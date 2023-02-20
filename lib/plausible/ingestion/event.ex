@@ -71,14 +71,21 @@ defmodule Plausible.Ingestion.Event do
     [:plausible, :ingest, :event, :dropped]
   end
 
-  @spec emit_telemetry_buffered(String.t()) :: :ok
-  def emit_telemetry_buffered(domain) do
-    :telemetry.execute(telemetry_event_buffered(), %{}, %{domain: domain})
+  @spec emit_telemetry_buffered(t()) :: :ok
+  def emit_telemetry_buffered(event) do
+    :telemetry.execute(telemetry_event_buffered(), %{}, %{
+      domain: event.domain,
+      request_timestamp: event.request.timestamp
+    })
   end
 
-  @spec emit_telemetry_dropped(String.t(), drop_reason()) :: :ok
-  def emit_telemetry_dropped(domain, reason) do
-    :telemetry.execute(telemetry_event_dropped(), %{}, %{domain: domain, reason: reason})
+  @spec emit_telemetry_dropped(t(), drop_reason()) :: :ok
+  def emit_telemetry_dropped(event, reason) do
+    :telemetry.execute(telemetry_event_dropped(), %{}, %{
+      domain: event.domain,
+      reason: reason,
+      request_timestamp: event.request.timestamp
+    })
   end
 
   defp pipeline() do
@@ -111,13 +118,13 @@ defmodule Plausible.Ingestion.Event do
     struct!(__MODULE__, domain: domain, request: request)
   end
 
-  defp drop(%__MODULE__{domain: domain} = event, reason, attrs \\ []) do
+  defp drop(%__MODULE__{} = event, reason, attrs \\ []) do
     fields =
       attrs
       |> Keyword.put(:dropped?, true)
       |> Keyword.put(:drop_reason, reason)
 
-    emit_telemetry_dropped(domain, reason)
+    emit_telemetry_dropped(event, reason)
     struct!(event, fields)
   end
 
@@ -251,9 +258,9 @@ defmodule Plausible.Ingestion.Event do
     %{event | clickhouse_event: clickhouse_event}
   end
 
-  defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event, domain: domain} = event) do
+  defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event) do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
-    emit_telemetry_buffered(domain)
+    emit_telemetry_buffered(event)
     event
   end
 

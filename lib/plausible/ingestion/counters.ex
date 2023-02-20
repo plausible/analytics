@@ -63,21 +63,20 @@ defmodule Plausible.Ingestion.Counters do
           Enum.map(records, fn {bucket, metric, domain, value} ->
             %{
               event_timebucket: DateTime.from_unix!(bucket),
-              application: to_string(node()),
               metric: metric,
+              site_id: Plausible.Site.Cache.get_site_id(domain),
               domain: domain,
               value: value
             }
           end)
 
         try do
-          # XXX: This must be changed to async_insert=1 clause
-          # Trying to figure out how to do that with the current driver
           IngestRepo.checkout(fn ->
             IngestRepo.query!("SET async_insert = 1")
             IngestRepo.query!("SET wait_for_async_insert = 0")
             {_, _} = IngestRepo.insert_all(Record, records)
             IngestRepo.query!("SET async_insert = 0")
+            IngestRepo.query!("SET wait_for_async_insert = 0")
           end)
         catch
           _, thrown ->

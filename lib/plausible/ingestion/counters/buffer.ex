@@ -1,19 +1,22 @@
 defmodule Plausible.Ingestion.Counters.Buffer do
   @moduledoc """
-  A buffer aggregating internal counters within spiralling buckets
-  (resetting every minute) per domain and metric.
+  A buffer aggregating internal counters within spiralling buckets.
+
+  Aggregates are placed in buckets resetting every 1 minute.
+  Flushing is done using 10 seconds moving window.
 
   Aggregates can be flushed on demand. Current bucket is excluded from
   flush until its time has passed.
   """
 
-  defstruct [:buffer_name, :bucket_fn]
+  defstruct [:buffer_name, :aggregate_bucket_fn]
 
   alias Plausible.Ingestion.Counters.Record
 
   @type t() :: %__MODULE__{}
   @type unix_timestamp() :: pos_integer()
-  @type bucket_fn_opt() :: {:bucket_fn, (DateTime.t() -> unix_timestamp())}
+  @type bucket_fn_opt() ::
+          {:aggregate_bucket_fn, (NaiveDateTime.t() -> unix_timestamp())}
 
   @ets_opts [
     :public,
@@ -26,22 +29,24 @@ defmodule Plausible.Ingestion.Counters.Buffer do
   def new(buffer_name, opts \\ []) do
     ^buffer_name = :ets.new(buffer_name, @ets_opts)
 
-    bucket_fn = Keyword.get(opts, :bucket_fn, &minute_spiral/1)
+    aggregate_bucket_fn = Keyword.get(opts, :aggregate_bucket_fn, &bucket_10s/1)
 
     %__MODULE__{
       buffer_name: buffer_name,
-      bucket_fn: bucket_fn
+      aggregate_bucket_fn: aggregate_bucket_fn
     }
   end
 
-  @spec aggregate(t(), binary(), binary(), now :: DateTime.t()) :: t()
+  @spec aggregate(t(), binary(), binary(), timestamp :: NaiveDateTime.t()) :: t()
   def aggregate(
-        %__MODULE__{buffer_name: buffer_name, bucket_fn: bucket_fn} = buffer,
+        %__MODULE__{buffer_name: buffer_name, aggregate_bucket_fn: bucket_fn} = buffer,
         metric,
         domain,
-        now \\ DateTime.utc_now()
+        timestamp
       ) do
-    bucket = bucket_fn.(now)
+    bucket =
+      bucket_fn.(timestamp)
+      |> IO.inspect(label: :bucket)
 
     :ets.update_counter(
       buffer_name,
@@ -55,11 +60,14 @@ defmodule Plausible.Ingestion.Counters.Buffer do
 
   @spec flush(t(), now :: DateTime.t()) :: [Record.t()]
   def flush(
-        %__MODULE__{buffer_name: buffer_name, bucket_fn: bucket_fn},
+        %__MODULE__{buffer_name: buffer_name},
         now \\ DateTime.utc_now()
       ) do
+    boundary =
+      now |> DateTime.add(-10, :second) |> IO.inspect(label: :minus) |> DateTime.to_unix()
+
     match = {{:"$1", :"$2", :"$3"}, :"$4"}
-    guard = {:<, :"$1", bucket_fn.(now)}
+    guard = {:"=<", :"$1", boundary}
     select = {{:"$1", :"$2", :"$3", :"$4"}}
 
     match_specs_read = [{match, [guard], [select]}]
@@ -75,11 +83,15 @@ defmodule Plausible.Ingestion.Counters.Buffer do
     end
   end
 
-  @spec minute_spiral(DateTime.t()) :: unix_timestamp()
-  def minute_spiral(now) do
-    now
+  @spec bucket_10s(NaiveDateTime.t()) :: unix_timestamp()
+  def bucket_10s(datetime) do
+    datetime
+    |> IO.inspect(label: :input_dt)
+    |> DateTime.from_naive!("Etc/UTC")
     |> DateTime.truncate(:second)
-    |> Map.replace(:second, 0)
+    |> Map.replace(:second, div(datetime.second, 10) * 10)
+    |> IO.inspect(label: :agg_bucket_dt)
     |> DateTime.to_unix()
+    |> IO.inspect(label: :agg_bucket)
   end
 end

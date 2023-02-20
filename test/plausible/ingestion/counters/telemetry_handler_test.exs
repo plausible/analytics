@@ -34,10 +34,14 @@ defmodule Plausible.Ingestion.Counters.TelemetryHandlerTest do
     buffer = Buffer.new(test)
     assert :ok = TelemetryHandler.install(buffer)
 
-    :ok = Event.emit_telemetry_dropped("a.example.com", :invalid)
-    :ok = Event.emit_telemetry_dropped("b.example.com", :not_found)
-    :ok = Event.emit_telemetry_buffered("c.example.com")
-    :ok = Event.emit_telemetry_dropped("b.example.com", :not_found)
+    e1 = %{domain: "a.example.com", request: %{timestamp: NaiveDateTime.utc_now()}}
+    e2 = %{domain: "b.example.com", request: %{timestamp: NaiveDateTime.utc_now()}}
+    e3 = %{domain: "c.example.com", request: %{timestamp: NaiveDateTime.utc_now()}}
+
+    :ok = Event.emit_telemetry_dropped(e1, :invalid)
+    :ok = Event.emit_telemetry_dropped(e2, :not_found)
+    :ok = Event.emit_telemetry_buffered(e3)
+    :ok = Event.emit_telemetry_dropped(e2, :not_found)
 
     future = DateTime.utc_now() |> DateTime.add(120, :second)
 

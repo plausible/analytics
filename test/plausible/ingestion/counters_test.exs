@@ -1,5 +1,6 @@
 defmodule Plausible.Ingestion.CountersTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase, async: false
+  import Ecto.Query
 
   alias Plausible.Ingestion.Counters
   alias Plausible.Ingestion.Counters.Record
@@ -17,7 +18,7 @@ defmodule Plausible.Ingestion.CountersTest do
       start_counters(
         buffer_name: test,
         interval: 100,
-        bucket_fn: fn _now ->
+        flush_boundary_fn: fn _now ->
           System.os_time(:second)
         end
       )
@@ -25,8 +26,10 @@ defmodule Plausible.Ingestion.CountersTest do
       {:ok, dropped} = emit_dropped_request()
       {:ok, buffered} = emit_buffered_request()
 
-      verify_record_written(dropped.domain, "dropped_not_found")
-      verify_record_written(buffered.domain, "buffered")
+      verify_record_written(dropped.domain, "dropped_not_found", 1)
+
+      site_id = Plausible.Sites.get_by_domain(buffered.domain).id
+      verify_record_written(buffered.domain, "buffered", 1, site_id)
     end
   end
 
@@ -38,7 +41,7 @@ defmodule Plausible.Ingestion.CountersTest do
       url: "http://#{site.domain}"
     }
 
-    conn = build_conn(:post, "/api/events", payload)
+    conn = build_conn(:post, "/api/event", payload)
     assert {:ok, request} = Request.build(conn)
     assert {:ok, %{dropped: [dropped]}} = Event.build_and_buffer(request)
     {:ok, dropped}
@@ -52,9 +55,10 @@ defmodule Plausible.Ingestion.CountersTest do
       url: "http://#{site.domain}"
     }
 
-    conn = build_conn(:post, "/api/events", payload)
+    conn = build_conn(:post, "/api/event", payload)
     assert {:ok, request} = Request.build(conn)
     assert {:ok, %{buffered: [buffered]}} = Event.build_and_buffer(request)
+
     {:ok, buffered}
   end
 
@@ -64,7 +68,7 @@ defmodule Plausible.Ingestion.CountersTest do
     {:ok, _pid} = apply(m, f, a)
   end
 
-  defp verify_record_written(domain, metric, value \\ 1) do
+  defp verify_record_written(domain, metric, value, site_id \\ nil) do
     query =
       from(r in Record,
         where:
@@ -72,6 +76,13 @@ defmodule Plausible.Ingestion.CountersTest do
             r.metric == ^metric and
             r.value == ^value
       )
+
+    query =
+      if site_id do
+        query |> where([r], r.site_id == ^site_id)
+      else
+        query |> where([r], is_nil(r.site_id))
+      end
 
     assert await_clickhouse_count(query, 1)
   end

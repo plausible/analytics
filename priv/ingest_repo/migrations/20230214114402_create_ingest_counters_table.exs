@@ -3,15 +3,13 @@ defmodule Plausible.IngestRepo.Migrations.CreateIngestCountersTable do
 
   def change do
     create_if_not_exists table(:ingest_counters,
-      engine: "MergeTree() ORDER BY (domain, toDate(event_timebucket))"
-                         ) do
+      engine: "SummingMergeTree() ORDER BY (domain, toDate(event_timebucket), metric, event_timebucket)") do
 
-      #  XXX: store site identifier too?
       add(:event_timebucket, :utc_datetime)
-      add(:application, :"LowCardinality(String)")
       add(:domain, :"LowCardinality(String)")
+      add(:site_id, :"Nullable(UInt64)")
       add(:metric, :"LowCardinality(String)")
-      add(:value, :Int64)
+      add(:value, :UInt64)
     end
   end
 end
