@@ -1,8 +1,8 @@
 # we can not use the pre-built tar because the distribution is
 # platform specific, it makes sense to build it in the docker
-
+nt
 #### Builder
-FROM hexpm/elixir:1.13.4-erlang-24.3.3-alpine-3.15.3 as buildcontainer
+FROM hexpm/elixir:1.14.3-erlang-25.2.3-alpine-3.17.0 as buildcontainer
 
 # preparation
 ENV MIX_ENV=prod
@@ -47,8 +47,8 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.15.3
-LABEL maintainer="tckb <tckb@tgrthi.me>"
+FROM alpine:3.17.0
+LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}
 ENV BUILD_METADATA=$BUILD_METADATA
