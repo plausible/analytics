@@ -71,7 +71,7 @@ jobs:
       - name: Check Credo Warnings
         run: mix credo diff --from-git-merge-base origin/master
       - name: Run tests
-        run: mix test --include slow --max-failures 1 --warnings-as-errors
+        run: mix test --include slow --max-failures 1 --warnings-as-errors | grep -P '\[(warning|error)\]' && echo "Log lines found. Capture log output in tests. Aborting." && exit 1 || exit 0
       - name: Check Dialyzer
         run: mix dialyzer
 env:
