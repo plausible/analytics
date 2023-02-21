@@ -7,6 +7,7 @@ FROM hexpm/elixir:1.14.3-erlang-25.2.3-alpine-3.17.0 as buildcontainer
 # preparation
 ENV MIX_ENV=prod
 ENV NODE_ENV=production
+ENV NODE_OPTIONS=--openssl-legacy-provider
 
 RUN mkdir /app
 WORKDIR /app
