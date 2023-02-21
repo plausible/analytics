@@ -341,14 +341,14 @@ class LineGraph extends React.Component {
         </div>
         <div className="relative px-2">
           {mainGraphRefreshing && renderLoader()}
-          <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center">
+          <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center z-20">
             { this.downloadLink() }
             { this.samplingNotice() }
             { this.importedNotice() }
             <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={updateInterval}/>
           </div>
           <FadeIn show={graphData}>
-            <div className="relative h-96 w-full">
+            <div className="relative h-96 w-full z-10">
               <canvas id="main-graph-canvas" className={canvasClass}></canvas>
             </div>
           </FadeIn>
