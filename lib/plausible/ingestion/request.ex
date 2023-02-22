@@ -37,7 +37,7 @@ defmodule Plausible.Ingestion.Request do
       |> Changeset.change()
       |> Changeset.put_change(
         :timestamp,
-        NaiveDateTime.utc_now()
+        NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
       )
 
     case parse_body(conn) do

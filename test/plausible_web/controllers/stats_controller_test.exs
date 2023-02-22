@@ -191,7 +191,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
         pathname: "/",
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], minutes: -1) |> NaiveDateTime.truncate(:second),
         referrer_source: "Google",
         user_id: 123
       ),
@@ -200,7 +201,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
         pathname: "/some-other-page",
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -2),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], minutes: -2) |> NaiveDateTime.truncate(:second),
         referrer_source: "Google",
         user_id: 123
       ),
@@ -211,23 +213,27 @@ defmodule PlausibleWeb.StatsControllerTest do
         utm_source: "google",
         utm_content: "content",
         utm_term: "term",
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         browser: "ABrowserName"
       ),
       build(:pageview,
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -1),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], months: -1) |> NaiveDateTime.truncate(:second),
         country_code: "EE",
         browser: "ABrowserName"
       ),
       build(:pageview,
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -5),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], months: -5) |> NaiveDateTime.truncate(:second),
         utm_campaign: "ads",
         country_code: "EE",
         referrer_source: "Google",
         browser: "ABrowserName"
       ),
       build(:event,
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         name: "Signup",
         "meta.key": ["variant"],
         "meta.value": ["A"]
