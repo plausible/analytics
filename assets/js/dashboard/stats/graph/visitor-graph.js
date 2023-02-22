@@ -476,12 +476,21 @@ export default class VisitorGraph extends React.Component {
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
+        res.top_stats = this.maybeRemoveVisitsMetric(res.top_stats)
         this.setState({ topStatsLoadingState: LoadingState.loaded, topStatData: res }, () => {
           this.storeTopStatsContainerHeight()
           this.resetMetric()
         })
         return res
       })
+  }
+
+  maybeRemoveVisitsMetric(top_stats) {
+    if (this.props.site.flags.visits_metric) {
+      return top_stats
+    } else {
+      return top_stats.filter((stat) => {return stat.name !== "Visits"})
+    }
   }
 
   renderInner() {
