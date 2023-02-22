@@ -82,7 +82,7 @@ defmodule Plausible.MixProject do
       {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
       {:locus, "~> 2.3"},
-      {:gen_cycle, "~> 1.0"},
+      {:gen_cycle, github: "aerosol/gen_cycle", branch: "add-terminate-callback"},
       {:hackney, "~> 1.8"},
       {:hammer, "~> 6.0"},
       {:httpoison, "~> 1.4"},

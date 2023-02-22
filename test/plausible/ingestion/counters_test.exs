@@ -66,6 +66,32 @@ defmodule Plausible.Ingestion.CountersTest do
 
       verify_record_written(event1.domain, "dropped_not_found", 3)
     end
+
+    test "dumps the buffer on shutdown", %{test: test} do
+      on_exit(:detach, fn ->
+        :telemetry.detach("ingest-counters-#{test}")
+      end)
+
+      # normal operation, 10s cycle/10s bucket
+      {:ok, pid} = start_counters(buffer_name: test)
+
+      event1_at = ~N[2023-02-14 01:00:03]
+      event2_at = NaiveDateTime.utc_now() |> NaiveDateTime.add(10, :second)
+
+      {:ok, event1} = emit_dropped_request(at: event1_at)
+      {:ok, event2} = emit_dropped_request(at: event2_at)
+
+      assert Process.alive?(pid)
+      :ok = Counters.stop(pid)
+
+      assert :down ==
+               eventually(fn ->
+                 {Process.alive?(pid) == false, :down}
+               end)
+
+      verify_record_written(event1.domain, "dropped_not_found", 1)
+      verify_record_written(event2.domain, "dropped_not_found", 1)
+    end
   end
 
   defp emit_dropped_request(opts \\ []) do

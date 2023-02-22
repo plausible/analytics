@@ -46,6 +46,7 @@ defmodule Plausible.Ingestion.Counters do
 
   @impl true
   def init_cycle(opts) do
+    Process.flag(:trap_exit, true)
     buffer_name = Keyword.get(opts, :buffer_name, __MODULE__)
     force_start? = Keyword.get(opts, :force_start?, false)
 
@@ -62,8 +63,8 @@ defmodule Plausible.Ingestion.Counters do
   end
 
   @impl true
-  def handle_cycle(buffer) do
-    case Buffer.flush(buffer) do
+  def handle_cycle(buffer, now \\ DateTime.utc_now()) do
+    case Buffer.flush(buffer, now) do
       [] ->
         :noop
 
@@ -100,8 +101,26 @@ defmodule Plausible.Ingestion.Counters do
   end
 
   @impl true
+  def handle_info(:stop, _state) do
+    {:stop, :normal}
+  end
+
   def handle_info(_msg, state) do
     {:continue, state}
+  end
+
+  @impl true
+  def terminate(_reason, buffer) do
+    # we'll travel in time to flush everything regardless of current bucket completion
+    future = DateTime.utc_now() |> DateTime.add(60, :second)
+    handle_cycle(buffer, future)
+    :ok
+  end
+
+  @spec stop(pid()) :: :ok
+  def stop(pid) do
+    send(pid, :stop)
+    :ok
   end
 
   defp to_0_minute_datetime(unix_ts) when is_integer(unix_ts) do
