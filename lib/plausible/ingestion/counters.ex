@@ -79,20 +79,21 @@ defmodule Plausible.Ingestion.Counters do
             }
           end)
 
-        try do
-          IngestRepo.checkout(fn ->
+        IngestRepo.checkout(fn ->
+          try do
             IngestRepo.query!("SET async_insert = 1")
             IngestRepo.query!("SET wait_for_async_insert = 0")
             {_, _} = IngestRepo.insert_all(Record, records)
+          catch
+            _, thrown ->
+              Logger.error(
+                "Caught an error when trying to flush ingest counters: #{inspect(thrown)}"
+              )
+          after
             IngestRepo.query!("SET async_insert = 0")
             IngestRepo.query!("SET wait_for_async_insert = 0")
-          end)
-        catch
-          _, thrown ->
-            Logger.error(
-              "Caught an error when trying to flush ingest counters: #{inspect(thrown)}"
-            )
-        end
+          end
+        end)
     end
 
     {:continue_hibernated, buffer}
