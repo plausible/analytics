@@ -6,6 +6,7 @@ export const METRIC_MAPPING = {
   'Unique visitors': 'visitors',
   'Visit duration': 'visit_duration',
   'Total pageviews': 'pageviews',
+  'Visits': 'visits',
   'Bounce rate': 'bounce_rate',
   'Unique conversions': 'conversions',
 }
@@ -13,6 +14,7 @@ export const METRIC_MAPPING = {
 export const METRIC_LABELS = {
   'visitors': 'Visitors',
   'pageviews': 'Pageviews',
+  'visits': 'Visits',
   'bounce_rate': 'Bounce Rate',
   'visit_duration': 'Visit Duration',
   'conversions': 'Converted Visitors',
@@ -21,6 +23,7 @@ export const METRIC_LABELS = {
 export const METRIC_FORMATTER = {
   'visitors': numberFormatter,
   'pageviews': numberFormatter,
+  'visits': numberFormatter,
   'bounce_rate': (number) => (`${number}%`),
   'visit_duration': durationFormatter,
   'conversions': numberFormatter,
