@@ -67,6 +67,7 @@ export function IntervalPicker({ graphData, query, site, updateInterval }) {
           </Menu.Button>
 
           <Transition
+            as={Fragment}
             show={open}
             enter="transition ease-out duration-100"
             enterFrom="transform opacity-0 scale-95"
