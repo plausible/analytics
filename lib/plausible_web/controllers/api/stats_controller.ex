@@ -114,23 +114,7 @@ defmodule PlausibleWeb.Api.StatsController do
       present_index = present_index_for(site, query, labels)
       full_intervals = build_full_intervals(query, labels)
 
-      comparison_result =
-        case params["comparison"] do
-          "previous_period" ->
-            comparison_query = Query.shift_back(query, site)
-            Stats.timeseries(site, comparison_query, [selected_metric])
-
-          "last_year" ->
-            start_date = Date.add(query.date_range.first, -365)
-            end_date = Date.add(query.date_range.last, -365)
-            range = Date.range(start_date, end_date)
-
-            comparison_query = %Query{query | date_range: range}
-            Stats.timeseries(site, comparison_query, [selected_metric])
-
-          _any ->
-            nil
-        end
+      comparison_result = query_comparison(params["comparison"], site, query, selected_metric)
 
       json(conn, %{
         plot: plot_timeseries(timeseries_result, selected_metric),
@@ -180,6 +164,25 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp build_full_intervals(_query, _labels) do
     nil
+  end
+
+  defp query_comparison(comparison_mode, site, query, selected_metric) do
+    case comparison_mode do
+      "previous_period" ->
+        comparison_query = Query.shift_back(query, site)
+        Stats.timeseries(site, comparison_query, [selected_metric])
+
+      "last_year" ->
+        start_date = Date.add(query.date_range.first, -365)
+        end_date = Date.add(query.date_range.last, -365)
+        range = Date.range(start_date, end_date)
+
+        comparison_query = %Query{query | date_range: range}
+        Stats.timeseries(site, comparison_query, [selected_metric])
+
+      _any ->
+        nil
+    end
   end
 
   def top_stats(conn, params) do
