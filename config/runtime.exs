@@ -296,8 +296,10 @@ config :plausible, Plausible.AsyncInsertRepo,
   queue_interval: 2000,
   url: ch_db_url,
   pool_size: 1,
-  clickhouse_async_insert: 1,
-  clickhouse_wait_for_async_insert: 0
+  clickhouse_settings: [
+    async_insert: 1,
+    wait_for_async_insert: 0
+  ]
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
