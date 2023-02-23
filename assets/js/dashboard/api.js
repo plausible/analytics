@@ -45,7 +45,7 @@ export function serializeQuery(query, extraQuery=[]) {
   if (query.filters) { queryObj.filters = serializeFilters(query.filters)  }
   if (query.with_imported) { queryObj.with_imported = query.with_imported  }
   if (SHARED_LINK_AUTH) { queryObj.auth = SHARED_LINK_AUTH }
-  if (query.comparison) { queryObj.comparison = true }
+  if (query.comparison) { queryObj.comparison = query.comparison }
   Object.assign(queryObj, ...extraQuery)
 
   return '?' + serialize(queryObj)
