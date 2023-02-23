@@ -27,17 +27,17 @@ defmodule Plausible.Ingestion.Request do
 
   @type t() :: %__MODULE__{}
 
-  @spec build(Plug.Conn.t()) :: {:ok, t()} | {:error, Changeset.t()}
+  @spec build(Plug.Conn.t(), NaiveDateTime.t()) :: {:ok, t()} | {:error, Changeset.t()}
   @doc """
   Builds and initially validates %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
   """
-  def build(%Plug.Conn{} = conn) do
+  def build(%Plug.Conn{} = conn, now \\ NaiveDateTime.utc_now()) do
     changeset =
       %__MODULE__{}
       |> Changeset.change()
       |> Changeset.put_change(
         :timestamp,
-        NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+        NaiveDateTime.truncate(now, :second)
       )
 
     case parse_body(conn) do
