@@ -27,7 +27,7 @@ const ComparisonInput = function({ site, query, history }) {
       <Menu.Item
         key={value}
         onClick={() => update(value)}
-        className="px-4 py-2 leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100 flex hover:cursor-pointer">
+        className="px-4 py-2 leading-tight hover:bg-gray-100 dark:text-white hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100 flex hover:cursor-pointer">
         <span className={labelClass}>{ label }</span>
       </Menu.Item>
     )
