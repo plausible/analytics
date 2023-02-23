@@ -96,8 +96,7 @@ defmodule PlausibleWeb.StatsController do
     query = Query.from(site, params) |> Filters.add_prefix()
 
     visits_metric_enabled =
-      FunWithFlags.enabled?(:visits_metric, for: conn.assigns[:current_user]) ||
-        Mix.env() == :test
+      FunWithFlags.enabled?(:visits_metric, for: conn.assigns[:current_user])
 
     metrics =
       if visits_metric_enabled && !query.filters["event:goal"] do
