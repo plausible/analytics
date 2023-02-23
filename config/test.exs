@@ -28,3 +28,5 @@ config :plausible,
   session_timeout: 0,
   http_impl: Plausible.HTTPClient.Mock,
   sites_by_domain_cache_enabled: false
+
+config :plausible, Plausible.Ingestion.Counters, enabled: false

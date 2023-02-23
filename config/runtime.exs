@@ -290,6 +290,17 @@ config :plausible, Plausible.IngestRepo,
   max_buffer_size: ch_max_buffer_size,
   pool_size: ingest_pool_size
 
+config :plausible, Plausible.AsyncInsertRepo,
+  loggers: [Ecto.LogEntry],
+  queue_target: 500,
+  queue_interval: 2000,
+  url: ch_db_url,
+  pool_size: 1,
+  clickhouse_settings: [
+    async_insert: 1,
+    wait_for_async_insert: 0
+  ]
+
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
