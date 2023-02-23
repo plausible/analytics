@@ -20,14 +20,15 @@ const ComparisonInput = function({ site, query, history }) {
     navigateToQuery(history, query, { comparison: key })
   }
 
-  function renderItem(key) {
-    const menuItemClass = classNames("font-medium text-sm", {
-      "font-bold disabled": query.comparison == key,
-    })
+  function renderItem({ label, value, isCurrentlySelected }) {
+    const labelClass = classNames("font-medium text-sm", { "font-bold disabled": isCurrentlySelected })
 
     return (
-      <Menu.Item className="px-4 py-2 leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100 flex hover:cursor-pointer" key={key} onClick={() => update(key)}>
-        <span className={menuItemClass}>{ COMPARISON_MODES[key] }</span>
+      <Menu.Item
+        key={value}
+        onClick={() => update(value)}
+        className="px-4 py-2 leading-tight hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100 flex hover:cursor-pointer">
+        <span className={labelClass}>{ label }</span>
       </Menu.Item>
     )
   }
@@ -49,7 +50,8 @@ const ComparisonInput = function({ site, query, history }) {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95">
           <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10" static>
-            { Object.keys(COMPARISON_MODES).map(renderItem) }
+            { renderItem({ label: "Disabled", value: false, isCurrentlySelected: !query.comparison }) }
+            { Object.keys(COMPARISON_MODES).map((key) => renderItem({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison})) }
           </Menu.Items>
         </Transition>
       </Menu>
