@@ -115,9 +115,21 @@ defmodule PlausibleWeb.Api.StatsController do
       full_intervals = build_full_intervals(query, labels)
 
       comparison_result =
-        if params["comparison"] == "previous_period" do
-          comparison_query = Query.shift_back(query, site)
-          Stats.timeseries(site, comparison_query, [selected_metric])
+        case params["comparison"] do
+          "previous_period" ->
+            comparison_query = Query.shift_back(query, site)
+            Stats.timeseries(site, comparison_query, [selected_metric])
+
+          "last_year" ->
+            start_date = Date.add(query.date_range.first, -365)
+            end_date = Date.add(query.date_range.last, -365)
+            range = Date.range(start_date, end_date)
+
+            comparison_query = %Query{query | date_range: range}
+            Stats.timeseries(site, comparison_query, [selected_metric])
+
+          _any ->
+            nil
         end
 
       json(conn, %{
