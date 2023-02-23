@@ -341,14 +341,14 @@ class LineGraph extends React.Component {
         </div>
         <div className="relative px-2">
           {mainGraphRefreshing && renderLoader()}
-          <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center z-20">
+          <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center">
             { this.downloadLink() }
             { this.samplingNotice() }
             { this.importedNotice() }
             <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={updateInterval}/>
           </div>
           <FadeIn show={graphData}>
-            <div className="relative h-96 w-full z-10">
+            <div className="relative h-96 w-full z-0">
               <canvas id="main-graph-canvas" className={canvasClass}></canvas>
             </div>
           </FadeIn>
@@ -476,12 +476,21 @@ export default class VisitorGraph extends React.Component {
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
+        res.top_stats = this.maybeRemoveVisitsMetric(res.top_stats)
         this.setState({ topStatsLoadingState: LoadingState.loaded, topStatData: res }, () => {
           this.storeTopStatsContainerHeight()
           this.resetMetric()
         })
         return res
       })
+  }
+
+  maybeRemoveVisitsMetric(top_stats) {
+    if (this.props.site.flags.visits_metric) {
+      return top_stats
+    } else {
+      return top_stats.filter((stat) => {return stat.name !== "Visits"})
+    }
   }
 
   renderInner() {

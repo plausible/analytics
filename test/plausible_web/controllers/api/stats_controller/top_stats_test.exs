@@ -32,6 +32,20 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"name" => "Total pageviews", "value" => 3, "change" => 100} in res["top_stats"]
     end
 
+    test "counts total visits", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 10:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 15:00:00])
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01")
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Visits", "value" => 3, "change" => 100} in res["top_stats"]
+    end
+
     test "calculates bounce rate", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: @user_id),
@@ -293,6 +307,38 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
       assert %{"name" => "Unique visitors", "value" => 2, "change" => 100} in res["top_stats"]
+    end
+
+    test "returns number of visits from one specific referral source", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: @user_id,
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 05:00:00]
+        ),
+        build(:pageview, timestamp: ~N[2021-01-01 00:10:00])
+      ])
+
+      filters = Jason.encode!(%{source: "Google"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Visits", "value" => 2, "change" => 100} in res["top_stats"]
     end
   end
 
