@@ -9,8 +9,7 @@ import {
   FILTER_GROUPS,
   formatFilterGroup,
   filterGroupForFilter,
-  toFilterType,
-  valueWithoutPrefix
+  parseQueryFilter
 } from "./stats/modals/filter";
 
 function removeFilter(key, history, query) {
@@ -18,8 +17,8 @@ function removeFilter(key, history, query) {
     [key]: false
   }
   if (key === 'country') { newOpts.country_name = false }
-  if (key === 'region')  { newOpts.region_name = false }
-  if (key === 'city')    { newOpts.city_name = false }
+  if (key === 'region') { newOpts.region_name = false }
+  if (key === 'city') { newOpts.city_name = false }
 
   navigateToQuery(
     history,
@@ -38,8 +37,7 @@ function clearAllFilters(history, query) {
 }
 
 function filterText(key, rawValue, query) {
-  let type = toFilterType(rawValue)
-  const value = valueWithoutPrefix(rawValue)
+  const {type, value} = parseQueryFilter(rawValue)
 
   if (key === "goal") {
     return <>Completed goal <b>{value}</b></>
@@ -47,14 +45,18 @@ function filterText(key, rawValue, query) {
   if (key === "props") {
     const [metaKey, metaValue] = Object.entries(value)[0]
     const eventName = query.filters.goal ? query.filters.goal : 'event'
-    return <>{eventName}.{metaKey} {toFilterType(metaValue)} <b>{valueWithoutPrefix(metaValue)}</b></>
+    const metaFilter = parseQueryFilter(metaValue)
+    return <>{eventName}.{metaKey} {metaFilter.type} <b>{metaFilter.value}</b></>
   }
   if (key === "browser_version") {
-    const browserName = query.filters.browser ? query.filters.browser : 'Browser'
+    const isNotSet = query.filters.browser === '(not set)' || (!query.filters.browser)
+    const browserName = isNotSet ? 'Browser' : query.filters.browser
     return <>{browserName}.Version {type} <b>{value}</b></>
   }
   if (key === "os_version") {
-    const osName = query.filters.os ? query.filters.os : 'OS'
+    const isNotSet = query.filters.os === '(not set)' || (!query.filters.os)
+    const osName = isNotSet ? 'Operating System' : query.filters.os
+    console.info('osname', osName)
     return <>{osName}.Version {type} <b>{value}</b></>
   }
   if (key === "country") {
@@ -92,7 +94,7 @@ function renderDropdownFilter(site, history, [key, value], query) {
           title={`Edit filter: ${formattedFilters[key]}`}
           to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
-          style={{width: 'calc(100% - 1.5rem)'}}
+          style={{ width: 'calc(100% - 1.5rem)' }}
         >
           <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
           <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
@@ -123,7 +125,7 @@ function filterDropdownOption(site, option) {
   )
 }
 
-function DropdownContent({history, site, query, wrapped}) {
+function DropdownContent({ history, site, query, wrapped }) {
   const [addingFilter, setAddingFilter] = useState(false);
 
   if (wrapped === 0 || addingFilter) {
@@ -191,7 +193,7 @@ class Filters extends React.Component {
   }
 
   handleKeyup(e) {
-    const {query, history} = this.props
+    const { query, history } = this.props
 
     if (e.ctrlKey || e.metaKey || e.altKey) return
 
@@ -201,7 +203,7 @@ class Filters extends React.Component {
   }
 
   handleResize() {
-    this.setState({ viewport: window.innerWidth || 639});
+    this.setState({ viewport: window.innerWidth || 639 });
   }
 
   // Checks if the filter container is wrapping items
@@ -325,8 +327,8 @@ class Filters extends React.Component {
   render() {
     return (
       <>
-        { this.renderFilterList() }
-        { this.renderDropDown() }
+        {this.renderFilterList()}
+        {this.renderDropDown()}
       </>
     )
   }

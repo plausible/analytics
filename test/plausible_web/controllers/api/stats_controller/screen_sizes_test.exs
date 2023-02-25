@@ -19,6 +19,33 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
              ]
     end
 
+    test "returns (not set) when appropriate", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          screen_size: ""
+        ),
+        build(:pageview,
+          screen_size: "Desktop"
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "(not set)", "visitors" => 1, "percentage" => 50},
+               %{"name" => "Desktop", "visitors" => 1, "percentage" => 50}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
+
+      filters = Jason.encode!(%{screen: "(not set)"})
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "(not set)", "visitors" => 1, "percentage" => 100}
+             ]
+    end
+
     test "returns screen sizes with :is filter on custom pageview props", %{
       conn: conn,
       site: site

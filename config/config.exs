@@ -1,7 +1,7 @@
 import Config
 
 config :plausible,
-  ecto_repos: [Plausible.Repo, Plausible.ClickhouseRepo]
+  ecto_repos: [Plausible.Repo, Plausible.IngestRepo]
 
 config :plausible, PlausibleWeb.Endpoint,
   pubsub_server: Plausible.PubSub,
@@ -52,4 +52,9 @@ config :plausible,
   sites_by_domain_cache_refresh_interval_max_jitter: :timer.seconds(5),
   sites_by_domain_cache_refresh_interval: :timer.minutes(15)
 
+<<<<<<< HEAD
+=======
+config :plausible, Plausible.Ingestion.Counters, enabled: true
+
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
 import_config "#{config_env()}.exs"

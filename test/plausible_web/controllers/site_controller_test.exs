@@ -126,7 +126,11 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert html = html_response(conn, 200)
+<<<<<<< HEAD
       assert html =~ "This domain has already been taken."
+=======
+      assert html =~ "This domain cannot be registered"
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       assert html =~ "please contact support"
       refute Repo.get_by(Plausible.Site, domain: domain)
     end
@@ -291,7 +295,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert html_response(conn, 200) =~
-               "This domain has already been taken. Perhaps one of your team members registered it? If that&#39;s not the case, please contact support@plausible.io"
+               "This domain cannot be registered. Perhaps one of your colleagues registered it?"
     end
   end
 

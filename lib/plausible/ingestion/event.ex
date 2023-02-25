@@ -71,6 +71,7 @@ defmodule Plausible.Ingestion.Event do
     [:plausible, :ingest, :event, :dropped]
   end
 
+<<<<<<< HEAD
   defp pipeline() do
     [
       &put_user_agent/1,
@@ -123,6 +124,77 @@ defmodule Plausible.Ingestion.Event do
       %UAInspector.Result.Bot{} ->
         drop(event, :bot)
 
+=======
+  @spec emit_telemetry_buffered(t()) :: :ok
+  def emit_telemetry_buffered(event) do
+    :telemetry.execute(telemetry_event_buffered(), %{}, %{
+      domain: event.domain,
+      request_timestamp: event.request.timestamp
+    })
+  end
+
+  @spec emit_telemetry_dropped(t(), drop_reason()) :: :ok
+  def emit_telemetry_dropped(event, reason) do
+    :telemetry.execute(telemetry_event_dropped(), %{}, %{
+      domain: event.domain,
+      reason: reason,
+      request_timestamp: event.request.timestamp
+    })
+  end
+
+  defp pipeline() do
+    [
+      &put_user_agent/1,
+      &put_basic_info/1,
+      &put_referrer/1,
+      &put_utm_tags/1,
+      &put_geolocation/1,
+      &put_screen_size/1,
+      &put_props/1,
+      &put_salts/1,
+      &put_user_id/1,
+      &validate_clickhouse_event/1,
+      &register_session/1,
+      &write_to_buffer/1
+    ]
+  end
+
+  defp process_unless_dropped(%__MODULE__{} = initial_event, pipeline) do
+    Enum.reduce_while(pipeline, initial_event, fn pipeline_step, acc_event ->
+      case pipeline_step.(acc_event) do
+        %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
+        %__MODULE__{dropped?: false} = event -> {:cont, event}
+      end
+    end)
+  end
+
+  defp new(domain, request) do
+    struct!(__MODULE__, domain: domain, request: request)
+  end
+
+  defp drop(%__MODULE__{} = event, reason, attrs \\ []) do
+    fields =
+      attrs
+      |> Keyword.put(:dropped?, true)
+      |> Keyword.put(:drop_reason, reason)
+
+    emit_telemetry_dropped(event, reason)
+    struct!(event, fields)
+  end
+
+  defp update_attrs(%__MODULE__{} = event, %{} = attrs) do
+    struct!(event, clickhouse_event_attrs: Map.merge(event.clickhouse_event_attrs, attrs))
+  end
+
+  defp put_user_agent(%__MODULE__{} = event) do
+    case parse_user_agent(event.request) do
+      %UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}} ->
+        drop(event, :bot)
+
+      %UAInspector.Result.Bot{} ->
+        drop(event, :bot)
+
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       %UAInspector.Result{} = user_agent ->
         update_attrs(event, %{
           operating_system: os_name(user_agent),
@@ -236,6 +308,7 @@ defmodule Plausible.Ingestion.Event do
       )
 
     session_id = Plausible.Session.CacheStore.on_event(event.clickhouse_event, previous_user_id)
+<<<<<<< HEAD
 
     clickhouse_event = Map.put(event.clickhouse_event, :session_id, session_id)
     %{event | clickhouse_event: clickhouse_event}
@@ -244,6 +317,16 @@ defmodule Plausible.Ingestion.Event do
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event) do
     {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
     emit_telemetry_buffered()
+=======
+
+    clickhouse_event = Map.put(event.clickhouse_event, :session_id, session_id)
+    %{event | clickhouse_event: clickhouse_event}
+  end
+
+  defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event) do
+    {:ok, _} = Plausible.Event.WriteBuffer.insert(clickhouse_event)
+    emit_telemetry_buffered(event)
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
     event
   end
 
@@ -374,6 +457,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp spam_referrer?(_), do: false
+<<<<<<< HEAD
 
   defp emit_telemetry_buffered() do
     :telemetry.execute(telemetry_event_buffered(), %{}, %{})
@@ -382,4 +466,6 @@ defmodule Plausible.Ingestion.Event do
   defp emit_telemetry_dropped(reason) do
     :telemetry.execute(telemetry_event_dropped(), %{}, %{reason: reason})
   end
+=======
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
 end

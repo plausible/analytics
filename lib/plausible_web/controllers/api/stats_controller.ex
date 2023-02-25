@@ -97,9 +97,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
       selected_metric =
         if !params["metric"] || params["metric"] == "conversions" do
-          "visitors"
+          :visitors
         else
-          params["metric"]
+          String.to_existing_atom(params["metric"])
         end
 
       timeseries_query =
@@ -109,21 +109,25 @@ defmodule PlausibleWeb.Api.StatsController do
           query
         end
 
-      timeseries_result =
-        Stats.timeseries(site, timeseries_query, [String.to_existing_atom(selected_metric)])
-
-      plot =
-        Enum.map(timeseries_result, fn row ->
-          row[String.to_existing_atom(selected_metric)] || 0
-        end)
-
-      labels = Enum.map(timeseries_result, fn row -> row[:date] end)
+      timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
+      labels = label_timeseries(timeseries_result)
       present_index = present_index_for(site, query, labels)
       full_intervals = build_full_intervals(query, labels)
+<<<<<<< HEAD
+=======
+
+      comparison_result =
+        if params["comparison"] do
+          comparison_query = Query.shift_back(query, site)
+          Stats.timeseries(site, comparison_query, [selected_metric])
+        end
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
 
       json(conn, %{
-        plot: plot,
+        plot: plot_timeseries(timeseries_result, selected_metric),
         labels: labels,
+        comparison_plot: comparison_result && plot_timeseries(comparison_result, selected_metric),
+        comparison_labels: comparison_result && label_timeseries(comparison_result),
         present_index: present_index,
         interval: query.interval,
         with_imported: query.include_imported,
@@ -135,6 +139,17 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+<<<<<<< HEAD
+=======
+  defp plot_timeseries(timeseries, metric) do
+    Enum.map(timeseries, fn row -> row[metric] || 0 end)
+  end
+
+  defp label_timeseries(timeseries) do
+    Enum.map(timeseries, & &1.date)
+  end
+
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
   defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
     for label <- labels, into: %{} do
       interval_start = Timex.beginning_of_week(label)
@@ -219,6 +234,7 @@ defmodule PlausibleWeb.Api.StatsController do
           |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}:00")
 
         Enum.find_index(dates, &(&1 == current_date))
+<<<<<<< HEAD
     end
   end
 
@@ -232,6 +248,21 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+=======
+    end
+  end
+
+  defp date_or_weekstart(date, query) do
+    weekstart = Timex.beginning_of_week(date)
+
+    if Enum.member?(query.date_range, weekstart) do
+      weekstart
+    else
+      date
+    end
+  end
+
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
   defp fetch_top_stats(
          site,
          %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query
@@ -344,9 +375,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       if query.filters["event:page"] do
-        [:visitors, :pageviews, :bounce_rate, :time_on_page, :sample_percent]
+        [:visitors, :pageviews, :bounce_rate, :time_on_page, :visits, :sample_percent]
       else
-        [:visitors, :pageviews, :bounce_rate, :visit_duration, :sample_percent]
+        [:visitors, :pageviews, :bounce_rate, :visit_duration, :visits, :sample_percent]
       end
 
     current_results = Stats.aggregate(site, query, metrics)
@@ -356,6 +387,7 @@ defmodule PlausibleWeb.Api.StatsController do
       [
         top_stats_entry(current_results, prev_results, "Unique visitors", :visitors),
         top_stats_entry(current_results, prev_results, "Total pageviews", :pageviews),
+        top_stats_entry(current_results, prev_results, "Visits", :visits),
         top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate),
         top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration),
         top_stats_entry(current_results, prev_results, "Time on page", :time_on_page)

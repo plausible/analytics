@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+<<<<<<<< HEAD:lib/plausible/site.ex
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
 defmodule Plausible.Site do
   @moduledoc """
   Site schema
@@ -50,7 +54,11 @@ defmodule Plausible.Site do
     |> validate_domain_reserved_characters()
     |> unique_constraint(:domain,
       message:
+<<<<<<< HEAD
         "This domain has already been taken. Perhaps one of your team members registered it? If that's not the case, please contact support@plausible.io"
+=======
+        "This domain cannot be registered. Perhaps one of your colleagues registered it? Or did you recently delete it from your account? The deletion may take up to 48 hours before you can add the same site again. If that's not the case, please contact support@plausible.io"
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
     )
   end
 
@@ -185,3 +193,9 @@ defmodule Plausible.Site do
     end
   end
 end
+<<<<<<< HEAD
+=======
+========
+
+>>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1:lib/plausible/site/schema.ex
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1

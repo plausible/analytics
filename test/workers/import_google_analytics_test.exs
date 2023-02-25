@@ -5,6 +5,8 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
 
   alias Plausible.Workers.ImportGoogleAnalytics
 
+  @moduletag capture_log: true
+
   @imported_data %Plausible.Site.ImportedData{
     start_date: Timex.today() |> Timex.shift(days: -7),
     end_date: Timex.today(),

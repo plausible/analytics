@@ -180,6 +180,20 @@ defmodule Plausible.Site.Cache do
     end
   end
 
+<<<<<<< HEAD
+=======
+  @spec get_site_id(String.t(), Keyword.t()) :: pos_integer() | nil
+  def get_site_id(domain, opts \\ []) do
+    case get(domain, opts) do
+      %{id: site_id} ->
+        site_id
+
+      nil ->
+        nil
+    end
+  end
+
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
   @spec telemetry_event_refresh(atom(), atom()) :: list(atom())
   def telemetry_event_refresh(cache_name \\ @cache_name, mode) when mode in @modes do
     [:plausible, :cache, cache_name, :refresh, mode]

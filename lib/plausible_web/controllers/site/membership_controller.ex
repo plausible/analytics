@@ -116,22 +116,41 @@ defmodule PlausibleWeb.Site.MembershipController do
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
     user = Plausible.Auth.find_user_by(email: email)
 
-    invitation =
+    invite_result =
       Invitation.new(%{
         email: email,
         role: :owner,
         site_id: site.id,
         inviter_id: conn.assigns[:current_user].id
       })
-      |> Repo.insert!()
-      |> Repo.preload([:site, :inviter])
+      |> Repo.insert()
 
-    PlausibleWeb.Email.ownership_transfer_request(invitation, user)
-    |> Plausible.Mailer.send()
+    conn =
+      case invite_result do
+        {:ok, invitation} ->
+          invitation
+          |> Repo.preload([:site, :inviter])
+          |> PlausibleWeb.Email.ownership_transfer_request(user)
+          |> Plausible.Mailer.send()
 
-    conn
-    |> put_flash(:success, "Site transfer request has been sent to #{email}")
-    |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+          put_flash(conn, :success, "Site transfer request has been sent to #{email}")
+
+        {:error, changeset} ->
+          errors = Plausible.ChangesetHelpers.traverse_errors(changeset)
+
+          message =
+            case errors do
+              %{invitation: ["already sent" | _]} -> "Invitation has already been sent"
+              _other -> "Site transfer request to #{email} has failed"
+            end
+
+          conn
+          |> put_flash(:ttl, :timer.seconds(5))
+          |> put_flash(:error_title, "Transfer error")
+          |> put_flash(:error, message)
+      end
+
+    redirect(conn, to: Routes.site_path(conn, :settings_people, site.domain))
   end
 
   @doc """

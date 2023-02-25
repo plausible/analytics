@@ -207,6 +207,33 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
       refute Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
     end
+
+    test "fails to transfer ownership to invited user with proper error message", ctx do
+      %{conn: conn, user: user} = ctx
+      site = insert(:site, members: [user])
+      invited = "john.doe@example.com"
+
+      # invite a user but don't join
+
+      conn =
+        post(conn, "/sites/#{site.domain}/memberships/invite", %{
+          email: invited,
+          role: "admin"
+        })
+
+      conn = get(recycle(conn), redirected_to(conn, 302))
+
+      assert html_response(conn, 200) =~
+               "#{invited} has been invited to #{site.domain} as an admin"
+
+      # transferring ownership to that domain now fails
+
+      conn = post(conn, "/sites/#{site.domain}/transfer-ownership", %{email: invited})
+      conn = get(recycle(conn), redirected_to(conn, 302))
+      html = html_response(conn, 200)
+      assert html =~ "Transfer error"
+      assert html =~ "Invitation has already been sent"
+    end
   end
 
   describe "PUT /sites/memberships/:id/role/:new_role" do

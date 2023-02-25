@@ -26,7 +26,11 @@ defmodule PlausibleWeb.Api.ExternalController do
             conn
             |> put_resp_header("x-plausible-dropped", "#{Enum.count(dropped)}")
             |> put_status(400)
+<<<<<<< HEAD
             |> json(%{errors: traverse_errors(first_invalid_changeset)})
+=======
+            |> json(%{errors: Plausible.ChangesetHelpers.traverse_errors(first_invalid_changeset)})
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
           else
             conn
             |> put_resp_header("x-plausible-dropped", "#{Enum.count(dropped)}")
@@ -38,7 +42,11 @@ defmodule PlausibleWeb.Api.ExternalController do
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(400)
+<<<<<<< HEAD
         |> json(%{errors: traverse_errors(changeset)})
+=======
+        |> json(%{errors: Plausible.ChangesetHelpers.traverse_errors(changeset)})
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
     end
   end
 
@@ -102,6 +110,7 @@ defmodule PlausibleWeb.Api.ExternalController do
       end
     end)
   end
+<<<<<<< HEAD
 
   defp traverse_errors(changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
@@ -112,4 +121,6 @@ defmodule PlausibleWeb.Api.ExternalController do
       end)
     end)
   end
+=======
+>>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
 end
