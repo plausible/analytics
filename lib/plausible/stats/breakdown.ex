@@ -316,22 +316,6 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-<<<<<<< HEAD
-  defp do_group_by(
-         %Ecto.Query{
-           from: %Ecto.Query.FromExpr{source: {"events", _}},
-           joins: [%Ecto.Query.JoinExpr{source: {"meta", _}}]
-         } = q,
-         "event:props:" <> prop
-       ) do
-    from(
-      [e, meta] in q,
-      group_by: e.name,
-      where: meta.key == ^prop,
-      group_by: meta.value,
-      select_merge: %{^prop => meta.value},
-      order_by: {:asc, meta.value}
-=======
   defp joins_table?(ecto_q, table) do
     Enum.any?(
       ecto_q.joins,
@@ -339,7 +323,6 @@ defmodule Plausible.Stats.Breakdown do
         %Ecto.Query.JoinExpr{source: {^table, _}} -> true
         _ -> false
       end
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
     )
   end
 
@@ -533,13 +516,9 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.screen_size,
-<<<<<<< HEAD
-      select_merge: %{device: s.screen_size},
-=======
       select_merge: %{
         device: fragment("if(empty(?), ?, ?)", s.screen_size, @not_set, s.screen_size)
       },
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       order_by: {:asc, s.screen_size}
     )
   end
@@ -548,14 +527,10 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system,
-<<<<<<< HEAD
-      select_merge: %{operating_system: s.operating_system},
-=======
       select_merge: %{
         operating_system:
           fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system)
       },
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       order_by: {:asc, s.operating_system}
     )
   end
@@ -564,9 +539,6 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.operating_system_version,
-<<<<<<< HEAD
-      select_merge: %{os_version: s.operating_system_version},
-=======
       select_merge: %{
         os_version:
           fragment(
@@ -576,7 +548,6 @@ defmodule Plausible.Stats.Breakdown do
             s.operating_system_version
           )
       },
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       order_by: {:asc, s.operating_system_version}
     )
   end
@@ -585,13 +556,9 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser,
-<<<<<<< HEAD
-      select_merge: %{browser: s.browser},
-=======
       select_merge: %{
         browser: fragment("if(empty(?), ?, ?)", s.browser, @not_set, s.browser)
       },
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       order_by: {:asc, s.browser}
     )
   end
@@ -600,14 +567,10 @@ defmodule Plausible.Stats.Breakdown do
     from(
       s in q,
       group_by: s.browser_version,
-<<<<<<< HEAD
-      select_merge: %{browser_version: s.browser_version},
-=======
       select_merge: %{
         browser_version:
           fragment("if(empty(?), ?, ?)", s.browser_version, @not_set, s.browser_version)
       },
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       order_by: {:asc, s.browser_version}
     )
   end

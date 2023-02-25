@@ -27,29 +27,17 @@ defmodule Plausible.Ingestion.Request do
 
   @type t() :: %__MODULE__{}
 
-<<<<<<< HEAD
-  @spec build(Plug.Conn.t()) :: {:ok, t()} | {:error, Changeset.t()}
-  @doc """
-  Builds and initially validates %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
-  """
-  def build(%Plug.Conn{} = conn) do
-=======
   @spec build(Plug.Conn.t(), NaiveDateTime.t()) :: {:ok, t()} | {:error, Changeset.t()}
   @doc """
   Builds and initially validates %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.
   """
   def build(%Plug.Conn{} = conn, now \\ NaiveDateTime.utc_now()) do
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
     changeset =
       %__MODULE__{}
       |> Changeset.change()
       |> Changeset.put_change(
         :timestamp,
-<<<<<<< HEAD
-        NaiveDateTime.utc_now()
-=======
         NaiveDateTime.truncate(now, :second)
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       )
 
     case parse_body(conn) do

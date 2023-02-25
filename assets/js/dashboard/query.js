@@ -18,12 +18,9 @@ export function parseQuery(querystring, site) {
   } else {
     period = '30d'
   }
-<<<<<<< HEAD
-=======
 
   let comparison = !!q.get('comparison')
   if (COMPARISON_DISABLED_PERIODS.includes(period)) comparison = null
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
 
   return {
     period,

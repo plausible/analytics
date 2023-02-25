@@ -113,15 +113,12 @@ defmodule PlausibleWeb.Api.StatsController do
       labels = label_timeseries(timeseries_result)
       present_index = present_index_for(site, query, labels)
       full_intervals = build_full_intervals(query, labels)
-<<<<<<< HEAD
-=======
 
       comparison_result =
         if params["comparison"] do
           comparison_query = Query.shift_back(query, site)
           Stats.timeseries(site, comparison_query, [selected_metric])
         end
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
 
       json(conn, %{
         plot: plot_timeseries(timeseries_result, selected_metric),
@@ -139,8 +136,6 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-<<<<<<< HEAD
-=======
   defp plot_timeseries(timeseries, metric) do
     Enum.map(timeseries, fn row -> row[metric] || 0 end)
   end
@@ -149,7 +144,6 @@ defmodule PlausibleWeb.Api.StatsController do
     Enum.map(timeseries, & &1.date)
   end
 
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
   defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
     for label <- labels, into: %{} do
       interval_start = Timex.beginning_of_week(label)
@@ -234,7 +228,6 @@ defmodule PlausibleWeb.Api.StatsController do
           |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}:00")
 
         Enum.find_index(dates, &(&1 == current_date))
-<<<<<<< HEAD
     end
   end
 
@@ -248,21 +241,6 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-=======
-    end
-  end
-
-  defp date_or_weekstart(date, query) do
-    weekstart = Timex.beginning_of_week(date)
-
-    if Enum.member?(query.date_range, weekstart) do
-      weekstart
-    else
-      date
-    end
-  end
-
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
   defp fetch_top_stats(
          site,
          %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query

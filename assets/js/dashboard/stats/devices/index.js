@@ -200,15 +200,9 @@ export default class Devices extends React.Component {
           <div className="flex justify-between w-full">
             <h3 className="font-bold dark:text-gray-100">Devices</h3>
             <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-<<<<<<< HEAD
-              { this.renderPill('Size', 'size') }
-              { this.renderPill('Browser', 'browser') }
-              { this.renderPill('OS', 'os') }
-=======
               {this.renderPill('Size', 'size')}
               {this.renderPill('Browser', 'browser')}
               {this.renderPill('OS', 'os')}
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
             </div>
           </div>
           {this.renderContent()}

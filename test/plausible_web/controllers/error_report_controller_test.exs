@@ -68,8 +68,6 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
       })
     end
 
-<<<<<<< HEAD
-=======
     test "short feedback is not sent", %{conn: conn} do
       action_path = Routes.error_report_path(Endpoint, :submit_error_report)
 
@@ -86,7 +84,6 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
       })
     end
 
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
     test "submitting no feedback for authenticated user", %{conn: conn} do
       action_path = Routes.error_report_path(Endpoint, :submit_error_report)
 

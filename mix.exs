@@ -63,12 +63,8 @@ defmodule Plausible.MixProject do
       {:bypass, "~> 2.1", only: [:dev, :test]},
       {:cachex, "~> 3.4"},
       {:clickhouse_ecto, git: "https://github.com/plausible/clickhouse_ecto.git"},
-<<<<<<< HEAD
-      {:clickhousex, github: "plausible/clickhousex", branch: "master", override: true},
-=======
       {:clickhousex,
        github: "plausible/clickhousex", branch: "generate-session-id-on-connect", override: true},
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       {:combination, "~> 0.0.3"},
       {:connection, "~> 1.1", override: true},
       {:cors_plug, "~> 3.0"},
@@ -86,11 +82,7 @@ defmodule Plausible.MixProject do
       {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
       {:locus, "~> 2.3"},
-<<<<<<< HEAD
-      {:gen_cycle, "~> 1.0"},
-=======
       {:gen_cycle, github: "aerosol/gen_cycle", branch: "add-terminate-callback"},
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
       {:hackney, "~> 1.8"},
       {:hammer, "~> 6.0"},
       {:httpoison, "~> 1.4"},

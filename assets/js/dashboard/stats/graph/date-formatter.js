@@ -1,20 +1,3 @@
-<<<<<<< HEAD
-import {parseUTCDate, formatMonthYYYY, formatDay, formatDayShort} from '../../util/date'
-
-const browserDateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
-
-const is12HourClock = function() {
-  return browserDateFormat.resolvedOptions().hour12
-}
-
-const parseISODate = function(isoDate) {
-  const date = parseUTCDate(isoDate)
-  const minutes = date.getMinutes();
-  return { date, minutes }
-}
-
-const formatHours = function(isoDate) {
-=======
 import { parseUTCDate, formatMonthYYYY, formatDay, formatDayShort } from '../../util/date'
 
 const browserDateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
@@ -33,7 +16,6 @@ const parseISODate = function (isoDate) {
 const getYearString = (options, year) => options.shouldShowYear ? ` ${year}` : ''
 
 const formatHours = function (isoDate) {
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
   const monthIndex = 1
   const dateParts = isoDate.split(/[^0-9]/);
   dateParts[monthIndex] = dateParts[monthIndex] - 1
@@ -58,15 +40,9 @@ const weekIntervalFormatter = {
     const formatted = this.short(isoDate, options)
     return options.isBucketPartial ? `Partial week of ${formatted}` : `Week of ${formatted}`
   },
-<<<<<<< HEAD
-  short(isoDate, _options) {
-    const { date } = parseISODate(isoDate)
-    return formatDayShort(date)
-=======
   short(isoDate, options) {
     const { date, year } = parseISODate(isoDate)
     return `${formatDayShort(date)}${getYearString(options, year)}`
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
   }
 }
 
@@ -75,15 +51,9 @@ const dateIntervalFormatter = {
     const { date } = parseISODate(isoDate)
     return formatDay(date)
   },
-<<<<<<< HEAD
-  short(isoDate, _options) {
-    const { date } = parseISODate(isoDate)
-    return formatDayShort(date)
-=======
   short(isoDate, options) {
     const { date, year } = parseISODate(isoDate)
     return `${formatDayShort(date)}${getYearString(options, year)}`
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
   }
 }
 
@@ -93,11 +63,6 @@ const hourIntervalFormatter = {
   },
   short(isoDate, _options) {
     const formatted = formatHours(isoDate)
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
     if (is12HourClock()) {
       return formatted.replace(' ', '').toLowerCase()
     } else {
@@ -146,21 +111,6 @@ const factory = {
  * The preferred date and time format in the dashboard depends on the selected
  * interval and period. For example, in real-time view only the time is necessary,
  * while other intervals require dates to be displayed.
-<<<<<<< HEAD
- *
- * @param {string} interval - The interval of the query, e.g. `minute`, `hour`
- * @param {boolean} longForm - Whether the formatted result should be in long or
- * short form.
- * @param {string} period - The period of the query, e.g. `12mo`, `day`
- * @param {boolean} isPeriodFull - Indicates whether the interval has been cut
- * off by the requested date range or not. If false, the returned formatted date
- * indicates this cut off, e.g. `Partial week of November 8`.
- */
-export default function dateFormatter(interval, longForm, period, isPeriodFull) {
-  const displayMode = longForm ? 'long' : 'short'
-  const options = { period: period, interval: interval, isBucketPartial: !isPeriodFull }
-  return function(isoDate, _index, _ticks) {
-=======
  * @param {Object} config - Configuration object for determining formatter.
  *
  * @param {string} config.interval - The interval of the query, e.g. `minute`, `hour`
@@ -177,7 +127,6 @@ export default function dateFormatter({ interval, longForm, period, isPeriodFull
   const displayMode = longForm ? 'long' : 'short'
   const options = { period: period, interval: interval, isBucketPartial: !isPeriodFull, shouldShowYear }
   return function (isoDate, _index, _ticks) {
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
     return factory[interval][displayMode](isoDate, options)
   }
 }
