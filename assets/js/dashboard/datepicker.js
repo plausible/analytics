@@ -147,10 +147,7 @@ function DatePicker({query, site, history}) {
   const dropDownNode = useRef(null)
   const calendar = useRef(null)
 
-<<<<<<< HEAD
-=======
   const handleKeydown = useCallback((e) => {
->>>>>>> 867dad6da7bb361f584d5bd35582687f90afb7e1
     if (shouldIgnoreKeypress(e)) return true
 
     const newSearch = {
