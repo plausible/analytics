@@ -5,7 +5,8 @@ import { navigateToQuery } from '../../query'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
-import {GraphTooltip, buildDataSet, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER, LoadingState} from './graph-util';
+import GraphTooltip from './graph-tooltip'
+import { buildDataSet, METRIC_MAPPING, METRIC_LABELS, METRIC_FORMATTER, LoadingState } from './graph-util'
 import dateFormatter from './date-formatter';
 import TopStats from './top-stats';
 import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
@@ -347,7 +348,7 @@ class LineGraph extends React.Component {
             <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={updateInterval}/>
           </div>
           <FadeIn show={graphData}>
-            <div className="relative h-96 w-full">
+            <div className="relative h-96 w-full z-0">
               <canvas id="main-graph-canvas" className={canvasClass}></canvas>
             </div>
           </FadeIn>
@@ -475,12 +476,21 @@ export default class VisitorGraph extends React.Component {
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
+        res.top_stats = this.maybeRemoveVisitsMetric(res.top_stats)
         this.setState({ topStatsLoadingState: LoadingState.loaded, topStatData: res }, () => {
           this.storeTopStatsContainerHeight()
           this.resetMetric()
         })
         return res
       })
+  }
+
+  maybeRemoveVisitsMetric(top_stats) {
+    if (this.props.site.flags.visits_metric) {
+      return top_stats
+    } else {
+      return top_stats.filter((stat) => {return stat.name !== "Visits"})
+    }
   }
 
   renderInner() {

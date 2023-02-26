@@ -181,13 +181,12 @@ defmodule Plausible.Stats.Imported do
         :entry_page ->
           imported_q
           |> select_merge([i], %{
-            entry_page: i.entry_page,
-            visits: sum(i.entrances)
+            entry_page: i.entry_page
           })
 
         :exit_page ->
           imported_q
-          |> select_merge([i], %{exit_page: i.exit_page, visits: sum(i.exits)})
+          |> select_merge([i], %{exit_page: i.exit_page})
 
         :country ->
           imported_q |> where([i], i.country != "ZZ") |> select_merge([i], %{country: i.country})
@@ -213,7 +212,8 @@ defmodule Plausible.Stats.Imported do
     q =
       from(s in Ecto.Query.subquery(q),
         full_join: i in subquery(imported_q),
-        on: field(s, ^dim) == field(i, ^dim)
+        on: field(s, ^dim) == field(i, ^dim),
+        select: %{}
       )
       |> select_joined_metrics(metrics)
       |> apply_order_by(metrics)
@@ -265,15 +265,13 @@ defmodule Plausible.Stats.Imported do
       :entry_page ->
         q
         |> select_merge([s, i], %{
-          entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page),
-          visits: fragment("? + ?", s.visits, i.visits)
+          entry_page: fragment("if(empty(?), ?, ?)", i.entry_page, s.entry_page, i.entry_page)
         })
 
       :exit_page ->
         q
         |> select_merge([s, i], %{
-          exit_page: fragment("if(empty(?), ?, ?)", i.exit_page, s.exit_page, i.exit_page),
-          visits: fragment("coalesce(?, 0) + coalesce(?, 0)", s.visits, i.visits)
+          exit_page: fragment("if(empty(?), ?, ?)", i.exit_page, s.exit_page, i.exit_page)
         })
 
       :country ->
@@ -348,9 +346,45 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_exit_pages", _}}} = q,
+         [:visits | rest]
+       ) do
+    q
+    |> select_merge([i], %{visits: sum(i.exits)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
+         [:visits | rest]
+       ) do
+    q
+    |> select_merge([i], %{visits: sum(i.entrances)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(q, [:visits | rest]) do
+    q
+    |> select_merge([i], %{visits: sum(i.visits)})
+    |> select_imported_metrics(rest)
+  end
+
   defp select_imported_metrics(q, [:pageviews | rest]) do
     q
     |> select_merge([i], %{pageviews: sum(i.pageviews)})
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
+         [:bounce_rate | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      bounces: sum(i.bounces),
+      __internal_visits: sum(i.entrances)
+    })
     |> select_imported_metrics(rest)
   end
 
@@ -358,7 +392,19 @@ defmodule Plausible.Stats.Imported do
     q
     |> select_merge([i], %{
       bounces: sum(i.bounces),
-      visits: sum(i.visits)
+      __internal_visits: sum(i.visits)
+    })
+    |> select_imported_metrics(rest)
+  end
+
+  defp select_imported_metrics(
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"imported_entry_pages", _}}} = q,
+         [:visit_duration | rest]
+       ) do
+    q
+    |> select_merge([i], %{
+      visit_duration: sum(i.visit_duration),
+      __internal_visits: sum(i.entrances)
     })
     |> select_imported_metrics(rest)
   end
@@ -367,7 +413,7 @@ defmodule Plausible.Stats.Imported do
     q
     |> select_merge([i], %{
       visit_duration: sum(i.visit_duration),
-      visits: sum(i.visits)
+      __internal_visits: sum(i.visits)
     })
     |> select_imported_metrics(rest)
   end
@@ -383,6 +429,14 @@ defmodule Plausible.Stats.Imported do
   # queries should fetch bounces/total_visit_duration and visits and be
   # used as subqueries to a main query that then find the bounce rate/avg
   # visit_duration.
+
+  defp select_joined_metrics(q, [:visits | rest]) do
+    q
+    |> select_merge([s, i], %{
+      :visits => fragment("? + ?", s.visits, i.visits)
+    })
+    |> select_joined_metrics(rest)
+  end
 
   defp select_joined_metrics(q, [:visitors | rest]) do
     q
@@ -408,9 +462,9 @@ defmodule Plausible.Stats.Imported do
           "round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0)))",
           i.bounces,
           s.bounce_rate,
-          s.visits,
-          i.visits,
-          s.visits
+          s.__internal_visits,
+          i.__internal_visits,
+          s.__internal_visits
         )
     })
     |> select_joined_metrics(rest)
@@ -424,9 +478,9 @@ defmodule Plausible.Stats.Imported do
           "round((? + ? * ?) / (? + ?), 1)",
           i.visit_duration,
           s.visit_duration,
-          s.visits,
-          s.visits,
-          i.visits
+          s.__internal_visits,
+          s.__internal_visits,
+          i.__internal_visits
         )
     })
     |> select_joined_metrics(rest)
