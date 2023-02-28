@@ -7,7 +7,7 @@ import classNames from 'classnames'
 
 const COMPARISON_MODES = {
   'previous_period': 'Previous period',
-  'last_year': 'Last year',
+  'year_over_year': 'Year over year',
 }
 
 export const COMPARISON_DISABLED_PERIODS = ['realtime', 'all']

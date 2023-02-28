@@ -613,7 +613,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.last(comparison_labels) == last
     end
 
-    test "returns past year stats when period=month and comparison=last_year", %{
+    test "returns past year stats when period=month and comparison=year_over_year", %{
       conn: conn,
       site: site
     } do
@@ -632,7 +632,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/main-graph?period=month&date=2020-01-01&comparison=last_year"
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2020-01-01&comparison=year_over_year"
         )
 
       assert %{"plot" => plot, "comparison_plot" => comparison_plot} = json_response(conn, 200)

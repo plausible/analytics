@@ -172,7 +172,7 @@ defmodule PlausibleWeb.Api.StatsController do
         comparison_query = Query.shift_back(query, site)
         Stats.timeseries(site, comparison_query, [selected_metric])
 
-      "last_year" ->
+      "year_over_year" ->
         start_date = Date.add(query.date_range.first, -365)
         end_date = Date.add(query.date_range.last, -365)
         range = Date.range(start_date, end_date)
