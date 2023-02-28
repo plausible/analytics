@@ -1,4 +1,4 @@
-const { mockRequest, expectCustomEvent } = require('./support/test-utils')
+const { mockRequest, expectCustomEvent, metaKey } = require('./support/test-utils')
 const { expect, test } = require('@playwright/test');
 
 test.describe('outbound-links extension', () => {
@@ -10,7 +10,7 @@ test.describe('outbound-links extension', () => {
     const plausibleRequestMock = mockRequest(page, '/api/event')
     const navigationRequestMock = mockRequest(page, outboundURL)
 
-    await page.click('#link', { modifiers: ['Meta'] })
+    await page.click('#link', { modifiers: [metaKey()] })
 
     expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
     expect(await navigationRequestMock, "should not have made navigation request").toBeNull()

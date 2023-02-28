@@ -1,4 +1,4 @@
-const { mockRequest, expectCustomEvent, mockManyRequests } = require('./support/test-utils');
+const { mockRequest, expectCustomEvent, mockManyRequests, metaKey } = require('./support/test-utils');
 const { expect, test } = require('@playwright/test');
 const { LOCAL_SERVER_ADDR } = require('./support/server');
 
@@ -10,7 +10,7 @@ test.describe('file-downloads extension', () => {
 
     const plausibleRequestMock = mockRequest(page, '/api/event')
     const downloadRequestMock = mockRequest(page, downloadURL)
-    await page.click('#link', { modifiers: ['Meta'] })
+    await page.click('#link', { modifiers: [metaKey()] })
 
     expectCustomEvent(await plausibleRequestMock, 'File Download', { url: downloadURL })
     expect(await downloadRequestMock, "should not make download request").toBeNull()

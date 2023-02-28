@@ -1,4 +1,4 @@
-const { mockRequest, mockManyRequests, expectCustomEvent } = require('./support/test-utils')
+const { mockRequest, mockManyRequests, expectCustomEvent, metaKey } = require('./support/test-utils')
 const { expect, test } = require('@playwright/test')
 
 test.describe('tagged-events extension', () => {
@@ -43,7 +43,7 @@ test.describe('tagged-events extension', () => {
 
         await page.click('#button')
         await page.click('#span')
-        await page.click('#div', { modifiers: ['Meta'] })
+        await page.click('#div', { modifiers: [metaKey()] })
 
         const requests = await plausibleRequestMockList
         expect(requests.length).toBe(3)
@@ -72,7 +72,7 @@ test.describe('tagged-events extension', () => {
 
         const plausibleRequestMockList = mockManyRequests(page, '/api/event', 2)
 
-        await page.click('#h2-with-link-parent', { modifiers: ['Meta'] })
+        await page.click('#h2-with-link-parent', { modifiers: [metaKey()] })
         await page.click('#link-with-div-parent')
 
         const requests = await plausibleRequestMockList
