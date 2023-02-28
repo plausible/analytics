@@ -311,43 +311,30 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
+  @mobile_types [
+    "smartphone",
+    "feature phone",
+    "portable media player",
+    "phablet",
+    "wearable",
+    "camera"
+  ]
+  @tablet_types ["car browser", "tablet"]
+  @desktop_types ["tv", "console", "desktop"]
+  alias UAInspector.Result.Device
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp screen_size(ua) do
     case ua.device do
-      %UAInspector.Result.Device{type: "smartphone"} ->
+      %Device{type: t} when t in @mobile_types ->
         "Mobile"
 
-      %UAInspector.Result.Device{type: "feature phone"} ->
-        "Mobile"
-
-      %UAInspector.Result.Device{type: "portable media player"} ->
-        "Mobile"
-
-      %UAInspector.Result.Device{type: "phablet"} ->
-        "Mobile"
-
-      %UAInspector.Result.Device{type: "wearable"} ->
-        "Mobile"
-
-      %UAInspector.Result.Device{type: "camera"} ->
-        "Mobile"
-
-      %UAInspector.Result.Device{type: "car browser"} ->
+      %Device{type: t} when t in @tablet_types ->
         "Tablet"
 
-      %UAInspector.Result.Device{type: "tablet"} ->
-        "Tablet"
-
-      %UAInspector.Result.Device{type: "tv"} ->
+      %Device{type: t} when t in @desktop_types ->
         "Desktop"
 
-      %UAInspector.Result.Device{type: "console"} ->
-        "Desktop"
-
-      %UAInspector.Result.Device{type: "desktop"} ->
-        "Desktop"
-
-      %UAInspector.Result.Device{type: type} ->
+      %Device{type: type} ->
         Sentry.capture_message("Could not determine device type from UAInspector",
           extra: %{type: type}
         )
