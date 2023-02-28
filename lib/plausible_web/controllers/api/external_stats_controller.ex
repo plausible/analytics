@@ -156,7 +156,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
   defp validate_metric(metric, _, _) do
     {:error,
-      "The metric `#{metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"}
+      "The metric `#{metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"}
   end
 
   def timeseries(conn, params) do
