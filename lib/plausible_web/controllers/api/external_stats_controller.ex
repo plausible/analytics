@@ -177,8 +177,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          query <- Query.from(site, params),
          {:ok, metrics} <- parse_and_validate_metrics(params, nil, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
-      metrics = metrics ++ [:date]
-      json(conn, %{results: Enum.map(graph, &Map.take(&1, metrics))})
+      json(conn, %{results: graph})
     else
       {:error, msg} ->
         conn

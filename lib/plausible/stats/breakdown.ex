@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
-  import Plausible.Stats.{Base, Imported}
+  import Plausible.Stats.{Base, Imported, Util}
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.Query
   alias Plausible.Goals
@@ -582,18 +582,6 @@ defmodule Plausible.Stats.Breakdown do
       end)
       |> Enum.into(%{})
     end)
-  end
-
-  defp remove_internal_visits_metric(results, metrics) do
-    # "__internal_visits" is fetched when querying bounce rate and visit duration, as it
-    # is needed to calculate these from imported data. Let's remove it from the
-    # result if it wasn't requested.
-    if :bounce_rate in metrics or :visit_duration in metrics do
-      results
-      |> Enum.map(&Map.delete(&1, :__internal_visits))
-    else
-      results
-    end
   end
 
   defp apply_pagination(q, {limit, page}) do

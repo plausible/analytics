@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Timeseries do
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.Query
-  import Plausible.Stats.Base
+  import Plausible.Stats.{Base, Util}
   use Plausible.Stats.Fragments
 
   @event_metrics [:visitors, :pageviews]
@@ -45,6 +45,7 @@ defmodule Plausible.Stats.Timeseries do
     |> select_session_metrics(metrics)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
+    |> remove_internal_visits_metric(metrics)
   end
 
   defp buckets(%Query{interval: "month"} = query) do
