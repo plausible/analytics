@@ -32,10 +32,6 @@ exports.mockManyRequests = function(page, path, numberOfRequests) {
   })
 }
 
-exports.isMac = function (workerInfo) {
-  return workerInfo.project.name.includes('OSX')
-}
-
 exports.expectCustomEvent = function (request, eventName, eventProps) {
   const payload = request.postDataJSON()
 

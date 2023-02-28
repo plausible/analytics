@@ -1,6 +1,5 @@
-const { test } = require('./support/harness');
 const { mockRequest, mockManyRequests, expectCustomEvent } = require('./support/test-utils');
-const { expect } = require('@playwright/test');
+const { expect, test } = require('@playwright/test');
 const { LOCAL_SERVER_ADDR } = require('./support/server');
 
 

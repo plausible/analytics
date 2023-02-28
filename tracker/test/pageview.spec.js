@@ -1,6 +1,5 @@
-const { test } = require('./support/harness');
 const { mockRequest } = require('./support/test-utils')
-const { expect } = require('@playwright/test');
+const { expect, test } = require('@playwright/test');
 
 test.describe('Basic installation', () => {
   test('Sends pageview automatically', async ({ page }) => {
