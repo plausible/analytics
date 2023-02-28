@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Aggregate do
   import Plausible.Stats.{Base, Imported}
 
   @event_metrics [:visitors, :pageviews, :events, :sample_percent]
-  @session_metrics [:visits, :bounce_rate, :visit_duration, :sample_percent]
+  @session_metrics [:visits, :bounce_rate, :visit_duration, :pages_per_visit, :sample_percent]
 
   def aggregate(site, query, metrics) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
@@ -21,9 +21,7 @@ defmodule Plausible.Stats.Aggregate do
 
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
-    |> Enum.map(fn {metric, value} ->
-      {metric, %{value: round(value || 0)}}
-    end)
+    |> Enum.map(&round_and_wrap_value/1)
     |> Enum.into(%{})
   end
 
@@ -108,5 +106,13 @@ defmodule Plausible.Stats.Aggregate do
     {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [where_arg])
     [[time_on_page]] = res.rows
     %{time_on_page: time_on_page}
+  end
+
+  defp round_and_wrap_value({metric, nil}), do: {metric, %{value: 0}}
+  defp round_and_wrap_value({:pages_per_visit = metric, value}) do
+    {metric, %{value: round(value * 100) / 100}}
+  end
+  defp round_and_wrap_value({metric, value}) do
+    {metric, %{value: round(value)}}
   end
 end

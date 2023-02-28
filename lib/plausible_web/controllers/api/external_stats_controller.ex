@@ -42,7 +42,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           Plausible.Stats.aggregate(site, query, metrics)
         end
 
-      json(conn, %{results: Map.take(results, metrics)})
+      results =
+        results
+        |> Map.take(metrics)
+        |> stringify_float_values()
+
+      json(conn, %{results: results})
     else
       {:error, msg} ->
         conn
@@ -116,7 +121,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp event_only_property?(_), do: false
 
   @event_metrics ["visitors", "pageviews", "events"]
-  @session_metrics ["visits", "bounce_rate", "visit_duration"]
+  @session_metrics ["visits", "bounce_rate", "visit_duration", "pages_per_visit"]
   defp parse_and_validate_metrics(params, property, query) do
     metrics =
       Map.get(params, "metrics", "visitors")
@@ -142,6 +147,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     event_only_filter = Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
 
     cond do
+      metric == "pages_per_visit" && property != nil ->
+        {:error, "Metric `#{metric}` is not supported in breakdown queries"}
+
       event_only_property?(property) ->
         {:error,
           "Session metric `#{metric}` cannot be queried for breakdown by `#{property}`."}
@@ -250,4 +258,15 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_interval(_), do: :ok
+
+  defp stringify_float_values(results_map) do
+    results_map
+    |> Enum.map(&maybe_stringify/1)
+    |> Enum.into(%{})
+  end
+
+  defp maybe_stringify({metric, %{value: value}}) when is_float(value) do
+    {metric, %{value: Float.to_string(value)}}
+  end
+  defp maybe_stringify(entry), do: entry
 end
