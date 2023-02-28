@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_all_metrics(metrics, property, query) do
-    Enum.reduce_while(metrics, [], fn (metric, acc) ->
+    Enum.reduce_while(metrics, [], fn metric, acc ->
       case validate_metric(metric, property, query) do
         {:ok, metric} -> {:cont, acc ++ [metric]}
         {:error, reason} -> {:halt, {:error, reason}}
@@ -143,6 +143,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_metric(metric, _, _) when metric in @event_metrics, do: {:ok, metric}
+
   defp validate_metric(metric, property, query) when metric in @session_metrics do
     event_only_filter = Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
 
@@ -151,20 +152,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {:error, "Metric `#{metric}` is not supported in breakdown queries"}
 
       event_only_property?(property) ->
-        {:error,
-          "Session metric `#{metric}` cannot be queried for breakdown by `#{property}`."}
+        {:error, "Session metric `#{metric}` cannot be queried for breakdown by `#{property}`."}
 
       event_only_filter ->
         {:error,
-          "Session metric `#{metric}` cannot be queried when using a filter on `#{event_only_filter}`."}
+         "Session metric `#{metric}` cannot be queried when using a filter on `#{event_only_filter}`."}
 
       true ->
         {:ok, metric}
     end
   end
+
   defp validate_metric(metric, _, _) do
     {:error,
-      "The metric `#{metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"}
+     "The metric `#{metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"}
   end
 
   def timeseries(conn, params) do
@@ -179,6 +180,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       graph =
         Plausible.Stats.timeseries(site, query, metrics)
         |> stringify_float_values()
+
       json(conn, %{results: graph})
     else
       {:error, msg} ->
@@ -263,6 +265,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp stringify_float_values(results) when is_list(results) do
     Enum.map(results, &stringify_float_values/1)
   end
+
   defp stringify_float_values(results_map) do
     results_map
     |> Enum.map(&maybe_stringify/1)
@@ -272,8 +275,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp maybe_stringify({metric, %{value: value}}) when is_float(value) do
     {metric, %{value: Float.to_string(value)}}
   end
+
   defp maybe_stringify({metric, value}) when is_float(value) do
     {metric, Float.to_string(value)}
   end
+
   defp maybe_stringify(entry), do: entry
 end

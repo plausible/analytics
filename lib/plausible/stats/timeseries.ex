@@ -211,5 +211,6 @@ defmodule Plausible.Stats.Timeseries do
   defp round_pages_per_visit(%{pages_per_visit: value} = bucket) do
     Map.replace(bucket, :pages_per_visit, round(value * 100) / 100)
   end
+
   defp round_pages_per_visit(bucket), do: bucket
 end

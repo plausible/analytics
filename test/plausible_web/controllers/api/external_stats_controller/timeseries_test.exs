@@ -801,8 +801,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   describe "metrics" do
     test "shows pageviews,visits,pages_per_visit for last 7d", %{conn: conn, site: site} do
       populate_stats([
-        build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:05:00]),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
         build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, domain: site.domain, timestamp: ~N[2021-01-07 23:59:00])
       ])
@@ -817,23 +825,77 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
 
       assert json_response(conn, 200) == %{
                "results" => [
-                 %{"date" => "2021-01-01", "pageviews" => 3, "visits" => 2, "pages_per_visit" => "1.5"},
-                 %{"date" => "2021-01-02", "pageviews" => 0, "visits" => 0, "pages_per_visit" => "0.0"},
-                 %{"date" => "2021-01-03", "pageviews" => 0, "visits" => 0, "pages_per_visit" => "0.0"},
-                 %{"date" => "2021-01-04", "pageviews" => 0, "visits" => 0, "pages_per_visit" => "0.0"},
-                 %{"date" => "2021-01-05", "pageviews" => 0, "visits" => 0, "pages_per_visit" => "0.0"},
-                 %{"date" => "2021-01-06", "pageviews" => 0, "visits" => 0, "pages_per_visit" => "0.0"},
-                 %{"date" => "2021-01-07", "pageviews" => 1, "visits" => 1, "pages_per_visit" => "1.0"},
+                 %{
+                   "date" => "2021-01-01",
+                   "pageviews" => 3,
+                   "visits" => 2,
+                   "pages_per_visit" => "1.5"
+                 },
+                 %{
+                   "date" => "2021-01-02",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "pages_per_visit" => "0.0"
+                 },
+                 %{
+                   "date" => "2021-01-03",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "pages_per_visit" => "0.0"
+                 },
+                 %{
+                   "date" => "2021-01-04",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "pages_per_visit" => "0.0"
+                 },
+                 %{
+                   "date" => "2021-01-05",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "pages_per_visit" => "0.0"
+                 },
+                 %{
+                   "date" => "2021-01-06",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "pages_per_visit" => "0.0"
+                 },
+                 %{
+                   "date" => "2021-01-07",
+                   "pageviews" => 1,
+                   "visits" => 1,
+                   "pages_per_visit" => "1.0"
+                 }
                ]
              }
     end
 
-    test "rounds pages_per_visit to two decimal places and keeps trailing zeros", %{conn: conn, site: site} do
+    test "rounds pages_per_visit to two decimal places and keeps trailing zeros", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats([
-        build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
-        build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:05:00]),
-        build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-03 00:00:00]),
-        build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-03 00:01:00]),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-03 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-03 00:01:00]
+        ),
         build(:pageview, domain: site.domain, timestamp: ~N[2021-01-03 00:00:00]),
         build(:pageview, domain: site.domain, timestamp: ~N[2021-01-03 00:00:00]),
         build(:pageview, domain: site.domain, timestamp: ~N[2021-01-07 23:59:00])
@@ -855,7 +917,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                  %{"date" => "2021-01-04", "pages_per_visit" => "0.0"},
                  %{"date" => "2021-01-05", "pages_per_visit" => "0.0"},
                  %{"date" => "2021-01-06", "pages_per_visit" => "0.0"},
-                 %{"date" => "2021-01-07", "pages_per_visit" => "1.0"},
+                 %{"date" => "2021-01-07", "pages_per_visit" => "1.0"}
                ]
              }
     end
