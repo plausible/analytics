@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          query <- Query.from(site, params),
-         {:ok, metrics} <- parse_metrics(params, nil, query) do
+         {:ok, metrics} <- parse_and_validate_metrics(params, nil, query) do
       results =
         if params["compare"] == "previous_period" do
           prev_query = Query.shift_back(query, site)
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          {:ok, property} <- validate_property(params),
          query <- Query.from(site, params),
-         {:ok, metrics} <- parse_metrics(params, property, query),
+         {:ok, metrics} <- parse_and_validate_metrics(params, property, query),
          {:ok, limit} <- validate_or_default_limit(params) do
       page = String.to_integer(Map.get(params, "page", "1"))
       results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
@@ -117,39 +117,46 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   @event_metrics ["visitors", "pageviews", "events"]
   @session_metrics ["visits", "bounce_rate", "visit_duration"]
-  defp parse_metrics(params, property, query) do
+  defp parse_and_validate_metrics(params, property, query) do
     metrics =
       Map.get(params, "metrics", "visitors")
       |> String.split(",")
 
+    case validate_all_metrics(metrics, property, query) do
+      {:error, reason} -> {:error, reason}
+      metrics -> {:ok, Enum.map(metrics, &String.to_atom/1)}
+    end
+  end
+
+  defp validate_all_metrics(metrics, property, query) do
+    Enum.reduce_while(metrics, [], fn (metric, acc) ->
+      case validate_metric(metric, property, query) do
+        {:ok, metric} -> {:cont, acc ++ [metric]}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+
+  defp validate_metric(metric, _, _) when metric in @event_metrics, do: {:ok, metric}
+  defp validate_metric(metric, property, query) when metric in @session_metrics do
     event_only_filter = Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
 
-    valid_metrics =
-      if event_only_property?(property) || event_only_filter do
-        @event_metrics
-      else
-        @event_metrics ++ @session_metrics
-      end
+    cond do
+      event_only_property?(property) ->
+        {:error,
+          "Session metric `#{metric}` cannot be queried for breakdown by `#{property}`."}
 
-    invalid_metric = Enum.find(metrics, fn metric -> metric not in valid_metrics end)
+      event_only_filter ->
+        {:error,
+          "Session metric `#{metric}` cannot be queried when using a filter on `#{event_only_filter}`."}
 
-    if invalid_metric do
-      cond do
-        event_only_property?(property) && invalid_metric in @session_metrics ->
-          {:error,
-           "Session metric `#{invalid_metric}` cannot be queried for breakdown by `#{property}`."}
-
-        event_only_filter && invalid_metric in @session_metrics ->
-          {:error,
-           "Session metric `#{invalid_metric}` cannot be queried when using a filter on `#{event_only_filter}`."}
-
-        true ->
-          {:error,
-           "The metric `#{invalid_metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"}
-      end
-    else
-      {:ok, Enum.map(metrics, &String.to_atom/1)}
+      true ->
+        {:ok, metric}
     end
+  end
+  defp validate_metric(metric, _, _) do
+    {:error,
+      "The metric `#{metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"}
   end
 
   def timeseries(conn, params) do
@@ -160,7 +167,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
          query <- Query.from(site, params),
-         {:ok, metrics} <- parse_metrics(params, nil, query) do
+         {:ok, metrics} <- parse_and_validate_metrics(params, nil, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
       metrics = metrics ++ [:date]
       json(conn, %{results: Enum.map(graph, &Map.take(&1, metrics))})
