@@ -111,7 +111,7 @@ defmodule Plausible.Stats.Aggregate do
   defp round_and_wrap_value({metric, nil}), do: {metric, %{value: 0}}
 
   defp round_and_wrap_value({:pages_per_visit = metric, value}) do
-    {metric, %{value: round(value * 100) / 100}}
+    {metric, %{value: Float.to_string(round(value * 100) / 100)}}
   end
 
   defp round_and_wrap_value({metric, value}) do

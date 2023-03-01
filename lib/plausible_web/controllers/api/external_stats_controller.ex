@@ -45,7 +45,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       results =
         results
         |> Map.take(metrics)
-        |> stringify_float_values()
 
       json(conn, %{results: results})
     else
@@ -177,9 +176,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_interval(params),
          query <- Query.from(site, params),
          {:ok, metrics} <- parse_and_validate_metrics(params, nil, query) do
-      graph =
-        Plausible.Stats.timeseries(site, query, metrics)
-        |> stringify_float_values()
+      graph = Plausible.Stats.timeseries(site, query, metrics)
 
       json(conn, %{results: graph})
     else
@@ -261,24 +258,4 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_interval(_), do: :ok
-
-  defp stringify_float_values(results) when is_list(results) do
-    Enum.map(results, &stringify_float_values/1)
-  end
-
-  defp stringify_float_values(results_map) do
-    results_map
-    |> Enum.map(&maybe_stringify/1)
-    |> Enum.into(%{})
-  end
-
-  defp maybe_stringify({metric, %{value: value}}) when is_float(value) do
-    {metric, %{value: Float.to_string(value)}}
-  end
-
-  defp maybe_stringify({metric, value}) when is_float(value) do
-    {metric, Float.to_string(value)}
-  end
-
-  defp maybe_stringify(entry), do: entry
 end

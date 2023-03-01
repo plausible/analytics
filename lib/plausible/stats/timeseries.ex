@@ -193,7 +193,7 @@ defmodule Plausible.Stats.Timeseries do
         :pageviews -> Map.merge(row, %{pageviews: 0})
         :visitors -> Map.merge(row, %{visitors: 0})
         :visits -> Map.merge(row, %{visits: 0})
-        :pages_per_visit -> Map.merge(row, %{pages_per_visit: 0.0})
+        :pages_per_visit -> Map.merge(row, %{pages_per_visit: "0.0"})
         :bounce_rate -> Map.merge(row, %{bounce_rate: nil})
         :visit_duration -> Map.merge(row, %{:visit_duration => nil})
       end
@@ -209,7 +209,7 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp round_pages_per_visit(%{pages_per_visit: value} = bucket) do
-    Map.replace(bucket, :pages_per_visit, round(value * 100) / 100)
+    Map.replace(bucket, :pages_per_visit, Float.to_string(round(value * 100) / 100))
   end
 
   defp round_pages_per_visit(bucket), do: bucket
