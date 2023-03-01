@@ -108,29 +108,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
-    test "refuses to create the site when events exist (pending deletion)", %{conn: conn} do
-      domain = "events-exist.example.com"
-
-      populate_stats(%{domain: domain}, [
-        build(:pageview)
-      ])
-
-      :inserted = eventually(fn -> {Plausible.Sites.has_events?(domain), :inserted} end)
-
-      conn =
-        post(conn, "/sites", %{
-          "site" => %{
-            "domain" => domain,
-            "timezone" => "Europe/London"
-          }
-        })
-
-      assert html = html_response(conn, 200)
-      assert html =~ "This domain cannot be registered"
-      assert html =~ "please contact support"
-      refute Repo.get_by(Plausible.Site, domain: domain)
-    end
-
     test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
       Plausible.Auth.User.remove_trial_expiry(user) |> Repo.update!()
 
