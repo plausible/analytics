@@ -7,6 +7,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
   def pageview_start_date_local(site) do
+    # TODO: limit by site.inserted_at
     datetime =
       ClickhouseRepo.one(
         from e in "events",
@@ -46,7 +47,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   def usage_breakdown(domains, date_range) do
     Enum.chunk_every(domains, 300)
-    |> Enum.reduce({0, 0}, fn domains, {pageviews_total, custom_events_total} ->
+    |> Enum.reduce({0, 0}, fn domains, j({pageviews_total, custom_events_total}) ->
       {chunk_pageviews, chunk_custom_events} =
         ClickhouseRepo.one(
           from e in "events",
@@ -155,6 +156,7 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
+  # TODO: Needs limit by site.inserted_at
   def has_pageviews?([]), do: false
 
   def has_pageviews?(domains) when is_list(domains) do

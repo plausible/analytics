@@ -121,7 +121,8 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp select_bucket(q, site, %Query{interval: "week"} = query) do
-    {first_datetime, _} = utc_boundaries(query, site.timezone)
+    # TODO: Maybe use query.date_range.first
+    {first_datetime, _} = utc_boundaries(query, site)
 
     from(
       e in q,

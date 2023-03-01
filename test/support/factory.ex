@@ -26,7 +26,8 @@ defmodule Plausible.Factory do
 
     %Plausible.Site{
       domain: domain,
-      timezone: "UTC"
+      timezone: "UTC",
+      inserted_at: ~N[2020-01-01 00:00:00]
     }
   end
 

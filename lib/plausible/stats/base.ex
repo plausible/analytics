@@ -31,7 +31,7 @@ defmodule Plausible.Stats.Base do
   end
 
   def query_events(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
       from(
@@ -145,7 +145,7 @@ defmodule Plausible.Stats.Base do
   }
 
   def query_sessions(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     sessions_q =
       from(
@@ -409,17 +409,24 @@ defmodule Plausible.Stats.Base do
     {first_datetime, last_datetime}
   end
 
-  def utc_boundaries(%Query{date_range: date_range}, timezone) do
+  def utc_boundaries(%Query{date_range: date_range}, site) do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
     first_datetime =
-      Timex.to_datetime(first, timezone)
+      Timex.to_datetime(first, site.timezone)
       |> Timex.Timezone.convert("UTC")
+
+    first_datetime =
+      if Timex.after?(site.inserted_at, first_datetime) do
+        site.inserted_at
+      else
+        first_datetime
+      end
 
     {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
 
     last_datetime =
-      Timex.to_datetime(last, timezone)
+      Timex.to_datetime(last, site.timezone)
       |> Timex.Timezone.convert("UTC")
 
     {first_datetime, last_datetime}
