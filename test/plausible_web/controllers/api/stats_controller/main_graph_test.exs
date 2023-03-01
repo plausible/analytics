@@ -45,8 +45,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         insert(:site,
           domain: "tz-test.com",
           members: [user],
-          timezone: "CET",
-          inserted_at: ~N[2020-12-12 00:00:00]
+          timezone: "CET"
         )
 
       populate_stats(site, [

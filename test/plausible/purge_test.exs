@@ -2,7 +2,7 @@ defmodule Plausible.PurgeTest do
   use Plausible.DataCase
 
   setup do
-    site = insert(:site, stats_start_date: ~D[2020-01-01], inserted_at: ~N[2020-01-01 00:00:00])
+    site = insert(:site, stats_start_date: ~D[2020-01-01])
 
     populate_stats(site, [
       build(:pageview),
