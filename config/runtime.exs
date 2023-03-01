@@ -401,8 +401,7 @@ base_queues = [
   site_setup_emails: 1,
   clean_email_verification_codes: 1,
   clean_invitations: 1,
-  google_analytics_imports: 1,
-  site_stats_removal: 1
+  google_analytics_imports: 1
 ]
 
 cloud_queues = [

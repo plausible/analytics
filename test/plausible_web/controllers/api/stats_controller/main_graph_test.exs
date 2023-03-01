@@ -41,7 +41,12 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
       # UTC+1
-      site = insert(:site, domain: "tz-test.com", members: [user], timezone: "CET")
+      site =
+        insert(:site,
+          domain: "tz-test.com",
+          members: [user],
+          timezone: "CET"
+        )
 
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])

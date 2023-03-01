@@ -16,6 +16,7 @@ defmodule Plausible.Site do
     field :public, :boolean
     field :locked, :boolean
     field :stats_start_date, :date
+    field :native_stats_start_at, :naive_datetime
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     field :ingest_rate_limit_threshold, :integer

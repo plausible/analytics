@@ -4,7 +4,9 @@ defmodule PlausibleWeb.Api.InternalController do
   alias Plausible.Stats.Clickhouse, as: Stats
 
   def domain_status(conn, %{"domain" => domain}) do
-    if Stats.has_pageviews?(%Plausible.Site{domain: domain}) do
+    site = Plausible.Sites.get_by_domain(domain)
+
+    if Stats.has_pageviews?(site) do
       json(conn, "READY")
     else
       json(conn, "WAITING")

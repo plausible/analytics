@@ -349,7 +349,7 @@ defmodule PlausibleWeb.SiteController do
 
   def reset_stats(conn, _params) do
     site = conn.assigns[:site]
-    Plausible.Purge.delete_native_stats!(site)
+    Plausible.Purge.reset!(site)
 
     conn
     |> put_flash(:success, "#{site.domain} stats will be reset in a few minutes")

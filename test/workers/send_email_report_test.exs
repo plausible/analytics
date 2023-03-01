@@ -24,7 +24,11 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "calculates timezone correctly" do
-      site = insert(:site, timezone: "US/Eastern")
+      site =
+        insert(:site,
+          timezone: "US/Eastern"
+        )
+
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       now = Timex.now(site.timezone)
@@ -61,9 +65,9 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "includes the correct stats" do
-      site = insert(:site, domain: "test-site.com")
-      insert(:weekly_report, site: site, recipients: ["user@email.com"])
       now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      site = insert(:site, domain: "test-site.com", inserted_at: Timex.shift(now, days: -8))
+      insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
         build(:pageview,

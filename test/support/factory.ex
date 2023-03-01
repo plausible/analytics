@@ -25,6 +25,7 @@ defmodule Plausible.Factory do
     domain = sequence(:domain, &"example-#{&1}.com")
 
     %Plausible.Site{
+      native_stats_start_at: ~N[2000-01-01 00:00:00],
       domain: domain,
       timezone: "UTC"
     }

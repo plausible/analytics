@@ -79,29 +79,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
              }
     end
 
-    test "does not allow creating a site when external events are present", %{
-      conn: conn
-    } do
-      domain = "events-exist.example.com"
-
-      populate_stats(%{domain: domain}, [
-        build(:pageview)
-      ])
-
-      :inserted = eventually(fn -> {Plausible.Sites.has_events?(domain), :inserted} end)
-
-      conn =
-        post(conn, "/api/v1/sites", %{
-          "domain" => domain,
-          "timezone" => "Europe/Tallinn"
-        })
-
-      assert json_response(conn, 400) == %{
-               "error" =>
-                 "domain: This domain cannot be registered. Perhaps one of your colleagues registered it? Or did you recently delete it from your account? The deletion may take up to 48 hours before you can add the same site again. If that's not the case, please contact support@plausible.io"
-             }
-    end
-
     test "cannot access with a bad API key scope", %{conn: conn, user: user} do
       api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
 

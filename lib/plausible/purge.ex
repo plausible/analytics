@@ -27,17 +27,21 @@ defmodule Plausible.Purge do
 
   @spec delete_native_stats!(Plausible.Site.t()) :: :ok
   @doc """
-  Deletes native stats for a site, and clears the `stats_start_date` field.
+  Move stats pointers so that no historical stats are available.
   """
   def delete_native_stats!(site) do
-    events_sql = "ALTER TABLE events DELETE WHERE domain = ?"
-    sessions_sql = "ALTER TABLE sessions DELETE WHERE domain = ?"
-    Ecto.Adapters.SQL.query!(Plausible.ClickhouseRepo, events_sql, [site.domain])
-    Ecto.Adapters.SQL.query!(Plausible.ClickhouseRepo, sessions_sql, [site.domain])
-
-    clear_stats_start_date!(site)
+    reset!(site)
 
     :ok
+  end
+
+  def reset!(site) do
+    site
+    |> Ecto.Changeset.change(
+      native_stats_start_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+      stats_start_date: nil
+    )
+    |> Plausible.Repo.update!()
   end
 
   defp clear_stats_start_date!(site) do
