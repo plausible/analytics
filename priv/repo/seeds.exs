@@ -13,7 +13,9 @@
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
 beginning_of_time = NaiveDateTime.add(NaiveDateTime.utc_now(), -721, :day)
-site = Plausible.Factory.insert(:site, domain: "dummy.site", inserted_at: beginning_of_time)
+
+site =
+  Plausible.Factory.insert(:site, domain: "dummy.site", native_stats_start_at: beginning_of_time)
 
 _membership = Plausible.Factory.insert(:site_membership, user: user, site: site, role: :owner)
 
