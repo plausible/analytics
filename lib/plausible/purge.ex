@@ -35,18 +35,18 @@ defmodule Plausible.Purge do
     :ok
   end
 
-  defp clear_stats_start_date!(site) do
-    site
-    |> Ecto.Changeset.change(stats_start_date: nil)
-    |> Plausible.Repo.update!()
-  end
-
-  defp reset!(site) do
+  def reset!(site) do
     site
     |> Ecto.Changeset.change(
       native_stats_start_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       stats_start_date: nil
     )
+    |> Plausible.Repo.update!()
+  end
+
+  defp clear_stats_start_date!(site) do
+    site
+    |> Ecto.Changeset.change(stats_start_date: nil)
     |> Plausible.Repo.update!()
   end
 end
