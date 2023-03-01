@@ -10,6 +10,8 @@ defmodule Plausible.Stats.Query do
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{FilterParser, Interval}
 
+  @type t :: %__MODULE__{}
+
   def shift_back(%__MODULE__{period: "year"} = query, site) do
     # Querying current year to date
     {new_first, new_last} =
