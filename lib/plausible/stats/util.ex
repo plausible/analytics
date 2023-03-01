@@ -1,6 +1,10 @@
 defmodule Plausible.Stats.Util do
+  @moduledoc """
+  Utilities for modifying stat results
+  """
+
   @doc """
-  "__internal_visits" is fetched when querying bounce rate and visit duration, as it
+  `__internal_visits` is fetched when querying bounce rate and visit duration, as it
   is needed to calculate these from imported data. This function removes that metric
   from all entries in the results list.
   """
