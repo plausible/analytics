@@ -44,7 +44,7 @@ defmodule Plausible.Purge do
   defp reset!(site) do
     site
     |> Ecto.Changeset.change(
-      inserted_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+      native_stats_start_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       stats_start_date: nil
     )
     |> Plausible.Repo.update!()

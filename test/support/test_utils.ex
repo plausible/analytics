@@ -38,8 +38,7 @@ defmodule Plausible.TestUtils do
     site =
       Factory.insert(:site,
         domain: "test-site.com",
-        members: [user],
-        inserted_at: ~N[2000-05-05 12:00:00]
+        members: [user]
       )
 
     {:ok, site: site}
@@ -55,7 +54,7 @@ defmodule Plausible.TestUtils do
   end
 
   def create_new_site(%{user: user}) do
-    site = Factory.insert(:site, members: [user], inserted_at: ~N[2000-05-05 12:00:00])
+    site = Factory.insert(:site, members: [user])
     {:ok, site: site}
   end
 

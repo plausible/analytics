@@ -40,6 +40,7 @@ defmodule Plausible.Workers.SendSiteSetupEmailsTest do
   describe "when user has managed to set up their site" do
     test "sends the setup completed email as soon as possible" do
       user = insert(:user)
+
       insert(:site, members: [user], domain: "test-site.com")
 
       perform_job(SendSiteSetupEmails, %{})

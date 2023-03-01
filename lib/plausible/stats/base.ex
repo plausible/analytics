@@ -395,22 +395,11 @@ defmodule Plausible.Stats.Base do
   defp db_prop_val(_, @not_set), do: ""
   defp db_prop_val(_, val), do: val
 
-  defp beginning_of_time(%NaiveDateTime{} = candidate, site_creation_date) do
-    candidate
-    |> DateTime.from_naive!("Etc/UTC")
-    |> beginning_of_time(site_creation_date)
-  end
-
-  defp beginning_of_time(candidate, site_creation_date) do
-    # dbg(binding())
-    site_creation_date = DateTime.from_naive!(site_creation_date, "Etc/UTC")
-
-    case DateTime.compare(candidate, site_creation_date) do
-      :lt ->
-        site_creation_date
-
-      _ ->
-        candidate
+  defp beginning_of_time(candidate, native_stats_start_at) do
+    if Timex.after?(native_stats_start_at, candidate) do
+      native_stats_start_at
+    else
+      candidate
     end
   end
 
@@ -418,7 +407,7 @@ defmodule Plausible.Stats.Base do
     last_datetime =
       NaiveDateTime.utc_now()
       |> Timex.shift(seconds: 5)
-      |> beginning_of_time(site.inserted_at)
+      |> beginning_of_time(site.native_stats_start_at)
 
     first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -5)
 
@@ -429,7 +418,7 @@ defmodule Plausible.Stats.Base do
     last_datetime =
       NaiveDateTime.utc_now()
       |> Timex.shift(seconds: 5)
-      |> beginning_of_time(site.inserted_at)
+      |> beginning_of_time(site.native_stats_start_at)
 
     first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -30)
 
@@ -442,7 +431,7 @@ defmodule Plausible.Stats.Base do
     first_datetime =
       Timex.to_datetime(first, site.timezone)
       |> Timex.Timezone.convert("UTC")
-      |> beginning_of_time(site.inserted_at)
+      |> beginning_of_time(site.native_stats_start_at)
 
     {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
 

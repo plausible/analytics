@@ -39,10 +39,13 @@ defmodule Plausible.PurgeTest do
     assert %Plausible.Site{stats_start_date: nil} = Plausible.Repo.reload(site)
   end
 
-  test "delete_native_stats!/1 moves the inserted_at pointer", %{site: site} do
+  test "delete_native_stats!/1 moves the native_stats_start_at pointer", %{site: site} do
     assert :ok == Plausible.Purge.delete_native_stats!(site)
-    assert %Plausible.Site{inserted_at: inserted_at} = Plausible.Repo.reload(site)
-    assert NaiveDateTime.compare(inserted_at, site.inserted_at) == :gt
+
+    assert %Plausible.Site{native_stats_start_at: native_stats_start_at} =
+             Plausible.Repo.reload(site)
+
+    assert NaiveDateTime.compare(native_stats_start_at, site.native_stats_start_at) == :gt
   end
 
   test "delete_native_stats!/1 resets stats_start_date", %{site: site} do
