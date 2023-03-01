@@ -132,7 +132,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "GET /:website/export - via shared link" do
     test "exports data in zipped csvs", %{conn: conn} do
-      site = insert(:site, domain: "new-site.com", inserted_at: ~N[2021-09-01 00:00:00])
+      site = insert(:site, domain: "new-site.com")
       link = insert(:shared_link, site: site)
 
       populate_exported_stats(site)
