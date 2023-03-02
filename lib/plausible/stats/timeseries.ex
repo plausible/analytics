@@ -45,7 +45,7 @@ defmodule Plausible.Stats.Timeseries do
     |> select_session_metrics(metrics)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
-    |> maybe_round_pages_per_visit(metrics)
+    |> maybe_stringify_pages_per_visit(metrics)
     |> remove_internal_visits_metric(metrics)
   end
 
@@ -200,17 +200,11 @@ defmodule Plausible.Stats.Timeseries do
     end)
   end
 
-  defp maybe_round_pages_per_visit(results_list, metrics) do
+  defp maybe_stringify_pages_per_visit(results_list, metrics) do
     if :pages_per_visit in metrics do
-      Enum.map(results_list, &round_pages_per_visit/1)
+      Enum.map(results_list, &stringify_pages_per_visit/1)
     else
       results_list
     end
   end
-
-  defp round_pages_per_visit(%{pages_per_visit: value} = bucket) do
-    Map.replace(bucket, :pages_per_visit, Float.to_string(round(value * 100) / 100))
-  end
-
-  defp round_pages_per_visit(bucket), do: bucket
 end

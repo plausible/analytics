@@ -16,4 +16,10 @@ defmodule Plausible.Stats.Util do
       results
     end
   end
+
+  def stringify_pages_per_visit(%{pages_per_visit: value} = results) do
+    Map.replace(results, :pages_per_visit, Float.to_string(value))
+  end
+
+  def stringify_pages_per_visit(results), do: results
 end
