@@ -95,7 +95,6 @@ defmodule Plausible.Ingestion.Event do
       &put_referrer/1,
       &put_utm_tags/1,
       &put_geolocation/1,
-      &put_screen_size/1,
       &put_props/1,
       &put_salts/1,
       &put_user_id/1,
@@ -145,7 +144,8 @@ defmodule Plausible.Ingestion.Event do
           operating_system: os_name(user_agent),
           operating_system_version: os_version(user_agent),
           browser: browser_name(user_agent),
-          browser_version: browser_version(user_agent)
+          browser_version: browser_version(user_agent),
+          screen_size: screen_size(user_agent)
         })
 
       _any ->
@@ -188,19 +188,6 @@ defmodule Plausible.Ingestion.Event do
     result = Plausible.Ingestion.Geolocation.lookup(event.request.remote_ip) || %{}
 
     update_attrs(event, result)
-  end
-
-  defp put_screen_size(%__MODULE__{} = event) do
-    screen_size =
-      case event.request.screen_width do
-        nil -> nil
-        width when width < 576 -> "Mobile"
-        width when width < 992 -> "Tablet"
-        width when width < 1440 -> "Laptop"
-        width when width >= 1440 -> "Desktop"
-      end
-
-    update_attrs(event, %{screen_size: screen_size})
   end
 
   defp put_props(%__MODULE__{request: %{props: %{} = props}} = event) do
@@ -321,6 +308,41 @@ defmodule Plausible.Ingestion.Event do
       %UAInspector.Result.Client{name: "Chrome Webview"} -> "Mobile App"
       %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
       client -> client.name
+    end
+  end
+
+  @mobile_types [
+    "smartphone",
+    "feature phone",
+    "portable media player",
+    "phablet",
+    "wearable",
+    "camera"
+  ]
+  @tablet_types ["car browser", "tablet"]
+  @desktop_types ["tv", "console", "desktop"]
+  alias UAInspector.Result.Device
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
+  defp screen_size(ua) do
+    case ua.device do
+      %Device{type: t} when t in @mobile_types ->
+        "Mobile"
+
+      %Device{type: t} when t in @tablet_types ->
+        "Tablet"
+
+      %Device{type: t} when t in @desktop_types ->
+        "Desktop"
+
+      %Device{type: type} ->
+        Sentry.capture_message("Could not determine device type from UAInspector",
+          extra: %{type: type}
+        )
+
+        nil
+
+      _ ->
+        nil
     end
   end
 

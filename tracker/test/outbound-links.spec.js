@@ -1,17 +1,16 @@
-const { test } = require('./support/harness')
-const { mockRequest, isMac, expectCustomEvent } = require('./support/test-utils')
-const { expect } = require('@playwright/test');
+const { mockRequest, expectCustomEvent, metaKey } = require('./support/test-utils')
+const { expect, test } = require('@playwright/test');
 
 test.describe('outbound-links extension', () => {
 
-  test('sends event and does not navigate when link opens in new tab', async ({ page }, workerInfo) => {
+  test('sends event and does not navigate when link opens in new tab', async ({ page }) => {
     await page.goto('/outbound-link.html')
     const outboundURL = await page.locator('#link').getAttribute('href')
 
     const plausibleRequestMock = mockRequest(page, '/api/event')
     const navigationRequestMock = mockRequest(page, outboundURL)
 
-    await page.click('#link', { modifiers: [isMac(workerInfo) ? 'Meta' : 'Control'] })
+    await page.click('#link', { modifiers: [metaKey()] })
 
     expectCustomEvent(await plausibleRequestMock, 'Outbound Link: Click', { url: outboundURL })
     expect(await navigationRequestMock, "should not have made navigation request").toBeNull()

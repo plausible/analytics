@@ -3,6 +3,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   use Plausible.ClickhouseRepo
 
   @user_agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36"
+  @user_agent_mobile "Mozilla/5.0 (Linux; Android 6.0; U007 Pro Build/MRA58K; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/44.0.2403.119 Mobile Safari/537.36"
+  @user_agent_tablet "Mozilla/5.0 (Linux; U; Android 4.2.2; it-it; Surfing TAB B 9.7 3G Build/JDQ39) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30"
 
   describe "POST /api/event" do
     setup do
@@ -15,8 +17,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: domain,
         name: "pageview",
         url: "http://gigride.live/",
-        referrer: "http://m.facebook.com/",
-        screen_width: 1440
+        referrer: "http://m.facebook.com/"
       }
 
       conn =
@@ -36,8 +37,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         domain: domain,
         name: "pageview",
-        url: "http://gigride.live/",
-        screen_width: 1440
+        url: "http://gigride.live/"
       }
 
       conn =
@@ -72,8 +72,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         name: "pageview",
         url: "http://gigride.live/",
         referrer: "http://m.facebook.com/",
-        domain: "#{domain1},#{domain2}",
-        screen_width: 1440
+        domain: "#{domain1},#{domain2}"
       }
 
       conn =
@@ -93,8 +92,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: domain,
         name: "pageview",
         url: "http://gigride.live/",
-        referrer: "http://m.facebook.com/",
-        screen_width: 1440
+        referrer: "http://m.facebook.com/"
       }
 
       t1 = System.convert_time_unit(System.monotonic_time(), :native, :millisecond)
@@ -273,8 +271,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         domain: domain,
         name: "pageview",
         url: "http://gigride.live/",
-        referrer: "https://www.1-best-seo.com",
-        screen_width: 1440
+        referrer: "https://www.1-best-seo.com"
       }
 
       conn =
@@ -451,17 +448,16 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.referrer_source == ""
     end
 
-    test "screen size is calculated from screen_width", %{conn: conn, domain: domain} do
+    test "screen size is calculated from user agent", %{conn: conn, domain: domain} do
       params = %{
         name: "pageview",
         url: "http://gigride.live/",
-        screen_width: 480,
         domain: domain
       }
 
       conn =
         conn
-        |> put_req_header("user-agent", @user_agent)
+        |> put_req_header("user-agent", @user_agent_mobile)
         |> post("/api/event", params)
 
       pageview = get_event(domain)
@@ -470,7 +466,46 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.screen_size == "Mobile"
     end
 
-    test "screen size is nil if screen_width is missing", %{conn: conn, domain: domain} do
+    test "screen size is nil if user agent is unknown", %{conn: conn, domain: domain} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        domain: domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", "unknown UA")
+        |> post("/api/event", params)
+
+      pageview = get_event(domain)
+
+      assert response(conn, 202) == "ok"
+      assert pageview.screen_size == ""
+    end
+
+    test "screen size is calculated from user_agent when is tablet", %{conn: conn, domain: domain} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        domain: domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent_tablet)
+        |> post("/api/event", params)
+
+      pageview = get_event(domain)
+
+      assert response(conn, 202) == "ok"
+      assert pageview.screen_size == "Tablet"
+    end
+
+    test "screen size is calculated from user_agent when is desktop", %{
+      conn: conn,
+      domain: domain
+    } do
       params = %{
         name: "pageview",
         url: "http://gigride.live/",
@@ -485,7 +520,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event(domain)
 
       assert response(conn, 202) == "ok"
-      assert pageview.screen_size == ""
+      assert pageview.screen_size == "Desktop"
     end
 
     test "can trigger a custom event", %{conn: conn, domain: domain} do
@@ -875,8 +910,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         n: "pageview",
         u: "http://www.example.com/opportunity",
         d: domain,
-        r: "https://facebook.com/page",
-        w: 300
+        r: "https://facebook.com/page"
       }
 
       conn
@@ -887,7 +921,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/opportunity"
       assert pageview.referrer_source == "Facebook"
       assert pageview.referrer == "facebook.com/page"
-      assert pageview.screen_size == "Mobile"
     end
 
     test "records hash when in hash mode", %{conn: conn, domain: domain} do

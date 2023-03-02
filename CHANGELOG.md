@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 - Reject events with long URIs and data URIs plausible/analytics#2536
 - Always show direct traffic in sources reports plausible/analytics#2531
 - Stop recording XX and T1 country codes plausible/analytics#2556
+- Device type is now determined from the User-Agent instead of window.innerWidth plausible/analytics#2711
 
 ### Removed
 - Remove the ability to collapse the main graph plausible/analytics#2627

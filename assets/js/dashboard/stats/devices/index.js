@@ -84,10 +84,6 @@ function ScreenSizes({ query, site }) {
     return iconFor(screenSize.name)
   }
 
-  function renderTooltipText(screenSize) {
-    return EXPLANATION[screenSize.name]
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
@@ -95,16 +91,8 @@ function ScreenSizes({ query, site }) {
       keyLabel="Screen size"
       query={query}
       renderIcon={renderIcon}
-      tooltipText={renderTooltipText}
     />
   )
-}
-
-const EXPLANATION = {
-  'Mobile': 'up to 576px',
-  'Tablet': '576px to 992px',
-  'Laptop': '992px to 1440px',
-  'Desktop': 'above 1440px',
 }
 
 function iconFor(screenSize) {
@@ -135,7 +123,7 @@ export default class Devices extends React.Component {
     this.tabKey = `deviceTab__${props.site.domain}`
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
-      mode: storedTab || 'size'
+      mode: storedTab || 'browser'
     }
   }
 
@@ -200,9 +188,9 @@ export default class Devices extends React.Component {
           <div className="flex justify-between w-full">
             <h3 className="font-bold dark:text-gray-100">Devices</h3>
             <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-              {this.renderPill('Size', 'size')}
               {this.renderPill('Browser', 'browser')}
               {this.renderPill('OS', 'os')}
+              {this.renderPill('Size', 'size')}
             </div>
           </div>
           {this.renderContent()}

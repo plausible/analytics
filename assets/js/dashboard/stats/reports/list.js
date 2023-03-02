@@ -89,7 +89,7 @@ export default function ListReport(props) {
           maxWidthDeduction={maxWidthDeduction}
           plot={valueKey}
         >
-          <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all" tooltip={props.tooltipText && props.tooltipText(listItem)}>
+          <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all">
             <Link onClick={props.onClick || noop} className="md:truncate block hover:underline" to={{search: query.toString()}}>
               {props.renderIcon && props.renderIcon(listItem)}
               {props.renderIcon && ' '}

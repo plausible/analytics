@@ -142,7 +142,6 @@ defmodule Plausible.Ingestion.RequestTest do
       domain: "dummy.site",
       url: "http://dummy.site/index.html",
       referrer: "https://example.com",
-      screen_width: 1024,
       hashMode: 1,
       props: %{
         "custom1" => "property1",
@@ -154,7 +153,6 @@ defmodule Plausible.Ingestion.RequestTest do
 
     assert {:ok, request} = Request.build(conn)
     assert request.referrer == "https://example.com"
-    assert request.screen_width == 1024
     assert request.hash_mode == 1
     assert request.props["custom1"] == "property1"
     assert request.props["custom2"] == "property2"

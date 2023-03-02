@@ -14,6 +14,14 @@ exports.mockRequest = function (page, path) {
   })
 }
 
+exports.metaKey = function() {
+  if (process.platform === 'darwin') {
+    return 'Meta'
+  } else {
+    return 'Control'
+  }
+}
+
 // Mocks a specified number of HTTP requests with given path. Returns a promise that resolves to a
 // list of requests as soon as the specified number of requests is made, or 10 seconds has passed.
 exports.mockManyRequests = function(page, path, numberOfRequests) {
@@ -30,10 +38,6 @@ exports.mockManyRequests = function(page, path, numberOfRequests) {
       return route.fulfill({ status: 202, contentType: 'text/plain', body: 'ok' })
     })
   })
-}
-
-exports.isMac = function (workerInfo) {
-  return workerInfo.project.name.includes('OSX')
 }
 
 exports.expectCustomEvent = function (request, eventName, eventProps) {

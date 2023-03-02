@@ -70,7 +70,6 @@
     {{/if}}
     payload.d = scriptEl.getAttribute('data-domain')
     payload.r = document.referrer || null
-    payload.w = window.innerWidth
     if (options && options.meta) {
       payload.m = JSON.stringify(options.meta)
     }
