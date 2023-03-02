@@ -96,7 +96,9 @@ defmodule Plausible.SiteAdmin do
       start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(from_site)
 
       {:ok, _} =
-        Plausible.Site.set_stats_start_date(to_site, start_date)
+        to_site
+        |> Plausible.Site.set_stats_start_date(start_date)
+        |> Plausible.Site.set_native_stats_start_at(from_site.native_stats_start_at)
         |> Repo.update()
 
       :ok

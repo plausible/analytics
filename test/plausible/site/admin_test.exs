@@ -62,6 +62,17 @@ defmodule Plausible.SiteAdminTest do
       assert Repo.reload(to_site).stats_start_date == ~D[2022-01-01]
     end
 
+    test "updates native_stats_start_date on based on the from_site record" do
+      from_site = insert(:site, native_stats_start_at: ~N[2022-01-01 01:00:00])
+      to_site = insert(:site)
+
+      populate_stats(from_site, [build(:pageview, timestamp: ~N[2022-01-01 13:21:00])])
+
+      SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
+
+      assert Repo.reload(to_site).native_stats_start_at == ~N[2022-01-01 01:00:00]
+    end
+
     test "session_transfer_query" do
       actual = SiteAdmin.session_transfer_query("from.com", "to.com")
 
