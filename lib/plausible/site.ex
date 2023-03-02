@@ -87,6 +87,10 @@ defmodule Plausible.Site do
     change(site, stats_start_date: val)
   end
 
+  def set_native_stats_start_at(site, val) do
+    change(site, native_stats_start_at: val)
+  end
+
   def start_import(site, start_date, end_date, imported_source, status \\ "importing") do
     change(site,
       imported_data: %{
