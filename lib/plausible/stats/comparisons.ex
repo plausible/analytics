@@ -16,7 +16,7 @@ defmodule Plausible.Stats.Comparisons do
           {:ok, Stats.Query.t()} | {:error, :not_supported}
   def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode) do
     if valid_mode?(source_query, mode) do
-      do_compare(site, source_query, mode)
+      {:ok, do_compare(site, source_query, mode)}
     else
       {:error, :not_supported}
     end
