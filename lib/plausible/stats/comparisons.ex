@@ -12,29 +12,44 @@ defmodule Plausible.Stats.Comparisons do
   @modes ~w(previous_period year_over_year)
   @disallowed_periods ~w(realtime all)
 
-  @spec compare(Plausible.Site.t(), Stats.Query.t(), String.t()) ::
-          {:ok, Stats.Query.t()} | {:error, :not_supported}
-  def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode) do
+  @type mode() :: String.t() | nil
+
+  @spec compare(
+          Plausible.Site.t(),
+          Stats.Query.t(),
+          mode(),
+          NaiveDateTime.t()
+        ) :: {:ok, Stats.Query.t()} | {:error, :not_supported}
+  def compare(
+        %Plausible.Site{} = site,
+        %Stats.Query{} = source_query,
+        mode,
+        now \\ NaiveDateTime.utc_now()
+      ) do
     if valid_mode?(source_query, mode) do
-      {:ok, do_compare(site, source_query, mode)}
+      {:ok, do_compare(site, source_query, mode, now)}
     else
       {:error, :not_supported}
     end
   end
 
-  defp do_compare(site, source_query, "previous_period") do
+  defp do_compare(site, source_query, "previous_period", _now) do
     Stats.Query.shift_back(source_query, site)
   end
 
-  defp do_compare(_site, source_query, "year_over_year") do
+  defp do_compare(_site, source_query, "year_over_year", now) do
     start_date = Date.add(source_query.date_range.first, -365)
-    end_date = Date.add(source_query.date_range.last, -365)
-    range = Date.range(start_date, end_date)
+    end_date = earliest(source_query.date_range.last, now) |> Date.add(-365)
 
+    range = Date.range(start_date, end_date)
     %Stats.Query{source_query | date_range: range}
   end
 
-  @spec valid_mode?(Stats.Query.t(), String.t()) :: boolean()
+  defp earliest(a, b) do
+    if Date.compare(a, b) in [:eq, :lt], do: a, else: b
+  end
+
+  @spec valid_mode?(Stats.Query.t(), mode()) :: boolean()
   @doc """
   Returns whether the source query and the selected mode support comparisons.
 
