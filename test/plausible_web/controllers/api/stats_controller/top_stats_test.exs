@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01")
 
       res = json_response(conn, 200)
-      assert %{"name" => "Visits", "value" => 3, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Total visits", "value" => 3, "change" => 100} in res["top_stats"]
     end
 
     test "calculates bounce rate", %{conn: conn, site: site} do
@@ -338,7 +338,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
         )
 
       res = json_response(conn, 200)
-      assert %{"name" => "Visits", "value" => 2, "change" => 100} in res["top_stats"]
+      assert %{"name" => "Total visits", "value" => 2, "change" => 100} in res["top_stats"]
     end
   end
 

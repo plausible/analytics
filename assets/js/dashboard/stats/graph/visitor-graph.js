@@ -489,7 +489,7 @@ export default class VisitorGraph extends React.Component {
     if (this.props.site.flags.visits_metric) {
       return top_stats
     } else {
-      return top_stats.filter((stat) => {return stat.name !== "Visits"})
+      return top_stats.filter((stat) => {return stat.name !== "Total visits"})
     }
   }
 

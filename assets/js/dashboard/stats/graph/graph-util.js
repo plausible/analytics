@@ -6,7 +6,7 @@ export const METRIC_MAPPING = {
   'Unique visitors': 'visitors',
   'Visit duration': 'visit_duration',
   'Total pageviews': 'pageviews',
-  'Visits': 'visits',
+  'Total visits': 'visits',
   'Bounce rate': 'bounce_rate',
   'Unique conversions': 'conversions',
 }
