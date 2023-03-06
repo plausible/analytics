@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Aggregate do
   import Plausible.Stats.{Base, Imported}
 
   @event_metrics [:visitors, :pageviews, :events, :sample_percent]
-  @session_metrics [:visits, :bounce_rate, :visit_duration, :pages_per_visit, :sample_percent]
+  @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
 
   def aggregate(site, query, metrics) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))

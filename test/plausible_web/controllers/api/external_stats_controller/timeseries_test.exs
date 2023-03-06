@@ -799,7 +799,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   end
 
   describe "metrics" do
-    test "shows pageviews,visits,pages_per_visit for last 7d", %{conn: conn, site: site} do
+    test "shows pageviews,visits,views_per_visit for last 7d", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
           user_id: @user_id,
@@ -819,7 +819,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "7d",
-          "metrics" => "pageviews,visits,pages_per_visit",
+          "metrics" => "pageviews,visits,views_per_visit",
           "date" => "2021-01-07"
         })
 
@@ -829,49 +829,49 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                    "date" => "2021-01-01",
                    "pageviews" => 3,
                    "visits" => 2,
-                   "pages_per_visit" => 1.5
+                   "views_per_visit" => 1.5
                  },
                  %{
                    "date" => "2021-01-02",
                    "pageviews" => 0,
                    "visits" => 0,
-                   "pages_per_visit" => 0.0
+                   "views_per_visit" => 0.0
                  },
                  %{
                    "date" => "2021-01-03",
                    "pageviews" => 0,
                    "visits" => 0,
-                   "pages_per_visit" => 0.0
+                   "views_per_visit" => 0.0
                  },
                  %{
                    "date" => "2021-01-04",
                    "pageviews" => 0,
                    "visits" => 0,
-                   "pages_per_visit" => 0.0
+                   "views_per_visit" => 0.0
                  },
                  %{
                    "date" => "2021-01-05",
                    "pageviews" => 0,
                    "visits" => 0,
-                   "pages_per_visit" => 0.0
+                   "views_per_visit" => 0.0
                  },
                  %{
                    "date" => "2021-01-06",
                    "pageviews" => 0,
                    "visits" => 0,
-                   "pages_per_visit" => 0.0
+                   "views_per_visit" => 0.0
                  },
                  %{
                    "date" => "2021-01-07",
                    "pageviews" => 1,
                    "visits" => 1,
-                   "pages_per_visit" => 1.0
+                   "views_per_visit" => 1.0
                  }
                ]
              }
     end
 
-    test "rounds pages_per_visit to two decimal places", %{
+    test "rounds views_per_visit to two decimal places", %{
       conn: conn,
       site: site
     } do
@@ -905,19 +905,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
           "period" => "7d",
-          "metrics" => "pages_per_visit",
+          "metrics" => "views_per_visit",
           "date" => "2021-01-07"
         })
 
       assert json_response(conn, 200) == %{
                "results" => [
-                 %{"date" => "2021-01-01", "pages_per_visit" => 2.0},
-                 %{"date" => "2021-01-02", "pages_per_visit" => 0.0},
-                 %{"date" => "2021-01-03", "pages_per_visit" => 1.33},
-                 %{"date" => "2021-01-04", "pages_per_visit" => 0.0},
-                 %{"date" => "2021-01-05", "pages_per_visit" => 0.0},
-                 %{"date" => "2021-01-06", "pages_per_visit" => 0.0},
-                 %{"date" => "2021-01-07", "pages_per_visit" => 1.0}
+                 %{"date" => "2021-01-01", "views_per_visit" => 2.0},
+                 %{"date" => "2021-01-02", "views_per_visit" => 0.0},
+                 %{"date" => "2021-01-03", "views_per_visit" => 1.33},
+                 %{"date" => "2021-01-04", "views_per_visit" => 0.0},
+                 %{"date" => "2021-01-05", "views_per_visit" => 0.0},
+                 %{"date" => "2021-01-06", "views_per_visit" => 0.0},
+                 %{"date" => "2021-01-07", "views_per_visit" => 1.0}
                ]
              }
     end
