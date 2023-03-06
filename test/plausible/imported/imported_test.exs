@@ -1126,12 +1126,12 @@ defmodule Plausible.ImportedTest do
                  },
                  %{
                    "change" => 100,
-                   "name" => "Total pageviews",
+                   "name" => "Visits",
                    "value" => 1
                  },
                  %{
                    "change" => 100,
-                   "name" => "Visits",
+                   "name" => "Total pageviews",
                    "value" => 1
                  },
                  %{
