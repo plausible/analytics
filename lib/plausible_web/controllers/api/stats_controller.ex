@@ -353,9 +353,25 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       if query.filters["event:page"] do
-        [:visitors, :visits, :pageviews, :views_per_visit, :bounce_rate, :time_on_page, :sample_percent]
+        [
+          :visitors,
+          :visits,
+          :pageviews,
+          :views_per_visit,
+          :bounce_rate,
+          :time_on_page,
+          :sample_percent
+        ]
       else
-        [:visitors, :visits, :pageviews, :views_per_visit, :bounce_rate, :visit_duration, :sample_percent]
+        [
+          :visitors,
+          :visits,
+          :pageviews,
+          :views_per_visit,
+          :bounce_rate,
+          :visit_duration,
+          :sample_percent
+        ]
       end
 
     current_results = Stats.aggregate(site, query, metrics)
