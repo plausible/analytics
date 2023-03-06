@@ -314,7 +314,7 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, [:visits | rest]) do
     from(s in q,
       select_merge: %{
-        visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.session_id)
+        visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
       }
     )
     |> select_session_metrics(rest)
@@ -354,6 +354,16 @@ defmodule Plausible.Stats.Base do
         :visit_duration =>
           fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
         __internal_visits: fragment("toUInt32(sum(sign))")
+      }
+    )
+    |> select_session_metrics(rest)
+  end
+
+  def select_session_metrics(q, [:pages_per_visit | rest]) do
+    from(s in q,
+      select_merge: %{
+        pages_per_visit:
+          fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
       }
     )
     |> select_session_metrics(rest)

@@ -4,7 +4,7 @@ defmodule Plausible.Stats.Aggregate do
   import Plausible.Stats.{Base, Imported}
 
   @event_metrics [:visitors, :pageviews, :events, :sample_percent]
-  @session_metrics [:visits, :bounce_rate, :visit_duration, :sample_percent]
+  @session_metrics [:visits, :bounce_rate, :visit_duration, :pages_per_visit, :sample_percent]
 
   def aggregate(site, query, metrics) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
@@ -21,9 +21,8 @@ defmodule Plausible.Stats.Aggregate do
 
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
-    |> Enum.map(fn {metric, value} ->
-      {metric, %{value: round(value || 0)}}
-    end)
+    |> Enum.map(&maybe_round_value/1)
+    |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
     |> Enum.into(%{})
   end
 
@@ -109,4 +108,14 @@ defmodule Plausible.Stats.Aggregate do
     [[time_on_page]] = res.rows
     %{time_on_page: time_on_page}
   end
+
+  @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]
+
+  defp maybe_round_value({metric, nil}), do: {metric, 0}
+
+  defp maybe_round_value({metric, value}) when metric in @metrics_to_round do
+    {metric, round(value)}
+  end
+
+  defp maybe_round_value(entry), do: entry
 end

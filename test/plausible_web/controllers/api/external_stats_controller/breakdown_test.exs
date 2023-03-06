@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert json_response(conn, 400) == %{
                "error" =>
-                 "The metric `baa` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"
+                 "The metric `baa` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"
              }
     end
 
