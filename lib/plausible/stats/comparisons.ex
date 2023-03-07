@@ -24,17 +24,14 @@ defmodule Plausible.Stats.Comparisons do
         %Plausible.Site{} = site,
         %Stats.Query{} = source_query,
         mode,
-        now \\ NaiveDateTime.utc_now()
+        now \\ nil
       ) do
     if valid_mode?(source_query, mode) do
+      now = now || Timex.now(site.timezone)
       {:ok, do_compare(site, source_query, mode, now)}
     else
       {:error, :not_supported}
     end
-  end
-
-  defp do_compare(site, source_query, "previous_period", _now) do
-    Stats.Query.shift_back(source_query, site)
   end
 
   defp do_compare(_site, source_query, "year_over_year", now) do
@@ -43,6 +40,59 @@ defmodule Plausible.Stats.Comparisons do
 
     range = Date.range(start_date, end_date)
     %Stats.Query{source_query | date_range: range}
+  end
+
+  defp do_compare(_site, %Stats.Query{period: "year"} = query, "previous_period", now) do
+    # Querying current year to date
+    {new_first, new_last} =
+      if Timex.compare(now, query.date_range.first, :year) == 0 do
+        diff =
+          Timex.diff(
+            Timex.beginning_of_year(now),
+            now,
+            :days
+          ) - 1
+
+        {query.date_range.first |> Timex.shift(days: diff),
+         now |> Timex.to_date() |> Timex.shift(days: diff)}
+      else
+        diff = Timex.diff(query.date_range.first, query.date_range.last, :days) - 1
+
+        {query.date_range.first |> Timex.shift(days: diff),
+         query.date_range.last |> Timex.shift(days: diff)}
+      end
+
+    Map.put(query, :date_range, Date.range(new_first, new_last))
+  end
+
+  defp do_compare(_site, %Stats.Query{period: "month"} = query, "previous_period", now) do
+    # Querying current month to date
+    {new_first, new_last} =
+      if Timex.compare(now, query.date_range.first, :month) == 0 do
+        diff =
+          Timex.diff(
+            Timex.beginning_of_month(now),
+            now,
+            :days
+          ) - 1
+
+        {query.date_range.first |> Timex.shift(days: diff),
+         now |> Timex.to_date() |> Timex.shift(days: diff)}
+      else
+        diff = Timex.diff(query.date_range.first, query.date_range.last, :days) - 1
+
+        {query.date_range.first |> Timex.shift(days: diff),
+         query.date_range.last |> Timex.shift(days: diff)}
+      end
+
+    Map.put(query, :date_range, Date.range(new_first, new_last))
+  end
+
+  defp do_compare(_site, query, "previous_period", _now) do
+    diff = Timex.diff(query.date_range.first, query.date_range.last, :days) - 1
+    new_first = query.date_range.first |> Timex.shift(days: diff)
+    new_last = query.date_range.last |> Timex.shift(days: diff)
+    Map.put(query, :date_range, Date.range(new_first, new_last))
   end
 
   defp earliest(a, b) do
