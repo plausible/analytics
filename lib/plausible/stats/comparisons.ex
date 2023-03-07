@@ -18,7 +18,7 @@ defmodule Plausible.Stats.Comparisons do
           Plausible.Site.t(),
           Stats.Query.t(),
           mode(),
-          NaiveDateTime.t()
+          NaiveDateTime.t() | nil
         ) :: {:ok, Stats.Query.t()} | {:error, :not_supported}
   def compare(
         %Plausible.Site{} = site,
