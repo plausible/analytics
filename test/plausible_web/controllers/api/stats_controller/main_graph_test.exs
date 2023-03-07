@@ -591,4 +591,65 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
              }
     end
   end
+
+  describe "GET /api/stats/main-graph - comparisons" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "returns past month stats when period=30d and comparison=previous_period", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/stats/#{site.domain}/main-graph?period=30d&comparison=previous_period")
+
+      assert %{"labels" => labels, "comparison_labels" => comparison_labels} =
+               json_response(conn, 200)
+
+      {:ok, first} = Timex.today() |> Timex.shift(days: -30) |> Timex.format("{ISOdate}")
+      {:ok, last} = Timex.today() |> Timex.format("{ISOdate}")
+
+      assert List.first(labels) == first
+      assert List.last(labels) == last
+
+      {:ok, first} = Timex.today() |> Timex.shift(days: -61) |> Timex.format("{ISOdate}")
+      {:ok, last} = Timex.today() |> Timex.shift(days: -31) |> Timex.format("{ISOdate}")
+
+      assert List.first(comparison_labels) == first
+      assert List.last(comparison_labels) == last
+    end
+
+    test "returns past year stats when period=month and comparison=year_over_year", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-01-05 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-01-30 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-01-31 00:00:00]),
+        build(:pageview, timestamp: ~N[2019-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2019-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2019-01-05 00:00:00]),
+        build(:pageview, timestamp: ~N[2019-01-05 00:00:00]),
+        build(:pageview, timestamp: ~N[2019-01-31 00:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2020-01-01&comparison=year_over_year"
+        )
+
+      assert %{"plot" => plot, "comparison_plot" => comparison_plot} = json_response(conn, 200)
+
+      assert 1 == Enum.at(plot, 0)
+      assert 2 == Enum.at(comparison_plot, 0)
+
+      assert 1 == Enum.at(plot, 4)
+      assert 2 == Enum.at(comparison_plot, 4)
+
+      assert 1 == Enum.at(plot, 30)
+      assert 1 == Enum.at(comparison_plot, 30)
+    end
+  end
 end

@@ -4,6 +4,10 @@ defmodule Plausible.Stats.Timeseries do
   import Plausible.Stats.{Base, Util}
   use Plausible.Stats.Fragments
 
+  @typep metric :: :pageviews | :visitors | :visits | :bounce_rate | :visit_duration
+  @typep value :: nil | integer() | float()
+  @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
+
   @event_metrics [:visitors, :pageviews]
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
   def timeseries(site, query, metrics) do

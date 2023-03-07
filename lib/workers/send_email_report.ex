@@ -49,7 +49,7 @@ defmodule Plausible.Workers.SendEmailReport do
   end
 
   defp send_report(email, site, name, unsubscribe_link, query) do
-    prev_query = Query.shift_back(query, site)
+    {:ok, prev_query} = Stats.Comparisons.compare(site, query, "previous_period")
     curr_period = Stats.aggregate(site, query, [:pageviews, :visitors, :bounce_rate])
     prev_period = Stats.aggregate(site, prev_query, [:pageviews, :visitors, :bounce_rate])
 

@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          {:ok, metrics} <- parse_and_validate_metrics(params, nil, query) do
       results =
         if params["compare"] == "previous_period" do
-          prev_query = Query.shift_back(query, site)
+          {:ok, prev_query} = Plausible.Stats.Comparisons.compare(site, query, "previous_period")
 
           [prev_result, curr_result] =
             Plausible.ClickhouseRepo.parallel_tasks([

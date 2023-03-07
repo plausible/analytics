@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible.Repo
   use Plug.ErrorHandler
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.{Query, Filters, Comparisons}
 
   require Logger
 
@@ -115,9 +115,9 @@ defmodule PlausibleWeb.Api.StatsController do
       full_intervals = build_full_intervals(query, labels)
 
       comparison_result =
-        if params["comparison"] do
-          comparison_query = Query.shift_back(query, site)
-          Stats.timeseries(site, comparison_query, [selected_metric])
+        case Comparisons.compare(site, query, params["comparison"]) do
+          {:ok, comparison_query} -> Stats.timeseries(site, comparison_query, [selected_metric])
+          {:error, :not_supported} -> nil
         end
 
       json(conn, %{
@@ -174,9 +174,10 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     with :ok <- validate_params(params) do
+      comparison_mode = params["comparison"] || "previous_period"
       query = Query.from(site, params) |> Filters.add_prefix()
 
-      {top_stats, sample_percent} = fetch_top_stats(site, query)
+      {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_mode)
 
       json(conn, %{
         top_stats: top_stats,
@@ -243,7 +244,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(
          site,
-         %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query
+         %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query,
+         _comparison_mode
        ) do
     query_30m = %Query{query | period: "30m"}
 
@@ -270,7 +272,7 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_top_stats(site, %Query{period: "realtime"} = query) do
+  defp fetch_top_stats(site, %Query{period: "realtime"} = query, _comparison_mode) do
     query_30m = %Query{query | period: "30m"}
 
     %{
@@ -296,28 +298,40 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query) do
+  defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query, comparison_mode) do
     total_q = Query.remove_event_filters(query, [:goal, :props])
-    prev_query = Query.shift_back(query, site)
-    prev_total_query = Query.shift_back(total_q, site)
+
+    {prev_converted_visitors, prev_completions} =
+      case Stats.Comparisons.compare(site, query, comparison_mode) do
+        {:ok, prev_query} ->
+          %{visitors: %{value: prev_converted_visitors}, events: %{value: prev_completions}} =
+            Stats.aggregate(site, prev_query, [:visitors, :events])
+
+          {prev_converted_visitors, prev_completions}
+
+        {:error, :not_supported} ->
+          {nil, nil}
+      end
+
+    prev_unique_visitors =
+      case Stats.Comparisons.compare(site, total_q, comparison_mode) do
+        {:ok, prev_total_query} ->
+          site
+          |> Stats.aggregate(prev_total_query, [:visitors])
+          |> get_in([:visitors, :value])
+
+        {:error, :not_supported} ->
+          nil
+      end
 
     %{
       visitors: %{value: unique_visitors}
     } = Stats.aggregate(site, total_q, [:visitors])
 
     %{
-      visitors: %{value: prev_unique_visitors}
-    } = Stats.aggregate(site, prev_total_query, [:visitors])
-
-    %{
       visitors: %{value: converted_visitors},
       events: %{value: completions}
     } = Stats.aggregate(site, query, [:visitors, :events])
-
-    %{
-      visitors: %{value: prev_converted_visitors},
-      events: %{value: prev_completions}
-    } = Stats.aggregate(site, prev_query, [:visitors, :events])
 
     conversion_rate = calculate_cr(unique_visitors, converted_visitors)
     prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
@@ -348,9 +362,7 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_top_stats(site, query) do
-    prev_query = Query.shift_back(query, site)
-
+  defp fetch_top_stats(site, query, comparison_mode) do
     metrics =
       if query.filters["event:page"] do
         [
@@ -375,7 +387,12 @@ defmodule PlausibleWeb.Api.StatsController do
       end
 
     current_results = Stats.aggregate(site, query, metrics)
-    prev_results = Stats.aggregate(site, prev_query, metrics)
+
+    prev_results =
+      case Stats.Comparisons.compare(site, query, comparison_mode) do
+        {:ok, prev_results_query} -> Stats.aggregate(site, prev_results_query, metrics)
+        {:error, :not_supported} -> nil
+      end
 
     stats =
       [
@@ -394,11 +411,11 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp top_stats_entry(current_results, prev_results, name, key) do
     if current_results[key] do
-      %{
-        name: name,
-        value: current_results[key][:value],
-        change: calculate_change(key, prev_results[key][:value], current_results[key][:value])
-      }
+      value = get_in(current_results, [key, :value])
+      prev_value = get_in(prev_results, [key, :value])
+      change = prev_value && calculate_change(key, prev_value, value)
+
+      %{name: name, value: value, change: change}
     end
   end
 
