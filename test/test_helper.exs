@@ -2,7 +2,6 @@
 Plausible.Test.ClickhouseSetup.run()
 Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
 FunWithFlags.enable(:visits_metric)
-FunWithFlags.enable(:views_per_visit_metric)
 ExUnit.start(exclude: :slow)
 Application.ensure_all_started(:double)
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)

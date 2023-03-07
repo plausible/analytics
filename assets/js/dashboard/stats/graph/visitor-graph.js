@@ -476,8 +476,7 @@ export default class VisitorGraph extends React.Component {
   fetchTopStatData() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
       .then((res) => {
-        res.top_stats = this.maybeRemoveVisitsMetric(res.top_stats)
-        res.top_stats = this.maybeRemoveViewsPerVisitMetric(res.top_stats)
+        res.top_stats = this.maybeRemoveFeatureFlaggedMetrics(res.top_stats)
         this.setState({ topStatsLoadingState: LoadingState.loaded, topStatData: res }, () => {
           this.storeTopStatsContainerHeight()
           this.resetMetric()
@@ -486,19 +485,11 @@ export default class VisitorGraph extends React.Component {
       })
   }
 
-  maybeRemoveVisitsMetric(top_stats) {
+  maybeRemoveFeatureFlaggedMetrics(top_stats) {
     if (this.props.site.flags.visits_metric) {
       return top_stats
     } else {
-      return top_stats.filter((stat) => {return stat.name !== "Total visits"})
-    }
-  }
-
-  maybeRemoveViewsPerVisitMetric(top_stats) {
-    if (this.props.site.flags.views_per_visit_metric) {
-      return top_stats
-    } else {
-      return top_stats.filter((stat) => {return stat.name !== "Views per visit"})
+      return top_stats.filter((stat) => {return !(["Total visits", "Views per visit"].includes(stat.name))})
     }
   }
 
