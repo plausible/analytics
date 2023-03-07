@@ -120,7 +120,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp event_only_property?(_), do: false
 
   @event_metrics ["visitors", "pageviews", "events"]
-  @session_metrics ["visits", "bounce_rate", "visit_duration", "pages_per_visit"]
+  @session_metrics ["visits", "bounce_rate", "visit_duration", "views_per_visit"]
   defp parse_and_validate_metrics(params, property, query) do
     metrics =
       Map.get(params, "metrics", "visitors")
@@ -147,7 +147,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     event_only_filter = Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
 
     cond do
-      metric == "pages_per_visit" && property != nil ->
+      metric == "views_per_visit" && property != nil ->
         {:error, "Metric `#{metric}` is not supported in breakdown queries"}
 
       event_only_property?(property) ->

@@ -116,7 +116,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
            }
   end
 
-  test "rounds pages_per_visit to two decimal places", %{
+  test "rounds views_per_visit to two decimal places", %{
     conn: conn,
     site: site
   } do
@@ -133,11 +133,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         "site_id" => site.domain,
         "period" => "day",
         "date" => "2021-01-01",
-        "metrics" => "pages_per_visit"
+        "metrics" => "views_per_visit"
       })
 
     assert json_response(conn, 200)["results"] == %{
-             "pages_per_visit" => %{"value" => 1.67}
+             "views_per_visit" => %{"value" => 1.67}
            }
   end
 
@@ -156,14 +156,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         "site_id" => site.domain,
         "period" => "day",
         "date" => "2021-01-01",
-        "metrics" => "pageviews,visits,pages_per_visit,visitors,bounce_rate,visit_duration"
+        "metrics" => "pageviews,visits,views_per_visit,visitors,bounce_rate,visit_duration"
       })
 
     assert json_response(conn, 200)["results"] == %{
              "pageviews" => %{"value" => 3},
              "visitors" => %{"value" => 2},
              "visits" => %{"value" => 2},
-             "pages_per_visit" => %{"value" => 1.5},
+             "views_per_visit" => %{"value" => 1.5},
              "bounce_rate" => %{"value" => 50},
              "visit_duration" => %{"value" => 750}
            }

@@ -359,10 +359,10 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest)
   end
 
-  def select_session_metrics(q, [:pages_per_visit | rest]) do
+  def select_session_metrics(q, [:views_per_visit | rest]) do
     from(s in q,
       select_merge: %{
-        pages_per_visit:
+        views_per_visit:
           fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
       }
     )
