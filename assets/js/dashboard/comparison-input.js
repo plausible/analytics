@@ -1,9 +1,10 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, useEffect, useCallback } from 'react'
 import { withRouter } from "react-router-dom";
 import { navigateToQuery } from './query'
 import { Menu, Transition } from '@headlessui/react'
 import { ArrowsUpDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
+import { isKeyPressed } from './keybinding'
 
 const COMPARISON_MODES = {
   'previous_period': 'Previous period',
@@ -11,6 +12,17 @@ const COMPARISON_MODES = {
 }
 
 export const COMPARISON_DISABLED_PERIODS = ['realtime', 'all']
+
+function subscribeKeybinding(element) {
+  const handleKeyPress = useCallback((event) => {
+    if (isKeyPressed(event, "x")) element.current?.click()
+  }, [])
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyPress)
+    return () => document.removeEventListener('keydown', handleKeyPress)
+  }, [handleKeyPress])
+}
 
 const ComparisonInput = function({ site, query, history }) {
   if (!site.flags.comparisons) return null
@@ -21,21 +33,26 @@ const ComparisonInput = function({ site, query, history }) {
   }
 
   function renderItem({ label, value, isCurrentlySelected }) {
-    const labelClass = classNames("font-medium text-sm", { "font-bold disabled": isCurrentlySelected })
-
     return (
       <Menu.Item
         key={value}
         onClick={() => update(value)}
-        className="px-4 py-2 leading-tight hover:bg-gray-100 dark:text-white hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-gray-100 flex hover:cursor-pointer">
-        <span className={labelClass}>{ label }</span>
+        disabled={isCurrentlySelected}>
+        {({ active }) => (
+          <button className={classNames("px-4 py-2 w-full text-left font-medium text-sm dark:text-white cursor-pointer", { "bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100": active, "font-bold": isCurrentlySelected })}>
+            { label }
+          </button>
+        )}
       </Menu.Item>
     )
   }
 
+  const element = React.useRef(null)
+  subscribeKeybinding(element)
+
   return (
     <Menu as="div" className="relative">
-      <Menu.Button className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
+      <Menu.Button ref={element} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
         <ArrowsUpDownIcon className="-ml-1 mr-1 h-4 w-4" aria-hidden="true" />
         <span>{ COMPARISON_MODES[query.comparison] || 'Compare to' }</span>
       </Menu.Button>
