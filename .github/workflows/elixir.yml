@@ -1,15 +1,14 @@
 name: Elixir CI
 
 on:
-  push:
-    branches: [master, stable]
   pull_request:
+  push:
     branches: [master, stable]
 
 jobs:
   build:
     name: Build and test
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
