@@ -427,6 +427,8 @@ defmodule PlausibleWeb.Api.StatsController do
     percent_change(old_count, new_count)
   end
 
+  defp percent_change(nil, _new_count), do: nil
+
   defp percent_change(old_count, new_count) do
     cond do
       old_count == 0 and new_count > 0 ->
@@ -1007,7 +1009,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp calculate_cr(nil, _converted_visitors), do: 100.0
+  defp calculate_cr(nil, _converted_visitors), do: nil
 
   defp calculate_cr(unique_visitors, converted_visitors) do
     if unique_visitors > 0,
