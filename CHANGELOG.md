@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Device type is now determined from the User-Agent instead of window.innerWidth plausible/analytics#2711
 
 ### Removed
+- Remove Firewall plug and `IP_BLOCKLIST` environment variable
 - Remove the ability to collapse the main graph plausible/analytics#2627
 
 ## v1.5.1 - 2022-12-06
