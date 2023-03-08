@@ -51,7 +51,7 @@ defmodule Plausible.Site do
     |> validate_domain_reserved_characters()
     |> unique_constraint(:domain,
       message:
-        "This domain cannot be registered. Perhaps one of your colleagues registered it? Or did you recently delete it from your account? The deletion may take up to 48 hours before you can add the same site again. If that's not the case, please contact support@plausible.io"
+        "This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io"
     )
   end
 
