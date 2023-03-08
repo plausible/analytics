@@ -356,12 +356,6 @@ case mailer_adapter do
     """
 end
 
-config :plausible, PlausibleWeb.Firewall,
-  blocklist:
-    get_var_from_path_or_env(config_dir, "IP_BLOCKLIST", "")
-    |> String.split(",")
-    |> Enum.map(&String.trim/1)
-
 base_cron = [
   # Daily at midnight
   {"0 0 * * *", Plausible.Workers.RotateSalts},
