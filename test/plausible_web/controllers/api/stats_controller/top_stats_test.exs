@@ -419,5 +419,29 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{"name" => "Conversion rate", "value" => 33.3, "change" => 100} in res["top_stats"]
     end
+
+    test "returns conversion rate with change=nil when comparison mode disallowed", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id),
+        build(:pageview, user_id: @user_id),
+        build(:pageview),
+        build(:event, name: "Signup")
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{"name" => "Conversion rate", "value" => 33.3, "change" => nil} in res["top_stats"]
+    end
   end
 end
