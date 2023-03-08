@@ -150,10 +150,12 @@ defmodule Plausible.Stats.Timeseries do
   defp select_bucket(q, site, %Query{interval: "hour"}) do
     from(
       e in q,
-      group_by: fragment("toStartOfHour(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
-      order_by: fragment("toStartOfHour(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
+      group_by:
+        fragment("toString(toStartOfHour(toTimeZone(?, ?)))", e.timestamp, ^site.timezone),
+      order_by:
+        fragment("toString(toStartOfHour(toTimeZone(?, ?)))", e.timestamp, ^site.timezone),
       select_merge: %{
-        date: fragment("toStartOfHour(toTimeZone(?, ?))", e.timestamp, ^site.timezone)
+        date: fragment("toString(toStartOfHour(toTimeZone(?, ?)))", e.timestamp, ^site.timezone)
       }
     )
   end
@@ -172,10 +174,12 @@ defmodule Plausible.Stats.Timeseries do
   defp select_bucket(q, site, %Query{interval: "minute"}) do
     from(
       e in q,
-      group_by: fragment("toStartOfMinute(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
-      order_by: fragment("toStartOfMinute(toTimeZone(?, ?))", e.timestamp, ^site.timezone),
+      group_by:
+        fragment("toString(toStartOfMinute(toTimeZone(?, ?)))", e.timestamp, ^site.timezone),
+      order_by:
+        fragment("toString(toStartOfMinute(toTimeZone(?, ?)))", e.timestamp, ^site.timezone),
       select_merge: %{
-        date: fragment("toStartOfMinute(toTimeZone(?, ?))", e.timestamp, ^site.timezone)
+        date: fragment("toString(toStartOfMinute(toTimeZone(?, ?)))", e.timestamp, ^site.timezone)
       }
     )
   end

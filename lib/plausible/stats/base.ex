@@ -239,7 +239,7 @@ defmodule Plausible.Stats.Base do
 
         {:member, values} ->
           list = Enum.map(values, &db_prop_val(prop_name, &1))
-          from(s in sessions_q, where: fragment("? in tuple(?)", field(s, ^prop_name), ^list))
+          from(s in sessions_q, where: field(s, ^prop_name) in ^list)
 
         {:matches, expr} ->
           regex = page_regex(expr)
@@ -418,8 +418,10 @@ defmodule Plausible.Stats.Base do
       NaiveDateTime.utc_now()
       |> Timex.shift(seconds: 5)
       |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
 
-    first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -5)
+    first_datetime =
+      NaiveDateTime.utc_now() |> Timex.shift(minutes: -5) |> NaiveDateTime.truncate(:second)
 
     {first_datetime, last_datetime}
   end
@@ -429,8 +431,10 @@ defmodule Plausible.Stats.Base do
       NaiveDateTime.utc_now()
       |> Timex.shift(seconds: 5)
       |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
 
-    first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -30)
+    first_datetime =
+      NaiveDateTime.utc_now() |> Timex.shift(minutes: -30) |> NaiveDateTime.truncate(:second)
 
     {first_datetime, last_datetime}
   end

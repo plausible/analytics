@@ -6,20 +6,20 @@ defmodule Plausible.ClickhouseSession do
   schema "sessions" do
     field :hostname, :string
     field :domain, :string
-    field :user_id, :integer
-    field :session_id, :integer
+    field :user_id, Ch.Types.UInt64
+    field :session_id, Ch.Types.UInt64
 
     field :start, :naive_datetime
-    field :duration, :integer
+    field :duration, Ch.Types.UInt32
     field :is_bounce, :boolean
     field :entry_page, :string
     field :exit_page, :string
-    field :pageviews, :integer
-    field :events, :integer
-    field :sign, :integer
+    field :pageviews, Ch.Types.Int32
+    field :events, Ch.Types.Int32
+    field :sign, Ch.Types.Int8
 
-    field :"entry_meta.key", {:array, :string}, default: []
-    field :"entry_meta.value", {:array, :string}, default: []
+    field :"entry_meta.key", {:array, :string}
+    field :"entry_meta.value", {:array, :string}
 
     field :utm_medium, :string
     field :utm_source, :string
@@ -29,10 +29,10 @@ defmodule Plausible.ClickhouseSession do
     field :referrer, :string
     field :referrer_source, :string
 
-    field :country_code, :string, default: ""
-    field :subdivision1_code, :string, default: ""
-    field :subdivision2_code, :string, default: ""
-    field :city_geoname_id, :integer, default: 0
+    field :country_code, Ch.Types.FixedString, size: 2
+    field :subdivision1_code, :string
+    field :subdivision2_code, :string
+    field :city_geoname_id, Ch.Types.UInt32
 
     field :screen_size, :string
     field :operating_system, :string
@@ -41,7 +41,7 @@ defmodule Plausible.ClickhouseSession do
     field :browser_version, :string
     field :timestamp, :naive_datetime
 
-    field :transferred_from, :string, default: ""
+    field :transferred_from, :string
   end
 
   def random_uint64() do

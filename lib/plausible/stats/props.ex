@@ -51,7 +51,7 @@ defmodule Plausible.Stats.Props do
       nil ->
         ClickhouseRepo.all(
           from e in base_event_query(site, query),
-            inner_lateral_join: meta in fragment("meta as m"),
+            inner_lateral_join: meta in fragment("meta"),
             select: {e.name, meta.key},
             distinct: true
         )

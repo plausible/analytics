@@ -37,8 +37,8 @@ defmodule Plausible.Ingestion.CountersTest do
     end
 
     test "the database eventually sums the records within 1-minute buckets", %{test: test} do
-      # Testing if the database works is an unfunny way of integration testing, 
-      # but on the upside it's quite straight-forward way of testing if the 
+      # Testing if the database works is an unfunny way of integration testing,
+      # but on the upside it's quite straight-forward way of testing if the
       # 1-minute bucket rollups are applied when dumping the records that are
       # originally aggregated with 10s windows.
       on_exit(:detach, fn ->

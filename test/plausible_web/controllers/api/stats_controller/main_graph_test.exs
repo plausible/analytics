@@ -108,6 +108,26 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.sum(plot) == 4
     end
 
+    test "displays visitors for a month with only imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
+        )
+
+      assert %{"plot" => plot, "imported_source" => "Google Analytics"} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 31
+      assert List.first(plot) == 1
+      assert List.last(plot) == 1
+      assert Enum.sum(plot) == 2
+    end
+
     test "displays visitors for a month with imported data and filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00], pathname: "/pageA"),
@@ -154,6 +174,26 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.sum(plot) == 4
     end
 
+    test "displays visitors for 6 months with only imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-06-30])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=6mo&date=2021-06-30&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 6
+      assert List.first(plot) == 1
+      assert List.last(plot) == 1
+      assert Enum.sum(plot) == 2
+    end
+
     test "displays visitors for 12 months with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
@@ -176,6 +216,26 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert Enum.sum(plot) == 4
     end
 
+    test "displays visitors for 12 months with only imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-12-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=12mo&date=2021-12-31&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 12
+      assert List.first(plot) == 1
+      assert List.last(plot) == 1
+      assert Enum.sum(plot) == 2
+    end
+
     test "displays visitors for calendar year with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
@@ -196,6 +256,26 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.first(plot) == 2
       assert List.last(plot) == 2
       assert Enum.sum(plot) == 4
+    end
+
+    test "displays visitors for calendar year with only imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-12-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=year&date=2021-12-31&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 12
+      assert List.first(plot) == 1
+      assert List.last(plot) == 1
+      assert Enum.sum(plot) == 2
     end
 
     test "displays visitors for all time with just native data", %{conn: conn, site: site} do
@@ -292,6 +372,26 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert List.last(plot) == 2
       assert Enum.sum(plot) == 4
     end
+
+    test "displays pageviews for a month with only imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=pageviews&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 31
+      assert List.first(plot) == 1
+      assert List.last(plot) == 1
+      assert Enum.sum(plot) == 2
+    end
   end
 
   describe "GET /api/stats/main-graph - bounce_rate plot" do
@@ -335,6 +435,25 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 50
+      assert List.last(plot) == 100
+    end
+
+    test "displays bounce rate for a month with only imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, visits: 1, bounces: 0, date: ~D[2021-01-01]),
+        build(:imported_visitors, visits: 1, bounces: 1, date: ~D[2021-01-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=bounce_rate&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 31
+      assert List.first(plot) == 0
       assert List.last(plot) == 100
     end
   end
@@ -386,6 +505,23 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 200
+    end
+
+    test "displays visit_duration for a month with only imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, visits: 1, visit_duration: 100, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=visit_duration&with_imported=true"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert Enum.count(plot) == 31
+      assert List.first(plot) == 100
     end
   end
 

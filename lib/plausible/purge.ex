@@ -16,7 +16,7 @@ defmodule Plausible.Purge do
   """
   def delete_imported_stats!(site) do
     Enum.each(Plausible.Imported.tables(), fn table ->
-      sql = "ALTER TABLE #{table} DELETE WHERE site_id = ?"
+      sql = "ALTER TABLE #{table} DELETE WHERE site_id = {$0:UInt64}"
       Ecto.Adapters.SQL.query!(Plausible.ClickhouseRepo, sql, [site.id])
     end)
 

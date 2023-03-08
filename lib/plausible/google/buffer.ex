@@ -91,6 +91,23 @@ defmodule Plausible.Google.Buffer do
     Process.sleep(1000)
 
     Logger.info("Import: Flushing #{length(records)} from #{table_name} buffer")
-    Plausible.IngestRepo.insert_all(table_name, records)
+    insert_all(table_name, records)
   end
+
+  # used in tests `setup`
+  @doc false
+  def insert_all(table_name, records) do
+    schema = table_schema(table_name)
+    Plausible.IngestRepo.insert_all(schema, records)
+  end
+
+  defp table_schema("imported_visitors"), do: Plausible.Google.ImportedVisitor
+  defp table_schema("imported_sources"), do: Plausible.Google.ImportedSource
+  defp table_schema("imported_pages"), do: Plausible.Google.ImportedPage
+  defp table_schema("imported_entry_pages"), do: Plausible.Google.ImportedEntryPage
+  defp table_schema("imported_exit_pages"), do: Plausible.Google.ImportedExitPage
+  defp table_schema("imported_locations"), do: Plausible.Google.ImportedLocation
+  defp table_schema("imported_devices"), do: Plausible.Google.ImportedDevice
+  defp table_schema("imported_browsers"), do: Plausible.Google.ImportedBrowser
+  defp table_schema("imported_operating_systems"), do: Plausible.Google.ImportedOperatingSystem
 end

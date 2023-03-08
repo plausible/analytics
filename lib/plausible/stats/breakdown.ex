@@ -44,14 +44,14 @@ defmodule Plausible.Stats.Breakdown do
           offset: ^offset,
           where:
             fragment(
-              "notEmpty(multiMatchAllIndices(?, array(?)) as indices)",
+              "notEmpty(multiMatchAllIndices(?, ?) as indices)",
               e.pathname,
               ^page_regexes
             ),
           group_by: fragment("index"),
           select: %{
             index: fragment("arrayJoin(indices) as index"),
-            goal: fragment("concat('Visit ', array(?)[index])", ^page_exprs)
+            goal: fragment("concat('Visit ', ?[index])", ^page_exprs)
           }
         )
         |> select_event_metrics(metrics)
@@ -260,6 +260,9 @@ defmodule Plausible.Stats.Breakdown do
         "round(sum(td)/count(case when p2 != p then 1 end))"
       end
 
+    pages_idx = length(base_query_raw_params)
+    params = base_query_raw_params ++ [pages]
+
     time_query = "
       SELECT
         p,
@@ -276,11 +279,11 @@ defmodule Plausible.Stats.Breakdown do
             neighbor(p, 1) as p2,
             neighbor(s, 1) as s2
           FROM (#{base_query_raw}))
-        WHERE s=s2 AND p IN tuple(?)
+        WHERE s=s2 AND p IN {$#{pages_idx}:Array(String)}
         GROUP BY p,p2,s)
       GROUP BY p"
 
-    {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [pages])
+    {:ok, res} = ClickhouseRepo.query(time_query, params)
 
     if query.include_imported do
       # Imported page views have pre-calculated values
@@ -385,7 +388,7 @@ defmodule Plausible.Stats.Breakdown do
           group_by: fragment("index"),
           select_merge: %{
             index: fragment("arrayJoin(indices) as index"),
-            page_match: fragment("array(?)[index]", ^match_exprs)
+            page_match: fragment("?[index]", ^match_exprs)
           },
           order_by: {:asc, fragment("index")}
         )
