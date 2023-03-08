@@ -6,6 +6,7 @@ defmodule Plausible.Stats.CurrentVisitors do
     first_datetime =
       NaiveDateTime.utc_now()
       |> Timex.shift(minutes: -5)
+      |> NaiveDateTime.truncate(:second)
 
     ClickhouseRepo.one(
       from e in "events",

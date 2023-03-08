@@ -44,26 +44,12 @@ defmodule Plausible.Factory do
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       hostname: hostname,
       domain: hostname,
-      referrer: "",
-      referrer_source: "",
-      utm_medium: "",
-      utm_source: "",
-      utm_campaign: "",
-      utm_content: "",
-      utm_term: "",
       entry_page: "/",
       pageviews: 1,
       events: 1,
-      duration: 0,
       start: Timex.now(),
       timestamp: Timex.now(),
-      is_bounce: false,
-      browser: "",
-      browser_version: "",
-      country_code: "",
-      screen_size: "",
-      operating_system: "",
-      operating_system_version: ""
+      is_bounce: false
     }
   end
 
@@ -85,22 +71,7 @@ defmodule Plausible.Factory do
       pathname: "/",
       timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-      referrer: "",
-      referrer_source: "",
-      utm_medium: "",
-      utm_source: "",
-      utm_campaign: "",
-      utm_content: "",
-      utm_term: "",
-      browser: "",
-      browser_version: "",
-      country_code: "",
-      screen_size: "",
-      operating_system: "",
-      operating_system_version: "",
-      "meta.key": [],
-      "meta.value": []
+      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())
     }
   end
 

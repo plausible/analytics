@@ -8,32 +8,32 @@ defmodule Plausible.ClickhouseEvent do
     field :domain, :string
     field :hostname, :string
     field :pathname, :string
-    field :user_id, :integer
-    field :session_id, :integer
+    field :user_id, Ch.Types.UInt64
+    field :session_id, Ch.Types.UInt64
     field :timestamp, :naive_datetime
 
-    field :referrer, :string, default: ""
-    field :referrer_source, :string, default: ""
-    field :utm_medium, :string, default: ""
-    field :utm_source, :string, default: ""
-    field :utm_campaign, :string, default: ""
-    field :utm_content, :string, default: ""
-    field :utm_term, :string, default: ""
+    field :referrer, :string
+    field :referrer_source, :string
+    field :utm_medium, :string
+    field :utm_source, :string
+    field :utm_campaign, :string
+    field :utm_content, :string
+    field :utm_term, :string
 
-    field :country_code, :string, default: ""
-    field :subdivision1_code, :string, default: ""
-    field :subdivision2_code, :string, default: ""
-    field :city_geoname_id, :integer, default: 0
+    field :country_code, Ch.Types.FixedString, size: 2
+    field :subdivision1_code, :string
+    field :subdivision2_code, :string
+    field :city_geoname_id, Ch.Types.UInt32
 
-    field :screen_size, :string, default: ""
-    field :operating_system, :string, default: ""
-    field :operating_system_version, :string, default: ""
-    field :browser, :string, default: ""
-    field :browser_version, :string, default: ""
+    field :screen_size, :string
+    field :operating_system, :string
+    field :operating_system_version, :string
+    field :browser, :string
+    field :browser_version, :string
 
-    field :"meta.key", {:array, :string}, default: []
-    field :"meta.value", {:array, :string}, default: []
-    field :transferred_from, :string, default: ""
+    field :"meta.key", {:array, :string}
+    field :"meta.value", {:array, :string}
+    field :transferred_from, :string
   end
 
   def new(attrs) do

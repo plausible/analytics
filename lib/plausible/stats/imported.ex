@@ -28,7 +28,7 @@ defmodule Plausible.Stats.Imported do
     from(s in Ecto.Query.subquery(native_q),
       full_join: i in subquery(imported_q),
       on: field(s, :date) == field(i, :date),
-      select: %{date: field(s, :date)}
+      select: %{date: fragment("greatest(?, ?)", field(s, :date), field(i, :date))}
     )
     |> select_joined_metrics(metrics)
   end

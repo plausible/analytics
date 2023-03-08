@@ -63,23 +63,27 @@ defmodule Plausible.Stats.Aggregate do
       )
 
     {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
+    where_param_idx = length(base_query_raw_params)
+    where_param = "{$#{where_param_idx}:String}"
 
     {where_clause, where_arg} =
       case query.filters["event:page"] do
         {:is, page} ->
-          {"p = ?", page}
+          {"p = #{where_param}", page}
 
         {:is_not, page} ->
-          {"p != ?", page}
+          {"p != #{where_param}", page}
 
         {:matches, expr} ->
           regex = page_regex(expr)
-          {"match(p, ?)", regex}
+          {"match(p, #{where_param})", regex}
 
         {:does_not_match, expr} ->
           regex = page_regex(expr)
-          {"not(match(p, ?))", regex}
+          {"not(match(p, #{where_param}))", regex}
       end
+
+    params = base_query_raw_params ++ [where_arg]
 
     time_query = "
       SELECT
@@ -104,7 +108,7 @@ defmodule Plausible.Stats.Aggregate do
           GROUP BY p,p2,s)
         GROUP BY p)"
 
-    {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [where_arg])
+    {:ok, res} = ClickhouseRepo.query(time_query, params)
     [[time_on_page]] = res.rows
     %{time_on_page: time_on_page}
   end

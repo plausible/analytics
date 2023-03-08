@@ -87,11 +87,13 @@ defmodule Plausible.SiteAdmin do
     to_site = Repo.get_by(Plausible.Site, domain: params["domain"])
 
     if to_site do
+      opts = [timeout: 30_000, command: :insert_select]
+
       event_q = event_transfer_query(from_site.domain, to_site.domain)
-      {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, event_q, [], timeout: 30_000)
+      {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, event_q, [], opts)
 
       session_q = session_transfer_query(from_site.domain, to_site.domain)
-      {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, session_q, [], timeout: 30_000)
+      {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, session_q, [], opts)
 
       start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(from_site)
 
