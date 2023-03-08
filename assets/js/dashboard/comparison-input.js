@@ -5,6 +5,7 @@ import { Menu, Transition } from '@headlessui/react'
 import { ArrowsUpDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import { isKeyPressed } from './keybinding'
+import * as storage from './util/storage'
 
 const COMPARISON_MODES = {
   'previous_period': 'Previous period',
@@ -12,6 +13,19 @@ const COMPARISON_MODES = {
 }
 
 export const COMPARISON_DISABLED_PERIODS = ['realtime', 'all']
+
+export const getStoredComparisonMode = function(domain) {
+  const mode = storage.getItem(`comparison_mode__${domain}`)
+  if (Object.keys(COMPARISON_MODES).includes(mode)) {
+    return mode
+  } else {
+    return null
+  }
+}
+
+const storeComparisonMode = function(domain, mode) {
+  storage.setItem(`comparison_mode__${domain}`, mode)
+}
 
 function subscribeKeybinding(element) {
   const handleKeyPress = useCallback((event) => {
@@ -43,7 +57,10 @@ const ComparisonInput = function({ site, query, history }) {
   if (!site.flags.comparisons) return null
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
 
-  const updateMode = (key) => navigateToQuery(history, query, { comparison: key })
+  const updateMode = (key) => {
+    storeComparisonMode(site.domain, key)
+    navigateToQuery(history, query, { comparison: key })
+  }
 
   const element = React.useRef(null)
   subscribeKeybinding(element)

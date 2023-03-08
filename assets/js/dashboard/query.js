@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
 import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
 import * as storage from './util/storage'
-import { COMPARISON_DISABLED_PERIODS } from './comparison-input'
+import { getStoredComparisonMode, COMPARISON_DISABLED_PERIODS } from './comparison-input'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'year', 'all', 'custom']
 
@@ -19,7 +19,7 @@ export function parseQuery(querystring, site) {
     period = '30d'
   }
 
-  let comparison = q.get('comparison')
+  let comparison = q.get('comparison') || getStoredComparisonMode(site.domain)
   if (COMPARISON_DISABLED_PERIODS.includes(period)) comparison = null
 
   return {
