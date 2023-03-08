@@ -52,7 +52,10 @@ defmodule Plausible.Application do
   defp finch_pool_config() do
     base_config = %{
       "https://icons.duckduckgo.com" => [
-        conn_opts: [transport_opts: [timeout: 15_000]]
+        conn_opts: [transport_opts: finch_transport_opts()]
+      ],
+      default: [
+        conn_opts: [transport_opts: finch_transport_opts()]
       ]
     }
 
@@ -78,7 +81,7 @@ defmodule Plausible.Application do
     cond do
       paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] ->
         Map.put(pool_config, Plausible.Billing.PaddleApi.vendors_domain(),
-          conn_opts: [transport_opts: [timeout: 15_000]]
+          conn_opts: [transport_opts: finch_transport_opts()]
         )
 
       true ->
@@ -92,12 +95,16 @@ defmodule Plausible.Application do
     cond do
       google_conf[:client_id] && google_conf[:client_secret] ->
         pool_config
-        |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: [timeout: 15_000]])
-        |> Map.put(google_conf[:reporting_api_url], conn_opts: [transport_opts: [timeout: 15_000]])
+        |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: finch_transport_opts()])
+        |> Map.put(google_conf[:reporting_api_url], conn_opts: [transport_opts: finch_transport_opts()])
 
       true ->
         pool_config
     end
+  end
+
+  defp finch_transport_opts() do
+      maybe_ipv6 = if System.get_env("FINCH_IPV6"), do: [timeout: 15_000, inet6: true], else: [timeout: 15_000]
   end
 
   def setup_sentry() do
