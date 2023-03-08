@@ -37,9 +37,9 @@ function Historical(props) {
             <SiteSwitcher site={props.site} loggedIn={props.loggedIn} currentUserRole={props.currentUserRole} />
             <CurrentVisitors site={props.site} query={props.query} lastLoadTimestamp={props.lastLoadTimestamp} tooltipBoundary={tooltipBoundary.current} />
             <Filters className="flex" site={props.site} query={props.query} history={props.history} />
+            <ComparisonInput site={props.site} query={props.query} />
           </div>
           <Datepicker site={props.site} query={props.query} />
-          <ComparisonInput site={props.site} query={props.query} />
         </div>
       </div>
       <VisitorGraph site={props.site} query={props.query} />
