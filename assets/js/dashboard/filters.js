@@ -4,13 +4,14 @@ import { AdjustmentsVerticalIcon, MagnifyingGlassIcon, XMarkIcon, PencilSquareIc
 import classNames from 'classnames'
 import { Menu, Transition } from '@headlessui/react'
 
-import { appliedFilters, navigateToQuery, formattedFilters } from './query'
+import { appliedFilters, navigateToQuery } from './query'
 import {
   FILTER_GROUPS,
   formatFilterGroup,
   filterGroupForFilter,
-  parseQueryFilter
-} from "./stats/modals/filter";
+  parseQueryFilter,
+  formattedFilters
+} from "./util/filters";
 
 function removeFilter(key, history, query) {
   const newOpts = {

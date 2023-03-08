@@ -6,21 +6,10 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 import Combobox from '../../components/combobox'
 import Modal from './modal'
-import { parseQuery, formattedFilters } from '../../query'
+import { FILTER_GROUPS, parseQueryFilter, formatFilterGroup, formattedFilters, FILTER_PREFIXES, FILTER_TYPES } from '../../util/filters'
+import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath } from '../../util/url'
-
-export const FILTER_GROUPS = {
-  'page': ['page', 'entry_page', 'exit_page'],
-  'source': ['source', 'referrer'],
-  'location': ['country', 'region', 'city'],
-  'screen': ['screen'],
-  'browser': ['browser', 'browser_version'],
-  'os': ['os', 'os_version'],
-  'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
-  'goal': ['goal'],
-  'props': ['prop_key', 'prop_value']
-}
 
 function getFormState(filterGroup, query) {
   if (filterGroup === 'props') {
@@ -57,29 +46,6 @@ function getFormState(filterGroup, query) {
   }, {})
 }
 
-const FILTER_TYPES = {
-  isNot: 'is not',
-  contains: 'contains',
-  is: 'is'
-};
-
-const FILTER_PREFIXES = {
-  [FILTER_TYPES.isNot]: '!',
-  [FILTER_TYPES.contains]: '~',
-  [FILTER_TYPES.is]: ''
-};
-
-export function parseQueryFilter(queryFilter) {
-  const type = Object.keys(FILTER_PREFIXES)
-    .find(type => FILTER_PREFIXES[type] === queryFilter[0]) || FILTER_TYPES.is;
-
-  const value = [FILTER_TYPES.isNot, FILTER_TYPES.contains].includes(type)
-    ? queryFilter.substring(1)
-    : queryFilter;
-
-  return {type, value}
-}
-
 function toFilterQuery(value, type) {
   const prefix = FILTER_PREFIXES[type];
   return prefix + value.trim();
@@ -101,32 +67,6 @@ function withIndefiniteArticle(word) {
   }
   return `a ${word}`
 
-}
-
-export function formatFilterGroup(filterGroup) {
-  if (filterGroup === 'utm') {
-    return 'UTM tags'
-  } else if (filterGroup === 'location') {
-    return 'Location'
-  } else if (filterGroup === 'props') {
-    return 'Property'
-  } else {
-    return formattedFilters[filterGroup]
-  }
-}
-
-export function filterGroupForFilter(filter) {
-  const map = Object.entries(FILTER_GROUPS).reduce((filterToGroupMap, [group, filtersInGroup]) => {
-    const filtersToAdd = {}
-    filtersInGroup.forEach((filterInGroup) => {
-      filtersToAdd[filterInGroup] = group
-    })
-
-    return { ...filterToGroupMap, ...filtersToAdd }
-  }, {})
-
-
-  return map[filter] || filter
 }
 
 class FilterModal extends React.Component {

@@ -1,0 +1,85 @@
+export const FILTER_GROUPS = {
+  'page': ['page', 'entry_page', 'exit_page'],
+  'source': ['source', 'referrer'],
+  'location': ['country', 'region', 'city'],
+  'screen': ['screen'],
+  'browser': ['browser', 'browser_version'],
+  'os': ['os', 'os_version'],
+  'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
+  'goal': ['goal'],
+  'props': ['prop_key', 'prop_value']
+}
+
+export const FILTER_TYPES = {
+  isNot: 'is not',
+  contains: 'contains',
+  is: 'is'
+};
+
+export const FILTER_PREFIXES = {
+  [FILTER_TYPES.isNot]: '!',
+  [FILTER_TYPES.contains]: '~',
+  [FILTER_TYPES.is]: ''
+};
+
+export function parseQueryFilter(queryFilter) {
+  const type = Object.keys(FILTER_PREFIXES)
+    .find(type => FILTER_PREFIXES[type] === queryFilter[0]) || FILTER_TYPES.is;
+
+  const value = [FILTER_TYPES.isNot, FILTER_TYPES.contains].includes(type)
+    ? queryFilter.substring(1)
+    : queryFilter;
+
+  return {type, value}
+}
+
+export function formatFilterGroup(filterGroup) {
+  if (filterGroup === 'utm') {
+    return 'UTM tags'
+  } else if (filterGroup === 'location') {
+    return 'Location'
+  } else if (filterGroup === 'props') {
+    return 'Property'
+  } else {
+    return formattedFilters[filterGroup]
+  }
+}
+
+export function filterGroupForFilter(filter) {
+  const map = Object.entries(FILTER_GROUPS).reduce((filterToGroupMap, [group, filtersInGroup]) => {
+    const filtersToAdd = {}
+    filtersInGroup.forEach((filterInGroup) => {
+      filtersToAdd[filterInGroup] = group
+    })
+
+    return { ...filterToGroupMap, ...filtersToAdd }
+  }, {})
+
+
+  return map[filter] || filter
+}
+
+export const formattedFilters = {
+  'goal': 'Goal',
+  'props': 'Property',
+  'prop_key': 'Property',
+  'prop_value': 'Value',
+  'source': 'Source',
+  'utm_medium': 'UTM Medium',
+  'utm_source': 'UTM Source',
+  'utm_campaign': 'UTM Campaign',
+  'utm_content': 'UTM Content',
+  'utm_term': 'UTM Term',
+  'referrer': 'Referrer URL',
+  'screen': 'Screen size',
+  'browser': 'Browser',
+  'browser_version': 'Browser Version',
+  'os': 'Operating System',
+  'os_version': 'Operating System Version',
+  'country': 'Country',
+  'region': 'Region',
+  'city': 'City',
+  'page': 'Page',
+  'entry_page': 'Entry Page',
+  'exit_page': 'Exit Page'
+}
