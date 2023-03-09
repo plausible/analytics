@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - 'Last updated X seconds ago' info to 'current visitors' tooltips
 - Add support for more Bamboo adapters, i.e. `Bamboo.MailgunAdapter`, `Bamboo.MandrillAdapter`, `Bamboo.SendGridAdapter` plausible/analytics#2649
+- Added IPv6 Finch support (via the environment-variable `FINCH_IPV6`)
 
 ### Fixed
 - City report showing N/A instead of city names with imported data plausible/analytics#2675
