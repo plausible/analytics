@@ -408,6 +408,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+<<<<<<< HEAD
     test "can filter using the not_member filter type",
          %{conn: conn, site: site} do
       populate_stats(site, [

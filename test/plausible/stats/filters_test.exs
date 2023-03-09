@@ -84,7 +84,6 @@ defmodule Plausible.Stats.FiltersTest do
     end
   end
 
-<<<<<<< HEAD
   describe "member filter type" do
     test "simple member filter" do
       %{"page" => "/|/blog"}
