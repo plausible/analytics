@@ -80,7 +80,7 @@ const ComparisonInput = function({ site, query, history }) {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95">
         <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10" static>
-          { DropdownItem({ label: "Disabled", value: false, isCurrentlySelected: !query.comparison, updateMode }) }
+          { DropdownItem({ label: "No comparison", value: false, isCurrentlySelected: !query.comparison, updateMode }) }
           { Object.keys(COMPARISON_MODES).map((key) => DropdownItem({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison, updateMode })) }
         </Menu.Items>
       </Transition>
