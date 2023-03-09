@@ -184,7 +184,7 @@ class FilterModal extends React.Component {
 
   renderSearchBox(filter) {
     const isStrict = this.state.selectedFilterGroup === 'location'
-    return <Combobox fetchOptions={this.fetchOptions(filter)} strict={isStrict} selection={this.state.formState[filter]} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
+    return <Combobox fetchOptions={this.fetchOptions(filter)} strict={isStrict} value={this.state.formState[filter]} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
   }
 
   renderFilterInputs() {

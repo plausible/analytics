@@ -1,5 +1,5 @@
-import React, { Fragment, useState, useCallback } from 'react'
-import { Combobox, Transition } from '@headlessui/react'
+import React, { Fragment, useState, useCallback, useEffect, useRef } from 'react'
+import { Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import debounce from 'debounce-promise'
 
@@ -15,9 +15,13 @@ function Spinner() {
 export default function PlausibleCombobox(props) {
   const [options, setOptions] = useState([])
   const [loading, setLoading] = useState(false)
+  const [isOpen, setOpen] = useState(false);
+  const searchRef = useRef(null);
+  const containerRef = useRef(null);
 
   function fetchOptions(query) {
     setLoading(true)
+    setOpen(true)
 
     return props.fetchOptions(query).then((loadedOptions) => {
       setLoading(false)
@@ -27,80 +31,89 @@ export default function PlausibleCombobox(props) {
 
   const debouncedFetchOptions = useCallback(debounce(fetchOptions, 200), [])
 
-  function onOpen() {
-    setOptions([])
-    fetchOptions(props.selection.label)
+  function onInput() {
+    debouncedFetchOptions(searchRef.current.value)
   }
 
-  function onBlur(e) {
-    !props.strict && props.onChange({
-      value: e.target.value,
-      label: e.target.value
-    })
-  }
-
-
-  function renderOptions() {
-    if (loading) {
-      return (
-        <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
-          Loading options...
-        </div>
-      )
-    } else if (!loading && options.length === 0) {
-      return (
-        <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
-          No matches found in the current dashboard. Try selecting a different time range or searching for something different
-        </div>
-      )
-
-    } else {
-      return options.map((option) => {
-        return (
-          <Combobox.Option
-            key={option.value}
-            className={({ active }) =>
-              `relative cursor-default select-none py-2 px-3 ${active ? 'bg-indigo-600 text-white' : 'text-gray-900 dark:text-gray-300'
-              }`
-            }
-            value={option}
-          >
-            <span className="block truncate">{option.label}</span>
-          </Combobox.Option>
-        )
-      })
+  function toggleOpen() {
+    if (!isOpen) {
+      debouncedFetchOptions(searchRef.current.value)
+      setLoading(true)
     }
+    setOpen(!isOpen)
   }
+
+  function selectOption(option) {
+    props.onChange(option)
+    searchRef.current.value = ''
+    searchRef.current.focus()
+  }
+
+  function removeOption() {
+    props.onChange({value: '', label: ''})
+    searchRef.current.focus()
+  }
+
+  const handleClick = useCallback((e) => {
+    if (containerRef.current && containerRef.current.contains(e.target)) return;
+
+    setOpen(false)
+  })
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClick, false);
+    return () => { document.removeEventListener("mousedown", handleClick, false); }
+  }, [])
+
+  const noMatchesFound = !loading && options.length === 0
+  const matchesFound = !loading && options.length > 0
+  const placeholder = props.value.label ? '' : props.placeholder
 
   return (
-    <Combobox value={props.selection} onChange={(val) => props.onChange(val)}>
-      <div className="relative ml-2 w-full">
-        <Combobox.Button as="div" className="relative dark:bg-gray-900 dark:text-gray-300 block rounded-md shadow-sm border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus-within:ring-indigo-500 focus-within:border-indigo-500 ">
-          <Combobox.Input
-            className="border-none rounded-md focus:outline-none focus:ring-0 pr-10 text-sm"
-            style={{backgroundColor: 'inherit'}}
-            placeholder={props.placeholder}
-            displayValue={(item) => item && item.label}
-            onChange={(event) => debouncedFetchOptions(event.target.value)}
-            onBlur={onBlur}
-          />
-          <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-            {!loading && <ChevronDownIcon className="h-4 w-4 text-gray-500" />}
-            {loading && <Spinner />}
-          </div>
-        </Combobox.Button>
-        <Transition
-          as={Fragment}
-          leave="transition ease-in duration-100"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-          beforeEnter={onOpen}
-        >
-          <Combobox.Options className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
-            {renderOptions()}
-          </Combobox.Options>
-        </Transition>
+    <div ref={containerRef} className="relative ml-2 w-full">
+      <div className="flex items-center flex-wrap w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus-within:border-indigo-500">
+        { props.value.label && (
+          <span className="bg-indigo-100 rounded-sm px-2 py-0.5 ml-2 text-sm">{props.value.label} <button onClick={() => removeOption(props.value)} className="font-bold ml-1">&times;</button></span>
+        )}
+        <input className="border-none w-44 pr-4 flex-auto inline-block rounded-md focus:outline-none focus:ring-0 text-sm" ref={searchRef} style={{backgroundColor: "inherit"}} onFocus={(e) => fetchOptions(e.target.value)} placeholder={placeholder} type="text" onChange={onInput}></input>
+        <div onClick={toggleOpen} className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
+          {!loading && <ChevronDownIcon className="h-4 w-4 text-gray-500" />}
+          {loading && <Spinner />}
+        </div>
       </div>
-    </Combobox>
-  )
+      <Transition
+        as={Fragment}
+        leave="transition ease-in duration-100"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+        show={isOpen}
+      >
+        <ul className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
+          { loading && (
+            <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
+              Loading options...
+            </div>
+          )}
+          { noMatchesFound && (
+            <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
+              No matches found in the current dashboard. Try selecting a different time range or searching for something different
+            </div>
+          )}
+          { matchesFound && (
+            options.map((option) => {
+              return (
+                <li
+                  key={option.value}
+                  className="relative cursor-pointer select-none py-2 px-3 text-gray-900 dark:text-gray-300"
+                  onClick={() => selectOption(option)}
+                >
+                  <span className="block truncate">{option.label}</span>
+                </li>
+              )
+            })
+          )}
+        </ul>
+      </Transition>
+    </div>
+  );
 }
