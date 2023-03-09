@@ -84,6 +84,13 @@ defmodule Plausible.Stats.FiltersTest do
     end
   end
 
+  describe "member filter type" do
+    test "simple member filter" do
+      %{"page" => "/|/blog"}
+      |> assert_parsed(%{"event:page" => {:member, ["/", "/blog"]}})
+    end
+  end
+
   describe "matches filter type" do
     test "can be used with `goal` or `page` filters" do
       %{"page" => "/blog/post-*"}

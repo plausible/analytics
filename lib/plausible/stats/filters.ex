@@ -46,7 +46,7 @@ defmodule Plausible.Stats.Filters do
 
             Map.put(new_filters, "event:goal", filter)
 
-          name in (@visit_props ++ ["goal"]) ->
+          name in @visit_props ->
             Map.put(new_filters, "visit:" <> name, filter_value(name, val))
 
           name in @event_props ->
@@ -62,23 +62,31 @@ defmodule Plausible.Stats.Filters do
     %Plausible.Stats.Query{query | filters: new_filters}
   end
 
-  defp filter_value(key, "!" <> val) do
-    if String.contains?(key, ["page", "goal"]) && String.match?(val, ~r/\*/) do
-      {:does_not_match, val}
-    else
-      {:is_not, val}
-    end
-  end
-
-  defp filter_value(_, "~" <> val) do
-    {:matches, "**" <> val <> "**"}
-  end
-
+  @non_escaped_pipe_regex ~r/(?<!\\)\|/
   defp filter_value(key, val) do
-    if String.contains?(key, ["page", "goal"]) && String.match?(val, ~r/\*/) do
-      {:matches, val}
-    else
-      {:is, val}
+    {is_negated, val} = parse_negated_prefix(val)
+    {is_contains, val} = parse_contains_prefix(val)
+    is_list = Regex.match?(@non_escaped_pipe_regex, val)
+    is_wildcard = String.contains?(key, ["page", "goal"]) && String.match?(val, ~r/\*/)
+
+    cond do
+      is_negated && is_wildcard -> {:does_not_match, val}
+      is_negated -> {:is_not, val}
+      is_list -> {:member, parse_member_list(val)}
+      is_contains -> {:matches, "**" <> val <> "**"}
+      is_wildcard -> {:matches, val}
+      true -> {:is, val}
     end
+  end
+
+  defp parse_negated_prefix("!" <> val), do: {true, val}
+  defp parse_negated_prefix(val), do: {false, val}
+
+  defp parse_contains_prefix("~" <> val), do: {true, val}
+  defp parse_contains_prefix(val), do: {false, val}
+
+  defp parse_member_list(raw_value) do
+    raw_value
+    |> String.split(@non_escaped_pipe_regex)
   end
 end
