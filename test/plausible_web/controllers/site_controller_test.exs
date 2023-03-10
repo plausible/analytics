@@ -108,6 +108,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
+    test "fails to create the site if only http:// provided", %{conn: conn} do
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "http://",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert html_response(conn, 200) =~ "can&#39;t be blank"
+    end
+
     test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
       Plausible.Auth.User.remove_trial_expiry(user) |> Repo.update!()
 
