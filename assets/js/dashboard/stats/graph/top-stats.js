@@ -45,7 +45,7 @@ export default class TopStats extends React.Component {
     statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
     const { topStatData, lastLoadTimestamp } = this.props
-    const showingImported = topStatData && topStatData.imported_source && topStatData.with_imported
+    const showingImported = topStatData?.imported_source && topStatData?.with_imported
 
     return (
       <div>
