@@ -8,7 +8,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query = Query.from(site, %{"period" => "month", "date" => "2023-03-02"})
       now = ~N[2023-03-02 14:00:00]
 
-      {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now)
+      {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now: now)
 
       assert comparison.date_range.first == ~D[2023-02-27]
       assert comparison.date_range.last == ~D[2023-02-28]
@@ -19,7 +19,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query = Query.from(site, %{"period" => "month", "date" => "2023-03-01"})
       now = ~N[2023-03-01 14:00:00]
 
-      {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now)
+      {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now: now)
 
       assert comparison.date_range.first == ~D[2023-02-28]
       assert comparison.date_range.last == ~D[2023-02-28]
@@ -32,7 +32,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query = Query.from(site, %{"period" => "month", "date" => "2023-02-01"})
       now = ~N[2023-03-01 14:00:00]
 
-      {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now)
+      {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now: now)
 
       assert comparison.date_range.first == ~D[2023-01-04]
       assert comparison.date_range.last == ~D[2023-01-31]
@@ -43,7 +43,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query = Query.from(site, %{"period" => "month", "date" => "2023-02-01"})
       now = ~N[2023-03-01 14:00:00]
 
-      {:ok, comparison} = Comparisons.compare(site, query, "year_over_year", now)
+      {:ok, comparison} = Comparisons.compare(site, query, "year_over_year", now: now)
 
       assert comparison.date_range.first == ~D[2022-02-01]
       assert comparison.date_range.last == ~D[2022-02-28]
@@ -54,7 +54,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query = Query.from(site, %{"period" => "month", "date" => "2020-02-01"})
       now = ~N[2023-03-01 14:00:00]
 
-      {:ok, comparison} = Comparisons.compare(site, query, "year_over_year", now)
+      {:ok, comparison} = Comparisons.compare(site, query, "year_over_year", now: now)
 
       assert comparison.date_range.first == ~D[2019-02-01]
       assert comparison.date_range.last == ~D[2019-03-01]
@@ -67,7 +67,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query = Query.from(site, %{"period" => "year", "date" => "2023-03-01"})
       now = ~N[2023-03-01 14:00:00]
 
-      {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now)
+      {:ok, comparison} = Comparisons.compare(site, query, "previous_period", now: now)
 
       assert comparison.date_range.first == ~D[2022-11-02]
       assert comparison.date_range.last == ~D[2022-12-31]
@@ -78,7 +78,7 @@ defmodule Plausible.Stats.ComparisonsTest do
       query = Query.from(site, %{"period" => "year", "date" => "2023-03-01"})
       now = ~N[2023-03-01 14:00:00]
 
-      {:ok, comparison} = Comparisons.compare(site, query, "year_over_year", now)
+      {:ok, comparison} = Comparisons.compare(site, query, "year_over_year", now: now)
 
       assert comparison.date_range.first == ~D[2022-01-01]
       assert comparison.date_range.last == ~D[2022-03-01]

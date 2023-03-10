@@ -26,15 +26,18 @@ defmodule Plausible.Stats.Comparisons do
         mode,
         now \\ nil
       ) do
+  def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode, opts \\ []) do
     if valid_mode?(source_query, mode) do
-      now = now || Timex.now(site.timezone)
-      {:ok, do_compare(source_query, mode, now)}
+      opts = Keyword.put_new(opts, :now, Timex.now(site.timezone))
+      {:ok, do_compare(source_query, mode, opts)}
     else
       {:error, :not_supported}
     end
   end
 
-  defp do_compare(source_query, "year_over_year", now) do
+  defp do_compare(source_query, "year_over_year", opts) do
+    now = Keyword.fetch!(opts, :now)
+
     start_date = Date.add(source_query.date_range.first, -365)
     end_date = earliest(source_query.date_range.last, now) |> Date.add(-365)
 
@@ -42,7 +45,9 @@ defmodule Plausible.Stats.Comparisons do
     %Stats.Query{source_query | date_range: range}
   end
 
-  defp do_compare(source_query, "previous_period", now) do
+  defp do_compare(source_query, "previous_period", opts) do
+    now = Keyword.fetch!(opts, :now)
+
     last = earliest(source_query.date_range.last, now)
     diff_in_days = Date.diff(source_query.date_range.first, last) - 1
 
