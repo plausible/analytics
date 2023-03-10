@@ -125,6 +125,47 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
     end
   end
 
+  describe "GET /api/stats/top-stats - with imported data" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "merges imported data into all top stat metrics except views_per_visit", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:imported_visitors, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      res = json_response(conn, 200)
+
+      assert res["top_stats"] == [
+               %{"name" => "Unique visitors", "value" => 3, "change" => 100},
+               %{"name" => "Total visits", "value" => 3, "change" => 100},
+               %{"name" => "Total pageviews", "value" => 4, "change" => 100},
+               %{"name" => "Views per visit", "value" => 1.5, "change" => 100},
+               %{"name" => "Bounce rate", "value" => 33, "change" => nil},
+               %{"name" => "Visit duration", "value" => 303, "change" => 100}
+             ]
+    end
+  end
+
   describe "GET /api/stats/top-stats - realtime" do
     setup [:create_user, :log_in, :create_new_site]
 

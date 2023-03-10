@@ -452,6 +452,14 @@ defmodule Plausible.Stats.Imported do
     |> select_joined_metrics(rest)
   end
 
+  defp select_joined_metrics(q, [:views_per_visit | rest]) do
+    q
+    |> select_merge([s, _i], %{
+      views_per_visit: s.views_per_visit
+    })
+    |> select_joined_metrics(rest)
+  end
+
   defp select_joined_metrics(q, [:bounce_rate | rest]) do
     q
     |> select_merge([s, i], %{
