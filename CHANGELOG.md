@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 - Always show direct traffic in sources reports plausible/analytics#2531
 - Stop recording XX and T1 country codes plausible/analytics#2556
 - Device type is now determined from the User-Agent instead of window.innerWidth plausible/analytics#2711
+- Add padding by default to embedded dashboards so that shadows are not cut off plausible/analytics#2744
 
 ### Removed
 - Remove Firewall plug and `IP_BLOCKLIST` environment variable
