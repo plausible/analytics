@@ -8,7 +8,7 @@ defmodule Plausible.MixProject do
       docs: docs(),
       app: :plausible,
       version: System.get_env("APP_VERSION", "0.0.1"),
-      elixir: "~> 1.11",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
