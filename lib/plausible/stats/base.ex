@@ -154,48 +154,7 @@ defmodule Plausible.Stats.Base do
         where: s.start >= ^first_datetime and s.start < ^last_datetime
       )
       |> add_sample_hint(query)
-
-    sessions_q =
-      case Query.get_filter_by_prefix(query, "visit:entry_props:") do
-        nil ->
-          sessions_q
-
-        {"visit:entry_props:" <> prop_name, filter_value} ->
-          case filter_value do
-            {:is, "(none)"} ->
-              from(
-                s in sessions_q,
-                where: fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
-              )
-
-            {:is, value} ->
-              from(
-                s in sessions_q,
-                inner_lateral_join: meta in "entry_meta",
-                as: :meta,
-                where: meta.key == ^prop_name and meta.value == ^value
-              )
-
-            {:is_not, "(none)"} ->
-              from(
-                s in sessions_q,
-                where: fragment("has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
-              )
-
-            {:is_not, value} ->
-              from(
-                s in sessions_q,
-                left_lateral_join: meta in "entry_meta",
-                as: :meta,
-                where:
-                  (meta.key == ^prop_name and meta.value != ^value) or
-                    fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
-              )
-
-            _ ->
-              sessions_q
-          end
-      end
+      |> filter_by_entry_props(query)
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
       filter = query.filters["visit:" <> prop_name]
@@ -233,6 +192,52 @@ defmodule Plausible.Stats.Base do
       end
     end)
   end
+
+  def filter_by_entry_props(sessions_q, query) do
+    case Query.get_filter_by_prefix(query, "visit:entry_props:") do
+      nil ->
+        sessions_q
+
+      {"visit:entry_props:" <> prop_name, filter_value} ->
+        apply_entry_prop_filter(sessions_q, prop_name, filter_value)
+    end
+  end
+
+  def apply_entry_prop_filter(sessions_q, prop_name, {:is, "(none)"}) do
+    from(
+      s in sessions_q,
+      where: fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+    )
+  end
+
+  def apply_entry_prop_filter(sessions_q, prop_name, {:is, value}) do
+    from(
+      s in sessions_q,
+      inner_lateral_join: meta in "entry_meta",
+      as: :meta,
+      where: meta.key == ^prop_name and meta.value == ^value
+    )
+  end
+
+  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, "(none)"}) do
+    from(
+      s in sessions_q,
+      where: fragment("has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+    )
+  end
+
+  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, value}) do
+    from(
+      s in sessions_q,
+      left_lateral_join: meta in "entry_meta",
+      as: :meta,
+      where:
+        (meta.key == ^prop_name and meta.value != ^value) or
+          fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+    )
+  end
+
+  def apply_entry_prop_filter(sessions_q, _, _), do: sessions_q
 
   def select_event_metrics(q, []), do: q
 
