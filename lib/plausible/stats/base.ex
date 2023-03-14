@@ -155,7 +155,6 @@ defmodule Plausible.Stats.Base do
       )
       |> add_sample_hint(query)
 
-
     sessions_q =
       case Query.get_filter_by_prefix(query, "visit:entry_props:") do
         nil ->

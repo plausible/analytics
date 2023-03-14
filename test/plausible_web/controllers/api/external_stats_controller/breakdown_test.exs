@@ -1302,7 +1302,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         assert json_response(conn, 200) == %{
                  "results" => [
                    %{property => "Google", "visitors" => 2},
-                   %{property => "Twitter", "visitors" => 1},
+                   %{property => "Twitter", "visitors" => 1}
                  ]
                }
       end
