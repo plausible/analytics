@@ -123,6 +123,44 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
       assert %{"name" => "Time on page", "value" => 900, "change" => 100} in res["top_stats"]
     end
+
+    test "calculates time on page instead when filtered for multiple pages", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/pageA",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/pageB",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          pathname: "/pageC",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:16:00]
+        ),
+        build(:pageview,
+          pathname: "/pageA",
+          timestamp: ~N[2021-01-01 00:15:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{page: "/pageA|/pageB"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Time on page", "value" => 480, "change" => 100} in res["top_stats"]
+    end
   end
 
   describe "GET /api/stats/top-stats - with imported data" do

@@ -72,6 +72,9 @@ defmodule Plausible.Stats.Aggregate do
         {:is_not, page} ->
           {"p != #{where_param}", page}
 
+        {:member, page} ->
+          {"p IN tuple(?)", page}
+
         {:matches, expr} ->
           regex = page_regex(expr)
           {"match(p, #{where_param})", regex}
