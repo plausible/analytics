@@ -48,7 +48,7 @@ export function serializeQuery(query, extraQuery=[]) {
 
   if (query.comparison) {
     queryObj.comparison = query.comparison
-    queryObj.comparison_from = query.comparison_from
+    queryObj.compare_from = query.compare_from
   }
 
   Object.assign(queryObj, ...extraQuery)

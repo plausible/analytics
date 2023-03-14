@@ -88,12 +88,12 @@ const ComparisonInput = function({ site, query, history }) {
 
   const updateMode = (mode, from = null) => {
     storeComparisonMode(site.domain, mode)
-    navigateToQuery(history, query, { comparison: mode, comparison_from: from })
+    navigateToQuery(history, query, { comparison: mode, compare_from: from })
   }
 
   const buildLabel = (query) => {
     if (query.comparison == "custom") {
-      const date = parseUTCDate(query.comparison_from)
+      const date = parseUTCDate(query.compare_from)
       return formatDayShort(date, true)
     } else {
       return COMPARISON_MODES[query.comparison]

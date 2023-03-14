@@ -115,9 +115,7 @@ defmodule PlausibleWeb.Api.StatsController do
       full_intervals = build_full_intervals(query, labels)
 
       comparison_result =
-        case Comparisons.compare(site, query, params["comparison"],
-               from: params["comparison_from"]
-             ) do
+        case Comparisons.compare(site, query, params["comparison"], from: params["compare_from"]) do
           {:ok, comparison_query} -> Stats.timeseries(site, comparison_query, [selected_metric])
           {:error, :not_supported} -> nil
         end
@@ -177,7 +175,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     with :ok <- validate_params(params) do
       comparison_mode = params["comparison"] || "previous_period"
-      comparison_opts = [from: params["comparison_from"]]
+      comparison_opts = [from: params["compare_from"]]
 
       query = Query.from(site, params) |> Filters.add_prefix()
 
