@@ -38,7 +38,7 @@
         Delete site
         </p>
         <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-        Permanently remove all stats and the site configuration too. This process may take up to 48 hours so you won't be able to immediately register the same site again
+        Permanently remove all stats and the site configuration too
         </p>
       </div>
       <%= link "Delete #{@site.domain}", to: "/#{URI.encode_www_form(@site.domain)}", method: :delete, class: "inline-block px-4 py-2 border border-transparent font-medium rounded-md text-red-700 dark:text-red-800 bg-red-100 dark:bg-red-200 hover:bg-red-50 dark:hover:bg-red-300 focus:outline-none focus:border-red-300 focus:ring active:bg-red-200 transition ease-in-out duration-150 sm:text-sm sm:leading-5", data: [confirm: "Deleting the site data cannot be reversed. Are you sure?"] %>
