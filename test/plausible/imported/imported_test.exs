@@ -1135,6 +1135,11 @@ defmodule Plausible.ImportedTest do
                    "value" => 1
                  },
                  %{
+                   "change" => 0,
+                   "name" => "Views per visit",
+                   "value" => 0.0
+                 },
+                 %{
                    "change" => nil,
                    "name" => "Bounce rate",
                    "value" => 0
