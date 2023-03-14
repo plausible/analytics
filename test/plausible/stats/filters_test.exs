@@ -89,6 +89,11 @@ defmodule Plausible.Stats.FiltersTest do
       %{"page" => "/|/blog"}
       |> assert_parsed(%{"event:page" => {:member, ["/", "/blog"]}})
     end
+
+    test "escaping pipe character" do
+      %{"page" => "/|\\|"}
+      |> assert_parsed(%{"event:page" => {:member, ["/", "|"]}})
+    end
   end
 
   describe "matches filter type" do
