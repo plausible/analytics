@@ -28,8 +28,6 @@ function Historical(props) {
     return null
   }
 
-  const [graphData, setGraphData] = React.useState(null)
-
   return (
     <div className="mb-12">
       <div id="stats-container-top"></div>
@@ -41,10 +39,10 @@ function Historical(props) {
             <Filters className="flex" site={props.site} query={props.query} history={props.history} />
           </div>
           <Datepicker site={props.site} query={props.query} />
-          <ComparisonInput site={props.site} query={props.query} graphData={graphData} />
+          <ComparisonInput site={props.site} query={props.query} />
         </div>
       </div>
-      <VisitorGraph site={props.site} query={props.query} handleGraphDataChange={setGraphData} />
+      <VisitorGraph site={props.site} query={props.query} />
       <div className="items-start justify-between block w-full md:flex">
         <Sources site={props.site} query={props.query} />
         <Pages site={props.site} query={props.query} />

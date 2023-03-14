@@ -465,7 +465,6 @@ export default class VisitorGraph extends React.Component {
     api.get(url, this.props.query, params)
       .then((res) => {
         this.setState({ mainGraphLoadingState: LoadingState.loaded, graphData: res })
-        this.props.handleGraphDataChange && this.props.handleGraphDataChange(res)
         return res
       })
       .catch((err) => {

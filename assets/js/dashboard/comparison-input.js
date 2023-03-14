@@ -5,7 +5,6 @@ import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from './util/storage'
-import { parseUTCDate, formatDayShort } from "./util/date"
 
 const COMPARISON_MODES = {
   'previous_period': 'Previous period',
@@ -53,7 +52,7 @@ function DropdownItem({ label, value, isCurrentlySelected, updateMode }) {
   )
 }
 
-const ComparisonInput = function({ site, query, history, graphData }) {
+const ComparisonInput = function({ site, query, history }) {
   if (!site.flags.comparisons) return null
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
   if (!query.comparison) return null
@@ -63,19 +62,6 @@ const ComparisonInput = function({ site, query, history, graphData }) {
     navigateToQuery(history, query, { comparison: key })
   }
 
-  const buildLabel = () => {
-    if (!graphData || !graphData.comparison_labels) return null
-
-    const sourceFrom = parseUTCDate(graphData.labels.at(0))
-    const comparingFrom = parseUTCDate(graphData.comparison_labels.at(0))
-    const comparingTo = parseUTCDate(graphData.comparison_labels.at(-1))
-
-    const comparisonDatesCrossYearBoundary = comparingFrom.getYear() !== comparingTo.getYear()
-    const comparingDifferentYears = sourceFrom.getYear() != comparingFrom.getYear()
-
-    return `${formatDayShort(comparingFrom, comparisonDatesCrossYearBoundary)} - ${formatDayShort(comparingTo, comparingDifferentYears || comparisonDatesCrossYearBoundary)}`
-  }
-
   return (
     <>
       <span className="pl-2 text-sm font-medium text-gray-800 dark:text-gray-200">vs.</span>
@@ -83,7 +69,7 @@ const ComparisonInput = function({ site, query, history, graphData }) {
         <div className="min-w-32 md:w-52 md:relative">
           <Menu as="div" className="relative inline-block pl-2 w-full">
             <Menu.Button className="bg-white text-gray-800 text-xs md:text-sm font-medium dark:bg-gray-800 dark:hover:bg-gray-900 dark:text-gray-200 hover:bg-gray-200 flex md:px-3 px-2 py-2 items-center justify-between leading-tight rounded shadow cursor-pointer w-full truncate">
-              <span className="truncate">{ buildLabel() }</span>
+              <span className="truncate">{ COMPARISON_MODES[query.comparison] || 'Compare to' }</span>
               <ChevronDownIcon className="hidden sm:inline-block h-4 w-4 md:h-5 md:w-5 text-gray-500 ml-2" aria-hidden="true" />
             </Menu.Button>
             <Transition
