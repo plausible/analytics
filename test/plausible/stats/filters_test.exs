@@ -16,10 +16,10 @@ defmodule Plausible.Stats.FiltersTest do
       |> assert_parsed(%{"event:page" => {:is, "/"}})
 
       %{"goal" => "Signup"}
-      |> assert_parsed(%{"event:goal" => {:is, :event, "Signup"}})
+      |> assert_parsed(%{"event:goal" => {:is, {:event, "Signup"}}})
 
       %{"goal" => "Visit /blog"}
-      |> assert_parsed(%{"event:goal" => {:is, :page, "/blog"}})
+      |> assert_parsed(%{"event:goal" => {:is, {:page, "/blog"}}})
 
       %{"source" => "Google"}
       |> assert_parsed(%{"visit:source" => {:is, "Google"}})
@@ -94,6 +94,11 @@ defmodule Plausible.Stats.FiltersTest do
       %{"page" => "/|\\|"}
       |> assert_parsed(%{"event:page" => {:member, ["/", "|"]}})
     end
+
+    test "mixed goals" do
+      %{"goal" => "Signup|Visit /thank-you"}
+      |> assert_parsed(%{"event:goal" => {:member, [{:event, "Signup"}, {:page, "/thank-you"}]}})
+    end
   end
 
   describe "matches filter type" do
@@ -102,7 +107,7 @@ defmodule Plausible.Stats.FiltersTest do
       |> assert_parsed(%{"event:page" => {:matches, "/blog/post-*"}})
 
       %{"goal" => "Visit /blog/post-*"}
-      |> assert_parsed(%{"event:goal" => {:matches, :page, "/blog/post-*"}})
+      |> assert_parsed(%{"event:goal" => {:matches, {:page, "/blog/post-*"}}})
     end
 
     test "other filters default to `is` even when wildcard is present" do

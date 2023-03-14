@@ -78,15 +78,21 @@ defmodule Plausible.Stats.Base do
 
     q =
       case query.filters["event:goal"] do
-        {:is, :page, path} ->
+        {:is, {:page, path}} ->
           from(e in q, where: e.pathname == ^path)
 
-        {:matches, :page, expr} ->
+        {:matches, {:page, expr}} ->
           regex = page_regex(expr)
           from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
 
-        {:is, :event, event} ->
+        {:is, {:event, event}} ->
           from(e in q, where: e.name == ^event)
+
+        {:member, clauses} ->
+          {events, pages} = Enum.split_with(clauses, fn {type, _} -> type == :event end)
+          events = Enum.map(events, fn {_, val} -> val end)
+          pages = Enum.map(pages, fn {_, val} -> val end)
+          from(e in q, where: e.pathname in ^pages or e.name in ^events)
 
         nil ->
           q

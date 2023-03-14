@@ -22,7 +22,8 @@ defmodule Plausible.Stats.Filters do
 
   @event_props [
     "name",
-    "page"
+    "page",
+    "goal"
   ]
 
   def visit_props() do
@@ -33,19 +34,6 @@ defmodule Plausible.Stats.Filters do
     new_filters =
       Enum.reduce(query.filters, %{}, fn {name, val}, new_filters ->
         cond do
-          name == "goal" ->
-            filter =
-              case val do
-                "Visit " <> page ->
-                  {filter_type, filter_val} = filter_value(name, page)
-                  {filter_type, :page, filter_val}
-
-                event ->
-                  {:is, :event, event}
-              end
-
-            Map.put(new_filters, "event:goal", filter)
-
           name in @visit_props ->
             Map.put(new_filters, "visit:" <> name, filter_value(name, val))
 
@@ -68,11 +56,13 @@ defmodule Plausible.Stats.Filters do
     {is_contains, val} = parse_contains_prefix(val)
     is_list = Regex.match?(@non_escaped_pipe_regex, val)
     is_wildcard = String.contains?(key, ["page", "goal"]) && String.match?(val, ~r/\*/)
+    val = if is_list, do: parse_member_list(val), else: val
+    val = if key == "goal", do: wrap_goal_value(val), else: val
 
     cond do
       is_negated && is_wildcard -> {:does_not_match, val}
       is_negated -> {:is_not, val}
-      is_list -> {:member, parse_member_list(val)}
+      is_list -> {:member, val}
       is_contains -> {:matches, "**" <> val <> "**"}
       is_wildcard -> {:matches, val}
       true -> {:is, val}
@@ -94,4 +84,8 @@ defmodule Plausible.Stats.Filters do
   defp remove_escape_chars(value) do
     String.replace(value, "\\|", "|")
   end
+
+  defp wrap_goal_value(goals) when is_list(goals), do: Enum.map(goals, &wrap_goal_value/1)
+  defp wrap_goal_value("Visit " <> page), do: {:page, page}
+  defp wrap_goal_value(event), do: {:event, event}
 end

@@ -35,7 +35,7 @@ defmodule Plausible.Stats.Props do
 
     case prop_filter do
       {"event:props:" <> key, {_, "(none)"}} ->
-        {_, _, goal_name} = query.filters["event:goal"]
+        {_, {_, goal_name}} = query.filters["event:goal"]
         %{goal_name => [key]}
 
       {"event:props:" <> _key, _} ->
