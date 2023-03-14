@@ -39,6 +39,25 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert plot == [1] ++ zeroes ++ [1]
     end
 
+    test "displays visitors for a day with imported data", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:imported_visitors, date: ~D[2021-01-01]),
+        build(:imported_visitors, date: ~D[2021-01-31])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert %{"plot" => plot, "imported_source" => "Google Analytics"} = json_response(conn, 200)
+
+      assert plot == [2] ++ List.duplicate(0, 23)
+    end
+
     test "displays hourly stats in configured timezone", %{conn: conn, user: user} do
       # UTC+1
       site =
@@ -60,7 +79,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      zeroes = Stream.repeatedly(fn -> 0 end) |> Stream.take(22) |> Enum.into([])
+      zeroes = List.duplicate(0, 22)
 
       # Expecting pageview to show at 1am CET
       assert plot == [0, 1] ++ zeroes
