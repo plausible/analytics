@@ -26,14 +26,13 @@ function BrowserVersions({ query, site }) {
   }
 
   const isNotSet = query.filters.browser === '(not set)'
-  const browserName = isNotSet ? 'Browser' : query.filters.browser
   const filter = isNotSet ? {} : { browser_version: 'name' }
 
   return (
     <ListReport
       fetchData={fetchData}
       filter={filter}
-      keyLabel={browserName + ' version'}
+      keyLabel="Browser version"
       query={query}
     />
   )
@@ -61,14 +60,13 @@ function OperatingSystemVersions({ query, site }) {
   }
 
   const isNotSet = query.filters.os === '(not set)'
-  const osName = isNotSet ? 'Operating System' : query.filters.os
   const filter = isNotSet ? {} : { os_version: 'name' }
 
   return (
     <ListReport
       fetchData={fetchData}
       filter={filter}
-      keyLabel={osName + ' version'}
+      keyLabel="Operating System Version"
       query={query}
     />
   )
