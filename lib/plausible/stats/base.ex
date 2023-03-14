@@ -30,6 +30,7 @@ defmodule Plausible.Stats.Base do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_events(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
