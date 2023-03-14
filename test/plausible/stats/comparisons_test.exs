@@ -24,6 +24,17 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison.date_range.first == ~D[2023-02-28]
       assert comparison.date_range.last == ~D[2023-02-28]
     end
+
+    test "limits the comparison query to current day when mode is custom" do
+      site = build(:site)
+      query = Query.from(site, %{"period" => "month", "date" => "2023-03-25"})
+      now = ~N[2023-03-25 14:00:00]
+
+      {:ok, comparison} = Comparisons.compare(site, query, "custom", from: "2023-03-23", now: now)
+
+      assert comparison.date_range.first == ~D[2023-03-23]
+      assert comparison.date_range.last == ~D[2023-03-25]
+    end
   end
 
   describe "with period set to previous month" do
@@ -58,6 +69,16 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       assert comparison.date_range.first == ~D[2019-02-01]
       assert comparison.date_range.last == ~D[2019-03-01]
+    end
+
+    test "infers the end date from source query length when mode is custom" do
+      site = build(:site)
+      query = Query.from(site, %{"period" => "month", "date" => "2023-03-01"})
+
+      {:ok, comparison} = Comparisons.compare(site, query, "custom", from: "2023-04-02")
+
+      assert comparison.date_range.first == ~D[2023-04-02]
+      assert comparison.date_range.last == ~D[2023-05-01]
     end
   end
 
@@ -104,6 +125,16 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       assert comparison.date_range.first == ~D[2021-01-01]
       assert comparison.date_range.last == ~D[2021-12-31]
+    end
+
+    test "infers the end date from source query length when mode is custom" do
+      site = build(:site)
+      query = Query.from(site, %{"period" => "year", "date" => "2022-03-02"})
+
+      {:ok, comparison} = Comparisons.compare(site, query, "custom", from: "2019-01-01")
+
+      assert comparison.date_range.first == ~D[2019-01-01]
+      assert comparison.date_range.last == ~D[2019-12-30]
     end
   end
 
