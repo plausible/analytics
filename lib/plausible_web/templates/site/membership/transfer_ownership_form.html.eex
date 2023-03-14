@@ -5,7 +5,7 @@
     Enter the email address of the new owner. We will contact them over email to offer them the ownership of <%= @site.domain %>. If they don't respond in 48 hours, the request will expire automatically.
   </p>
   <p class="mt-4 max-w-2xl text-sm text-gray-500">
-    Do note that a subscription plan is not transfered alongside the site. If they accept the transfer request, the new owner will need to have an active subscription. Your access will be downgraded to <b>admin</b> and
+    Do note that a subscription plan is not transferred alongside the site. If they accept the transfer request, the new owner will need to have an active subscription. Your access will be downgraded to <b>admin</b> and
     any other member roles will stay the same.
   </p>
 
