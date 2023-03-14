@@ -2,11 +2,13 @@ import React, { Fragment, useState, useCallback, useEffect, useRef } from 'react
 import { Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import debounce from 'debounce-promise'
+import classNames from 'classnames'
 
 export default function PlausibleCombobox(props) {
   const [options, setOptions] = useState([])
   const [loading, setLoading] = useState(false)
   const [isOpen, setOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
   const searchRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -16,6 +18,7 @@ export default function PlausibleCombobox(props) {
 
     return props.fetchOptions(query).then((loadedOptions) => {
       setLoading(false)
+      setHighlightedIndex(0)
       setOptions(loadedOptions)
     })
   }
@@ -30,8 +33,10 @@ export default function PlausibleCombobox(props) {
     if (!isOpen) {
       fetchOptions(searchRef.current.value)
       searchRef.current.focus()
+      setOpen(true)
+    } else {
+      setOpen(false)
     }
-    setOpen(!isOpen)
   }
 
   function selectOption(option) {
@@ -97,12 +102,19 @@ export default function PlausibleCombobox(props) {
             </div>
           )}
           { matchesFound && (
-            options.map((option) => {
+            options.map((option, i) => {
+              const isHighlighted = highlightedIndex === i
+              const className = classNames('relative cursor-pointer select-none py-2 px-3', {
+                'text-gray-900 dark:text-gray-300': !isHighlighted,
+                'bg-indigo-600 text-white': isHighlighted,
+              })
+
               return (
                 <li
                   key={option.value}
-                  className="relative cursor-pointer select-none py-2 px-3 text-gray-900 dark:text-gray-300"
+                  className={className}
                   onClick={() => selectOption(option)}
+                  onMouseEnter={() => setHighlightedIndex(i)}
                 >
                   <span className="block truncate">{option.label}</span>
                 </li>
