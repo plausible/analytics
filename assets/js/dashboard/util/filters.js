@@ -22,15 +22,52 @@ export const FILTER_PREFIXES = {
   [FILTER_TYPES.is]: ''
 };
 
-export function parseQueryFilter(queryFilter) {
+function parsePrefix(rawValue) {
   const type = Object.keys(FILTER_PREFIXES)
-    .find(type => FILTER_PREFIXES[type] === queryFilter[0]) || FILTER_TYPES.is;
+    .find(type => FILTER_PREFIXES[type] === rawValue[0]) || FILTER_TYPES.is;
 
   const value = [FILTER_TYPES.isNot, FILTER_TYPES.contains].includes(type)
-    ? queryFilter.substring(1)
-    : queryFilter;
+    ? rawValue.substring(1)
+    : rawValue;
 
-  return {type, value}
+  const values = value
+    .split('|')
+    .filter((clause) => !!clause)
+
+  return {type, values}
+}
+
+export function parseQueryFilter(query, filter) {
+  if (filter === 'props') {
+    const rawValue = query.filters['props']
+    const [[_propKey, propVal]] = Object.entries(rawValue)
+    const {type, values} = parsePrefix(propVal)
+    const clauses = values.map(val => { return {value: val, label: val}})
+    return {type, clauses}
+  } else {
+    const {type, values} = parsePrefix(query.filters[filter] || '')
+
+    let labels = values
+
+    if (filter === 'country' && values.length > 0) {
+      const rawLabel = (new URLSearchParams(window.location.search)).get('country_labels') || ''
+      labels = rawLabel.split('|').filter(label => !!label)
+    }
+
+    if (filter === 'region' && values.length > 0) {
+      const rawLabel = (new URLSearchParams(window.location.search)).get('region_labels') || ''
+      labels = rawLabel.split('|').filter(label => !!label)
+    }
+
+    if (filter === 'city' && values.length > 0) {
+      const rawLabel = (new URLSearchParams(window.location.search)).get('city_labels') || ''
+      labels = rawLabel.split('|').filter(label => !!label)
+    }
+
+    const clauses = values.map((value, index) => { return {value, label: labels[index]}})
+
+    return {type, clauses}
+  }
 }
 
 export function formatFilterGroup(filterGroup) {

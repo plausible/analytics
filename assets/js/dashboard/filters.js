@@ -37,51 +37,21 @@ function clearAllFilters(history, query) {
   );
 }
 
-function filterText(key, rawValue, query) {
-  const {type, value} = parseQueryFilter(rawValue)
+function filterText(key, _rawValue, query) {
+  const {type, clauses} = parseQueryFilter(query, key)
 
-  if (key === "goal") {
-    return <>Completed goal <b>{value}</b></>
-  }
-  if (key === "props") {
-    const [metaKey, metaValue] = Object.entries(value)[0]
-    const eventName = query.filters.goal ? query.filters.goal : 'event'
-    const metaFilter = parseQueryFilter(metaValue)
-    return <>{eventName}.{metaKey} {metaFilter.type} <b>{metaFilter.value}</b></>
-  }
-  if (key === "browser_version") {
-    const isNotSet = query.filters.browser === '(not set)' || (!query.filters.browser)
-    const browserName = isNotSet ? 'Browser' : query.filters.browser
-    return <>{browserName}.Version {type} <b>{value}</b></>
-  }
-  if (key === "os_version") {
-    const isNotSet = query.filters.os === '(not set)' || (!query.filters.os)
-    const osName = isNotSet ? 'Operating System' : query.filters.os
-    console.info('osname', osName)
-    return <>{osName}.Version {type} <b>{value}</b></>
-  }
-  if (key === "country") {
-    const q = new URLSearchParams(window.location.search)
-    const countryName = q.get('country_name')
-    return <>Country {type} <b>{countryName}</b></>
-  }
-
-  if (key === "region") {
-    const q = new URLSearchParams(window.location.search)
-    const regionName = q.get('region_name')
-    return <>Region {type} <b>{regionName}</b></>
-  }
-
-  if (key === "city") {
-    const q = new URLSearchParams(window.location.search)
-    const cityName = q.get('city_name')
-    return <>City {type} <b>{cityName}</b></>
-  }
+  // TODO
+  // if (key === "goal") {
+  //   return <>Completed goal <b>{value}</b></>
+  // }
 
   const formattedFilter = formattedFilters[key]
 
-  if (formattedFilter) {
-    return <>{formattedFilter} {type} <b>{value}</b></>
+  if (key === "props") {
+    const [[propKey, _propValue]] = Object.entries(query.filters['props'])
+    return <>props.{propKey} {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  } else if (formattedFilter) {
+    return <>{formattedFilter} {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
 
   throw new Error(`Unknown filter: ${key}`)

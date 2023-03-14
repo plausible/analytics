@@ -3,15 +3,6 @@ import { Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import debounce from 'debounce-promise'
 
-function Spinner() {
-  return (
-    <svg className="animate-spin h-4 w-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-  )
-}
-
 export default function PlausibleCombobox(props) {
   const [options, setOptions] = useState([])
   const [loading, setLoading] = useState(false)
@@ -37,20 +28,24 @@ export default function PlausibleCombobox(props) {
 
   function toggleOpen() {
     if (!isOpen) {
-      debouncedFetchOptions(searchRef.current.value)
-      setLoading(true)
+      fetchOptions(searchRef.current.value)
+      searchRef.current.focus()
     }
     setOpen(!isOpen)
   }
 
   function selectOption(option) {
-    props.onChange(option)
-    searchRef.current.value = ''
+    props.onChange([...props.values, option])
+    if (searchRef.current.value !== '') {
+      searchRef.current.value = ''
+      fetchOptions('')
+    }
     searchRef.current.focus()
   }
 
-  function removeOption() {
-    props.onChange({value: '', label: ''})
+  function removeOption(option) {
+    const newValues = props.values.filter((val) => val.value !== option.value)
+    props.onChange(newValues)
     searchRef.current.focus()
   }
 
@@ -67,16 +62,18 @@ export default function PlausibleCombobox(props) {
 
   const noMatchesFound = !loading && options.length === 0
   const matchesFound = !loading && options.length > 0
-  const placeholder = props.value.label ? '' : props.placeholder
 
   return (
     <div ref={containerRef} className="relative ml-2 w-full">
-      <div className="flex items-center flex-wrap w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus-within:border-indigo-500">
-        { props.value.label && (
-          <span className="bg-indigo-100 rounded-sm px-2 py-0.5 ml-2 text-sm">{props.value.label} <button onClick={() => removeOption(props.value)} className="font-bold ml-1">&times;</button></span>
-        )}
-        <input className="border-none w-44 pr-4 flex-auto inline-block rounded-md focus:outline-none focus:ring-0 text-sm" ref={searchRef} style={{backgroundColor: "inherit"}} onFocus={(e) => fetchOptions(e.target.value)} placeholder={placeholder} type="text" onChange={onInput}></input>
-        <div onClick={toggleOpen} className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
+      <div onClick={toggleOpen} className="pl-2 pr-4 py-1 flex flex-1 items-center flex-wrap w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus-within:border-indigo-500">
+        { props.values.map((value) => {
+            return (
+              <span key={value.value} className="bg-indigo-100 rounded-sm px-2 py-0.5 mx-1 my-0.5 text-sm">{value.label} <button onClick={() => removeOption(value)} className="font-bold ml-1">&times;</button></span>
+            )
+          })
+        }
+        <input className="border-none py-1 px-1 p-0 w-24 flex-auto inline-block rounded-md focus:outline-none focus:ring-0 text-sm" ref={searchRef} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
+        <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
           {!loading && <ChevronDownIcon className="h-4 w-4 text-gray-500" />}
           {loading && <Spinner />}
         </div>
@@ -116,4 +113,13 @@ export default function PlausibleCombobox(props) {
       </Transition>
     </div>
   );
+}
+
+function Spinner() {
+  return (
+    <svg className="animate-spin h-4 w-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  )
 }
