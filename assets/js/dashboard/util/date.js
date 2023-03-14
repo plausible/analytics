@@ -49,17 +49,8 @@ export function formatDay(date) {
   }
 }
 
-export function formatDayShort(date, includeYear = false) {
-  let formatted = `${date.getDate()} ${formatMonthShort(date)}`
-  if (includeYear) {
-    formatted += ` ${formatYearShort(date)}`
-  }
-
-  return formatted
-}
-
-export function formatYearShort(date) {
-  return date.getUTCFullYear().toString().substring(2)
+export function formatDayShort(date) {
+  return `${date.getDate()} ${formatMonthShort(date)}`;
 }
 
 export function parseUTCDate(dateString) {

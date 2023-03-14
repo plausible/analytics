@@ -42,7 +42,7 @@ export const toggleComparisons = function(history, query, site) {
     navigateToQuery(history, query, { comparison: "off" })
   } else {
     const storedMode = getStoredComparisonMode(site.domain)
-    const newMode = storedMode == "off" ? DEFAULT_COMPARISON_MODE : storedMode
+    const newMode = isComparisonEnabled(storedMode) ? storedMode : DEFAULT_COMPARISON_MODE
 
     storeComparisonMode(site.domain, newMode)
     navigateToQuery(history, query, { comparison: newMode })
