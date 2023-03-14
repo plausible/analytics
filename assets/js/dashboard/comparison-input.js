@@ -7,9 +7,12 @@ import classNames from 'classnames'
 import * as storage from './util/storage'
 
 const COMPARISON_MODES = {
+  'off': 'Disable comparison',
   'previous_period': 'Previous period',
   'year_over_year': 'Year over year',
 }
+
+const DEFAULT_COMPARISON_MODE = 'previous_period'
 
 export const COMPARISON_DISABLED_PERIODS = ['realtime', 'all']
 
@@ -26,15 +29,24 @@ const storeComparisonMode = function(domain, mode) {
   storage.setItem(`comparison_mode__${domain}`, mode)
 }
 
+export const isComparisonEnabled = function(mode) {
+  return mode && mode !== "off"
+}
+
 export const toggleComparisons = function(history, query, site) {
   if (!site.flags.comparisons) return
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return
 
-  const defaultMode = getStoredComparisonMode(site.domain) || 'previous_period'
-  const toggle = query.comparison ? false : defaultMode
-  storeComparisonMode(site.domain, toggle)
+  if (isComparisonEnabled(query.comparison)) {
+    storeComparisonMode(site.domain, "off")
+    navigateToQuery(history, query, { comparison: "off" })
+  } else {
+    const storedMode = getStoredComparisonMode(site.domain)
+    const newMode = storedMode == "off" ? DEFAULT_COMPARISON_MODE : storedMode
 
-  navigateToQuery(history, query, { comparison: toggle })
+    storeComparisonMode(site.domain, newMode)
+    navigateToQuery(history, query, { comparison: newMode })
+  }
 }
 
 function DropdownItem({ label, value, isCurrentlySelected, updateMode }) {
@@ -55,7 +67,7 @@ function DropdownItem({ label, value, isCurrentlySelected, updateMode }) {
 const ComparisonInput = function({ site, query, history }) {
   if (!site.flags.comparisons) return null
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
-  if (!query.comparison) return null
+  if (!isComparisonEnabled(query.comparison)) return null
 
   const updateMode = (key) => {
     storeComparisonMode(site.domain, key)
@@ -81,7 +93,6 @@ const ComparisonInput = function({ site, query, history }) {
               leaveFrom="transform opacity-100 scale-100"
               leaveTo="transform opacity-0 scale-95">
               <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10" static>
-                { DropdownItem({ label: "No comparison", value: false, isCurrentlySelected: !query.comparison, updateMode }) }
                 { Object.keys(COMPARISON_MODES).map((key) => DropdownItem({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison, updateMode })) }
               </Menu.Items>
             </Transition>

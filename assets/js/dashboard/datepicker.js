@@ -23,7 +23,7 @@ import {
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
-import { COMPARISON_DISABLED_PERIODS, toggleComparisons } from "../dashboard/comparison-input.js"
+import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -374,7 +374,7 @@ function DatePicker({query, site, history}) {
                     setOpen(false)
                   }}
                   className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer flex items-center justify-between">
-                  Compare
+                  { isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare' }
                   <span className='font-normal'>X</span>
                 </span>
               </div> }
