@@ -86,15 +86,16 @@ const ComparisonInput = function({ site, query, history }) {
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
   if (!isComparisonEnabled(query.comparison)) return null
 
-  const updateMode = (mode, from = null) => {
+  const updateMode = (mode, from = null, to = null) => {
     storeComparisonMode(site.domain, mode)
-    navigateToQuery(history, query, { comparison: mode, compare_from: from })
+    navigateToQuery(history, query, { comparison: mode, compare_from: from, compare_to: to })
   }
 
   const buildLabel = (query) => {
     if (query.comparison == "custom") {
-      const date = parseUTCDate(query.compare_from)
-      return formatDayShort(date, true)
+      const from = parseUTCDate(query.compare_from)
+      const to = parseUTCDate(query.compare_to)
+      return `${formatDayShort(from, false)} - ${formatDayShort(to, false)}`
     } else {
       return COMPARISON_MODES[query.comparison]
     }
@@ -102,10 +103,12 @@ const ComparisonInput = function({ site, query, history }) {
 
   const calendar = React.useRef(null)
   const flatpickrOptions = {
+    mode: 'range',
+    showMonths: 1,
     maxDate: 'today',
     animate: true,
     static: true,
-    onChange: ([date]) => updateMode("custom", formatISO(date))
+    onChange: ([from, to]) => updateMode("custom", formatISO(from), formatISO(to))
   }
 
   return (
