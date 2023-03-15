@@ -70,14 +70,14 @@ export default function PlausibleCombobox(props) {
 
   return (
     <div ref={containerRef} className="relative ml-2 w-full">
-      <div onClick={toggleOpen} className="pl-2 pr-4 py-1 flex flex-1 items-center flex-wrap w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus-within:border-indigo-500">
+      <div onClick={toggleOpen} className={classNames('pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700', {'border-indigo-500 ring-1 ring-indigo-500': isOpen, '': !isOpen})}>
         { props.values.map((value) => {
             return (
-              <span key={value.value} className="bg-indigo-100 rounded-sm px-2 py-0.5 mx-1 my-0.5 text-sm">{value.label} <button onClick={(e) => removeOption(value, e)} className="font-bold ml-1">&times;</button></span>
+              <div key={value.value} className="bg-indigo-100 flex justify-between w-full rounded-sm px-2 py-0.5 m-0.5 text-sm">{value.label} <button onClick={(e) => removeOption(value, e)} className="font-bold ml-1">&times;</button></div>
             )
           })
         }
-        <input className="border-none py-1 px-1 p-0 w-24 flex-auto inline-block rounded-md focus:outline-none focus:ring-0 text-sm" ref={searchRef} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
+        <input className="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" ref={searchRef} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
         <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
           {!loading && <ChevronDownIcon className="h-4 w-4 text-gray-500" />}
           {loading && <Spinner />}
