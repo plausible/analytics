@@ -23,6 +23,7 @@ import {
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
+import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -194,11 +195,24 @@ function DatePicker({query, site, history}) {
 
     setOpen(false);
 
-    const keys = ['d', 'e', 'r', 'w', 'm', 'y', 't', 's', 'l', 'a'];
-    const redirects = [{date: false, period: 'day'}, {date: formatISO(shiftDays(nowForSite(site), -1)), period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: 'year'}, {date: false, period: '30d'}, {date: false, period: '6mo'}, {date: false, period: '12mo'}, {date: false, period: 'all'}];
+    const keybindings = {
+      d: {date: false, period: 'day'},
+      e: {date: formatISO(shiftDays(nowForSite(site), -1)), period: 'day'},
+      r: {period: 'realtime'},
+      w: {date: false, period: '7d'},
+      m: {date: false, period: 'month'},
+      y: {date: false, period: 'year'},
+      t: {date: false, period: '30d'},
+      s: {date: false, period: '6mo'},
+      l: {date: false, period: '12mo'},
+      a: {date: false, period: 'all'},
+    }
 
-    if (keys.includes(e.key.toLowerCase())) {
-      navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key.toLowerCase())])});
+    const redirect = keybindings[e.key.toLowerCase()]
+    if (redirect) {
+      navigateToQuery(history, query, {...newSearch, ...redirect})
+    } else if (e.key.toLowerCase() === 'x') {
+      toggleComparisons(history, query, site)
     } else if (e.key.toLowerCase() === 'c') {
       setOpen(true)
       setMode('calendar')
@@ -352,6 +366,18 @@ function DatePicker({query, site, history}) {
                 <span className='font-normal'>C</span>
               </span>
             </div>
+            { !COMPARISON_DISABLED_PERIODS.includes(query.period) && site.flags.comparisons &&
+              <div className="py-1 date-option-group border-t border-gray-200 dark:border-gray-500">
+                <span
+                  onClick={() => {
+                    toggleComparisons(history, query, site)
+                    setOpen(false)
+                  }}
+                  className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer flex items-center justify-between">
+                  { isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare' }
+                  <span className='font-normal'>X</span>
+                </span>
+              </div> }
           </div>
         </div>
       );
@@ -381,7 +407,7 @@ function DatePicker({query, site, history}) {
   function renderPicker() {
     return (
       <div
-        className="w-20 sm:w-36 md:w-48 md:relative"
+        className="min-w-32 md:w-48 md:relative"
         ref={dropDownNode}
       >
         <div

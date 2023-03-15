@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
 import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
 import * as storage from './util/storage'
-import { COMPARISON_DISABLED_PERIODS } from './comparison-input'
+import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled } from './comparison-input'
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'year', 'all', 'custom']
 
@@ -19,16 +19,16 @@ export function parseQuery(querystring, site) {
     period = '30d'
   }
 
-  let comparison = q.get('comparison')
-  if (COMPARISON_DISABLED_PERIODS.includes(period)) comparison = null
+  let comparison = q.get('comparison') || getStoredComparisonMode(site.domain)
+  if (COMPARISON_DISABLED_PERIODS.includes(period) || !isComparisonEnabled(comparison)) comparison = null
 
   return {
     period,
+    comparison,
     date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
-    comparison: comparison,
     filters: {
       'goal': q.get('goal'),
       'props': JSON.parse(q.get('props')),
