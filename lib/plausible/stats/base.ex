@@ -61,6 +61,9 @@ defmodule Plausible.Stats.Base do
         {:member, list} ->
           from(e in q, where: e.pathname in ^list)
 
+        {:not_member, list} ->
+          from(e in q, where: e.pathname not in ^list)
+
         nil ->
           q
       end
@@ -94,6 +97,12 @@ defmodule Plausible.Stats.Base do
           events = Enum.map(events, fn {_, val} -> val end)
           pages = Enum.map(pages, fn {_, val} -> val end)
           from(e in q, where: e.pathname in ^pages or e.name in ^events)
+
+        {:not_member, clauses} ->
+          {events, pages} = Enum.split_with(clauses, fn {type, _} -> type == :event end)
+          events = Enum.map(events, fn {_, val} -> val end)
+          pages = Enum.map(pages, fn {_, val} -> val end)
+          from(e in q, where: e.pathname not in ^pages and e.name not in ^events)
 
         nil ->
           q
@@ -182,6 +191,10 @@ defmodule Plausible.Stats.Base do
         {:member, values} ->
           list = Enum.map(values, &db_prop_val(prop_name, &1))
           from(s in sessions_q, where: field(s, ^prop_name) in ^list)
+
+        {:not_member, values} ->
+          list = Enum.map(values, &db_prop_val(prop_name, &1))
+          from(s in sessions_q, where: fragment("? not in tuple(?)", field(s, ^prop_name), ^list))
 
         {:matches, expr} ->
           regex = page_regex(expr)

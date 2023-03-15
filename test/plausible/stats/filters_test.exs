@@ -98,6 +98,28 @@ defmodule Plausible.Stats.FiltersTest do
     test "mixed goals" do
       %{"goal" => "Signup|Visit /thank-you"}
       |> assert_parsed(%{"event:goal" => {:member, [{:event, "Signup"}, {:page, "/thank-you"}]}})
+
+      %{"goal" => "Visit /thank-you|Signup"}
+      |> assert_parsed(%{"event:goal" => {:member, [{:page, "/thank-you"}, {:event, "Signup"}]}})
+    end
+  end
+
+  describe "not_member filter type" do
+    test "simple not_member filter" do
+      %{"page" => "!/|/blog"}
+      |> assert_parsed(%{"event:page" => {:not_member, ["/", "/blog"]}})
+    end
+
+    test "mixed goals" do
+      %{"goal" => "!Signup|Visit /thank-you"}
+      |> assert_parsed(%{
+        "event:goal" => {:not_member, [{:event, "Signup"}, {:page, "/thank-you"}]}
+      })
+
+      %{"goal" => "!Visit /thank-you|Signup"}
+      |> assert_parsed(%{
+        "event:goal" => {:not_member, [{:page, "/thank-you"}, {:event, "Signup"}]}
+      })
     end
   end
 
