@@ -638,19 +638,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "when filtering by page, session metrics treat is like entry_page", %{
+    test "can filter by page", %{
       conn: conn,
       site: site
     } do
       populate_stats([
         build(:pageview,
-          pathname: "/blogpost",
           user_id: @user_id,
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           user_id: @user_id,
+          pathname: "/blogpost",
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:25:00]
         ),

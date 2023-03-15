@@ -42,9 +42,8 @@ defmodule Plausible.Stats.Timeseries do
   defp sessions_timeseries(_, _, []), do: []
 
   defp sessions_timeseries(site, query, metrics) do
-    query = Query.treat_page_filter_as_entry_page(query)
-
     from(e in query_sessions(site, query), select: %{})
+    |> filter_converted_sessions(site, query)
     |> select_bucket(site, query)
     |> select_session_metrics(metrics)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)

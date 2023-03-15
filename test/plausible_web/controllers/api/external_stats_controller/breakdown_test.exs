@@ -1257,22 +1257,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
-    test "event:page filter shows traffic sources directly to that page", %{
+    test "event:page filter shows sources of sessions that have visited that page", %{
       conn: conn,
       site: site
     } do
       populate_stats(site, [
         build(:pageview,
-          pathname: "/ignore",
-          referrer_source: "Should not show up",
-          utm_medium: "Should not show up",
-          utm_source: "Should not show up",
-          utm_campaign: "Should not show up",
+          pathname: "/",
+          referrer_source: "Twitter",
+          utm_medium: "Twitter",
+          utm_source: "Twitter",
+          utm_campaign: "Twitter",
           user_id: @user_id
         ),
         build(:pageview,
           pathname: "/plausible.io",
           user_id: @user_id
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          referrer_source: "Google",
+          utm_medium: "Google",
+          utm_source: "Google",
+          utm_campaign: "Google"
         ),
         build(:pageview,
           pathname: "/plausible.io",
@@ -1294,7 +1301,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
         assert json_response(conn, 200) == %{
                  "results" => [
-                   %{property => "Google", "visitors" => 1}
+                   %{property => "Google", "visitors" => 2},
+                   %{property => "Twitter", "visitors" => 1}
                  ]
                }
       end
