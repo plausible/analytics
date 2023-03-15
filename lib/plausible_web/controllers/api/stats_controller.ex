@@ -110,21 +110,25 @@ defmodule PlausibleWeb.Api.StatsController do
         end
 
       timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
-      labels = label_timeseries(timeseries_result)
-      present_index = present_index_for(site, query, labels)
-      full_intervals = build_full_intervals(query, labels)
 
       comparison_result =
-        case Comparisons.compare(site, query, params["comparison"], from: params["compare_from"]) do
+        case Comparisons.compare(site, query, params["comparison"],
+               from: params["compare_from"],
+               to: params["compare_to"]
+             ) do
           {:ok, comparison_query} -> Stats.timeseries(site, comparison_query, [selected_metric])
           {:error, :not_supported} -> nil
         end
+
+      labels = label_timeseries(query, timeseries_result, comparison_result)
+      present_index = present_index_for(site, query, labels)
+      full_intervals = build_full_intervals(query, labels)
 
       json(conn, %{
         plot: plot_timeseries(timeseries_result, selected_metric),
         labels: labels,
         comparison_plot: comparison_result && plot_timeseries(comparison_result, selected_metric),
-        comparison_labels: comparison_result && label_timeseries(comparison_result),
+        comparison_labels: comparison_result && label_timeseries(query, comparison_result, nil),
         present_index: present_index,
         interval: query.interval,
         with_imported: query.include_imported,
@@ -140,8 +144,40 @@ defmodule PlausibleWeb.Api.StatsController do
     Enum.map(timeseries, fn row -> row[metric] || 0 end)
   end
 
-  defp label_timeseries(timeseries) do
-    Enum.map(timeseries, & &1.date)
+  defp label_timeseries(_query, main_result, nil) do
+    Enum.map(main_result, & &1.date)
+  end
+
+  defp label_timeseries(query, main_result, comparison_result) do
+    blanks_to_fill = Enum.count(comparison_result) - Enum.count(main_result)
+
+    if blanks_to_fill > 0 do
+      last_date = List.last(main_result).date
+
+      blanks = generate_blanks(query, last_date, blanks_to_fill)
+
+      Enum.map(main_result, & &1.date) ++ blanks
+    else
+      Enum.map(main_result, & &1.date)
+    end
+  end
+
+  defp generate_blanks(%Query{interval: "month"}, last_date, blanks_to_fill) do
+    Enum.map(1..blanks_to_fill, fn index ->
+      Timex.shift(last_date, months: index)
+    end)
+  end
+
+  defp generate_blanks(%Query{interval: "week"}, last_date, blanks_to_fill) do
+    Enum.map(1..blanks_to_fill, fn index ->
+      Timex.shift(last_date, weeks: index)
+    end)
+  end
+
+  defp generate_blanks(query, last_date, blanks_to_fill) do
+    Enum.map(1..blanks_to_fill, fn index ->
+      Timex.shift(last_date, days: index)
+    end)
   end
 
   defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
@@ -175,7 +211,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     with :ok <- validate_params(params) do
       comparison_mode = params["comparison"] || "previous_period"
-      comparison_opts = [from: params["compare_from"]]
+      comparison_opts = [from: params["compare_from"], to: params["compare_to"]]
 
       query = Query.from(site, params) |> Filters.add_prefix()
 

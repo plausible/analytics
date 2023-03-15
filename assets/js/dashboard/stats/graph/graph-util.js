@@ -40,14 +40,14 @@ export const LoadingState = {
   isLoadedOrRefreshing: function (state) { return [this.loaded, this.refreshing].includes(state) }
 }
 
-const buildComparisonDataset = function(comparisonPlot, presentIndex) {
+const buildComparisonDataset = function(comparisonPlot, _presentIndex) {
   if (!comparisonPlot) return []
 
   let data = [...comparisonPlot]
-  if (presentIndex) {
-    const dashedPartIncludedIndex = presentIndex + 1
-    data = data.slice(0, dashedPartIncludedIndex)
-  }
+  // if (presentIndex) {
+  //   const dashedPartIncludedIndex = presentIndex + 1
+  //   data = data.slice(0, dashedPartIncludedIndex)
+  // }
 
   return [{
     data: data,

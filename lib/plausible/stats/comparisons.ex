@@ -79,9 +79,7 @@ defmodule Plausible.Stats.Comparisons do
 
   defp do_compare(source_query, "custom", opts) do
     from = opts |> Keyword.fetch!(:from) |> Date.from_iso8601!()
-
-    diff_in_days = Date.diff(source_query.date_range.last, source_query.date_range.first)
-    to = from |> Date.add(diff_in_days) |> earliest(opts[:now])
+    to = opts |> Keyword.fetch!(:to) |> Date.from_iso8601!()
 
     %Stats.Query{source_query | date_range: Date.range(from, to)}
   end
