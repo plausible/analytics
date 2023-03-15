@@ -175,7 +175,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     with :ok <- validate_params(params) do
       comparison_mode = params["comparison"] || "previous_period"
-      comparison_opts = [from: params["compare_from"]]
+      comparison_opts = [from: params["compare_from"], to: params["compare_to"]]
 
       query = Query.from(site, params) |> Filters.add_prefix()
 

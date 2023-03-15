@@ -16,7 +16,7 @@ defmodule Plausible.Stats.Comparisons do
   @typep option() :: {:from, String.t()} | {:to, String.t()} | {:now, NaiveDateTime.t()}
 
   @spec compare(Plausible.Site.t(), Stats.Query.t(), mode(), [option()]) ::
-          {:ok, Stats.Query.t()} | {:error, :not_supported}
+          {:ok, Stats.Query.t()} | {:error, :not_supported} | {:error, :invalid_dates}
   @doc """
   Generates a comparison query based on the source query and comparison mode.
 
@@ -28,11 +28,8 @@ defmodule Plausible.Stats.Comparisons do
 
     * `"year_over_year"` - shifts back the query by 1 year.
 
-    * `"custom"` - compares the query using a custom start date defined in
-      `opts`. The end date of the comparison query is inferred using the same
-      numbers of days the original query had. For example, if the graph displays
-      data for seven days, and the user selects a custom comparison starting on
-      May 7th, the end date would be automatically set to May 13th.
+    * `"custom"` - compares the query using a custom date range. See options for
+      more details.
 
   The comparison query returned by the function has its end date restricted to
   the current day. This can be overriden by the `now` option, described below.
@@ -44,11 +41,14 @@ defmodule Plausible.Stats.Comparisons do
 
     * `:from` - a ISO-8601 date string used when mode is `"custom"`.
 
+    * `:to` - a ISO-8601 date string used when mode is `"custom"`. Must be
+      after `from`.
+
   """
   def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode, opts \\ []) do
     if valid_mode?(source_query, mode) do
       opts = Keyword.put_new(opts, :now, Timex.now(site.timezone))
-      {:ok, do_compare(source_query, mode, opts)}
+      do_compare(source_query, mode, opts)
     else
       {:error, :not_supported}
     end
@@ -61,7 +61,7 @@ defmodule Plausible.Stats.Comparisons do
     end_date = earliest(source_query.date_range.last, now) |> Date.add(-365)
 
     range = Date.range(start_date, end_date)
-    %Stats.Query{source_query | date_range: range}
+    {:ok, %Stats.Query{source_query | date_range: range}}
   end
 
   defp do_compare(source_query, "previous_period", opts) do
@@ -74,16 +74,17 @@ defmodule Plausible.Stats.Comparisons do
     new_last = Date.add(last, diff_in_days)
 
     range = Date.range(new_first, new_last)
-    %Stats.Query{source_query | date_range: range}
+    {:ok, %Stats.Query{source_query | date_range: range}}
   end
 
   defp do_compare(source_query, "custom", opts) do
-    from = opts |> Keyword.fetch!(:from) |> Date.from_iso8601!()
-
-    diff_in_days = Date.diff(source_query.date_range.last, source_query.date_range.first)
-    to = from |> Date.add(diff_in_days) |> earliest(opts[:now])
-
-    %Stats.Query{source_query | date_range: Date.range(from, to)}
+    with {:ok, from} <- opts |> Keyword.fetch!(:from) |> Date.from_iso8601(),
+         {:ok, to} <- opts |> Keyword.fetch!(:to) |> Date.from_iso8601(),
+         result when result in [:eq, :lt] <- Date.compare(from, to) do
+      {:ok, %Stats.Query{source_query | date_range: Date.range(from, to)}}
+    else
+      _error -> {:error, :invalid_dates}
+    end
   end
 
   defp earliest(a, b) do
