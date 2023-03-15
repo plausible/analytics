@@ -17,9 +17,9 @@ function removeFilter(key, history, query) {
   const newOpts = {
     [key]: false
   }
-  if (key === 'country') { newOpts.country_name = false }
-  if (key === 'region') { newOpts.region_name = false }
-  if (key === 'city') { newOpts.city_name = false }
+  if (key === 'country') { newOpts.country_labels = false }
+  if (key === 'region') { newOpts.region_labels = false }
+  if (key === 'city') { newOpts.city_labels = false }
 
   navigateToQuery(
     history,
