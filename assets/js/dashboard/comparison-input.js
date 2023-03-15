@@ -57,7 +57,8 @@ function DropdownItem({ label, value, isCurrentlySelected, updateMode, calendar 
   const click = () => {
     if (value == "custom") {
       // https://github.com/flatpickr/flatpickr/issues/399#issuecomment-260007013
-      setTimeout(() => calendar.current.flatpickr.open(), 0)
+      // FIXME: Use setState to prevent this issue
+      setTimeout(() => calendar.current.flatpickr.open(), 100)
     } else {
       updateMode(value)
     }
