@@ -108,12 +108,12 @@ class FilterModal extends React.Component {
   }
 
   onChange(filterName) {
-    return (selection, callback) => {
+    return (selection) => {
       this.setState(prevState => ({
         formState: Object.assign(prevState.formState, {
           [filterName]: Object.assign(prevState.formState[filterName], { clauses: selection })
         })
-      }), callback)
+      }))
     }
   }
 

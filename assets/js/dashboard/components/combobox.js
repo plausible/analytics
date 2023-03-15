@@ -40,21 +40,18 @@ export default function PlausibleCombobox(props) {
   }
 
   function selectOption(option) {
-    props.onChange([...props.values, option], () => {
-      setOptions(options.filter(o => o != option))
-      searchRef.current.value = ''
-      searchRef.current.focus()
-    })
+    props.onChange([...props.values, option])
+    setOpen(false)
+    searchRef.current.value = ''
+    searchRef.current.focus()
   }
 
   function removeOption(option, e) {
     e.stopPropagation()
     const newValues = props.values.filter((val) => val.value !== option.value)
-    props.onChange(newValues, () => {
-      searchRef.current.focus()
-      setOpen(true)
-      fetchOptions(searchRef.current.value)
-    })
+    props.onChange(newValues)
+    searchRef.current.focus()
+    setOpen(false)
   }
 
   const handleClick = useCallback((e) => {
