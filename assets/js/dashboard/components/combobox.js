@@ -40,18 +40,21 @@ export default function PlausibleCombobox(props) {
   }
 
   function selectOption(option) {
-    props.onChange([...props.values, option])
-    if (searchRef.current.value !== '') {
+    props.onChange([...props.values, option], () => {
+      setOptions(options.filter(o => o != option))
       searchRef.current.value = ''
-      fetchOptions('')
-    }
-    searchRef.current.focus()
+      searchRef.current.focus()
+    })
   }
 
-  function removeOption(option) {
+  function removeOption(option, e) {
+    e.stopPropagation()
     const newValues = props.values.filter((val) => val.value !== option.value)
-    props.onChange(newValues)
-    searchRef.current.focus()
+    props.onChange(newValues, () => {
+      searchRef.current.focus()
+      setOpen(true)
+      fetchOptions(searchRef.current.value)
+    })
   }
 
   const handleClick = useCallback((e) => {
@@ -73,7 +76,7 @@ export default function PlausibleCombobox(props) {
       <div onClick={toggleOpen} className="pl-2 pr-4 py-1 flex flex-1 items-center flex-wrap w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus-within:border-indigo-500">
         { props.values.map((value) => {
             return (
-              <span key={value.value} className="bg-indigo-100 rounded-sm px-2 py-0.5 mx-1 my-0.5 text-sm">{value.label} <button onClick={() => removeOption(value)} className="font-bold ml-1">&times;</button></span>
+              <span key={value.value} className="bg-indigo-100 rounded-sm px-2 py-0.5 mx-1 my-0.5 text-sm">{value.label} <button onClick={(e) => removeOption(value, e)} className="font-bold ml-1">&times;</button></span>
             )
           })
         }

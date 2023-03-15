@@ -108,12 +108,12 @@ class FilterModal extends React.Component {
   }
 
   onChange(filterName) {
-    return (selection) => {
+    return (selection, callback) => {
       this.setState(prevState => ({
         formState: Object.assign(prevState.formState, {
           [filterName]: Object.assign(prevState.formState[filterName], { clauses: selection })
         })
-      }))
+      }), callback)
     }
   }
 
@@ -144,7 +144,17 @@ class FilterModal extends React.Component {
       const propsFilter = formFilters.prop_key ? { [formFilters.prop_key]: '!(none)' } : null
       return { ...query, filters: { ...query.filters, props: propsFilter } }
     } else {
-      return { ...query, filters: { ...query.filters, ...formFilters, [filter]: null } }
+      return { ...query, filters: { ...query.filters, ...formFilters, [filter]: this.negate(formFilters[filter]) } }
+    }
+  }
+
+  negate(filterVal) {
+    if (!filterVal) {
+      return filterVal
+    } else if (filterVal.startsWith('!')) {
+      return filterVal
+    } else {
+      return '!' + filterVal
     }
   }
 
