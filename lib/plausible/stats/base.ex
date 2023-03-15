@@ -222,6 +222,10 @@ defmodule Plausible.Stats.Base do
           list = Enum.map(values, &db_prop_val(prop_name, &1))
           from(s in sessions_q, where: fragment("? not in ?", field(s, ^prop_name), ^list))
 
+        {:not_member, values} ->
+          list = Enum.map(values, &db_prop_val(prop_name, &1))
+          from(s in sessions_q, where: fragment("? not in tuple(?)", field(s, ^prop_name), ^list))
+
         {:matches, expr} ->
           regex = page_regex(expr)
           from(s in sessions_q, where: fragment("match(?, ?)", field(s, ^prop_name), ^regex))
