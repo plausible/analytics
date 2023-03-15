@@ -160,6 +160,7 @@ defmodule Plausible.Stats.Base do
     "city" => "city_geoname_id"
   }
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_sessions(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
