@@ -208,30 +208,6 @@ defmodule Plausible.Stats.Query do
     }
   end
 
-  def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"visit:entry_page" => _}} = q), do: q
-
-  def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"event:page" => f}} = q) do
-    q
-    |> put_filter("visit:entry_page", f)
-    |> put_filter("event:page", nil)
-  end
-
-  def treat_page_filter_as_entry_page(q), do: q
-
-  def treat_prop_filter_as_entry_prop(%__MODULE__{filters: filters} = q) do
-    prop_filter = get_filter_by_prefix(q, "event:props:")
-
-    case {filters["event:goal"], prop_filter} do
-      {nil, {"event:props:" <> prop, filter_value}} ->
-        q
-        |> remove_event_filters([:props])
-        |> put_filter("visit:entry_props:" <> prop, filter_value)
-
-      _ ->
-        q
-    end
-  end
-
   def remove_event_filters(query, opts) do
     new_filters =
       Enum.filter(query.filters, fn {filter_key, _} ->

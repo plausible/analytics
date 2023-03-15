@@ -681,13 +681,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              }
     end
 
-    test "filtering by page - session metrics consider it like entry_page", %{
+    test "can filter by page", %{
       conn: conn,
       site: site
     } do
       populate_stats([
         build(:pageview,
-          pathname: "/hello",
           user_id: @user_id,
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
@@ -716,7 +715,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "period" => "month",
           "date" => "2021-01-01",
           "filters" => "event:page==/hello",
-          "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
+          "metrics" => "visitors,visits,pageviews,views_per_visit,bounce_rate,visit_duration"
         })
 
       res = json_response(conn, 200)["results"]
@@ -724,7 +723,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       assert List.first(res) == %{
                "date" => "2021-01-01",
                "visitors" => 2,
-               "pageviews" => 3,
+               "visits" => 2,
+               "pageviews" => 2,
+               "views_per_visit" => 1.5,
                "bounce_rate" => 50,
                "visit_duration" => 150
              }

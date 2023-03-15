@@ -151,24 +151,6 @@ defmodule Plausible.Stats.Breakdown do
     breakdown_events(site, query, property, metrics, pagination)
   end
 
-  def breakdown(site, query, property, metrics, pagination)
-      when property in [
-             "visit:source",
-             "visit:utm_medium",
-             "visit:utm_source",
-             "visit:utm_campaign",
-             "visit:utm_content",
-             "visit:utm_term"
-           ] do
-    query =
-      query
-      |> Query.treat_page_filter_as_entry_page()
-      |> Query.treat_prop_filter_as_entry_prop()
-
-    trace(query, property, metrics)
-    breakdown_sessions(site, query, property, metrics, pagination)
-  end
-
   def breakdown(site, query, property, metrics, pagination) do
     trace(query, property, metrics)
     breakdown_sessions(site, query, property, metrics, pagination)
