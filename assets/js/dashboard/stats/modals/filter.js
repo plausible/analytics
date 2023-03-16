@@ -255,12 +255,30 @@ class FilterModal extends React.Component {
         <div className="mt-4" key={filter}>
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{formattedFilters[filter]}</div>
           <div className="flex items-start mt-1">
-            {this.renderFilterTypeSelector(filter)}
+            {this.renderFilterTypeBox(filter)}
             {this.renderSearchBox(filter)}
           </div>
         </div>
       )
     })
+  }
+
+  renderFilterTypeBox(filterName) {
+    const isMultiTypeFilter = supportsContains(filterName) || supportsIsNot(filterName)
+
+    if (isMultiTypeFilter) {
+      return this.renderFilterTypeSelector(filterName)
+    } else {
+      return (
+        <div className="relative inline-block text-left">
+          <div className="w-24">
+            <div className="inline-flex justify-between items-center w-full rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500">
+              is
+            </div>
+          </div>
+        </div>
+      )
+    }    
   }
 
   renderFilterTypeSelector(filterName) {
