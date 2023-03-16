@@ -672,7 +672,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                json_response(conn, 200)
 
       assert length(labels) == length(comparison_labels)
-      assert "" == List.last(labels)
+      assert "__blank__" == List.last(labels)
     end
   end
 end

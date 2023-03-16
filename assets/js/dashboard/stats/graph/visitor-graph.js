@@ -91,7 +91,7 @@ class LineGraph extends React.Component {
             ticks: {
               maxTicksLimit: 8,
               callback: function (val, _index, _ticks) {
-                if (this.getLabelForValue(val) == "") return ""
+                if (this.getLabelForValue(val) == "__blank__") return ""
 
                 const hasMultipleYears =
                   graphData.labels

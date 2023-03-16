@@ -148,11 +148,12 @@ defmodule PlausibleWeb.Api.StatsController do
     Enum.map(main_result, & &1.date)
   end
 
-  defp label_timeseries(main_result, comparison_result, empty \\ "") do
+  @blank_value "__blank__"
+  defp label_timeseries(main_result, comparison_result) do
     blanks_to_fill = Enum.count(comparison_result) - Enum.count(main_result)
 
     if blanks_to_fill > 0 do
-      blanks = List.duplicate(empty, blanks_to_fill)
+      blanks = List.duplicate(@blank_value, blanks_to_fill)
       Enum.map(main_result, & &1.date) ++ blanks
     else
       Enum.map(main_result, & &1.date)
