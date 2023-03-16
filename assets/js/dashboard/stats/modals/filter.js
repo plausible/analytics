@@ -225,7 +225,13 @@ class FilterModal extends React.Component {
   }
 
   isDisabled() {
-    return Object.entries(this.state.formState).every(([_key, { value: val }]) => !val)
+    const { formState, selectedFilterGroup} = this.state
+    
+    if (selectedFilterGroup === 'props') {
+      return !formState.prop_key.value || !formState.prop_value.value
+    } else {
+      return Object.entries(formState).every(([_key, { value: val }]) => !val)
+    }
   }
 
   selectFiltersAndCloseModal(filters) {
