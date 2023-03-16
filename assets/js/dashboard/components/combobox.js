@@ -4,10 +4,28 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import debounce from 'debounce-promise'
 import classNames from 'classnames'
 
+function Option({isHighlighted, onClick, onMouseEnter, text}) {
+  const className = classNames('relative cursor-pointer select-none py-2 px-3', {
+    'text-gray-900 dark:text-gray-300': !isHighlighted,
+    'bg-indigo-600 text-white': isHighlighted,
+  })
+
+  return (
+    <li
+      className={className}
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+    >
+      <span className="block truncate">{text}</span>
+    </li>
+  )
+}
+
 export default function PlausibleCombobox(props) {
   const [options, setOptions] = useState([])
   const [loading, setLoading] = useState(false)
   const [isOpen, setOpen] = useState(false);
+  const [input, setInput] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const searchRef = useRef(null);
   const containerRef = useRef(null);
@@ -25,16 +43,22 @@ export default function PlausibleCombobox(props) {
 
   const debouncedFetchOptions = useCallback(debounce(fetchOptions, 200), [])
 
-  function onInput() {
-    debouncedFetchOptions(searchRef.current.value)
+  function onInput(e) {
+    const newInput = e.target.value
+    setInput(newInput)
+
+    if (!newInput.includes('*')) {
+      debouncedFetchOptions(newInput)
+    }
   }
 
   function toggleOpen() {
     if (!isOpen) {
-      fetchOptions(searchRef.current.value)
+      fetchOptions(input)
       searchRef.current.focus()
       setOpen(true)
     } else {
+      setInput('')
       setOpen(false)
     }
   }
@@ -42,7 +66,7 @@ export default function PlausibleCombobox(props) {
   function selectOption(option) {
     props.onChange([...props.values, option])
     setOpen(false)
-    searchRef.current.value = ''
+    setInput('')
     searchRef.current.focus()
   }
 
@@ -57,6 +81,7 @@ export default function PlausibleCombobox(props) {
   const handleClick = useCallback((e) => {
     if (containerRef.current && containerRef.current.contains(e.target)) return;
 
+    setInput('')
     setOpen(false)
   })
 
@@ -65,8 +90,9 @@ export default function PlausibleCombobox(props) {
     return () => { document.removeEventListener("mousedown", handleClick, false); }
   }, [])
 
-  const noMatchesFound = !loading && options.length === 0
-  const matchesFound = !loading && options.length > 0
+  const isWildCard = !loading && input.includes('*')
+  const matchesFound = !loading && !isWildCard && options.length > 0
+  const noMatchesFound = !loading && !isWildCard && options.length === 0
 
   return (
     <div ref={containerRef} className="relative ml-2 w-full">
@@ -77,7 +103,7 @@ export default function PlausibleCombobox(props) {
             )
           })
         }
-        <input className="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" ref={searchRef} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
+        <input className="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" ref={searchRef} value={input} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
         <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
           {!loading && <ChevronDownIcon className="h-4 w-4 text-gray-500" />}
           {loading && <Spinner />}
@@ -103,23 +129,23 @@ export default function PlausibleCombobox(props) {
           )}
           { matchesFound && (
             options.map((option, i) => {
-              const isHighlighted = highlightedIndex === i
-              const className = classNames('relative cursor-pointer select-none py-2 px-3', {
-                'text-gray-900 dark:text-gray-300': !isHighlighted,
-                'bg-indigo-600 text-white': isHighlighted,
-              })
-
               return (
-                <li
+                <Option
                   key={option.value}
-                  className={className}
+                  isHighlighted={highlightedIndex === i}
                   onClick={() => selectOption(option)}
                   onMouseEnter={() => setHighlightedIndex(i)}
-                >
-                  <span className="block truncate">{option.label}</span>
-                </li>
+                  text={option.label}
+                />
               )
             })
+          )}
+          { isWildCard && (
+            <Option
+              isHighlighted={true}
+              onClick={() => selectOption({value: input, label: input})}
+              text={`Filter by ${input}`}
+              />
           )}
         </ul>
       </Transition>
