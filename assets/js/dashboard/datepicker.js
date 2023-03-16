@@ -382,8 +382,6 @@ function DatePicker({query, site, history}) {
         </div>
       );
     } if (mode === "calendar") {
-      const insertionDate = new Date(site.statsBegin);
-      const dayBeforeCreation = insertionDate - 86400000;
       return (
         <div className="h-0">
           <Flatpickr
@@ -391,7 +389,7 @@ function DatePicker({query, site, history}) {
             options={{
               mode: 'range',
               maxDate: 'today',
-              minDate: dayBeforeCreation,
+              minDate: parseUTCDate(site.statsBegin),
               showMonths: 1,
               static: true,
               animate: true}}

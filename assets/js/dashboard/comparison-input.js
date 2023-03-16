@@ -103,13 +103,17 @@ const ComparisonInput = function({ site, query, history }) {
   }
 
   const calendar = React.useRef(null)
+
   const flatpickrOptions = {
     mode: 'range',
     showMonths: 1,
     maxDate: 'today',
+    minDate: parseUTCDate(site.statsBegin),
     animate: true,
     static: true,
-    onChange: ([from, to]) => updateMode("custom", formatISO(from), formatISO(to))
+    onChange: ([from, to]) => {
+      if (from && to) updateMode("custom", formatISO(from), formatISO(to))
+    }
   }
 
   return (
