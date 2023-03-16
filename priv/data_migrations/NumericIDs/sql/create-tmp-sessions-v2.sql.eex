@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS
+    tmp_sessions_v2 AS sessions_v2 ENGINE = CollapsingMergeTree(sign)
+    PARTITION BY toYYYYMM(start)
+    PRIMARY KEY (site_id, toDate(start), user_id, session_id)
+    ORDER BY (site_id, toDate(start), user_id, session_id)
+    <%= @table_settings %>

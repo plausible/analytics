@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS
+    tmp_events_v2 AS events_v2 ENGINE = MergeTree()
+    ORDER BY (site_id, toDate(timestamp), name, user_id, timestamp)
+    PRIMARY KEY (site_id, toDate(timestamp), name, user_id)
+    PARTITION BY toYYYYMM(timestamp)
+    <%= @table_settings %>

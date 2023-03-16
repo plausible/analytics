@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS tmp_sessions_v2 SYNC

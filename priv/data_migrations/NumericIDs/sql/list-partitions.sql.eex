@@ -1,0 +1,5 @@
+SELECT partition 
+FROM system.parts 
+WHERE table = 'events' 
+<%= if @start_from do %>AND partition >= '<%= @start_from %>'<% end %>
+ORDER BY partition
