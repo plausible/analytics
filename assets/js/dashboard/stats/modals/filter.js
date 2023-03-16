@@ -251,6 +251,8 @@ class FilterModal extends React.Component {
     const groups = FILTER_GROUPS[this.state.selectedFilterGroup]
 
     return groups.map((filter) => {
+      if (filter === 'prop_value' && !this.state.formState.prop_key.value) { return }
+
       return (
         <div className="mt-4" key={filter}>
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{formattedFilters[filter]}</div>
