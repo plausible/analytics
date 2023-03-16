@@ -7,6 +7,7 @@ defmodule Plausible.DataMigration.NumericIDs do
 
   @table_settings "SETTINGS index_granularity = 8192, storage_policy = 'tiered'"
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def run(opts \\ []) do
     interactive? = Keyword.get(opts, :interactive?, true)
 
@@ -16,7 +17,9 @@ defmodule Plausible.DataMigration.NumericIDs do
         Application.get_env(:plausible, Plausible.IngestRepo)[:url]
       )
 
-    max_threads = System.get_env("NUMERIC_IDS_MIGRATION_MAX_THREADS", "16")
+    max_threads =
+      "NUMERIC_IDS_MIGRATION_MAX_THREADS" |> System.get_env("16") |> String.to_integer()
+
     # TBD: There's most likely a bug in Clickhouse defining Postgres dictionaries,
     # we'll use a static URL for now
     dict_url = Keyword.get(opts, :dict_url) || System.get_env("DOMAINS_DICT_URL") || ""
@@ -31,7 +34,7 @@ defmodule Plausible.DataMigration.NumericIDs do
     (byte_size(dict_url) > 0 and byte_size(dict_password) > 0) ||
       raise "Set DOMAINS_DICT_URL and DOMAINS_DICT_PASSWORD"
 
-    @repo.start(db_url, String.to_integer(max_threads))
+    @repo.start(db_url, max_threads)
 
     cluster? =
       case run_sql("check-replicas") do
