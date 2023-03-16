@@ -234,6 +234,16 @@ class FilterModal extends React.Component {
     }
   }
 
+  showClear() {
+    const { selectedFilterGroup, query } = this.state
+    
+    if (selectedFilterGroup === 'props') {
+      return !!query.filters.props
+    } else {
+      return FILTER_GROUPS[selectedFilterGroup].some((filterName) => query.filters[filterName])
+    }
+  }
+
   selectFiltersAndCloseModal(filters) {
     const queryString = new URLSearchParams(window.location.search)
 
@@ -350,7 +360,6 @@ class FilterModal extends React.Component {
 
   renderBody() {
     const { selectedFilterGroup, query } = this.state;
-    const showClear = FILTER_GROUPS[selectedFilterGroup].some((filterName) => query.filters[filterName])
 
     return (
       <>
@@ -370,13 +379,17 @@ class FilterModal extends React.Component {
                 Save Filter
               </button>
 
-              {showClear && (
+              {this.showClear() && (
                 <button
                   type="button"
                   className="ml-2 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
                   onClick={() => {
-                    const updatedFilters = FILTER_GROUPS[selectedFilterGroup].map((filterName) => ({ filter: filterName, value: null }))
-                    this.selectFiltersAndCloseModal(updatedFilters)
+                    if (selectedFilterGroup === 'props') {
+                      this.selectFiltersAndCloseModal([{filter: 'props', value: null}])
+                    } else {
+                      const updatedFilters = FILTER_GROUPS[selectedFilterGroup].map((filterName) => ({ filter: filterName, value: null }))
+                      this.selectFiltersAndCloseModal(updatedFilters)
+                    }
                   }}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
