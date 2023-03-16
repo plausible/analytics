@@ -37,16 +37,17 @@ function clearAllFilters(history, query) {
 }
 
 function filterText(key, rawValue, query) {
+  if (key === "props") {
+    const entries = Object.entries(rawValue)[0]
+    const prop = entries[0]
+    const { type, value } = parseQueryFilter(entries[1])
+    return <>Property <b>{prop}</b> {type} <b>{value}</b></>
+  }
+  
   const {type, value} = parseQueryFilter(rawValue)
 
   if (key === "goal") {
     return <>Completed goal <b>{value}</b></>
-  }
-  if (key === "props") {
-    const [metaKey, metaValue] = Object.entries(value)[0]
-    const eventName = query.filters.goal ? query.filters.goal : 'event'
-    const metaFilter = parseQueryFilter(metaValue)
-    return <>{eventName}.{metaKey} {metaFilter.type} <b>{metaFilter.value}</b></>
   }
   if (key === "browser_version") {
     const isNotSet = query.filters.browser === '(not set)' || (!query.filters.browser)
