@@ -60,6 +60,8 @@ defmodule Plausible.Stats.Filters do
     val = if key == "goal", do: wrap_goal_value(val), else: val
 
     cond do
+      is_negated && is_wildcard && is_list -> {:not_matches_member, val}
+      is_wildcard && is_list -> {:matches_member, val}
       is_negated && is_wildcard -> {:does_not_match, val}
       is_negated && is_list -> {:not_member, val}
       is_negated -> {:is_not, val}

@@ -50,6 +50,17 @@ defmodule Plausible.Stats.Base do
         {:is_not, page} ->
           from(e in q, where: e.pathname != ^page)
 
+        {:matches_member, glob_exprs} ->
+          page_regexes = Enum.map(glob_exprs, &page_regex/1)
+          from(e in q, where: fragment("multiMatchAny(?, array(?))", e.pathname, ^page_regexes))
+
+        {:not_matches_member, glob_exprs} ->
+          page_regexes = Enum.map(glob_exprs, &page_regex/1)
+
+          from(e in q,
+            where: fragment("not(multiMatchAny(?, array(?)))", e.pathname, ^page_regexes)
+          )
+
         {:matches, glob_expr} ->
           regex = page_regex(glob_expr)
           from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
@@ -200,6 +211,21 @@ defmodule Plausible.Stats.Base do
         {:matches, expr} ->
           regex = page_regex(expr)
           from(s in sessions_q, where: fragment("match(?, ?)", field(s, ^prop_name), ^regex))
+
+        {:matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+
+          from(s in sessions_q,
+            where: fragment("multiMatchAny(?, array(?))", field(s, ^prop_name), ^page_regexes)
+          )
+
+        {:not_matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+
+          from(s in sessions_q,
+            where:
+              fragment("not(multiMatchAny(?, array(?)))", field(s, ^prop_name), ^page_regexes)
+          )
 
         {:does_not_match, expr} ->
           regex = page_regex(expr)

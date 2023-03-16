@@ -104,6 +104,18 @@ defmodule Plausible.Stats.FiltersTest do
     end
   end
 
+  describe "matches_member filter type" do
+    test "parses matches_member filter type" do
+      %{"page" => "/|/blog**"}
+      |> assert_parsed(%{"event:page" => {:matches_member, ["/", "/blog**"]}})
+    end
+
+    test "parses not_matches_member filter type" do
+      %{"page" => "!/|/blog**"}
+      |> assert_parsed(%{"event:page" => {:not_matches_member, ["/", "/blog**"]}})
+    end
+  end
+
   describe "not_member filter type" do
     test "simple not_member filter" do
       %{"page" => "!/|/blog"}

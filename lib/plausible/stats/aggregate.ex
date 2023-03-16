@@ -82,6 +82,14 @@ defmodule Plausible.Stats.Aggregate do
           regex = page_regex(expr)
           {"match(p, #{where_param})", regex}
 
+        {:matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+          {"multiMatchAny(p, array(?))", page_regexes}
+
+        {:not_matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+          {"not(multiMatchAny(p, array(?)))", page_regexes}
+
         {:does_not_match, expr} ->
           regex = page_regex(expr)
           {"not(match(p, #{where_param}))", regex}
