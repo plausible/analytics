@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
+defmodule PlausibleWeb.Api.StatsController.FilterSuggestionsTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/suggestions/:filter_name" do
