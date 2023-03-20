@@ -1,8 +1,8 @@
 defmodule Plausible.IngestRepo.Migrations.CreateV2Schemas do
   @moduledoc """
   Normally, for live environments the migration will be done via
-  DataMigration.NumericIDs module (TBD). In which case PASS_V2_SCHEMA_MIGRATION
-  environment vatiable needs to be set, to only make the standard migrate
+  `DataMigration.NumericIDs` module (TBD). In which case PASS_V2_SCHEMA_MIGRATION
+  environment variable needs to be set, to only make the standard migrate
   command write an entry into schema_migrations.
 
   For tests, and entirely new small, self-hosted instances however, 
