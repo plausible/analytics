@@ -29,7 +29,12 @@ defmodule Plausible.DataMigration.NumericIDs do
       Keyword.get(opts, :table_settings) || System.get_env("NUMERIC_IDS_TABLE_SETTINGS") ||
         @table_settings
 
-    start_from = System.get_env("NUMERIC_IDS_PARTITION_START_FROM")
+    start_from =
+      Keyword.get(opts, :start_from) || System.get_env("NUMERIC_IDS_PARTITION_START_FROM")
+
+    stop_at =
+      Keyword.get(opts, :stop_at) || System.get_env("NUMERIC_IDS_PARTITION_STOP_AT") ||
+        previous_part()
 
     (byte_size(dict_url) > 0 and byte_size(dict_password) > 0) ||
       raise "Set DOMAINS_DICT_URL and DOMAINS_DICT_PASSWORD"
@@ -42,7 +47,9 @@ defmodule Plausible.DataMigration.NumericIDs do
         {:ok, %{num_rows: 1}} -> true
       end
 
-    {:ok, %{rows: partitions}} = run_sql("list-partitions", start_from: start_from)
+    {:ok, %{rows: partitions}} =
+      run_sql("list-partitions", start_from: start_from, stop_at: stop_at)
+
     partitions = Enum.map(partitions, fn [part] -> part end)
 
     start_from = start_from || List.first(partitions)
@@ -58,6 +65,7 @@ defmodule Plausible.DataMigration.NumericIDs do
       - cluster?: #{cluster?}
       - partitions to do: #{inspect(partitions, pretty: true, width: 80)}
       - start from: #{start_from}
+      - stop at: #{stop_at}
     """)
 
     run_sql_fn =
@@ -100,17 +108,32 @@ defmodule Plausible.DataMigration.NumericIDs do
       IO.puts("start.. #{DateTime.utc_now()}")
 
       for part <- partitions do
+        part_start = System.monotonic_time()
+
         confirm_fn.("Run partition: #{part}?", fn ->
-          {:ok, _} = run_sql_fn.("insert-into-tmp-events-v2", partition: part)
-          {:ok, _} = run_sql_fn.("attach-tmp-events-v2", partition: part)
-          {:ok, _} = run_sql_fn.("truncate-tmp-events-v2", [])
-          {:ok, _} = run_sql_fn.("insert-into-tmp-sessions-v2", partition: part)
-          {:ok, _} = run_sql_fn.("attach-tmp-sessions-v2", partition: part)
-          {:ok, _} = run_sql_fn.("truncate-tmp-sessions-v2", [])
+          {:ok, _} = run_sql("insert-into-tmp-events-v2", partition: part)
+          {:ok, _} = run_sql("attach-tmp-events-v2", partition: part)
+          {:ok, _} = run_sql("truncate-tmp-events-v2", [])
+          {:ok, _} = run_sql("insert-into-tmp-sessions-v2", partition: part)
+          {:ok, _} = run_sql("attach-tmp-sessions-v2", partition: part)
+          {:ok, _} = run_sql("truncate-tmp-sessions-v2", [])
         end)
+
+        part_end = System.monotonic_time()
+
+        IO.puts(
+          "#{part} took #{System.convert_time_unit(part_end - part_start, :native, :second)} seconds"
+        )
       end
 
       IO.puts("end.. #{DateTime.utc_now()}")
     end)
+  end
+
+  defp previous_part() do
+    now = NaiveDateTime.utc_now()
+    month = String.pad_leading("#{now.month - 1}", 2, "0")
+    year = "#{now.year}"
+    "#{year}#{month}"
   end
 end
