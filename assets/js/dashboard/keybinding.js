@@ -1,5 +1,3 @@
-import { useEffect, useCallback } from "react";
-
 /**
  * Returns whether a keydown or keyup event should be ignored or not.
  *
@@ -21,29 +19,6 @@ export function shouldIgnoreKeypress(event) {
 
   return modifierPressed || isTyping
 }
-
-export function useKeybinds(el, callback, deps) {
-  const handleKeydown = useCallback((e) => {
-    const modifierPressed = event.ctrlKey || event.metaKey || event.altKey || event.keyCode == 229
-    if (modifierPressed) return true
-
-    e = {...e, key: e.key.toLowerCase()}
-
-    const retValue = callback(e)
-    if (retValue === false) {
-      e.preventDefault()
-      e.stopPropagation()
-    }
-  }, deps)
-
-  useEffect(() => {
-    if (el) {
-      el.addEventListener("keydown", handleKeydown);
-      return () => { el.removeEventListener("keydown", handleKeydown); }
-    }
-  })
-}
-
 
 /**
  * Returns whether the given keybinding has been pressed and should be

@@ -3,7 +3,6 @@ import { Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import debounce from 'debounce-promise'
 import classNames from 'classnames'
-import { useKeybinds } from '../keybinding'
 
 function Option({isHighlighted, onClick, onMouseEnter, text, id}) {
   const className = classNames('relative cursor-pointer select-none py-2 px-3', {
@@ -25,7 +24,6 @@ function Option({isHighlighted, onClick, onMouseEnter, text, id}) {
 function scrollTo(wrapper, id) {
   if (wrapper) {
     const el = wrapper.querySelector('#' + id);
-    console.log(el)
 
     if (el) {
       el.scrollIntoView({block: 'center'});
@@ -47,12 +45,17 @@ export default function PlausibleCombobox(props) {
   const containerRef = useRef(null);
   const listRef = useRef(null);
 
+  const visibleOptions = [...options]
+  if (props.allowWildcard && input.length > 0) {
+    visibleOptions.push({value: input, label: input, freeChoice: true})
+  }
+
   function highLight(index) {
     let newIndex = index
 
     if (index < 0) {
-      newIndex = options.length - 1
-    } else if (index >= options.length) {
+      newIndex = visibleOptions.length - 1
+    } else if (index >= visibleOptions.length) {
       newIndex = 0
     }
 
@@ -60,46 +63,41 @@ export default function PlausibleCombobox(props) {
     scrollTo(listRef.current, optionId(newIndex))
   }
 
-  useKeybinds(containerRef.current, (e) => {
-    if (e.key === 'enter') {
+  function onKeyDown(e) {
+    if (e.key === 'Enter') {
       if (!isOpen || loading) return null
-      selectOption(options[highlightedIndex])
-      return false
+      selectOption(visibleOptions[highlightedIndex])
+      e.preventDefault()
     }
-    if (e.key === 'escape') {
+    if (e.key === 'Escape') {
       if (!isOpen || loading) return null
       setOpen(false)
       searchRef.current?.focus()
-      return false
+      e.preventDefault()
     }
-    if (e.key === 'arrowdown') {
+    if (e.key === 'ArrowDown') {
       if (isOpen) {
         highLight(highlightedIndex + 1)
       } else {
-        fetchOptions(input)
+        setOpen(true)
       }
     }
-    if (e.key === 'arrowup') {
+    if (e.key === 'ArrowUp') {
       if (isOpen) {
         highLight(highlightedIndex - 1)
       } else {
-        fetchOptions(input, 'bottom')
+        setOpen(true)
       }
     }
-  }, [options, isOpen, loading, highlightedIndex, input])
+  }
 
-  function fetchOptions(query, highlight = 'top') {
+  function fetchOptions(query) {
     setLoading(true)
     setOpen(true)
 
     return props.fetchOptions(query).then((loadedOptions) => {
       setLoading(false)
-      if (highlight === 'top') {
-        setHighlightedIndex(0)
-      } else if (highlight === 'bottom') {
-        setHighlightedIndex(loadedOptions.length - 1)
-        scrollTo(listRef.current, optionId(loadedOptions.length - 1))
-      }
+      setHighlightedIndex(0)
       setOptions(loadedOptions)
     })
   }
@@ -109,10 +107,7 @@ export default function PlausibleCombobox(props) {
   function onInput(e) {
     const newInput = e.target.value
     setInput(newInput)
-
-    if (!newInput.includes('*')) {
-      debouncedFetchOptions(newInput)
-    }
+    debouncedFetchOptions(newInput)
   }
 
   function toggleOpen() {
@@ -153,13 +148,12 @@ export default function PlausibleCombobox(props) {
     return () => { document.removeEventListener("mousedown", handleClick, false); }
   }, [])
 
-  const isWildCard = props.allowWildcard && !loading && input.includes('*')
-  const matchesFound = !loading && !isWildCard && options.length > 0
-  const noMatchesFound = !loading && !isWildCard && options.length === 0
+  const matchesFound = !loading && visibleOptions.length > 0
+  const noMatchesFound = !loading && !props.allowWildcard && options.length === 0
 
   return (
-    <div ref={containerRef} className="relative ml-2 w-full">
-      <div onClick={toggleOpen} className={classNames('pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700', {'border-indigo-500 ring-1 ring-indigo-500': isOpen, '': !isOpen})}>
+    <div onKeyDown={onKeyDown} ref={containerRef} className="relative ml-2 w-full">
+      <div onClick={toggleOpen} className={classNames('pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500', {'border-indigo-500 ring-1 ring-indigo-500': isOpen, '': !isOpen})}>
         { props.values.map((value) => {
             return (
               <div key={value.value} className="bg-indigo-100 flex justify-between w-full rounded-sm px-2 py-0.5 m-0.5 text-sm">{value.label} <span onClick={(e) => removeOption(value, e)} className="cursor-pointer font-bold ml-1">&times;</span></div>
@@ -191,7 +185,9 @@ export default function PlausibleCombobox(props) {
             </div>
           )}
           { matchesFound && (
-            options.map((option, i) => {
+            visibleOptions.map((option, i) => {
+              const text = option.freeChoice ? `Filter by '${option.label}'` : option.label
+
               return (
                 <Option
                   key={option.value}
@@ -199,17 +195,10 @@ export default function PlausibleCombobox(props) {
                   isHighlighted={highlightedIndex === i}
                   onClick={() => selectOption(option)}
                   onMouseEnter={() => setHighlightedIndex(i)}
-                  text={option.label}
+                  text={text}
                 />
               )
             })
-          )}
-          { isWildCard && (
-            <Option
-              isHighlighted={true}
-              onClick={() => selectOption({value: input, label: input})}
-              text={`Filter by ${input}`}
-              />
           )}
         </ul>
       </Transition>
