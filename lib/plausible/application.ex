@@ -38,7 +38,7 @@ defmodule Plausible.Application do
     setup_opentelemetry()
 
     setup_geolocation()
-    Location.load_all()
+    Location.load_all(60_000)
     Plausible.Geo.await_loader()
 
     Supervisor.start_link(children, opts)
