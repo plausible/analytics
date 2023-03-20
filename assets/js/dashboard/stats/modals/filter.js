@@ -282,7 +282,7 @@ class FilterModal extends React.Component {
                 className="button"
                 disabled={this.isDisabled()}
               >
-                Save Filter
+                Apply Filter
               </button>
 
               {showClear && (
