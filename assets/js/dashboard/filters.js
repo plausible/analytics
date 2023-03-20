@@ -39,12 +39,6 @@ function clearAllFilters(history, query) {
 
 function filterText(key, _rawValue, query) {
   const {type, clauses} = parseQueryFilter(query, key)
-
-  // TODO
-  // if (key === "goal") {
-  //   return <>Completed goal <b>{value}</b></>
-  // }
-
   const formattedFilter = formattedFilters[key]
 
   if (key === "props") {
