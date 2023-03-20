@@ -77,8 +77,8 @@ export default function PlausibleCombobox(props) {
       <div className="relative ml-2 w-full">
         <Combobox.Button as="div" className="relative dark:bg-gray-900 dark:text-gray-300 block rounded-md shadow-sm border border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-200 focus-within:ring-indigo-500 focus-within:border-indigo-500 ">
           <Combobox.Input
-            className="border-none rounded-md focus:outline-none focus:ring-0 pr-10 text-sm"
-            style={{backgroundColor: 'inherit'}}
+            className="w-full border-none rounded-md focus:outline-none focus:ring-0 pr-10 text-sm"
+            style={{ backgroundColor: 'inherit' }}
             placeholder={props.placeholder}
             displayValue={(item) => item && item.label}
             onChange={(event) => debouncedFetchOptions(event.target.value)}
