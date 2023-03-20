@@ -3,8 +3,9 @@ import { Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import debounce from 'debounce-promise'
 import classNames from 'classnames'
+import { useKeybinds } from '../keybinding'
 
-function Option({isHighlighted, onClick, onMouseEnter, text}) {
+function Option({isHighlighted, onClick, onMouseEnter, text, id}) {
   const className = classNames('relative cursor-pointer select-none py-2 px-3', {
     'text-gray-900 dark:text-gray-300': !isHighlighted,
     'bg-indigo-600 text-white': isHighlighted,
@@ -13,12 +14,27 @@ function Option({isHighlighted, onClick, onMouseEnter, text}) {
   return (
     <li
       className={className}
+      id={id}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
     >
       <span className="block truncate">{text}</span>
     </li>
   )
+}
+function scrollTo(wrapper, id) {
+  if (wrapper) {
+    const el = wrapper.querySelector('#' + id);
+    console.log(el)
+
+    if (el) {
+      el.scrollIntoView({block: 'center'});
+    }
+  }
+}
+
+function optionId(index) {
+  return `plausible-combobox-option-${index}`
 }
 
 export default function PlausibleCombobox(props) {
@@ -29,14 +45,61 @@ export default function PlausibleCombobox(props) {
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const searchRef = useRef(null);
   const containerRef = useRef(null);
+  const listRef = useRef(null);
 
-  function fetchOptions(query) {
+  function highLight(index) {
+    let newIndex = index
+
+    if (index < 0) {
+      newIndex = options.length - 1
+    } else if (index >= options.length) {
+      newIndex = 0
+    }
+
+    setHighlightedIndex(newIndex)
+    scrollTo(listRef.current, optionId(newIndex))
+  }
+
+  useKeybinds(containerRef.current, (e) => {
+    if (e.key === 'enter') {
+      if (!isOpen || loading) return null
+      selectOption(options[highlightedIndex])
+      return false
+    }
+    if (e.key === 'escape') {
+      if (!isOpen || loading) return null
+      setOpen(false)
+      searchRef.current?.focus()
+      return false
+    }
+    if (e.key === 'arrowdown') {
+      if (isOpen) {
+        highLight(highlightedIndex + 1)
+      } else {
+        fetchOptions(input)
+      }
+    }
+    if (e.key === 'arrowup') {
+      if (isOpen) {
+        highLight(highlightedIndex - 1)
+      } else {
+        fetchOptions(input, 'bottom')
+      }
+    }
+  }, [options, isOpen, loading, highlightedIndex, input])
+
+  function fetchOptions(query, highlight = 'top') {
     setLoading(true)
     setOpen(true)
 
     return props.fetchOptions(query).then((loadedOptions) => {
       setLoading(false)
-      setHighlightedIndex(0)
+      if (highlight === 'top') {
+        setHighlightedIndex(0)
+      } else if (highlight === 'bottom') {
+        setHighlightedIndex(loadedOptions.length - 1)
+        scrollTo(listRef.current, optionId(loadedOptions.length - 1))
+      }
       setOptions(loadedOptions)
     })
   }
@@ -90,7 +153,7 @@ export default function PlausibleCombobox(props) {
     return () => { document.removeEventListener("mousedown", handleClick, false); }
   }, [])
 
-  const isWildCard = !loading && input.includes('*')
+  const isWildCard = props.allowWildcard && !loading && input.includes('*')
   const matchesFound = !loading && !isWildCard && options.length > 0
   const noMatchesFound = !loading && !isWildCard && options.length === 0
 
@@ -99,7 +162,7 @@ export default function PlausibleCombobox(props) {
       <div onClick={toggleOpen} className={classNames('pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700', {'border-indigo-500 ring-1 ring-indigo-500': isOpen, '': !isOpen})}>
         { props.values.map((value) => {
             return (
-              <div key={value.value} className="bg-indigo-100 flex justify-between w-full rounded-sm px-2 py-0.5 m-0.5 text-sm">{value.label} <button onClick={(e) => removeOption(value, e)} className="font-bold ml-1">&times;</button></div>
+              <div key={value.value} className="bg-indigo-100 flex justify-between w-full rounded-sm px-2 py-0.5 m-0.5 text-sm">{value.label} <span onClick={(e) => removeOption(value, e)} className="cursor-pointer font-bold ml-1">&times;</span></div>
             )
           })
         }
@@ -116,7 +179,7 @@ export default function PlausibleCombobox(props) {
         leaveTo="opacity-0"
         show={isOpen}
       >
-        <ul className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
+        <ul ref={listRef} className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
           { loading && (
             <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
               Loading options...
@@ -132,6 +195,7 @@ export default function PlausibleCombobox(props) {
               return (
                 <Option
                   key={option.value}
+                  id={optionId(i)}
                   isHighlighted={highlightedIndex === i}
                   onClick={() => selectOption(option)}
                   onMouseEnter={() => setHighlightedIndex(i)}

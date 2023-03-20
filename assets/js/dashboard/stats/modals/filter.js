@@ -10,6 +10,7 @@ import { FILTER_GROUPS, parseQueryFilter, formatFilterGroup, formattedFilters, F
 import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath } from '../../util/url'
+import { shouldIgnoreKeypress } from '../../keybinding'
 
 function getFormState(filterGroup, query) {
   if (filterGroup === 'props') {
@@ -77,9 +78,7 @@ class FilterModal extends React.Component {
   }
 
   handleKeydown(e) {
-    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.isComposing || e.keyCode === 229) {
-      return
-    }
+    if (shouldIgnoreKeypress(e)) return
 
     if (e.target.tagName === 'BODY' && e.key === 'Enter') {
       this.handleSubmit()
@@ -185,8 +184,8 @@ class FilterModal extends React.Component {
   }
 
   renderSearchBox(filter) {
-    const isStrict = this.state.selectedFilterGroup === 'location'
-    return <Combobox fetchOptions={this.fetchOptions(filter)} strict={isStrict} values={this.state.formState[filter].clauses} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
+    const allowWildcard = this.state.selectedFilterGroup === 'page'
+    return <Combobox fetchOptions={this.fetchOptions(filter)} allowWildcard={allowWildcard} values={this.state.formState[filter].clauses} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
   }
 
   renderFilterInputs() {
@@ -274,7 +273,7 @@ class FilterModal extends React.Component {
 
         <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
-          <form className="flex flex-col" id="filter-form" onSubmit={this.handleSubmit.bind(this)}>
+          <form className="flex flex-col" onSubmit={this.handleSubmit.bind(this)}>
             {this.renderFilterInputs()}
 
             <div className="mt-6 flex items-center justify-start">
