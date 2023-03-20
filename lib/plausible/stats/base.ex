@@ -104,15 +104,29 @@ defmodule Plausible.Stats.Base do
           from(e in q, where: e.name == ^event)
 
         {:member, clauses} ->
-          {events, pages} = Enum.split_with(clauses, fn {type, _} -> type == :event end)
-          events = Enum.map(events, fn {_, val} -> val end)
-          pages = Enum.map(pages, fn {_, val} -> val end)
+          {events, pages} = split_goals(clauses)
           from(e in q, where: e.pathname in ^pages or e.name in ^events)
 
+        {:matches_member, clauses} ->
+          {events, pages} = split_goals(clauses, &page_regex/1)
+
+          from(e in q,
+            where:
+              fragment("multiMatchAny(?, array(?))", e.pathname, ^pages) or
+                fragment("multiMatchAny(?, array(?))", e.name, ^events)
+          )
+
+        {:not_matches_member, clauses} ->
+          {events, pages} = split_goals(clauses, &page_regex/1)
+
+          from(e in q,
+            where:
+              fragment("not(multiMatchAny(?, array(?)))", e.pathname, ^pages) and
+                fragment("not(multiMatchAny(?, array(?)))", e.name, ^events)
+          )
+
         {:not_member, clauses} ->
-          {events, pages} = Enum.split_with(clauses, fn {type, _} -> type == :event end)
-          events = Enum.map(events, fn {_, val} -> val end)
-          pages = Enum.map(pages, fn {_, val} -> val end)
+          {events, pages} = split_goals(clauses)
           from(e in q, where: e.pathname not in ^pages and e.name not in ^events)
 
         nil ->
@@ -498,5 +512,15 @@ defmodule Plausible.Stats.Base do
       threshold ->
         from(e in db_q, hints: [sample: threshold])
     end
+  end
+
+  defp split_goals(clauses, map_fn \\ &Function.identity/1) do
+    groups =
+      Enum.group_by(clauses, fn {goal_type, _v} -> goal_type end, fn {_k, val} -> map_fn.(val) end)
+
+    {
+      Map.get(groups, :event, []),
+      Map.get(groups, :page, [])
+    }
   end
 end
