@@ -112,8 +112,8 @@ defmodule Plausible.Stats.Base do
 
           from(e in q,
             where:
-              fragment("multiMatchAny(?, array(?))", e.pathname, ^pages) or
-                fragment("multiMatchAny(?, array(?))", e.name, ^events)
+              fragment("multiMatchAny(?, ?)", e.pathname, ^pages) or
+                fragment("multiMatchAny(?, ?)", e.name, ^events)
           )
 
         {:not_matches_member, clauses} ->
@@ -121,8 +121,8 @@ defmodule Plausible.Stats.Base do
 
           from(e in q,
             where:
-              fragment("not(multiMatchAny(?, array(?)))", e.pathname, ^pages) and
-                fragment("not(multiMatchAny(?, array(?)))", e.name, ^events)
+              fragment("not(multiMatchAny(?, ?))", e.pathname, ^pages) and
+                fragment("not(multiMatchAny(?, ?))", e.name, ^events)
           )
 
         {:not_member, clauses} ->
@@ -220,7 +220,7 @@ defmodule Plausible.Stats.Base do
 
         {:not_member, values} ->
           list = Enum.map(values, &db_prop_val(prop_name, &1))
-          from(s in sessions_q, where: fragment("? not in tuple(?)", field(s, ^prop_name), ^list))
+          from(s in sessions_q, where: fragment("? not in ?", field(s, ^prop_name), ^list))
 
         {:matches, expr} ->
           regex = page_regex(expr)
@@ -230,15 +230,14 @@ defmodule Plausible.Stats.Base do
           page_regexes = Enum.map(exprs, &page_regex/1)
 
           from(s in sessions_q,
-            where: fragment("multiMatchAny(?, array(?))", field(s, ^prop_name), ^page_regexes)
+            where: fragment("multiMatchAny(?, ?)", field(s, ^prop_name), ^page_regexes)
           )
 
         {:not_matches_member, exprs} ->
           page_regexes = Enum.map(exprs, &page_regex/1)
 
           from(s in sessions_q,
-            where:
-              fragment("not(multiMatchAny(?, array(?)))", field(s, ^prop_name), ^page_regexes)
+            where: fragment("not(multiMatchAny(?, ?))", field(s, ^prop_name), ^page_regexes)
           )
 
         {:does_not_match, expr} ->
