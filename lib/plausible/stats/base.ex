@@ -52,13 +52,13 @@ defmodule Plausible.Stats.Base do
 
         {:matches_member, glob_exprs} ->
           page_regexes = Enum.map(glob_exprs, &page_regex/1)
-          from(e in q, where: fragment("multiMatchAny(?, array(?))", e.pathname, ^page_regexes))
+          from(e in q, where: fragment("multiMatchAny(?, ?)", e.pathname, ^page_regexes))
 
         {:not_matches_member, glob_exprs} ->
           page_regexes = Enum.map(glob_exprs, &page_regex/1)
 
           from(e in q,
-            where: fragment("not(multiMatchAny(?, array(?)))", e.pathname, ^page_regexes)
+            where: fragment("not(multiMatchAny(?, ?))", e.pathname, ^page_regexes)
           )
 
         {:matches, glob_expr} ->
