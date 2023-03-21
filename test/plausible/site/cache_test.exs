@@ -23,7 +23,7 @@ defmodule Plausible.Site.CacheTest do
           assert Cache.get("key", force?: true, cache_name: NonExistingCache) == nil
         end)
 
-      assert log =~ "Error retrieving 'key' from 'NonExistingCache': :no_cache"
+      assert log =~ "Error retrieving domain from 'NonExistingCache': :no_cache"
     end
 
     test "cache caches", %{test: test} do

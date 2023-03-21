@@ -169,9 +169,7 @@ defmodule Plausible.Site.Cache do
           site
 
         {:error, e} ->
-          Logger.error(
-            "Error retrieving '#{domain}' from '#{inspect(cache_name)}': #{inspect(e)}"
-          )
+          Logger.error("Error retrieving domain from '#{inspect(cache_name)}': #{inspect(e)}")
 
           nil
       end
