@@ -1,6 +1,5 @@
 defmodule Plausible.ClickhouseSessionV2 do
   use Ecto.Schema
-  import Ecto.Changeset
 
   @primary_key false
   schema "sessions_v2" do
@@ -46,36 +45,5 @@ defmodule Plausible.ClickhouseSessionV2 do
 
   def random_uint64() do
     :crypto.strong_rand_bytes(8) |> :binary.decode_unsigned()
-  end
-
-  def changeset(session, attrs) do
-    session
-    |> cast(attrs, [
-      :hostname,
-      :site_id,
-      :entry_page,
-      :exit_page,
-      :fingerprint,
-      :start,
-      :length,
-      :is_bounce,
-      :operating_system,
-      :operating_system_version,
-      :browser_version,
-      :referrer,
-      :referrer_source,
-      :utm_medium,
-      :utm_source,
-      :utm_campaign,
-      :utm_content,
-      :utm_term,
-      :country_code,
-      :country_geoname_id,
-      :subdivision1_code,
-      :subdivision2_code,
-      :city_geoname_id,
-      :screen_size
-    ])
-    |> validate_required([:hostname, :site_id, :fingerprint, :is_bounce, :start])
   end
 end
