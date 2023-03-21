@@ -24,8 +24,9 @@ defmodule Plausible.Stats.Timeseries do
 
     Enum.map(steps, fn step ->
       empty_row(step, metrics)
-      |> Map.merge(Enum.find(event_result, fn row -> row[:date] == step end) || %{})
-      |> Map.merge(Enum.find(session_result, fn row -> row[:date] == step end) || %{})
+      |> Map.merge(Enum.find(event_result, fn row -> date_eq(row[:date], step) end) || %{})
+      |> Map.merge(Enum.find(session_result, fn row -> date_eq(row[:date], step) end) || %{})
+      |> Map.update!(:date, &date_format/1)
     end)
   end
 
@@ -88,7 +89,6 @@ defmodule Plausible.Stats.Timeseries do
       query.date_range.first
       |> Timex.to_datetime()
       |> Timex.shift(hours: step)
-      |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
     end)
   end
 
@@ -109,8 +109,27 @@ defmodule Plausible.Stats.Timeseries do
       query.date_range.first
       |> Timex.to_datetime()
       |> Timex.shift(minutes: step)
-      |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
     end)
+  end
+
+  defp date_eq(%DateTime{} = left, %DateTime{} = right) do
+    NaiveDateTime.compare(left, right) == :eq
+  end
+
+  defp date_eq(%Date{} = left, %Date{} = right) do
+    Date.compare(left, right) == :eq
+  end
+
+  defp date_eq(left, right) do
+    left == right
+  end
+
+  defp date_format(%DateTime{} = date) do
+    Timex.format!(date, "{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
+  end
+
+  defp date_format(date) do
+    date
   end
 
   defp select_bucket(q, site, %Query{interval: "month"}) do

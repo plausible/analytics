@@ -3,7 +3,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.AddEntryProps do
 
   def change do
     alter table(:sessions) do
-      add(:entry_meta, {:nested, {{:key, :string}, {:value, :string}}})
+      add(:entry_meta, :"Nested(key String, value String)")
     end
   end
 end

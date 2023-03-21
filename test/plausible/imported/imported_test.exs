@@ -7,7 +7,7 @@ defmodule Plausible.ImportedTest do
   defp import_data(ga_data, site_id, table_name) do
     ga_data
     |> Plausible.Imported.from_google_analytics(site_id, table_name)
-    |> then(&Plausible.IngestRepo.insert_all(table_name, &1))
+    |> then(&Plausible.Google.Buffer.insert_all(table_name, &1))
   end
 
   describe "Parse and import third party data fetched from Google Analytics" do

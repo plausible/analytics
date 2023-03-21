@@ -176,7 +176,7 @@ defmodule Plausible.Stats.Clickhouse do
     ClickhouseRepo.all(
       from e in "events",
         group_by: e.domain,
-        where: fragment("? IN tuple(?)", e.domain, ^domains),
+        where: e.domain in ^domains,
         where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
         select: {e.domain, fragment("uniq(user_id)")}
     )
@@ -421,7 +421,7 @@ defmodule Plausible.Stats.Clickhouse do
       else
         from(
           e in q,
-          inner_lateral_join: meta in fragment("meta as m"),
+          inner_lateral_join: meta in fragment("meta"),
           where: meta.key == ^key and meta.value == ^val
         )
       end
@@ -435,19 +435,25 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp utc_boundaries(%Query{period: "30m"}, site) do
-    last_datetime = NaiveDateTime.utc_now()
+    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
     first_datetime =
-      last_datetime |> Timex.shift(minutes: -30) |> beginning_of_time(site.native_stats_start_at)
+      last_datetime
+      |> Timex.shift(minutes: -30)
+      |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
 
     {first_datetime, last_datetime}
   end
 
   defp utc_boundaries(%Query{period: "realtime"}, site) do
-    last_datetime = NaiveDateTime.utc_now()
+    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
     first_datetime =
-      last_datetime |> Timex.shift(minutes: -5) |> beginning_of_time(site.native_stats_start_at)
+      last_datetime
+      |> Timex.shift(minutes: -5)
+      |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
 
     {first_datetime, last_datetime}
   end
