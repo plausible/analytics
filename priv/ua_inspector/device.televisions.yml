@@ -16,6 +16,20 @@ Airties:
     - regex: 'Airties; ?([^);/]+)'
       model: '$1'
 
+# ALDI NORD
+'ALDI NORD':
+  regex: 'ALDINORD[;,]'
+  device: 'tv'
+  model: ''
+
+# ALDI SÜD
+'ALDI SÜD':
+  regex: 'ALDISUED[;,]'
+  device: 'tv'
+  models:
+    - regex: 'ALDISUED, ([a-z0-9_ \-]+), (?:wired|wireless)'
+      model: ''
+
 # Altech UEC
 'Altech UEC':
   regex: 'Altech UEC'
@@ -24,11 +38,55 @@ Airties:
     - regex: 'Altech UEC; ?([^);/]+)'
       model: '$1'
 
+# AOC
+AOC:
+  regex: 'AOC'
+  device: 'tv'
+  models:
+    - regex: '(LE43S5970-20|S50856)'
+      model: '$1'
+
+# ARRIS
+ARRIS:
+  regex: 'ARRIS[;,]'
+  device: 'tv'
+  models:
+    - regex: 'FS-ARS-01B'
+      model: 'FS-ARS-01B'
+
+# Atvio
+Atvio:
+  regex: 'ATVIO'
+  device: 'tv'
+  models:
+    - regex: '55D1620'
+      model: '55D1620'
+
 # BangOlufsen
 BangOlufsen:
   regex: 'Bangolufsen'
   device: 'tv'
   model: 'BeoVision'
+
+# Blaupunkt
+Blaupunkt:
+  regex: 'Blaupunkt_UMC[;,]'
+  device: 'tv'
+  models:
+    - regex: 'LC-65CUG8052E'
+      model: 'LC-65CUG8052E'
+
+# Bush
+Bush:
+  regex: 'BUSH[;,]'
+  device: 'tv'
+  model: ''
+
+# Celcus
+Celcus:
+  regex: 'CELCUS[;,]'
+  device: 'tv'
+  model: ''
 
 # Changhong
 Changhong:
@@ -44,47 +102,149 @@ CreNova:
   device: 'tv'
   model: 'CNV001'
 
+# Digihome
+Digihome:
+  regex: 'DIGIHOME[;,]'
+  device: 'tv'
+  model: ''
+
 # DMM
 DMM:
   regex: 'DMM'
   device: 'tv'
   model: 'Dreambox'
 
+# ELECTRONIA
+ELECTRONIA:
+  regex: 'ELECTRONIA[;,]'
+  device: 'tv'
+  model: ''
+
+# Essentielb
+Essentielb:
+  regex: 'ESSENTIELB[;,]'
+  device: 'tv'
+  model: ''
+
+# Finlux
+Finlux:
+  regex: 'FINLUX[;,]'
+  device: 'tv'
+  model: ''
+
+# F&U (https://www.fandu.gr/)
+'F&U':
+  regex: 'FU[;,]'
+  device: 'tv'
+  model: ''
+
+# Fuego
+Fuego:
+  regex: 'FUEGO[;,]'
+  device: 'tv'
+  model: ''
+
+# GoGEN (https://www.gogen.cz/)
+GoGEN:
+  regex: 'GOGEN[;,]'
+  device: 'tv'
+  model: ''
+
 # Grundig
 Grundig:
   regex: '(OWB|Grundig|Arcelik)'
+  device: 'tv'
+  models:
+    - regex: 'G7'
+      model: 'G7'
+
+# Haier
+Haier:
+  regex: '(?:HHW_)?HAIER'
+  device: 'tv'
+  models:
+    - regex: 'LE55X7000U'
+      model: 'LE55X7000U'
+
+# Hi-Level
+Hi-Level:
+  regex: 'HI-LEVEL[;,]'
   device: 'tv'
   model: ''
 
 # Hisense
 Hisense:
-  regex: 'Hisense'
+  regex: 'Hisense|Eurofins_Digital_Testing'
   device: 'tv'
   models:
+    - regex: '50ADEVTOOL'
+      model: '50ADEVTOOL'
+    - regex: '50A683FEVS'
+      model: '50A683FEVS'
+    - regex: '55A6100EE'
+      model: '55A6100EE'
+    - regex: '55U62QGAVT'
+      model: '55U62QGAVT'
+    - regex: '50A6502EA'
+      model: '50A6502EA'
+    - regex: 'MICALIDVB6886'
+      model: 'MICALIDVB6886'
     - regex: '(L[A-Z]{2,3}[0-9]{2}[A-Z][0-9]{3,4}[A-Z]{0,6}[0-9]?[A-Z]?)'
       model: '$1'
     - regex: '(H[A-Z]?[0-9]{2}[A-Z][0-9]{3,4}[A-Z]{0,4})'
       model: '$1'
 
+# Hitachi
+Hitachi:
+  regex: 'Hitachi[;,]'
+  device: 'tv'
+  models:
+    - regex: '49D2900'
+      model: '49D2900'
+
+# Horizon
+Horizon:
+  regex: 'HORIZON[;,]'
+  device: 'tv'
+  model: ''
+
+# Hotel
+Hotel:
+  regex: 'HOTEL[;,]'
+  device: 'tv'
+  model: ''
+
 # Humax
 Humax:
-  regex: 'Humax'
+  regex: 'Humax|hdr1000s'
   device: 'tv'
   models:
     - regex: '(HD-FOX C|HD (FOX\+|NANO)|iCord (HD\+|MINI|Cable)|(CX|IR)HD-5100(C|S)|HM9503HD)'
       model: '$1'
     - regex: 'HMS1000S'
       model: 'HMS-1000S'
+    - regex: 'FVP4000T'
+      model: 'FVP-4000T'
+    - regex: 'HGS1000S'
+      model: 'HGS-1000S'
+    - regex: 'HDR1000S'
+      model: 'HDR-1000S'
+    - regex: 'HDR4000T'
+      model: 'HDR-4000T'
     - regex: 'Humax; ([^);/]+)'
       model: '$1'
+
+# Hyundai
+Hyundai:
+  regex: 'HYUNDAI[;,]'
+  device: 'tv'
+  model: ''
 
 # IKEA
 Ikea:
   regex: 'Ikea'
   device: 'tv'
-  models:
-    - regex: '(LF1V[0-9]{3})'
-      model: '$1'
+  model: ''
 
 # Intek
 Intek:
@@ -104,17 +264,83 @@ Inverto:
     - regex: '(Volksbox Web Edition|Volksbox Essential|Volksbox II|Volksbox)'
       model: '$1'
 
+# JVC
+JVC:
+  regex: 'AFTSO001|JVC[;,]'
+  device: 'tv'
+  models:
+    - regex: 'AFTSO001'
+      model: '4K (2019)'
+
+# Kalley
+Kalley:
+  regex: 'KALLEY[;,]'
+  device: 'tv'
+  models:
+    - regex: '32D1620'
+      model: '32D1620'
+
+# KUBO
+KUBO:
+  regex: 'KUBO[;,]'
+  device: 'tv'
+  model: ''
+
+# Laurus
+Laurus:
+  regex: 'LAURUS[;,]'
+  device: 'tv'
+  model: ''
+
 # LG
 LG:
   regex: 'LGE'
   device: 'tv'
   models:
+    - regex: 'XU43WT180N'
+      model: 'XU43WT180N'
+    - regex: '43LJ614V-ZA'
+      model: '43LJ614V-ZA'
+    - regex: '55SK850V-ZA'
+      model: '55SK850V-ZA'
+    - regex: 'KEY0000213F1z'
+      model: 'KEY0000213F1z'
+    - regex: 'KEY0000213F'
+      model: 'KEY0000213F'
+    - regex: 'KEY000000(2E|2F|3B|3F)'
+      model: 'KEY000000$1'
     - regex: '(NetCast [0-9]{1}.[0-9]{1}|GLOBAL_PLAT3)'
+      model: '$1'
+    - regex: '(OLED[0-9]{2}[A-Z0-9]{3}[A-Z]{2})'
       model: '$1'
     - regex: '(OLED[0-9]{2}[A-Z][0-9][A-Z])'
       model: '$1'
+    - regex: '(OLED[0-9]{2}[A-Z0-9]{2})'
+      model: '$1'
+    - regex: '([0-9]{2}[A-Z]{2}[0-9]{4}[A-Z0-9]{1}[A-Z]{2})'
+      model: '$1'
+    - regex: '([0-9]{2}NANO[0-9]{3}[A-Z]{2})'
+      model: '$1'
+    - regex: '([0-9]{2}NANO[0-9]{2})'
+      model: '$1'
     - regex: 'LGE;? ?([0-9]{2}[A-Z]{2}[0-9]{2,4}[A-Z]?)'
       model: '$1'
+    - regex: 'LM21U'
+      model: 'LM21U'
+    - regex: '32LM'
+      model: '32LM'
+
+# Lifemaxx
+Lifemaxx:
+  regex: 'Lifemaxx[;,]'
+  device: 'tv'
+  model: ''
+
+# Linsar
+Linsar:
+  regex: 'LINSAR[;,]'
+  device: 'tv'
+  model: ''
 
 # Loewe
 Loewe:
@@ -124,9 +350,23 @@ Loewe:
     - regex: '([A-Z]{2}[0-9]{3})'
       model: '$1'
 
+# Luxor
+Luxor:
+  regex: 'LUXOR[;,]'
+  device: 'tv'
+  model: ''
+
+# Manhattan (https://manhattan-tv.com/)
+Manhattan:
+  regex: 'Manhattan'
+  device: 'tv'
+  models:
+    - regex: 'T3'
+      model: 'T3'
+
 # MediaTek
 MediaTek:
-  regex: 'MTK'
+  regex: 'MTK|MediaTek;'
   device: 'tv'
   models:
     - regex: '(MT[0-9]{4})'
@@ -137,12 +377,48 @@ Medion:
   regex: 'Medion'
   device: 'tv'
   models:
-    - regex: '(MB[0-9]{2})'
-      model: '$1'
+    - regex: 'MEDION, ([a-z0-9_ \-]+), (?:wired|wireless)'
+      model: ''
+
+# Miray
+Miray:
+  regex: 'MIRAY'
+  device: 'tv'
+  models:
+    - regex: 'LEDM-322NIP'
+      model: 'LEDM-322NIP'
+
+# MStar
+MStar:
+  regex: 'MStar[;,]'
+  device: 'tv'
+  models:
+    - regex: '([24])KTV18'
+      model: '$1KTV18'
+
+# MTC
+MTC:
+  regex: 'MTC[;,]'
+  device: 'tv'
+  models:
+    - regex: '([24])K_Android_TV_V01'
+      model: '$1K Android TV'
+
+# Nordmende
+Nordmende:
+  regex: 'NORDMENDE[;,]'
+  device: 'tv'
+  model: ''
 
 # Metz
 Metz:
   regex: 'Metz'
+  device: 'tv'
+  model: ''
+
+# Ok
+Ok:
+  regex: 'OK[;,]'
   device: 'tv'
   model: ''
 
@@ -151,18 +427,20 @@ Panasonic:
   regex: 'Panasonic'
   device: 'tv'
   models:
-    - regex: '(VIERA [0-9]{1,4})|(DIGA [A-Z]{1}[0-9]{4})'
+    - regex: 'VIERA (201[1-9])'
+      model: 'VIERA ($1)'
+    - regex: '(DIGA [A-Z]{1}[0-9]{4})'
       model: '$1'
     - regex: 'DIGA Webkit ([A-Z]{1}[0-9]{4})'
       model: 'DIGA $1'
+    - regex: 'SmartTV(201[89]|202[0-1])'
+      model: 'Smart TV ($1)'
 
 # PEAQ
 PEAQ:
   regex: 'PEAQ'
   device: 'tv'
-  models:
-    - regex: '(LF1V[0-9]{3})'
-      model: '$1'
+  model: ''
 
 # Philips
 Philips:
@@ -174,15 +452,69 @@ Philips:
     - regex: 'NETTV/[0-9\.]{5}'
       model: 'NetTV Series'
 
+# Polaroid
+Polaroid:
+  regex: 'POLAROID[;,]'
+  device: 'tv'
+  model: ''
+
+# PROFiLO
+PROFiLO:
+  regex: 'PROFILO[;,]'
+  device: 'tv'
+  model: ''
+
+# Qilive
+Qilive:
+  regex: 'QILIVE[;,]'
+  device: 'tv'
+  model: ''
+
+# REGAL
+REGAL:
+  regex: 'REGAL[;,]'
+  device: 'tv'
+  model: ''
+
+# Saba
+Saba:
+  regex: 'Saba[;,]'
+  device: 'tv'
+  model: ''
+
+# Salora
+Salora:
+  regex: 'Salora[;,]'
+  device: 'tv'
+  model: ''
+
 # Samsung
 Samsung:
   regex: 'Samsung|Maple_2011'
   device: 'tv'
   models:
-    - regex: 'SmartTV(201[2-9])'
-      model: 'Smart TV $1'
+    - regex: 'SmartTV(201[2-9]|202[0-1]):([^);/]+)'
+      model: '$2'
+    - regex: 'SmartTV(201[2-9]|202[0-1])'
+      model: 'Smart TV ($1)'
     - regex: 'Maple_2011'
-      model: 'Smart TV 2011'
+      model: 'Smart TV (2011)'
+
+# SCBC
+SCBC:
+  regex: 'SCBC[;,]'
+  device: 'tv'
+  models:
+    - regex: 'SCBC586'
+      model: 'SCBC586'
+    - regex: '43D1850'
+      model: '43D1850'
+
+# SEG
+SEG:
+  regex: 'SEG[;,]'
+  device: 'tv'
+  model: ''
 
 # Selevision
 Selevision:
@@ -196,13 +528,19 @@ Selevision:
 
 # Sharp
 Sharp:
-  regex: 'Sharp'
+  regex: '(?:UMC-)?Sharp'
   device: 'tv'
   models:
+    - regex: 'SHARP, ([a-z0-9_ \-]+), (?:wired|wireless)'
+      model: ''
     - regex: 'Sharp[,;] ?((?! |HbbTV)[^),;/]+)'
       model: '$1'
     - regex: '(LE[0-9]{3}[A-Z]{0,3})'
       model: '$1'
+    - regex: 'LC-([^);/]+)'
+      model: 'LC-$1'
+    - regex: 'BLA-43'
+      model: 'BLA-43'
 
 # Skyworth
 Skyworth:
@@ -212,9 +550,9 @@ Skyworth:
     - regex: 'Sky_worth;([^);/]+)'
       model: '$1'
 
-# Smart
-Smart:
-  regex: 'Smart[^a-z]'
+# Smart Electronic
+Smart Electronic:
+  regex: 'Smart[;,]'
   device: 'tv'
   models:
     - regex: 'Smart; ([^);/]+)'
@@ -227,8 +565,48 @@ Sony:
   regex: 'Sony'
   device: 'tv'
   models:
+    - regex: 'KDL-GR1'
+      model: 'KDL-GR1'
+    - regex: 'KDL-GN([56])'
+      model: 'KDL-GN$1'
+    - regex: 'BRAVIA (VH1|4K VH2)'
+      model: 'BRAVIA $1'
+    - regex: '(KDL?-?[0-9]{2}[A-Z]{1}[0-9]{4}[A-Z]{1})'
+      model: '$1'
+    - regex: '(KDL?-?[0-9]{2}[A-Z]{1}[0-9]{3}[A-Z]{1})'
+      model: '$1'
     - regex: '(KDL?-?[0-9]{2}[A-Z]{1,2}[0-9]{1,5})'
       model: '$1'
+
+# SWTV
+SWTV:
+  regex: 'SWTV[;,]'
+  device: 'tv'
+  models:
+    - regex: 'SKWE20E21'
+      model: 'SKWE20E21'
+
+# TD Systems
+'TD Systems':
+  regex: 'TDSystems[;,]'
+  device: 'tv'
+  models:
+    - regex: 'SmartTV(2019|2020)'
+      model: 'Smart TV ($1)'
+
+# Technicolor
+Technicolor:
+  regex: 'Technicolor'
+  device: 'tv'
+  models:
+    - regex: 'uzw4054ttg'
+      model: 'UZW4054TTG'
+
+# Technika
+Technika:
+  regex: 'TECHNIKA[;,]'
+  device: 'tv'
+  model: ''
 
 # TechniSat
 TechniSat:
@@ -246,21 +624,24 @@ TechnoTrend:
     - regex: '([A-Z]{1}-[0-9]{3})'
       model: '$1'
 
+# Techwood
+Techwood:
+  regex: 'Techwood[;,]'
+  device: 'tv'
+  model: ''
+
 # Telefunken
 Telefunken:
   regex: 'Telefunken'
   device: 'tv'
-  models:
-    - regex: '(MB[0-9]{2})'
-      model: '$1'
+  model: ''
+
 # TCL
 TCL:
   regex: 'TCL'
   device: 'tv'
   models:
-    - regex: '(32D1820)'
-      model: '$1'
-    - regex: '(LF1V[0-9]{3})'
+    - regex: '(32D1820|(?:39|55)D2900|32D2930|(?:32|43)S4900)'
       model: '$1'
 
 # Thomson
@@ -280,23 +661,25 @@ Thomson:
       model: '$1 49.0"'
     - regex: '(T55D18[SD]FS-01B)'
       model: '$1 55.0"'
-    - regex: '(LF1V[0-9]{3})'
-      model: '$1'
+    - regex: '40FB5426'
+      model: '40FB5426'
+
+# TOKYO
+TOKYO:
+  regex: 'TOKYO[;,]'
+  device: 'tv'
+  models:
+    - regex: 'TOKTCLED32S'
+      model: 'TOKTCLED32S'
 
 # Toshiba
 Toshiba:
   regex: 'Toshiba'
   device: 'tv'
   models:
+    - regex: '40L2600'
+      model: '40L2600'
     - regex: '(([0-9]{2}|DTV_)[A-Z]{2}[0-9]{1,3})'
-      model: '$1'
-
-# Vestel
-Vestel:
-  regex: 'Vestel'
-  device: 'tv'
-  models:
-    - regex: '(MB[0-9]{2})'
       model: '$1'
 
 # Videoweb
@@ -308,3 +691,33 @@ Videoweb:
       model: '$1'
     - regex: '(videowebtv)'
       model: 'VideoWeb TV'
+
+# VOX (https://www.voxelectronics.com/)
+VOX:
+  regex: 'VOX[;,]'
+  device: 'tv'
+  model: ''
+
+# WELLINGTON
+WELLINGTON:
+  regex: 'WELLINGTON[;,]'
+  device: 'tv'
+  model: ''
+
+# X.Vision
+X.Vision:
+  regex: 'X-VISION[;,]'
+  device: 'tv'
+  model: ''
+
+# Vestel
+Vestel:
+  regex: '(?:Vestel.+VESTEL|VESTEL;)'
+  device: 'tv'
+  model: ''
+
+# Unknown
+Unknown:
+  regex: 'OEM, ([a-z0-9_ \-]+), (?:wired|wireless)'
+  device: 'tv'
+  model: ''

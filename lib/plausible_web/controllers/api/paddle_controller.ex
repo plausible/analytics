@@ -68,8 +68,8 @@ defmodule PlausibleWeb.Api.PaddleController do
     json(conn, "")
   end
 
-  defp webhook_response({:error, changeset}, conn, _params) do
-    Logger.error("Error processing Paddle webhook: #{inspect(changeset)}")
+  defp webhook_response({:error, details}, conn, _params) do
+    Logger.error("Error processing Paddle webhook: #{inspect(details)}")
 
     conn |> send_resp(400, "") |> halt
   end

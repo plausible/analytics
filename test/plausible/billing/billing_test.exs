@@ -2,7 +2,6 @@ defmodule Plausible.BillingTest do
   use Plausible.DataCase
   use Bamboo.Test, shared: true
   alias Plausible.Billing
-  import Plausible.TestUtils
 
   describe "usage" do
     test "is 0 with no events" do
@@ -47,6 +46,52 @@ defmodule Plausible.BillingTest do
       )
 
       assert Billing.usage(user) == 0
+    end
+  end
+
+  describe "sites_limit" do
+    test "is the globally configured site limit for regular accounts" do
+      user = insert(:user, subscription: build(:subscription))
+
+      assert Billing.sites_limit(user) == Application.get_env(:plausible, :site_limit)
+    end
+
+    test "is limited for enterprise customers who have not upgraded yet" do
+      enterprise_plan_paddle_id = "123321"
+
+      user =
+        insert(:user,
+          enterprise_plan: build(:enterprise_plan, paddle_plan_id: enterprise_plan_paddle_id),
+          subscription: build(:subscription, paddle_plan_id: "99999")
+        )
+
+      assert Billing.sites_limit(user) == Application.get_env(:plausible, :site_limit)
+    end
+
+    test "is unlimited for enterprise customers. Their site limit is checked in a background job so as to avoid service disruption" do
+      enterprise_plan_paddle_id = "123321"
+
+      user =
+        insert(:user,
+          enterprise_plan: build(:enterprise_plan, paddle_plan_id: enterprise_plan_paddle_id),
+          subscription: build(:subscription, paddle_plan_id: enterprise_plan_paddle_id)
+        )
+
+      assert Billing.sites_limit(user) == nil
+    end
+
+    test "is unlimited for enterprise customers who are due to change a plan" do
+      enterprise_plan_paddle_id = "123321"
+
+      user =
+        insert(:user,
+          enterprise_plan: build(:enterprise_plan, paddle_plan_id: enterprise_plan_paddle_id),
+          subscription: build(:subscription, paddle_plan_id: enterprise_plan_paddle_id)
+        )
+
+      insert(:enterprise_plan, user_id: user.id, paddle_plan_id: "new-paddle-plan-id")
+
+      assert Billing.sites_limit(user) == nil
     end
   end
 
@@ -547,5 +592,25 @@ defmodule Plausible.BillingTest do
       assert subscription.next_bill_date == ~D[2019-07-10]
       assert subscription.next_bill_amount == "6.00"
     end
+  end
+
+  test "active_subscription_for/1 returns active subscription" do
+    active = insert(:subscription, user: insert(:user), status: "active")
+    paused = insert(:subscription, user: insert(:user), status: "paused")
+    user_without_subscription = insert(:user)
+
+    assert Billing.active_subscription_for(active.user_id).id == active.id
+    assert Billing.active_subscription_for(paused.user_id) == nil
+    assert Billing.active_subscription_for(user_without_subscription.id) == nil
+  end
+
+  test "has_active_subscription?/1 returns whether the user has an active subscription" do
+    active = insert(:subscription, user: insert(:user), status: "active")
+    paused = insert(:subscription, user: insert(:user), status: "paused")
+    user_without_subscription = insert(:user)
+
+    assert Billing.has_active_subscription?(active.user_id)
+    refute Billing.has_active_subscription?(paused.user_id)
+    refute Billing.has_active_subscription?(user_without_subscription.id)
   end
 end

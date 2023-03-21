@@ -5,6 +5,11 @@ module.exports = {
     './js/**/*.js',
     '../lib/plausible_web/templates/**/*.html.eex',
   ],
+  safelist: [
+    // PlausibleWeb.StatsView.stats_container_class/1 uses this class
+    // it's not used anywhere else in the templates or scripts
+    "max-w-screen-lg"
+  ],
   darkMode: 'class',
   theme: {
     container: {
@@ -23,6 +28,7 @@ module.exports = {
       },
       width: {
         '31percent': '31%',
+        'content': 'fit-content'
       },
       opacity: {
         '15': '0.15',
@@ -33,6 +39,9 @@ module.exports = {
       maxWidth: {
         '2xs': '15rem',
         '3xs': '12rem',
+      },
+      transitionProperty: {
+        'padding': 'padding',
       }
     },
   },

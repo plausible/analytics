@@ -1,6 +1,7 @@
-defmodule PlausibleWeb.StatsView.Test do
+defmodule PlausibleWeb.StatsViewTest do
   use PlausibleWeb.ConnCase, async: true
   alias PlausibleWeb.StatsView
+  doctest PlausibleWeb.StatsView
 
   describe "large_number_format" do
     test "numbers under 1000 stay the same" do

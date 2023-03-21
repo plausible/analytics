@@ -434,7 +434,7 @@ body {
                           <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 5px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
                           <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:5px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
                             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
-                              <p id="referrer-name" style="font-size: 14px; line-height: 16px; margin: 0;"><%= source["source"] %></p>
+                              <p id="referrer-name" style="font-size: 14px; line-height: 16px; margin: 0;"><%= source[:source] %></p>
                             </div>
                           </div>
                           <!--[if mso]></td></tr></table><![endif]-->
@@ -453,7 +453,7 @@ body {
                           <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 5px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
                           <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:5px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
                             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
-                              <p style="font-size: 12px; line-height: 16px; text-align: right; margin: 0;"><span id="referrer-count" style="font-size: 14px;"><%= PlausibleWeb.StatsView.large_number_format(source["visitors"]) %></span></p>
+                              <p style="font-size: 12px; line-height: 16px; text-align: right; margin: 0;"><span id="referrer-count" style="font-size: 14px;"><%= PlausibleWeb.StatsView.large_number_format(source[:visitors]) %></span></p>
                             </div>
                           </div>
                           <!--[if mso]></td></tr></table><![endif]-->
@@ -563,7 +563,7 @@ body {
                           <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 5px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
                           <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:5px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
                             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
-                              <p id="page-name" style="font-size: 14px; line-height: 16px; margin: 0;"><%= page["page"] %></p>
+                              <p id="page-name" style="font-size: 14px; line-height: 16px; margin: 0;"><%= page[:page] %></p>
                             </div>
                           </div>
                           <!--[if mso]></td></tr></table><![endif]-->
@@ -582,7 +582,7 @@ body {
                           <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-right: 5px; padding-left: 5px; padding-top: 5px; padding-bottom: 5px; font-family: Arial, sans-serif"><![endif]-->
                           <div style="color:#555555;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;line-height:120%;padding-top:5px;padding-right:5px;padding-bottom:5px;padding-left:5px;">
                             <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 14px; color: #555555;">
-                              <p style="font-size: 12px; line-height: 16px; text-align: right; margin: 0;"><span id="page-count" style="font-size: 14px;"><%= PlausibleWeb.StatsView.large_number_format(page["visitors"]) %></span></p>
+                              <p style="font-size: 12px; line-height: 16px; text-align: right; margin: 0;"><span id="page-count" style="font-size: 14px;"><%= PlausibleWeb.StatsView.large_number_format(page[:visitors]) %></span></p>
                             </div>
                           </div>
                           <!--[if mso]></td></tr></table><![endif]-->
@@ -609,7 +609,7 @@ body {
                         <!--<![endif]-->
                         <div align="center" class="button-container" style="padding-top:10px;padding-right:10px;padding-bottom:10px;padding-left:10px;">
                           <%= if @login_link do %>
-                            <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-spacing: 0; border-collapse: collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"><tr><td style="padding-top: 10px; padding-right: 10px; padding-bottom: 10px; padding-left: 10px" align="center"><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://plausible.io/plausible.io" style="height:31.5pt; width:189.75pt; v-text-anchor:middle;" arcsize="10%" stroke="false" fillcolor="#5661b3"><w:anchorlock/><v:textbox inset="0,0,0,0"><center style="color:#ffffff; font-family:Arial, sans-serif; font-size:16px"><![endif]--><a href="<%= PlausibleWeb.Router.Helpers.auth_url(PlausibleWeb.Endpoint, :login_form) %>" style="-webkit-text-size-adjust: none; text-decoration: none; display: inline-block; color: #ffffff; background-color: #5661b3; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; width: auto; width: auto; border-top: 1px solid #5661b3; border-right: 1px solid #5661b3; border-bottom: 1px solid #5661b3; border-left: 1px solid #5661b3; padding-top: 5px; padding-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-align: center; mso-border-alt: none; word-break: keep-all;" target="_blank"><span style="padding-left:20px;padding-right:20px;font-size:16px;display:inline-block;">
+                            <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-spacing: 0; border-collapse: collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"><tr><td style="padding-top: 10px; padding-right: 10px; padding-bottom: 10px; padding-left: 10px" align="center"><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="<%= PlausibleWeb.Router.Helpers.auth_url(PlausibleWeb.Endpoint, :login_form) %>" style="height:31.5pt; width:189.75pt; v-text-anchor:middle;" arcsize="10%" stroke="false" fillcolor="#5661b3"><w:anchorlock/><v:textbox inset="0,0,0,0"><center style="color:#ffffff; font-family:Arial, sans-serif; font-size:16px"><![endif]--><a href="<%= PlausibleWeb.Router.Helpers.auth_url(PlausibleWeb.Endpoint, :login_form) %>" style="-webkit-text-size-adjust: none; text-decoration: none; display: inline-block; color: #ffffff; background-color: #5661b3; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; width: auto; width: auto; border-top: 1px solid #5661b3; border-right: 1px solid #5661b3; border-bottom: 1px solid #5661b3; border-left: 1px solid #5661b3; padding-top: 5px; padding-bottom: 5px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-align: center; mso-border-alt: none; word-break: keep-all;" target="_blank"><span style="padding-left:20px;padding-right:20px;font-size:16px;display:inline-block;">
                             <span style="font-size: 16px; line-height: 32px;">Login to view your dashboard</span>
                             </span></a>
                             <!--[if mso]></center></v:textbox></v:roundrect></td></tr></table><![endif]-->

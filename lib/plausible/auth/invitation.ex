@@ -19,5 +19,10 @@ defmodule Plausible.Auth.Invitation do
     %__MODULE__{invitation_id: Nanoid.generate()}
     |> cast(attrs, @required)
     |> validate_required(@required)
+    |> unique_constraint([:email, :site_id],
+      name: :invitations_site_id_email_index,
+      error_key: :invitation,
+      message: "already sent"
+    )
   end
 end

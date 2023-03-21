@@ -1,6 +1,6 @@
 <div class="w-full max-w-3xl mt-4 mx-auto flex">
   <%= form_for @conn, "/", [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
-    <h2 class="text-xl font-bold dark:text-gray-100">Add javascript snippet</h2>
+    <h2 class="text-xl font-bold dark:text-gray-100">Add JavaScript snippet</h2>
     <div class="my-4">
       <p class="dark:text-gray-100">Paste this snippet in the <code>&lt;head&gt;</code> of your website.</p>
 

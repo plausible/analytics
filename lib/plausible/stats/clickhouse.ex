@@ -5,6 +5,36 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible.Stats.Fragments
   @no_ref "Direct / None"
 
+  @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
+  def pageview_start_date_local(site) do
+    datetime =
+      ClickhouseRepo.one(
+        from e in "events",
+          select: fragment("min(?)", e.timestamp),
+          where: e.domain == ^site.domain,
+          where: e.timestamp >= ^site.native_stats_start_at
+      )
+
+    case datetime do
+      # no stats for this domain yet
+      ~N[1970-01-01 00:00:00] ->
+        nil
+
+      _ ->
+        Timex.Timezone.convert(datetime, "UTC")
+        |> Timex.Timezone.convert(site.timezone)
+        |> DateTime.to_date()
+    end
+  end
+
+  def imported_pageview_count(site) do
+    Plausible.ClickhouseRepo.one(
+      from i in "imported_visitors",
+        where: i.site_id == ^site.id,
+        select: sum(i.pageviews)
+    )
+  end
+
   def usage_breakdown(domains) do
     range =
       Date.range(
@@ -98,7 +128,7 @@ defmodule Plausible.Stats.Clickhouse do
 
   defp filter_converted_sessions(db_query, site, query) do
     goal = query.filters["goal"]
-    page = query.filters["page"]
+    page = query.filters[:page]
 
     if is_binary(goal) || is_binary(page) do
       converted_sessions =
@@ -116,7 +146,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp apply_page_as_entry_page(db_query, _site, query) do
-    include_path_filter_entry(db_query, query.filters["page"])
+    include_path_filter_entry(db_query, query.filters[:page])
   end
 
   def current_visitors(site, query) do
@@ -126,19 +156,15 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def has_pageviews?([]), do: false
-
-  def has_pageviews?(domains) when is_list(domains) do
-    ClickhouseRepo.exists?(
-      from e in "events",
-        select: e.timestamp,
-        where: fragment("? IN tuple(?)", e.domain, ^domains)
-    )
-  end
-
   def has_pageviews?(site) do
     ClickhouseRepo.exists?(
-      from e in "events", where: e.domain == ^site.domain and e.name == "pageview"
+      from(e in "events",
+        where:
+          e.domain == ^site.domain and
+            e.name == "pageview" and
+            e.timestamp >=
+              ^site.native_stats_start_at
+      )
     )
   end
 
@@ -150,7 +176,7 @@ defmodule Plausible.Stats.Clickhouse do
     ClickhouseRepo.all(
       from e in "events",
         group_by: e.domain,
-        where: fragment("? IN tuple(?)", e.domain, ^domains),
+        where: e.domain in ^domains,
         where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
         select: {e.domain, fragment("uniq(user_id)")}
     )
@@ -158,7 +184,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp base_session_query(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
       from(s in "sessions",
@@ -277,7 +303,7 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp base_query_bare(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
       from(e in "events",
@@ -382,7 +408,7 @@ defmodule Plausible.Stats.Clickhouse do
         q
       end
 
-    q = include_path_filter(q, query.filters["page"])
+    q = include_path_filter(q, query.filters[:page])
 
     if query.filters["props"] do
       [{key, val}] = query.filters["props"] |> Enum.into([])
@@ -395,7 +421,7 @@ defmodule Plausible.Stats.Clickhouse do
       else
         from(
           e in q,
-          inner_lateral_join: meta in fragment("meta as m"),
+          inner_lateral_join: meta in fragment("meta"),
           where: meta.key == ^key and meta.value == ^val
         )
       end
@@ -408,31 +434,42 @@ defmodule Plausible.Stats.Clickhouse do
     base_query_bare(site, query) |> include_goal_conversions(query)
   end
 
-  defp utc_boundaries(%Query{period: "30m"}, _timezone) do
-    last_datetime = NaiveDateTime.utc_now()
+  defp utc_boundaries(%Query{period: "30m"}, site) do
+    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
-    first_datetime = last_datetime |> Timex.shift(minutes: -30)
+    first_datetime =
+      last_datetime
+      |> Timex.shift(minutes: -30)
+      |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
+
     {first_datetime, last_datetime}
   end
 
-  defp utc_boundaries(%Query{period: "realtime"}, _timezone) do
-    last_datetime = NaiveDateTime.utc_now()
+  defp utc_boundaries(%Query{period: "realtime"}, site) do
+    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
-    first_datetime = last_datetime |> Timex.shift(minutes: -5)
+    first_datetime =
+      last_datetime
+      |> Timex.shift(minutes: -5)
+      |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
+
     {first_datetime, last_datetime}
   end
 
-  defp utc_boundaries(%Query{date_range: date_range}, timezone) do
+  defp utc_boundaries(%Query{date_range: date_range}, site) do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
     first_datetime =
-      Timex.to_datetime(first, timezone)
+      Timex.to_datetime(first, site.timezone)
       |> Timex.Timezone.convert("UTC")
+      |> beginning_of_time(site.native_stats_start_at)
 
     {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
 
     last_datetime =
-      Timex.to_datetime(last, timezone)
+      Timex.to_datetime(last, site.timezone)
       |> Timex.Timezone.convert("UTC")
 
     {first_datetime, last_datetime}
@@ -558,6 +595,14 @@ defmodule Plausible.Stats.Clickhouse do
       end
     else
       db_query
+    end
+  end
+
+  defp beginning_of_time(candidate, site_creation_date) do
+    if Timex.after?(site_creation_date, candidate) do
+      site_creation_date
+    else
+      candidate
     end
   end
 end

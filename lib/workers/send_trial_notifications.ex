@@ -14,6 +14,7 @@ defmodule Plausible.Workers.SendTrialNotifications do
         from u in Plausible.Auth.User,
           left_join: s in Plausible.Billing.Subscription,
           on: s.user_id == u.id,
+          where: not is_nil(u.trial_expiry_date),
           where: is_nil(s.id),
           order_by: u.inserted_at
       )
@@ -50,25 +51,25 @@ defmodule Plausible.Workers.SendTrialNotifications do
 
   defp send_one_week_reminder(user) do
     PlausibleWeb.Email.trial_one_week_reminder(user)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
   end
 
   defp send_tomorrow_reminder(user) do
     usage = Plausible.Billing.usage_breakdown(user)
 
     PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", usage)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
   end
 
   defp send_today_reminder(user) do
     usage = Plausible.Billing.usage_breakdown(user)
 
     PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
   end
 
   defp send_over_reminder(user) do
     PlausibleWeb.Email.trial_over_email(user)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
   end
 end

@@ -1,0 +1,57 @@
+name: Publish Elixir documentation
+
+on:
+  push:
+    branches: ["master"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Allow only one concurrent GitHub Pages workflow
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Read .tool-versions
+        uses: marocchino/tool-versions-action@v1
+        id: versions
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{steps.versions.outputs.elixir}}
+          otp-version: ${{ steps.versions.outputs.erlang}}
+
+      - name: Restore Elixir dependencies cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            deps
+            _build
+            priv/plts
+          key: ${{ runner.os }}-mix-v1-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-v1-
+
+      - name: Install Mix dependencies
+        run: mix deps.get
+        
+      - name: Build documentation
+        run: mix docs
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc

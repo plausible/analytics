@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Plausible Playwright tests</title>
+
+  <script defer src="/tracker/js/plausible.file-downloads.local.manual.js" add-file-types="ex,exs"></script>
+</head>
+
+<body>
+  <a id="link" href="https://awesome.website.com/file.pdf">
+    <span id="link-child">Download</span>
+  </a>
+
+  <a id="link-query" href="https://awesome.website.com/file.ex?some=query">Download link with query</a>
+
+  <a id="local-download" href="file.csv">Local download</a>
+</body>
+
+</html>

@@ -10,9 +10,6 @@
   var scriptEl = document.currentScript;
   {{/if}}
   var endpoint = scriptEl.getAttribute('data-api') || defaultEndpoint(scriptEl)
-  {{#if exclusions}}
-  var excludedPaths = scriptEl && scriptEl.getAttribute('data-exclude').split(',');
-  {{/if}}
 
   function warn(reason) {
     console.warn('Ignoring Event: ' + reason);
@@ -33,20 +30,35 @@
   function trigger(eventName, options) {
     {{#unless local}}
     if (/^localhost$|^127(\.[0-9]+){0,2}\.[0-9]+$|^\[::1?\]$/.test(location.hostname) || location.protocol === 'file:') return warn('localhost');
-    {{/unless}}
     if (window._phantom || window.__nightmare || window.navigator.webdriver || window.Cypress) return;
+    {{/unless}}
     try {
-      if (window.localStorage.plausible_ignore=="true") {
+      if (window.localStorage.plausible_ignore === 'true') {
         return warn('localStorage flag')
       }
     } catch (e) {
 
     }
     {{#if exclusions}}
-    if (excludedPaths)
-      for (var i = 0; i < excludedPaths.length; i++)
-        if (eventName == "pageview" && location.pathname.match(new RegExp('^' + excludedPaths[i].trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$')))
-          return warn('exclusion rule');
+    var dataIncludeAttr = scriptEl && scriptEl.getAttribute('data-include')
+    var dataExcludeAttr = scriptEl && scriptEl.getAttribute('data-exclude')
+
+    if (eventName === 'pageview') {
+      var isIncluded = !dataIncludeAttr || (dataIncludeAttr && dataIncludeAttr.split(',').some(pathMatches))
+      var isExcluded = dataExcludeAttr && dataExcludeAttr.split(',').some(pathMatches)
+
+      if (!isIncluded || isExcluded) return warn('exclusion rule')
+    }
+
+    function pathMatches(wildcardPath) {
+      var actualPath = location.pathname
+
+      {{#if hash}}
+      actualPath += location.hash
+      {{/if}}
+
+      return actualPath.match(new RegExp('^' + wildcardPath.trim().replace(/\*\*/g, '.*').replace(/([^\.])\*/g, '$1[^\\s\/]*') + '\/?$'))
+    }
     {{/if}}
 
     var payload = {}
@@ -58,13 +70,29 @@
     {{/if}}
     payload.d = scriptEl.getAttribute('data-domain')
     payload.r = document.referrer || null
-    payload.w = window.innerWidth
     if (options && options.meta) {
       payload.m = JSON.stringify(options.meta)
     }
     if (options && options.props) {
-      payload.p = JSON.stringify(options.props)
+      payload.p = options.props
     }
+
+    {{#if dimensions}}
+    var dimensionAttributes = scriptEl.getAttributeNames().filter(function (name) {
+      return name.substring(0, 6) === 'event-'
+    })
+
+    var props = payload.p || {}
+
+    dimensionAttributes.forEach(function(attribute) {
+      var propKey = attribute.replace('event-', '')
+      var propValue = scriptEl.getAttribute(attribute)
+      props[propKey] = props[propKey] || propValue
+    })
+
+    payload.p = props
+    {{/if}}
+
     {{#if hash}}
     payload.h = 1
     {{/if}}
@@ -76,46 +104,11 @@
     request.send(JSON.stringify(payload));
 
     request.onreadystatechange = function() {
-      if (request.readyState == 4) {
+      if (request.readyState === 4) {
         options && options.callback && options.callback()
       }
     }
   }
-
-  {{#if outbound_links}}
-  function handleOutbound(event) {
-    var link = event.target;
-    var middle = event.type == "auxclick" && event.which == 2;
-    var click = event.type == "click";
-      while(link && (typeof link.tagName == 'undefined' || link.tagName.toLowerCase() != 'a' || !link.href)) {
-        link = link.parentNode
-      }
-
-      if (link && link.href && link.host && link.host !== location.host) {
-        if (middle || click)
-        plausible('Outbound Link: Click', {props: {url: link.href}})
-
-        // Delay navigation so that Plausible is notified of the click
-        if(!link.target || link.target.match(/^_(self|parent|top)$/i)) {
-          if (!(event.ctrlKey || event.metaKey || event.shiftKey) && click) {
-            setTimeout(function() {
-              location.href = link.href;
-            }, 150);
-            event.preventDefault();
-          }
-        }
-      }
-  }
-
-  function registerOutboundLinkEvents() {
-    document.addEventListener('click', handleOutbound)
-    document.addEventListener('auxclick', handleOutbound)
-  }
-  {{/if}}
-
-  {{#if outbound_links}}
-  registerOutboundLinkEvents()
-  {{/if}}
 
   var queue = (window.plausible && window.plausible.q) || []
   window.plausible = trigger
@@ -154,11 +147,14 @@
       }
     }
 
-
     if (document.visibilityState === 'prerender') {
-      document.addEventListener("visibilitychange", handleVisibilityChange);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
     } else {
       page()
     }
   {{/unless}}
+
+  {{#if (any outbound_links file_downloads tagged_events)}}
+  {{> customEvents}}
+  {{/if}}
 })();

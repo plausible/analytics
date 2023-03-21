@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
 
@@ -682,13 +681,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              }
     end
 
-    test "filtering by page - session metrics consider it like entry_page", %{
+    test "can filter by page", %{
       conn: conn,
       site: site
     } do
       populate_stats([
         build(:pageview,
-          pathname: "/hello",
           user_id: @user_id,
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
@@ -717,7 +715,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "period" => "month",
           "date" => "2021-01-01",
           "filters" => "event:page==/hello",
-          "metrics" => "visitors,pageviews,bounce_rate,visit_duration"
+          "metrics" => "visitors,visits,pageviews,views_per_visit,bounce_rate,visit_duration"
         })
 
       res = json_response(conn, 200)["results"]
@@ -725,7 +723,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       assert List.first(res) == %{
                "date" => "2021-01-01",
                "visitors" => 2,
-               "pageviews" => 3,
+               "visits" => 2,
+               "pageviews" => 2,
+               "views_per_visit" => 1.5,
                "bounce_rate" => 50,
                "visit_duration" => 150
              }
@@ -796,6 +796,131 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       %{"results" => [first, second | _rest]} = json_response(conn, 200)
       assert first == %{"date" => "2021-01-01", "visitors" => 2}
       assert second == %{"date" => "2021-01-02", "visitors" => 1}
+    end
+  end
+
+  describe "metrics" do
+    test "shows pageviews,visits,views_per_visit for last 7d", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-07 23:59:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "pageviews,visits,views_per_visit",
+          "date" => "2021-01-07"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "date" => "2021-01-01",
+                   "pageviews" => 3,
+                   "visits" => 2,
+                   "views_per_visit" => 1.5
+                 },
+                 %{
+                   "date" => "2021-01-02",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "views_per_visit" => 0.0
+                 },
+                 %{
+                   "date" => "2021-01-03",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "views_per_visit" => 0.0
+                 },
+                 %{
+                   "date" => "2021-01-04",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "views_per_visit" => 0.0
+                 },
+                 %{
+                   "date" => "2021-01-05",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "views_per_visit" => 0.0
+                 },
+                 %{
+                   "date" => "2021-01-06",
+                   "pageviews" => 0,
+                   "visits" => 0,
+                   "views_per_visit" => 0.0
+                 },
+                 %{
+                   "date" => "2021-01-07",
+                   "pageviews" => 1,
+                   "visits" => 1,
+                   "views_per_visit" => 1.0
+                 }
+               ]
+             }
+    end
+
+    test "rounds views_per_visit to two decimal places", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats([
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-03 00:00:00]
+        ),
+        build(:pageview,
+          user_id: @user_id,
+          domain: site.domain,
+          timestamp: ~N[2021-01-03 00:01:00]
+        ),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-03 00:00:00]),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-03 00:00:00]),
+        build(:pageview, domain: site.domain, timestamp: ~N[2021-01-07 23:59:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "views_per_visit",
+          "date" => "2021-01-07"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"date" => "2021-01-01", "views_per_visit" => 2.0},
+                 %{"date" => "2021-01-02", "views_per_visit" => 0.0},
+                 %{"date" => "2021-01-03", "views_per_visit" => 1.33},
+                 %{"date" => "2021-01-04", "views_per_visit" => 0.0},
+                 %{"date" => "2021-01-05", "views_per_visit" => 0.0},
+                 %{"date" => "2021-01-06", "views_per_visit" => 0.0},
+                 %{"date" => "2021-01-07", "views_per_visit" => 1.0}
+               ]
+             }
     end
   end
 end

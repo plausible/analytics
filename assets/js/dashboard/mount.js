@@ -5,6 +5,9 @@ import 'url-search-params-polyfill';
 import Router from './router'
 import ErrorBoundary from './error-boundary'
 import * as api from './api'
+import * as timer from './util/realtime-update-timer'
+
+timer.start()
 
 const container = document.getElementById('stats-react-container')
 
@@ -13,10 +16,12 @@ if (container) {
     domain: container.dataset.domain,
     offset: container.dataset.offset,
     hasGoals: container.dataset.hasGoals === 'true',
-    insertedAt: container.dataset.insertedAt,
+    statsBegin: container.dataset.statsBegin,
     embedded: container.dataset.embedded,
     background: container.dataset.background,
-    selfhosted: container.dataset.selfhosted === 'true'
+    isDbip: container.dataset.isDbip === 'true',
+    flags: JSON.parse(container.dataset.flags),
+    validIntervalsByPeriod: JSON.parse(container.dataset.validIntervalsByPeriod)
   }
 
   const loggedIn = container.dataset.loggedIn === 'true'

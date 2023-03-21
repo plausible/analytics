@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
+
   @user_id 1231
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
@@ -15,6 +15,32 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert json_response(conn, 400) == %{
                "error" =>
                  "The `property` parameter is required. Please provide at least one property to show a breakdown by."
+             }
+    end
+
+    test "validates that property is valid", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "badproperty"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Invalid property 'badproperty'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"
+             }
+    end
+
+    test "empty custom prop is invalid", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:props:"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Invalid property 'event:props:'. Please provide a valid property for the breakdown endpoint: https://plausible.io/docs/stats-api#properties"
              }
     end
 
@@ -41,7 +67,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert json_response(conn, 400) == %{
                "error" =>
-                 "The metric `baa` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"
+                 "The metric `baa` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"
              }
     end
 
@@ -553,6 +579,34 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  test "breakdown by event:page when there are no events in the second page", %{
+    conn: conn,
+    site: site
+  } do
+    populate_stats([
+      build(:pageview, pathname: "/", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, pathname: "/", domain: site.domain, timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview,
+        pathname: "/plausible.io",
+        domain: site.domain,
+        timestamp: ~N[2021-01-01 00:00:00]
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "event:page",
+        "metrics" => "visitors,bounce_rate",
+        "page" => 2,
+        "limit" => 2
+      })
+
+    assert json_response(conn, 200) == %{"results" => []}
+  end
+
   describe "custom events" do
     test "can breakdown by event:name", %{conn: conn, site: site} do
       populate_stats([
@@ -606,7 +660,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         build(:pageview,
           domain: site.domain,
           pathname: "/non-existing",
-          user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:01]
         ),
         build(:pageview,
@@ -641,7 +694,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert json_response(conn, 200) == %{
                "results" => [
-                 %{"name" => "pageview", "visitors" => 1, "events" => 4},
+                 %{"name" => "pageview", "visitors" => 2, "events" => 4},
                  %{"name" => "404", "visitors" => 1, "events" => 2}
                ]
              }
@@ -924,6 +977,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         ),
         build(:event,
           name: "Purchase",
+          "meta.key": ["cost"],
+          "meta.value": ["16"],
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:25:00]
         ),
@@ -954,7 +1014,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
       assert json_response(conn, 200) == %{
                "results" => [
-                 %{"cost" => "16", "visitors" => 2},
+                 %{"cost" => "16", "visitors" => 3},
                  %{"cost" => "14", "visitors" => 2},
                  %{"cost" => "(none)", "visitors" => 1}
                ]
@@ -963,13 +1023,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
     test "breakdown by custom event property, limited", %{conn: conn, site: site} do
       populate_stats([
-        build(:event,
-          name: "Purchase",
-          "meta.key": ["cost"],
-          "meta.value": ["16"],
-          domain: site.domain,
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
         build(:event,
           name: "Purchase",
           "meta.key": ["cost"],
@@ -1013,7 +1066,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert json_response(conn, 200) == %{
                "results" => [
                  %{"cost" => "14", "visitors" => 2},
-                 %{"cost" => "16", "visitors" => 2}
+                 %{"cost" => "16", "visitors" => 1}
                ]
              }
     end
@@ -1076,6 +1129,88 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     end
   end
 
+  describe "breakdown by event:goal" do
+    test "custom properties from custom events are returned", %{conn: conn, site: site} do
+      insert(:goal, %{domain: site.domain, event_name: "404"})
+      insert(:goal, %{domain: site.domain, event_name: "Purchase"})
+      insert(:goal, %{domain: site.domain, page_path: "/test"})
+
+      populate_stats([
+        build(:pageview,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:00],
+          pathname: "/test"
+        ),
+        build(:pageview,
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:01],
+          pathname: "/test",
+          "meta.key": ["method"],
+          "meta.value": ["HTTP"]
+        ),
+        build(:event,
+          name: "404",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:02],
+          "meta.key": ["method"],
+          "meta.value": ["HTTP"]
+        ),
+        build(:event,
+          name: "Purchase",
+          domain: site.domain,
+          timestamp: ~N[2021-01-01 00:00:02],
+          "meta.key": ["method"],
+          "meta.value": ["HTTPS"]
+        ),
+        build(:event,
+          name: "404",
+          timestamp: ~N[2021-01-01 00:00:03],
+          domain: site.domain,
+          "meta.key": ["OS", "method"],
+          "meta.value": ["Linux", "HTTP"]
+        ),
+        build(:event,
+          name: "404",
+          timestamp: ~N[2021-01-01 00:00:04],
+          domain: site.domain,
+          "meta.key": ["version"],
+          "meta.value": ["1"]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:goal"
+        })
+
+      res =
+        Enum.map(json_response(conn, 200)["results"], fn item ->
+          Map.update(item, "props", [], fn x -> Enum.sort(x) end)
+        end)
+
+      assert res == [
+               %{
+                 "goal" => "404",
+                 "props" => ["OS", "method", "version"],
+                 "visitors" => 3
+               },
+               %{
+                 "goal" => "Visit /test",
+                 "props" => [],
+                 "visitors" => 2
+               },
+               %{
+                 "goal" => "Purchase",
+                 "props" => ["method"],
+                 "visitors" => 1
+               }
+             ]
+    end
+  end
+
   describe "filtering" do
     test "event:page filter for breakdown by session props", %{conn: conn, site: site} do
       populate_stats([
@@ -1122,22 +1257,29 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
-    test "event:page filter shows traffic sources directly to that page", %{
+    test "event:page filter shows sources of sessions that have visited that page", %{
       conn: conn,
       site: site
     } do
       populate_stats(site, [
         build(:pageview,
-          pathname: "/ignore",
-          referrer_source: "Should not show up",
-          utm_medium: "Should not show up",
-          utm_source: "Should not show up",
-          utm_campaign: "Should not show up",
+          pathname: "/",
+          referrer_source: "Twitter",
+          utm_medium: "Twitter",
+          utm_source: "Twitter",
+          utm_campaign: "Twitter",
           user_id: @user_id
         ),
         build(:pageview,
           pathname: "/plausible.io",
           user_id: @user_id
+        ),
+        build(:pageview,
+          pathname: "/plausible.io",
+          referrer_source: "Google",
+          utm_medium: "Google",
+          utm_source: "Google",
+          utm_campaign: "Google"
         ),
         build(:pageview,
           pathname: "/plausible.io",
@@ -1159,7 +1301,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
         assert json_response(conn, 200) == %{
                  "results" => [
-                   %{property => "Google", "visitors" => 1}
+                   %{property => "Google", "visitors" => 2},
+                   %{property => "Twitter", "visitors" => 1}
                  ]
                }
       end
@@ -1479,6 +1622,76 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert Enum.count(res["results"]) == 2
     end
 
+    test "does not repeat results", %{conn: conn, site: site} do
+      populate_stats([
+        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["apple"]}),
+        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["kiwi"]}),
+        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["pineapple"]}),
+        build(:pageview, %{domain: site.domain, "meta.key": ["item"], "meta.value": ["grapes"]})
+      ])
+
+      params = %{
+        "site_id" => site.domain,
+        "metrics" => "visitors",
+        "property" => "event:props:item",
+        "limit" => 3,
+        "page" => nil
+      }
+
+      first_page =
+        conn
+        |> get("/api/v1/stats/breakdown", %{params | "page" => 1})
+        |> json_response(200)
+        |> Map.get("results")
+        |> Enum.map(& &1["item"])
+        |> MapSet.new()
+
+      second_page =
+        conn
+        |> get("/api/v1/stats/breakdown", %{params | "page" => 2})
+        |> json_response(200)
+        |> Map.get("results")
+        |> Enum.map(& &1["item"])
+        |> MapSet.new()
+
+      assert first_page |> MapSet.intersection(second_page) |> Enum.empty?()
+    end
+
+    @invalid_limit_message "Please provide limit as a number between 1 and 1000."
+
+    test "returns error when limit too large", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "limit" => 1001
+        })
+
+      assert json_response(conn, 400) == %{"error" => @invalid_limit_message}
+    end
+
+    test "returns error with non-integer limit", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "limit" => "bad_limit"
+        })
+
+      assert json_response(conn, 400) == %{"error" => @invalid_limit_message}
+    end
+
+    test "returns error with negative integer limit", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "limit" => -1
+        })
+
+      assert json_response(conn, 400) == %{"error" => @invalid_limit_message}
+    end
+
     test "can paginate results", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview, pathname: "/a", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
@@ -1509,6 +1722,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           referrer_source: "Google",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
+        build(:event,
+          name: "signup",
+          user_id: 1,
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:05:00]
+        ),
         build(:pageview,
           user_id: 1,
           referrer_source: "Google",
@@ -1530,7 +1749,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "period" => "day",
           "date" => "2021-01-01",
           "property" => "visit:source",
-          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration"
+          "metrics" => "visitors,visits,pageviews,events,bounce_rate,visit_duration"
         })
 
       assert json_response(conn, 200) == %{
@@ -1541,7 +1760,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "visits" => 2,
                    "bounce_rate" => 50,
                    "visit_duration" => 300,
-                   "pageviews" => 3
+                   "pageviews" => 3,
+                   "events" => 4
                  },
                  %{
                    "source" => "Twitter",
@@ -1549,7 +1769,51 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "visits" => 1,
                    "bounce_rate" => 100,
                    "visit_duration" => 0,
-                   "pageviews" => 1
+                   "pageviews" => 1,
+                   "events" => 1
+                 }
+               ]
+             }
+    end
+
+    test "metrics=bounce_rate does not add visits to the response", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          pathname: "/entry-page-1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/some-page",
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:pageview,
+          user_id: 2,
+          pathname: "/entry-page-2",
+          referrer_source: "Google",
+          timestamp: ~N[2021-01-01 00:05:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:entry_page",
+          "metrics" => "bounce_rate"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "entry_page" => "/entry-page-1",
+                   "bounce_rate" => 0
+                 },
+                 %{
+                   "entry_page" => "/entry-page-2",
+                   "bounce_rate" => 100
                  }
                ]
              }

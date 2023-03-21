@@ -3,7 +3,7 @@ import React from 'react';
 import Datepicker from './datepicker'
 import SiteSwitcher from './site-switcher'
 import Filters from './filters'
-import VisitorGraph from './stats/visitor-graph'
+import VisitorGraph from './stats/graph/visitor-graph'
 import Sources from './stats/sources'
 import Pages from './stats/pages'
 import Locations from './stats/locations'
@@ -39,14 +39,14 @@ class Realtime extends React.Component {
             <Datepicker site={this.props.site} query={this.props.query} />
           </div>
         </div>
-        <VisitorGraph site={this.props.site} query={this.props.query} timer={this.props.timer} />
+        <VisitorGraph site={this.props.site} query={this.props.query} lastLoadTimestamp={this.props.lastLoadTimestamp} />
         <div className="items-start justify-between block w-full md:flex">
-          <Sources site={this.props.site} query={this.props.query} timer={this.props.timer} />
-          <Pages site={this.props.site} query={this.props.query} timer={this.props.timer} />
+          <Sources site={this.props.site} query={this.props.query} />
+          <Pages site={this.props.site} query={this.props.query} />
         </div>
         <div className="items-start justify-between block w-full md:flex">
-          <Locations site={this.props.site} query={this.props.query} timer={this.props.timer} />
-          <Devices site={this.props.site} query={this.props.query} timer={this.props.timer} />
+          <Locations site={this.props.site} query={this.props.query} />
+          <Devices site={this.props.site} query={this.props.query} />
         </div>
 
         { this.renderConversions() }

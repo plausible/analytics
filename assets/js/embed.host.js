@@ -2,7 +2,8 @@ import iframeResize from 'iframe-resizer/js/iframeResizer'
 
 var iframes = iframeResize({
   heightCalculationMethod: 'taggedElement',
-  onInit: onInit
+  onInit: onInit,
+  checkOrigin: false
 }, '[plausible-embed]')
 
 function onInit() {

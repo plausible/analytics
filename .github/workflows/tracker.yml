@@ -1,0 +1,24 @@
+name: Tracker CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tracker/**'
+
+jobs:
+  test:
+    timeout-minutes: 15
+    runs-on: buildjet-4vcpu-ubuntu-2004
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 16
+    - name: Install dependencies
+      run: npm --prefix ./tracker ci
+    - name: Install Playwright Browsers
+      working-directory: ./tracker
+      run: npx playwright install --with-deps
+    - name: Run Playwright tests
+      run: npm --prefix ./tracker test

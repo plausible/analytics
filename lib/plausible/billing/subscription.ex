@@ -1,6 +1,9 @@
 defmodule Plausible.Billing.Subscription do
+  @moduledoc false
   use Ecto.Schema
   import Ecto.Changeset
+
+  @type t() :: %__MODULE__{}
 
   @required_fields [
     :paddle_subscription_id,

@@ -2,7 +2,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
   use Plausible.DataCase
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
-  import Plausible.TestUtils
+
   alias Plausible.Workers.SendTrialNotifications
 
   test "does not send a notification if user didn't create a site" do
@@ -10,6 +10,15 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 1))
     insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 0))
     insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: -1))
+
+    perform_job(SendTrialNotifications, %{})
+
+    assert_no_emails_delivered()
+  end
+
+  test "does not send a notification if user does not have a trial" do
+    user = insert(:user, trial_expiry_date: nil)
+    insert(:site, members: [user])
 
     perform_job(SendTrialNotifications, %{})
 

@@ -11,9 +11,13 @@ jobs:
     name: Build and test
     runs-on: buildjet-4vcpu-ubuntu-2004
 
+    strategy:
+      matrix:
+        postgres_version: [12, 13, 14]
+
     services:
       postgres:
-        image: postgres:12
+        image: postgres:${{ matrix.postgres_version }}
         ports:
           - 5432:5432
         env:
@@ -25,7 +29,7 @@ jobs:
             --health-retries 5
 
       clickhouse:
-        image: yandex/clickhouse-server:21.11
+        image: clickhouse/clickhouse-server:22.8.13.20-alpine
         ports:
           - 8123:8123
         env:
@@ -36,12 +40,14 @@ jobs:
             --health-retries 5
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Read .tool-versions
         uses: marocchino/tool-versions-action@v1
         id: versions
       - name: Set up Elixir
-        uses: erlef/setup-elixir@v1
+        uses: erlef/setup-beam@v1
         with:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
@@ -52,19 +58,21 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-mix-v1-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-v1-
+          key: ${{ runner.os }}-mix-v3-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-v3-
       - name: Install dependencies
-        run: mix deps.get
+        run: mix deps.get && npm install --prefix ./tracker
       - name: Check Formatting
         run: mix format --check-formatted
       - name: Check Compile Warnings
         run: mix compile --warnings-as-errors --all-warnings
-      - name: Run tests
-        run: mix test
-      #- name: Check Dialyzer
-      #  run: mix dialyzer <-- false negatives
+      - name: Generate tracker files
+        run: npm run deploy --prefix ./tracker
       - name: Check Credo Warnings
-        run: mix credo --strict --only warning --ignore Consistency
+        run: mix credo diff --from-git-merge-base origin/master
+      - name: Run tests
+        run: mix test --include slow --max-failures 1 --warnings-as-errors
+      - name: Check Dialyzer
+        run: mix dialyzer
 env:
   MIX_ENV: test

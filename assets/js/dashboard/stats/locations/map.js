@@ -21,6 +21,7 @@ class Countries extends React.Component {
       darkTheme: document.querySelector('html').classList.contains('dark') || false
     }
     this.onVisible = this.onVisible.bind(this)
+    this.updateCountries = this.updateCountries.bind(this)
   }
 
   componentDidUpdate(prevProps) {
@@ -33,12 +34,15 @@ class Countries extends React.Component {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.resizeMap);
+    document.removeEventListener('tick', this.updateCountries);
   }
 
   onVisible() {
     this.fetchCountries().then(this.drawMap.bind(this))
     window.addEventListener('resize', this.resizeMap);
-    if (this.props.timer) this.props.timer.onTick(this.updateCountries.bind(this))
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.updateCountries)
+    }
   }
 
   getDataset() {
@@ -128,7 +132,7 @@ class Countries extends React.Component {
   }
 
   geolocationDbNotice() {
-    if (this.props.site.selfhosted) {
+    if (this.props.site.isDbip) {
       return (
         <span className="text-xs text-gray-500 absolute bottom-4 right-3">IP Geolocation by <a target="_blank" href="https://db-ip.com" rel="noreferrer" className="text-indigo-600">DB-IP</a></span>
       )

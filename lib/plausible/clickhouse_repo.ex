@@ -1,7 +1,8 @@
 defmodule Plausible.ClickhouseRepo do
   use Ecto.Repo,
     otp_app: :plausible,
-    adapter: ClickhouseEcto
+    adapter: Ecto.Adapters.ClickHouse,
+    read_only: true
 
   defmacro __using__(_) do
     quote do
@@ -11,10 +12,17 @@ defmodule Plausible.ClickhouseRepo do
     end
   end
 
-  def clear_stats_for(domain) do
-    events_sql = "ALTER TABLE events DELETE WHERE domain = ?"
-    sessions_sql = "ALTER TABLE sessions DELETE WHERE domain = ?"
-    Ecto.Adapters.SQL.query!(__MODULE__, events_sql, [domain])
-    Ecto.Adapters.SQL.query!(__MODULE__, sessions_sql, [domain])
+  @task_timeout 60_000
+  def parallel_tasks(queries) do
+    ctx = OpenTelemetry.Ctx.get_current()
+
+    execute_with_tracing = fn fun ->
+      OpenTelemetry.Ctx.attach(ctx)
+      fun.()
+    end
+
+    Task.async_stream(queries, execute_with_tracing, max_concurrency: 3, timeout: @task_timeout)
+    |> Enum.to_list()
+    |> Keyword.values()
   end
 end

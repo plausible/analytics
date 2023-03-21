@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Endpoint do
     at: "/",
     from: :plausible,
     gzip: false,
-    only: ~w(css fonts images js favicon.ico robots.txt)
+    only: ~w(css images js favicon.ico robots.txt)
 
   plug Plug.Static,
     at: "/kaffy",
@@ -29,8 +29,8 @@ defmodule PlausibleWeb.Endpoint do
   end
 
   plug Plug.RequestId
+  plug PromEx.Plug, prom_ex_module: Plausible.PromEx
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
-  plug Plug.Logger
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],

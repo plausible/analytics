@@ -6,7 +6,7 @@ defmodule PlausibleWeb.SiteController do
   plug PlausibleWeb.RequireAccountPlug
 
   plug PlausibleWeb.AuthorizeSiteAccess,
-       [:owner, :admin] when action not in [:index, :new, :create_site]
+       [:owner, :admin, :super_admin] when action not in [:index, :new, :create_site]
 
   def index(conn, params) do
     user = conn.assigns[:current_user]
@@ -50,14 +50,12 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def new(conn, _params) do
-    current_user = conn.assigns[:current_user] |> Repo.preload(site_memberships: :site)
+    current_user = conn.assigns[:current_user]
 
-    owned_site_count =
-      current_user.site_memberships |> Enum.filter(fn m -> m.role == :owner end) |> Enum.count()
-
+    owned_site_count = Plausible.Sites.owned_sites_count(current_user)
     site_limit = Plausible.Billing.sites_limit(current_user)
     is_at_limit = site_limit && owned_site_count >= site_limit
-    is_first_site = Enum.empty?(current_user.site_memberships)
+    is_first_site = owned_site_count == 0
 
     changeset = Plausible.Site.changeset(%Plausible.Site{})
 
@@ -72,32 +70,36 @@ defmodule PlausibleWeb.SiteController do
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    site_count = Enum.count(Plausible.Sites.owned_by(user))
+    site_count = Plausible.Sites.owned_sites_count(user)
     is_first_site = site_count == 0
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
-        Plausible.Slack.notify("#{user.name} created #{site.domain} [email=#{user.email}]")
-
         if is_first_site do
           PlausibleWeb.Email.welcome_email(user)
-          |> Plausible.Mailer.send_email()
+          |> Plausible.Mailer.send()
         end
 
         conn
         |> put_session(site.domain <> "_offer_email_report", true)
         |> redirect(to: Routes.site_path(conn, :add_snippet, site.domain))
 
-      {:error, :site, changeset, _} ->
+      {:error, :limit, limit, _} ->
+        render(conn, "new.html",
+          changeset: Plausible.Site.changeset(%Plausible.Site{}),
+          is_first_site: is_first_site,
+          is_at_limit: true,
+          site_limit: limit,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      {:error, _, changeset, _} ->
         render(conn, "new.html",
           changeset: changeset,
           is_first_site: is_first_site,
           is_at_limit: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
-
-      {:error, :limit, _limit} ->
-        send_resp(conn, 400, "Site limit reached")
     end
   end
 
@@ -155,12 +157,18 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def delete_goal(conn, %{"website" => website, "id" => goal_id}) do
-    Plausible.Goals.delete(goal_id)
+  def delete_goal(conn, %{"id" => goal_id}) do
+    case Plausible.Goals.delete(goal_id, conn.assigns[:site].domain) do
+      :ok ->
+        conn
+        |> put_flash(:success, "Goal deleted successfully")
+        |> redirect(to: Routes.site_path(conn, :settings_goals, conn.assigns[:site].domain))
 
-    conn
-    |> put_flash(:success, "Goal deleted successfully")
-    |> redirect(to: Routes.site_path(conn, :settings_goals, website))
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "Could not find goal")
+        |> redirect(to: Routes.site_path(conn, :settings_goals, conn.assigns[:site].domain))
+    end
   end
 
   def settings(conn, %{"website" => website}) do
@@ -170,12 +178,20 @@ defmodule PlausibleWeb.SiteController do
   def settings_general(conn, _params) do
     site =
       conn.assigns[:site]
-      |> Repo.preload(:custom_domain)
+      |> Repo.preload([:custom_domain])
+
+    imported_pageviews =
+      if site.imported_data do
+        Plausible.Stats.Clickhouse.imported_pageview_count(site)
+      else
+        0
+      end
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_general.html",
       site: site,
+      imported_pageviews: imported_pageviews,
       changeset: Plausible.Site.changeset(site, %{}),
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -209,7 +225,7 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_goals(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    goals = Goals.for_site(site.domain)
+    goals = Goals.for_domain(site.domain)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -295,9 +311,21 @@ defmodule PlausibleWeb.SiteController do
 
     Repo.delete!(site.google_auth)
 
-    conn
-    |> put_flash(:success, "Google account unlinked from Plausible")
-    |> redirect(to: Routes.site_path(conn, :settings_search_console, site.domain))
+    conn = put_flash(conn, :success, "Google account unlinked from Plausible")
+
+    panel =
+      conn.path_info
+      |> List.last()
+      |> String.split("-")
+      |> List.last()
+
+    case panel do
+      "search" ->
+        redirect(conn, to: Routes.site_path(conn, :settings_search_console, site.domain))
+
+      "import" ->
+        redirect(conn, to: Routes.site_path(conn, :settings_general, site.domain))
+    end
   end
 
   def update_settings(conn, %{"site" => site_params}) do
@@ -321,7 +349,7 @@ defmodule PlausibleWeb.SiteController do
 
   def reset_stats(conn, _params) do
     site = conn.assigns[:site]
-    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
+    Plausible.Purge.reset!(site)
 
     conn
     |> put_flash(:success, "#{site.domain} stats will be reset in a few minutes")
@@ -331,10 +359,10 @@ defmodule PlausibleWeb.SiteController do
   def delete_site(conn, _params) do
     site = conn.assigns[:site]
 
-    Plausible.Sites.delete!(site)
+    Plausible.Site.Removal.run(site.domain)
 
     conn
-    |> put_flash(:success, "Site deleted successfully along with all pageviews")
+    |> put_flash(:success, "Your site and page views deletion process has started.")
     |> redirect(to: "/sites")
   end
 
@@ -599,22 +627,244 @@ defmodule PlausibleWeb.SiteController do
 
   def delete_shared_link(conn, %{"slug" => slug}) do
     site = conn.assigns[:site]
+    site_id = site.id
 
-    Repo.get_by(Plausible.Site.SharedLink, slug: slug)
-    |> Repo.delete!()
+    case Repo.delete_all(
+           from l in Plausible.Site.SharedLink,
+             where: l.slug == ^slug,
+             where: l.site_id == ^site_id
+         ) do
+      {1, _} ->
+        conn
+        |> put_flash(:success, "Shared Link deleted")
+        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
 
-    redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+      {0, _} ->
+        conn
+        |> put_flash(:error, "Could not find Shared Link")
+        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+    end
   end
 
-  def delete_custom_domain(conn, _params) do
-    site =
-      conn.assigns[:site]
-      |> Repo.preload(:custom_domain)
+  def delete_custom_domain(conn, %{"id" => domain_id}) do
+    site = conn.assigns[:site]
+    site_id = site.id
 
-    Repo.delete!(site.custom_domain)
+    case Repo.delete_all(
+           from d in Plausible.Site.CustomDomain,
+             where: d.site_id == ^site_id,
+             where: d.id == ^domain_id
+         ) do
+      {1, _} ->
+        conn
+        |> put_flash(:success, "Custom domain deleted successfully")
+        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+
+      {0, _} ->
+        conn
+        |> put_flash(:error, "Failed to delete custom domain")
+        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+    end
+  end
+
+  def import_from_google_user_metric_notice(conn, %{
+        "view_id" => view_id,
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
+    site = conn.assigns[:site]
 
     conn
-    |> put_flash(:success, "Custom domain deleted successfully")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+    |> assign(:skip_plausible_tracking, true)
+    |> render("import_from_google_user_metric_form.html",
+      site: site,
+      view_id: view_id,
+      access_token: access_token,
+      refresh_token: refresh_token,
+      expires_at: expires_at,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def import_from_google_view_id_form(conn, %{
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
+    case Plausible.Google.Api.list_views(access_token) do
+      {:ok, view_ids} ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("import_from_google_view_id_form.html",
+          access_token: access_token,
+          refresh_token: refresh_token,
+          expires_at: expires_at,
+          site: conn.assigns.site,
+          view_ids: view_ids,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      {:error, :authentication_failed} ->
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, conn.assigns.site.domain))
+
+      {:error, _any} ->
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to list your Google Analytics properties. If the problem persists, please contact support for assistance."
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_general, conn.assigns.site.domain))
+    end
+  end
+
+  # see https://stackoverflow.com/a/57416769
+  @google_analytics_new_user_metric_date ~D[2016-08-24]
+  def import_from_google_view_id(conn, %{
+        "view_id" => view_id,
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
+    site = conn.assigns[:site]
+    start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
+
+    case start_date do
+      {:ok, nil} ->
+        site = conn.assigns[:site]
+        {:ok, view_ids} = Plausible.Google.Api.list_views(access_token)
+
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("import_from_google_view_id_form.html",
+          access_token: access_token,
+          refresh_token: refresh_token,
+          expires_at: expires_at,
+          site: site,
+          view_ids: view_ids,
+          selected_view_id_error: "No data found. Nothing to import",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      {:ok, date} ->
+        if Timex.before?(date, @google_analytics_new_user_metric_date) do
+          redirect(conn,
+            to:
+              Routes.site_path(conn, :import_from_google_user_metric_notice, site.domain,
+                view_id: view_id,
+                access_token: access_token,
+                refresh_token: refresh_token,
+                expires_at: expires_at
+              )
+          )
+        else
+          redirect(conn,
+            to:
+              Routes.site_path(conn, :import_from_google_confirm, site.domain,
+                view_id: view_id,
+                access_token: access_token,
+                refresh_token: refresh_token,
+                expires_at: expires_at
+              )
+          )
+        end
+    end
+  end
+
+  def import_from_google_confirm(conn, %{
+        "view_id" => view_id,
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
+    site = conn.assigns[:site]
+
+    start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
+    end_date = Plausible.Sites.stats_start_date(site) || Timex.today(site.timezone)
+
+    {:ok, {view_name, view_id}} = Plausible.Google.Api.get_view(access_token, view_id)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("import_from_google_confirm.html",
+      access_token: access_token,
+      refresh_token: refresh_token,
+      expires_at: expires_at,
+      site: site,
+      selected_view_id: view_id,
+      selected_view_id_name: view_name,
+      start_date: start_date,
+      end_date: end_date,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def import_from_google(conn, %{
+        "view_id" => view_id,
+        "start_date" => start_date,
+        "end_date" => end_date,
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "expires_at" => expires_at
+      }) do
+    site = conn.assigns[:site]
+
+    job =
+      Plausible.Workers.ImportGoogleAnalytics.new(%{
+        "site_id" => site.id,
+        "view_id" => view_id,
+        "start_date" => start_date,
+        "end_date" => end_date,
+        "access_token" => access_token,
+        "refresh_token" => refresh_token,
+        "token_expires_at" => expires_at
+      })
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.update(
+      :update_site,
+      Plausible.Site.start_import(site, start_date, end_date, "Google Analytics")
+    )
+    |> Oban.insert(:oban_job, job)
+    |> Repo.transaction()
+
+    conn
+    |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
+    |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+  end
+
+  def forget_imported(conn, _params) do
+    site = conn.assigns[:site]
+
+    cond do
+      site.imported_data ->
+        Oban.cancel_all_jobs(
+          from(j in Oban.Job,
+            where:
+              j.queue == "google_analytics_imports" and
+                fragment("(? ->> 'site_id')::int", j.args) == ^site.id
+          )
+        )
+
+        Plausible.Imported.forget(site)
+
+        site
+        |> Plausible.Site.remove_imported_data()
+        |> Repo.update!()
+
+        conn
+        |> put_flash(:success, "Imported data has been cleared")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+
+      true ->
+        conn
+        |> put_flash(:error, "No data has been imported")
+        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    end
   end
 end

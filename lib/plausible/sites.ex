@@ -1,30 +1,40 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
+  alias Plausible.ClickhouseRepo
+  alias Plausible.Site
   alias Plausible.Site.SharedLink
+  import Ecto.Query
+
+  def get_by_domain(domain) do
+    Repo.get_by(Site, domain: domain)
+  end
 
   def create(user, params) do
-    count = Enum.count(owned_by(user))
-    limit = Plausible.Billing.sites_limit(user)
+    site_changeset = Site.changeset(%Site{}, params)
 
-    if count >= limit do
-      {:error, :limit, limit}
-    else
-      site_changeset = Plausible.Site.changeset(%Plausible.Site{}, params)
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:limit, fn _, _ ->
+      limit = Plausible.Billing.sites_limit(user)
+      count = owned_sites_count(user)
 
-      Ecto.Multi.new()
-      |> Ecto.Multi.insert(:site, site_changeset)
-      |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
-        membership_changeset =
-          Plausible.Site.Membership.changeset(%Plausible.Site.Membership{}, %{
-            site_id: site.id,
-            user_id: user.id
-          })
+      if count >= limit do
+        {:error, limit}
+      else
+        {:ok, count}
+      end
+    end)
+    |> Ecto.Multi.insert(:site, site_changeset)
+    |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
+      membership_changeset =
+        Site.Membership.changeset(%Site.Membership{}, %{
+          site_id: site.id,
+          user_id: user.id
+        })
 
-        repo.insert(membership_changeset)
-      end)
-      |> maybe_start_trial(user)
-      |> Repo.transaction()
-    end
+      repo.insert(membership_changeset)
+    end)
+    |> maybe_start_trial(user)
+    |> Repo.transaction()
   end
 
   defp maybe_start_trial(multi, user) do
@@ -38,21 +48,38 @@ defmodule Plausible.Sites do
     end
   end
 
-  def has_stats?(site) do
-    if site.has_stats do
-      true
-    else
-      has_stats = Plausible.Stats.Clickhouse.has_pageviews?(site)
+  @spec stats_start_date(Plausible.Site.t()) :: Date.t() | nil
+  @doc """
+  Returns the date of the first event of the given site, or `nil` if the site
+  does not have stats yet.
 
-      if has_stats do
-        Plausible.Site.set_has_stats(site, true)
-        |> Repo.update()
+  If this is the first time the function is called for the site, it queries
+  Clickhouse and saves the date in the sites table.
+  """
+  def stats_start_date(site)
 
-        true
-      else
-        false
-      end
+  def stats_start_date(%Site{stats_start_date: %Date{} = date}) do
+    date
+  end
+
+  def stats_start_date(%Site{} = site) do
+    if start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site) do
+      updated_site =
+        site
+        |> Site.set_stats_start_date(start_date)
+        |> Repo.update!()
+
+      updated_site.stats_start_date
     end
+  end
+
+  def has_stats?(site) do
+    !!stats_start_date(site)
+  end
+
+  def has_events?(domain) do
+    q = from e in "events", where: e.domain == ^domain, select: true, limit: 1
+    ClickhouseRepo.one(q) == true
   end
 
   def create_shared_link(site, name, password \\ nil) do
@@ -81,8 +108,8 @@ defmodule Plausible.Sites do
     do: Repo.one(get_for_user_q(user_id, domain, roles))
 
   defp get_for_user_q(user_id, domain, roles) do
-    from(s in Plausible.Site,
-      join: sm in Plausible.Site.Membership,
+    from(s in Site,
+      join: sm in Site.Membership,
       on: sm.site_id == s.id,
       where: sm.user_id == ^user_id,
       where: sm.role in ^roles,
@@ -106,47 +133,47 @@ defmodule Plausible.Sites do
     role(user_id, site) in [:admin, :owner]
   end
 
+  def locked?(%Site{locked: locked}) do
+    locked
+  end
+
   def role(user_id, site) do
     Repo.one(
-      from sm in Plausible.Site.Membership,
+      from sm in Site.Membership,
         where: sm.user_id == ^user_id and sm.site_id == ^site.id,
         select: sm.role
     )
   end
 
-  def owned_by(user) do
-    Repo.all(
-      from s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        where: sm.role == :owner,
-        where: sm.user_id == ^user.id
-    )
+  def owned_sites_count(user) do
+    user
+    |> owned_sites_query()
+    |> Repo.aggregate(:count)
   end
 
-  def count_owned_by(user) do
-    Repo.one(
-      from s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        where: sm.role == :owner,
-        where: sm.user_id == ^user.id,
-        select: count(sm)
+  def owned_sites_domains(user) do
+    user
+    |> owned_sites_query()
+    |> select([site], site.domain)
+    |> Repo.all()
+  end
+
+  defp owned_sites_query(user) do
+    from(s in Site,
+      join: sm in Site.Membership,
+      on: sm.site_id == s.id,
+      where: sm.role == :owner,
+      where: sm.user_id == ^user.id
     )
   end
 
   def owner_for(site) do
     Repo.one(
       from u in Plausible.Auth.User,
-        join: sm in Plausible.Site.Membership,
+        join: sm in Site.Membership,
         on: sm.user_id == u.id,
         where: sm.site_id == ^site.id,
         where: sm.role == :owner
     )
-  end
-
-  def delete!(site) do
-    Repo.delete!(site)
-    Plausible.ClickhouseRepo.clear_stats_for(site.domain)
   end
 end

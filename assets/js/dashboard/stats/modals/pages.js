@@ -40,8 +40,7 @@ class PagesModal extends React.Component {
   }
 
   showPageviews() {
-    const {filters} = this.state.query
-    return this.state.query.period !== 'realtime' && !(filters.goal || filters.source || filters.referrer)
+    return this.state.query.period !== 'realtime' && !this.state.query.filters.goal
   }
 
   showConversionRate() {

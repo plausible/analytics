@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
   @user_id 123
@@ -74,7 +73,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       assert json_response(conn, 400) == %{
                "error" =>
-                 "The metric `led_zeppelin` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#get-apiv1statsbreakdown"
+                 "The metric `led_zeppelin` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"
              }
     end
 
@@ -117,7 +116,32 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
            }
   end
 
-  test "aggregates visitors, pageviews, visits, bounce rate and visit duration", %{
+  test "rounds views_per_visit to two decimal places", %{
+    conn: conn,
+    site: site
+  } do
+    populate_stats([
+      build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview, user_id: 456, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, user_id: 456, domain: site.domain, timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00])
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/aggregate", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "metrics" => "views_per_visit"
+      })
+
+    assert json_response(conn, 200)["results"] == %{
+             "views_per_visit" => %{"value" => 1.67}
+           }
+  end
+
+  test "aggregates all metrics in a single query", %{
     conn: conn,
     site: site
   } do
@@ -132,13 +156,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         "site_id" => site.domain,
         "period" => "day",
         "date" => "2021-01-01",
-        "metrics" => "pageviews,visits,visitors,bounce_rate,visit_duration"
+        "metrics" => "pageviews,visits,views_per_visit,visitors,bounce_rate,visit_duration"
       })
 
     assert json_response(conn, 200)["results"] == %{
              "pageviews" => %{"value" => 3},
              "visitors" => %{"value" => 2},
              "visits" => %{"value" => 2},
+             "views_per_visit" => %{"value" => 1.5},
              "bounce_rate" => %{"value" => 50},
              "visit_duration" => %{"value" => 750}
            }
@@ -613,19 +638,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "when filtering by page, session metrics treat is like entry_page", %{
+    test "can filter by page", %{
       conn: conn,
       site: site
     } do
       populate_stats([
         build(:pageview,
-          pathname: "/blogpost",
           user_id: @user_id,
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           user_id: @user_id,
+          pathname: "/blogpost",
           domain: site.domain,
           timestamp: ~N[2021-01-01 00:25:00]
         ),
@@ -780,6 +805,50 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
+    end
+
+    test "can escape pipe character in member + wildcard filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post|1"),
+        build(:pageview, pathname: "/otherpost|1"),
+        build(:pageview, pathname: "/blog/post|2"),
+        build(:pageview, pathname: "/something-else")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => "event:page==**post\\|1|/something-else"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 3}}
+    end
+
+    test "joins correctly with the sessions (CollapsingMergeTree) table", %{
+      conn: conn,
+      site: site
+    } do
+      create_sessions([
+        %{domain: site.domain, session_id: 1000, country_code: "EE", sign: 1, events: 1},
+        %{domain: site.domain, session_id: 1000, country_code: "EE", sign: -1, events: 1},
+        %{domain: site.domain, session_id: 1000, country_code: "EE", sign: 1, events: 2}
+      ])
+
+      create_events([
+        %{domain: site.domain, session_id: 1000, country_code: "EE", name: "pageview"},
+        %{domain: site.domain, session_id: 1000, country_code: "EE", name: "pageview"},
+        %{domain: site.domain, session_id: 1000, country_code: "EE", name: "pageview"}
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "pageviews",
+          "filters" => "visit:country==EE"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"pageviews" => %{"value" => 3}}
     end
   end
 end

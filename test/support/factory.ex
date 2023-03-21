@@ -25,6 +25,7 @@ defmodule Plausible.Factory do
     domain = sequence(:domain, &"example-#{&1}.com")
 
     %Plausible.Site{
+      native_stats_start_at: ~N[2000-01-01 00:00:00],
       domain: domain,
       timezone: "UTC"
     }
@@ -39,30 +40,16 @@ defmodule Plausible.Factory do
 
     %Plausible.ClickhouseSession{
       sign: 1,
-      session_id: SipHash.hash!(hash_key(), UUID.uuid4()),
-      user_id: SipHash.hash!(hash_key(), UUID.uuid4()),
+      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
+      user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
       hostname: hostname,
       domain: hostname,
-      referrer: "",
-      referrer_source: "",
-      utm_medium: "",
-      utm_source: "",
-      utm_campaign: "",
-      utm_content: "",
-      utm_term: "",
       entry_page: "/",
       pageviews: 1,
       events: 1,
-      duration: 0,
       start: Timex.now(),
       timestamp: Timex.now(),
-      is_bounce: false,
-      browser: "",
-      browser_version: "",
-      country_code: "",
-      screen_size: "",
-      operating_system: "",
-      operating_system_version: ""
+      is_bounce: false
     }
   end
 
@@ -83,23 +70,8 @@ defmodule Plausible.Factory do
       domain: hostname,
       pathname: "/",
       timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-      user_id: SipHash.hash!(hash_key(), UUID.uuid4()),
-      session_id: SipHash.hash!(hash_key(), UUID.uuid4()),
-      referrer: "",
-      referrer_source: "",
-      utm_medium: "",
-      utm_source: "",
-      utm_campaign: "",
-      utm_content: "",
-      utm_term: "",
-      browser: "",
-      browser_version: "",
-      country_code: "",
-      screen_size: "",
-      operating_system: "",
-      operating_system_version: "",
-      "meta.key": [],
-      "meta.value": []
+      user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
+      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())
     }
   end
 
@@ -177,6 +149,114 @@ defmodule Plausible.Factory do
       key: key,
       key_hash: Plausible.Auth.ApiKey.do_hash(key),
       key_prefix: binary_part(key, 0, 6)
+    }
+  end
+
+  def imported_visitors_factory do
+    %{
+      table: "imported_visitors",
+      date: Timex.today(),
+      visitors: 1,
+      pageviews: 1,
+      bounces: 0,
+      visits: 1,
+      visit_duration: 10
+    }
+  end
+
+  def imported_sources_factory do
+    %{
+      table: "imported_sources",
+      date: Timex.today(),
+      source: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_pages_factory do
+    %{
+      table: "imported_pages",
+      date: Timex.today(),
+      page: "",
+      visitors: 1,
+      pageviews: 1,
+      exits: 0,
+      time_on_page: 10
+    }
+  end
+
+  def imported_entry_pages_factory do
+    %{
+      table: "imported_entry_pages",
+      date: Timex.today(),
+      entry_page: "",
+      visitors: 1,
+      entrances: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_exit_pages_factory do
+    %{
+      table: "imported_exit_pages",
+      date: Timex.today(),
+      exit_page: "",
+      visitors: 1,
+      exits: 1
+    }
+  end
+
+  def imported_locations_factory do
+    %{
+      table: "imported_locations",
+      date: Timex.today(),
+      country: "",
+      region: "",
+      city: 0,
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_devices_factory do
+    %{
+      table: "imported_devices",
+      date: Timex.today(),
+      device: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_browsers_factory do
+    %{
+      table: "imported_browsers",
+      date: Timex.today(),
+      browser: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
+    }
+  end
+
+  def imported_operating_systems_factory do
+    %{
+      table: "imported_operating_systems",
+      date: Timex.today(),
+      operating_system: "",
+      visitors: 1,
+      visits: 1,
+      bounces: 0,
+      visit_duration: 10
     }
   end
 

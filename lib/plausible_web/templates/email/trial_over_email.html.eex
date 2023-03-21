@@ -1,15 +1,6 @@
-Hey <%= user_salutation(@user) %>,
-<br /><br />
 Your free Plausible trial has now expired. Upgrade your account to continue receiving valuable website traffic insights at a glance while respecting the privacy of your visitors and still having a fast loading site. <br /><br />
 
 <%= link("Upgrade now", to: "#{plausible_url()}/billing/upgrade") %>
 <br /><br />
 
 We will keep recording stats for another month to give you time to upgrade.
-
-<br /><br />
-Thanks,<br />
-Uku and Marko<br />
---<br />
-<%= plausible_url() %><br />
-{{{ pm:unsubscribe }}}

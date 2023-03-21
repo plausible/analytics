@@ -18,20 +18,15 @@ config :plausible,
   paddle_api: Plausible.PaddleApi.Mock,
   google_api: Plausible.Google.Api.Mock
 
+config :plausible, :google,
+  client_id: "fake_client_id",
+  client_secret: "fake_client_secret"
+
 config :bamboo, :refute_timeout, 10
 
-config :geolix,
-  databases: [
-    %{
-      id: :geolocation,
-      adapter: Geolix.Adapter.Fake,
-      data: %{
-        {1, 1, 1, 1} => %{country: %{iso_code: "US"}},
-        {1, 1, 1, 1, 1, 1, 1, 1} => %{country: %{iso_code: "US"}},
-        {0, 0, 0, 0} => %{country: %{iso_code: "ZZ"}}
-      }
-    }
-  ]
-
 config :plausible,
-  session_timeout: 0
+  session_timeout: 0,
+  http_impl: Plausible.HTTPClient.Mock,
+  sites_by_domain_cache_enabled: false
+
+config :plausible, Plausible.Ingestion.Counters, enabled: false

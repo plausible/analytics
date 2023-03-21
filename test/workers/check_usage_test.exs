@@ -1,8 +1,8 @@
 defmodule Plausible.Workers.CheckUsageTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   use Bamboo.Test
   import Double
-  import Plausible.TestUtils
+
   alias Plausible.Workers.CheckUsage
 
   setup [:create_user, :create_site]
@@ -97,8 +97,32 @@ defmodule Plausible.Workers.CheckUsageTest do
     assert Repo.reload(user).grace_period.end_date == Timex.shift(Timex.today(), days: 7)
   end
 
+  test "sends an email suggesting enterprise plan when usage is greater than 10M ", %{
+    user: user
+  } do
+    billing_stub =
+      Plausible.Billing
+      |> stub(:last_two_billing_months_usage, fn _user -> {11_000_000, 11_000_000} end)
+      |> stub(:last_two_billing_cycles, fn _user ->
+        {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+      end)
+
+    insert(:subscription,
+      user: user,
+      paddle_plan_id: @paddle_id_10k,
+      last_bill_date: Timex.shift(Timex.today(), days: -1)
+    )
+
+    CheckUsage.perform(nil, billing_stub)
+
+    assert_delivered_email_matches(%{html_body: html_body})
+
+    assert html_body =~
+             "This is more than our standard plans, so please reply back to this email to get a quote for your volume."
+  end
+
   test "skips checking users who already have a grace period", %{user: user} do
-    Plausible.Auth.User.start_grace_period(user, 12_000) |> Repo.update()
+    user |> Plausible.Auth.GracePeriod.start_changeset(12_000) |> Repo.update()
 
     billing_stub =
       Plausible.Billing
@@ -119,7 +143,7 @@ defmodule Plausible.Workers.CheckUsageTest do
     assert Repo.reload(user).grace_period.allowance_required == 12_000
   end
 
-  test "reccommends a plan to upgrade to", %{
+  test "recommends a plan to upgrade to", %{
     user: user
   } do
     billing_stub =
@@ -202,6 +226,26 @@ defmodule Plausible.Workers.CheckUsageTest do
         to: [{nil, "enterprise@plausible.io"}],
         subject: "#{user.email} has outgrown their enterprise plan"
       )
+    end
+
+    test "starts grace period when plan is outgrown", %{user: user} do
+      billing_stub =
+        Plausible.Billing
+        |> stub(:last_two_billing_months_usage, fn _user -> {1_100_000, 1_100_000} end)
+        |> stub(:last_two_billing_cycles, fn _user ->
+          {Date.range(Timex.today(), Timex.today()), Date.range(Timex.today(), Timex.today())}
+        end)
+
+      enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
+
+      insert(:subscription,
+        user: user,
+        paddle_plan_id: enterprise_plan.paddle_plan_id,
+        last_bill_date: Timex.shift(Timex.today(), days: -1)
+      )
+
+      CheckUsage.perform(nil, billing_stub)
+      assert user |> Repo.reload() |> Plausible.Auth.GracePeriod.active?()
     end
   end
 

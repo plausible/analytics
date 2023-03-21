@@ -11,17 +11,15 @@
     <a href="https://plausible.io/privacy-focused-web-analytics">Privacy Focused</a> |
     <a href="https://plausible.io/open-source-website-analytics">Open Source</a> |
     <a href="https://plausible.io/docs">Docs</a> |
-    <a href="https://github.com/plausible/analytics/blob/master/CONTRIBUTING.md">Contributing</a> |
-    <a href="https://twitter.com/plausiblehq">Twitter</a> |
-    <a href="https://fosstodon.org/@plausible">Mastodon</a>
+    <a href="https://github.com/plausible/analytics/blob/master/CONTRIBUTING.md">Contributing</a>
     <br /><br />
 </p>
 
-[Plausible Analytics](https://plausible.io/) is a simple, lightweight (< 1 KB), open-source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host Plausible or have us run it for you in the Cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). Made and hosted in the EU 🇪🇺
+[Plausible Analytics](https://plausible.io/) is a simple, lightweight (< 1 KB), open source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host or have us run Plausible for you in the cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). Made and hosted in the EU 🇪🇺
 
-We are dedicated to making web analytics more privacy-friendly. Our mission is to reduce corporate surveillance by providing an alternative web analytics tool which doesn’t come from the AdTech world. The full-time team consists of Uku Taht and Marko Saric. We are completely independent, self-funded and bootstrapped.
+We are dedicated to making web analytics more privacy-friendly. Our mission is to reduce corporate surveillance by providing an alternative web analytics tool which doesn’t come from the AdTech world. We are completely independent and solely funded by our subscribers.
 
-![](https://docs.plausible.io/img/plausible-analytics.png)
+![Plausible Analytics](https://plausible.io/docs/img/plausible-analytics.png)
 
 ## Why Plausible?
 
@@ -50,27 +48,28 @@ We choose the subscription business model rather than the business model of surv
 
 ## Getting started with Plausible
 
-The easiest way to get started with Plausible is with [our official managed service in the Cloud](https://plausible.io/#pricing). It takes 2 minutes to start counting your stats with a worldwide CDN, high availability, backups, security and maintenance all done for you by us.
+The easiest way to get started with Plausible is with [our official managed service in the cloud](https://plausible.io/#pricing). It takes 2 minutes to start counting your stats with a worldwide CDN, high availability, backups, security and maintenance all done for you by us.
 
-In order to be compliant with the GDPR and the Schrems II ruling, all visitor data for our managed service in the Cloud is exclusively processed on servers and cloud infrastructure owned and operated by European providers. Your website data never leaves the EU.
+In order to be compliant with the GDPR and the Schrems II ruling, all visitor data for our managed service in the cloud is exclusively processed on servers and cloud infrastructure owned and operated by European providers. Your website data never leaves the EU.
 
 Our managed hosting can save a substantial amount of developer time and resources. For most sites this ends up being the best value option and the revenue goes to funding the maintenance and further development of Plausible. So you’ll be supporting open source software and getting a great service!
 
 ### Can Plausible Analytics be self-hosted?
 
-Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics) and we have a free as in beer [Plausible Analytics Self-Hosted](https://plausible.io/self-hosted-web-analytics) solution. It’s exactly the same product as our Cloud solution with a less frequent release schedule (think of it as a long term support release).
+Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics) and we have a free as in beer [Plausible Analytics Self-Hosted](https://plausible.io/self-hosted-web-analytics) solution. It’s exactly the same product as our cloud solution with a less frequent release schedule (think of it as a long term support release).
 
-Bug fixes and new features are released to the cloud version several times per week. Features are battle-tested in the cloud which allows us to fix any bugs before the general self-hosted release. Every six months we combine all the changes into a new self-hosted release.
+Bug fixes and new features are released to the cloud version several times per week. Features are battle-tested in the cloud which allows us to fix any bugs before the general self-hosted release. Every six months or so we combine all the changes into a new self-hosted release.
 
-The main difference between the two is that the self-hosted version you have to install, host and manage yourself on your own infrastructure while the Cloud version we manage everything for your ease and convenience. Here's the overview of all the differences:
+The main difference between the two is that the self-hosted version you have to install, host and manage yourself on your own infrastructure while the cloud version we manage everything for your ease and convenience. Here's the overview of all the differences:
 
-|  | Cloud  | Self-hosted |
+|  | Plausible Cloud  | Self-Hosting |
 | ------------- | ------------- | ------------- |
-| Hosting | Easy and convenient. We manage everything for you so you don’t have to worry about anything. We take care of the installation, upgrades, server, security, maintenance, uptime, stability, consistency, loading time and so on.  | You do it all yourself. You need to get a server and you need to install, maintain and manage Plausible on that server. You are responsible for installation, maintenance, upgrades, server capacity, uptime, backup and so on.  |
-| Storage | We keep your site data on a secure, encrypted and green energy powered server in Germany. A server that ensures that your site data is protected by the strict European Union data privacy laws.  | You have full control and can host your Plausible Analytics on any server in any country that you wish. Host it on a server in your basement or host it with any cloud provider wherever you want.  |
-| Raw data | You see all your site stats and metrics on our modern-looking, simple to use and fast loading dashboard. You can only see the stats aggregated in the dashboard.  | Are you an analyst and want access to the raw data? Hosting Plausible yourself gives you that option. Take the data directly from the ClickHouse database and import it to a data analysis tool of your choice.  |
-| Costs | There’s a cost associated with providing an analytics service so we charge a subscription fee. We choose the subscription business model rather than the business model of surveillance capitalism.  | You only need to pay for your server and whatever cost there is associated with running a server. You never have to pay any fees to us, only to your cloud provider.  |
-| Releases | Continuously developed and improved with new features and frequent updates.  | [It’s a long term release](https://plausible.io/blog/building-open-source) so latest features won’t be immediately available as they’re battled-tested in the cloud before released to self-hosted.  |
+| Hosting | Easy and convenient. It takes 2 minutes to start counting your stats with a worldwide CDN, high availability, backups, security and maintenance all done for you by us. We manage everything so you don’t have to worry about anything and can focus on your stats. | You do it all yourself. You need to get a server and you need to manage your infrastructure. You are responsible for installation, maintenance, upgrades, server capacity, uptime, backup, security, stability, consistency, loading time and so on. |
+| Storage | All visitor data is exclusively processed on EU-owned cloud infrastructure. We keep your site data on a secure, encrypted and green energy powered server in Germany. This ensures that your site data is protected by the strict European Union data privacy laws and ensures compliance with GDPR. Your website data never leaves the EU. | You have full control and can host your instance on any server in any country that you wish. Host it on a server in your basement or host it with any cloud provider wherever you want, even those that are not GDPR compliant. |
+| Releases | Continuously developed and improved with new features and updates multiple times per week. | [It's a long term release](https://plausible.io/blog/building-open-source) published approximately twice per year so latest features won't be immediately available. You can see all the [currently unreleased features in the changelog](https://github.com/plausible/analytics/blob/master/CHANGELOG.md).|
+| Raw data | You see all your site stats and metrics on our modern-looking, simple to use and fast loading dashboard. You can only see the stats aggregated in the dashboard. You can download the stats using the [CSV export](https://plausible.io/docs/export-stats), [stats API](https://plausible.io/docs/stats-api) or tools such as the [Data Studio Connector](https://plausible.io/docs/integration-guides#google-data-studio). | Do you want access to the raw data? Self-hosting gives you that option. You can take the data directly from the ClickHouse database. |
+| Premium Support | Real support delivered by real human beings who build and maintain Plausible. | Premium support is not included. Self-hosting is community supported only. |
+| Costs | There's a cost associated with providing an analytics service so we charge a subscription fee. We choose the subscription business model rather than the business model of surveillance capitalism. Your money funds further development of Plausible. | You need to pay for your server, CDN, backups and whatever other cost there is associated with running the infrastructure. You never have to pay any fees to us. Your money goes to 3rd party companies with no connection to us.|
 
 Interested in self-hosting Plausible on your server? Take a look at our [self-hosting installation instructions](https://plausible.io/docs/self-hosting).
 
@@ -91,13 +90,13 @@ For anyone wishing to contribute to Plausible, we recommend taking a look at [ou
 
 ## Feedback & Roadmap
 
-We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://plausible.io/feedback) and our [public roadmap](https://plausible.io/roadmap) directly here on GitHub. Please let us know if you have any requests and vote on open issues so we can better prioritize.
+We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://plausible.io/feedback) directly here on GitHub. Please let us know if you have any requests and vote on open issues so we can better prioritize.
 
-To stay up to date with all the latest news and product updates, make sure to follow us on [Twitter](https://twitter.com/plausiblehq) or [Mastodon](https://fosstodon.org/@plausible).
+To stay up to date with all the latest news and product updates, make sure to follow us on [Twitter](https://twitter.com/plausiblehq), [LinkedIn](https://www.linkedin.com/company/plausible-analytics/) or [Mastodon](https://fosstodon.org/@plausible).
 
 ## License
 
 Plausible is open-source under the GNU Affero General Public License Version 3 (AGPLv3) or any later version. You can [find it here](https://github.com/plausible/analytics/blob/master/LICENSE.md).
 
-The only exception is our javascript tracker which gets included on your website. To avoid issues with AGPL virality, we've
+The only exception is our JavaScript tracker which gets included on your website. To avoid issues with AGPL virality, we've
 released the tracker under the MIT license. You can [find it here](https://github.com/plausible/analytics/blob/master/tracker/LICENSE.md).

@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.StatsControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
-  import Plausible.TestUtils
 
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
@@ -35,13 +34,64 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "shows locked page if page is locked", %{conn: conn, user: user} do
       locked_site = insert(:site, locked: true, members: [user])
       conn = get(conn, "/" <> locked_site.domain)
-      assert html_response(conn, 200) =~ "Site locked"
+      assert html_response(conn, 200) =~ "Dashboard locked"
     end
 
     test "can not view stats of someone else's website", %{conn: conn} do
-      conn = get(conn, "/some-other-site.com")
+      site = insert(:site)
+      conn = get(conn, "/" <> site.domain)
       assert html_response(conn, 404) =~ "There&#39;s nothing here"
     end
+  end
+
+  describe "GET /:website - as a super admin" do
+    setup [:create_user, :make_user_super_admin, :log_in]
+
+    test "can view a private dashboard with stats", %{conn: conn} do
+      site = insert(:site)
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "stats-react-container"
+    end
+
+    test "can view a private dashboard without stats", %{conn: conn} do
+      site = insert(:site)
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+    end
+
+    test "can view a private locked dashboard with stats", %{conn: conn} do
+      user = insert(:user)
+      site = insert(:site, locked: true, members: [user])
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "stats-react-container"
+      assert html_response(conn, 200) =~ "This dashboard is actually locked"
+    end
+
+    test "can view a private locked dashboard without stats", %{conn: conn} do
+      user = insert(:user)
+      site = insert(:site, locked: true, members: [user])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "Need to see the snippet again?"
+      assert html_response(conn, 200) =~ "This dashboard is actually locked"
+    end
+
+    test "can view a locked public dashboard", %{conn: conn} do
+      site = insert(:site, locked: true, public: true)
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/" <> site.domain)
+      assert html_response(conn, 200) =~ "stats-react-container"
+    end
+  end
+
+  defp make_user_super_admin(%{user: user}) do
+    Application.put_env(:plausible, :super_admin_user_ids, [user.id])
   end
 
   describe "GET /:website/export" do
@@ -51,6 +101,40 @@ defmodule PlausibleWeb.StatsControllerTest do
       populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
       assert_zip(conn, "30d")
+    end
+
+    test "exports data grouped by interval", %{conn: conn, site: site} do
+      populate_exported_stats(site)
+      conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20&period=30d&interval=week")
+
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      {_filename, visitors} =
+        Enum.find(zip, fn {filename, _data} -> filename == 'visitors.csv' end)
+
+      parsed_csv =
+        visitors
+        |> String.split("\r\n")
+        |> Enum.map(&String.split(&1, ","))
+
+      assert parsed_csv == [
+               [
+                 "date",
+                 "visitors",
+                 "pageviews",
+                 "visits",
+                 "views_per_visit",
+                 "bounce_rate",
+                 "visit_duration"
+               ],
+               ["2021-09-20", "1", "1", "1", "1.0", "100", "0"],
+               ["2021-09-27", "0", "0", "0", "0.0", "", ""],
+               ["2021-10-04", "0", "0", "0", "0.0", "", ""],
+               ["2021-10-11", "0", "0", "0", "0.0", "", ""],
+               ["2021-10-18", "3", "3", "3", "1.0", "67", "20"],
+               [""]
+             ]
     end
   end
 
@@ -115,7 +199,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
         pathname: "/",
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -1),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], minutes: -1) |> NaiveDateTime.truncate(:second),
         referrer_source: "Google",
         user_id: 123
       ),
@@ -124,7 +209,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
         pathname: "/some-other-page",
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], minutes: -2),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], minutes: -2) |> NaiveDateTime.truncate(:second),
         referrer_source: "Google",
         user_id: 123
       ),
@@ -135,23 +221,27 @@ defmodule PlausibleWeb.StatsControllerTest do
         utm_source: "google",
         utm_content: "content",
         utm_term: "term",
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         browser: "ABrowserName"
       ),
       build(:pageview,
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -1),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], months: -1) |> NaiveDateTime.truncate(:second),
         country_code: "EE",
         browser: "ABrowserName"
       ),
       build(:pageview,
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], months: -5),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], months: -5) |> NaiveDateTime.truncate(:second),
         utm_campaign: "ads",
         country_code: "EE",
         referrer_source: "Google",
         browser: "ABrowserName"
       ),
       build(:event,
-        timestamp: Timex.shift(~N[2021-10-20 12:00:00], days: -1),
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         name: "Signup",
         "meta.key": ["variant"],
         "meta.value": ["A"]
@@ -172,7 +262,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
-  describe "GET /share/:slug" do
+  describe "GET /share/:domain?auth=:auth" do
     test "prompts a password for a password-protected link", %{conn: conn} do
       site = insert(:site)
 
@@ -209,8 +299,45 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
 
-      assert html_response(conn, 200) =~ "Site locked"
+      assert html_response(conn, 200) =~ "Dashboard locked"
       refute String.contains?(html_response(conn, 200), "Back to my sites")
+    end
+
+    test "renders 404 not found when no auth parameter supplied", %{conn: conn} do
+      conn = get(conn, "/share/example.com")
+      assert response(conn, 404) =~ "nothing here"
+    end
+
+    test "renders 404 not found when non-existent auth parameter is supplied", %{conn: conn} do
+      conn = get(conn, "/share/example.com?auth=bad-token")
+      assert response(conn, 404) =~ "nothing here"
+    end
+
+    test "renders 404 not found when auth parameter for another site is supplied", %{conn: conn} do
+      site1 = insert(:site, domain: "test-site-1.com")
+      site2 = insert(:site, domain: "test-site-2.com")
+      site1_link = insert(:shared_link, site: site1)
+
+      conn = get(conn, "/share/#{site2.domain}/?auth=#{site1_link.slug}")
+      assert response(conn, 404) =~ "nothing here"
+    end
+  end
+
+  describe "GET /share/:slug - backwards compatibility" do
+    test "it redirects to new shared link format for historical links", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com")
+      site_link = insert(:shared_link, site: site, inserted_at: ~N[2021-12-31 00:00:00])
+
+      conn = get(conn, "/share/#{site_link.slug}")
+      assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{site_link.slug}"
+    end
+
+    test "it does nothing for newer links", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com")
+      site_link = insert(:shared_link, site: site, inserted_at: ~N[2022-01-01 00:00:00])
+
+      conn = get(conn, "/share/#{site_link.slug}")
+      assert response(conn, 404) =~ "nothing here"
     end
   end
 
@@ -235,6 +362,23 @@ defmodule PlausibleWeb.StatsControllerTest do
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "WRONG!"})
+      assert html_response(conn, 200) =~ "Enter password"
+    end
+
+    test "only gives access to the correct dashboard", %{conn: conn} do
+      site = insert(:site, domain: "test-site.com")
+      site2 = insert(:site, domain: "test-site2.com")
+
+      link =
+        insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
+
+      link2 =
+        insert(:shared_link, site: site2, password_hash: Plausible.Auth.Password.hash("password1"))
+
+      conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
+      assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{link.slug}"
+
+      conn = get(conn, "/share/#{site2.domain}?auth=#{link2.slug}")
       assert html_response(conn, 200) =~ "Enter password"
     end
   end

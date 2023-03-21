@@ -5,15 +5,21 @@ import MoreLink from '../more-link'
 import numberFormatter from '../../util/number-formatter'
 import RocketIcon from '../modals/rocket-icon'
 import * as api from '../../api'
+import LazyLoader from '../../components/lazy-loader'
 
 export default class SearchTerms extends React.Component {
   constructor(props) {
     super(props)
     this.state = {loading: true}
+    this.onVisible = this.onVisible.bind(this)
+    this.fetchSearchTerms = this.fetchSearchTerms.bind(this)
   }
 
-  componentDidMount() {
+  onVisible() {
     this.fetchSearchTerms()
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchSearchTerms)
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -23,6 +29,10 @@ export default class SearchTerms extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    document.removeEventListener('tick', this.fetchSearchTerms)
+  }
+
   fetchSearchTerms() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/referrers/Google`, this.props.query)
       .then((res) => this.setState({
@@ -30,7 +40,11 @@ export default class SearchTerms extends React.Component {
         searchTerms: res.search_terms || [],
         notConfigured: res.not_configured,
         isAdmin: res.is_admin
-      }))
+      })).catch((error) =>
+        {
+            this.setState({ loading: false, searchTerms: [], notConfigured: true, error: true, isAdmin: error.payload.is_admin })
+        }
+      )
   }
 
   renderSearchTerm(term) {
@@ -67,8 +81,10 @@ export default class SearchTerms extends React.Component {
       return (
         <div className="text-center text-gray-700 dark:text-gray-300 text-sm mt-20">
           <RocketIcon />
-          <div>The site is not connected to Google Search Keywords</div>
-          <div>Cannot show search terms</div>
+          <div>
+          This site is not connected to Search Console so we cannot show the search phrases.
+          {this.state.isAdmin && this.state.error && <><br/><br/><p>Please click below to connect your Search Console account.</p></>}
+          </div>
           {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a> }
         </div>
       )
@@ -91,7 +107,7 @@ export default class SearchTerms extends React.Component {
           <RocketIcon />
           <div>Could not find any search terms for this period</div>
           <div>Google Search Console data is sampled and delayed by 24-36h</div>
-          <div>Read more on <a href="https://docs.plausible.io/google-search-console-integration/#i-dont-see-google-search-query-data-in-my-dashboard" target="_blank" rel="noreferrer" className="hover:underline text-indigo-700 dark:text-indigo-500">our documentation</a></div>
+          <div>Read more on <a href="https://plausible.io/docs/google-search-console-integration#i-dont-see-google-search-query-data-in-my-dashboard" target="_blank" rel="noreferrer" className="hover:underline text-indigo-700 dark:text-indigo-500">our documentation</a></div>
         </div>
       )
     }
@@ -116,7 +132,9 @@ export default class SearchTerms extends React.Component {
       >
         { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading} className="flex-grow">
-          { this.renderContent() }
+          <LazyLoader onVisible={this.onVisible}>
+            { this.renderContent() }
+          </LazyLoader>
         </FadeIn>
       </div>
     )

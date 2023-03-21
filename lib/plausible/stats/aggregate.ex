@@ -1,30 +1,28 @@
 defmodule Plausible.Stats.Aggregate do
   alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
-  import Plausible.Stats.Base
+  import Plausible.Stats.{Base, Imported}
 
-  @event_metrics ["visitors", "pageviews", "events", "sample_percent"]
-  @session_metrics ["visits", "bounce_rate", "visit_duration", "sample_percent"]
+  @event_metrics [:visitors, :pageviews, :events, :sample_percent]
+  @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
 
   def aggregate(site, query, metrics) do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
-    event_task = Task.async(fn -> aggregate_events(site, query, event_metrics) end)
+    event_task = fn -> aggregate_events(site, query, event_metrics) end
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
-    session_task = Task.async(fn -> aggregate_sessions(site, query, session_metrics) end)
+    session_task = fn -> aggregate_sessions(site, query, session_metrics) end
 
     time_on_page_task =
-      if "time_on_page" in metrics do
-        Task.async(fn -> aggregate_time_on_page(site, query) end)
+      if :time_on_page in metrics do
+        fn -> aggregate_time_on_page(site, query) end
       else
-        Task.async(fn -> %{} end)
+        fn -> %{} end
       end
 
-    Task.await(session_task, 10_000)
-    |> Map.merge(Task.await(event_task, 10_000))
-    |> Map.merge(Task.await(time_on_page_task, 10_000))
-    |> Enum.map(fn {metric, value} ->
-      {metric, %{"value" => round(value || 0)}}
-    end)
+    Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
+    |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
+    |> Enum.map(&maybe_round_value/1)
+    |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
     |> Enum.into(%{})
   end
 
@@ -33,17 +31,17 @@ defmodule Plausible.Stats.Aggregate do
   defp aggregate_events(site, query, metrics) do
     from(e in base_event_query(site, query), select: %{})
     |> select_event_metrics(metrics)
+    |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
   end
 
   defp aggregate_sessions(_, _, []), do: %{}
 
   defp aggregate_sessions(site, query, metrics) do
-    query = Query.treat_page_filter_as_entry_page(query)
-
     from(e in query_sessions(site, query), select: %{})
     |> filter_converted_sessions(site, query)
     |> select_session_metrics(metrics)
+    |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
   end
 
@@ -63,23 +61,27 @@ defmodule Plausible.Stats.Aggregate do
       )
 
     {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
+    where_param_idx = length(base_query_raw_params)
+    where_param = "{$#{where_param_idx}:String}"
 
     {where_clause, where_arg} =
       case query.filters["event:page"] do
         {:is, page} ->
-          {"p = ?", page}
+          {"p = #{where_param}", page}
 
         {:is_not, page} ->
-          {"p != ?", page}
+          {"p != #{where_param}", page}
 
         {:matches, expr} ->
           regex = page_regex(expr)
-          {"match(p, ?)", regex}
+          {"match(p, #{where_param})", regex}
 
         {:does_not_match, expr} ->
           regex = page_regex(expr)
-          {"not(match(p, ?))", regex}
+          {"not(match(p, #{where_param}))", regex}
       end
+
+    params = base_query_raw_params ++ [where_arg]
 
     time_query = "
       SELECT
@@ -104,8 +106,18 @@ defmodule Plausible.Stats.Aggregate do
           GROUP BY p,p2,s)
         GROUP BY p)"
 
-    {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [where_arg])
+    {:ok, res} = ClickhouseRepo.query(time_query, params)
     [[time_on_page]] = res.rows
-    %{"time_on_page" => time_on_page}
+    %{time_on_page: time_on_page}
   end
+
+  @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]
+
+  defp maybe_round_value({metric, nil}), do: {metric, 0}
+
+  defp maybe_round_value({metric, value}) when metric in @metrics_to_round do
+    {metric, round(value)}
+  end
+
+  defp maybe_round_value(entry), do: entry
 end

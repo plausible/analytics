@@ -1,7 +1,7 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useState, useEffect, useCallback, useRef } from "react";
 import { withRouter } from "react-router-dom";
 import Flatpickr from "react-flatpickr";
-import { ChevronDownIcon } from '@heroicons/react/solid'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { Transition } from '@headlessui/react'
 import {
   shiftDays,
@@ -9,20 +9,24 @@ import {
   formatDay,
   formatDayShort,
   formatMonthYYYY,
+  formatYear,
   formatISO,
   isToday,
   lastMonth,
   nowForSite,
   isSameMonth,
   isThisMonth,
+  isThisYear,
   parseUTCDate,
   isBefore,
   isAfter,
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
+import { shouldIgnoreKeypress } from "./keybinding.js"
+import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
 
 function renderArrow(query, site, period, prevDate, nextDate) {
-  const insertionDate = parseUTCDate(site.insertedAt);
+  const insertionDate = parseUTCDate(site.statsBegin);
   const disabledLeft = isBefore(
     parseUTCDate(prevDate),
     insertionDate,
@@ -36,11 +40,11 @@ function renderArrow(query, site, period, prevDate, nextDate) {
 
   const leftClasses = `flex items-center px-1 sm:px-2 border-r border-gray-300 rounded-l
       dark:border-gray-500 dark:text-gray-100 ${
-      disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-    }`;
+  disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
+}`;
   const rightClasses = `flex items-center px-1 sm:px-2 rounded-r dark:text-gray-100 ${
-      disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-    }`;
+    disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
+  }`;
   return (
     <div className="flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer dark:bg-gray-800">
       <QueryButton
@@ -86,12 +90,17 @@ function renderArrow(query, site, period, prevDate, nextDate) {
 }
 
 function DatePickerArrows({site, query}) {
-  if (query.period === "month") {
+  if (query.period === "year") {
+    const prevDate = formatISO(shiftMonths(query.date, -12));
+    const nextDate = formatISO(shiftMonths(query.date, 12));
+
+    return renderArrow(query, site, "year", prevDate, nextDate);
+  } else if (query.period === "month") {
     const prevDate = formatISO(shiftMonths(query.date, -1));
     const nextDate = formatISO(shiftMonths(query.date, 1));
 
     return renderArrow(query, site, "month", prevDate, nextDate);
-  } if (query.period === "day") {
+  } else if (query.period === "day") {
     const prevDate = formatISO(shiftDays(query.date, -1));
     const nextDate = formatISO(shiftDays(query.date, 1));
 
@@ -101,125 +110,157 @@ function DatePickerArrows({site, query}) {
   return null
 }
 
-class DatePicker extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleKeydown = this.handleKeydown.bind(this);
-    this.handleClick = this.handleClick.bind(this);
-    this.setCustomDate = this.setCustomDate.bind(this);
-    this.openCalendar = this.openCalendar.bind(this);
-    this.close = this.close.bind(this);
-    this.toggle = this.toggle.bind(this);
-    this.state = { mode: "menu", open: false };
+function DisplayPeriod({query, site}) {
+  if (query.period === "day") {
+    if (isToday(site, query.date)) {
+      return "Today";
+    }
+    return formatDay(query.date);
+  } if (query.period === '7d') {
+    return 'Last 7 days'
+  } if (query.period === '30d') {
+    return 'Last 30 days'
+  } if (query.period === 'month') {
+    if (isThisMonth(site, query.date)) {
+      return 'Month to Date'
+    }
+    return formatMonthYYYY(query.date)
+  } if (query.period === '6mo') {
+    return 'Last 6 months'
+  } if (query.period === '12mo') {
+    return 'Last 12 months'
+  } if (query.period === 'year') {
+    if (isThisYear(site, query.date)) {
+      return 'Year to Date'
+    }
+    return formatYear(query.date)
+  } if (query.period === 'all') {
+    return 'All time'
+  } if (query.period === 'custom') {
+    return `${formatDayShort(query.from)} - ${formatDayShort(query.to)}`
   }
+  return 'Realtime'
+}
 
-  componentDidMount() {
-    document.addEventListener("keydown", this.handleKeydown);
-    document.addEventListener("mousedown", this.handleClick, false);
-  }
+function DatePicker({query, site, history}) {
+  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState('menu')
+  const dropDownNode = useRef(null)
+  const calendar = useRef(null)
 
-  componentWillUnmount() {
-    document.removeEventListener("keydown", this.handleKeydown);
-    document.removeEventListener("mousedown", this.handleClick, false);
-  }
-
-  handleKeydown(e) {
-    const { query, history } = this.props;
-
-    if (e.target.tagName === 'INPUT') return true;
-    if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return true;
+  const handleKeydown = useCallback((e) => {
+    if (shouldIgnoreKeypress(e)) return true
 
     const newSearch = {
       period: false,
       from: false,
       to: false,
-      date: false,
+      date: false
     };
 
-    const insertionDate = parseUTCDate(this.props.site.insertedAt);
+    const insertionDate = parseUTCDate(site.statsBegin);
 
     if (e.key === "ArrowLeft") {
       const prevDate = formatISO(shiftDays(query.date, -1));
       const prevMonth = formatISO(shiftMonths(query.date, -1));
+      const prevYear = formatISO(shiftMonths(query.date, -12));
 
-      if (
-        query.period === "day" &&
-        !isBefore(parseUTCDate(prevDate), insertionDate, query.period)
-      ) {
+      if (query.period === "day" && !isBefore(parseUTCDate(prevDate), insertionDate, query.period)) {
         newSearch.period = "day";
         newSearch.date = prevDate;
-      } else if (
-        query.period === "month" &&
-        !isBefore(parseUTCDate(prevMonth), insertionDate, query.period)
-      ) {
+      } else if (query.period === "month" && !isBefore(parseUTCDate(prevMonth), insertionDate, query.period)) {
         newSearch.period = "month";
         newSearch.date = prevMonth;
+      } else if (query.period === "year" && !isBefore(parseUTCDate(prevYear), insertionDate, query.period)) {
+        newSearch.period = "year";
+        newSearch.date = prevYear;
       }
     } else if (e.key === "ArrowRight") {
+      const now = nowForSite(site)
       const nextDate = formatISO(shiftDays(query.date, 1));
       const nextMonth = formatISO(shiftMonths(query.date, 1));
+      const nextYear = formatISO(shiftMonths(query.date, 12));
 
-      if (
-        query.period === "day" &&
-        !isAfter(
-          parseUTCDate(nextDate),
-          nowForSite(this.props.site),
-          query.period
-        )
-      ) {
+      if (query.period === "day" && !isAfter(parseUTCDate(nextDate), now, query.period)) {
         newSearch.period = "day";
         newSearch.date = nextDate;
-      } else if (
-        query.period === "month" &&
-        !isAfter(
-          parseUTCDate(nextMonth),
-          nowForSite(this.props.site),
-          query.period
-        )
-      ) {
+      } else if (query.period === "month" && !isAfter(parseUTCDate(nextMonth), now, query.period)) {
         newSearch.period = "month";
         newSearch.date = nextMonth;
+      } else if (query.period === "year" && !isAfter(parseUTCDate(nextYear), now, query.period)) {
+        newSearch.period = "year";
+        newSearch.date = nextYear;
       }
     }
 
-    this.setState({open: false});
+    setOpen(false);
 
-    const keys = ['d', 'r', 'w', 'm', 'y', 't', 's'];
-    const redirects = [{date: false, period: 'day'}, {period: 'realtime'}, {date: false, period: '7d'}, {date: false, period: 'month'}, {date: false, period: '12mo'}, {date: false, period: '30d'}, {date: false, period: '6mo'}];
+    const keybindings = {
+      d: {date: false, period: 'day'},
+      e: {date: formatISO(shiftDays(nowForSite(site), -1)), period: 'day'},
+      r: {period: 'realtime'},
+      w: {date: false, period: '7d'},
+      m: {date: false, period: 'month'},
+      y: {date: false, period: 'year'},
+      t: {date: false, period: '30d'},
+      s: {date: false, period: '6mo'},
+      l: {date: false, period: '12mo'},
+      a: {date: false, period: 'all'},
+    }
 
-    if (keys.includes(e.key.toLowerCase())) {
-      navigateToQuery(history, query, {...newSearch, ...(redirects[keys.indexOf(e.key.toLowerCase())])});
+    const redirect = keybindings[e.key.toLowerCase()]
+    if (redirect) {
+      navigateToQuery(history, query, {...newSearch, ...redirect})
+    } else if (e.key.toLowerCase() === 'x') {
+      toggleComparisons(history, query, site)
     } else if (e.key.toLowerCase() === 'c') {
-      this.setState({mode: 'calendar', open: true}, this.openCalendar);
+      setOpen(true)
+      setMode('calendar')
     } else if (newSearch.date) {
       navigateToQuery(history, query, newSearch);
     }
-  }
+  }, [query])
 
-  handleClick(e) {
-    if (this.dropDownNode && this.dropDownNode.contains(e.target)) return;
+  const handleClick = useCallback((e) => {
+    if (dropDownNode.current && dropDownNode.current.contains(e.target)) return;
 
-    this.setState({ open: false });
-  }
+    setOpen(false)
+  })
 
-  setCustomDate(dates) {
+  useEffect(() => {
+    if (mode === 'calendar' && open)   {
+      openCalendar()
+    }
+  }, [mode])
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeydown);
+    return () => { document.removeEventListener("keydown", handleKeydown); }
+  }, [handleKeydown])
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClick, false);
+    return () => { document.removeEventListener("mousedown", handleClick, false); }
+  }, [])
+
+  function setCustomDate(dates) {
     if (dates.length === 2) {
       const [from, to] = dates
       if (formatISO(from) === formatISO(to)) {
         navigateToQuery(
-          this.props.history,
-          this.props.query,
+          history,
+          query,
           {
             period: 'day',
             date: formatISO(from),
             from: false,
-            to: false,
+            to: false
           }
         )
       } else {
         navigateToQuery(
-          this.props.history,
-          this.props.query,
+          history,
+          query,
           {
             period: 'custom',
             date: false,
@@ -228,52 +269,21 @@ class DatePicker extends React.Component {
           }
         )
       }
-      this.close()
+      setOpen(false)
     }
   }
 
-  timeFrameText() {
-    const { query, site } = this.props;
-
-    if (query.period === "day") {
-      if (isToday(site, query.date)) {
-        return "Today";
-      }
-      return formatDay(query.date);
-    } if (query.period === '7d') {
-      return 'Last 7 days'
-    } if (query.period === '30d') {
-      return 'Last 30 days'
-    } if (query.period === 'month') {
-      if (isThisMonth(site, query.date)) {
-        return 'Month to Date'
-      }
-      return formatMonthYYYY(query.date)
-    } if (query.period === '6mo') {
-      return 'Last 6 months'
-    } if (query.period === '12mo') {
-      return 'Last 12 months'
-    } if (query.period === 'custom') {
-      return `${formatDayShort(query.from)} - ${formatDayShort(query.to)}`
-    }
-    return 'Realtime'
+  function toggle() {
+    const newMode = mode === 'calendar' && !open ? 'menu' : mode
+    setOpen(!open)
+    setMode(newMode)
   }
 
-  toggle() {
-    const newMode = this.state.mode === 'calendar' && !this.state.open ? 'menu' : this.state.mode
-    this.setState(prevState => ({ mode: newMode, open: !prevState.open }));
+  function openCalendar() {
+    calendar.current && calendar.current.flatpickr.open();
   }
 
-  close() {
-    this.setState({ open: false });
-  }
-
-  openCalendar() {
-    this.calendar && this.calendar.flatpickr.open();
-  }
-
-  renderLink(period, text, opts = {}) {
-    const { query, site } = this.props;
+  function renderLink(period, text, opts = {}) {
     let boldClass;
     if (query.period === "day" && period === "day") {
       boldClass = isToday(site, query.date) ? "font-bold" : "";
@@ -291,16 +301,17 @@ class DatePicker extends React.Component {
       'Realtime': 'R',
       'Last 7 days': 'W',
       'Month to Date': 'M',
-      'Last 12 months': 'Y',
-      'Last 6 months': 'S',
+      'Year to Date': 'Y',
+      'Last 12 months': 'L',
       'Last 30 days': 'T',
+      'All time': 'A',
     };
 
     return (
       <QueryLink
         to={{from: false, to: false, period, ...opts}}
-        onClick={this.close}
-        query={this.props.query}
+        onClick={() => setOpen(false)}
+        query={query}
         className={`${boldClass  } px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
@@ -310,8 +321,8 @@ class DatePicker extends React.Component {
     );
   }
 
-  renderDropDownContent() {
-    if (this.state.mode === "menu") {
+  function renderDropDownContent() {
+    if (mode === "menu") {
       return (
         <div
           id="datemenu"
@@ -322,25 +333,26 @@ class DatePicker extends React.Component {
             font-medium text-gray-800 dark:text-gray-200 date-options"
           >
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {this.renderLink("day", "Today")}
-              {this.renderLink("realtime", "Realtime")}
+              {renderLink("day", "Today")}
+              {renderLink("realtime", "Realtime")}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {this.renderLink("7d", "Last 7 days")}
-              {this.renderLink("30d", "Last 30 days")}
+              {renderLink("7d", "Last 7 days")}
+              {renderLink("30d", "Last 30 days")}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              { this.renderLink('month', 'Month to Date') }
-              { this.renderLink('month', 'Last month', {date: lastMonth(this.props.site)}) }
+              { renderLink('month', 'Month to Date') }
+              { renderLink('month', 'Last month', {date: lastMonth(site)}) }
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {this.renderLink("6mo", "Last 6 months")}
-              {this.renderLink("12mo", "Last 12 months")}
+              {renderLink("year", "Year to Date")}
+              {renderLink("12mo", "Last 12 months")}
             </div>
             <div className="py-1 date-option-group">
+              {renderLink("all", "All time")}
               <span
-                onClick={() => this.setState({mode: 'calendar'}, this.openCalendar)}
-                onKeyPress={() => this.setState({mode: 'calendar'}, this.openCalendar)}
+                onClick={() => setMode('calendar')}
+                onKeyPress={() => setMode('calendar')}
                 className="px-4 py-2 text-sm leading-tight hover:bg-gray-100
                   dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100
                   cursor-pointer flex items-center justify-between"
@@ -354,11 +366,23 @@ class DatePicker extends React.Component {
                 <span className='font-normal'>C</span>
               </span>
             </div>
+            { !COMPARISON_DISABLED_PERIODS.includes(query.period) && site.flags.comparisons &&
+              <div className="py-1 date-option-group border-t border-gray-200 dark:border-gray-500">
+                <span
+                  onClick={() => {
+                    toggleComparisons(history, query, site)
+                    setOpen(false)
+                  }}
+                  className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer flex items-center justify-between">
+                  { isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare' }
+                  <span className='font-normal'>X</span>
+                </span>
+              </div> }
           </div>
         </div>
       );
-    } if (this.state.mode === "calendar") {
-      const insertionDate = new Date(this.props.site.insertedAt);
+    } if (mode === "calendar") {
+      const insertionDate = new Date(site.statsBegin);
       const dayBeforeCreation = insertionDate - 86400000;
       return (
         <div className="h-0">
@@ -371,24 +395,23 @@ class DatePicker extends React.Component {
               showMonths: 1,
               static: true,
               animate: true}}
-            ref={calendar => this.calendar = calendar}
+            ref={calendar}
             className="invisible"
-            onChange={this.setCustomDate}
+            onChange={setCustomDate}
           />
         </div>
-        )
+      )
     }
   }
 
-  renderPicker() {
+  function renderPicker() {
     return (
       <div
-        className="w-20 sm:w-36 md:w-44 md:relative"
-        ref={(node) => (this.dropDownNode = node)}
+        className="min-w-32 md:w-48 md:relative"
+        ref={dropDownNode}
       >
         <div
-          onClick={this.toggle}
-          onKeyPress={this.toggle}
+          onClick={toggle}
           className="flex items-center justify-between rounded bg-white dark:bg-gray-800 shadow px-2 md:px-3
           py-2 leading-tight cursor-pointer text-xs md:text-sm text-gray-800
           dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900"
@@ -399,14 +422,13 @@ class DatePicker extends React.Component {
           aria-controls="datemenu"
         >
           <span className="truncate mr-1 md:mr-2">
-            {this.props.leadingText}
-            <span className="font-medium">{this.timeFrameText()}</span>
+            <span className="font-medium"><DisplayPeriod query={query} site={site} /></span>
           </span>
           <ChevronDownIcon className="hidden sm:inline-block h-4 w-4 md:h-5 md:w-5 text-gray-500" />
         </div>
 
         <Transition
-          show={this.state.open}
+          show={open}
           as={Fragment}
           enter="transition ease-out duration-100"
           enterFrom="transform opacity-0 scale-95"
@@ -415,20 +437,18 @@ class DatePicker extends React.Component {
           leaveFrom="transform opacity-100 scale-100"
           leaveTo="transform opacity-0 scale-95"
         >
-          {this.renderDropDownContent()}
+          {renderDropDownContent()}
         </Transition>
       </div>
     );
   }
 
-  render() {
-    return (
-      <div className="flex ml-auto pl-2">
-        <DatePickerArrows site={this.props.site} query={this.props.query} />
-        {this.renderPicker()}
-      </div>
-    )
-  }
+  return (
+    <div className="flex ml-auto pl-2">
+      <DatePickerArrows site={site} query={query} />
+      {renderPicker()}
+    </div>
+  )
 }
 
 export default withRouter(DatePicker);

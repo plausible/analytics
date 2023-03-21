@@ -10,9 +10,8 @@ There are currently <%= @current_visitors %> visitors on <%= link(@site.domain, 
 
 <%= if @link do %>
 <br /><br />
-View dashboard: @link
+View dashboard: <%= link(@link, to: @link) %>
 <% end %>
 <br /><br />
---
-<br /><br />
-<%= plausible_url() %><br />
+
+Congrats on the spike in traffic!

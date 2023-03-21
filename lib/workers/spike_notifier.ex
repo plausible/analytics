@@ -19,7 +19,7 @@ defmodule Plausible.Workers.SpikeNotifier do
       )
 
     for notification <- notifications do
-      query = Query.from(notification.site.timezone, %{"period" => "realtime"})
+      query = Query.from(notification.site, %{"period" => "realtime"})
       current_visitors = clickhouse.current_visitors(notification.site, query)
 
       if current_visitors >= notification.threshold do
@@ -31,7 +31,7 @@ defmodule Plausible.Workers.SpikeNotifier do
     :ok
   end
 
-  def notify(notification, current_visitors, sources) do
+  defp notify(notification, current_visitors, sources) do
     for recipient <- notification.recipients do
       send_notification(recipient, notification.site, current_visitors, sources)
     end
@@ -45,7 +45,7 @@ defmodule Plausible.Workers.SpikeNotifier do
     site = Repo.preload(site, :members)
 
     dashboard_link =
-      if Enum.member?(site.members, recipient) do
+      if Enum.any?(site.members, &(&1.email == recipient)) do
         PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site.domain)
       end
 
@@ -58,6 +58,6 @@ defmodule Plausible.Workers.SpikeNotifier do
         dashboard_link
       )
 
-    Plausible.Mailer.send_email_safe(template)
+    Plausible.Mailer.send(template)
   end
 end

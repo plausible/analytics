@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
   use PlausibleWeb.ConnCase
-  import Plausible.TestUtils
 
   describe "API authorization - as anonymous user" do
     test "Sends 404 Not found for a site that doesn't exist", %{conn: conn} do
@@ -32,7 +31,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
 
     test "Sends 404 Not found for a site that doesn't exist", %{conn: conn} do
       conn = init_session(conn)
-      conn = get(conn, "/api/stats/fake-site.com/main-graph")
+      conn = get(conn, "/api/stats/fake-site.com/main-graph/")
 
       assert conn.status == 404
     end

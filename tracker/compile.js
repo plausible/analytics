@@ -4,6 +4,12 @@ const path = require('path')
 const Handlebars = require("handlebars");
 const g = require("generatorics");
 
+Handlebars.registerHelper('any', function (...args) {
+  return args.slice(0, -1).some(Boolean)
+})
+
+Handlebars.registerPartial('customEvents', Handlebars.compile(fs.readFileSync(relPath('src/customEvents.js')).toString()))
+
 function relPath(segment) {
   return path.join(__dirname, segment)
 }
@@ -13,14 +19,17 @@ function compilefile(input, output, templateVars = {}) {
   const template = Handlebars.compile(code)
   const rendered = template(templateVars)
   const result = uglify.minify(rendered)
-  fs.writeFileSync(output, result.code)
+  if (result.code) {
+    fs.writeFileSync(output, result.code)
+  } else {
+    throw new Error(`Failed to compile ${output.split('/').pop()}.\n${result.error}\n`)
+  }
 }
 
-const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual"]
+const base_variants = ["hash", "outbound-links", "exclusions", "compat", "local", "manual", "file-downloads", "dimensions", "tagged-events"]
 const variants = [...g.clone.powerSet(base_variants)].filter(a => a.length > 0).map(a => a.sort());
 
 compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/plausible.js'))
-compilefile(relPath('src/plausible.js'), relPath('../priv/tracker/js/analytics.js'))
 compilefile(relPath('src/p.js'), relPath('../priv/tracker/js/p.js'))
 
 variants.map(variant => {

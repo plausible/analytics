@@ -7,6 +7,11 @@ defmodule PlausibleWeb.InvitationController do
 
   plug PlausibleWeb.RequireAccountPlug
 
+  @require_owner [:remove_invitation]
+
+  plug PlausibleWeb.AuthorizeSiteAccess,
+       [:owner, :admin] when action in @require_owner
+
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
     invitation =
       Repo.get_by!(Invitation, invitation_id: invitation_id)
@@ -25,11 +30,9 @@ defmodule PlausibleWeb.InvitationController do
       end
 
     membership_changeset =
-      Membership.changeset(existing_membership || %Membership{}, %{
-        user_id: user.id,
-        site_id: invitation.site.id,
-        role: invitation.role
-      })
+      (existing_membership ||
+         %Membership{user_id: user.id, site_id: invitation.site.id})
+      |> Membership.changeset(%{role: invitation.role})
 
     multi =
       multi
@@ -46,7 +49,7 @@ defmodule PlausibleWeb.InvitationController do
         |> put_flash(:success, "You now have access to #{invitation.site.domain}")
         |> redirect(to: "/#{URI.encode_www_form(invitation.site.domain)}")
 
-      {:error, _} ->
+      {:error, _, _} ->
         conn
         |> put_flash(:error, "Something went wrong, please try again")
         |> redirect(to: "/sites")
@@ -65,7 +68,9 @@ defmodule PlausibleWeb.InvitationController do
   end
 
   defp maybe_end_trial_of_new_owner(multi, new_owner) do
-    if !Application.get_env(:plausible, :is_selfhost) do
+    if Application.get_env(:plausible, :is_selfhost) do
+      multi
+    else
       end_trial_of_new_owner(multi, new_owner)
     end
   end
@@ -93,27 +98,27 @@ defmodule PlausibleWeb.InvitationController do
 
   defp notify_invitation_accepted(%Invitation{role: :owner} = invitation) do
     PlausibleWeb.Email.ownership_transfer_accepted(invitation)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
   end
 
   defp notify_invitation_accepted(invitation) do
     PlausibleWeb.Email.invitation_accepted(invitation)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
   end
 
   defp notify_invitation_rejected(%Invitation{role: :owner} = invitation) do
     PlausibleWeb.Email.ownership_transfer_rejected(invitation)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
   end
 
   defp notify_invitation_rejected(invitation) do
     PlausibleWeb.Email.invitation_rejected(invitation)
-    |> Plausible.Mailer.send_email_safe()
+    |> Plausible.Mailer.send()
   end
 
   def remove_invitation(conn, %{"invitation_id" => invitation_id}) do
     invitation =
-      Repo.get_by!(Invitation, invitation_id: invitation_id)
+      Repo.get_by!(Invitation, invitation_id: invitation_id, site_id: conn.assigns[:site].id)
       |> Repo.preload(:site)
 
     Repo.delete!(invitation)

@@ -13,18 +13,28 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:ok, %{site: site}} ->
         json(conn, site)
 
-      {:error, :site, changeset, _} ->
-        conn
-        |> put_status(400)
-        |> json(serialize_errors(changeset))
-
-      {:error, :limit, limit} ->
+      {:error, :limit, limit, _} ->
         conn
         |> put_status(403)
         |> json(%{
           error:
             "Your account has reached the limit of #{limit} sites per account. Please contact hello@plausible.io to unlock more sites."
         })
+
+      {:error, _, changeset, _} ->
+        conn
+        |> put_status(400)
+        |> json(serialize_errors(changeset))
+    end
+  end
+
+  def get_site(conn, %{"site_id" => site_id}) do
+    site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin])
+
+    if site do
+      json(conn, site)
+    else
+      H.not_found(conn, "Site could not be found")
     end
   end
 
@@ -32,7 +42,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner])
 
     if site do
-      Sites.delete!(site)
+      {:ok, _} = Plausible.Site.Removal.run(site.domain)
       json(conn, %{"deleted" => true})
     else
       H.not_found(conn, "Site could not be found")
@@ -105,13 +115,12 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
          {:ok, goal_id} <- expect_param_key(params, "goal_id"),
          site when not is_nil(site) <-
            Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin]) do
-      goal = Repo.get_by(Plausible.Goal, id: goal_id)
+      case Goals.delete(goal_id, site.domain) do
+        :ok ->
+          json(conn, %{"deleted" => true})
 
-      if goal do
-        Goals.delete(goal_id)
-        json(conn, %{"deleted" => true})
-      else
-        H.not_found(conn, "Goal could not be found")
+        {:error, :not_found} ->
+          H.not_found(conn, "Goal could not be found")
       end
     else
       nil ->
@@ -130,7 +139,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
   defp serialize_errors(changeset) do
     {field, {msg, _opts}} = List.first(changeset.errors)
-    error_msg = Atom.to_string(field) <> " " <> msg
+    error_msg = Atom.to_string(field) <> ": " <> msg
     %{"error" => error_msg}
   end
 

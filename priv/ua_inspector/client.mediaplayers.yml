@@ -32,7 +32,7 @@
 - regex: 'FlyCast(?:/([\d\.]+))?'
   name: 'FlyCast'
   version: '$1'
-  
+
 - regex: 'foobar2000(?:/([\d\.]+))?'
   name: 'Foobar2000'
   version: '$1'
@@ -63,6 +63,10 @@
 
 - regex: 'SubStream(?:/([\d\.]+))?'
   name: 'SubStream'
+  version: '$1'
+
+- regex: 'Sonos/([\d\.]+)?'
+  name: 'SONOS'
   version: '$1'
 
 - regex: '(?:Lib)?VLC(?:/([\d\.]+))?'
@@ -99,4 +103,24 @@
 
 - regex: 'mpv (?:(\d+[\.\d]+))?'
   name: 'mpv'
+  version: '$1'
+
+- regex: 'foobar2000(?:/([\w\.]+))?'
+  name: 'foobar2000'
+  version: '$1'
+
+- regex: 'HTC Streaming Player'
+  name: 'HTC Streaming Player'
+  version: ''
+
+- regex: 'MediaGo(?:/([\w\.]+))?'
+  name: 'Sony Media Go'
+  version: '$1'
+
+- regex: 'MPlayer[ /](\d+\.[\d\.])'
+  name: 'MPlayer'
+  version: '$1'
+
+- regex: 'Downcast/(\d+\.[\d\.]+)?'
+  name: 'Downcast'
   version: '$1'

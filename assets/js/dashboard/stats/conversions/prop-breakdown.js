@@ -8,6 +8,7 @@ import * as api from '../../api'
 
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080
+const BREAKDOWN_LIMIT = 100
 
 // https://stackoverflow.com/a/43467144
 function isValidHttpUrl(string) {
@@ -45,17 +46,25 @@ export default class PropertyBreakdown extends React.Component {
     }
 
     this.handleResize = this.handleResize.bind(this);
+    this.fetch = this.fetch.bind(this)
+    this.fetchAndReplace = this.fetchAndReplace.bind(this)
+    this.fetchAndConcat = this.fetchAndConcat.bind(this)
   }
 
   componentDidMount() {
     window.addEventListener('resize', this.handleResize, false);
 
     this.handleResize();
-    this.fetchPropBreakdown()
+    this.fetchAndReplace()
+
+    if (this.props.query.period === 'realtime') {
+      document.addEventListener('tick', this.fetchAndReplace)
+    }
   }
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize, false);
+    document.removeEventListener('tick', this.fetchAndReplace)
   }
 
   handleResize() {
@@ -67,19 +76,31 @@ export default class PropertyBreakdown extends React.Component {
     return viewport > MOBILE_UPPER_WIDTH ? "16rem" : "10rem";
   }
 
-  fetchPropBreakdown() {
-    if (this.props.query.filters['goal']) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: 100, page: this.state.page})
-        .then((res) => this.setState((state) => ({
-            loading: false,
-            breakdown: state.breakdown.concat(res),
-            moreResultsAvailable: res.length === 100
-          })))
-    }
+  fetch({concat}) {
+    if (!this.props.query.filters['goal']) return
+
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: BREAKDOWN_LIMIT, page: this.state.page})
+      .then((res) => {
+        let breakdown = concat ? this.state.breakdown.concat(res) : res
+
+        this.setState(() => ({
+          loading: false,
+          breakdown: breakdown,
+          moreResultsAvailable: res.length >= BREAKDOWN_LIMIT
+        }))
+      })
+  }
+
+  fetchAndReplace() {
+    this.fetch({concat: false})
+  }
+
+  fetchAndConcat() {
+    this.fetch({concat: true})
   }
 
   loadMore() {
-    this.setState({loading: true, page: this.state.page + 1}, this.fetchPropBreakdown.bind(this))
+    this.setState({loading: true, page: this.state.page + 1}, this.fetchAndConcat.bind(this))
   }
 
   renderUrl(value) {
@@ -143,13 +164,13 @@ export default class PropertyBreakdown extends React.Component {
 
   changePropKey(newKey) {
     storage.setItem(this.storageKey, newKey)
-    this.setState({propKey: newKey, loading: true, breakdown: [], page: 1, moreResultsAvailable: false}, this.fetchPropBreakdown)
+    this.setState({propKey: newKey, loading: true, breakdown: [], page: 1, moreResultsAvailable: false}, this.fetchAndReplace)
   }
 
   renderLoading() {
     if (this.state.loading) {
       return <div className="px-4 py-2"><div className="loading sm mx-auto"><div></div></div></div>
-    } else if (this.state.moreResultsAvailable) {
+    } else if (this.state.moreResultsAvailable && this.props.query.period !== 'realtime') {
       return (
         <div className="w-full text-center my-4">
           <button onClick={this.loadMore.bind(this)} type="button" className="button">

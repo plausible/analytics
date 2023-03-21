@@ -4,10 +4,10 @@ defmodule PlausibleWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
-    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug :fetch_flash
     plug :put_secure_browser_headers
+    plug PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.LastSeenPlug
@@ -24,21 +24,25 @@ defmodule PlausibleWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
   end
 
   pipeline :internal_stats_api do
     plug :accepts, ["json"]
-    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug PlausibleWeb.AuthorizeSiteAccess
   end
 
   pipeline :public_api do
     plug :accepts, ["json"]
-    plug PlausibleWeb.Firewall
+  end
+
+  pipeline :flags do
+    plug :accepts, ["html"]
+    plug :put_secure_browser_headers
+    plug :fetch_session
+    plug PlausibleWeb.CRMAuthPlug
   end
 
   if Mix.env() == :dev do
@@ -47,11 +51,17 @@ defmodule PlausibleWeb.Router do
 
   use Kaffy.Routes, scope: "/crm", pipe_through: [PlausibleWeb.CRMAuthPlug]
 
+  scope path: "/flags" do
+    pipe_through :flags
+    forward "/", FunWithFlags.UI.Router, namespace: "flags"
+  end
+
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
 
     get "/:domain/current-visitors", StatsController, :current_visitors
     get "/:domain/main-graph", StatsController, :main_graph
+    get "/:domain/top-stats", StatsController, :top_stats
     get "/:domain/sources", StatsController, :sources
     get "/:domain/utm_mediums", StatsController, :utm_mediums
     get "/:domain/utm_sources", StatsController, :utm_sources
@@ -88,6 +98,7 @@ defmodule PlausibleWeb.Router do
     pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
 
     post "/", ExternalSitesController, :create_site
+    get "/:site_id", ExternalSitesController, :get_site
     delete "/:site_id", ExternalSitesController, :delete_site
     put "/shared-links", ExternalSitesController, :find_or_create_shared_link
     put "/goals", ExternalSitesController, :find_or_create_goal
@@ -100,6 +111,7 @@ defmodule PlausibleWeb.Router do
     post "/event", Api.ExternalController, :event
     get "/error", Api.ExternalController, :error
     get "/health", Api.ExternalController, :health
+    get "/system", Api.ExternalController, :info
 
     post "/paddle/webhook", Api.PaddleController, :webhook
 
@@ -123,12 +135,13 @@ defmodule PlausibleWeb.Router do
     post "/password/request-reset", AuthController, :password_reset_request
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
+    post "/error_report", ErrorReportController, :submit_error_report
   end
 
   scope "/", PlausibleWeb do
     pipe_through [:shared_link]
 
-    get "/share/:slug", StatsController, :shared_link
+    get "/share/:domain", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
   end
 
@@ -157,6 +170,7 @@ defmodule PlausibleWeb.Router do
     get "/billing/upgrade/enterprise/:plan_id", BillingController, :upgrade_enterprise_plan
     get "/billing/change-plan/enterprise/:plan_id", BillingController, :change_enterprise_plan
     get "/billing/upgrade-success", BillingController, :upgrade_success
+    get "/billing/subscription/ping", BillingController, :ping_subscription
 
     get "/sites", SiteController, :index
     get "/sites/new", SiteController, :new
@@ -205,9 +219,11 @@ defmodule PlausibleWeb.Router do
     get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
     post "/sites/:website/memberships/invite", Site.MembershipController, :invite_member
 
-    post "/sites//invitations/:invitation_id/accept", InvitationController, :accept_invitation
-    post "/sites//invitations/:invitation_id/reject", InvitationController, :reject_invitation
-    delete "/sites//invitations/:invitation_id", InvitationController, :remove_invitation
+    post "/sites/invitations/:invitation_id/accept", InvitationController, :accept_invitation
+
+    post "/sites/invitations/:invitation_id/reject", InvitationController, :reject_invitation
+
+    delete "/sites/:website/invitations/:invitation_id", InvitationController, :remove_invitation
 
     get "/sites/:website/transfer-ownership", Site.MembershipController, :transfer_ownership_form
     post "/sites/:website/transfer-ownership", Site.MembershipController, :transfer_ownership
@@ -233,9 +249,24 @@ defmodule PlausibleWeb.Router do
     delete "/:website/goals/:id", SiteController, :delete_goal
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth
-    delete "/:website/settings/google", SiteController, :delete_google_auth
+    delete "/:website/settings/google-search", SiteController, :delete_google_auth
+    delete "/:website/settings/google-import", SiteController, :delete_google_auth
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
+
+    get "/:website/import/google-analytics/view-id",
+        SiteController,
+        :import_from_google_view_id_form
+
+    post "/:website/import/google-analytics/view-id", SiteController, :import_from_google_view_id
+
+    get "/:website/import/google-analytics/user-metric",
+        SiteController,
+        :import_from_google_user_metric_notice
+
+    get "/:website/import/google-analytics/confirm", SiteController, :import_from_google_confirm
+    post "/:website/settings/google-import", SiteController, :import_from_google
+    delete "/:website/settings/forget-imported", SiteController, :forget_imported
 
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats

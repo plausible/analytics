@@ -8,7 +8,7 @@ defmodule Plausible.Billing.SiteLocker do
 
         if !user.grace_period.is_over do
           send_grace_period_end_email(user)
-          Plausible.Auth.User.end_grace_period(user) |> Repo.update()
+          Plausible.Auth.GracePeriod.end_changeset(user) |> Repo.update()
         end
 
       {true, _} ->
@@ -19,7 +19,7 @@ defmodule Plausible.Billing.SiteLocker do
     end
   end
 
-  defp set_lock_status_for(user, status) do
+  def set_lock_status_for(user, status) do
     site_ids =
       Repo.all(
         from s in Plausible.Site.Membership,
@@ -50,6 +50,6 @@ defmodule Plausible.Billing.SiteLocker do
         suggested_plan
       )
 
-    Plausible.Mailer.send_email_safe(template)
+    Plausible.Mailer.send(template)
   end
 end

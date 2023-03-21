@@ -131,14 +131,14 @@ export default class Locations extends React.Component {
 	renderContent() {
     switch(this.state.mode) {
 		case "cities":
-      return <Cities site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <Cities site={this.props.site} query={this.props.query} />
 		case "regions":
-      return <Regions onClick={this.onRegionFilter} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <Regions onClick={this.onRegionFilter} site={this.props.site} query={this.props.query} />
 		case "countries":
-      return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <Countries onClick={this.onCountryFilter('countries')} site={this.props.site} query={this.props.query} />
     case "map":
     default:
-      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query} timer={this.props.timer}/>
+      return <CountriesMap onClick={this.onCountryFilter('map')} site={this.props.site} query={this.props.query}/>
     }
   }
 
@@ -147,21 +147,21 @@ export default class Locations extends React.Component {
 
     if (isActive) {
       return (
-        <li
+        <button
           className="inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading"
         >
           {name}
-        </li>
+        </button>
       )
     }
 
     return (
-      <li
+      <button
         className="hover:text-indigo-600 cursor-pointer"
         onClick={this.setMode(mode)}
       >
         {name}
-      </li>
+      </button>
     )
   }
 
@@ -177,12 +177,12 @@ export default class Locations extends React.Component {
             <h3 className="font-bold dark:text-gray-100">
               {labelFor[this.state.mode] || 'Locations'}
             </h3>
-            <ul className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
+            <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
               { this.renderPill('Map', 'map') }
               { this.renderPill('Countries', 'countries') }
               { this.renderPill('Regions', 'regions') }
               { this.renderPill('Cities', 'cities') }
-            </ul>
+            </div>
           </div>
           { this.renderContent() }
         </div>

@@ -1,5 +1,11 @@
 <div class="mx-auto mt-6 text-center dark:text-gray-300">
-  <h1 class="text-3xl font-black">Register your 30-day unlimited-use free trial</h1>
+  <h1 class="text-3xl font-black">
+    <%= if @is_selfhost do %>
+    Register your Plausible Analytics account
+    <% else %>
+    Register your 30-day unlimited-use free trial
+    <% end %>
+  </h1>
   <div class="text-xl font-medium">Set up privacy-friendly analytics with just a few clicks</div>
 </div>
 
@@ -53,7 +59,15 @@
       </div>
     <% end %>
 
-    <%= submit "Start my free trial →", class: "button mt-4 w-full" %>
+    <%
+      submit_text =
+        if @is_selfhost do
+          "Create my account →"
+        else
+          "Start my free trial →"
+        end
+    %>
+    <%= submit submit_text, class: "button mt-4 w-full" %>
 
     <p class="text-center text-gray-600 dark:text-gray-500  text-xs mt-4">
       Already have an account? <%= link("Log in", to: "/login", class: "underline text-gray-800 dark:text-gray-50") %> instead.
