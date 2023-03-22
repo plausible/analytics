@@ -62,23 +62,36 @@ defmodule Plausible.Stats.Aggregate do
 
     {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
     where_param_idx = length(base_query_raw_params)
-    where_param = "{$#{where_param_idx}:String}"
 
     {where_clause, where_arg} =
       case query.filters["event:page"] do
         {:is, page} ->
-          {"p = #{where_param}", page}
+          {"p = {$#{where_param_idx}:String}", page}
 
         {:is_not, page} ->
-          {"p != #{where_param}", page}
+          {"p != {$#{where_param_idx}:String}", page}
+
+        {:member, page} ->
+          {"p IN {$#{where_param_idx}:Array(String)}", page}
+
+        {:not_member, page} ->
+          {"p NOT IN {$#{where_param_idx}:Array(String)}", page}
 
         {:matches, expr} ->
           regex = page_regex(expr)
-          {"match(p, #{where_param})", regex}
+          {"match(p, {$#{where_param_idx}:String})", regex}
+
+        {:matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+          {"multiMatchAny(p, {$#{where_param_idx}:Array(String)})", page_regexes}
+
+        {:not_matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+          {"not(multiMatchAny(p, {$#{where_param_idx}:Array(String)}))", page_regexes}
 
         {:does_not_match, expr} ->
           regex = page_regex(expr)
-          {"not(match(p, #{where_param}))", regex}
+          {"not(match(p, {$#{where_param_idx}:String}))", regex}
       end
 
     params = base_query_raw_params ++ [where_arg]

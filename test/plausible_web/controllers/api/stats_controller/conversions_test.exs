@@ -248,6 +248,167 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                }
              ]
     end
+
+    test "can filter by multiple mixed goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/another"),
+        build(:pageview, pathname: "/register"),
+        build(:event, name: "Signup"),
+        build(:event, name: "Signup")
+      ])
+
+      insert(:goal, %{domain: site.domain, page_path: "/register"})
+      insert(:goal, %{domain: site.domain, event_name: "Signup"})
+
+      filters = Jason.encode!(%{goal: "Signup|Visit /register"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Signup",
+                 "unique_conversions" => 2,
+                 "total_conversions" => 2,
+                 "prop_names" => nil,
+                 "conversion_rate" => 33.3
+               },
+               %{
+                 "name" => "Visit /register",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => nil,
+                 "conversion_rate" => 16.7
+               }
+             ]
+    end
+
+    test "can filter by multiple negated mixed goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/another"),
+        build(:pageview, pathname: "/register"),
+        build(:event, name: "CTA"),
+        build(:event, name: "Signup")
+      ])
+
+      insert(:goal, %{domain: site.domain, page_path: "/register"})
+      insert(:goal, %{domain: site.domain, page_path: "/another"})
+      insert(:goal, %{domain: site.domain, event_name: "CTA"})
+      insert(:goal, %{domain: site.domain, event_name: "Signup"})
+
+      filters = Jason.encode!(%{goal: "!Signup|Visit /another"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "CTA",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => nil,
+                 "conversion_rate" => 16.7
+               },
+               %{
+                 "name" => "Visit /register",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => nil,
+                 "conversion_rate" => 16.7
+               }
+             ]
+    end
+
+    test "can filter by matches_member filter type on goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/another"),
+        build(:pageview, pathname: "/blog/post-1"),
+        build(:pageview, pathname: "/blog/post-2"),
+        build(:event, name: "CTA"),
+        build(:event, name: "Signup")
+      ])
+
+      insert(:goal, %{domain: site.domain, page_path: "/blog**"})
+      insert(:goal, %{domain: site.domain, event_name: "CTA"})
+      insert(:goal, %{domain: site.domain, event_name: "Signup"})
+
+      filters = Jason.encode!(%{goal: "Signup|Visit /blog**"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Visit /blog**",
+                 "unique_conversions" => 2,
+                 "total_conversions" => 2,
+                 "prop_names" => nil,
+                 "conversion_rate" => 33.3
+               },
+               %{
+                 "name" => "Signup",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => nil,
+                 "conversion_rate" => 16.7
+               }
+             ]
+    end
+
+    test "can filter by not_matches_member filter type on goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/another"),
+        build(:pageview, pathname: "/another"),
+        build(:pageview, pathname: "/blog/post-1"),
+        build(:pageview, pathname: "/blog/post-2"),
+        build(:event, name: "CTA"),
+        build(:event, name: "Signup")
+      ])
+
+      insert(:goal, %{domain: site.domain, page_path: "/blog**"})
+      insert(:goal, %{domain: site.domain, page_path: "/ano**"})
+      insert(:goal, %{domain: site.domain, event_name: "CTA"})
+      insert(:goal, %{domain: site.domain, event_name: "Signup"})
+
+      filters = Jason.encode!(%{goal: "!Signup|Visit /blog**"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Visit /ano**",
+                 "unique_conversions" => 2,
+                 "total_conversions" => 2,
+                 "prop_names" => nil,
+                 "conversion_rate" => 33.3
+               },
+               %{
+                 "name" => "CTA",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => nil,
+                 "conversion_rate" => 16.7
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/conversions - with goal and prop=(none) filter" do

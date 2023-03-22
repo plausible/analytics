@@ -354,6 +354,220 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "can filter using the | (OR) filter",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/irrelevant",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
+          timestamp: ~N[2021-01-01 00:10:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{page: "/about|/"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/",
+                 "visitors" => 2,
+                 "pageviews" => 3,
+                 "bounce_rate" => 50,
+                 "time_on_page" => 60
+               },
+               %{
+                 "name" => "/about",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => 100,
+                 "time_on_page" => nil
+               }
+             ]
+    end
+
+    test "can filter using the not_member filter type",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/irrelevant",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:02:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
+          timestamp: ~N[2021-01-01 00:10:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{page: "!/irrelevant|/about"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/",
+                 "visitors" => 2,
+                 "pageviews" => 3,
+                 "bounce_rate" => 50,
+                 "time_on_page" => 60
+               }
+             ]
+    end
+
+    test "can filter using the matches_member filter type",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/post-1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/post-2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/articles/post-1",
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:pageview,
+          pathname: "/articles/post-1",
+          timestamp: ~N[2021-01-01 00:10:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{page: "/blog/**|/articles/**"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/articles/post-1",
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 100,
+                 "time_on_page" => nil
+               },
+               %{
+                 "name" => "/blog/post-1",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 60
+               },
+               %{
+                 "name" => "/blog/post-2",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => nil,
+                 "time_on_page" => nil
+               }
+             ]
+    end
+
+    test "can filter using the not_matches_member filter type",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/post-1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/about",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/articles/post-1",
+          timestamp: ~N[2021-01-01 00:10:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{page: "!/blog/**|/articles/**"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/",
+                 "visitors" => 2,
+                 "pageviews" => 2,
+                 "bounce_rate" => 50,
+                 "time_on_page" => 600
+               },
+               %{
+                 "name" => "/about",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => nil,
+                 "time_on_page" => nil
+               }
+             ]
+    end
+
     test "returns top pages by visitors with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),

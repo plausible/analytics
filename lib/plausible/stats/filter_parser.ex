@@ -74,8 +74,8 @@ defmodule Plausible.Stats.FilterParser do
     |> Enum.map(&String.trim/1)
   end
 
-  defp parse_goal_filter("Visit " <> page), do: {:is, :page, page}
-  defp parse_goal_filter(event), do: {:is, :event, event}
+  defp parse_goal_filter("Visit " <> page), do: {:is, {:page, page}}
+  defp parse_goal_filter(event), do: {:is, {:event, event}}
 
   defp remove_escape_chars(value) do
     String.replace(value, "\\|", "|")

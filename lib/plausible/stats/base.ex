@@ -30,6 +30,7 @@ defmodule Plausible.Stats.Base do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_events(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
@@ -49,6 +50,17 @@ defmodule Plausible.Stats.Base do
         {:is_not, page} ->
           from(e in q, where: e.pathname != ^page)
 
+        {:matches_member, glob_exprs} ->
+          page_regexes = Enum.map(glob_exprs, &page_regex/1)
+          from(e in q, where: fragment("multiMatchAny(?, ?)", e.pathname, ^page_regexes))
+
+        {:not_matches_member, glob_exprs} ->
+          page_regexes = Enum.map(glob_exprs, &page_regex/1)
+
+          from(e in q,
+            where: fragment("not(multiMatchAny(?, ?))", e.pathname, ^page_regexes)
+          )
+
         {:matches, glob_expr} ->
           regex = page_regex(glob_expr)
           from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
@@ -59,6 +71,9 @@ defmodule Plausible.Stats.Base do
 
         {:member, list} ->
           from(e in q, where: e.pathname in ^list)
+
+        {:not_member, list} ->
+          from(e in q, where: e.pathname not in ^list)
 
         nil ->
           q
@@ -78,15 +93,41 @@ defmodule Plausible.Stats.Base do
 
     q =
       case query.filters["event:goal"] do
-        {:is, :page, path} ->
+        {:is, {:page, path}} ->
           from(e in q, where: e.pathname == ^path)
 
-        {:matches, :page, expr} ->
+        {:matches, {:page, expr}} ->
           regex = page_regex(expr)
           from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
 
-        {:is, :event, event} ->
+        {:is, {:event, event}} ->
           from(e in q, where: e.name == ^event)
+
+        {:member, clauses} ->
+          {events, pages} = split_goals(clauses)
+          from(e in q, where: e.pathname in ^pages or e.name in ^events)
+
+        {:matches_member, clauses} ->
+          {events, pages} = split_goals(clauses, &page_regex/1)
+
+          from(e in q,
+            where:
+              fragment("multiMatchAny(?, ?)", e.pathname, ^pages) or
+                fragment("multiMatchAny(?, ?)", e.name, ^events)
+          )
+
+        {:not_matches_member, clauses} ->
+          {events, pages} = split_goals(clauses, &page_regex/1)
+
+          from(e in q,
+            where:
+              fragment("not(multiMatchAny(?, ?))", e.pathname, ^pages) and
+                fragment("not(multiMatchAny(?, ?))", e.name, ^events)
+          )
+
+        {:not_member, clauses} ->
+          {events, pages} = split_goals(clauses)
+          from(e in q, where: e.pathname not in ^pages and e.name not in ^events)
 
         nil ->
           q
@@ -144,6 +185,7 @@ defmodule Plausible.Stats.Base do
     "city" => "city_geoname_id"
   }
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_sessions(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
@@ -176,9 +218,27 @@ defmodule Plausible.Stats.Base do
           list = Enum.map(values, &db_prop_val(prop_name, &1))
           from(s in sessions_q, where: field(s, ^prop_name) in ^list)
 
+        {:not_member, values} ->
+          list = Enum.map(values, &db_prop_val(prop_name, &1))
+          from(s in sessions_q, where: fragment("? not in ?", field(s, ^prop_name), ^list))
+
         {:matches, expr} ->
           regex = page_regex(expr)
           from(s in sessions_q, where: fragment("match(?, ?)", field(s, ^prop_name), ^regex))
+
+        {:matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+
+          from(s in sessions_q,
+            where: fragment("multiMatchAny(?, ?)", field(s, ^prop_name), ^page_regexes)
+          )
+
+        {:not_matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+
+          from(s in sessions_q,
+            where: fragment("not(multiMatchAny(?, ?))", field(s, ^prop_name), ^page_regexes)
+          )
 
         {:does_not_match, expr} ->
           regex = page_regex(expr)
@@ -451,5 +511,15 @@ defmodule Plausible.Stats.Base do
       threshold ->
         from(e in db_q, hints: [sample: threshold])
     end
+  end
+
+  defp split_goals(clauses, map_fn \\ &Function.identity/1) do
+    groups =
+      Enum.group_by(clauses, fn {goal_type, _v} -> goal_type end, fn {_k, val} -> map_fn.(val) end)
+
+    {
+      Map.get(groups, :event, []),
+      Map.get(groups, :page, [])
+    }
   end
 end
