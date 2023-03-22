@@ -53,12 +53,10 @@ export const toggleComparisons = function(history, query, site) {
   }
 }
 
-function DropdownItem({ label, value, isCurrentlySelected, updateMode, calendar }) {
+function DropdownItem({ label, value, isCurrentlySelected, updateMode, setUiMode }) {
   const click = () => {
     if (value == "custom") {
-      // https://github.com/flatpickr/flatpickr/issues/399#issuecomment-260007013
-      // FIXME: Use setState to prevent this issue
-      setTimeout(() => calendar.current.flatpickr.open(), 100)
+      setUiMode("datepicker")
     } else {
       updateMode(value)
     }
@@ -104,6 +102,11 @@ const ComparisonInput = function({ site, query, history }) {
 
   const calendar = React.useRef(null)
 
+  const [uiMode, setUiMode] = React.useState("menu")
+  React.useEffect(() => {
+    if (uiMode == "datepicker" && calendar) calendar.current.flatpickr.open()
+  }, [uiMode])
+
   const flatpickrOptions = {
     mode: 'range',
     showMonths: 1,
@@ -111,16 +114,14 @@ const ComparisonInput = function({ site, query, history }) {
     minDate: parseUTCDate(site.statsBegin),
     animate: true,
     static: true,
-    onChange: ([from, to]) => {
+    onClose: ([from, to], _dateStr, _instance) => {
+      setUiMode("menu")
       if (from && to) updateMode("custom", formatISO(from), formatISO(to))
     }
   }
 
   return (
     <>
-      <span className="h-0 w-0 invisible">
-        <Flatpickr ref={calendar} options={flatpickrOptions} />
-      </span>
       <span className="pl-2 text-sm font-medium text-gray-800 dark:text-gray-200">vs.</span>
       <div className="flex">
         <div className="min-w-32 md:w-48 md:relative">
@@ -138,9 +139,15 @@ const ComparisonInput = function({ site, query, history }) {
               leaveFrom="transform opacity-100 scale-100"
               leaveTo="transform opacity-0 scale-95">
               <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10" static>
-                { Object.keys(COMPARISON_MODES).map((key) => DropdownItem({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison, updateMode, calendar })) }
+                { Object.keys(COMPARISON_MODES).map((key) => DropdownItem({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison, updateMode, setUiMode })) }
               </Menu.Items>
             </Transition>
+
+            { uiMode == "datepicker" &&
+            <div className="h-0 absolute">
+              <Flatpickr ref={calendar} options={flatpickrOptions} className="invisible" />
+            </div>
+            }
           </Menu>
         </div>
       </div>
