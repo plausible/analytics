@@ -300,20 +300,9 @@ class FilterModal extends React.Component {
               )}
             </div>
           </form>
-          {this.renderHints()}
         </main>
       </>
     )
-  }
-
-  renderHints() {
-    if (['page', 'entry_page', 'exit_page'].includes(this.state.selectedFilterGroup)) {
-      return (
-        <p className="mt-6 text-xs text-gray-500">Hint: You can use double asterisks to match any character e.g. /blog** to group all of your blog posts. Or use double asterisks in front and back (e.g. **keyword**) to group all URLs containing a specific keyword.</p>
-      )
-    }
-
-    return null
   }
 
   render() {
