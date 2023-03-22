@@ -184,8 +184,8 @@ class FilterModal extends React.Component {
   }
 
   renderSearchBox(filter) {
-    const allowWildcard = this.state.selectedFilterGroup === 'page'
-    return <Combobox fetchOptions={this.fetchOptions(filter)} allowWildcard={allowWildcard} values={this.state.formState[filter].clauses} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
+    const freeChoice = this.state.selectedFilterGroup === 'page'
+    return <Combobox fetchOptions={this.fetchOptions(filter)} freeChoice={freeChoice} values={this.state.formState[filter].clauses} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
   }
 
   renderFilterInputs() {

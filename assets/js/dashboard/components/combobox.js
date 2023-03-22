@@ -46,7 +46,7 @@ export default function PlausibleCombobox(props) {
   const listRef = useRef(null);
 
   const visibleOptions = [...options]
-  if (props.allowWildcard && input.length > 0) {
+  if (props.freeChoice && input.length > 0) {
     visibleOptions.push({value: input, label: input, freeChoice: true})
   }
 
@@ -149,7 +149,7 @@ export default function PlausibleCombobox(props) {
   }, [])
 
   const matchesFound = !loading && visibleOptions.length > 0
-  const noMatchesFound = !loading && !props.allowWildcard && options.length === 0
+  const noMatchesFound = !loading && !props.freeChoice && options.length === 0
 
   return (
     <div onKeyDown={onKeyDown} ref={containerRef} className="relative ml-2 w-full">
