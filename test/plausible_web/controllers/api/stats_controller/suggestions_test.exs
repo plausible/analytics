@@ -5,23 +5,37 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     setup [:create_user, :log_in, :create_site]
 
     test "returns suggestions for pages without a query", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], pathname: "/"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], pathname: "/register"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/contact"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/irrelevant")
+      ])
+
       conn = get(conn, "/api/stats/#{site.domain}/suggestions/page?period=month&date=2019-01-01")
 
       assert json_response(conn, 200) == [
                %{"label" => "/", "value" => "/"},
-               %{"label" => "/register", "value" => "/register"},
                %{"label" => "/contact", "value" => "/contact"},
-               %{"label" => "/irrelevant", "value" => "/irrelevant"}
+               %{"label" => "/irrelevant", "value" => "/irrelevant"},
+               %{"label" => "/register", "value" => "/register"}
              ]
     end
 
     test "returns suggestions for pages with a query", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], pathname: "/"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], pathname: "/register"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/contact"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/irrelevant")
+      ])
+
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/page?period=month&date=2019-01-01&q=re")
 
       assert json_response(conn, 200) == [
-               %{"label" => "/register", "value" => "/register"},
-               %{"label" => "/irrelevant", "value" => "/irrelevant"}
+               %{"label" => "/irrelevant", "value" => "/irrelevant"},
+               %{"label" => "/register", "value" => "/register"}
              ]
     end
 
@@ -42,16 +56,25 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for sources", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "10words")
+      ])
+
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/source?period=month&date=2019-01-01")
 
       assert json_response(conn, 200) == [
-               %{"label" => "10words", "value" => "10words"},
-               %{"label" => "Bing", "value" => "Bing"}
+               %{"label" => "Bing", "value" => "Bing"},
+               %{"label" => "10words", "value" => "10words"}
              ]
     end
 
     test "returns suggestions for countries", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/", country_code: "US")
+      ])
+
       conn =
         get(
           conn,
@@ -106,6 +129,10 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for screen sizes", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], pathname: "/", screen_size: "Desktop")
+      ])
+
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/screen?period=month&date=2019-01-01")
 
@@ -113,6 +140,10 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for browsers", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], pathname: "/", browser: "Chrome")
+      ])
+
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/browser?period=month&date=2019-01-01")
 
@@ -121,6 +152,14 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for browser versions", %{conn: conn, site: site} do
       filters = Jason.encode!(%{browser: "Chrome"})
+
+      populate_stats(site, [
+        build(:pageview,
+          timestamp: ~N[2019-01-01 00:00:00],
+          browser: "Chrome",
+          browser_version: "78.0"
+        )
+      ])
 
       conn =
         get(
@@ -132,6 +171,10 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for OS", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2019-01-01 00:00:00], operating_system: "Mac")
+      ])
+
       conn = get(conn, "/api/stats/#{site.domain}/suggestions/os?period=month&date=2019-01-01")
 
       assert json_response(conn, 200) == [%{"value" => "Mac", "label" => "Mac"}]
@@ -139,6 +182,14 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for OS versions", %{conn: conn, site: site} do
       filters = Jason.encode!(%{os: "Mac"})
+
+      populate_stats(site, [
+        build(:pageview,
+          timestamp: ~N[2019-01-01 00:00:00],
+          operating_system: "Mac",
+          operating_system_version: "10.15"
+        )
+      ])
 
       conn =
         get(
@@ -162,6 +213,14 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     end
 
     test "returns suggestions for referrers", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:00],
+          pathname: "/",
+          referrer: "10words.com/page1"
+        )
+      ])
+
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/referrer?period=month&date=2019-01-01")
 

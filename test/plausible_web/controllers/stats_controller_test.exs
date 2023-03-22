@@ -4,9 +4,10 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
-      insert(:site, domain: "public-site.io", public: true)
+      site = insert(:site, public: true)
+      populate_stats(site, [build(:pageview)])
 
-      conn = get(conn, "/public-site.io")
+      conn = get(conn, "/#{site.domain}")
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
@@ -27,6 +28,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "can view stats of a website I've created", %{conn: conn, site: site} do
+      populate_stats(site, [build(:pageview)])
       conn = get(conn, "/" <> site.domain)
       assert html_response(conn, 200) =~ "stats-react-container"
     end
