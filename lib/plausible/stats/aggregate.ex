@@ -77,12 +77,6 @@ defmodule Plausible.Stats.Aggregate do
         {:not_member, page} ->
           {"p NOT IN {$#{where_param_idx}:Array(String)}", page}
 
-        {:member, page} ->
-          {"p IN tuple(?)", page}
-
-        {:not_member, page} ->
-          {"p NOT IN tuple(?)", page}
-
         {:matches, expr} ->
           regex = page_regex(expr)
           {"match(p, {$#{where_param_idx}:String})", regex}
@@ -94,14 +88,6 @@ defmodule Plausible.Stats.Aggregate do
         {:not_matches_member, exprs} ->
           page_regexes = Enum.map(exprs, &page_regex/1)
           {"not(multiMatchAny(p, {$#{where_param_idx}:Array(String)}))", page_regexes}
-
-        {:matches_member, exprs} ->
-          page_regexes = Enum.map(exprs, &page_regex/1)
-          {"multiMatchAny(p, array(?))", page_regexes}
-
-        {:not_matches_member, exprs} ->
-          page_regexes = Enum.map(exprs, &page_regex/1)
-          {"not(multiMatchAny(p, array(?)))", page_regexes}
 
         {:does_not_match, expr} ->
           regex = page_regex(expr)
