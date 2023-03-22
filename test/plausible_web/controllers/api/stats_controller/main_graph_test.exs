@@ -806,5 +806,28 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert 1 == Enum.at(plot, 30)
       assert 1 == Enum.at(comparison_plot, 30)
     end
+
+    test "fill in gaps when custom comparison period is larger than original query", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2020-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-01-05 00:00:00]),
+        build(:pageview, timestamp: ~N[2020-01-30 00:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2020-01-01&comparison=custom&compare_from=2022-01-01&compare_to=2022-06-01"
+        )
+
+      assert %{"labels" => labels, "comparison_plot" => comparison_labels} =
+               json_response(conn, 200)
+
+      assert length(labels) == length(comparison_labels)
+      assert "__blank__" == List.last(labels)
+    end
   end
 end

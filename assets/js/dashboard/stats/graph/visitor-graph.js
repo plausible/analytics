@@ -91,14 +91,14 @@ class LineGraph extends React.Component {
             ticks: {
               maxTicksLimit: 8,
               callback: function (val, _index, _ticks) {
-                // realtime graph labels are not date strings
-                const hasMultipleYears = typeof graphData.labels[0] !== 'string' ? false :
-                    graphData.labels
-                    // date format: 'yyyy-mm-dd'; maps to -> 'yyyy'
-                    .map(date => date.split('-')[0])
-                    // reject any year that appears at a previous index, unique years only
-                    .filter((value, index, list) => list.indexOf(value) === index)
-                    .length > 1
+                if (this.getLabelForValue(val) == "__blank__") return ""
+
+                const hasMultipleYears =
+                  graphData.labels
+                  .filter((date) => typeof date === 'string')
+                  .map(date => date.split('-')[0])
+                  .filter((value, index, list) => list.indexOf(value) === index)
+                  .length > 1
 
                 if (graphData.interval === 'hour' && query.period !== 'day') {
                   const date = dateFormatter({
@@ -220,26 +220,12 @@ class LineGraph extends React.Component {
 
   onClick(e) {
     const element = this.chart.getElementsAtEventForMode(e, 'index', { intersect: false })[0]
-    const date = this.chart.data.labels[element.index]
+    const date = this.props.graphData.labels[element.index] || this.props.graphData.comparison_labels[element.index]
 
     if (this.props.graphData.interval === 'month') {
-      navigateToQuery(
-        this.props.history,
-        this.props.query,
-        {
-          period: 'month',
-          date,
-        }
-      )
+      navigateToQuery(this.props.history, this.props.query, { period: 'month', date })
     } else if (this.props.graphData.interval === 'date') {
-      navigateToQuery(
-        this.props.history,
-        this.props.query,
-        {
-          period: 'day',
-          date,
-        }
-      )
+      navigateToQuery(this.props.history, this.props.query, { period: 'day', date })
     }
   }
 

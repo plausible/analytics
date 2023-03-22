@@ -110,21 +110,25 @@ defmodule PlausibleWeb.Api.StatsController do
         end
 
       timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
-      labels = label_timeseries(timeseries_result)
-      present_index = present_index_for(site, query, labels)
-      full_intervals = build_full_intervals(query, labels)
 
       comparison_result =
-        case Comparisons.compare(site, query, params["comparison"]) do
+        case Comparisons.compare(site, query, params["comparison"],
+               from: params["compare_from"],
+               to: params["compare_to"]
+             ) do
           {:ok, comparison_query} -> Stats.timeseries(site, comparison_query, [selected_metric])
           {:error, :not_supported} -> nil
         end
+
+      labels = label_timeseries(timeseries_result, comparison_result)
+      present_index = present_index_for(site, query, labels)
+      full_intervals = build_full_intervals(query, labels)
 
       json(conn, %{
         plot: plot_timeseries(timeseries_result, selected_metric),
         labels: labels,
         comparison_plot: comparison_result && plot_timeseries(comparison_result, selected_metric),
-        comparison_labels: comparison_result && label_timeseries(comparison_result),
+        comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
         present_index: present_index,
         interval: query.interval,
         with_imported: query.include_imported,
@@ -140,8 +144,20 @@ defmodule PlausibleWeb.Api.StatsController do
     Enum.map(timeseries, fn row -> row[metric] || 0 end)
   end
 
-  defp label_timeseries(timeseries) do
-    Enum.map(timeseries, & &1.date)
+  defp label_timeseries(main_result, nil) do
+    Enum.map(main_result, & &1.date)
+  end
+
+  @blank_value "__blank__"
+  defp label_timeseries(main_result, comparison_result) do
+    blanks_to_fill = Enum.count(comparison_result) - Enum.count(main_result)
+
+    if blanks_to_fill > 0 do
+      blanks = List.duplicate(@blank_value, blanks_to_fill)
+      Enum.map(main_result, & &1.date) ++ blanks
+    else
+      Enum.map(main_result, & &1.date)
+    end
   end
 
   defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
@@ -175,9 +191,11 @@ defmodule PlausibleWeb.Api.StatsController do
 
     with :ok <- validate_params(params) do
       comparison_mode = params["comparison"] || "previous_period"
+      comparison_opts = [from: params["compare_from"], to: params["compare_to"]]
+
       query = Query.from(site, params) |> Filters.add_prefix()
 
-      {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_mode)
+      {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_mode, comparison_opts)
 
       json(conn, %{
         top_stats: top_stats,
@@ -245,7 +263,8 @@ defmodule PlausibleWeb.Api.StatsController do
   defp fetch_top_stats(
          site,
          %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query,
-         _comparison_mode
+         _comparison_mode,
+         _comparison_opts
        ) do
     query_30m = %Query{query | period: "30m"}
 
@@ -272,7 +291,12 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_top_stats(site, %Query{period: "realtime"} = query, _comparison_mode) do
+  defp fetch_top_stats(
+         site,
+         %Query{period: "realtime"} = query,
+         _comparison_mode,
+         _comparison_opts
+       ) do
     query_30m = %Query{query | period: "30m"}
 
     %{
@@ -298,11 +322,16 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query, comparison_mode) do
+  defp fetch_top_stats(
+         site,
+         %Query{filters: %{"event:goal" => _goal}} = query,
+         comparison_mode,
+         comparison_opts
+       ) do
     total_q = Query.remove_event_filters(query, [:goal, :props])
 
     {prev_converted_visitors, prev_completions} =
-      case Stats.Comparisons.compare(site, query, comparison_mode) do
+      case Stats.Comparisons.compare(site, query, comparison_mode, comparison_opts) do
         {:ok, prev_query} ->
           %{visitors: %{value: prev_converted_visitors}, events: %{value: prev_completions}} =
             Stats.aggregate(site, prev_query, [:visitors, :events])
@@ -362,7 +391,7 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_top_stats(site, query, comparison_mode) do
+  defp fetch_top_stats(site, query, comparison_mode, comparison_opts) do
     metrics =
       if query.filters["event:page"] do
         [
@@ -389,7 +418,7 @@ defmodule PlausibleWeb.Api.StatsController do
     current_results = Stats.aggregate(site, query, metrics)
 
     prev_results =
-      case Stats.Comparisons.compare(site, query, comparison_mode) do
+      case Stats.Comparisons.compare(site, query, comparison_mode, comparison_opts) do
         {:ok, prev_results_query} -> Stats.aggregate(site, prev_results_query, metrics)
         {:error, :not_supported} -> nil
       end

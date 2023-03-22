@@ -40,6 +40,10 @@ export function formatYear(date) {
   return `Year of ${date.getFullYear()}`;
 }
 
+export function formatYearShort(date) {
+   return date.getUTCFullYear().toString().substring(2)
+}
+
 export function formatDay(date) {
   var weekday = DAYS_ABBREV[date.getDay()];
   if (date.getFullYear() !== (new Date()).getFullYear()) {
@@ -49,8 +53,13 @@ export function formatDay(date) {
   }
 }
 
-export function formatDayShort(date) {
-  return `${date.getDate()} ${formatMonthShort(date)}`;
+export function formatDayShort(date, includeYear = false) {
+  let formatted = `${date.getDate()} ${formatMonthShort(date)}`
+   if (includeYear) {
+     formatted += ` ${formatYearShort(date)}`
+   }
+
+   return formatted
 }
 
 export function parseUTCDate(dateString) {

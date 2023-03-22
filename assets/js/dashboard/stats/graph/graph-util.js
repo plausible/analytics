@@ -40,17 +40,11 @@ export const LoadingState = {
   isLoadedOrRefreshing: function (state) { return [this.loaded, this.refreshing].includes(state) }
 }
 
-const buildComparisonDataset = function(comparisonPlot, presentIndex) {
+const buildComparisonDataset = function(comparisonPlot) {
   if (!comparisonPlot) return []
 
-  let data = [...comparisonPlot]
-  if (presentIndex) {
-    const dashedPartIncludedIndex = presentIndex + 1
-    data = data.slice(0, dashedPartIncludedIndex)
-  }
-
   return [{
-    data: data,
+    data: comparisonPlot,
     borderColor: 'rgba(60,70,110,0.2)',
     pointBackgroundColor: 'rgba(60,70,110,0.2)',
     pointHoverBackgroundColor: 'rgba(60, 70, 110)',
@@ -98,7 +92,7 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) =>
   const dataset = [
     ...buildMainPlotDataset(plot, present_index),
     ...buildDashedDataset(plot, present_index),
-    ...buildComparisonDataset(comparisonPlot, present_index)
+    ...buildComparisonDataset(comparisonPlot)
   ]
 
   return dataset.map((item) => Object.assign(item, defaultOptions))
