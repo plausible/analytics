@@ -84,26 +84,32 @@ defmodule Plausible.SiteAdmin do
   end
 
   def transfer_data([from_site], params) do
-    to_site = Repo.get_by(Plausible.Site, domain: params["domain"])
-
-    if to_site do
-      event_q = event_transfer_query(from_site.domain, to_site.domain)
-      {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, event_q, [], timeout: 30_000)
-
-      session_q = session_transfer_query(from_site.domain, to_site.domain)
-      {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, session_q, [], timeout: 30_000)
-
-      start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(from_site)
-
-      {:ok, _} =
-        to_site
-        |> Plausible.Site.set_stats_start_date(start_date)
-        |> Plausible.Site.set_native_stats_start_at(from_site.native_stats_start_at)
-        |> Repo.update()
-
-      :ok
+    if Plausible.v2?() do
+      {:error, "Transfers temporarily unspported with v2"}
     else
-      {:error, "Cannot transfer to non-existing domain"}
+      to_site = Repo.get_by(Plausible.Site, domain: params["domain"])
+
+      if to_site do
+        event_q = event_transfer_query(from_site.domain, to_site.domain)
+        {:ok, _} = Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, event_q, [], timeout: 30_000)
+
+        session_q = session_transfer_query(from_site.domain, to_site.domain)
+
+        {:ok, _} =
+          Ecto.Adapters.SQL.query(Plausible.ClickhouseRepo, session_q, [], timeout: 30_000)
+
+        start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(from_site)
+
+        {:ok, _} =
+          to_site
+          |> Plausible.Site.set_stats_start_date(start_date)
+          |> Plausible.Site.set_native_stats_start_at(from_site.native_stats_start_at)
+          |> Repo.update()
+
+        :ok
+      else
+        {:error, "Cannot transfer to non-existing domain"}
+      end
     end
   end
 
