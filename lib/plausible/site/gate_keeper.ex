@@ -1,9 +1,9 @@
 defmodule Plausible.Site.GateKeeper do
   @type policy() :: :allow | :not_found | :block | :throttle
+  @type site_id() :: pos_integer()
   @policy_for_non_existing_sites :not_found
-  @policy_on_rate_limiting_backend_error :allow
 
-  @type t() :: :allow | {:deny, policy()}
+  @type t() :: {:allow, site_id()} | {:deny, policy()}
 
   @moduledoc """
   Thin wrapper around Hammer for gate keeping domain-specific events
@@ -23,7 +23,7 @@ defmodule Plausible.Site.GateKeeper do
   The module defines two policies outside the regular bucket inspection:
     * when the the site is not found in cache: #{@policy_for_non_existing_sites}
     * when the underlying rate limiting mechanism returns
-      an internal error: #{@policy_on_rate_limiting_backend_error}
+      an internal error: :allow
   """
   alias Plausible.Site
   alias Plausible.Site.Cache
@@ -33,7 +33,7 @@ defmodule Plausible.Site.GateKeeper do
   @spec check(String.t(), Keyword.t()) :: t()
   def check(domain, opts \\ []) when is_binary(domain) do
     case policy(domain, opts) do
-      :allow -> :allow
+      {:allow, site_id} -> {:allow, site_id}
       other -> {:deny, other}
     end
   end
@@ -56,15 +56,15 @@ defmodule Plausible.Site.GateKeeper do
     result
   end
 
-  defp check_rate_limit(%Site{ingest_rate_limit_threshold: nil}, _opts) do
-    :allow
+  defp check_rate_limit(%Site{id: site_id, ingest_rate_limit_threshold: nil}, _opts) do
+    {:allow, site_id}
   end
 
   defp check_rate_limit(%Site{ingest_rate_limit_threshold: 0}, _opts) do
     :block
   end
 
-  defp check_rate_limit(%Site{ingest_rate_limit_threshold: threshold} = site, opts)
+  defp check_rate_limit(%Site{id: site_id, ingest_rate_limit_threshold: threshold} = site, opts)
        when is_integer(threshold) do
     key = Keyword.get(opts, :key, key(site.domain))
     scale_ms = site.ingest_rate_limit_scale_seconds * 1_000
@@ -74,14 +74,14 @@ defmodule Plausible.Site.GateKeeper do
         :throttle
 
       {:allow, _} ->
-        :allow
+        {:allow, site_id}
 
       {:error, reason} ->
         Logger.error(
-          "Error checking rate limit for '#{key}': #{inspect(reason)}. Falling back to: #{@policy_on_rate_limiting_backend_error}"
+          "Error checking rate limit for '#{key}': #{inspect(reason)}. Falling back to: :allow"
         )
 
-        @policy_on_rate_limiting_backend_error
+        {:allow, site_id}
     end
   end
 end
