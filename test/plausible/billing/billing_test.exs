@@ -133,10 +133,10 @@ defmodule Plausible.BillingTest do
       site = insert(:site, members: [user])
 
       create_pageviews([
-        %{domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]},
-        %{domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]},
-        %{domain: site.domain, timestamp: ~N[2020-11-01 00:00:00]},
-        %{domain: site.domain, timestamp: ~N[2020-10-31 00:00:00]}
+        %{site: site, timestamp: ~N[2021-01-01 00:00:00]},
+        %{site: site, timestamp: ~N[2020-12-31 00:00:00]},
+        %{site: site, timestamp: ~N[2020-11-01 00:00:00]},
+        %{site: site, timestamp: ~N[2020-10-31 00:00:00]}
       ])
 
       assert Billing.last_two_billing_months_usage(user, today) == {1, 1}
@@ -163,10 +163,10 @@ defmodule Plausible.BillingTest do
         )
 
       create_pageviews([
-        %{domain: owner_site.domain, timestamp: ~N[2020-12-31 00:00:00]},
-        %{domain: admin_site.domain, timestamp: ~N[2020-12-31 00:00:00]},
-        %{domain: owner_site.domain, timestamp: ~N[2020-11-01 00:00:00]},
-        %{domain: admin_site.domain, timestamp: ~N[2020-11-01 00:00:00]}
+        %{site: owner_site, timestamp: ~N[2020-12-31 00:00:00]},
+        %{site: admin_site, timestamp: ~N[2020-12-31 00:00:00]},
+        %{site: owner_site, timestamp: ~N[2020-11-01 00:00:00]},
+        %{site: admin_site, timestamp: ~N[2020-11-01 00:00:00]}
       ])
 
       assert Billing.last_two_billing_months_usage(user, today) == {1, 1}
