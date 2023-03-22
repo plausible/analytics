@@ -18,7 +18,11 @@ defmodule Plausible.AuthTest do
 
     test "is true if user does have events" do
       user = insert(:user)
-      insert(:site, members: [user], domain: "test-site.com")
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:pageview)
+      ])
 
       assert Auth.has_active_sites?(user)
     end

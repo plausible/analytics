@@ -41,10 +41,12 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "lists all of your sites with last 24h visitors", %{conn: conn, user: user} do
-      insert(:site, members: [user], domain: "test-site.com")
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [build(:pageview), build(:pageview), build(:pageview)])
       conn = get(conn, "/sites")
 
-      assert html_response(conn, 200) =~ "test-site.com"
+      assert html_response(conn, 200) =~ site.domain
       assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
     end
 

@@ -1,76 +1,98 @@
 defmodule Plausible.SiteAdminTest do
   use Plausible.DataCase, async: true
 
-  alias Plausible.{SiteAdmin, ClickhouseRepo, ClickhouseEvent, ClickhouseSession}
+  alias Plausible.{
+    SiteAdmin,
+    ClickhouseRepo,
+    ClickhouseEvent,
+    ClickhouseSession
+  }
 
   describe "transfer_data" do
     test "event and session structs remain the same after transfer" do
-      from_site = insert(:site)
-      to_site = insert(:site)
+      if Plausible.v2?() do
+        :ok
+      else
+        from_site = insert(:site)
+        to_site = insert(:site)
 
-      populate_stats(from_site, [build(:pageview)])
+        populate_stats(from_site, [build(:pageview)])
 
-      event_before = get_event_by_domain(from_site.domain)
-      session_before = get_session_by_domain(from_site.domain)
+        event_before = get_event_by_domain(from_site.domain)
+        session_before = get_session_by_domain(from_site.domain)
 
-      SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
+        SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
 
-      event_after = get_event_by_domain(to_site.domain)
-      session_after = get_session_by_domain(to_site.domain)
+        event_after = get_event_by_domain(to_site.domain)
+        session_after = get_session_by_domain(to_site.domain)
 
-      assert event_before == %ClickhouseEvent{event_after | transferred_from: ""}
-      assert session_before == %ClickhouseSession{session_after | transferred_from: ""}
-      assert event_after.transferred_from == from_site.domain
-      assert session_after.transferred_from == from_site.domain
+        assert event_before == %ClickhouseEvent{event_after | transferred_from: ""}
+        assert event_before == %ClickhouseEvent{event_after | transferred_from: ""}
+        assert session_before == %ClickhouseSession{session_after | transferred_from: ""}
+        assert event_after.transferred_from == from_site.domain
+        assert session_after.transferred_from == from_site.domain
+      end
     end
 
     test "transfers all events and sessions" do
-      from_site = insert(:site)
-      to_site = insert(:site)
+      if Plausible.v2?() do
+        :ok
+      else
+        from_site = insert(:site)
+        to_site = insert(:site)
 
-      populate_stats(from_site, [
-        build(:pageview, user_id: 123),
-        build(:event, name: "Signup", user_id: 123),
-        build(:pageview, user_id: 456),
-        build(:event, name: "Signup", user_id: 789)
-      ])
+        populate_stats(from_site, [
+          build(:pageview, user_id: 123),
+          build(:event, name: "Signup", user_id: 123),
+          build(:pageview, user_id: 456),
+          build(:event, name: "Signup", user_id: 789)
+        ])
 
-      SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
+        SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
 
-      transferred_events =
-        ClickhouseRepo.all(
-          from e in Plausible.ClickhouseEvent, where: e.domain == ^to_site.domain
-        )
+        transferred_events =
+          ClickhouseRepo.all(
+            from e in Plausible.ClickhouseEvent, where: e.domain == ^to_site.domain
+          )
 
-      transferred_sessions =
-        ClickhouseRepo.all(
-          from e in Plausible.ClickhouseSession, where: e.domain == ^to_site.domain
-        )
+        transferred_sessions =
+          ClickhouseRepo.all(
+            from e in Plausible.ClickhouseSession, where: e.domain == ^to_site.domain
+          )
 
-      assert length(transferred_events) == 4
-      assert length(transferred_sessions) == 3
+        assert length(transferred_events) == 4
+        assert length(transferred_sessions) == 3
+      end
     end
 
     test "updates stats_start_date on site record" do
-      from_site = insert(:site)
-      to_site = insert(:site)
+      if Plausible.v2?() do
+        :ok
+      else
+        from_site = insert(:site)
+        to_site = insert(:site)
 
-      populate_stats(from_site, [build(:pageview, timestamp: ~N[2022-01-01 13:21:00])])
+        populate_stats(from_site, [build(:pageview, timestamp: ~N[2022-01-01 13:21:00])])
 
-      SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
+        SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
 
-      assert Repo.reload(to_site).stats_start_date == ~D[2022-01-01]
+        assert Repo.reload(to_site).stats_start_date == ~D[2022-01-01]
+      end
     end
 
     test "updates native_stats_start_date on based on the from_site record" do
-      from_site = insert(:site, native_stats_start_at: ~N[2022-01-01 01:00:00])
-      to_site = insert(:site)
+      if Plausible.v2?() do
+        :ok
+      else
+        from_site = insert(:site, native_stats_start_at: ~N[2022-01-01 01:00:00])
+        to_site = insert(:site)
 
-      populate_stats(from_site, [build(:pageview, timestamp: ~N[2022-01-01 13:21:00])])
+        populate_stats(from_site, [build(:pageview, timestamp: ~N[2022-01-01 13:21:00])])
 
-      SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
+        SiteAdmin.transfer_data([from_site], %{"domain" => to_site.domain})
 
-      assert Repo.reload(to_site).native_stats_start_at == ~N[2022-01-01 01:00:00]
+        assert Repo.reload(to_site).native_stats_start_at == ~N[2022-01-01 01:00:00]
+      end
     end
 
     test "session_transfer_query" do

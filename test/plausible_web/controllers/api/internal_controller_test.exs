@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
 
     test "is READY when site has at least 1 pageview", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
-      Plausible.TestUtils.create_pageviews([%{domain: site.domain}])
+      Plausible.TestUtils.create_pageviews([%{site: site}])
 
       conn = get(conn, "/api/#{site.domain}/status")
 
