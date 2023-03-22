@@ -23,7 +23,9 @@ defmodule Plausible.DataMigration.NumericIDs do
     # TBD: There's most likely a bug in Clickhouse defining Postgres dictionaries,
     # we'll use a static URL for now
     dict_url = Keyword.get(opts, :dict_url) || System.get_env("DOMAINS_DICT_URL") || ""
-    dict_password = Keyword.get(opts, :dict_url) || System.get_env("DOMAINS_DICT_PASSWORD") || ""
+
+    dict_password =
+      Keyword.get(opts, :dict_password) || System.get_env("DOMAINS_DICT_PASSWORD") || ""
 
     table_settings =
       Keyword.get(opts, :table_settings) || System.get_env("NUMERIC_IDS_TABLE_SETTINGS") ||
