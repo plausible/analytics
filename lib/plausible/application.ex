@@ -50,13 +50,13 @@ defmodule Plausible.Application do
   end
 
   defp finch_pool_config() do
-    finch_transport_opts = Application.get_env(:plausible, :finch_transport)
+    finch_conf = Application.get_env(:plausible, :finch)
     base_config = %{
       "https://icons.duckduckgo.com" => [
-        conn_opts: [transport_opts: finch_transport_opts]
+        conn_opts: [transport_opts: finch_conf[:transport_opts]]
       ],
       default: [
-        conn_opts: [transport_opts: finch_transport_opts]
+        conn_opts: [transport_opts: finch_conf[:transport_opts]]
       ]
     }
 
@@ -78,12 +78,12 @@ defmodule Plausible.Application do
 
   defp maybe_add_paddle_pool(pool_config) do
     paddle_conf = Application.get_env(:plausible, :paddle)
-    finch_transport_opts = Application.get_env(:plausible, :finch_transport)
+    finch_conf = Application.get_env(:plausible, :finch)
 
     cond do
       paddle_conf[:vendor_id] && paddle_conf[:vendor_auth_code] ->
         Map.put(pool_config, Plausible.Billing.PaddleApi.vendors_domain(),
-          conn_opts: [transport_opts: finch_transport_opts]
+          conn_opts: [transport_opts: finch_conf[:transport_opts]]
         )
 
       true ->
@@ -93,13 +93,13 @@ defmodule Plausible.Application do
 
   defp maybe_add_google_pools(pool_config) do
     google_conf = Application.get_env(:plausible, :google)
-    finch_transport_opts = Application.get_env(:plausible, :finch_transport)
+    finch_conf = Application.get_env(:plausible, :finch)
 
     cond do
       google_conf[:client_id] && google_conf[:client_secret] ->
         pool_config
-        |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: finch_transport_opts])
-        |> Map.put(google_conf[:reporting_api_url], conn_opts: [transport_opts: finch_transport_opts])
+        |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: finch_conf[:transport_opts]])
+        |> Map.put(google_conf[:reporting_api_url], conn_opts: [transport_opts: finch_conf[:transport_opts]])
 
       true ->
         pool_config

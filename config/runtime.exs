@@ -268,11 +268,10 @@ config :plausible, :paddle,
   vendor_auth_code: paddle_auth_code,
   vendor_id: paddle_vendor_id
 
-finch_ipv6 = if System.get_env("FINCH_IPV6"), do: true, else: false
+finch_transport_opts = if System.get_env("FINCH_IPV6"), do: [timeout: 15_000, inet6: true], else: [timeout: 15_000]
 
-config :plausible, :finch_transport),
-  inet6: finch_ipv6,
-  timeout: 15_000
+config :plausible, :finch,
+  transport_opts: finch_transport_opts
 
 config :plausible, :google,
   client_id: google_cid,
