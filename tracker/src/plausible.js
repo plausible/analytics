@@ -77,14 +77,14 @@
       payload.p = options.props
     }
 
-    {{#if dimensions}}
-    var dimensionAttributes = scriptEl.getAttributeNames().filter(function (name) {
+    {{#if pageview_props}}
+    var propAttributes = scriptEl.getAttributeNames().filter(function (name) {
       return name.substring(0, 6) === 'event-'
     })
 
     var props = payload.p || {}
 
-    dimensionAttributes.forEach(function(attribute) {
+    propAttributes.forEach(function(attribute) {
       var propKey = attribute.replace('event-', '')
       var propValue = scriptEl.getAttribute(attribute)
       props[propKey] = props[propKey] || propValue
