@@ -1,6 +1,5 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
-  alias Plausible.ClickhouseRepo
   alias Plausible.Site
   alias Plausible.Site.SharedLink
   import Ecto.Query
