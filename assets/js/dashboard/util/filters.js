@@ -22,6 +22,19 @@ export const FILTER_PREFIXES = {
   [FILTER_TYPES.is]: ''
 };
 
+const NON_ESCAPED_PIPE_REGEX = /(?<!\\)\|/g
+const ESCAPED_PIPE = '\\|'
+
+function escapeFilterValue(value) {
+  return value.replaceAll(NON_ESCAPED_PIPE_REGEX, ESCAPED_PIPE)
+}
+
+export function toFilterQuery(type, clauses) {
+  const prefix = FILTER_PREFIXES[type];
+  const result = clauses.map(clause => escapeFilterValue(clause.value.trim())).join('|')
+  return prefix + result;
+}
+
 function parsePrefix(rawValue) {
   const type = Object.keys(FILTER_PREFIXES)
     .find(type => FILTER_PREFIXES[type] === rawValue[0]) || FILTER_TYPES.is;
@@ -31,8 +44,9 @@ function parsePrefix(rawValue) {
     : rawValue;
 
   const values = value
-    .split('|')
+    .split(NON_ESCAPED_PIPE_REGEX)
     .filter((clause) => !!clause)
+    .map((val) => val.replaceAll(ESCAPED_PIPE, '|'))
 
   return {type, values}
 }

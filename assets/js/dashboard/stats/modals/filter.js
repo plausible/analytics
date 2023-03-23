@@ -6,7 +6,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 import Combobox from '../../components/combobox'
 import Modal from './modal'
-import { FILTER_GROUPS, parseQueryFilter, formatFilterGroup, formattedFilters, FILTER_PREFIXES, FILTER_TYPES } from '../../util/filters'
+import { FILTER_GROUPS, parseQueryFilter, formatFilterGroup, formattedFilters, toFilterQuery, FILTER_TYPES } from '../../util/filters'
 import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath } from '../../util/url'
@@ -33,12 +33,6 @@ function getFormState(filterGroup, query) {
 
     return Object.assign(result, { [filter]: { type, clauses } })
   }, {})
-}
-
-function toFilterQuery(type, clauses) {
-  const prefix = FILTER_PREFIXES[type];
-  const result = clauses.map(clause => clause.value.trim()).join('|')
-  return prefix + result;
 }
 
 function supportsContains(filterName) {
