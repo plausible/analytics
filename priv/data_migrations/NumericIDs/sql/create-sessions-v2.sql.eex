@@ -1,0 +1,45 @@
+CREATE TABLE sessions_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+(
+    `session_id` UInt64,
+    `sign` Int8,
+    `site_id` UInt64,
+    `user_id` UInt64,
+    `hostname` String,
+    `timestamp` DateTime CODEC(DoubleDelta, LZ4),
+    `start` DateTime CODEC(DoubleDelta, LZ4),
+    `is_bounce` UInt8,
+    `entry_page` String,
+    `exit_page` String,
+    `pageviews` Int32,
+    `events` Int32,
+    `duration` UInt32,
+    `referrer` String,
+    `referrer_source` String,
+    `country_code` LowCardinality(FixedString(2)),
+    `screen_size` LowCardinality(String),
+    `operating_system` LowCardinality(String),
+    `browser` LowCardinality(String),
+    `utm_medium` String,
+    `utm_source` String,
+    `utm_campaign` String,
+    `browser_version` LowCardinality(String),
+    `operating_system_version` LowCardinality(String),
+    `subdivision1_code` LowCardinality(String),
+    `subdivision2_code` LowCardinality(String),
+    `city_geoname_id` UInt32,
+    `utm_content` String,
+    `utm_term` String,
+    `transferred_from` String,
+    `entry_meta.key` Array(String),
+    `entry_meta.value` Array(String)
+)
+<%= if @cluster? do %>
+ENGINE = ReplicatedCollapsingMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_prod/sessions_v2', '{replica}', sign)
+<% else %>
+ENGINE = CollapsingMergeTree(sign)
+<% end %>
+PARTITION BY toYYYYMM(start)
+PRIMARY KEY (site_id, toDate(start), user_id, session_id)
+ORDER BY (site_id, toDate(start), user_id, session_id)
+SAMPLE BY user_id
+<%= @table_settings %>
