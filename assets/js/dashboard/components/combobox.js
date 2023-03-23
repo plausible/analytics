@@ -4,10 +4,12 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import debounce from 'debounce-promise'
 import classNames from 'classnames'
 
-function Option({isHighlighted, onClick, onMouseEnter, text, id}) {
-  const className = classNames('relative cursor-pointer select-none py-2 px-3', {
-    'text-gray-900 dark:text-gray-300': !isHighlighted,
-    'bg-indigo-600 text-white': isHighlighted,
+function Option({isHighlighted, isDisabled, onClick, onMouseEnter, text, id}) {
+  const className = classNames('relative select-none py-2 px-3', {
+    'cursor-pointer': !isDisabled,
+    'text-gray-300': isDisabled,
+    'text-gray-900 dark:text-gray-300': !isDisabled && !isHighlighted,
+    'bg-indigo-600 text-white': !isDisabled && isHighlighted,
   })
 
   return (
@@ -46,7 +48,7 @@ export default function PlausibleCombobox(props) {
   const listRef = useRef(null);
 
   const visibleOptions = [...options]
-  if (props.freeChoice && input.length > 0) {
+  if (props.freeChoice && input.length > 0 && options.every(option => option.value !== input)) {
     visibleOptions.push({value: input, label: input, freeChoice: true})
   }
 
@@ -91,6 +93,10 @@ export default function PlausibleCombobox(props) {
     }
   }
 
+  function isDisabled(option) {
+    return props.values.some((val) => val.value === option.value)
+  }
+
   function fetchOptions(query) {
     setLoading(true)
     setOpen(true)
@@ -122,6 +128,8 @@ export default function PlausibleCombobox(props) {
   }
 
   function selectOption(option) {
+    if (isDisabled(option)) return
+
     props.onChange([...props.values, option])
     setOpen(false)
     setInput('')
@@ -193,6 +201,7 @@ export default function PlausibleCombobox(props) {
                   key={option.value}
                   id={optionId(i)}
                   isHighlighted={highlightedIndex === i}
+                  isDisabled={isDisabled(option)}
                   onClick={() => selectOption(option)}
                   onMouseEnter={() => setHighlightedIndex(i)}
                   text={text}
