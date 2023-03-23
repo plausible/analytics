@@ -16,7 +16,7 @@
     id="stats-react-container"
     style="overflow-anchor: none;"
     data-domain="<%= @site.domain %>"
-    data-offset="<%= Timex.Timezone.total_offset(Timex.Timezone.get(@site.timezone)) %>"
+    data-offset="<%= Plausible.Site.tz_offset(@site) %>"
     data-has-goals="<%= @has_goals %>"
     data-logged-in="<%= !!@conn.assigns[:current_user] %>"
     data-stats-begin="<%= @stats_start_date %>"

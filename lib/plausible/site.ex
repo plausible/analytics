@@ -75,6 +75,20 @@ defmodule Plausible.Site do
     )
   end
 
+  def tz_offset(site, utc_now \\ DateTime.utc_now()) do
+    case DateTime.shift_zone(utc_now, site.timezone) do
+      {:ok, datetime} ->
+        datetime.utc_offset + datetime.std_offset
+
+      res ->
+        Sentry.capture_message("Unable to determine timezone offset for",
+          extra: %{site: site, result: res}
+        )
+
+        0
+    end
+  end
+
   def make_public(site) do
     change(site, public: true)
   end
