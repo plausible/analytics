@@ -1,4 +1,7 @@
 defmodule Plausible.ClickhouseEventV2 do
+  @moduledoc """
+  Event schema for when NumericIDs migration is complete
+  """
   use Ecto.Schema
   import Ecto.Changeset
 

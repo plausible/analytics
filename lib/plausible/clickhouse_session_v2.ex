@@ -1,4 +1,7 @@
 defmodule Plausible.ClickhouseSessionV2 do
+  @moduledoc """
+  Session schema for when NumericIDs migration is complete
+  """
   use Ecto.Schema
 
   @primary_key false
