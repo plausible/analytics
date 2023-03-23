@@ -214,15 +214,12 @@ defmodule Plausible.Stats.Clickhouse do
 
   def last_24h_visitors(sites) do
     if Plausible.v2?() do
-      site_ids = Enum.map(sites, & &1.id)
-      domains = Enum.map(sites, & &1.domain)
-
-      site_id_to_domain_mapping = Enum.zip(site_ids, domains) |> Enum.into(%{})
+      site_id_to_domain_mapping = for site <- sites, do: {site.id, site.domain}, into: %{}
 
       ClickhouseRepo.all(
         from e in "events_v2",
           group_by: e.site_id,
-          where: e.site_id in ^site_ids,
+          where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
           where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
           select: {e.site_id, fragment("uniq(user_id)")}
       )
