@@ -22,7 +22,17 @@ export const FILTER_PREFIXES = {
   [FILTER_TYPES.is]: ''
 };
 
-const NON_ESCAPED_PIPE_REGEX = /(?<!\\)\|/g
+// As of March 2023, Safari does not support negative lookbehind regexes. In case it throws an error, falls back to plain | matching. This means
+// escaping pipe characters in filters does not currently work in Safari
+let NON_ESCAPED_PIPE_REGEX;
+try {
+  NON_ESCAPED_PIPE_REGEX = new RegExp("(?<!\\\\)\\|", "g")
+} catch(_e) {
+  NON_ESCAPED_PIPE_REGEX = '|'
+}
+
+console.log(NON_ESCAPED_PIPE_REGEX)
+
 const ESCAPED_PIPE = '\\|'
 
 function escapeFilterValue(value) {
