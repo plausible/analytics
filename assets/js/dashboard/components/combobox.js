@@ -7,7 +7,7 @@ import classNames from 'classnames'
 function Option({isHighlighted, isDisabled, onClick, onMouseEnter, text, id}) {
   const className = classNames('relative select-none py-2 px-3', {
     'cursor-pointer': !isDisabled,
-    'text-gray-300': isDisabled,
+    'text-gray-300 dark:text-gray-600': isDisabled,
     'text-gray-900 dark:text-gray-300': !isDisabled && !isHighlighted,
     'bg-indigo-600 text-white': !isDisabled && isHighlighted,
   })
