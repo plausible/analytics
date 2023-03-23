@@ -29,6 +29,14 @@ defmodule Plausible.DataMigration do
         end
       end
 
+      defp unwrap(name, assigns) do
+        "priv/data_migrations"
+        |> Path.join(@dir)
+        |> Path.join("sql")
+        |> Path.join(name <> ".sql.eex")
+        |> EEx.eval_file(assigns: assigns)
+      end
+
       def run_sql(name, assigns \\ []) do
         query = unwrap(name, assigns)
         do_run(name, query)
@@ -41,15 +49,9 @@ defmodule Plausible.DataMigration do
         {:ok, res}
       end
 
-      defp unwrap(name, assigns) do
+      defp unwrap_with_io(name, assigns) do
         IO.puts("#{IO.ANSI.yellow()}Running #{name}#{IO.ANSI.reset()}")
-
-        query =
-          "priv/data_migrations"
-          |> Path.join(@dir)
-          |> Path.join("sql")
-          |> Path.join(name <> ".sql.eex")
-          |> EEx.eval_file(assigns: assigns)
+        query = unwrap(name, assigns)
 
         IO.puts("""
           -> Query: #{IO.ANSI.blue()}#{String.trim(query)}#{IO.ANSI.reset()}
