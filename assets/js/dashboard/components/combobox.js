@@ -99,7 +99,6 @@ export default function PlausibleCombobox(props) {
 
   function fetchOptions(query) {
     setLoading(true)
-    setOpen(true)
 
     return props.fetchOptions(query).then((loadedOptions) => {
       setLoading(false)
