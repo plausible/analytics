@@ -30,7 +30,9 @@ defmodule Plausible.DataMigration do
       end
 
       defp unwrap(name, assigns) do
-        "priv/data_migrations"
+        :plausible
+        |> :code.priv_dir()
+        |> Path.join("data_migrations")
         |> Path.join(@dir)
         |> Path.join("sql")
         |> Path.join(name <> ".sql.eex")
