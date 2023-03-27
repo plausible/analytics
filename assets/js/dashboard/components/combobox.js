@@ -67,7 +67,7 @@ export default function PlausibleCombobox(props) {
 
   function onKeyDown(e) {
     if (e.key === 'Enter') {
-      if (!isOpen || loading) return null
+      if (!isOpen || loading || visibleOptions.length === 0) return null
       selectOption(visibleOptions[highlightedIndex])
       e.preventDefault()
     }
