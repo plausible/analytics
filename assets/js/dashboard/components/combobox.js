@@ -157,7 +157,7 @@ export default function PlausibleCombobox(props) {
   }, [])
 
   const matchesFound = !loading && visibleOptions.length > 0
-  const noMatchesFound = !loading && !props.freeChoice && options.length === 0
+  const noMatchesFound = !loading && visibleOptions.length === 0
 
   return (
     <div onKeyDown={onKeyDown} ref={containerRef} className="relative ml-2 w-full">
