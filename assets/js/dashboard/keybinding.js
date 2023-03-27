@@ -20,7 +20,6 @@ export function shouldIgnoreKeypress(event) {
   return modifierPressed || isTyping
 }
 
-
 /**
  * Returns whether the given keybinding has been pressed and should be
  * processed. Events can be ignored based on `shouldIgnoreKeypress(event)`.
@@ -30,6 +29,6 @@ export function shouldIgnoreKeypress(event) {
  *
  */
 export function isKeyPressed(event, keybinding) {
-  const keyPressed = event.key.toLowerCase() == keybinding.toLowerCase() 
+  const keyPressed = event.key.toLowerCase() == keybinding.toLowerCase()
   return keyPressed && !shouldIgnoreKeypress(event)
 }

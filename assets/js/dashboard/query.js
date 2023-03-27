@@ -161,28 +161,3 @@ export function eventName(query) {
   }
   return 'pageviews'
 }
-
-export const formattedFilters = {
-  'goal': 'Goal',
-  'props': 'Property',
-  'prop_key': 'Property',
-  'prop_value': 'Value',
-  'source': 'Source',
-  'utm_medium': 'UTM Medium',
-  'utm_source': 'UTM Source',
-  'utm_campaign': 'UTM Campaign',
-  'utm_content': 'UTM Content',
-  'utm_term': 'UTM Term',
-  'referrer': 'Referrer URL',
-  'screen': 'Screen size',
-  'browser': 'Browser',
-  'browser_version': 'Browser Version',
-  'os': 'Operating System',
-  'os_version': 'Operating System Version',
-  'country': 'Country',
-  'region': 'Region',
-  'city': 'City',
-  'page': 'Page',
-  'entry_page': 'Entry Page',
-  'exit_page': 'Exit Page'
-}

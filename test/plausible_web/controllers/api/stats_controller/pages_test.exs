@@ -515,6 +515,51 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "page filter escapes brackets",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/blog/(/post-1",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/blog/(/post-2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{page: "/blog/(/**|/blog/)/**"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}&detailed=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/blog/(/post-1",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => 0,
+                 "time_on_page" => 60
+               },
+               %{
+                 "name" => "/blog/(/post-2",
+                 "visitors" => 1,
+                 "pageviews" => 1,
+                 "bounce_rate" => nil,
+                 "time_on_page" => nil
+               }
+             ]
+    end
+
     test "can filter using the not_matches_member filter type",
          %{conn: conn, site: site} do
       populate_stats(site, [

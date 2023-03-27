@@ -513,10 +513,16 @@ defmodule Plausible.Stats.Base do
     {first_datetime, last_datetime}
   end
 
+  @replaces %{
+    ~r/\*\*/ => ".*",
+    ~r/(?<!\.)\*/ => "[^/]*",
+    "(" => "\\(",
+    ")" => "\\)"
+  }
   def page_regex(expr) do
-    "^#{expr}$"
-    |> String.replace(~r/\*\*/, ".*")
-    |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+    Enum.reduce(@replaces, "^#{expr}$", fn {pattern, replacement}, regex ->
+      String.replace(regex, pattern, replacement)
+    end)
   end
 
   defp add_sample_hint(db_q, query) do

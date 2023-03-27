@@ -6,21 +6,11 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 import Combobox from '../../components/combobox'
 import Modal from './modal'
-import { parseQuery, formattedFilters } from '../../query'
+import { FILTER_GROUPS, parseQueryFilter, formatFilterGroup, formattedFilters, toFilterQuery, FILTER_TYPES } from '../../util/filters'
+import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath } from '../../util/url'
-
-export const FILTER_GROUPS = {
-  'page': ['page', 'entry_page', 'exit_page'],
-  'source': ['source', 'referrer'],
-  'location': ['country', 'region', 'city'],
-  'screen': ['screen'],
-  'browser': ['browser', 'browser_version'],
-  'os': ['os', 'os_version'],
-  'utm': ['utm_medium', 'utm_source', 'utm_campaign', 'utm_term', 'utm_content'],
-  'goal': ['goal'],
-  'props': ['prop_key', 'prop_value']
-}
+import { shouldIgnoreKeypress } from '../../keybinding'
 
 function getFormState(filterGroup, query) {
   if (filterGroup === 'props') {
@@ -28,61 +18,21 @@ function getFormState(filterGroup, query) {
     const entries = propsObject && Object.entries(propsObject)
 
     if (entries && entries.length == 1) {
-      const propKey = entries[0][0]
-      const {type, value} = parseQueryFilter(entries[0][1])
+      const [[propKey, _propVal]] = entries
+      const {type, clauses} = parseQueryFilter(query, 'props')
 
       return {
-        'prop_key': { label: propKey, value: propKey, type: FILTER_TYPES.is },
-        'prop_value': { label: value, value: value, type: type }
+        'prop_key': { type: FILTER_TYPES.is, clauses: [{label: propKey, value: propKey}] },
+        'prop_value': { type, clauses }
       }
     }
   }
 
   return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
-    const rawFilterValue = query.filters[filter] || ''
-    const {type, value} = parseQueryFilter(rawFilterValue)
+    const {type, clauses} = parseQueryFilter(query, filter)
 
-    let filterLabel = value
-
-    if (filter === 'country' && value !== '') {
-      filterLabel = (new URLSearchParams(window.location.search)).get('country_name')
-    }
-    if (filter === 'region' && value !== '') {
-      filterLabel = (new URLSearchParams(window.location.search)).get('region_name')
-    }
-    if (filter === 'city' && value !== '') {
-      filterLabel = (new URLSearchParams(window.location.search)).get('city_name')
-    }
-    return Object.assign(result, { [filter]: { label: filterLabel, value: value, type } })
+    return Object.assign(result, { [filter]: { type, clauses } })
   }, {})
-}
-
-const FILTER_TYPES = {
-  isNot: 'is not',
-  contains: 'contains',
-  is: 'is'
-};
-
-const FILTER_PREFIXES = {
-  [FILTER_TYPES.isNot]: '!',
-  [FILTER_TYPES.contains]: '~',
-  [FILTER_TYPES.is]: ''
-};
-
-export function parseQueryFilter(queryFilter) {
-  const type = Object.keys(FILTER_PREFIXES)
-    .find(type => FILTER_PREFIXES[type] === queryFilter[0]) || FILTER_TYPES.is;
-
-  const value = [FILTER_TYPES.isNot, FILTER_TYPES.contains].includes(type)
-    ? queryFilter.substring(1)
-    : queryFilter;
-
-  return {type, value}
-}
-
-function toFilterQuery(value, type) {
-  const prefix = FILTER_PREFIXES[type];
-  return prefix + value.trim();
 }
 
 function supportsContains(filterName) {
@@ -101,32 +51,6 @@ function withIndefiniteArticle(word) {
   }
   return `a ${word}`
 
-}
-
-export function formatFilterGroup(filterGroup) {
-  if (filterGroup === 'utm') {
-    return 'UTM tags'
-  } else if (filterGroup === 'location') {
-    return 'Location'
-  } else if (filterGroup === 'props') {
-    return 'Property'
-  } else {
-    return formattedFilters[filterGroup]
-  }
-}
-
-export function filterGroupForFilter(filter) {
-  const map = Object.entries(FILTER_GROUPS).reduce((filterToGroupMap, [group, filtersInGroup]) => {
-    const filtersToAdd = {}
-    filtersInGroup.forEach((filterInGroup) => {
-      filtersToAdd[filterInGroup] = group
-    })
-
-    return { ...filterToGroupMap, ...filtersToAdd }
-  }, {})
-
-
-  return map[filter] || filter
 }
 
 class FilterModal extends React.Component {
@@ -148,9 +72,7 @@ class FilterModal extends React.Component {
   }
 
   handleKeydown(e) {
-    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.isComposing || e.keyCode === 229) {
-      return
-    }
+    if (shouldIgnoreKeypress(e)) return
 
     if (e.target.tagName === 'BODY' && e.key === 'Enter') {
       this.handleSubmit()
@@ -160,19 +82,19 @@ class FilterModal extends React.Component {
   handleSubmit() {
     const { formState } = this.state;
 
-    const filters = Object.entries(formState).reduce((res, [filterKey, { type, value, label }]) => {
-      if (filterKey === 'country') { res.push({ filter: 'country_name', value: label }) }
-      if (filterKey === 'region') { res.push({ filter: 'region_name', value: label }) }
-      if (filterKey === 'city') { res.push({ filter: 'city_name', value: label }) }
+    const filters = Object.entries(formState).reduce((res, [filterKey, { type, clauses }]) => {
+      if (clauses.length === 0) { return res }
+      if (filterKey === 'country') { res.push({ filter: 'country_labels', value: clauses.map(clause => clause.label).join('|') }) }
+      if (filterKey === 'region') { res.push({ filter: 'region_labels', value: clauses.map(clause => clause.label).join('|') }) }
+      if (filterKey === 'city') { res.push({ filter: 'city_labels', value: clauses.map(clause => clause.label).join('|') }) }
       if (filterKey === 'prop_value') { return res }
       if (filterKey === 'prop_key') {
-        let propValue = formState['prop_value']
-        let filterValue = JSON.stringify({ [value]: toFilterQuery(propValue.value, propValue.type) })
-        res.push({ filter: 'props', value: filterValue })
+        const [{value: propKey}] = clauses
+        res.push({ filter: 'props', value: JSON.stringify({ [propKey]: toFilterQuery(formState.prop_value.type, formState.prop_value.clauses) }) })
         return res
       }
 
-      res.push({ filter: filterKey, value: toFilterQuery(value, type) })
+      res.push({ filter: filterKey, value: toFilterQuery(type, clauses) })
       return res
     }, [])
 
@@ -183,7 +105,7 @@ class FilterModal extends React.Component {
     return (selection) => {
       this.setState(prevState => ({
         formState: Object.assign(prevState.formState, {
-          [filterName]: Object.assign(prevState.formState[filterName], selection)
+          [filterName]: Object.assign(prevState.formState[filterName], { clauses: selection })
         })
       }))
     }
@@ -201,7 +123,7 @@ class FilterModal extends React.Component {
     return (input) => {
       const { query, formState } = this.state
       const formFilters = Object.fromEntries(
-        Object.entries(formState).map(([k, v]) => [k, v.code || v.value])
+        Object.entries(formState).map(([filter, {type, clauses}]) => [filter, toFilterQuery(type, clauses)])
       )
       const updatedQuery = this.queryForSuggestions(query, formFilters, filter)
       return api.get(apiPath(this.props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
@@ -216,7 +138,17 @@ class FilterModal extends React.Component {
       const propsFilter = formFilters.prop_key ? { [formFilters.prop_key]: '!(none)' } : null
       return { ...query, filters: { ...query.filters, props: propsFilter } }
     } else {
-      return { ...query, filters: { ...query.filters, ...formFilters, [filter]: null } }
+      return { ...query, filters: { ...query.filters, ...formFilters, [filter]: this.negate(formFilters[filter]) } }
+    }
+  }
+
+  negate(filterVal) {
+    if (!filterVal) {
+      return filterVal
+    } else if (filterVal.startsWith('!')) {
+      return filterVal
+    } else {
+      return '!' + filterVal
     }
   }
 
@@ -225,7 +157,11 @@ class FilterModal extends React.Component {
   }
 
   isDisabled() {
-    return Object.entries(this.state.formState).every(([_key, { value: val }]) => !val)
+    if (this.state.selectedFilterGroup === 'props') {
+      return Object.entries(this.state.formState).some(([_key, { clauses }]) => clauses.length === 0)
+    } else {
+      return Object.entries(this.state.formState).every(([_key, { clauses }]) => clauses.length === 0)
+    }
   }
 
   selectFiltersAndCloseModal(filters) {
@@ -243,8 +179,8 @@ class FilterModal extends React.Component {
   }
 
   renderSearchBox(filter) {
-    const isStrict = this.state.selectedFilterGroup === 'location'
-    return <Combobox fetchOptions={this.fetchOptions(filter)} strict={isStrict} selection={this.state.formState[filter]} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
+    const freeChoice = this.state.selectedFilterGroup === 'page'
+    return <Combobox fetchOptions={this.fetchOptions(filter)} freeChoice={freeChoice} values={this.state.formState[filter].clauses} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
   }
 
   renderFilterInputs() {
@@ -332,7 +268,7 @@ class FilterModal extends React.Component {
 
         <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
-          <form className="flex flex-col" id="filter-form" onSubmit={this.handleSubmit.bind(this)}>
+          <form className="flex flex-col" onSubmit={this.handleSubmit.bind(this)}>
             {this.renderFilterInputs()}
 
             <div className="mt-6 flex items-center justify-start">
@@ -341,7 +277,7 @@ class FilterModal extends React.Component {
                 className="button"
                 disabled={this.isDisabled()}
               >
-                Save Filter
+                Apply Filter
               </button>
 
               {showClear && (
@@ -359,20 +295,9 @@ class FilterModal extends React.Component {
               )}
             </div>
           </form>
-          {this.renderHints()}
         </main>
       </>
     )
-  }
-
-  renderHints() {
-    if (['page', 'entry_page', 'exit_page'].includes(this.state.selectedFilterGroup)) {
-      return (
-        <p className="mt-6 text-xs text-gray-500">Hint: You can use double asterisks to match any character e.g. /blog** to group all of your blog posts. Or use double asterisks in front and back (e.g. **keyword**) to group all URLs containing a specific keyword.</p>
-      )
-    }
-
-    return null
   }
 
   render() {

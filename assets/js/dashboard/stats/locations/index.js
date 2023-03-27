@@ -21,7 +21,7 @@ function Countries({query, site, onClick}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{country: 'code', country_name: 'name'}}
+      filter={{country: 'code', country_labels: 'name'}}
       onClick={onClick}
       keyLabel="Country"
       detailsLink={sitePath(site, '/countries')}
@@ -44,7 +44,7 @@ function Regions({query, site, onClick}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{region: 'code', region_name: 'name'}}
+      filter={{region: 'code', region_labels: 'name'}}
       onClick={onClick}
       keyLabel="Region"
       detailsLink={sitePath(site, '/regions')}
@@ -67,7 +67,7 @@ function Cities({query, site}) {
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{city: 'code', city_name: 'name'}}
+      filter={{city: 'code', city_labels: 'name'}}
       keyLabel="City"
       detailsLink={sitePath(site, '/cities')}
       query={query}

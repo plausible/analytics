@@ -63,6 +63,7 @@ defmodule Plausible.Stats.Filters do
     cond do
       is_negated && is_wildcard && is_list -> {:not_matches_member, val}
       is_negated && is_contains && is_list -> {:not_matches_member, Enum.map(val, &"**#{&1}**")}
+      is_wildcard && is_list -> {:matches_member, val}
       is_negated && is_wildcard -> {:does_not_match, val}
       is_negated && is_list -> {:not_member, val}
       is_negated && is_contains -> {:does_not_match, "**" <> val <> "**"}
