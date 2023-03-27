@@ -83,6 +83,7 @@ class FilterModal extends React.Component {
     const { formState } = this.state;
 
     const filters = Object.entries(formState).reduce((res, [filterKey, { type, clauses }]) => {
+      if (clauses.length === 0) { return res }
       if (filterKey === 'country') { res.push({ filter: 'country_labels', value: clauses.map(clause => clause.label).join('|') }) }
       if (filterKey === 'region') { res.push({ filter: 'region_labels', value: clauses.map(clause => clause.label).join('|') }) }
       if (filterKey === 'city') { res.push({ filter: 'city_labels', value: clauses.map(clause => clause.label).join('|') }) }
