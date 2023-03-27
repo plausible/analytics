@@ -37,7 +37,6 @@ defmodule Plausible.TestUtils do
   def create_site(%{user: user}) do
     site =
       Factory.insert(:site,
-        domain: "test-site-#{Base.encode16(:crypto.strong_rand_bytes(10), case: :lower)}.com",
         members: [user]
       )
 
