@@ -13,7 +13,7 @@ defmodule Plausible.DataMigration do
       @repo repo
 
       def run_sql_confirm(name, assigns \\ []) do
-        query = unwrap(name, assigns)
+        query = unwrap_with_io(name, assigns)
 
         confirm("Execute?", fn -> do_run(name, query) end)
       end
