@@ -69,7 +69,7 @@ defmodule Plausible.DataMigration.NumericIDs do
       - table_settings: #{table_settings}
       - db url: #{db_url}
       - cluster?: #{cluster?}
-      - partitions to do: #{inspect(partitions, pretty: true, width: 80)}
+      - partitions to do: #{inspect(partitions, pretty: true, limit: :infinity, width: 80)}
       - start from: #{start_from}
       - stop at: #{stop_at}
     """)
