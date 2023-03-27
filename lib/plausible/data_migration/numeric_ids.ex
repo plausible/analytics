@@ -7,6 +7,10 @@ defmodule Plausible.DataMigration.NumericIDs do
 
   @table_settings "SETTINGS index_granularity = 8192, storage_policy = 'tiered'"
 
+  def ready?() do
+    Application.get_env(:plausible, :v2_migration_done) || false
+  end
+
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def run(opts \\ []) do
     interactive? = Keyword.get(opts, :interactive?, true)
@@ -65,7 +69,7 @@ defmodule Plausible.DataMigration.NumericIDs do
       - table_settings: #{table_settings}
       - db url: #{db_url}
       - cluster?: #{cluster?}
-      - partitions to do: #{inspect(partitions, pretty: true, width: 80)}
+      - partitions to do: #{inspect(partitions, pretty: true, limit: :infinity, width: 80)}
       - start from: #{start_from}
       - stop at: #{stop_at}
     """)

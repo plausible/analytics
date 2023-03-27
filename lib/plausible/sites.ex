@@ -1,6 +1,5 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
-  alias Plausible.ClickhouseRepo
   alias Plausible.Site
   alias Plausible.Site.SharedLink
   import Ecto.Query
@@ -77,11 +76,6 @@ defmodule Plausible.Sites do
     !!stats_start_date(site)
   end
 
-  def has_events?(domain) do
-    q = from e in "events", where: e.domain == ^domain, select: true, limit: 1
-    ClickhouseRepo.one(q) == true
-  end
-
   def create_shared_link(site, name, password \\ nil) do
     changes =
       SharedLink.changeset(
@@ -155,6 +149,13 @@ defmodule Plausible.Sites do
     user
     |> owned_sites_query()
     |> select([site], site.domain)
+    |> Repo.all()
+  end
+
+  def owned_site_ids(user) do
+    user
+    |> owned_sites_query()
+    |> select([site], site.id)
     |> Repo.all()
   end
 

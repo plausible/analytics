@@ -44,7 +44,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
         ]
       )
 
-    populate_stats(site, [build(:pageview, domain: site.domain)])
+    populate_stats(site, [build(:pageview)])
 
     perform_job(SendTrialNotifications, %{})
 
@@ -55,7 +55,7 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
     test "sends a reminder 7 days before trial ends (16 days after user signed up)" do
       user = insert(:user, trial_expiry_date: Timex.now() |> Timex.shift(days: 7))
       site = insert(:site, members: [user])
-      populate_stats(site, [build(:pageview, domain: site.domain)])
+      populate_stats(site, [build(:pageview)])
 
       perform_job(SendTrialNotifications, %{})
 
@@ -67,9 +67,9 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       site = insert(:site, members: [user])
 
       populate_stats(site, [
-        build(:pageview, domain: site.domain),
-        build(:pageview, domain: site.domain),
-        build(:pageview, domain: site.domain)
+        build(:pageview),
+        build(:pageview),
+        build(:pageview)
       ])
 
       perform_job(SendTrialNotifications, %{})
@@ -82,9 +82,9 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       site = insert(:site, members: [user])
 
       populate_stats(site, [
-        build(:pageview, domain: site.domain),
-        build(:pageview, domain: site.domain),
-        build(:pageview, domain: site.domain)
+        build(:pageview),
+        build(:pageview),
+        build(:pageview)
       ])
 
       perform_job(SendTrialNotifications, %{})
@@ -115,9 +115,9 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       site = insert(:site, members: [user])
 
       populate_stats(site, [
-        build(:pageview, domain: site.domain),
-        build(:pageview, domain: site.domain),
-        build(:pageview, domain: site.domain)
+        build(:pageview),
+        build(:pageview),
+        build(:pageview)
       ])
 
       perform_job(SendTrialNotifications, %{})
@@ -130,9 +130,9 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       site = insert(:site, members: [user])
 
       populate_stats(site, [
-        build(:pageview, domain: site.domain),
-        build(:pageview, domain: site.domain),
-        build(:pageview, domain: site.domain)
+        build(:pageview),
+        build(:pageview),
+        build(:pageview)
       ])
 
       insert(:subscription, user: user)

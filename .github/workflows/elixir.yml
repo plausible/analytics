@@ -70,8 +70,12 @@ jobs:
         run: npm run deploy --prefix ./tracker
       - name: Check Credo Warnings
         run: mix credo diff --from-git-merge-base origin/master
-      - name: Run tests
+      - name: Run tests (against v1 schema)
         run: mix test --include slow --max-failures 1 --warnings-as-errors
+      - name: Run tests (against v2 schema)
+        run: mix test --include slow --max-failures 1 --warnings-as-errors
+        env:
+          V2_MIGRATION_DONE: 1
       - name: Check Dialyzer
         run: mix dialyzer
 env:

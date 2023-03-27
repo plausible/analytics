@@ -13,7 +13,7 @@ defmodule Plausible.DataMigration do
       @repo repo
 
       def run_sql_confirm(name, assigns \\ []) do
-        query = unwrap(name, assigns)
+        query = unwrap_with_io(name, assigns)
 
         confirm("Execute?", fn -> do_run(name, query) end)
       end
@@ -30,7 +30,9 @@ defmodule Plausible.DataMigration do
       end
 
       defp unwrap(name, assigns) do
-        "priv/data_migrations"
+        :plausible
+        |> :code.priv_dir()
+        |> Path.join("data_migrations")
         |> Path.join(@dir)
         |> Path.join("sql")
         |> Path.join(name <> ".sql.eex")

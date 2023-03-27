@@ -1,4 +1,4 @@
-SELECT partition 
+SELECT distinct(partition)
 FROM system.parts 
 WHERE table = 'events' 
 <%= if @start_from do %>AND partition >= '<%= @start_from %>'<% end %>

@@ -37,7 +37,6 @@ defmodule Plausible.TestUtils do
   def create_site(%{user: user}) do
     site =
       Factory.insert(:site,
-        domain: "test-site.com",
         members: [user]
       )
 
@@ -73,30 +72,63 @@ defmodule Plausible.TestUtils do
   def create_pageviews(pageviews) do
     pageviews =
       Enum.map(pageviews, fn pageview ->
+        pageview =
+          if Plausible.v2?() do
+            pageview
+            |> Map.delete(:site)
+            |> Map.put(:site_id, pageview.site.id)
+          else
+            pageview
+            |> Map.delete(:site)
+            |> Map.put(:domain, pageview.site.domain)
+          end
+
         Factory.build(:pageview, pageview)
         |> Map.from_struct()
         |> Map.delete(:__meta__)
         |> update_in([:timestamp], &to_naive_truncate/1)
       end)
 
-    Plausible.IngestRepo.insert_all(Plausible.ClickhouseEvent, pageviews)
+    if Plausible.v2?() do
+      Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, pageviews)
+    else
+      Plausible.IngestRepo.insert_all(Plausible.ClickhouseEvent, pageviews)
+    end
   end
 
   def create_events(events) do
     events =
       Enum.map(events, fn event ->
+        event =
+          if Plausible.v2?() do
+            Map.delete(event, :domain)
+          else
+            Map.delete(event, :site_id)
+          end
+
         Factory.build(:event, event)
         |> Map.from_struct()
         |> Map.delete(:__meta__)
         |> update_in([:timestamp], &to_naive_truncate/1)
       end)
 
-    Plausible.IngestRepo.insert_all(Plausible.ClickhouseEvent, events)
+    if Plausible.v2?() do
+      Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, events)
+    else
+      Plausible.IngestRepo.insert_all(Plausible.ClickhouseEvent, events)
+    end
   end
 
   def create_sessions(sessions) do
     sessions =
       Enum.map(sessions, fn session ->
+        session =
+          if Plausible.v2?() do
+            Map.delete(session, :domain)
+          else
+            Map.delete(session, :site_id)
+          end
+
         Factory.build(:ch_session, session)
         |> Map.from_struct()
         |> Map.delete(:__meta__)
@@ -104,7 +136,11 @@ defmodule Plausible.TestUtils do
         |> update_in([:start], &to_naive_truncate/1)
       end)
 
-    Plausible.IngestRepo.insert_all(Plausible.ClickhouseSession, sessions)
+    if Plausible.v2?() do
+      Plausible.IngestRepo.insert_all(Plausible.ClickhouseSessionV2, sessions)
+    else
+      Plausible.IngestRepo.insert_all(Plausible.ClickhouseSession, sessions)
+    end
   end
 
   def log_in(%{user: user, conn: conn}) do
@@ -134,6 +170,9 @@ defmodule Plausible.TestUtils do
   def populate_stats(site, events) do
     Enum.map(events, fn event ->
       case event do
+        %Plausible.ClickhouseEventV2{} ->
+          Map.put(event, :site_id, site.id)
+
         %Plausible.ClickhouseEvent{} ->
           Map.put(event, :domain, site.domain)
 
@@ -158,6 +197,9 @@ defmodule Plausible.TestUtils do
       end)
       |> Enum.split_with(fn event ->
         case event do
+          %Plausible.ClickhouseEventV2{} ->
+            true
+
           %Plausible.ClickhouseEvent{} ->
             true
 
@@ -174,11 +216,22 @@ defmodule Plausible.TestUtils do
     sessions =
       Enum.reduce(events, %{}, fn event, sessions ->
         session_id = Plausible.Session.CacheStore.on_event(event, nil)
-        Map.put(sessions, {event.domain, event.user_id}, session_id)
+
+        if Plausible.v2?() do
+          Map.put(sessions, {event.site_id, event.user_id}, session_id)
+        else
+          Map.put(sessions, {event.domain, event.user_id}, session_id)
+        end
       end)
 
     Enum.each(events, fn event ->
-      event = Map.put(event, :session_id, sessions[{event.domain, event.user_id}])
+      event =
+        if Plausible.v2?() do
+          Map.put(event, :session_id, sessions[{event.site_id, event.user_id}])
+        else
+          Map.put(event, :session_id, sessions[{event.domain, event.user_id}])
+        end
+
       Plausible.Event.WriteBuffer.insert(event)
     end)
 

@@ -8,12 +8,23 @@ defmodule Plausible.Stats.Clickhouse do
   @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
   def pageview_start_date_local(site) do
     datetime =
-      ClickhouseRepo.one(
-        from e in "events",
-          select: fragment("min(?)", e.timestamp),
-          where: e.domain == ^site.domain,
-          where: e.timestamp >= ^site.native_stats_start_at
-      )
+      if Plausible.v2?() do
+        ClickhouseRepo.one(
+          from(e in "events_v2",
+            select: fragment("min(?)", e.timestamp),
+            where: e.site_id == ^site.id,
+            where: e.timestamp >= ^site.native_stats_start_at
+          )
+        )
+      else
+        ClickhouseRepo.one(
+          from(e in "events",
+            select: fragment("min(?)", e.timestamp),
+            where: e.domain == ^site.domain,
+            where: e.timestamp >= ^site.native_stats_start_at
+          )
+        )
+      end
 
     case datetime do
       # no stats for this domain yet
@@ -29,28 +40,29 @@ defmodule Plausible.Stats.Clickhouse do
 
   def imported_pageview_count(site) do
     Plausible.ClickhouseRepo.one(
-      from i in "imported_visitors",
+      from(i in "imported_visitors",
         where: i.site_id == ^site.id,
         select: sum(i.pageviews)
+      )
     )
   end
 
-  def usage_breakdown(domains) do
+  def usage_breakdown(domains_or_site_ids) do
     range =
       Date.range(
         Timex.shift(Timex.today(), days: -30),
         Timex.today()
       )
 
-    usage_breakdown(domains, range)
+    usage_breakdown(domains_or_site_ids, range)
   end
 
-  def usage_breakdown(domains, date_range) do
+  def usage_breakdown([d | _] = domains, date_range) when is_binary(d) do
     Enum.chunk_every(domains, 300)
     |> Enum.reduce({0, 0}, fn domains, {pageviews_total, custom_events_total} ->
       {chunk_pageviews, chunk_custom_events} =
         ClickhouseRepo.one(
-          from e in "events",
+          from(e in "events",
             where: e.domain in ^domains,
             where: fragment("toDate(?)", e.timestamp) >= ^date_range.first,
             where: fragment("toDate(?)", e.timestamp) <= ^date_range.last,
@@ -58,11 +70,34 @@ defmodule Plausible.Stats.Clickhouse do
               fragment("countIf(? = 'pageview')", e.name),
               fragment("countIf(? != 'pageview')", e.name)
             }
+          )
         )
 
       {pageviews_total + chunk_pageviews, custom_events_total + chunk_custom_events}
     end)
   end
+
+  def usage_breakdown([sid | _] = site_ids, date_range) when is_integer(sid) do
+    Enum.chunk_every(site_ids, 300)
+    |> Enum.reduce({0, 0}, fn site_ids, {pageviews_total, custom_events_total} ->
+      {chunk_pageviews, chunk_custom_events} =
+        ClickhouseRepo.one(
+          from(e in "events_v2",
+            where: e.site_id in ^site_ids,
+            where: fragment("toDate(?)", e.timestamp) >= ^date_range.first,
+            where: fragment("toDate(?)", e.timestamp) <= ^date_range.last,
+            select: {
+              fragment("countIf(? = 'pageview')", e.name),
+              fragment("countIf(? != 'pageview')", e.name)
+            }
+          )
+        )
+
+      {pageviews_total + chunk_pageviews, custom_events_total + chunk_custom_events}
+    end)
+  end
+
+  def usage_breakdown([], _date_range), do: {0, 0}
 
   def top_sources(site, query, limit, page, show_noref \\ false, include_details) do
     offset = (page - 1) * limit
@@ -151,47 +186,87 @@ defmodule Plausible.Stats.Clickhouse do
 
   def current_visitors(site, query) do
     Plausible.ClickhouseRepo.one(
-      from e in base_query(site, query),
+      from(e in base_query(site, query),
         select: uniq(e.user_id)
+      )
     )
   end
 
   def has_pageviews?(site) do
-    ClickhouseRepo.exists?(
-      from(e in "events",
-        where:
-          e.domain == ^site.domain and
-            e.name == "pageview" and
-            e.timestamp >=
-              ^site.native_stats_start_at
+    if Plausible.v2?() do
+      ClickhouseRepo.exists?(
+        from(e in "events_v2",
+          where:
+            e.site_id == ^site.id and
+              e.name == "pageview" and
+              e.timestamp >=
+                ^site.native_stats_start_at
+        )
       )
-    )
+    else
+      ClickhouseRepo.exists?(
+        from(e in "events",
+          where:
+            e.domain == ^site.domain and
+              e.name == "pageview" and
+              e.timestamp >=
+                ^site.native_stats_start_at
+        )
+      )
+    end
   end
 
   def last_24h_visitors([]), do: %{}
 
   def last_24h_visitors(sites) do
-    domains = Enum.map(sites, & &1.domain)
+    if Plausible.v2?() do
+      site_id_to_domain_mapping = for site <- sites, do: {site.id, site.domain}, into: %{}
 
-    ClickhouseRepo.all(
-      from e in "events",
-        group_by: e.domain,
-        where: e.domain in ^domains,
-        where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
-        select: {e.domain, fragment("uniq(user_id)")}
-    )
-    |> Enum.into(%{})
+      ClickhouseRepo.all(
+        from(e in "events_v2",
+          group_by: e.site_id,
+          where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
+          where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
+          select: {e.site_id, fragment("uniq(user_id)")}
+        )
+      )
+      |> Enum.map(fn {site_id, user_id} ->
+        {site_id_to_domain_mapping[site_id], user_id}
+      end)
+      |> Enum.into(%{})
+    else
+      domains = Enum.map(sites, & &1.domain)
+
+      ClickhouseRepo.all(
+        from(e in "events",
+          group_by: e.domain,
+          where: e.domain in ^domains,
+          where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
+          select: {e.domain, fragment("uniq(user_id)")}
+        )
+      )
+      |> Enum.into(%{})
+    end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp base_session_query(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
-      from(s in "sessions",
-        hints: ["SAMPLE 10000000"],
-        where: s.domain == ^site.domain,
-        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
-      )
+      if Plausible.v2?() do
+        from(s in "sessions_v2",
+          hints: ["SAMPLE 10000000"],
+          where: s.site_id == ^site.id,
+          where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
+        )
+      else
+        from(s in "sessions",
+          hints: ["SAMPLE 10000000"],
+          where: s.domain == ^site.domain,
+          where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
+        )
+      end
 
     q =
       if query.filters["source"] do
@@ -302,15 +377,24 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp base_query_bare(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
-      from(e in "events",
-        hints: ["SAMPLE 10000000"],
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
-      )
+      if Plausible.v2?() do
+        from(e in "events_v2",
+          hints: ["SAMPLE 10000000"],
+          where: e.site_id == ^site.id,
+          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+        )
+      else
+        from(e in "events",
+          hints: ["SAMPLE 10000000"],
+          where: e.domain == ^site.domain,
+          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+        )
+      end
 
     q =
       if query.filters["screen"] do

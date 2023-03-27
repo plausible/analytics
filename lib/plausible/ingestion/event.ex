@@ -7,9 +7,11 @@ defmodule Plausible.Ingestion.Event do
   """
   alias Plausible.Ingestion.Request
   alias Plausible.ClickhouseEvent
+  alias Plausible.ClickhouseEventV2
   alias Plausible.Site.GateKeeper
 
   defstruct domain: nil,
+            site_id: nil,
             clickhouse_event_attrs: %{},
             clickhouse_event: nil,
             dropped?: false,
@@ -26,8 +28,9 @@ defmodule Plausible.Ingestion.Event do
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
+          site_id: pos_integer() | nil,
           clickhouse_event_attrs: map(),
-          clickhouse_event: %ClickhouseEvent{} | nil,
+          clickhouse_event: %ClickhouseEvent{} | %ClickhouseEventV2{} | nil,
           dropped?: boolean(),
           drop_reason: drop_reason(),
           request: Request.t(),
@@ -43,10 +46,10 @@ defmodule Plausible.Ingestion.Event do
       else
         Enum.reduce(domains, [], fn domain, acc ->
           case GateKeeper.check(domain) do
-            :allow ->
+            {:allow, site_id} ->
               processed =
                 domain
-                |> new(request)
+                |> new(site_id, request)
                 |> process_unless_dropped(pipeline())
 
               [processed | acc]
@@ -117,6 +120,10 @@ defmodule Plausible.Ingestion.Event do
     struct!(__MODULE__, domain: domain, request: request)
   end
 
+  defp new(domain, site_id, request) do
+    struct!(__MODULE__, domain: domain, site_id: site_id, request: request)
+  end
+
   defp drop(%__MODULE__{} = event, reason, attrs \\ []) do
     fields =
       attrs
@@ -156,6 +163,7 @@ defmodule Plausible.Ingestion.Event do
   defp put_basic_info(%__MODULE__{} = event) do
     update_attrs(event, %{
       domain: event.domain,
+      site_id: event.site_id,
       timestamp: event.request.timestamp,
       name: event.request.event_name,
       hostname: event.request.hostname,
@@ -217,9 +225,15 @@ defmodule Plausible.Ingestion.Event do
 
   defp validate_clickhouse_event(%__MODULE__{} = event) do
     clickhouse_event =
-      event
-      |> Map.fetch!(:clickhouse_event_attrs)
-      |> ClickhouseEvent.new()
+      if Plausible.v2?() do
+        event
+        |> Map.fetch!(:clickhouse_event_attrs)
+        |> ClickhouseEventV2.new()
+      else
+        event
+        |> Map.fetch!(:clickhouse_event_attrs)
+        |> ClickhouseEvent.new()
+      end
 
     case Ecto.Changeset.apply_action(clickhouse_event, nil) do
       {:ok, valid_clickhouse_event} ->

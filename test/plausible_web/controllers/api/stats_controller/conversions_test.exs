@@ -653,6 +653,41 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{domain: site.domain, page_path: "/*"})
       insert(:goal, %{domain: site.domain, page_path: "/**"})
 
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/hum",
+          timestamp: ~N[2019-07-01 23:00:00]
+        ),
+        build(:pageview,
+          pathname: "/register",
+          timestamp: ~N[2019-07-01 23:00:00]
+        ),
+        build(:pageview,
+          pathname: "/reg",
+          timestamp: ~N[2019-07-01 23:00:00]
+        ),
+        build(:pageview,
+          pathname: "/billing/success",
+          timestamp: ~N[2019-07-01 23:00:00]
+        ),
+        build(:pageview,
+          pathname: "/billing/upgrade/success",
+          timestamp: ~N[2019-07-01 23:00:00]
+        ),
+        build(:pageview,
+          pathname: "/signup/new",
+          timestamp: ~N[2019-07-01 23:00:00]
+        ),
+        build(:pageview,
+          pathname: "/signup/new/2",
+          timestamp: ~N[2019-07-01 23:00:00]
+        ),
+        build(:pageview,
+          pathname: "/signup/new/3",
+          timestamp: ~N[2019-07-01 23:00:00]
+        )
+      ])
+
       conn =
         get(
           conn,

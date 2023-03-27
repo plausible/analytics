@@ -1161,9 +1161,14 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     with :ok <- validate_params(params) do
-      query = Query.from(site, params) |> Filters.add_prefix()
+      query =
+        Query.from(site, params)
+        |> Filters.add_prefix()
 
-      json(conn, Stats.filter_suggestions(site, query, params["filter_name"], params["q"]))
+      json(
+        conn,
+        Stats.filter_suggestions(site, query, params["filter_name"], params["q"])
+      )
     else
       {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
