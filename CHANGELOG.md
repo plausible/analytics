@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - 'Last updated X seconds ago' info to 'current visitors' tooltips
 - Add support for more Bamboo adapters, i.e. `Bamboo.MailgunAdapter`, `Bamboo.MandrillAdapter`, `Bamboo.SendGridAdapter` plausible/analytics#2649
+- Allow multiple filter selections plausible/analytics#2773
 
 ### Fixed
 - Make goal-filtered CSV export return only unique_conversions timeseries in the 'visitors.csv' file
