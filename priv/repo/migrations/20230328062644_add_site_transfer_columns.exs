@@ -8,5 +8,6 @@ defmodule Plausible.Repo.Migrations.AddSiteTransferColumns do
     end
 
     create unique_index(:sites, :transferred_from)
+    create index(:sites, :transferred_at)
   end
 end
