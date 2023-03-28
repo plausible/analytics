@@ -122,6 +122,7 @@ class FilterModal extends React.Component {
   fetchOptions(filter) {
     return (input) => {
       const { query, formState } = this.state
+      if (formState[filter].type === 'contains') {return Promise.resolve([])}
       const formFilters = Object.fromEntries(
         Object.entries(formState).map(([filter, {type, clauses}]) => [filter, toFilterQuery(type, clauses)])
       )
@@ -147,6 +148,8 @@ class FilterModal extends React.Component {
       return filterVal
     } else if (filterVal.startsWith('!')) {
       return filterVal
+    } else if (filterVal.startsWith('~')) {
+      return null
     } else {
       return '!' + filterVal
     }
