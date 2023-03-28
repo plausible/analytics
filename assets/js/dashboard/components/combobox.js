@@ -99,6 +99,7 @@ export default function PlausibleCombobox(props) {
 
   function fetchOptions(query) {
     setLoading(true)
+    setOpen(true)
 
     return props.fetchOptions(query).then((loadedOptions) => {
       setLoading(false)
@@ -119,7 +120,6 @@ export default function PlausibleCombobox(props) {
     if (!isOpen) {
       fetchOptions(input)
       searchRef.current.focus()
-      setOpen(true)
     } else {
       setInput('')
       setOpen(false)
