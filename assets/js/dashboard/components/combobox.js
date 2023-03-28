@@ -99,6 +99,7 @@ export default function PlausibleCombobox(props) {
 
   function fetchOptions(query) {
     setLoading(true)
+    setOpen(true)
 
     return props.fetchOptions(query).then((loadedOptions) => {
       setLoading(false)
@@ -119,7 +120,6 @@ export default function PlausibleCombobox(props) {
     if (!isOpen) {
       fetchOptions(input)
       searchRef.current.focus()
-      setOpen(true)
     } else {
       setInput('')
       setOpen(false)
@@ -186,9 +186,14 @@ export default function PlausibleCombobox(props) {
               Loading options...
             </div>
           )}
-          { noMatchesFound && (
+          { noMatchesFound && !props.freeChoice && (
             <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
               No matches found in the current dashboard. Try selecting a different time range or searching for something different
+            </div>
+          )}
+          { noMatchesFound && props.freeChoice && (
+            <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
+              Start typing to apply filter
             </div>
           )}
           { matchesFound && (

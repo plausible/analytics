@@ -35,10 +35,6 @@ function getFormState(filterGroup, query) {
   }, {})
 }
 
-function supportsContains(filterName) {
-  return ['page', 'entry_page', 'exit_page'].includes(filterName)
-}
-
 function supportsIsNot(filterName) {
   return !['goal', 'prop_key'].includes(filterName)
 }
@@ -122,6 +118,8 @@ class FilterModal extends React.Component {
   fetchOptions(filter) {
     return (input) => {
       const { query, formState } = this.state
+      if (formState[filter].type === FILTER_TYPES.contains) {return Promise.resolve([])}
+
       const formFilters = Object.fromEntries(
         Object.entries(formState).map(([filter, {type, clauses}]) => [filter, toFilterQuery(type, clauses)])
       )
@@ -147,6 +145,8 @@ class FilterModal extends React.Component {
       return filterVal
     } else if (filterVal.startsWith('!')) {
       return filterVal
+    } else if (filterVal.startsWith('~')) {
+      return null
     } else {
       return '!' + filterVal
     }
@@ -178,9 +178,12 @@ class FilterModal extends React.Component {
     this.props.history.replace({ pathname: siteBasePath(this.props.site), search: queryString.toString() })
   }
 
+  isFreeChoice() {
+    return ['page', 'utm'].includes(this.state.selectedFilterGroup)
+  }
+
   renderSearchBox(filter) {
-    const freeChoice = this.state.selectedFilterGroup === 'page'
-    return <Combobox fetchOptions={this.fetchOptions(filter)} freeChoice={freeChoice} values={this.state.formState[filter].clauses} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
+    return <Combobox fetchOptions={this.fetchOptions(filter)} freeChoice={this.isFreeChoice()} values={this.state.formState[filter].clauses} onChange={this.onChange(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
   }
 
   renderFilterInputs() {
@@ -228,7 +231,7 @@ class FilterModal extends React.Component {
                 <div className="py-1">
                   {this.renderTypeItem(filterName, FILTER_TYPES.is, true)}
                   {this.renderTypeItem(filterName, FILTER_TYPES.isNot, supportsIsNot(filterName))}
-                  {this.renderTypeItem(filterName, FILTER_TYPES.contains, supportsContains(filterName))}
+                  {this.renderTypeItem(filterName, FILTER_TYPES.contains, this.isFreeChoice())}
                 </div>
               </Menu.Items>
             </Transition>
