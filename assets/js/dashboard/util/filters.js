@@ -31,8 +31,6 @@ try {
   NON_ESCAPED_PIPE_REGEX = '|'
 }
 
-console.log(NON_ESCAPED_PIPE_REGEX)
-
 const ESCAPED_PIPE = '\\|'
 
 function escapeFilterValue(value) {
