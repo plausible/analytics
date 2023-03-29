@@ -208,7 +208,11 @@ defmodule PlausibleWeb.Api.StatsController do
         interval: query.interval,
         sample_percent: sample_percent,
         with_imported: query.include_imported,
-        imported_source: site.imported_data && site.imported_data.source
+        imported_source: site.imported_data && site.imported_data.source,
+        comparing_from: comparison_query && comparison_query.date_range.first,
+        comparing_to: comparison_query && comparison_query.date_range.last,
+        from: query.date_range.first,
+        to: query.date_range.last
       })
     else
       {:error, message} when is_binary(message) -> bad_request(conn, message)
@@ -360,21 +364,25 @@ defmodule PlausibleWeb.Api.StatsController do
       %{
         name: "Unique visitors",
         value: unique_visitors,
+        comparison_value: prev_unique_visitors,
         change: percent_change(prev_unique_visitors, unique_visitors)
       },
       %{
         name: "Unique conversions",
         value: converted_visitors,
+        comparison_value: prev_converted_visitors,
         change: percent_change(prev_converted_visitors, converted_visitors)
       },
       %{
         name: "Total conversions",
         value: completions,
+        comparison_value: prev_completions,
         change: percent_change(prev_completions, completions)
       },
       %{
         name: "Conversion rate",
         value: conversion_rate,
+        comparison_value: prev_conversion_rate,
         change: percent_change(prev_conversion_rate, conversion_rate)
       }
     ]
@@ -430,7 +438,7 @@ defmodule PlausibleWeb.Api.StatsController do
       prev_value = get_in(prev_results, [key, :value])
       change = prev_value && calculate_change(key, prev_value, value)
 
-      %{name: name, value: value, change: change}
+      %{name: name, value: value, comparison_value: prev_value, change: change}
     end
   end
 
