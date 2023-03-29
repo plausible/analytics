@@ -875,9 +875,7 @@ defmodule PlausibleWeb.SiteController do
 
   def change_domain(conn, _params) do
     if Plausible.v2?() do
-      site = conn.assigns[:site]
-
-      changeset = Plausible.Site.update_changeset(site)
+      changeset = Plausible.Site.update_changeset(conn.assigns.site)
 
       render(conn, "change_domain.html",
         changeset: changeset,
