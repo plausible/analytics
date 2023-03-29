@@ -175,6 +175,9 @@ defmodule PlausibleWeb.Router do
     get "/sites", SiteController, :index
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
+    get "/sites/:website/change-domain", SiteController, :change_domain
+    put "/sites/:website/change-domain", SiteController, :change_domain_submit
+    get "/:website/change-domain-snippet", SiteController, :add_snippet_after_domain_change
     post "/sites/:website/make-public", SiteController, :make_public
     post "/sites/:website/make-private", SiteController, :make_private
     post "/sites/:website/weekly-report/enable", SiteController, :enable_weekly_report
