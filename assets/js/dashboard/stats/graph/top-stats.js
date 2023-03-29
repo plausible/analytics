@@ -7,7 +7,7 @@ import { METRIC_MAPPING } from './graph-util'
 import { parseUTCDate, formatDayShort } from '../../util/date.js'
 
 export default class TopStats extends React.Component {
-  renderComparison(name, comparison, forceDarkMode = false) {
+  renderPercentageComparison(name, comparison, forceDarkMode = false) {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     const defaultClassName = classNames({
@@ -62,7 +62,7 @@ export default class TopStats extends React.Component {
       <div>
         {query.comparison && <div className="whitespace-nowrap">
           {this.topStatNumberLong(stat.name, stat.value)} vs. {this.topStatNumberLong(stat.name, stat.comparison_value)} {statName}
-          <span className="ml-2">{this.renderComparison(stat.name, stat.change, true)}</span>
+          <span className="ml-2">{this.renderPercentageComparison(stat.name, stat.change, true)}</span>
         </div>}
 
         {!query.comparison && <div className="whitespace-nowrap">
@@ -145,7 +145,7 @@ export default class TopStats extends React.Component {
               <div>
                 <span className="flex items-center justify-between whitespace-nowrap">
                   <p className="font-bold text-xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat.name, stat.value)}</p>
-                  { !query.comparison && this.renderComparison(stat.name, stat.change) }
+                  { !query.comparison && this.renderPercentageComparison(stat.name, stat.change) }
                 </span>
                 { query.comparison && <p className="text-xs dark:text-gray-100">{ formatRange(topStatData.from, topStatData.to) }</p> }
               </div>
