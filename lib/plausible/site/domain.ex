@@ -4,13 +4,20 @@ defmodule Plausible.Site.Domain do
   @moduledoc """
   Basic interface for domain changes.
 
-  Once V2 schema migration is ready, domain change operation
-  will be enabled, accessible to the users.
+  Once `Plausible.DataMigration.NumericIDs` schema migration is ready, 
+  domain change operation will be enabled, accessible to the users.
 
-  We will set a grace period of #{@expire_threshold_hours} hours
-  during which both old and new domains will redirect events traffic
-  to the same site. A periodic worker will call the `expire/0` 
-  function to end it where applicable.
+  We will set a transition period of #{@expire_threshold_hours} hours
+  during which, both old and new domains, will be accepted as traffic
+  identifiers to the same site. 
+
+  A periodic worker will call the `expire/0` function to end it where applicable.
+  See: `Plausible.Workers.ExpireDomainChangeTransitions`.
+
+  The underlying changeset for domain change (see: `Plausible.Site`) relies
+  on database trigger installed via `Plausible.Repo.Migrations.AllowDomainChange`
+  Postgres migration. The trigger checks if either `domain` or `domain_changed_from`
+  exist to ensure unicity.
   """
 
   alias Plausible.Site
