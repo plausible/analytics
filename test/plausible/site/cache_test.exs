@@ -71,6 +71,15 @@ defmodule Plausible.Site.CacheTest do
       assert Cache.ready?(test)
     end
 
+    test "cache allows lookups for sites with changed domain", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      insert(:site, domain: "new.example.com", domain_changed_from: "old.example.com")
+      :ok = Cache.refresh_all(cache_name: test)
+
+      assert Cache.get("old.example.com", force?: true, cache_name: test)
+      assert Cache.get("new.example.com", force?: true, cache_name: test)
+    end
+
     test "cache exposes hit rate", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
@@ -104,6 +113,46 @@ defmodule Plausible.Site.CacheTest do
 
       refute Cache.get(domain1, cache_opts)
       assert %Site{domain: ^domain2} = Cache.get(domain2, cache_opts)
+    end
+
+    @tag :v2_only
+    test "sites with recently changed domains are refreshed", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+      cache_opts = [cache_name: test, force?: true]
+
+      domain1 = "first.example.com"
+      domain2 = "second.example.com"
+
+      site = insert(:site, domain: domain1)
+      assert :ok = Cache.refresh_updated_recently(cache_opts)
+      assert item = Cache.get(domain1, cache_opts)
+      refute item.domain_changed_from
+
+      # change domain1 to domain2
+
+      {:ok, _site} = Site.Domain.change(site, domain2)
+
+      # small refresh keeps both items in cache
+
+      assert :ok = Cache.refresh_updated_recently(cache_opts)
+      assert item_by_domain1 = Cache.get(domain1, cache_opts)
+      assert item_by_domain2 = Cache.get(domain2, cache_opts)
+
+      assert item_by_domain1 == item_by_domain2
+      assert item_by_domain1.domain == domain2
+      assert item_by_domain1.domain_changed_from == domain1
+
+      # domain_changed_from gets no longer tracked
+
+      {:ok, _} = Site.Domain.expire_change_transitions(-1)
+
+      # full refresh removes the stale entry
+
+      assert :ok = Cache.refresh_all(cache_opts)
+
+      refute Cache.get(domain1, cache_opts)
+      assert item = Cache.get(domain2, cache_opts)
+      refute item.domain_changed_from
     end
 
     test "refreshing all sites sends a telemetry event",
@@ -205,14 +254,14 @@ defmodule Plausible.Site.CacheTest do
     test "merging adds new items", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
-      :ok = Cache.merge([{"item1", :item1}], cache_name: test)
+      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
       assert :item1 == Cache.get("item1", cache_name: test, force?: true)
     end
 
     test "merging no new items leaves the old cache intact", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
-      :ok = Cache.merge([{"item1", :item1}], cache_name: test)
+      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
       :ok = Cache.merge([], cache_name: test)
       assert :item1 == Cache.get("item1", cache_name: test, force?: true)
     end
@@ -220,8 +269,8 @@ defmodule Plausible.Site.CacheTest do
     test "merging removes stale items", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
-      :ok = Cache.merge([{"item1", :item1}], cache_name: test)
-      :ok = Cache.merge([{"item2", :item2}], cache_name: test)
+      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
+      :ok = Cache.merge([{"item2", nil, :item2}], cache_name: test)
 
       refute Cache.get("item1", cache_name: test, force?: true)
       assert Cache.get("item2", cache_name: test, force?: true)
@@ -230,8 +279,8 @@ defmodule Plausible.Site.CacheTest do
     test "merging optionally leaves stale items intact", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
-      :ok = Cache.merge([{"item1", :item1}], cache_name: test)
-      :ok = Cache.merge([{"item2", :item2}], cache_name: test, delete_stale_items?: false)
+      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
+      :ok = Cache.merge([{"item2", nil, :item2}], cache_name: test, delete_stale_items?: false)
 
       assert Cache.get("item1", cache_name: test, force?: true)
       assert Cache.get("item2", cache_name: test, force?: true)
@@ -240,15 +289,24 @@ defmodule Plausible.Site.CacheTest do
     test "merging updates changed items", %{test: test} do
       {:ok, _} = start_test_cache(test)
 
-      :ok = Cache.merge([{"item1", :item1}, {"item2", :item2}], cache_name: test)
-      :ok = Cache.merge([{"item1", :changed}, {"item2", :item2}], cache_name: test)
+      :ok = Cache.merge([{"item1", nil, :item1}, {"item2", nil, :item2}], cache_name: test)
+      :ok = Cache.merge([{"item1", nil, :changed}, {"item2", nil, :item2}], cache_name: test)
 
       assert :changed == Cache.get("item1", cache_name: test, force?: true)
       assert :item2 == Cache.get("item2", cache_name: test, force?: true)
     end
 
-    @items1 for i <- 1..200_000, do: {i, :batch1}
-    @items2 for _ <- 1..200_000, do: {Enum.random(1..400_000), :batch2}
+    test "merging keeps secondary keys", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
+      :ok = Cache.merge([{"item2", "item1", :updated}], cache_name: test)
+      assert :updated == Cache.get("item1", cache_name: test, force?: true)
+      assert :updated == Cache.get("item2", cache_name: test, force?: true)
+    end
+
+    @items1 for i <- 1..200_000, do: {i, nil, :batch1}
+    @items2 for _ <- 1..200_000, do: {Enum.random(1..400_000), nil, :batch2}
     @max_seconds 2
     test "merging large sets is expected to be under #{@max_seconds} seconds", %{test: test} do
       {:ok, _} = start_test_cache(test)
