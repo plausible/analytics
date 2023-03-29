@@ -52,7 +52,10 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
   defp verify_access(_api_key, nil), do: {:error, :missing_site_id}
 
   defp verify_access(api_key, site_id) do
-    case Repo.get_by(Plausible.Site, domain: site_id) do
+    domain_based_search =
+      from s in Plausible.Site, where: s.domain == ^site_id or s.domain_changed_from == ^site_id
+
+    case Repo.one(domain_based_search) do
       %Plausible.Site{} = site ->
         is_member? = Sites.is_member?(api_key.user_id, site)
         is_super_admin? = Plausible.Auth.is_super_admin?(api_key.user_id)
