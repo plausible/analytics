@@ -5,7 +5,6 @@ import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 import Combobox from '../../components/combobox'
-import Modal from './modal'
 import { FILTER_GROUPS, parseQueryFilter, formatFilterGroup, formattedFilters, toFilterQuery, FILTER_TYPES } from '../../util/filters'
 import { parseQuery } from '../../query'
 import * as api from '../../api'
@@ -49,14 +48,13 @@ function withIndefiniteArticle(word) {
 
 }
 
-class FilterModal extends React.Component {
+class RegularFilterModal extends React.Component {
   constructor(props) {
     super(props)
     const query = parseQuery(props.location.search, props.site)
-    const selectedFilterGroup = this.props.match.params.field || 'page'
-    const formState = getFormState(selectedFilterGroup, query)
+    const formState = getFormState(props.filterGroup, query)
 
-    this.state = { selectedFilterGroup, query, formState }
+    this.state = { query, formState }
   }
 
   componentDidMount() {
@@ -159,7 +157,7 @@ class FilterModal extends React.Component {
   }
 
   isDisabled() {
-    if (this.state.selectedFilterGroup === 'props') {
+    if (this.props.filterGroup === 'props') {
       return Object.entries(this.state.formState).some(([_key, { clauses }]) => clauses.length === 0)
     } else {
       return Object.entries(this.state.formState).every(([_key, { clauses }]) => clauses.length === 0)
@@ -181,7 +179,7 @@ class FilterModal extends React.Component {
   }
 
   isFreeChoice() {
-    return ['page', 'utm'].includes(this.state.selectedFilterGroup)
+    return ['page', 'utm'].includes(this.props.filterGroup)
   }
 
   renderSearchBox(filter) {
@@ -189,7 +187,7 @@ class FilterModal extends React.Component {
   }
 
   renderFilterInputs() {
-    const groups = FILTER_GROUPS[this.state.selectedFilterGroup]
+    const groups = FILTER_GROUPS[this.props.filterGroup]
 
     return groups.map((filter) => {
       return (
@@ -263,13 +261,14 @@ class FilterModal extends React.Component {
     );
   }
 
-  renderBody() {
-    const { selectedFilterGroup, query } = this.state;
-    const showClear = FILTER_GROUPS[selectedFilterGroup].some((filterName) => query.filters[filterName])
+  render() {
+    const { filterGroup } = this.props
+    const { query } = this.state
+    const showClear = FILTER_GROUPS[filterGroup].some((filterName) => query.filters[filterName])
 
     return (
       <>
-        <h1 className="text-xl font-bold dark:text-gray-100">Filter by {formatFilterGroup(selectedFilterGroup)}</h1>
+        <h1 className="text-xl font-bold dark:text-gray-100">Filter by {formatFilterGroup(filterGroup)}</h1>
 
         <div className="mt-4 border-b border-gray-300"></div>
         <main className="modal__content">
@@ -290,12 +289,12 @@ class FilterModal extends React.Component {
                   type="button"
                   className="ml-2 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
                   onClick={() => {
-                    const updatedFilters = FILTER_GROUPS[selectedFilterGroup].map((filterName) => ({ filter: filterName, value: null }))
+                    const updatedFilters = FILTER_GROUPS[filterGroup].map((filterName) => ({ filter: filterName, value: null }))
                     this.selectFiltersAndCloseModal(updatedFilters)
                   }}
                 >
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                  Remove filter{FILTER_GROUPS[selectedFilterGroup].length > 1 ? 's' : ''}
+                  Remove filter{FILTER_GROUPS[filterGroup].length > 1 ? 's' : ''}
                 </button>
               )}
             </div>
@@ -304,14 +303,6 @@ class FilterModal extends React.Component {
       </>
     )
   }
-
-  render() {
-    return (
-      <Modal site={this.props.site} maxWidth="460px">
-        {this.renderBody()}
-      </Modal>
-    )
-  }
 }
 
-export default withRouter(FilterModal)
+export default withRouter(RegularFilterModal)

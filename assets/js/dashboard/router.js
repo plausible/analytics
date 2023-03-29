@@ -9,7 +9,7 @@ import PagesModal from './stats/modals/pages'
 import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
 import ModalTable from './stats/modals/table'
-import FilterModal from './stats/modals/filter'
+import FilterModal from './stats/modals/filter-modal'
 
 function ScrollToTop() {
   const location = useLocation();
