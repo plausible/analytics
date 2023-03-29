@@ -121,7 +121,9 @@ class FilterModal extends React.Component {
       if (formState[filter].type === FILTER_TYPES.contains) {return Promise.resolve([])}
 
       const formFilters = Object.fromEntries(
-        Object.entries(formState).map(([filter, {type, clauses}]) => [filter, toFilterQuery(type, clauses)])
+        Object.entries(formState)
+          .filter(([_filter, {_type, clauses}]) => clauses.length > 0)
+          .map(([filter, {type, clauses}]) => [filter, toFilterQuery(type, clauses)])
       )
       const updatedQuery = this.queryForSuggestions(query, formFilters, filter)
       return api.get(apiPath(this.props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
