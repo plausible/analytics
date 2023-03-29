@@ -888,9 +888,7 @@ defmodule PlausibleWeb.SiteController do
 
   def change_domain_submit(conn, %{"site" => %{"domain" => new_domain}}) do
     if Plausible.v2?() do
-      site = conn.assigns[:site]
-
-      case Plausible.Site.Domain.change(site, new_domain) do
+      case Plausible.Site.Domain.change(conn.assigns.site, new_domain) do
         {:ok, updated_site} ->
           conn
           |> put_flash(:success, "Website domain changed successfully")
