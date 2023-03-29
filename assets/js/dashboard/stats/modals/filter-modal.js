@@ -1,7 +1,7 @@
 import React from "react"
 import { withRouter } from 'react-router-dom'
 import Modal from './modal'
-import RegularFilterModal from './filter'
+import RegularFilterModal from './regular-filter-modal'
 
 function FilterModal(props) {
   function renderBody() {
