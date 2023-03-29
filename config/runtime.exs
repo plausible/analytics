@@ -363,7 +363,7 @@ end
 base_cron = [
   # Daily at midnight
   {"0 0 * * *", Plausible.Workers.RotateSalts},
-  #  hourly
+  # hourly
   {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
   # hourly
   {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
@@ -374,7 +374,9 @@ base_cron = [
   # Every day at midnight
   {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes},
   # Every day at 1am
-  {"0 1 * * *", Plausible.Workers.CleanInvitations}
+  {"0 1 * * *", Plausible.Workers.CleanInvitations},
+  # Every 2 hours
+  {"0 */2 * * *", Plausible.Workers.ExpireDomainChangeTransitions}
 ]
 
 cloud_cron = [
@@ -399,7 +401,8 @@ base_queues = [
   site_setup_emails: 1,
   clean_email_verification_codes: 1,
   clean_invitations: 1,
-  google_analytics_imports: 1
+  google_analytics_imports: 1,
+  domain_change_transition: 1
 ]
 
 cloud_queues = [
