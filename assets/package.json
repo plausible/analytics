@@ -32,6 +32,7 @@
     "css-loader": "^5.2.6",
     "css-minimizer-webpack-plugin": "^3.2.0",
     "datamaps": "^0.5.9",
+    "dayjs": "^1.11.7",
     "debounce-promise": "^3.1.2",
     "iframe-resizer": "^4.3.2",
     "mini-css-extract-plugin": "^1.6.0",

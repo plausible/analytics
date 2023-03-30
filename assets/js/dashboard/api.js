@@ -48,8 +48,8 @@ export function serializeQuery(query, extraQuery=[]) {
 
   if (query.comparison) {
     queryObj.comparison = query.comparison
-    queryObj.compare_from = query.compare_from
-    queryObj.compare_to = query.compare_to
+    queryObj.compare_from = query.compare_from?.format('YYYY-MM-DD')
+    queryObj.compare_to = query.compare_to?.format('YYYY-MM-DD')
   }
 
   Object.assign(queryObj, ...extraQuery)

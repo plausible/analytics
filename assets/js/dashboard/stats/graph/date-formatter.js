@@ -1,27 +1,12 @@
-import { parseUTCDate, formatMonthYYYY, formatDay, formatDayShort } from '../../util/date'
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc)
 
 const browserDateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
 
 const is12HourClock = function () {
   return browserDateFormat.resolvedOptions().hour12
-}
-
-const parseISODate = function (isoDate) {
-  const date = parseUTCDate(isoDate)
-  const minutes = date.getMinutes();
-  const year = date.getFullYear()
-  return { date, minutes, year }
-}
-
-const getYearString = (options, year) => options.shouldShowYear ? ` ${year}` : ''
-
-const formatHours = function (isoDate) {
-  const monthIndex = 1
-  const dateParts = isoDate.split(/[^0-9]/);
-  dateParts[monthIndex] = dateParts[monthIndex] - 1
-
-  const localDate = new Date(...dateParts)
-  return browserDateFormat.format(localDate)
 }
 
 const monthIntervalFormatter = {
@@ -30,8 +15,7 @@ const monthIntervalFormatter = {
     return options.isBucketPartial ? `Partial of ${formatted}` : formatted
   },
   short(isoDate, _options) {
-    const { date } = parseISODate(isoDate)
-    return formatMonthYYYY(date)
+    return dayjs.utc(isoDate).format('MMMM YYYY')
   }
 }
 
@@ -41,19 +25,24 @@ const weekIntervalFormatter = {
     return options.isBucketPartial ? `Partial week of ${formatted}` : `Week of ${formatted}`
   },
   short(isoDate, options) {
-    const { date, year } = parseISODate(isoDate)
-    return `${formatDayShort(date)}${getYearString(options, year)}`
+    if (options.shouldShowYear) {
+      return dayjs.utc(isoDate).format('D MMM YYYY')
+    } else {
+      return dayjs.utc(isoDate).format('D MMM')
+    }
   }
 }
 
 const dateIntervalFormatter = {
   long(isoDate, _options) {
-    const { date } = parseISODate(isoDate)
-    return formatDay(date)
+    return dayjs.utc(isoDate).format('ddd, D MMM')
   },
   short(isoDate, options) {
-    const { date, year } = parseISODate(isoDate)
-    return `${formatDayShort(date)}${getYearString(options, year)}`
+    if (options.shouldShowYear) {
+      return dayjs.utc(isoDate).format('DD MMM YYYY')
+    } else {
+      return dayjs.utc(isoDate).format('DD MMM')
+    }
   }
 }
 
@@ -62,12 +51,10 @@ const hourIntervalFormatter = {
     return this.short(isoDate, options)
   },
   short(isoDate, _options) {
-    const formatted = formatHours(isoDate)
-
     if (is12HourClock()) {
-      return formatted.replace(' ', '').toLowerCase()
+      return dayjs.utc(isoDate).format('ha')
     } else {
-      return formatted.replace(/[^0-9]/g, '').concat(":00")
+      return dayjs.utc(isoDate).format('HH:mm')
     }
   }
 }
@@ -84,12 +71,10 @@ const minuteIntervalFormatter = {
   short(isoDate, options) {
     if (options.period === 'realtime') return isoDate + 'm'
 
-    const { minutes } = parseISODate(isoDate)
-    const formatted = formatHours(isoDate)
     if (is12HourClock()) {
-      return formatted.replace(' ', ':' + (minutes < 10 ? `0${minutes}` : minutes)).toLowerCase()
+      return dayjs.utc(isoDate).format('h:mma')
     } else {
-      return formatted.replace(/[^0-9]/g, '').concat(":" + (minutes < 10 ? `0${minutes}` : minutes))
+      return dayjs.utc(isoDate).format('HH:mm')
     }
   }
 }

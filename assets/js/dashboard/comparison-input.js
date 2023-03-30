@@ -6,7 +6,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from './util/storage'
 import Flatpickr from 'react-flatpickr'
-import { formatISO, parseUTCDate, formatDayShort } from './util/date.js'
+import { formatISO, parseUTCDate } from './util/date.js'
 
 const COMPARISON_MODES = {
   'off': 'Disable comparison',
@@ -92,9 +92,9 @@ const ComparisonInput = function({ site, query, history }) {
 
   const buildLabel = (query) => {
     if (query.comparison == "custom") {
-      const from = parseUTCDate(query.compare_from)
-      const to = parseUTCDate(query.compare_to)
-      return `${formatDayShort(from, false)} - ${formatDayShort(to, false)}`
+      const from = query.compare_from.format('D MMM')
+      const to = query.compare_to.format('D MMM')
+      return `${from} - ${to}`
     } else {
       return COMPARISON_MODES[query.comparison]
     }

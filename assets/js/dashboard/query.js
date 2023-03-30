@@ -4,6 +4,11 @@ import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled } from './comparison-input'
 
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc)
+
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'year', 'all', 'custom']
 
 export function parseQuery(querystring, site) {
@@ -25,8 +30,8 @@ export function parseQuery(querystring, site) {
   return {
     period,
     comparison,
-    compare_from: q.get('compare_from'),
-    compare_to: q.get('compare_to'),
+    compare_from: q.get('compare_from') ? dayjs.utc(q.get('compare_from')) : undefined,
+    compare_to: q.get('compare_to') ? dayjs.utc(q.get('compare_to')) : undefined,
     date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
     from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
     to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
