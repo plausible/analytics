@@ -31,7 +31,7 @@ export default function FilterTypeSelector(props) {
   }
 
   return (
-    <Menu as="div" className="relative inline-block text-left">
+    <Menu as="div" className="relative inline-block text-left mr-2">
       {({ open }) => (
         <>
           <div className="w-24">

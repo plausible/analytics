@@ -159,7 +159,7 @@ export default function PlausibleCombobox(props) {
   const noMatchesFound = !loading && visibleOptions.length === 0
 
   return (
-    <div onKeyDown={onKeyDown} ref={containerRef} className="relative ml-2 w-full">
+    <div onKeyDown={onKeyDown} ref={containerRef} className={`relative w-full ${props.className || ''}`}>
       <div onClick={toggleOpen} className={classNames('pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500', {'border-indigo-500 ring-1 ring-indigo-500': isOpen, '': !isOpen})}>
         { props.values.map((value) => {
             return (
