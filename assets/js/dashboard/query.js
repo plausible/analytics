@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
-import {nowForSite, parseUTCDate} from './util/date'
+import {nowForSite} from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled } from './comparison-input'
 
@@ -32,9 +32,9 @@ export function parseQuery(querystring, site) {
     comparison,
     compare_from: q.get('compare_from') ? dayjs.utc(q.get('compare_from')) : undefined,
     compare_to: q.get('compare_to') ? dayjs.utc(q.get('compare_to')) : undefined,
-    date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
-    from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
-    to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
+    date: q.get('date') ? dayjs.utc(q.get('date')) : nowForSite(site),
+    from: q.get('from') ? dayjs.utc(q.get('from')) : undefined,
+    to: q.get('to') ? dayjs.utc(q.get('to')) : undefined,
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     filters: {
       'goal': q.get('goal'),
