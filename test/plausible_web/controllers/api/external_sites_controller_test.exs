@@ -481,6 +481,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "GET /api/v1/sites/:site_id" do
     setup :create_new_site
 
+    @tag :v2_only
     test "get a site by its domain", %{conn: conn, site: site} do
       conn = get(conn, "/api/v1/sites/" <> site.domain)
 
@@ -499,6 +500,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert json_response(conn, 200) == %{"domain" => new_domain, "timezone" => site.timezone}
     end
 
+    @tag :v2_only
     test "is 404 when site cannot be found", %{conn: conn} do
       conn = get(conn, "/api/v1/sites/foobar.baz")
 

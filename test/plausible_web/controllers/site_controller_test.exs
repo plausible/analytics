@@ -1177,7 +1177,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       resp = html_response(conn, 200)
-      assert resp =~ "New domain must be different than your current one."
+      assert resp =~ "New domain must be different than the current one"
     end
 
     @tag :v2_only
