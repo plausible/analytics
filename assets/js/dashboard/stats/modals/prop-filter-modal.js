@@ -1,10 +1,20 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { withRouter } from "react-router-dom";
+
 import Combobox from '../../components/combobox'
 import FilterTypeSelector from "../../components/filter-type-selector";
 import { FILTER_TYPES } from "../../util/filters";
 
 function PropFilterModal(props) {
+  const [formState, setFormState] = useState(getFormState())
+
+  function getFormState() {
+    return {
+      prop_key: '',
+      prop_value: { type: FILTER_TYPES.is, clauses: [] }
+    }
+  }
+
   function fetchOptions(filter) {
     return () => {
       []
@@ -15,19 +25,23 @@ function PropFilterModal(props) {
     return () => { }
   }
 
-  function onFilterTypeSelect(filter) {
-    return () => { }
+  function onFilterTypeSelect() {
+    return (newType) => {
+      setFormState(prevState => ({
+        ...prevState, prop_value: { ...prevState.prop_value, type: newType }
+      }))
+    }
   }
 
   function selectedFilterType() {
-    return FILTER_TYPES.is
+    return formState.prop_value.type
   }
 
   function renderFilterInputs() {
     return (
       <div className="flex items-start mt-6">
         <Combobox className="mr-2" fetchOptions={fetchOptions('prop_key')} values={[]} onSelect={onComboboxSelect('prop_key')} placeholder={'Property'} />
-        <FilterTypeSelector forFilter={'prop_value'} onSelect={onFilterTypeSelect('prop_value')} selectedType={selectedFilterType()} />
+        <FilterTypeSelector forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
         <Combobox fetchOptions={fetchOptions('prop_value')} values={[]} onSelect={onComboboxSelect('prop_value')} placeholder={'Value'} />
       </div>
     )
