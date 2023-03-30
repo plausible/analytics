@@ -116,7 +116,7 @@ const ComparisonInput = function({ site, query, history }) {
     static: true,
     onClose: ([from, to], _dateStr, _instance) => {
       setUiMode("menu")
-      if (from && to) updateMode("custom", formatISO(from), formatISO(to))
+      if (from && to) updateMode("custom", formatISO(parseUTCDate(from)), formatISO(parseUTCDate(to)))
     }
   }
 

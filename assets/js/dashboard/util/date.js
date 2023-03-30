@@ -44,10 +44,6 @@ export function formatDayShort(date, includeYear = false) {
   }
 }
 
-export function fromJSDate(date) {
-  return dayjs.utc(date)
-}
-
 export function parseUTCDate(dateString) {
   return dayjs.utc(dateString)
 }
