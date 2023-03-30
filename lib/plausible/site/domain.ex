@@ -43,7 +43,7 @@ defmodule Plausible.Site.Domain do
 
   @spec change(Site.t(), String.t(), Keyword.t()) ::
           {:ok, Site.t()} | {:error, Ecto.Changeset.t()}
-  def change(site = %Site{}, new_domain, opts \\ []) do
+  def change(%Site{} = site, new_domain, opts \\ []) do
     changeset = Site.update_changeset(site, %{domain: new_domain}, opts)
 
     changeset =
