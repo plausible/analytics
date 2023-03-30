@@ -11,34 +11,34 @@ defmodule Plausible.Site do
 
   @derive {Jason.Encoder, only: [:domain, :timezone]}
   schema "sites" do
-    field :domain, :string
-    field :timezone, :string, default: "Etc/UTC"
-    field :public, :boolean
-    field :locked, :boolean
-    field :stats_start_date, :date
-    field :native_stats_start_at, :naive_datetime
+    field(:domain, :string)
+    field(:timezone, :string, default: "Etc/UTC")
+    field(:public, :boolean)
+    field(:locked, :boolean)
+    field(:stats_start_date, :date)
+    field(:native_stats_start_at, :naive_datetime)
 
-    field :ingest_rate_limit_scale_seconds, :integer, default: 60
-    field :ingest_rate_limit_threshold, :integer
+    field(:ingest_rate_limit_scale_seconds, :integer, default: 60)
+    field(:ingest_rate_limit_threshold, :integer)
 
-    field :domain_changed_from, :string
-    field :domain_changed_at, :naive_datetime
+    field(:domain_changed_from, :string)
+    field(:domain_changed_at, :naive_datetime)
 
-    embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
+    embeds_one(:imported_data, Plausible.Site.ImportedData, on_replace: :update)
 
-    many_to_many :members, User, join_through: Plausible.Site.Membership
-    has_many :memberships, Plausible.Site.Membership
-    has_many :invitations, Plausible.Auth.Invitation
-    has_one :google_auth, GoogleAuth
-    has_one :weekly_report, Plausible.Site.WeeklyReport
-    has_one :monthly_report, Plausible.Site.MonthlyReport
-    has_one :custom_domain, Plausible.Site.CustomDomain
-    has_one :spike_notification, Plausible.Site.SpikeNotification
+    many_to_many(:members, User, join_through: Plausible.Site.Membership)
+    has_many(:memberships, Plausible.Site.Membership)
+    has_many(:invitations, Plausible.Auth.Invitation)
+    has_one(:google_auth, GoogleAuth)
+    has_one(:weekly_report, Plausible.Site.WeeklyReport)
+    has_one(:monthly_report, Plausible.Site.MonthlyReport)
+    has_one(:custom_domain, Plausible.Site.CustomDomain)
+    has_one(:spike_notification, Plausible.Site.SpikeNotification)
 
     # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Cache`.
     # Use `Plausible.Repo.reload!(cached_site)` to pre-fill missing fields if
     # strictly necessary.
-    field :from_cache?, :boolean, virtual: true, default: false
+    field(:from_cache?, :boolean, virtual: true, default: false)
 
     timestamps()
   end
@@ -195,7 +195,7 @@ defmodule Plausible.Site do
     |> Timex.to_date()
   end
 
-  defp clean_domain(changeset, field \\ :domain) do
+  defp clean_domain(changeset) do
     clean_domain =
       (get_field(changeset, field) || "")
       |> String.trim()
@@ -205,7 +205,7 @@ defmodule Plausible.Site do
       |> String.replace_trailing("/", "")
       |> String.downcase()
 
-    change(changeset, %{field => clean_domain})
+    change(changeset, %{domain: clean_domain})
   end
 
   # https://tools.ietf.org/html/rfc3986#section-2.2
