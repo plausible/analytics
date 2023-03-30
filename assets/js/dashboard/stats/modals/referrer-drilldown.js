@@ -4,7 +4,7 @@ import { Link, withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
-import {parseQuery, toHuman} from '../../query'
+import {parseQuery} from '../../query'
 
 class ReferrerDrilldownModal extends React.Component {
   constructor(props) {
@@ -98,14 +98,6 @@ class ReferrerDrilldownModal extends React.Component {
     )
   }
 
-  renderGoalText() {
-    if (this.state.query.filters.goal) {
-      return (
-        <h1 className="text-xl font-semibold text-gray-500 dark:text-gray-300 leading-none">completed {this.state.query.filters.goal}</h1>
-      )
-    }
-  }
-
   renderBody() {
     if (this.state.loading) {
       return (
@@ -118,9 +110,6 @@ class ReferrerDrilldownModal extends React.Component {
 
           <div className="my-4 border-b border-gray-300 dark:border-gray-500"></div>
           <main className="modal__content mt-0">
-            <h1 className="text-xl font-semibold mb-0 leading-none dark:text-gray-200">{this.state.totalVisitors} visitors from {decodeURIComponent(this.props.match.params.referrer)}<br /> {toHuman(this.state.query)}</h1>
-            {this.renderGoalText()}
-
             <table className="w-max overflow-x-auto md:w-full table-striped table-fixed mt-4">
               <thead>
                 <tr>

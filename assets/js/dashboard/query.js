@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
-import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
+import {nowForSite, parseUTCDate} from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled } from './comparison-input'
 
@@ -139,23 +139,6 @@ function QueryButton({history, query, to, disabled, className, children, onClick
 
 const QueryButtonWithRouter = withRouter(QueryButton)
 export { QueryButtonWithRouter as QueryButton };
-
-export function toHuman(query) {
-  if (query.period === 'day') {
-    return `on ${formatDay(query.date)}`
-  } if (query.period === 'month') {
-    return `in ${formatMonthYYYY(query.date)}`
-  } if (query.period === '7d') {
-    return 'in the last 7 days'
-  } if (query.period === '30d') {
-    return 'in the last 30 days'
-  } if (query.period === '6mo') {
-    return 'in the last 6 months'
-  } if (query.period === '12mo') {
-    return 'in the last 12 months'
-  }
-  return ''
-}
 
 export function eventName(query) {
   if (query.filters.goal) {
