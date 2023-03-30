@@ -1,7 +1,4 @@
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-
-dayjs.extend(utc)
+import {parseUTCDate, formatMonthYYYY, formatDayShort} from '../../util/date'
 
 const browserDateFormat = Intl.DateTimeFormat(navigator.language, { hour: 'numeric' })
 
@@ -15,7 +12,7 @@ const monthIntervalFormatter = {
     return options.isBucketPartial ? `Partial of ${formatted}` : formatted
   },
   short(isoDate, _options) {
-    return dayjs.utc(isoDate).format('MMMM YYYY')
+    return formatMonthYYYY(parseUTCDate(isoDate))
   }
 }
 
@@ -25,24 +22,16 @@ const weekIntervalFormatter = {
     return options.isBucketPartial ? `Partial week of ${formatted}` : `Week of ${formatted}`
   },
   short(isoDate, options) {
-    if (options.shouldShowYear) {
-      return dayjs.utc(isoDate).format('D MMM YYYY')
-    } else {
-      return dayjs.utc(isoDate).format('D MMM')
-    }
+    return formatDayShort(parseUTCDate(isoDate), options.shouldShowYear)
   }
 }
 
 const dateIntervalFormatter = {
   long(isoDate, _options) {
-    return dayjs.utc(isoDate).format('ddd, D MMM')
+    return parseUTCDate(isoDate).format('ddd, D MMM')
   },
   short(isoDate, options) {
-    if (options.shouldShowYear) {
-      return dayjs.utc(isoDate).format('DD MMM YYYY')
-    } else {
-      return dayjs.utc(isoDate).format('DD MMM')
-    }
+    return formatDayShort(parseUTCDate(isoDate), options.shouldShowYear)
   }
 }
 
@@ -52,9 +41,9 @@ const hourIntervalFormatter = {
   },
   short(isoDate, _options) {
     if (is12HourClock()) {
-      return dayjs.utc(isoDate).format('ha')
+      return parseUTCDate(isoDate).format('ha')
     } else {
-      return dayjs.utc(isoDate).format('HH:mm')
+      return parseUTCDate(isoDate).format('HH:mm')
     }
   }
 }
@@ -72,9 +61,9 @@ const minuteIntervalFormatter = {
     if (options.period === 'realtime') return isoDate + 'm'
 
     if (is12HourClock()) {
-      return dayjs.utc(isoDate).format('h:mma')
+      return parseUTCDate(isoDate).format('h:mma')
     } else {
-      return dayjs.utc(isoDate).format('HH:mm')
+      return parseUTCDate(isoDate).format('HH:mm')
     }
   }
 }
