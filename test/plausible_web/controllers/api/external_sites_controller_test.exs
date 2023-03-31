@@ -481,7 +481,6 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "GET /api/v1/sites/:site_id" do
     setup :create_new_site
 
-    @tag :v2_only
     test "get a site by its domain", %{conn: conn, site: site} do
       conn = get(conn, "/api/v1/sites/" <> site.domain)
 
@@ -500,11 +499,56 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert json_response(conn, 200) == %{"domain" => new_domain, "timezone" => site.timezone}
     end
 
-    @tag :v2_only
     test "is 404 when site cannot be found", %{conn: conn} do
       conn = get(conn, "/api/v1/sites/foobar.baz")
 
       assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+    end
+  end
+
+  describe "PUT /api/v1/sites/:site_id" do
+    setup :create_new_site
+
+    @tag :v2_only
+    test "can change domain name", %{conn: conn, site: site} do
+      old_domain = site.domain
+      assert old_domain != "new.example.com"
+
+      conn =
+        put(conn, "/api/v1/sites/#{old_domain}", %{
+          "domain" => "new.example.com"
+        })
+
+      assert json_response(conn, 200) == %{
+               "domain" => "new.example.com",
+               "timezone" => "UTC"
+             }
+
+      site = Repo.reload!(site)
+
+      assert site.domain == "new.example.com"
+      assert site.domain_changed_from == old_domain
+    end
+
+    @tag :v2_only
+    test "can't make a no-op change", %{conn: conn, site: site} do
+      conn =
+        put(conn, "/api/v1/sites/#{site.domain}", %{
+          "domain" => site.domain
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "domain: New domain must be different than the current one"
+             }
+    end
+
+    @tag :v2_only
+    test "domain parameter is required", %{conn: conn, site: site} do
+      conn = put(conn, "/api/v1/sites/#{site.domain}", %{})
+
+      assert json_response(conn, 400) == %{
+               "error" => "domain: can't be blank"
+             }
     end
   end
 end
