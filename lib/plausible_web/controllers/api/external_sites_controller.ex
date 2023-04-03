@@ -6,26 +6,33 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
   alias Plausible.Goals
   alias PlausibleWeb.Api.Helpers, as: H
 
-  def create_site(conn, params) do
-    user = conn.assigns[:current_user]
+  def create_site(conn, _params) do
+    # user = conn.assigns[:current_user]
 
-    case Sites.create(user, params) do
-      {:ok, %{site: site}} ->
-        json(conn, site)
+    conn
+    |> put_status(503)
+    |> json(%{
+      error:
+        "Creating sites is not currently possible due to regular database maintenance. Please try again after 1 hour."
+    })
 
-      {:error, :limit, limit, _} ->
-        conn
-        |> put_status(403)
-        |> json(%{
-          error:
-            "Your account has reached the limit of #{limit} sites per account. Please contact hello@plausible.io to unlock more sites."
-        })
+    # case Sites.create(user, params) do
+    #   {:ok, %{site: site}} ->
+    #     json(conn, site)
 
-      {:error, _, changeset, _} ->
-        conn
-        |> put_status(400)
-        |> json(serialize_errors(changeset))
-    end
+    #   {:error, :limit, limit, _} ->
+    #     conn
+    #     |> put_status(403)
+    #     |> json(%{
+    #       error:
+    #         "Your account has reached the limit of #{limit} sites per account. Please contact hello@plausible.io to unlock more sites."
+    #     })
+
+    #   {:error, _, changeset, _} ->
+    #     conn
+    #     |> put_status(400)
+    #     |> json(serialize_errors(changeset))
+    # end
   end
 
   def get_site(conn, %{"site_id" => site_id}) do
