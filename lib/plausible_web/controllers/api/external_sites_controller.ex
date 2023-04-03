@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     |> put_status(503)
     |> json(%{
       error:
-        "Creating sites is not currently possible due to regular database maintenance. Please try again after 1 hour."
+        "Creating sites is currently unavailable due to regular database maintenance. Please try again after 1 hour."
     })
 
     # case Sites.create(user, params) do

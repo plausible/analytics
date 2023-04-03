@@ -15,7 +15,7 @@
           </h3>
           <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
             <p>
-              Creating sites is not currently possible due to regular database maintenance. Please try again after 1 hour.
+              Creating sites is currently unavailable due to regular database maintenance. Please try again after 1 hour.
             </p>
           </div>
         </div>
