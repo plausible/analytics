@@ -4,25 +4,38 @@ import { withRouter } from "react-router-dom";
 import Combobox from '../../components/combobox'
 import FilterTypeSelector from "../../components/filter-type-selector";
 import { FILTER_TYPES } from "../../util/filters";
+import { parseQuery } from '../../query'
+import * as api from '../../api'
+import { apiPath } from '../../util/url'
 
 function PropFilterModal(props) {
+  const query = parseQuery(props.location.search, props.site)
   const [formState, setFormState] = useState(getFormState())
 
   function getFormState() {
     return {
-      prop_key: '',
+      prop_key: null,
       prop_value: { type: FILTER_TYPES.is, clauses: [] }
     }
   }
 
   function fetchOptions(filter) {
-    return () => {
-      []
+    return (input) => {
+      if (filter === 'prop_key') {
+        return api.get(apiPath(props.site, `/suggestions/${filter}`), query, { q: input.trim() })
+      }
     }
   }
 
-  function onComboboxSelect(filter) {
-    return () => { }
+  function onPropKeySelect() {
+    return (selectedOptions) => {
+      const newPropKey = selectedOptions.length === 0 ? null : selectedOptions[0]
+      setFormState(prevState => ({ ...prevState, prop_key: newPropKey }))
+    }
+  }
+
+  function onPropValueSelect() {
+    return (selection) => { }
   }
 
   function onFilterTypeSelect() {
@@ -40,9 +53,9 @@ function PropFilterModal(props) {
   function renderFilterInputs() {
     return (
       <div className="flex items-start mt-6">
-        <Combobox className="mr-2" fetchOptions={fetchOptions('prop_key')} values={[]} onSelect={onComboboxSelect('prop_key')} placeholder={'Property'} />
+        <Combobox className="mr-2" fetchOptions={fetchOptions('prop_key')} singleOption={true} values={formState.prop_key ? [formState.prop_key] : []} onSelect={onPropKeySelect()} placeholder={'Property'} />
         <FilterTypeSelector forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
-        <Combobox fetchOptions={fetchOptions('prop_value')} values={[]} onSelect={onComboboxSelect('prop_value')} placeholder={'Value'} />
+        <Combobox fetchOptions={fetchOptions('prop_value')} values={[]} onSelect={onPropValueSelect()} placeholder={'Value'} />
       </div>
     )
   }

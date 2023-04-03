@@ -42,6 +42,7 @@ export default function PlausibleCombobox(props) {
   const [loading, setLoading] = useState(false)
   const [isOpen, setOpen] = useState(false);
   const [input, setInput] = useState('');
+  const [initialRender, setInitialRender] = useState(true)
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const searchRef = useRef(null);
   const containerRef = useRef(null);
@@ -74,7 +75,6 @@ export default function PlausibleCombobox(props) {
     if (e.key === 'Escape') {
       if (!isOpen || loading) return null
       setOpen(false)
-      searchRef.current?.focus()
       e.preventDefault()
     }
     if (e.key === 'ArrowDown') {
@@ -119,7 +119,6 @@ export default function PlausibleCombobox(props) {
   function toggleOpen() {
     if (!isOpen) {
       fetchOptions(input)
-      searchRef.current.focus()
     } else {
       setInput('')
       setOpen(false)
@@ -129,17 +128,20 @@ export default function PlausibleCombobox(props) {
   function selectOption(option) {
     if (isDisabled(option)) return
 
-    props.onSelect([...props.values, option])
+    if (props.singleOption) {
+      props.onSelect([option])
+    } else {
+      props.onSelect([...props.values, option])
+    }
+
     setOpen(false)
     setInput('')
-    searchRef.current.focus()
   }
 
   function removeOption(option, e) {
     e.stopPropagation()
     const newValues = props.values.filter((val) => val.value !== option.value)
     props.onSelect(newValues)
-    searchRef.current.focus()
     setOpen(false)
   }
 
@@ -151,12 +153,21 @@ export default function PlausibleCombobox(props) {
   })
 
   useEffect(() => {
+    if (!initialRender) { searchRef.current.focus() }
+    setInitialRender(false)
+  }, [isOpen, props.values])
+
+  useEffect(() => {
     document.addEventListener("mousedown", handleClick, false);
     return () => { document.removeEventListener("mousedown", handleClick, false); }
   }, [])
 
   const matchesFound = !loading && visibleOptions.length > 0
   const noMatchesFound = !loading && visibleOptions.length === 0
+  
+  const searchBoxClass = classNames('border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm', {
+    'hidden': props.singleOption && props.values.length === 1
+  })
 
   return (
     <div onKeyDown={onKeyDown} ref={containerRef} className={`relative w-full ${props.className || ''}`}>
@@ -167,7 +178,7 @@ export default function PlausibleCombobox(props) {
             )
           })
         }
-        <input className="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" ref={searchRef} value={input} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
+        <input className={searchBoxClass} ref={searchRef} value={input} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
         <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
           {!loading && <ChevronDownIcon className="h-4 w-4 text-gray-500" />}
           {loading && <Spinner />}
