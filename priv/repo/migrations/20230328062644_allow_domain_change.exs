@@ -15,7 +15,7 @@ defmodule Plausible.Repo.Migrations.AllowDomainChange do
     BEGIN
       IF EXISTS (
         SELECT 1 FROM sites
-         WHERE NEW.domain = domain_changed_from
+         WHERE (NEW.domain = domain_changed_from AND NEW.id != id)
          OR (OLD IS NULL AND NEW.domain_changed_from = domain)
       ) THEN
         RAISE unique_violation USING CONSTRAINT = 'domain_change_disallowed';

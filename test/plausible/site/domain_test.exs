@@ -38,6 +38,19 @@ defmodule Plausible.Site.DomainTest do
     assert error =~ "This domain cannot be registered"
   end
 
+  test "a single site's domain can be changed back and forth" do
+    site1 = insert(:site, domain: "foo.example.com")
+    site2 = insert(:site, domain: "baz.example.com")
+
+    assert {:ok, _} = Domain.change(site1, "bar.example.com")
+
+    assert {:error, _} = Domain.change(site2, "bar.example.com")
+    assert {:error, _} = Domain.change(site2, "foo.example.com")
+
+    assert {:ok, _} = Domain.change(Repo.reload!(site1), "foo.example.com")
+    assert {:ok, _} = Domain.change(Repo.reload!(site1), "bar.example.com")
+  end
+
   test "change info is cleared when the grace period expires" do
     site = insert(:site)
 
