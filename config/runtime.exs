@@ -279,17 +279,24 @@ config :plausible, :google,
   reporting_api_url: "https://analyticsreporting.googleapis.com",
   max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
 
+ch_transport_opts = [
+  keepalive: true,
+  show_econnreset: true
+]
+
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
-  url: ch_db_url
+  url: ch_db_url,
+  transport_opts: ch_transport_opts
 
 config :plausible, Plausible.IngestRepo,
   loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
+  transport_opts: ch_transport_opts,
   flush_interval_ms: ch_flush_interval_ms,
   max_buffer_size: ch_max_buffer_size,
   pool_size: ingest_pool_size
@@ -299,6 +306,7 @@ config :plausible, Plausible.AsyncInsertRepo,
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
+  transport_opts: ch_transport_opts,
   pool_size: 1,
   settings: [
     async_insert: 1,
