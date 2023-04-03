@@ -144,11 +144,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
-  defp serialize_errors(changeset) do
-    {field, {msg, _opts}} = List.first(changeset.errors)
-    error_msg = Atom.to_string(field) <> ": " <> msg
-    %{"error" => error_msg}
-  end
+  # defp serialize_errors(changeset) do
+  #   {field, {msg, _opts}} = List.first(changeset.errors)
+  #   error_msg = Atom.to_string(field) <> ": " <> msg
+  #   %{"error" => error_msg}
+  # end
 
   def handle_errors(conn, %{kind: kind, reason: reason}) do
     json(conn, %{error: Exception.format_banner(kind, reason)})
