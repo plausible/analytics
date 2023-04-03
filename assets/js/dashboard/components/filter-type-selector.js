@@ -16,9 +16,10 @@ export default function FilterTypeSelector(props) {
           {({ active }) => (
             <span
               onClick={() => props.onSelect(type)}
-              className={classNames(
-                active ? "bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100" : "text-gray-700 dark:text-gray-200",
-                "cursor-pointer block px-4 py-2 text-sm"
+              className={classNames("cursor-pointer block px-4 py-2 text-sm", {
+                "bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100": active,
+                "text-gray-700 dark:text-gray-200": !active
+              }
               )}
             >
               {type}
