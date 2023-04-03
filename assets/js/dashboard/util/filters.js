@@ -33,7 +33,7 @@ try {
 
 const ESCAPED_PIPE = '\\|'
 
-function escapeFilterValue(value) {
+export function escapeFilterValue(value) {
   return value.replaceAll(NON_ESCAPED_PIPE_REGEX, ESCAPED_PIPE)
 }
 
