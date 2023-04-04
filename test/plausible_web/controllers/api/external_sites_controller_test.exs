@@ -97,8 +97,20 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "DELETE /api/v1/sites/:site_id" do
     setup :create_new_site
 
-    test "delete a site by it's domain", %{conn: conn, site: site} do
+    test "delete a site by its domain", %{conn: conn, site: site} do
       conn = delete(conn, "/api/v1/sites/" <> site.domain)
+
+      assert json_response(conn, 200) == %{"deleted" => true}
+    end
+
+    @tag :v2_only
+    test "delete a site by its old domain after domain change", %{conn: conn, site: site} do
+      old_domain = site.domain
+      new_domain = "new.example.com"
+
+      Plausible.Site.Domain.change(site, new_domain)
+
+      conn = delete(conn, "/api/v1/sites/" <> old_domain)
 
       assert json_response(conn, 200) == %{"deleted" => true}
     end
@@ -139,6 +151,27 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       conn =
         put(conn, "/api/v1/sites/shared-links", %{
           site_id: site.domain,
+          name: "Wordpress"
+        })
+
+      res = json_response(conn, 200)
+      assert res["name"] == "Wordpress"
+      assert String.starts_with?(res["url"], "http://")
+    end
+
+    @tag :v2_only
+    test "can add a shared link to a site using the old site id after domain change", %{
+      conn: conn,
+      site: site
+    } do
+      old_domain = site.domain
+      new_domain = "new.example.com"
+
+      Plausible.Site.Domain.change(site, new_domain)
+
+      conn =
+        put(conn, "/api/v1/sites/shared-links", %{
+          site_id: old_domain,
           name: "Wordpress"
         })
 
@@ -236,6 +269,25 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       res = json_response(conn, 200)
       assert res["goal_type"] == "page"
       assert res["page_path"] == "/signup"
+    end
+
+    @tag :v2_only
+    test "can add a goal using old site_id after domain change", %{conn: conn, site: site} do
+      old_domain = site.domain
+      new_domain = "new.example.com"
+
+      Plausible.Site.Domain.change(site, new_domain)
+
+      conn =
+        put(conn, "/api/v1/sites/goals", %{
+          site_id: old_domain,
+          goal_type: "event",
+          event_name: "Signup"
+        })
+
+      res = json_response(conn, 200)
+      assert res["goal_type"] == "event"
+      assert res["event_name"] == "Signup"
     end
 
     test "is idempotent find or create op", %{conn: conn, site: site} do
@@ -341,7 +393,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "DELETE /api/v1/sites/goals/:goal_id" do
     setup :create_new_site
 
-    test "delete a goal by it's id", %{conn: conn, site: site} do
+    test "delete a goal by its id", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
           site_id: site.domain,
@@ -354,6 +406,30 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       conn =
         delete(conn, "/api/v1/sites/goals/#{goal_id}", %{
           site_id: site.domain
+        })
+
+      assert json_response(conn, 200) == %{"deleted" => true}
+    end
+
+    @tag :v2_only
+    test "delete a goal using old site_id after domain change", %{conn: conn, site: site} do
+      old_domain = site.domain
+      new_domain = "new.example.com"
+
+      Plausible.Site.Domain.change(site, new_domain)
+
+      conn =
+        put(conn, "/api/v1/sites/goals", %{
+          site_id: new_domain,
+          goal_type: "event",
+          event_name: "Signup"
+        })
+
+      %{"id" => goal_id} = json_response(conn, 200)
+
+      conn =
+        delete(conn, "/api/v1/sites/goals/#{goal_id}", %{
+          site_id: old_domain
         })
 
       assert json_response(conn, 200) == %{"deleted" => true}
@@ -405,16 +481,74 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "GET /api/v1/sites/:site_id" do
     setup :create_new_site
 
-    test "get a site by it's domain", %{conn: conn, site: site} do
+    test "get a site by its domain", %{conn: conn, site: site} do
       conn = get(conn, "/api/v1/sites/" <> site.domain)
 
       assert json_response(conn, 200) == %{"domain" => site.domain, "timezone" => site.timezone}
+    end
+
+    @tag :v2_only
+    test "get a site by old site_id after domain change", %{conn: conn, site: site} do
+      old_domain = site.domain
+      new_domain = "new.example.com"
+
+      Plausible.Site.Domain.change(site, new_domain)
+
+      conn = get(conn, "/api/v1/sites/" <> old_domain)
+
+      assert json_response(conn, 200) == %{"domain" => new_domain, "timezone" => site.timezone}
     end
 
     test "is 404 when site cannot be found", %{conn: conn} do
       conn = get(conn, "/api/v1/sites/foobar.baz")
 
       assert json_response(conn, 404) == %{"error" => "Site could not be found"}
+    end
+  end
+
+  describe "PUT /api/v1/sites/:site_id" do
+    setup :create_new_site
+
+    @tag :v2_only
+    test "can change domain name", %{conn: conn, site: site} do
+      old_domain = site.domain
+      assert old_domain != "new.example.com"
+
+      conn =
+        put(conn, "/api/v1/sites/#{old_domain}", %{
+          "domain" => "new.example.com"
+        })
+
+      assert json_response(conn, 200) == %{
+               "domain" => "new.example.com",
+               "timezone" => "UTC"
+             }
+
+      site = Repo.reload!(site)
+
+      assert site.domain == "new.example.com"
+      assert site.domain_changed_from == old_domain
+    end
+
+    @tag :v2_only
+    test "can't make a no-op change", %{conn: conn, site: site} do
+      conn =
+        put(conn, "/api/v1/sites/#{site.domain}", %{
+          "domain" => site.domain
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "domain: New domain must be different than the current one"
+             }
+    end
+
+    @tag :v2_only
+    test "domain parameter is required", %{conn: conn, site: site} do
+      conn = put(conn, "/api/v1/sites/#{site.domain}", %{})
+
+      assert json_response(conn, 400) == %{
+               "error" => "domain: can't be blank"
+             }
     end
   end
 end

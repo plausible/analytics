@@ -49,6 +49,25 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     end
   end
 
+  def update_site(conn, %{"site_id" => site_id} = params) do
+    # for now this only allows to change the domain
+    site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin])
+
+    if site && Plausible.v2?() do
+      case Plausible.Site.Domain.change(site, params["domain"]) do
+        {:ok, site} ->
+          json(conn, site)
+
+        {:error, changeset} ->
+          conn
+          |> put_status(400)
+          |> json(serialize_errors(changeset))
+      end
+    else
+      H.not_found(conn, "Site could not be found")
+    end
+  end
+
   defp expect_param_key(params, key) do
     case Map.fetch(params, key) do
       :error -> {:missing, key}

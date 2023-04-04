@@ -107,7 +107,7 @@ defmodule Plausible.Sites do
       on: sm.site_id == s.id,
       where: sm.user_id == ^user_id,
       where: sm.role in ^roles,
-      where: s.domain == ^domain,
+      where: s.domain == ^domain or s.domain_changed_from == ^domain,
       select: s
     )
   end

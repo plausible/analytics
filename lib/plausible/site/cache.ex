@@ -9,6 +9,10 @@ defmodule Plausible.Site.Cache do
   during tests via the `:sites_by_domain_cache_enabled` application env key.
   This can be overridden on case by case basis, using the child specs options.
 
+  NOTE: the cache allows lookups by both `domain` and `domain_changed_from`
+  fields - this is to allow traffic from sites whose domains changed within a certain
+  grace period (see: `Plausible.Site.Transfer`).
+
   When Cache is disabled via application env, the `get/1` function
   falls back to pure database lookups. This should help with introducing
   cached lookups in existing code, so that no existing tests should break.
@@ -49,6 +53,7 @@ defmodule Plausible.Site.Cache do
   @cached_schema_fields ~w(
      id
      domain
+     domain_changed_from
      ingest_rate_limit_scale_seconds
      ingest_rate_limit_threshold
    )a
@@ -91,6 +96,7 @@ defmodule Plausible.Site.Cache do
       from s in Site,
         select: {
           s.domain,
+          s.domain_changed_from,
           %{struct(s, ^@cached_schema_fields) | from_cache?: true}
         }
 
@@ -109,6 +115,7 @@ defmodule Plausible.Site.Cache do
         where: s.updated_at > ago(^15, "minute"),
         select: {
           s.domain,
+          s.domain_changed_from,
           %{struct(s, ^@cached_schema_fields) | from_cache?: true}
         }
 
@@ -124,6 +131,7 @@ defmodule Plausible.Site.Cache do
   def merge([], _), do: :ok
 
   def merge(new_items, opts) do
+    new_items = unwrap_cache_keys(new_items)
     cache_name = Keyword.get(opts, :cache_name, @cache_name)
     true = Cachex.put_many!(cache_name, new_items)
 
@@ -220,5 +228,15 @@ defmodule Plausible.Site.Cache do
     result = fun.()
     stop = System.monotonic_time()
     {stop - start, result}
+  end
+
+  defp unwrap_cache_keys(items) do
+    Enum.reduce(items, [], fn
+      {domain, nil, object}, acc ->
+        [{domain, object} | acc]
+
+      {domain, domain_changed_from, object}, acc ->
+        [{domain, object}, {domain_changed_from, object} | acc]
+    end)
   end
 end

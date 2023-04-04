@@ -21,6 +21,9 @@ defmodule Plausible.Site do
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     field :ingest_rate_limit_threshold, :integer
 
+    field :domain_changed_from, :string
+    field :domain_changed_at, :naive_datetime
+
     embeds_one :imported_data, Plausible.Site.ImportedData, on_replace: :update
 
     many_to_many :members, User, join_through: Plausible.Site.Membership
@@ -40,19 +43,38 @@ defmodule Plausible.Site do
     timestamps()
   end
 
+  @domain_unique_error """
+  This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
+  """
+
   def changeset(site, attrs \\ %{}) do
     site
     |> cast(attrs, [:domain, :timezone])
     |> clean_domain()
     |> validate_required([:domain, :timezone])
-    |> validate_format(:domain, ~r/^[-\.\\\/:\p{L}\d]*$/u,
-      message: "only letters, numbers, slashes and period allowed"
-    )
+    |> validate_domain_format()
     |> validate_domain_reserved_characters()
     |> unique_constraint(:domain,
-      message:
-        "This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io"
+      message: @domain_unique_error
     )
+  end
+
+  def update_changeset(site, attrs \\ %{}, opts \\ []) do
+    at =
+      opts
+      |> Keyword.get(:at, NaiveDateTime.utc_now())
+      |> NaiveDateTime.truncate(:second)
+
+    attrs =
+      if Plausible.v2?() do
+        attrs
+      else
+        Map.delete(attrs, :domain)
+      end
+
+    site
+    |> changeset(attrs)
+    |> handle_domain_change(at)
   end
 
   def crm_changeset(site, attrs) do
@@ -183,9 +205,7 @@ defmodule Plausible.Site do
       |> String.replace_trailing("/", "")
       |> String.downcase()
 
-    change(changeset, %{
-      domain: clean_domain
-    })
+    change(changeset, %{domain: clean_domain})
   end
 
   # https://tools.ietf.org/html/rfc3986#section-2.2
@@ -198,6 +218,31 @@ defmodule Plausible.Site do
         changeset,
         :domain,
         "must not contain URI reserved characters #{@uri_reserved_chars}"
+      )
+    else
+      changeset
+    end
+  end
+
+  defp validate_domain_format(changeset) do
+    validate_format(changeset, :domain, ~r/^[-\.\\\/:\p{L}\d]*$/u,
+      message: "only letters, numbers, slashes and period allowed"
+    )
+  end
+
+  defp handle_domain_change(changeset, at) do
+    new_domain = get_change(changeset, :domain)
+
+    if new_domain do
+      changeset
+      |> put_change(:domain_changed_from, changeset.data.domain)
+      |> put_change(:domain_changed_at, at)
+      |> unique_constraint(:domain,
+        name: "domain_change_disallowed",
+        message: @domain_unique_error
+      )
+      |> unique_constraint(:domain_changed_from,
+        message: @domain_unique_error
       )
     else
       changeset

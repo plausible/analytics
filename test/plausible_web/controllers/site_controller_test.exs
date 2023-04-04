@@ -305,7 +305,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/general")
       resp = html_response(conn, 200)
 
-      assert resp =~ "General information"
+      assert resp =~ "Site timezone"
       assert resp =~ "Data Import from Google Analytics"
       assert resp =~ "https://accounts.google.com/o/oauth2/v2/auth?"
       assert resp =~ "analytics.readonly"
@@ -1143,6 +1143,118 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/#{site.domain}/settings/forget-imported")
 
       assert Repo.reload(job).state == "cancelled"
+    end
+  end
+
+  describe "domain change" do
+    setup [:create_user, :log_in, :create_site]
+
+    @tag :v2_only
+    test "shows domain change in the settings form", %{conn: conn, site: site} do
+      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Site domain"
+      assert resp =~ "Change domain"
+      assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
+    end
+
+    @tag :v2_only
+    test "domain change form renders", %{conn: conn, site: site} do
+      conn = get(conn, Routes.site_path(conn, :change_domain, site.domain))
+      resp = html_response(conn, 200)
+      assert resp =~ Routes.site_path(conn, :change_domain_submit, site.domain)
+
+      assert resp =~
+               "Once you change your domain, you must update the JavaScript snippet on your site within 72 hours"
+    end
+
+    @tag :v2_only
+    test "domain change form submission when no change is made", %{conn: conn, site: site} do
+      conn =
+        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+          "site" => %{"domain" => site.domain}
+        })
+
+      resp = html_response(conn, 200)
+      assert resp =~ "New domain must be different than the current one"
+    end
+
+    @tag :v2_only
+    test "domain change form submission to an existing domain", %{conn: conn, site: site} do
+      another_site = insert(:site)
+
+      conn =
+        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+          "site" => %{"domain" => another_site.domain}
+        })
+
+      resp = html_response(conn, 200)
+      assert resp =~ "This domain cannot be registered"
+
+      site = Repo.reload!(site)
+      assert site.domain != another_site.domain
+      assert is_nil(site.domain_changed_from)
+    end
+
+    @tag :v2_only
+    test "domain change form submission to a domain in transition period", %{
+      conn: conn,
+      site: site
+    } do
+      another_site = insert(:site, domain_changed_from: "foo.example.com")
+
+      conn =
+        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+          "site" => %{"domain" => "foo.example.com"}
+        })
+
+      resp = html_response(conn, 200)
+      assert resp =~ "This domain cannot be registered"
+
+      site = Repo.reload!(site)
+      assert site.domain != another_site.domain
+      assert is_nil(site.domain_changed_from)
+    end
+
+    @tag :v2_only
+    test "domain change succcessful form submission redirects to snippet change info", %{
+      conn: conn,
+      site: site
+    } do
+      original_domain = site.domain
+
+      conn =
+        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+          "site" => %{"domain" => "foo.example.com"}
+        })
+
+      assert redirected_to(conn) ==
+               Routes.site_path(conn, :add_snippet_after_domain_change, "foo.example.com")
+
+      site = Repo.reload!(site)
+      assert site.domain == "foo.example.com"
+      assert site.domain_changed_from == original_domain
+    end
+
+    @tag :v2_only
+    test "snippet info after domain change", %{
+      conn: conn,
+      site: site
+    } do
+      put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+        "site" => %{"domain" => "foo.example.com"}
+      })
+
+      resp =
+        conn
+        |> get(Routes.site_path(conn, :add_snippet_after_domain_change, "foo.example.com"))
+        |> html_response(200)
+        |> Floki.parse_document!()
+        |> Floki.text()
+
+      assert resp =~
+               "Your domain has been changed. You must update the JavaScript snippet on your site within 72 hours"
     end
   end
 end
