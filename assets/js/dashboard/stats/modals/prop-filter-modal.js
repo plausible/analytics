@@ -7,13 +7,25 @@ import { FILTER_TYPES } from "../../util/filters";
 import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath } from '../../util/url'
-import { toFilterQuery } from '../../util/filters';
+import { toFilterQuery, parsePrefix } from '../../util/filters';
 
 function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
   const [formState, setFormState] = useState(getFormState())
 
   function getFormState() {
+    const rawValue = query.filters['props']
+    if (rawValue) {
+      const [[propKey, propVal]] = Object.entries(rawValue)
+      const {type, values} = parsePrefix(propVal)
+      const clauses = values.map(val => { return {value: val, label: val}})
+      
+      return {
+        prop_key: {value: propKey, label: propKey},
+        prop_value: { type: type, clauses: clauses }
+      }
+    }
+
     return {
       prop_key: null,
       prop_value: { type: FILTER_TYPES.is, clauses: [] }
@@ -77,7 +89,7 @@ function PropFilterModal(props) {
   }
 
   function shouldShowClear() {
-    return true
+    return !!query.filters['props']
   }
 
   function handleSubmit() {
@@ -119,7 +131,7 @@ function PropFilterModal(props) {
               <button
                 type="button"
                 className="ml-2 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
-                onClick={() => { }}
+                onClick={() => {selectFiltersAndCloseModal(null)}}
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 Remove filter
