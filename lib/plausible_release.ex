@@ -6,7 +6,7 @@ defmodule Plausible.Release do
   @start_apps [
     :ssl,
     :postgrex,
-    :clickhousex,
+    :ch,
     :ecto
   ]
 
