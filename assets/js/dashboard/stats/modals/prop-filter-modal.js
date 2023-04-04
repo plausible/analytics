@@ -23,6 +23,10 @@ function PropFilterModal(props) {
     return (input) => {
       if (filter === 'prop_key') {
         return api.get(apiPath(props.site, `/suggestions/${filter}`), query, { q: input.trim() })
+      } else {
+        const propKey = formState.prop_key?.value
+        const updatedQuery = { ...query, filters: { ...query.filters, props: {[propKey]: '!(none)'} } }
+        return api.get(apiPath(props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
       }
     }
   }
@@ -30,12 +34,19 @@ function PropFilterModal(props) {
   function onPropKeySelect() {
     return (selectedOptions) => {
       const newPropKey = selectedOptions.length === 0 ? null : selectedOptions[0]
-      setFormState(prevState => ({ ...prevState, prop_key: newPropKey }))
+      setFormState(prevState => ({
+        prop_key: newPropKey,
+        prop_value: { type: prevState.prop_value.type, clauses: [] }
+      }))
     }
   }
 
   function onPropValueSelect() {
-    return (selection) => { }
+    return (selection) => {
+      setFormState(prevState => ({
+        ...prevState, prop_value: { ...prevState.prop_value, clauses: selection }
+      }))
+    }
   }
 
   function onFilterTypeSelect() {
@@ -54,8 +65,8 @@ function PropFilterModal(props) {
     return (
       <div className="flex items-start mt-6">
         <Combobox className="mr-2" fetchOptions={fetchOptions('prop_key')} singleOption={true} values={formState.prop_key ? [formState.prop_key] : []} onSelect={onPropKeySelect()} placeholder={'Property'} />
-        <FilterTypeSelector forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
-        <Combobox fetchOptions={fetchOptions('prop_value')} values={[]} onSelect={onPropValueSelect()} placeholder={'Value'} />
+        <FilterTypeSelector isDisabled={!formState.prop_key} forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
+        <Combobox isDisabled={!formState.prop_key} fetchOptions={fetchOptions('prop_value')} values={formState.prop_value.clauses} onSelect={onPropValueSelect()} placeholder={'Value'} />
       </div>
     )
   }
