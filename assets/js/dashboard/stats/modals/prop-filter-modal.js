@@ -6,7 +6,8 @@ import FilterTypeSelector from "../../components/filter-type-selector";
 import { FILTER_TYPES } from "../../util/filters";
 import { parseQuery } from '../../query'
 import * as api from '../../api'
-import { apiPath } from '../../util/url'
+import { apiPath, siteBasePath } from '../../util/url'
+import { toFilterQuery } from '../../util/filters';
 
 function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
@@ -72,11 +73,28 @@ function PropFilterModal(props) {
   }
 
   function isDisabled() {
-    return false
+    return !(formState.prop_key && formState.prop_value.clauses.length > 0)
   }
 
   function shouldShowClear() {
     return true
+  }
+
+  function handleSubmit() {
+    const filterString = JSON.stringify({ [formState.prop_key.value]: toFilterQuery(formState.prop_value.type, formState.prop_value.clauses) })
+    selectFiltersAndCloseModal(filterString)
+  }
+
+  function selectFiltersAndCloseModal(filterString) {
+    const queryString = new URLSearchParams(window.location.search)
+
+    if (filterString) {
+      queryString.set('props', filterString)
+    } else {
+      queryString.delete('props')
+    }
+
+    props.history.replace({ pathname: siteBasePath(props.site), search: queryString.toString() })
   }
 
   return (
@@ -85,7 +103,7 @@ function PropFilterModal(props) {
 
       <div className="mt-4 border-b border-gray-300"></div>
       <main className="modal__content">
-        <form className="flex flex-col" onSubmit={() => { }}>
+        <form className="flex flex-col" onSubmit={handleSubmit}>
           {renderFilterInputs()}
 
           <div className="mt-6 flex items-center justify-start">
