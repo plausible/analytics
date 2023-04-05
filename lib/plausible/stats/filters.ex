@@ -57,7 +57,7 @@ defmodule Plausible.Stats.Filters do
     {is_contains, val} = parse_contains_prefix(val)
     is_list = Regex.match?(@non_escaped_pipe_regex, val)
     is_wildcard = String.contains?(key, ["page", "goal"]) && String.match?(val, ~r/\*/)
-    val = if is_list, do: parse_member_list(val), else: val
+    val = if is_list, do: parse_member_list(val), else: remove_escape_chars(val)
     val = if key == "goal", do: wrap_goal_value(val), else: val
 
     cond do

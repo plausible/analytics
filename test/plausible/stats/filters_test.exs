@@ -74,6 +74,18 @@ defmodule Plausible.Stats.FiltersTest do
     end
   end
 
+  describe "escaping pipe character" do
+    test "in simple is filter" do
+      %{"goal" => ~S(Foo \| Bar)}
+      |> assert_parsed(%{"event:goal" => {:is, {:event, "Foo | Bar"}}})
+    end
+
+    test "in member filter" do
+      %{"page" => ~S(/|\|)}
+      |> assert_parsed(%{"event:page" => {:member, ["/", "|"]}})
+    end
+  end
+
   describe "is not filter type" do
     test "simple is not filter" do
       %{"page" => "!/"}
