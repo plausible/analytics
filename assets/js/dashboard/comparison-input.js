@@ -19,6 +19,10 @@ const DEFAULT_COMPARISON_MODE = 'previous_period'
 
 export const COMPARISON_DISABLED_PERIODS = ['realtime', 'all']
 
+export const getStoredMatchDayOfWeek = function(domain) {
+  return storage.getItem(`comparison_match_day_of_week__${domain}`)
+}
+
 export const getStoredComparisonMode = function(domain) {
   const mode = storage.getItem(`comparison_mode__${domain}`)
   if (Object.keys(COMPARISON_MODES).includes(mode)) {
@@ -53,7 +57,7 @@ export const toggleComparisons = function(history, query, site) {
   }
 }
 
-function DropdownItem({ label, value, isCurrentlySelected, updateMode, setUiMode }) {
+function ComparisonModeOption({ label, value, isCurrentlySelected, updateMode, setUiMode }) {
   const click = () => {
     if (value == "custom") {
       setUiMode("datepicker")
@@ -75,6 +79,29 @@ function DropdownItem({ label, value, isCurrentlySelected, updateMode, setUiMode
 
   return (
     <Menu.Item key={value} onClick={click} disabled={disabled}>
+      { render }
+    </Menu.Item>
+  )
+}
+
+function MatchDayOfWeekInput({ history, query, site }) {
+  const click = () => {
+    const toggle = !query.match_day_of_week
+    storage.setItem(`comparison_match_day_of_week__${site.domain}`, toggle.toString())
+    navigateToQuery(history, query, { match_day_of_week: toggle.toString() })
+  }
+
+  const render = ({ active }) => {
+    const buttonClass = classNames("px-4 py-2 w-full text-left font-medium text-sm dark:text-white cursor-pointer", {
+      "bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100": active,
+      "font-bold": query.match_day_of_week,
+    })
+
+    return <button className={buttonClass}>Match day of the week</button>
+  }
+
+  return (
+    <Menu.Item key="match_day_of_week" onClick={click}>
       { render }
     </Menu.Item>
   )
@@ -137,7 +164,11 @@ const ComparisonInput = function({ site, query, history }) {
               leaveFrom="transform opacity-100 scale-100"
               leaveTo="transform opacity-0 scale-95">
               <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10" static>
-                { Object.keys(COMPARISON_MODES).map((key) => DropdownItem({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison, updateMode, setUiMode })) }
+                { Object.keys(COMPARISON_MODES).map((key) => ComparisonModeOption({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison, updateMode, setUiMode })) }
+                { query.comparison !== "custom" && <span>
+                  <hr className="my-1" />
+                  <MatchDayOfWeekInput query={query} history={history} site={site} />
+                </span>}
               </Menu.Items>
             </Transition>
 
