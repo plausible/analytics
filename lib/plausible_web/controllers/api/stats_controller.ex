@@ -111,11 +111,10 @@ defmodule PlausibleWeb.Api.StatsController do
 
       timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
 
+      comparison_opts = parse_comparison_opts(params)
+
       comparison_result =
-        case Comparisons.compare(site, query, params["comparison"],
-               from: params["compare_from"],
-               to: params["compare_to"]
-             ) do
+        case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
           {:ok, comparison_query} -> Stats.timeseries(site, comparison_query, [selected_metric])
           {:error, :not_supported} -> nil
         end
@@ -193,7 +192,7 @@ defmodule PlausibleWeb.Api.StatsController do
       query = Query.from(site, params) |> Filters.add_prefix()
 
       comparison_mode = params["comparison"] || "previous_period"
-      comparison_opts = [from: params["compare_from"], to: params["compare_to"]]
+      comparison_opts = parse_comparison_opts(params)
 
       comparison_query =
         case Stats.Comparisons.compare(site, query, comparison_mode, comparison_opts) do
@@ -1315,5 +1314,13 @@ defmodule PlausibleWeb.Api.StatsController do
     conn
     |> put_status(400)
     |> json(%{error: message})
+  end
+
+  defp parse_comparison_opts(params) do
+    [
+      from: params["compare_from"],
+      to: params["compare_to"],
+      match_day_of_week?: params["match_day_of_week"] == "true"
+    ]
   end
 end

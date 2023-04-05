@@ -24,6 +24,18 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison.date_range.first == ~D[2023-02-28]
       assert comparison.date_range.last == ~D[2023-02-28]
     end
+
+    test "matches the day of the week when nearest day is original query start date and mode is previous_period" do
+      site = build(:site)
+      query = Query.from(site, %{"period" => "month", "date" => "2023-03-02"})
+      now = ~N[2023-03-02 14:00:00]
+
+      {:ok, comparison} =
+        Comparisons.compare(site, query, "previous_period", now: now, match_day_of_week?: true)
+
+      assert comparison.date_range.first == ~D[2023-02-22]
+      assert comparison.date_range.last == ~D[2023-02-23]
+    end
   end
 
   describe "with period set to previous month" do
@@ -59,6 +71,30 @@ defmodule Plausible.Stats.ComparisonsTest do
       assert comparison.date_range.first == ~D[2019-02-01]
       assert comparison.date_range.last == ~D[2019-03-01]
     end
+
+    test "matches the day of the week when mode is previous_period keeping the same day" do
+      site = build(:site)
+      query = Query.from(site, %{"period" => "month", "date" => "2023-02-01"})
+      now = ~N[2023-03-01 14:00:00]
+
+      {:ok, comparison} =
+        Comparisons.compare(site, query, "previous_period", now: now, match_day_of_week?: true)
+
+      assert comparison.date_range.first == ~D[2023-01-04]
+      assert comparison.date_range.last == ~D[2023-01-31]
+    end
+
+    test "matches the day of the week when mode is previous_period" do
+      site = build(:site)
+      query = Query.from(site, %{"period" => "month", "date" => "2023-01-01"})
+      now = ~N[2023-03-01 14:00:00]
+
+      {:ok, comparison} =
+        Comparisons.compare(site, query, "previous_period", now: now, match_day_of_week?: true)
+
+      assert comparison.date_range.first == ~D[2022-12-04]
+      assert comparison.date_range.last == ~D[2023-01-03]
+    end
   end
 
   describe "with period set to year to date" do
@@ -82,6 +118,18 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       assert comparison.date_range.first == ~D[2022-01-01]
       assert comparison.date_range.last == ~D[2022-03-01]
+    end
+
+    test "matches the day of the week when mode is year_over_year" do
+      site = build(:site)
+      query = Query.from(site, %{"period" => "year", "date" => "2023-03-01"})
+      now = ~N[2023-03-01 14:00:00]
+
+      {:ok, comparison} =
+        Comparisons.compare(site, query, "year_over_year", now: now, match_day_of_week?: true)
+
+      assert comparison.date_range.first == ~D[2022-01-02]
+      assert comparison.date_range.last == ~D[2022-03-02]
     end
   end
 
