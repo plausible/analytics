@@ -284,6 +284,23 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~
                "This domain cannot be registered. Perhaps one of your colleagues registered it?"
     end
+
+    test "renders form again when domain was changed from elsewhere", %{conn: conn} do
+      :site
+      |> insert(domain: "example.com")
+      |> Plausible.Site.Domain.change("new.example.com")
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert html_response(conn, 200) =~
+               "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+    end
   end
 
   describe "GET /:website/snippet" do

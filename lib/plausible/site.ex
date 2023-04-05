@@ -57,6 +57,10 @@ defmodule Plausible.Site do
     |> unique_constraint(:domain,
       message: @domain_unique_error
     )
+    |> unique_constraint(:domain,
+      name: "domain_change_disallowed",
+      message: @domain_unique_error
+    )
   end
 
   def update_changeset(site, attrs \\ %{}, opts \\ []) do
