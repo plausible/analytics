@@ -1481,6 +1481,94 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "IN filter for event:props:*", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Safari",
+          "meta.key": ["browser"],
+          "meta.value": ["Safari"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Firefox",
+          "meta.key": ["browser"],
+          "meta.value": ["Firefox"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:browser",
+          "filters" => "event:props:browser == Chrome|Safari"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"browser" => "Chrome", "visitors" => 2},
+                 %{"browser" => "Safari", "visitors" => 1},
+               ]
+             }
+    end
+
+    test "IN filter for event:props:* including (none) value", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Safari",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Firefox",
+          "meta.key": ["browser"],
+          "meta.value": ["Firefox"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:browser",
+          "filters" => "event:props:browser == Chrome|(none)"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"browser" => "Chrome", "visitors" => 2},
+                 %{"browser" => "Safari", "visitors" => 1},
+               ]
+             }
+    end
+
     test "can use a is_not filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "Chrome"),
