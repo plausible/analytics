@@ -360,8 +360,13 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, [:bounce_rate | rest]) do
     from(s in q,
       select_merge: %{
+        # Currently hard-coded. How to make this condition dynamic based on query.filters? Probably have to make use of Ecto.Query.dynamic/2
         bounce_rate:
-          fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))"),
+          fragment(
+            "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, entry_page = ?) / sumIf(sign, entry_page = ?) * 100), 0))",
+            "/page2",
+            "/page2"
+          ),
         __internal_visits: fragment("toUInt32(sum(sign))")
       }
     )

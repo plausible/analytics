@@ -73,6 +73,22 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"name" => "Bounce rate", "value" => 50, "change" => nil} in res["top_stats"]
     end
 
+    test "calculates bounce rate when filtering for page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/page1", user_id: @user_id),
+        build(:pageview, pathname: "/page2", user_id: @user_id),
+        build(:pageview, pathname: "/page2", user_id: 2),
+        build(:pageview, pathname: "/page3", user_id: 2),
+        build(:pageview, pathname: "/page2", user_id: 3)
+      ])
+
+      filters = Jason.encode!(%{page: "/page2"})
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day&filters=#{filters}")
+
+      res = json_response(conn, 200)
+      assert %{"name" => "Bounce rate", "value" => 50, "change" => nil} in res["top_stats"]
+    end
+
     test "calculates average visit duration", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
