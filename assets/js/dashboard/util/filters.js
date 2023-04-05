@@ -22,6 +22,14 @@ export const FILTER_PREFIXES = {
   [FILTER_TYPES.is]: ''
 };
 
+export function supportsIsNot(filterName) {
+  return !['goal', 'prop_key'].includes(filterName)
+}
+
+export function isFreeChoiceFilter(filterName) {
+  return FILTER_GROUPS['page'].concat(FILTER_GROUPS['utm']).includes(filterName)
+}
+
 // As of March 2023, Safari does not support negative lookbehind regexes. In case it throws an error, falls back to plain | matching. This means
 // escaping pipe characters in filters does not currently work in Safari
 let NON_ESCAPED_PIPE_REGEX;

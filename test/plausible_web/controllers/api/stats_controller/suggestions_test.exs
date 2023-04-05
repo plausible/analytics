@@ -58,6 +58,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
     test "returns suggestions for sources", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
         build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "10words")
       ])
 

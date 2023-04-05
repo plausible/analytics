@@ -129,7 +129,7 @@ export default function PlausibleCombobox(props) {
   function selectOption(option) {
     if (isDisabled(option)) return
 
-    props.onChange([...props.values, option])
+    props.onSelect([...props.values, option])
     setOpen(false)
     setInput('')
     searchRef.current.focus()
@@ -138,7 +138,7 @@ export default function PlausibleCombobox(props) {
   function removeOption(option, e) {
     e.stopPropagation()
     const newValues = props.values.filter((val) => val.value !== option.value)
-    props.onChange(newValues)
+    props.onSelect(newValues)
     searchRef.current.focus()
     setOpen(false)
   }
