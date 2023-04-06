@@ -6,6 +6,14 @@ import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { METRIC_MAPPING } from './graph-util'
 import { parseUTCDate, formatDayShort } from '../../util/date.js'
 
+function Maybe({condition, children}) {
+  if (condition) {
+    return children
+  } else {
+    return null
+  }
+}
+
 export default class TopStats extends React.Component {
   renderPercentageComparison(name, comparison, forceDarkMode = false) {
     const formattedComparison = numberFormatter(Math.abs(comparison))
@@ -145,15 +153,21 @@ export default class TopStats extends React.Component {
               <div>
                 <span className="flex items-center justify-between whitespace-nowrap">
                   <p className="font-bold text-xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat.name, stat.value)}</p>
-                  { !query.comparison && this.renderPercentageComparison(stat.name, stat.change) }
+                  <Maybe condition={!query.comparison}>
+                    {this.renderPercentageComparison(stat.name, stat.change)}
+                  </Maybe>
                 </span>
-                { query.comparison && <p className="text-xs dark:text-gray-100">{ formatRange(topStatData.from, topStatData.to) }</p> }
+                  <Maybe condition={query.comparison}>
+                    <p className="text-xs dark:text-gray-100">{ formatRange(topStatData.from, topStatData.to) }</p>
+                  </Maybe>
               </div>
 
-              { query.comparison && <div>
-                <p className="font-bold text-xl text-gray-500 dark:text-gray-400">{ this.topStatNumberShort(stat.name, stat.comparison_value) }</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{ formatRange(topStatData.comparing_from, topStatData.comparing_to) }</p>
-              </div> }
+              <Maybe condition={query.comparison}>
+                <div>
+                  <p className="font-bold text-xl text-gray-500 dark:text-gray-400">{ this.topStatNumberShort(stat.name, stat.comparison_value) }</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{ formatRange(topStatData.comparing_from, topStatData.comparing_to) }</p>
+                </div>
+              </Maybe>
             </div>
           </Tooltip>
       )
