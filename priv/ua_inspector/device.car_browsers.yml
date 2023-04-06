@@ -7,7 +7,7 @@
 
 # Tesla Model S
 Tesla:
-  regex: '(?:Tesla/[0-9.]+|QtCarBrowser)'
+  regex: '(?:Tesla/(?:(?:develop|feature)-)?[0-9.]+|QtCarBrowser)'
   device: 'car browser'
   models:
     - regex: 'QtCarBrowser'
