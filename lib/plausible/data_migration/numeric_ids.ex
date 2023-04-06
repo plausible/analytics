@@ -43,9 +43,7 @@ defmodule Plausible.DataMigration.NumericIDs do
     start_from =
       Keyword.get(opts, :start_from) || System.get_env("NUMERIC_IDS_PARTITION_START_FROM")
 
-    stop_at =
-      Keyword.get(opts, :stop_at) || System.get_env("NUMERIC_IDS_PARTITION_STOP_AT") ||
-        previous_part()
+    stop_at = Keyword.get(opts, :stop_at) || System.get_env("NUMERIC_IDS_PARTITION_STOP_AT")
 
     @repo.start(db_url, max_threads)
 
@@ -144,12 +142,5 @@ defmodule Plausible.DataMigration.NumericIDs do
 
       IO.puts("end.. #{DateTime.utc_now()}")
     end)
-  end
-
-  defp previous_part() do
-    now = NaiveDateTime.utc_now()
-    month = String.pad_leading("#{now.month - 1}", 2, "0")
-    year = "#{now.year}"
-    "#{year}#{month}"
   end
 end
