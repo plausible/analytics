@@ -289,7 +289,10 @@ config :plausible, Plausible.ClickhouseRepo,
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
-  transport_opts: ch_transport_opts
+  transport_opts: ch_transport_opts,
+  settings: [
+    readonly: 1
+  ]
 
 config :plausible, Plausible.IngestRepo,
   loggers: [Ecto.LogEntry],
@@ -312,6 +315,14 @@ config :plausible, Plausible.AsyncInsertRepo,
     async_insert: 1,
     wait_for_async_insert: 0
   ]
+
+config :plausible, Plausible.ImportDeletionRepo,
+  loggers: [Ecto.LogEntry],
+  queue_target: 500,
+  queue_interval: 2000,
+  url: ch_db_url,
+  transport_opts: ch_transport_opts,
+  pool_size: 1
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
