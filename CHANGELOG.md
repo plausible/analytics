@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - Stop recording XX and T1 country codes plausible/analytics#2556
 - Device type is now determined from the User-Agent instead of window.innerWidth plausible/analytics#2711
 - Add padding by default to embedded dashboards so that shadows are not cut off plausible/analytics#2744
+- Update the User Agents database (https://github.com/matomo-org/device-detector/releases/tag/6.1.1)
 
 ### Removed
 - Remove Firewall plug and `IP_BLOCKLIST` environment variable
