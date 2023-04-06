@@ -8,6 +8,7 @@ defmodule Plausible.DataMigration.NumericIDs do
   import Ecto.Query
 
   defmodule DomainsLookup do
+    @moduledoc false
     use Ecto.Schema
 
     @primary_key false
