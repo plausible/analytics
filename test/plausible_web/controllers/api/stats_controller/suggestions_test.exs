@@ -325,7 +325,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
-    test "returns suggestions for prop value with filter on prop key", %{conn: conn, site: site} do
+    test "returns suggestions for prop value ordered by count, but (none) value is always first", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           "meta.key": ["author"],
@@ -333,13 +333,16 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           timestamp: ~N[2022-01-01 00:00:00]
         ),
         build(:pageview,
-          "meta.key": ["logged_in"],
-          "meta.value": ["false"],
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
           timestamp: ~N[2022-01-01 00:00:00]
         ),
         build(:pageview,
-          "meta.key": ["dark_mode"],
-          "meta.value": ["true"],
+          "meta.key": ["author"],
+          "meta.value": ["Marko Saric"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
           timestamp: ~N[2022-01-01 00:00:00]
         )
       ])
@@ -352,7 +355,44 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) |> Enum.map(& &1["value"]) |> Enum.sort() == ["Uku Taht"]
+      assert json_response(conn, 200) == [
+        %{"label" => "(none)", "value" => "(none)"},
+        %{"label" => "Uku Taht", "value" => "Uku Taht"},
+        %{"label" => "Marko Saric", "value" => "Marko Saric"}
+      ]
+    end
+
+    test "does not show (none) value suggestion when all events have that prop_key", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Marko Saric"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+        %{"label" => "Uku Taht", "value" => "Uku Taht"},
+        %{"label" => "Marko Saric", "value" => "Marko Saric"}
+      ]
     end
 
     test "when date is borked, bad request is returned", %{
