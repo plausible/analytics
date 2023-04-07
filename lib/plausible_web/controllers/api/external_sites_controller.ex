@@ -124,6 +124,11 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
       {:missing, param} ->
         H.bad_request(conn, "Parameter `#{param}` is required to create a goal")
 
+      {:error, changeset} ->
+        conn
+        |> put_status(400)
+        |> json(serialize_errors(changeset))
+
       e ->
         H.bad_request(conn, "Something went wrong: #{inspect(e)}")
     end
