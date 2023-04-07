@@ -13,8 +13,8 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, "event:goal" = property, metrics, pagination) do
     {event_goals, pageview_goals} =
-      site.domain
-      |> Goals.for_domain()
+      site
+      |> Goals.for_site()
       |> Enum.split_with(fn goal -> goal.event_name end)
 
     events = Enum.map(event_goals, & &1.event_name)

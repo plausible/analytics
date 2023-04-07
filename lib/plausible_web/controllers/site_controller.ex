@@ -158,7 +158,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def delete_goal(conn, %{"id" => goal_id}) do
-    case Plausible.Goals.delete(goal_id, conn.assigns[:site].domain) do
+    case Plausible.Goals.delete(goal_id, conn.assigns[:site]) do
       :ok ->
         conn
         |> put_flash(:success, "Goal deleted successfully")
@@ -225,7 +225,7 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_goals(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    goals = Goals.for_domain(site.domain)
+    goals = Goals.for_site(site)
 
     conn
     |> assign(:skip_plausible_tracking, true)
