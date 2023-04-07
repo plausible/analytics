@@ -1,8 +1,13 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
-import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
+import {nowForSite} from './util/date'
 import * as storage from './util/storage'
 import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled } from './comparison-input'
+
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc)
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'year', 'all', 'custom']
 
@@ -25,11 +30,11 @@ export function parseQuery(querystring, site) {
   return {
     period,
     comparison,
-    compare_from: q.get('compare_from'),
-    compare_to: q.get('compare_to'),
-    date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
-    from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
-    to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
+    compare_from: q.get('compare_from') ? dayjs.utc(q.get('compare_from')) : undefined,
+    compare_to: q.get('compare_to') ? dayjs.utc(q.get('compare_to')) : undefined,
+    date: q.get('date') ? dayjs.utc(q.get('date')) : nowForSite(site),
+    from: q.get('from') ? dayjs.utc(q.get('from')) : undefined,
+    to: q.get('to') ? dayjs.utc(q.get('to')) : undefined,
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     filters: {
       'goal': q.get('goal'),
@@ -134,23 +139,6 @@ function QueryButton({history, query, to, disabled, className, children, onClick
 
 const QueryButtonWithRouter = withRouter(QueryButton)
 export { QueryButtonWithRouter as QueryButton };
-
-export function toHuman(query) {
-  if (query.period === 'day') {
-    return `on ${formatDay(query.date)}`
-  } if (query.period === 'month') {
-    return `in ${formatMonthYYYY(query.date)}`
-  } if (query.period === '7d') {
-    return 'in the last 7 days'
-  } if (query.period === '30d') {
-    return 'in the last 30 days'
-  } if (query.period === '6mo') {
-    return 'in the last 6 months'
-  } if (query.period === '12mo') {
-    return 'in the last 12 months'
-  }
-  return ''
-}
 
 export function eventName(query) {
   if (query.filters.goal) {

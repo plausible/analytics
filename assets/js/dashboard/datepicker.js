@@ -19,7 +19,7 @@ import {
   isThisYear,
   parseUTCDate,
   isBefore,
-  isAfter,
+  isAfter
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
@@ -245,7 +245,7 @@ function DatePicker({query, site, history}) {
 
   function setCustomDate(dates) {
     if (dates.length === 2) {
-      const [from, to] = dates
+      const [from, to] = dates.map(parseUTCDate)
       if (formatISO(from) === formatISO(to)) {
         navigateToQuery(
           history,
