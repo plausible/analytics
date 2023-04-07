@@ -4,7 +4,7 @@ import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { METRIC_MAPPING } from './graph-util'
-import { parseUTCDate, formatDayShort } from '../../util/date.js'
+import { formatDateRange } from '../../util/date.js'
 
 function Maybe({condition, children}) {
   if (condition) {
@@ -36,6 +36,8 @@ export default class TopStats extends React.Component {
       return <span className={defaultClassName}><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
     } else if (comparison === 0) {
       return <span className={noChangeClassName}>&#12336; 0%</span>
+    } else {
+      return null
     }
   }
 
@@ -122,7 +124,7 @@ export default class TopStats extends React.Component {
   }
 
   render() {
-    const { topStatData, query } = this.props
+    const { topStatData, query, site } = this.props
 
     const stats = topStatData && topStatData.top_stats.map((stat, index) => {
 
@@ -131,20 +133,6 @@ export default class TopStats extends React.Component {
         'lg:border-l border-gray-300': index > 0,
         'border-r lg:border-r-0': index % 2 === 0
       })
-
-      const formatRange = (from, to) => {
-        if (!from || !to) return
-
-        from = parseUTCDate(from)
-        to = parseUTCDate(to)
-
-        if (from.getTime() == to.getTime()) {
-          return formatDayShort(from, true)
-        } else {
-          const includeFromYear = from.getFullYear() != to.getFullYear()
-          return `${formatDayShort(from, includeFromYear)} - ${formatDayShort(to, true)}`
-        }
-      }
 
       return (
           <Tooltip key={stat.name} info={this.topStatTooltip(stat, query)} className={className} onClick={() => { this.maybeUpdateMetric(stat) }} boundary={this.props.tooltipBoundary}>
@@ -158,14 +146,14 @@ export default class TopStats extends React.Component {
                   </Maybe>
                 </span>
                   <Maybe condition={query.comparison}>
-                    <p className="text-xs dark:text-gray-100">{ formatRange(topStatData.from, topStatData.to) }</p>
+                    <p className="text-xs dark:text-gray-100">{ formatDateRange(site, topStatData.from, topStatData.to) }</p>
                   </Maybe>
               </div>
 
               <Maybe condition={query.comparison}>
                 <div>
                   <p className="font-bold text-xl text-gray-500 dark:text-gray-400">{ this.topStatNumberShort(stat.name, stat.comparison_value) }</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{ formatRange(topStatData.comparing_from, topStatData.comparing_to) }</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{ formatDateRange(site, topStatData.comparing_from, topStatData.comparing_to) }</p>
                 </div>
               </Maybe>
             </div>
