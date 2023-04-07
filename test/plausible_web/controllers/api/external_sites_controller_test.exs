@@ -256,6 +256,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       res = json_response(conn, 200)
       assert res["goal_type"] == "event"
       assert res["event_name"] == "Signup"
+      assert res["domain"] == site.domain
     end
 
     test "can add a goal as page to a site", %{conn: conn, site: site} do
@@ -269,6 +270,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       res = json_response(conn, 200)
       assert res["goal_type"] == "page"
       assert res["page_path"] == "/signup"
+      assert res["domain"] == site.domain
     end
 
     @tag :v2_only
@@ -288,6 +290,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       res = json_response(conn, 200)
       assert res["goal_type"] == "event"
       assert res["event_name"] == "Signup"
+      assert res["domain"] == new_domain
     end
 
     test "is idempotent find or create op", %{conn: conn, site: site} do

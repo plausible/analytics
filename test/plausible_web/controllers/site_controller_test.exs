@@ -334,8 +334,8 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "lists goals for the site", %{conn: conn, site: site} do
-      insert(:goal, domain: site.domain, event_name: "Custom event")
-      insert(:goal, domain: site.domain, page_path: "/register")
+      insert(:goal, site: site, event_name: "Custom event")
+      insert(:goal, site: site, page_path: "/register")
 
       conn = get(conn, "/#{site.domain}/settings/goals")
 
@@ -660,7 +660,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes goal", %{conn: conn, site: site} do
-      goal = insert(:goal, domain: site.domain, event_name: "Custom event")
+      goal = insert(:goal, site: site, event_name: "Custom event")
 
       conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
 
@@ -670,7 +670,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "fails to delete goal for a foreign site", %{conn: conn, site: site} do
       another_site = insert(:site)
-      goal = insert(:goal, domain: another_site.domain, event_name: "Custom event")
+      goal = insert(:goal, site: another_site, event_name: "Custom event")
 
       conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
 

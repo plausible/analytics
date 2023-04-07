@@ -250,7 +250,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       )
     ])
 
-    insert(:goal, %{domain: site.domain, event_name: "Signup"})
+    insert(:goal, %{site: site, event_name: "Signup"})
   end
 
   describe "GET /:website/export - with goal filter" do

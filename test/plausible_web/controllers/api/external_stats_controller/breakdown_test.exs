@@ -1061,9 +1061,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   describe "breakdown by event:goal" do
     test "custom properties from custom events are returned", %{conn: conn, site: site} do
-      insert(:goal, %{domain: site.domain, event_name: "404"})
-      insert(:goal, %{domain: site.domain, event_name: "Purchase"})
-      insert(:goal, %{domain: site.domain, page_path: "/test"})
+      insert(:goal, %{site: site, event_name: "404"})
+      insert(:goal, %{site: site, event_name: "Purchase"})
+      insert(:goal, %{site: site, page_path: "/test"})
 
       populate_stats(site, [
         build(:pageview,
