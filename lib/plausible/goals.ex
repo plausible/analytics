@@ -8,11 +8,11 @@ defmodule Plausible.Goals do
     Goal.changeset(%Goal{}, params)
     |> Ecto.Changeset.add_error(
       :event_name,
-      "Goals creation is temporarily disabled due to a planned database migration. Please try again in an hour."
+      "Sorry! Due to the ongoing maintenance, adding new goals is currently paused. Please try again in one hour. Thanks for your patience!"
     )
     |> Ecto.Changeset.add_error(
       :page_path,
-      "Goals creation is temporarily disabled due to a planned database migration. Please try again in an hour."
+      "Sorry! Due to the ongoing maintenance, adding new goals is currently paused. Please try again in one hour. Thanks for your patience!"
     )
     |> Repo.insert()
   end
