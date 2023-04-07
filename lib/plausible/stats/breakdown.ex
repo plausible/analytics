@@ -157,18 +157,6 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
-    sort_by = if Enum.member?(metrics, :visitors), do: :visitors, else: List.first(metrics)
-
-    property =
-      if is_binary(property) do
-        property
-        |> String.trim_leading("event:")
-        |> String.trim_leading("visit:")
-        |> String.trim_leading("props:")
-      else
-        property
-      end
-
     null_row = Enum.map(metrics, fn metric -> {metric, nil} end) |> Enum.into(%{})
 
     prop_values =
@@ -179,10 +167,11 @@ defmodule Plausible.Stats.Breakdown do
       event_row = Enum.find(event_result, fn row -> row[property] == value end) || %{}
       session_row = Enum.find(session_result, fn row -> row[property] == value end) || %{}
 
-      Map.merge(null_row, event_row)
+      null_row
+      |> Map.merge(event_row)
       |> Map.merge(session_row)
     end)
-    |> Enum.sort_by(fn row -> row[sort_by] end, :desc)
+    |> Enum.sort_by(&(&1[sorting_key(metrics)]), :desc)
   end
 
   defp breakdown_sessions(_, _, _, [], _), do: []
@@ -558,6 +547,10 @@ defmodule Plausible.Stats.Breakdown do
       },
       order_by: {:asc, s.browser_version}
     )
+  end
+
+  defp sorting_key(metrics) do
+    if Enum.member?(metrics, :visitors), do: :visitors, else: List.first(metrics)
   end
 
   defp transform_keys(results, keys_to_replace) do
