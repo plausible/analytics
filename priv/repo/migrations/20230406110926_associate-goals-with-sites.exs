@@ -18,9 +18,5 @@ defmodule :"Elixir.Plausible.Repo.Migrations.Associate-goals-with-sites" do
       SELECT s.id FROM sites s WHERE s.domain = g.domain
     )
     """
-
-    alter table(:goals) do
-      modify :site_id, references(:sites, on_delete: :delete_all), null: false
-    end
   end
 end
