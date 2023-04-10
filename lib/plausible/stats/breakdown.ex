@@ -68,12 +68,10 @@ defmodule Plausible.Stats.Breakdown do
     {limit, _} = pagination
 
     none_result =
-      if !Enum.any?(query.filters, fn {key, _} -> String.starts_with?(key, "event:props") end) do
-        none_filters = Map.put(query.filters, "event:props:" <> custom_prop, {:is, "(none)"})
-        none_query = %Query{query | filters: none_filters}
+      if include_none_result?(query.filters[property]) do
+        none_query = Query.put_filter(query, property, {:is, "(none)"})
 
         from(e in base_event_query(site, none_query),
-          order_by: [desc: fragment("uniq(?)", e.user_id)],
           select: %{},
           select_merge: %{^custom_prop => "(none)"},
           having: fragment("uniq(?)", e.user_id) > 0
@@ -85,14 +83,15 @@ defmodule Plausible.Stats.Breakdown do
       end
 
     trace(query, property, metrics)
-    results = breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
+    results =
+      breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
+      |> Kernel.++(none_result)
+      |> Enum.sort_by(&(&1[sorting_key(metrics)]), :desc)
 
-    zipped = zip_results(none_result, results, custom_prop, metrics)
-
-    if Enum.find_index(zipped, fn value -> value[custom_prop] == "(none)" end) == limit do
-      Enum.slice(zipped, 0..(limit - 1))
+    if Enum.find_index(results, fn value -> value[custom_prop] == "(none)" end) == limit do
+      Enum.slice(results, 0..(limit - 1))
     else
-      zipped
+      results
     end
   end
 
@@ -173,6 +172,12 @@ defmodule Plausible.Stats.Breakdown do
     end)
     |> Enum.sort_by(&(&1[sorting_key(metrics)]), :desc)
   end
+
+  defp include_none_result?({:is, value}), do: value == "(none)"
+  defp include_none_result?({:is_not, "(none)"}), do: false
+  defp include_none_result?({:member, values}), do: Enum.member?(values, "(none)")
+  defp include_none_result?({:not_member, values}), do: !Enum.member?(values, "(none)")
+  defp include_none_result?(_), do: true
 
   defp breakdown_sessions(_, _, _, [], _), do: []
 
