@@ -245,6 +245,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "PUT /api/v1/sites/goals" do
     setup :create_site
 
+    @tag :skip
     test "can add a goal as event to a site", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -258,6 +259,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["event_name"] == "Signup"
     end
 
+    @tag :skip
     test "can add a goal as page to a site", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -272,6 +274,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     @tag :v2_only
+    @tag :skip
     test "can add a goal using old site_id after domain change", %{conn: conn, site: site} do
       old_domain = site.domain
       new_domain = "new.example.com"
@@ -290,6 +293,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["event_name"] == "Signup"
     end
 
+    @tag :skip
     test "is idempotent find or create op", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -390,6 +394,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
   end
 
+  @tag :skip
   describe "DELETE /api/v1/sites/goals/:goal_id" do
     setup :create_new_site
 
@@ -412,6 +417,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     @tag :v2_only
+    @tag :skip
     test "delete a goal using old site_id after domain change", %{conn: conn, site: site} do
       old_domain = site.domain
       new_domain = "new.example.com"

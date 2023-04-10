@@ -5,7 +5,16 @@ defmodule Plausible.Goals do
   def create(site, params) do
     params = Map.merge(params, %{"domain" => site.domain})
 
-    Goal.changeset(%Goal{}, params) |> Repo.insert()
+    Goal.changeset(%Goal{}, params)
+    |> Ecto.Changeset.add_error(
+      :event_name,
+      "Sorry! Due to the ongoing maintenance, adding new goals is currently paused. Please try again in one hour. Thanks for your patience!"
+    )
+    |> Ecto.Changeset.add_error(
+      :page_path,
+      "Sorry! Due to the ongoing maintenance, adding new goals is currently paused. Please try again in one hour. Thanks for your patience!"
+    )
+    |> Repo.insert()
   end
 
   def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name}) do

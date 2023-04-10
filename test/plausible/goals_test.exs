@@ -3,6 +3,7 @@ defmodule Plausible.GoalsTest do
 
   alias Plausible.Goals
 
+  @tag :skip
   test "create/2 trims input" do
     site = insert(:site)
     {:ok, goal} = Goals.create(site, %{"page_path" => "/foo bar "})
