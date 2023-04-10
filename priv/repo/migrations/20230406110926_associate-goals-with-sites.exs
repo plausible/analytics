@@ -19,4 +19,10 @@ defmodule :"Elixir.Plausible.Repo.Migrations.Associate-goals-with-sites" do
     )
     """
   end
+
+  def down do
+    alter table(:goals) do
+      remove :site_id
+    end
+  end
 end
