@@ -620,7 +620,6 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  @tag :skip
   describe "POST /:website/goals" do
     setup [:create_user, :log_in, :create_site]
 
@@ -640,7 +639,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
     end
 
-    @tag :skip
     test "creates a custom event goal for the website", %{conn: conn, site: site} do
       conn =
         post(conn, "/#{site.domain}/goals", %{
