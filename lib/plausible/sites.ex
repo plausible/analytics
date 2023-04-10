@@ -115,7 +115,7 @@ defmodule Plausible.Sites do
   def has_goals?(site) do
     Repo.exists?(
       from g in Plausible.Goal,
-        where: g.domain == ^site.domain
+        where: g.site_id == ^site.id
     )
   end
 
