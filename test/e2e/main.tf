@@ -237,11 +237,11 @@ resource "checkly_alert_channel" "pagerduty" {
 
 resource "checkly_alert_channel" "instatus" {
   webhook {
-    name = "Instatus integration"
-    method = "POST"
+    name     = "Instatus integration"
+    method   = "POST"
     template = <<EOT
   {"alert": "{{ALERT_TYPE}}"}
 EOT
-    url = var.checkly_alert_channel_instatus_webhook_url
+    url      = var.checkly_alert_channel_instatus_webhook_url
   }
 }
