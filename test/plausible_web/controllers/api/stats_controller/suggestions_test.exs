@@ -234,11 +234,26 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
   describe "suggestions for props" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "returns suggestions for prop key with no filter", %{conn: conn, site: site} do
+    test "returns suggestions for prop key ordered by count", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           "meta.key": ["author"],
           "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
           timestamp: ~N[2022-01-01 00:00:00]
         ),
         build(:pageview,
@@ -256,73 +271,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
 
-      assert json_response(conn, 200) |> Enum.map(& &1["value"]) |> Enum.sort() == [
-               "author",
-               "dark_mode",
-               "logged_in"
-             ]
-    end
-
-    test "returns suggestions for prop key with value filter", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          "meta.key": ["author"],
-          "meta.value": ["Uku Taht"],
-          timestamp: ~N[2022-01-01 00:00:00]
-        ),
-        build(:pageview,
-          "meta.key": ["logged_in"],
-          "meta.value": ["true"],
-          timestamp: ~N[2022-01-01 00:00:00]
-        ),
-        build(:pageview,
-          "meta.key": ["dark_mode"],
-          "meta.value": ["true"],
-          timestamp: ~N[2022-01-01 00:00:00]
-        )
-      ])
-
-      filters = Jason.encode!(%{props: %{"": "true"}})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) |> Enum.map(& &1["value"]) |> Enum.sort() == [
-               "dark_mode",
-               "logged_in"
-             ]
-    end
-
-    test "returns suggestions for prop value with no filter", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          "meta.key": ["author"],
-          "meta.value": ["Uku Taht"],
-          timestamp: ~N[2022-01-01 00:00:00]
-        ),
-        build(:pageview,
-          "meta.key": ["logged_in"],
-          "meta.value": ["false"],
-          timestamp: ~N[2022-01-01 00:00:00]
-        ),
-        build(:pageview,
-          "meta.key": ["dark_mode"],
-          "meta.value": ["true"],
-          timestamp: ~N[2022-01-01 00:00:00]
-        )
-      ])
-
-      conn =
-        get(conn, "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01")
-
-      assert json_response(conn, 200) |> Enum.map(& &1["value"]) |> Enum.sort() == [
-               "Uku Taht",
-               "false",
-               "true"
-             ]
+      assert json_response(conn, 200) == [
+        %{"label" => "author", "value" => "author"},
+        %{"label" => "logged_in", "value" => "logged_in"},
+        %{"label" => "dark_mode", "value" => "dark_mode"}
+      ]
     end
 
     test "returns suggestions for prop value ordered by count, but (none) value is always first", %{conn: conn, site: site} do

@@ -144,14 +144,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         limit: 25
       )
 
-    q =
-      case Query.get_filter_by_prefix(query, "event:props") do
-        {"event:props:", {:is, val}} -> from([e, m] in q, where: m.value == ^val)
-        _ -> q
-      end
-
     ClickhouseRepo.all(q)
-    |> Enum.filter(fn suggestion -> suggestion != "" end)
     |> wrap_suggestions()
   end
 

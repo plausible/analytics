@@ -11,21 +11,6 @@ import { shouldIgnoreKeypress } from '../../keybinding'
 import { isFreeChoiceFilter } from "../../util/filters";
 
 function getFormState(filterGroup, query) {
-  if (filterGroup === 'props') {
-    const propsObject = query.filters['props']
-    const entries = propsObject && Object.entries(propsObject)
-
-    if (entries && entries.length == 1) {
-      const [[propKey, _propVal]] = entries
-      const {type, clauses} = parseQueryFilter(query, 'props')
-
-      return {
-        'prop_key': { type: FILTER_TYPES.is, clauses: [{label: propKey, value: propKey}] },
-        'prop_value': { type, clauses }
-      }
-    }
-  }
-
   return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
     const {type, clauses} = parseQueryFilter(query, filter)
 
@@ -75,12 +60,6 @@ class RegularFilterModal extends React.Component {
       if (filterKey === 'country') { res.push({ filter: 'country_labels', value: clauses.map(clause => clause.label).join('|') }) }
       if (filterKey === 'region') { res.push({ filter: 'region_labels', value: clauses.map(clause => clause.label).join('|') }) }
       if (filterKey === 'city') { res.push({ filter: 'city_labels', value: clauses.map(clause => clause.label).join('|') }) }
-      if (filterKey === 'prop_value') { return res }
-      if (filterKey === 'prop_key') {
-        const [{value: propKey}] = clauses
-        res.push({ filter: 'props', value: JSON.stringify({ [propKey]: toFilterQuery(formState.prop_value.type, formState.prop_value.clauses) }) })
-        return res
-      }
 
       res.push({ filter: filterKey, value: toFilterQuery(type, clauses) })
       return res
@@ -125,15 +104,7 @@ class RegularFilterModal extends React.Component {
   }
 
   queryForSuggestions(query, formFilters, filter) {
-    if (filter === 'prop_key') {
-      const propsFilter = formFilters.prop_value ? { '': formFilters.prop_value } : null
-      return { ...query, filters: { ...query.filters, props: propsFilter } }
-    } else if (filter === 'prop_value') {
-      const propsFilter = formFilters.prop_key ? { [formFilters.prop_key]: '!(none)' } : null
-      return { ...query, filters: { ...query.filters, props: propsFilter } }
-    } else {
-      return { ...query, filters: { ...query.filters, ...formFilters, [filter]: this.negate(formFilters[filter]) } }
-    }
+    return { ...query, filters: { ...query.filters, ...formFilters, [filter]: this.negate(formFilters[filter]) } }
   }
 
   negate(filterVal) {
@@ -153,11 +124,7 @@ class RegularFilterModal extends React.Component {
   }
 
   isDisabled() {
-    if (this.props.filterGroup === 'props') {
-      return Object.entries(this.state.formState).some(([_key, { clauses }]) => clauses.length === 0)
-    } else {
-      return Object.entries(this.state.formState).every(([_key, { clauses }]) => clauses.length === 0)
-    }
+    return Object.entries(this.state.formState).every(([_key, { clauses }]) => clauses.length === 0)
   }
 
   selectFiltersAndCloseModal(filters) {
