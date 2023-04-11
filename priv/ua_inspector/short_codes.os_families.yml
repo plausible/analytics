@@ -11,6 +11,11 @@
   - "HAR"
   - "ADR"
   - "CLR"
+  - "BOS"
+  - "REV"
+  - "LEN"
+  - "SIR"
+  - "RRS"
   - ""
 - "AmigaOS":
   - "AMG"
@@ -25,6 +30,7 @@
   - "HAI"
 - "Chrome OS":
   - "COS"
+  - "CRS"
   - "FYD"
   - "SEE"
 - "Firefox OS":
@@ -92,6 +98,13 @@
   - "LND"
   - "LNS"
   - "CHN"
+  - "AMZ"
+  - "TEN"
+  - "CST"
+  - "NOV"
+  - "ROU"
+  - "ZOR"
+  - "RED"
   - ""
 - "Mac":
   - "MAC"

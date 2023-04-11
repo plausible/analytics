@@ -19,20 +19,21 @@ defmodule Plausible.Site.GateKeeperTest do
   test "site from cache with no ingest_rate_limit_threshold is allowed", %{test: test, opts: opts} do
     domain = "site1.example.com"
 
-    add_site_and_refresh_cache(test, domain: domain)
-    assert :allow = GateKeeper.check(domain, opts)
+    %{id: site_id} = add_site_and_refresh_cache(test, domain: domain)
+    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
   end
 
   test "rate limiting works with threshold", %{test: test, opts: opts} do
     domain = "site1.example.com"
 
-    add_site_and_refresh_cache(test,
-      domain: domain,
-      ingest_rate_limit_threshold: 1,
-      ingest_rate_limit_scale_seconds: 60
-    )
+    %{id: site_id} =
+      add_site_and_refresh_cache(test,
+        domain: domain,
+        ingest_rate_limit_threshold: 1,
+        ingest_rate_limit_scale_seconds: 60
+      )
 
-    assert :allow = GateKeeper.check(domain, opts)
+    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
     assert {:deny, :throttle} = GateKeeper.check(domain, opts)
     assert {:deny, :throttle} = GateKeeper.check(domain, opts)
   end
@@ -40,17 +41,18 @@ defmodule Plausible.Site.GateKeeperTest do
   test "rate limiting works with scale window", %{test: test, opts: opts} do
     domain = "site1.example.com"
 
-    add_site_and_refresh_cache(test,
-      domain: domain,
-      ingest_rate_limit_threshold: 1,
-      ingest_rate_limit_scale_seconds: 1
-    )
+    %{id: site_id} =
+      add_site_and_refresh_cache(test,
+        domain: domain,
+        ingest_rate_limit_threshold: 1,
+        ingest_rate_limit_scale_seconds: 1
+      )
 
-    assert :allow = GateKeeper.check(domain, opts)
+    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
     Process.sleep(1)
     assert {:deny, :throttle} = GateKeeper.check(domain, opts)
     Process.sleep(1_000)
-    assert :allow = GateKeeper.check(domain, opts)
+    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
   end
 
   test "rate limiting prioritises cache lookups", %{test: test, opts: opts} do
@@ -67,8 +69,9 @@ defmodule Plausible.Site.GateKeeperTest do
     # We need some dummy site, otherwise the cache won't refresh in case the DB
     # is completely empty
     insert(:site)
+    deleted_site_id = site.id
 
-    assert :allow = GateKeeper.check(domain, opts)
+    assert {:allow, ^deleted_site_id} = GateKeeper.check(domain, opts)
     :ok = Cache.refresh_all(opts[:cache_opts])
     assert {:deny, :not_found} = GateKeeper.check(domain, opts)
   end
@@ -86,18 +89,19 @@ defmodule Plausible.Site.GateKeeperTest do
         ingest_rate_limit_scale_seconds: 600
       )
 
-    assert :allow = GateKeeper.check(domain, opts)
+    site_id = site.id
+    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
     assert {:deny, :throttle} = GateKeeper.check(domain, opts)
 
     {:ok, :broken} = break_hammer(site)
 
     log =
       capture_log(fn ->
-        assert :allow = GateKeeper.check(domain, opts)
+        assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
       end)
 
     assert log =~ "Error checking rate limit for 'ingest:site:causingerrors.example.com'"
-    assert log =~ "Falling back to: allow"
+    assert log =~ "Falling back to: :allow"
   end
 
   # We need a way to force Hammer to error-out on Hammer.check_rate/3.

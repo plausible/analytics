@@ -1,0 +1,54 @@
+INSERT INTO tmp_events_v2 (
+  site_id, timestamp, name, user_id,
+  session_id, hostname, pathname, referrer,
+  referrer_source, country_code, screen_size,
+  operating_system, browser, utm_medium,
+  utm_source, utm_campaign, meta.key,
+  meta.value, browser_version, operating_system_version,
+  subdivision1_code, subdivision2_code,
+  city_geoname_id, utm_content, utm_term,
+  transferred_from
+)
+SELECT
+  dictGet(
+    'domains_lookup', 'site_id', domain
+  ),
+  timestamp,
+  name,
+  user_id,
+  session_id,
+  hostname,
+  pathname,
+  referrer,
+  referrer_source,
+  country_code,
+  screen_size,
+  operating_system,
+  browser,
+  utm_medium,
+  utm_source,
+  utm_campaign,
+  meta.key,
+  meta.value,
+  browser_version,
+  operating_system_version,
+  subdivision1_code,
+  subdivision2_code,
+  city_geoname_id,
+  utm_content,
+  utm_term,
+  transferred_from
+FROM
+  events
+WHERE
+  (
+    domain IN (
+      SELECT
+        domain
+      FROM
+        dictionary('domains_lookup')
+      WHERE
+    partition <= '<%= @partition %>'
+    )
+  )
+AND (_partition_id = '<%= @partition %>')

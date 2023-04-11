@@ -25,6 +25,8 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
   test "does not send an email if the user has configured a weekly report" do
     user = insert(:user, inserted_at: days_ago(9), last_seen: days_ago(7))
     site = insert(:site, domain: "test-site.com", members: [user])
+
+    populate_stats(site, [build(:pageview)])
     insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
     perform_job(SendCheckStatsEmails, %{})
@@ -34,7 +36,8 @@ defmodule Plausible.Workers.SendCheckStatsEmailsTest do
 
   test "sends an email after a week of signup if the user hasn't logged in" do
     user = insert(:user, inserted_at: days_ago(8), last_seen: days_ago(8))
-    insert(:site, domain: "test-site.com", members: [user])
+    site = insert(:site, domain: "test-site.com", members: [user])
+    populate_stats(site, [build(:pageview)])
 
     perform_job(SendCheckStatsEmails, %{})
 

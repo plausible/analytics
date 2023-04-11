@@ -1,11 +1,15 @@
 defmodule Plausible.Stats.Timeseries do
   use Plausible.ClickhouseRepo
   alias Plausible.Stats.Query
-  import Plausible.Stats.Base
+  import Plausible.Stats.{Base, Util}
   use Plausible.Stats.Fragments
 
+  @typep metric :: :pageviews | :visitors | :visits | :bounce_rate | :visit_duration
+  @typep value :: nil | integer() | float()
+  @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
+
   @event_metrics [:visitors, :pageviews]
-  @session_metrics [:visits, :bounce_rate, :visit_duration]
+  @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
 
@@ -20,8 +24,9 @@ defmodule Plausible.Stats.Timeseries do
 
     Enum.map(steps, fn step ->
       empty_row(step, metrics)
-      |> Map.merge(Enum.find(event_result, fn row -> row[:date] == step end) || %{})
-      |> Map.merge(Enum.find(session_result, fn row -> row[:date] == step end) || %{})
+      |> Map.merge(Enum.find(event_result, fn row -> date_eq(row[:date], step) end) || %{})
+      |> Map.merge(Enum.find(session_result, fn row -> date_eq(row[:date], step) end) || %{})
+      |> Map.update!(:date, &date_format/1)
     end)
   end
 
@@ -38,13 +43,13 @@ defmodule Plausible.Stats.Timeseries do
   defp sessions_timeseries(_, _, []), do: []
 
   defp sessions_timeseries(site, query, metrics) do
-    query = Query.treat_page_filter_as_entry_page(query)
-
     from(e in query_sessions(site, query), select: %{})
+    |> filter_converted_sessions(site, query)
     |> select_bucket(site, query)
     |> select_session_metrics(metrics)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
+    |> remove_internal_visits_metric(metrics)
   end
 
   defp buckets(%Query{interval: "month"} = query) do
@@ -84,7 +89,6 @@ defmodule Plausible.Stats.Timeseries do
       query.date_range.first
       |> Timex.to_datetime()
       |> Timex.shift(hours: step)
-      |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
     end)
   end
 
@@ -105,8 +109,27 @@ defmodule Plausible.Stats.Timeseries do
       query.date_range.first
       |> Timex.to_datetime()
       |> Timex.shift(minutes: step)
-      |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
     end)
+  end
+
+  defp date_eq(%DateTime{} = left, %DateTime{} = right) do
+    NaiveDateTime.compare(left, right) == :eq
+  end
+
+  defp date_eq(%Date{} = left, %Date{} = right) do
+    Date.compare(left, right) == :eq
+  end
+
+  defp date_eq(left, right) do
+    left == right
+  end
+
+  defp date_format(%DateTime{} = date) do
+    Timex.format!(date, "{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
+  end
+
+  defp date_format(date) do
+    date
   end
 
   defp select_bucket(q, site, %Query{interval: "month"}) do
@@ -121,7 +144,7 @@ defmodule Plausible.Stats.Timeseries do
   end
 
   defp select_bucket(q, site, %Query{interval: "week"} = query) do
-    {first_datetime, _} = utc_boundaries(query, site.timezone)
+    {first_datetime, _} = utc_boundaries(query, site)
 
     from(
       e in q,
@@ -191,6 +214,7 @@ defmodule Plausible.Stats.Timeseries do
         :pageviews -> Map.merge(row, %{pageviews: 0})
         :visitors -> Map.merge(row, %{visitors: 0})
         :visits -> Map.merge(row, %{visits: 0})
+        :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
         :bounce_rate -> Map.merge(row, %{bounce_rate: nil})
         :visit_duration -> Map.merge(row, %{:visit_duration => nil})
       end

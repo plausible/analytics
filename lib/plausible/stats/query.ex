@@ -10,58 +10,7 @@ defmodule Plausible.Stats.Query do
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{FilterParser, Interval}
 
-  def shift_back(%__MODULE__{period: "year"} = query, site) do
-    # Querying current year to date
-    {new_first, new_last} =
-      if Timex.compare(Timex.now(site.timezone), query.date_range.first, :year) == 0 do
-        diff =
-          Timex.diff(
-            Timex.beginning_of_year(Timex.now(site.timezone)),
-            Timex.now(site.timezone),
-            :days
-          ) - 1
-
-        {query.date_range.first |> Timex.shift(days: diff),
-         Timex.now(site.timezone) |> Timex.to_date() |> Timex.shift(days: diff)}
-      else
-        diff = Timex.diff(query.date_range.first, query.date_range.last, :days) - 1
-
-        {query.date_range.first |> Timex.shift(days: diff),
-         query.date_range.last |> Timex.shift(days: diff)}
-      end
-
-    Map.put(query, :date_range, Date.range(new_first, new_last))
-  end
-
-  def shift_back(%__MODULE__{period: "month"} = query, site) do
-    # Querying current month to date
-    {new_first, new_last} =
-      if Timex.compare(Timex.now(site.timezone), query.date_range.first, :month) == 0 do
-        diff =
-          Timex.diff(
-            Timex.beginning_of_month(Timex.now(site.timezone)),
-            Timex.now(site.timezone),
-            :days
-          ) - 1
-
-        {query.date_range.first |> Timex.shift(days: diff),
-         Timex.now(site.timezone) |> Timex.to_date() |> Timex.shift(days: diff)}
-      else
-        diff = Timex.diff(query.date_range.first, query.date_range.last, :days) - 1
-
-        {query.date_range.first |> Timex.shift(days: diff),
-         query.date_range.last |> Timex.shift(days: diff)}
-      end
-
-    Map.put(query, :date_range, Date.range(new_first, new_last))
-  end
-
-  def shift_back(query, _site) do
-    diff = Timex.diff(query.date_range.first, query.date_range.last, :days) - 1
-    new_first = query.date_range.first |> Timex.shift(days: diff)
-    new_last = query.date_range.last |> Timex.shift(days: diff)
-    Map.put(query, :date_range, Date.range(new_first, new_last))
-  end
+  @type t :: %__MODULE__{}
 
   def from(site, %{"period" => "realtime"} = params) do
     date = today(site.timezone)
@@ -257,30 +206,6 @@ defmodule Plausible.Stats.Query do
       query
       | filters: Map.put(query.filters, key, val)
     }
-  end
-
-  def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"visit:entry_page" => _}} = q), do: q
-
-  def treat_page_filter_as_entry_page(%__MODULE__{filters: %{"event:page" => f}} = q) do
-    q
-    |> put_filter("visit:entry_page", f)
-    |> put_filter("event:page", nil)
-  end
-
-  def treat_page_filter_as_entry_page(q), do: q
-
-  def treat_prop_filter_as_entry_prop(%__MODULE__{filters: filters} = q) do
-    prop_filter = get_filter_by_prefix(q, "event:props:")
-
-    case {filters["event:goal"], prop_filter} do
-      {nil, {"event:props:" <> prop, filter_value}} ->
-        q
-        |> remove_event_filters([:props])
-        |> put_filter("visit:entry_props:" <> prop, filter_value)
-
-      _ ->
-        q
-    end
   end
 
   def remove_event_filters(query, opts) do

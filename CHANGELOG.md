@@ -6,8 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Added
 - 'Last updated X seconds ago' info to 'current visitors' tooltips
 - Add support for more Bamboo adapters, i.e. `Bamboo.MailgunAdapter`, `Bamboo.MandrillAdapter`, `Bamboo.SendGridAdapter` plausible/analytics#2649
+- Ability to change domain for existing site (requires numeric IDs data migration, instructions will be provided separately) UI + API (`PUT /api/v1/sites`)
 
 ### Fixed
+- Make goal-filtered CSV export return only unique_conversions timeseries in the 'visitors.csv' file
+- Stop treating page filter as an entry page filter
 - City report showing N/A instead of city names with imported data plausible/analytics#2675
 - Empty values for Screen Size, OS and Browser are uniformly replaced with "(not set)"
 - Fix [more pageviews with session prop filter than with no filters](https://github.com/plausible/analytics/issues/1666)
@@ -24,8 +27,12 @@ All notable changes to this project will be documented in this file.
 - Reject events with long URIs and data URIs plausible/analytics#2536
 - Always show direct traffic in sources reports plausible/analytics#2531
 - Stop recording XX and T1 country codes plausible/analytics#2556
+- Device type is now determined from the User-Agent instead of window.innerWidth plausible/analytics#2711
+- Add padding by default to embedded dashboards so that shadows are not cut off plausible/analytics#2744
+- Update the User Agents database (https://github.com/matomo-org/device-detector/releases/tag/6.1.1)
 
 ### Removed
+- Remove Firewall plug and `IP_BLOCKLIST` environment variable
 - Remove the ability to collapse the main graph plausible/analytics#2627
 
 ## v1.5.1 - 2022-12-06

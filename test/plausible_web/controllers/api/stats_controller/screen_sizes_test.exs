@@ -163,5 +163,24 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
                }
              ]
     end
+
+    test "returns screen sizes with not_member filter type", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, referrer_source: "Google", screen_size: "Desktop"),
+        build(:pageview, referrer_source: "Bad source", screen_size: "Desktop"),
+        build(:pageview, referrer_source: "Google", screen_size: "Desktop"),
+        build(:pageview, referrer_source: "Twitter", screen_size: "Mobile"),
+        build(:pageview, referrer_source: "Second bad source", screen_size: "Mobile")
+      ])
+
+      filters = Jason.encode!(%{"source" => "!Bad source|Second bad source"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 67},
+               %{"name" => "Mobile", "visitors" => 1, "percentage" => 33}
+             ]
+    end
   end
 end

@@ -12,16 +12,29 @@
 
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
-site = Plausible.Factory.insert(:site, domain: "dummy.site")
+beginning_of_time = NaiveDateTime.add(NaiveDateTime.utc_now(), -721, :day)
+
+site =
+  Plausible.Factory.insert(:site, domain: "dummy.site", native_stats_start_at: beginning_of_time)
 
 _membership = Plausible.Factory.insert(:site_membership, user: user, site: site, role: :owner)
 
-put_random_time = fn date ->
-  random_time = Time.new!(:rand.uniform(23), :rand.uniform(59), 0)
+put_random_time = fn
+  date, 0 ->
+    current_hour = Time.utc_now().hour
+    current_minute = Time.utc_now().minute
+    random_time = Time.new!(:rand.uniform(current_hour), :rand.uniform(current_minute - 1), 0)
 
-  date
-  |> NaiveDateTime.new!(random_time)
-  |> NaiveDateTime.truncate(:second)
+    date
+    |> NaiveDateTime.new!(random_time)
+    |> NaiveDateTime.truncate(:second)
+
+  date, _ ->
+    random_time = Time.new!(:rand.uniform(23), :rand.uniform(59), 0)
+
+    date
+    |> NaiveDateTime.new!(random_time)
+    |> NaiveDateTime.truncate(:second)
 end
 
 geolocations = [
@@ -71,17 +84,31 @@ Enum.flat_map(-720..0, fn day_index ->
   Enum.map(number_of_events, fn _ ->
     geolocation = Enum.random(geolocations)
 
-    [
-      domain: site.domain,
-      hostname: site.domain,
-      timestamp: put_random_time.(date),
-      referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
-      browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
-      browser_version: to_string(Enum.random(0..50)),
-      screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
-      operating_system: Enum.random(["Windows", "macOS", "Linux"]),
-      operating_system_version: to_string(Enum.random(0..15))
-    ]
+    if Plausible.v2?() do
+      [
+        site_id: site.id,
+        hostname: site.domain,
+        timestamp: put_random_time.(date, day_index),
+        referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+        browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
+        browser_version: to_string(Enum.random(0..50)),
+        screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
+        operating_system: Enum.random(["Windows", "macOS", "Linux"]),
+        operating_system_version: to_string(Enum.random(0..15))
+      ]
+    else
+      [
+        domain: site.domain,
+        hostname: site.domain,
+        timestamp: put_random_time.(date, day_index),
+        referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+        browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
+        browser_version: to_string(Enum.random(0..50)),
+        screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
+        operating_system: Enum.random(["Windows", "macOS", "Linux"]),
+        operating_system_version: to_string(Enum.random(0..15))
+      ]
+    end
     |> Keyword.merge(geolocation)
     |> then(&Plausible.Factory.build(:pageview, &1))
   end)

@@ -7,9 +7,11 @@ defmodule Plausible.Ingestion.Event do
   """
   alias Plausible.Ingestion.Request
   alias Plausible.ClickhouseEvent
+  alias Plausible.ClickhouseEventV2
   alias Plausible.Site.GateKeeper
 
   defstruct domain: nil,
+            site_id: nil,
             clickhouse_event_attrs: %{},
             clickhouse_event: nil,
             dropped?: false,
@@ -26,8 +28,9 @@ defmodule Plausible.Ingestion.Event do
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
+          site_id: pos_integer() | nil,
           clickhouse_event_attrs: map(),
-          clickhouse_event: %ClickhouseEvent{} | nil,
+          clickhouse_event: %ClickhouseEvent{} | %ClickhouseEventV2{} | nil,
           dropped?: boolean(),
           drop_reason: drop_reason(),
           request: Request.t(),
@@ -43,10 +46,10 @@ defmodule Plausible.Ingestion.Event do
       else
         Enum.reduce(domains, [], fn domain, acc ->
           case GateKeeper.check(domain) do
-            :allow ->
+            {:allow, site_id} ->
               processed =
                 domain
-                |> new(request)
+                |> new(site_id, request)
                 |> process_unless_dropped(pipeline())
 
               [processed | acc]
@@ -95,7 +98,6 @@ defmodule Plausible.Ingestion.Event do
       &put_referrer/1,
       &put_utm_tags/1,
       &put_geolocation/1,
-      &put_screen_size/1,
       &put_props/1,
       &put_salts/1,
       &put_user_id/1,
@@ -116,6 +118,10 @@ defmodule Plausible.Ingestion.Event do
 
   defp new(domain, request) do
     struct!(__MODULE__, domain: domain, request: request)
+  end
+
+  defp new(domain, site_id, request) do
+    struct!(__MODULE__, domain: domain, site_id: site_id, request: request)
   end
 
   defp drop(%__MODULE__{} = event, reason, attrs \\ []) do
@@ -145,7 +151,8 @@ defmodule Plausible.Ingestion.Event do
           operating_system: os_name(user_agent),
           operating_system_version: os_version(user_agent),
           browser: browser_name(user_agent),
-          browser_version: browser_version(user_agent)
+          browser_version: browser_version(user_agent),
+          screen_size: screen_size(user_agent)
         })
 
       _any ->
@@ -156,6 +163,7 @@ defmodule Plausible.Ingestion.Event do
   defp put_basic_info(%__MODULE__{} = event) do
     update_attrs(event, %{
       domain: event.domain,
+      site_id: event.site_id,
       timestamp: event.request.timestamp,
       name: event.request.event_name,
       hostname: event.request.hostname,
@@ -190,19 +198,6 @@ defmodule Plausible.Ingestion.Event do
     update_attrs(event, result)
   end
 
-  defp put_screen_size(%__MODULE__{} = event) do
-    screen_size =
-      case event.request.screen_width do
-        nil -> nil
-        width when width < 576 -> "Mobile"
-        width when width < 992 -> "Tablet"
-        width when width < 1440 -> "Laptop"
-        width when width >= 1440 -> "Desktop"
-      end
-
-    update_attrs(event, %{screen_size: screen_size})
-  end
-
   defp put_props(%__MODULE__{request: %{props: %{} = props}} = event) do
     update_attrs(event, %{
       "meta.key": Map.keys(props),
@@ -230,9 +225,15 @@ defmodule Plausible.Ingestion.Event do
 
   defp validate_clickhouse_event(%__MODULE__{} = event) do
     clickhouse_event =
-      event
-      |> Map.fetch!(:clickhouse_event_attrs)
-      |> ClickhouseEvent.new()
+      if Plausible.v2?() do
+        event
+        |> Map.fetch!(:clickhouse_event_attrs)
+        |> ClickhouseEventV2.new()
+      else
+        event
+        |> Map.fetch!(:clickhouse_event_attrs)
+        |> ClickhouseEvent.new()
+      end
 
     case Ecto.Changeset.apply_action(clickhouse_event, nil) do
       {:ok, valid_clickhouse_event} ->
@@ -321,6 +322,41 @@ defmodule Plausible.Ingestion.Event do
       %UAInspector.Result.Client{name: "Chrome Webview"} -> "Mobile App"
       %UAInspector.Result.Client{type: "mobile app"} -> "Mobile App"
       client -> client.name
+    end
+  end
+
+  @mobile_types [
+    "smartphone",
+    "feature phone",
+    "portable media player",
+    "phablet",
+    "wearable",
+    "camera"
+  ]
+  @tablet_types ["car browser", "tablet"]
+  @desktop_types ["tv", "console", "desktop"]
+  alias UAInspector.Result.Device
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
+  defp screen_size(ua) do
+    case ua.device do
+      %Device{type: t} when t in @mobile_types ->
+        "Mobile"
+
+      %Device{type: t} when t in @tablet_types ->
+        "Tablet"
+
+      %Device{type: t} when t in @desktop_types ->
+        "Desktop"
+
+      %Device{type: type} ->
+        Sentry.capture_message("Could not determine device type from UAInspector",
+          extra: %{type: type}
+        )
+
+        nil
+
+      _ ->
+        nil
     end
   end
 

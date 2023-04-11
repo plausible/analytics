@@ -4,9 +4,10 @@ defmodule PlausibleWeb.StatsControllerTest do
 
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
-      insert(:site, domain: "public-site.io", public: true)
+      site = insert(:site, public: true)
+      populate_stats(site, [build(:pageview)])
 
-      conn = get(conn, "/public-site.io")
+      conn = get(conn, "/#{site.domain}")
       assert html_response(conn, 200) =~ "stats-react-container"
     end
 
@@ -27,6 +28,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "can view stats of a website I've created", %{conn: conn, site: site} do
+      populate_stats(site, [build(:pageview)])
       conn = get(conn, "/" <> site.domain)
       assert html_response(conn, 200) =~ "stats-react-container"
     end
@@ -119,12 +121,20 @@ defmodule PlausibleWeb.StatsControllerTest do
         |> Enum.map(&String.split(&1, ","))
 
       assert parsed_csv == [
-               ["date", "visitors", "pageviews", "visits", "bounce_rate", "visit_duration"],
-               ["2021-09-20", "1", "1", "1", "100", "0"],
-               ["2021-09-27", "0", "0", "0", "", ""],
-               ["2021-10-04", "0", "0", "0", "", ""],
-               ["2021-10-11", "0", "0", "0", "", ""],
-               ["2021-10-18", "3", "3", "3", "67", "20"],
+               [
+                 "date",
+                 "visitors",
+                 "pageviews",
+                 "visits",
+                 "views_per_visit",
+                 "bounce_rate",
+                 "visit_duration"
+               ],
+               ["2021-09-20", "1", "1", "1", "1.0", "100", "0"],
+               ["2021-09-27", "0", "0", "0", "0.0", "", ""],
+               ["2021-10-04", "0", "0", "0", "0.0", "", ""],
+               ["2021-10-11", "0", "0", "0", "0.0", "", ""],
+               ["2021-10-18", "3", "3", "3", "1.0", "67", "20"],
                [""]
              ]
     end
@@ -240,7 +250,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       )
     ])
 
-    insert(:goal, %{domain: site.domain, event_name: "Signup"})
+    insert(:goal, %{site: site, event_name: "Signup"})
   end
 
   describe "GET /:website/export - with goal filter" do

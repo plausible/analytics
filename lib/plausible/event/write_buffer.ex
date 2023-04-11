@@ -64,7 +64,12 @@ defmodule Plausible.Event.WriteBuffer do
       events ->
         Logger.info("Flushing #{length(events)} events")
         events = Enum.map(events, &(Map.from_struct(&1) |> Map.delete(:__meta__)))
-        IngestRepo.insert_all(Plausible.ClickhouseEvent, events)
+
+        if Plausible.v2?() do
+          IngestRepo.insert_all(Plausible.ClickhouseEventV2, events)
+        else
+          IngestRepo.insert_all(Plausible.ClickhouseEvent, events)
+        end
     end
   end
 

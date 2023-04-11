@@ -11,7 +11,7 @@ defmodule Plausible.Stats.Base do
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
-    if Enum.any?(Filters.visit_props() ++ ["goal", "page"], &query.filters["visit:" <> &1]) do
+    if Enum.any?(Filters.visit_props(), &query.filters["visit:" <> &1]) do
       sessions_q =
         from(
           s in query_sessions(site, query),
@@ -30,15 +30,24 @@ defmodule Plausible.Stats.Base do
     end
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_events(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
-      from(
-        e in "events",
-        where: e.domain == ^site.domain,
-        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
-      )
+      if Plausible.v2?() do
+        from(
+          e in "events_v2",
+          where: e.site_id == ^site.id,
+          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+        )
+      else
+        from(
+          e in "events",
+          where: e.domain == ^site.domain,
+          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+        )
+      end
       |> add_sample_hint(query)
 
     q =
@@ -48,6 +57,17 @@ defmodule Plausible.Stats.Base do
 
         {:is_not, page} ->
           from(e in q, where: e.pathname != ^page)
+
+        {:matches_member, glob_exprs} ->
+          page_regexes = Enum.map(glob_exprs, &page_regex/1)
+          from(e in q, where: fragment("multiMatchAny(?, ?)", e.pathname, ^page_regexes))
+
+        {:not_matches_member, glob_exprs} ->
+          page_regexes = Enum.map(glob_exprs, &page_regex/1)
+
+          from(e in q,
+            where: fragment("not(multiMatchAny(?, ?))", e.pathname, ^page_regexes)
+          )
 
         {:matches, glob_expr} ->
           regex = page_regex(glob_expr)
@@ -59,6 +79,9 @@ defmodule Plausible.Stats.Base do
 
         {:member, list} ->
           from(e in q, where: e.pathname in ^list)
+
+        {:not_member, list} ->
+          from(e in q, where: e.pathname not in ^list)
 
         nil ->
           q
@@ -78,15 +101,41 @@ defmodule Plausible.Stats.Base do
 
     q =
       case query.filters["event:goal"] do
-        {:is, :page, path} ->
+        {:is, {:page, path}} ->
           from(e in q, where: e.pathname == ^path)
 
-        {:matches, :page, expr} ->
+        {:matches, {:page, expr}} ->
           regex = page_regex(expr)
           from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
 
-        {:is, :event, event} ->
+        {:is, {:event, event}} ->
           from(e in q, where: e.name == ^event)
+
+        {:member, clauses} ->
+          {events, pages} = split_goals(clauses)
+          from(e in q, where: e.pathname in ^pages or e.name in ^events)
+
+        {:matches_member, clauses} ->
+          {events, pages} = split_goals(clauses, &page_regex/1)
+
+          from(e in q,
+            where:
+              fragment("multiMatchAny(?, ?)", e.pathname, ^pages) or
+                fragment("multiMatchAny(?, ?)", e.name, ^events)
+          )
+
+        {:not_matches_member, clauses} ->
+          {events, pages} = split_goals(clauses, &page_regex/1)
+
+          from(e in q,
+            where:
+              fragment("not(multiMatchAny(?, ?))", e.pathname, ^pages) and
+                fragment("not(multiMatchAny(?, ?))", e.name, ^events)
+          )
+
+        {:not_member, clauses} ->
+          {events, pages} = split_goals(clauses)
+          from(e in q, where: e.pathname not in ^pages and e.name not in ^events)
 
         nil ->
           q
@@ -144,82 +193,26 @@ defmodule Plausible.Stats.Base do
     "city" => "city_geoname_id"
   }
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_sessions(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site.timezone)
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     sessions_q =
-      from(
-        s in "sessions",
-        where: s.domain == ^site.domain,
-        where: s.start >= ^first_datetime and s.start < ^last_datetime
-      )
+      if Plausible.v2?() do
+        from(
+          s in "sessions_v2",
+          where: s.site_id == ^site.id,
+          where: s.start >= ^first_datetime and s.start < ^last_datetime
+        )
+      else
+        from(
+          s in "sessions",
+          where: s.domain == ^site.domain,
+          where: s.start >= ^first_datetime and s.start < ^last_datetime
+        )
+      end
       |> add_sample_hint(query)
-
-    sessions_q =
-      case {query.filters["visit:goal"], query.filters["visit:page"]} do
-        {nil, nil} ->
-          sessions_q
-
-        {goal_filter, page_filter} ->
-          events_query =
-            Query.put_filter(query, "event:goal", goal_filter)
-            |> Query.put_filter("event:name", nil)
-            |> Query.put_filter("event:page", page_filter)
-
-          events_q =
-            from(
-              s in query_events(site, events_query),
-              select: %{session_id: fragment("DISTINCT ?", s.session_id)}
-            )
-
-          from(
-            s in sessions_q,
-            join: sq in subquery(events_q),
-            on: s.session_id == sq.session_id
-          )
-      end
-
-    sessions_q =
-      case Query.get_filter_by_prefix(query, "visit:entry_props:") do
-        nil ->
-          sessions_q
-
-        {"visit:entry_props:" <> prop_name, filter_value} ->
-          case filter_value do
-            {:is, "(none)"} ->
-              from(
-                s in sessions_q,
-                where: fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
-              )
-
-            {:is, value} ->
-              from(
-                s in sessions_q,
-                inner_lateral_join: meta in "entry_meta",
-                as: :meta,
-                where: meta.key == ^prop_name and meta.value == ^value
-              )
-
-            {:is_not, "(none)"} ->
-              from(
-                s in sessions_q,
-                where: fragment("has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
-              )
-
-            {:is_not, value} ->
-              from(
-                s in sessions_q,
-                left_lateral_join: meta in "entry_meta",
-                as: :meta,
-                where:
-                  (meta.key == ^prop_name and meta.value != ^value) or
-                    fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
-              )
-
-            _ ->
-              sessions_q
-          end
-      end
+      |> filter_by_entry_props(query)
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
       filter = query.filters["visit:" <> prop_name]
@@ -239,11 +232,29 @@ defmodule Plausible.Stats.Base do
 
         {:member, values} ->
           list = Enum.map(values, &db_prop_val(prop_name, &1))
-          from(s in sessions_q, where: fragment("? in tuple(?)", field(s, ^prop_name), ^list))
+          from(s in sessions_q, where: field(s, ^prop_name) in ^list)
+
+        {:not_member, values} ->
+          list = Enum.map(values, &db_prop_val(prop_name, &1))
+          from(s in sessions_q, where: fragment("? not in ?", field(s, ^prop_name), ^list))
 
         {:matches, expr} ->
           regex = page_regex(expr)
           from(s in sessions_q, where: fragment("match(?, ?)", field(s, ^prop_name), ^regex))
+
+        {:matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+
+          from(s in sessions_q,
+            where: fragment("multiMatchAny(?, ?)", field(s, ^prop_name), ^page_regexes)
+          )
+
+        {:not_matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+
+          from(s in sessions_q,
+            where: fragment("not(multiMatchAny(?, ?))", field(s, ^prop_name), ^page_regexes)
+          )
 
         {:does_not_match, expr} ->
           regex = page_regex(expr)
@@ -257,6 +268,52 @@ defmodule Plausible.Stats.Base do
       end
     end)
   end
+
+  def filter_by_entry_props(sessions_q, query) do
+    case Query.get_filter_by_prefix(query, "visit:entry_props:") do
+      nil ->
+        sessions_q
+
+      {"visit:entry_props:" <> prop_name, filter_value} ->
+        apply_entry_prop_filter(sessions_q, prop_name, filter_value)
+    end
+  end
+
+  def apply_entry_prop_filter(sessions_q, prop_name, {:is, "(none)"}) do
+    from(
+      s in sessions_q,
+      where: fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+    )
+  end
+
+  def apply_entry_prop_filter(sessions_q, prop_name, {:is, value}) do
+    from(
+      s in sessions_q,
+      inner_lateral_join: meta in "entry_meta",
+      as: :meta,
+      where: meta.key == ^prop_name and meta.value == ^value
+    )
+  end
+
+  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, "(none)"}) do
+    from(
+      s in sessions_q,
+      where: fragment("has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+    )
+  end
+
+  def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, value}) do
+    from(
+      s in sessions_q,
+      left_lateral_join: meta in "entry_meta",
+      as: :meta,
+      where:
+        (meta.key == ^prop_name and meta.value != ^value) or
+          fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+    )
+  end
+
+  def apply_entry_prop_filter(sessions_q, _, _), do: sessions_q
 
   def select_event_metrics(q, []), do: q
 
@@ -314,7 +371,7 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, [:visits | rest]) do
     from(s in q,
       select_merge: %{
-        visits: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.session_id)
+        visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
       }
     )
     |> select_session_metrics(rest)
@@ -359,6 +416,16 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest)
   end
 
+  def select_session_metrics(q, [:views_per_visit | rest]) do
+    from(s in q,
+      select_merge: %{
+        views_per_visit:
+          fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
+      }
+    )
+    |> select_session_metrics(rest)
+  end
+
   def select_session_metrics(q, [:sample_percent | rest]) do
     from(e in q,
       select_merge: %{
@@ -395,40 +462,67 @@ defmodule Plausible.Stats.Base do
   defp db_prop_val(_, @not_set), do: ""
   defp db_prop_val(_, val), do: val
 
-  def utc_boundaries(%Query{period: "realtime"}, _timezone) do
-    last_datetime = NaiveDateTime.utc_now() |> Timex.shift(seconds: 5)
-    first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -5)
+  defp beginning_of_time(candidate, native_stats_start_at) do
+    if Timex.after?(native_stats_start_at, candidate) do
+      native_stats_start_at
+    else
+      candidate
+    end
+  end
+
+  def utc_boundaries(%Query{period: "realtime"}, site) do
+    last_datetime =
+      NaiveDateTime.utc_now()
+      |> Timex.shift(seconds: 5)
+      |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
+
+    first_datetime =
+      NaiveDateTime.utc_now() |> Timex.shift(minutes: -5) |> NaiveDateTime.truncate(:second)
 
     {first_datetime, last_datetime}
   end
 
-  def utc_boundaries(%Query{period: "30m"}, _timezone) do
-    last_datetime = NaiveDateTime.utc_now() |> Timex.shift(seconds: 5)
-    first_datetime = NaiveDateTime.utc_now() |> Timex.shift(minutes: -30)
+  def utc_boundaries(%Query{period: "30m"}, site) do
+    last_datetime =
+      NaiveDateTime.utc_now()
+      |> Timex.shift(seconds: 5)
+      |> beginning_of_time(site.native_stats_start_at)
+      |> NaiveDateTime.truncate(:second)
+
+    first_datetime =
+      NaiveDateTime.utc_now() |> Timex.shift(minutes: -30) |> NaiveDateTime.truncate(:second)
 
     {first_datetime, last_datetime}
   end
 
-  def utc_boundaries(%Query{date_range: date_range}, timezone) do
+  def utc_boundaries(%Query{date_range: date_range}, site) do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
     first_datetime =
-      Timex.to_datetime(first, timezone)
+      Timex.to_datetime(first, site.timezone)
       |> Timex.Timezone.convert("UTC")
+      |> beginning_of_time(site.native_stats_start_at)
 
     {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
 
     last_datetime =
-      Timex.to_datetime(last, timezone)
+      Timex.to_datetime(last, site.timezone)
       |> Timex.Timezone.convert("UTC")
 
     {first_datetime, last_datetime}
   end
 
+  @replaces %{
+    ~r/\*\*/ => ".*",
+    ~r/(?<!\.)\*/ => "[^/]*",
+    "(" => "\\(",
+    ")" => "\\)"
+  }
   def page_regex(expr) do
-    "^#{expr}$"
-    |> String.replace(~r/\*\*/, ".*")
-    |> String.replace(~r/(?<!\.)\*/, "[^/]*")
+    Enum.reduce(@replaces, "^#{expr}$", fn {pattern, replacement}, regex ->
+      String.replace(regex, pattern, replacement)
+    end)
   end
 
   defp add_sample_hint(db_q, query) do
@@ -439,5 +533,15 @@ defmodule Plausible.Stats.Base do
       threshold ->
         from(e in db_q, hints: [sample: threshold])
     end
+  end
+
+  defp split_goals(clauses, map_fn \\ &Function.identity/1) do
+    groups =
+      Enum.group_by(clauses, fn {goal_type, _v} -> goal_type end, fn {_k, val} -> map_fn.(val) end)
+
+    {
+      Map.get(groups, :event, []),
+      Map.get(groups, :page, [])
+    }
   end
 end

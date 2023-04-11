@@ -90,7 +90,6 @@ defmodule Mix.Tasks.SendPageview do
       url: "http://#{domain}#{page}",
       domain: domain,
       referrer: referrer,
-      width: 1666,
       props: props
     }
   end

@@ -6,6 +6,55 @@
 ###############
 
 ##########
+# RedOS (https://redos.red-soft.ru/)
+##########
+- regex: 'RED OS; Linux'
+  name: 'RedOS'
+  version: ''
+
+##########
+# RouterOS (https://help.mikrotik.com/docs/display/ROS/RouterOS)
+##########
+- regex: 'Mikrotik/(\d).x'
+  name: 'RouterOS'
+  version: '$1'
+
+##########
+# Sirin OS (https://sirinlabs.com/sirin-os/)
+##########
+- regex: 'FINNEY U1'
+  name: 'Sirin OS'
+  version: ''
+
+##########
+# Nova (https://www.nova.cu/)
+##########
+- regex: 'Nova; Linux'
+  name: 'Nova'
+  version: ''
+
+##########
+# Bliss OS (https://blissos.org/)
+##########
+- regex: 'Android 10.+bliss_maple'
+  name: 'Bliss OS'
+  version: '12'
+
+##########
+# TencentOS (https://github.com/Tencent/TencentOS-kernel)
+##########
+- regex: 'Linux/(\d+[\.\d]*).+tlinux'
+  name: 'TencentOS'
+  version: '$1'
+
+##########
+# Amazon Linux (https://docs.aws.amazon.com/AL2/latest/relnotes/relnotes-al2.html)
+##########
+- regex: '.+.amzn(\d).x86_64'
+  name: 'Amazon Linux'
+  version: '$1'
+
+##########
 # COS (China Operating System - https://web.archive.org/web/20170825001023/http://www.china-cos.com/)
 ##########
 - regex: ' COS like Android'
@@ -138,6 +187,9 @@
 - regex: 'HarmonyOS(?:[/ ](\d+[\.\d]+))?'
   name: 'HarmonyOS'
   version: '$1'
+- regex: 'Hmos/1'
+  name: 'HarmonyOS'
+  version: '1.0.0'
 
 - regex: 'RazoDroiD(?: v(\d+[\.\d]*))?'
   name: 'RazoDroiD'
@@ -172,6 +224,27 @@
   version: ''
 
 ##########
+# Revenge OS
+##########
+- regex: 'revengeos_x2'
+  name: 'Revenge OS'
+  version: '2'
+
+##########
+# Lineage OS
+##########
+- regex: 'lineage_\w+'
+  name: 'Lineage OS'
+  version: ''
+
+#########
+# Resurrection Remix OS (https://resurrectionremix.com/)
+##########
+- regex: 'Android 8(?:[\d.]*);(?: [\w-]+;)? rr_fortuna3g'
+  name: 'Resurrection Remix OS'
+  version: '6'
+
+##########
 # Remix OS
 ##########
 - regex: 'RemixOS|Remix (?:Pro|Mini)'
@@ -198,9 +271,56 @@
   name: 'Android TV'
   version: '$1'
 
-- regex: 'Android[; ](\d+[\.\d]*).+Android TV'
+- regex: 'Android[; ](\d+[\.\d]*).+(?:(?:Android|AT&T) TV|AOSP on r33a0)'
   name: 'Android TV'
   version: '$1'
+
+- regex: 'Windows.+Andr0id TV|.+K_?Android_?TV_'
+  name: 'Android TV'
+  version: ''
+
+##########
+# Android SDK Level Api
+##########
+- regex: '\d+/tclwebkit(?:\d+[\.\d]*)'
+  name: 'Android'
+  versions:
+    - regex: '33/tclwebkit'
+      version: '13'
+    - regex: '3[12]/tclwebkit'
+      version: '12'
+    - regex: '30/tclwebkit'
+      version: '11'
+    - regex: '29/tclwebkit'
+      version: '10'
+    - regex: '28/tclwebkit'
+      version: '9'
+    - regex: '27/tclwebkit'
+      version: '8.1'
+    - regex: '26/tclwebkit'
+      version: '8'
+    - regex: '25/tclwebkit'
+      version: '7.1'
+    - regex: '24/tclwebkit'
+      version: '7'
+    - regex: '23/tclwebkit'
+      version: '6'
+    - regex: '22/tclwebkit'
+      version: '5.1'
+    - regex: '21/tclwebkit'
+      version: '5'
+    - regex: '(?:20|19)/tclwebkit'
+      version: '4.4'
+    - regex: '18/tclwebkit'
+      version: '4.3'
+    - regex: '17/tclwebkit'
+      version: '4.2'
+    - regex: '16/tclwebkit'
+      version: '4.2'
+    - regex: '15/tclwebkit'
+      version: '4.0.3'
+    - regex: '15/tclwebkit'
+      version: '4.0.1'
 
 ##########
 # Android
@@ -213,7 +333,7 @@
   name: 'Android'
   version: ''
 
-- regex: 'Android OS/(\d+[\.\d]*)'
+- regex: '(?:Android OS|OMDroid)[ /](\d+[\.\d]*)'
   name: 'Android'
   version: '$1'
 
@@ -245,7 +365,7 @@
   name: 'Android'
   version: '$1'
 
-- regex: ' Adr |(?<!like )Android|Silk-Accelerated=[a-z]{4,5}'
+- regex: ' Adr |DDG-Android|(?<!like )Android|Silk-Accelerated=[a-z]{4,5}'
   name: 'Android'
   version: ''
 
@@ -253,7 +373,7 @@
   name: 'Android'
   version: '$1'
 
-- regex: 'BeyondPod|AntennaPod|Podkicker|DoggCatcher|Player FM|okhttp|Podcatcher Deluxe|.+K_?Android_?TV_|Sonos/.+\(ACR_'
+- regex: 'BeyondPod|AntennaPod|Podkicker|DoggCatcher|Player FM|okhttp|Podcatcher Deluxe|Sonos/.+\(ACR_|Linux x86_64; Quest'
   name: 'Android'
   version: ''
 
@@ -361,7 +481,7 @@
   name: 'Roku OS'
   version: '$1'
 
-- regex: 'Roku(?:OS)?/(?:DVP|Pluto)?-?(\d+[\.\d]+)'
+- regex: 'Roku(?:OS|4640X)?/(?:DVP|Pluto)?-?(\d+[\.\d]+)?'
   name: 'Roku OS'
   version: '$1'
 
@@ -414,6 +534,34 @@
   name: 'VectorLinux'
   version: '$1'
 
+- regex: 'CentOS Stream (\d)'
+  name: 'CentOS Stream'
+  version: '$1'
+
+- regex: '.+.el(\d+(?:[_\.]\d+)*).(?:centos|x86_64)'
+  name: 'CentOS'
+  version: '$1'
+
+- regex: 'CentOS Linux (\d)'
+  name: 'CentOS'
+  version: '$1'
+
+- regex: 'Fedora/.+.fc(\d+)'
+  name: 'Fedora'
+  version: '$1'
+
+- regex: 'Mandriva(?: Linux)?/.+mdv(\d+[\.\d]+)'
+  name: 'Mandriva'
+  version: '$1'
+
+- regex: 'Linux Mint/(\d)'
+  name: 'Mint'
+  version: '$1'
+
+- regex: 'Zorin OS (\d+)'
+  name: 'ZorinOS'
+  version: '$1'
+
 - regex: 'Linux; .*((?:Debian|Knoppix|Mint|Ubuntu|Kubuntu|Xubuntu|Lubuntu|Fedora|Red Hat|Mandriva|Gentoo|Sabayon|Slackware|SUSE|CentOS|BackTrack))[ /](\d+[\.\d]+)'
   name: '$1'
   version: '$2'
@@ -425,6 +573,10 @@
 - regex: '(Debian|Knoppix|Mint(?! Browser)|Ubuntu|Kubuntu|Xubuntu|Lubuntu|Fedora|Red Hat|Mandriva|Gentoo|Sabayon|Slackware|SUSE|CentOS|BackTrack|Freebox)(?:(?: Enterprise)? Linux)?(?:[ /\-](\d+[\.\d]+))?'
   name: '$1'
   version: '$2'
+
+- regex: '.+redhat-linux-gnu'
+  name: 'Red Hat'
+  version: ''
 
 - regex: 'OS ROSA; Linux'
   name: 'Rosa'
@@ -485,7 +637,7 @@
   name: 'Windows'
   version: ''
 
-- regex: '(?:Windows(?:-Update-Agent)?|Microsoft-(?:CryptoAPI|Delivery-Optimization|WebDAV-MiniRedir|WNS))/(\d+\.\d+)'
+- regex: '(?:Windows(?:-Update-Agent)?|Microsoft-(?:CryptoAPI|Delivery-Optimization|WebDAV-MiniRedir|WNS)|WINDOWS_64)/(\d+\.\d+)'
   name: 'Windows'
   version: '$1'
 
@@ -545,9 +697,13 @@
   name: 'Windows'
   version: '3.1'
 
-- regex: 'Windows|.+win32|Win64|MSDW|HandBrake Win Upd|Microsoft BITS'
+- regex: 'Windows|.+win32|Win64|MSDW|HandBrake Win Upd|Microsoft BITS|ms-office; MSOffice'
   name: 'Windows'
   version: ''
+
+- regex: 'OS/Microsoft_Windows_NT_(\d+\.\d+)'
+  name: 'Windows'
+  version: '$1'
 
 ##########
 # Haiku OS
@@ -559,11 +715,11 @@
 ##########
 # tvOS (https://developer.apple.com/tvos/)
 ##########
-- regex: 'Apple ?TV.*CPU (?:iPhone )?OS ((?:9|1[0-5])[_\.]\d+(?:[_.]\d+)*)'
+- regex: 'Apple ?TV.*CPU (?:iPhone )?OS ((?:9|1[0-6])[_\.]\d+(?:[_.]\d+)*)'
   name: 'tvOS'
   version: '$1'
 
-- regex: 'iOS(?:; |/)((?:9|1[0-5]).\d+(?:[_\.]\d+)*) (?:model/)?AppleTV'
+- regex: 'iOS(?:; |/)((?:9|1[0-6]).\d+(?:[_\.]\d+)*) (?:model/)?AppleTV'
   name: 'tvOS'
   version: '$1'
 
@@ -573,31 +729,34 @@
 - regex: '(?:Watch1,[12]/|Watch OS,|watchOS[ /])(\d+[\.\d]*)'
   name: 'watchOS'
   version: '$1'
+- regex: 'Apple Watch(?!;)'
+  name: 'watchOS'
+  version: ''
 
 ##########
 # iPadOS (https://www.apple.com/ipados/)
 ##########
-- regex: 'FBMD/iPad;.*FBSV/ ?(1[345]).(\d+[\.\d]*);'
+- regex: 'FBMD/iPad;.*FBSV/ ?(1[3-6]).(\d+[\.\d]*);'
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: 'iPad/(1[345]).(\d+[\.\d]*)'
+- regex: 'iPad(?:OS)?/(1[3-6]).(\d+[\.\d]*)'
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: '^iPad(?:\d+[\,\d]*)/(1[345]).(\d+[\.\d]*)'
+- regex: '^iPad(?:\d+[\,\d]*)/(1[3-6]).(\d+[\.\d]*)'
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: 'iPad(?:; iOS|.+CPU OS) ((1[345])+(?:[_\.]\d+)*)'
+- regex: 'iPad(?:; (?:iOS|iPadOS|iPhone OS)|.+CPU OS) ((1[3-6])+(?:[_\.]\d+)*)'
   name: 'iPadOS'
   version: '$1'
 
-- regex: 'iOS/(1[345]).(\d+[\.\d]*).+Apple/iPad'
+- regex: 'iOS/(1[3-6]).(\d+[\.\d]*).+Apple/iPad'
   name: 'iPadOS'
   version: '$1.$2'
 
-- regex: 'iPhone OS,(1[345]).(\d+[\.\d]*).+iPad'
+- regex: 'iPhone OS,(1[3-6]).(\d+[\.\d]*).+iPad'
   name: 'iPadOS'
   version: '$1.$2'
 
@@ -616,6 +775,10 @@
   name: 'iOS'
   version: '$1'
 
+- regex: 'iOS (\d+[\.\d]+)\)'
+  name: 'iOS'
+  version: '$1'
+
 - regex: '(?:iPhone ?OS|iOS(?: Version)?)(?:/|; |,)(\d+[\.\d]+)'
   name: 'iOS'
   version: '$1'
@@ -623,6 +786,18 @@
 - regex: '^(?!com.apple.Safari.SearchHelper).*CFNetwork/.+ Darwin/(\d+[\.\d]+)(?!.*(?:x86_64|i386|PowerMac|Power%20Macintosh))'
   name: 'iOS'
   versions:
+    - regex: 'Darwin/22.3.0'
+      version: '16.3'
+    - regex: 'Darwin/22.2.0'
+      version: '16.2'
+    - regex: 'Darwin/22.1.0'
+      version: '16.1'
+    - regex: 'Darwin/22.0.0'
+      version: '16.0'
+    - regex: 'Darwin/21.6.0'
+      version: '15.6'
+    - regex: 'Darwin/21.5.0'
+      version: '15.5'
     - regex: 'Darwin/21.4.0'
       version: '15.4'
     - regex: 'Darwin/21.3.0'
@@ -760,7 +935,7 @@
   name: 'iOS'
   version: '$1.$2.$3'
 
-- regex: '(?:CPU OS|iPh(?:one)?[ _]OS|iOS)[ _/](\d+(?:[_\.]\d+)*)'
+- regex: '(?:CPU OS|iPh(?:one)?[ _]OS|iPhone.+ OS|iOS)[ _/](\d+(?:[_\.]\d+)*)'
   name: 'iOS'
   version: '$1'
 
@@ -826,6 +1001,18 @@
 - regex: 'CFNetwork/.+ Darwin/(?:[\d\.]+).+(?:x86_64|i386|Power%20Macintosh)|(?:x86_64-apple-)?darwin(?:[\d\.]+)|PowerMac|com.apple.Safari.SearchHelper'
   name: 'Mac'
   versions:
+    - regex: '(?:x86_64-apple-)?Darwin/?22.3.0'
+      version: '13.2'
+    - regex: '(?:x86_64-apple-)?Darwin/?22.2.0'
+      version: '13.1'
+    - regex: '(?:x86_64-apple-)?Darwin/?22.1.0'
+      version: '13.0.1'
+    - regex: '(?:x86_64-apple-)?Darwin/?22.0.0'
+      version: '13.0'
+    - regex: '(?:x86_64-apple-)?Darwin/?21.6.0'
+      version: '12.5'
+    - regex: '(?:x86_64-apple-)?Darwin/?21.5.0'
+      version: '12.4'
     - regex: '(?:x86_64-apple-)?Darwin/?21.4.0'
       version: '12.3'
     - regex: '(?:x86_64-apple-)?Darwin/?21.3.0'
@@ -985,7 +1172,7 @@
   name: 'Mac'
   version: '$1'
 
-- regex: '(?:macOS[/,]|Mac-)(\d+[\.\d]+)'
+- regex: '(?:macOS[ /,]|Mac-)(\d+[\.\d]+)'
   name: 'Mac'
   version: '$1'
 
@@ -1228,7 +1415,11 @@
 ###########
 # Linux (Generic)
 ###########
-- regex: 'Linux(?:OS)?[^a-z]|Cinnamon/(?:\d+[\.\d]+)'
+- regex: 'Linux/(\d+[\.\d]+)'
+  name: 'GNU/Linux'
+  version: '$1'
+
+- regex: 'Linux(?:OS)?[^a-z]|Cinnamon/(?:\d+[\.\d]+)|.+(?:pc|unknown)-linux-gnu'
   name: 'GNU/Linux'
   version: ''
 

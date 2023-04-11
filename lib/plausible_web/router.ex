@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Router do
 
   pipeline :browser do
     plug :accepts, ["html"]
-    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug :fetch_flash
     plug :put_secure_browser_headers
@@ -25,21 +24,18 @@ defmodule PlausibleWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
   end
 
   pipeline :internal_stats_api do
     plug :accepts, ["json"]
-    plug PlausibleWeb.Firewall
     plug :fetch_session
     plug PlausibleWeb.AuthorizeSiteAccess
   end
 
   pipeline :public_api do
     plug :accepts, ["json"]
-    plug PlausibleWeb.Firewall
   end
 
   pipeline :flags do
@@ -102,11 +98,12 @@ defmodule PlausibleWeb.Router do
     pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
 
     post "/", ExternalSitesController, :create_site
-    get "/:site_id", ExternalSitesController, :get_site
-    delete "/:site_id", ExternalSitesController, :delete_site
     put "/shared-links", ExternalSitesController, :find_or_create_shared_link
     put "/goals", ExternalSitesController, :find_or_create_goal
     delete "/goals/:goal_id", ExternalSitesController, :delete_goal
+    get "/:site_id", ExternalSitesController, :get_site
+    put "/:site_id", ExternalSitesController, :update_site
+    delete "/:site_id", ExternalSitesController, :delete_site
   end
 
   scope "/api", PlausibleWeb do
@@ -179,6 +176,9 @@ defmodule PlausibleWeb.Router do
     get "/sites", SiteController, :index
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
+    get "/sites/:website/change-domain", SiteController, :change_domain
+    put "/sites/:website/change-domain", SiteController, :change_domain_submit
+    get "/:website/change-domain-snippet", SiteController, :add_snippet_after_domain_change
     post "/sites/:website/make-public", SiteController, :make_public
     post "/sites/:website/make-private", SiteController, :make_private
     post "/sites/:website/weekly-report/enable", SiteController, :enable_weekly_report

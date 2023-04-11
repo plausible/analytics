@@ -99,6 +99,8 @@ ch_db_url =
   |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000")
   |> Integer.parse()
 
+v2_migration_done = get_var_from_path_or_env(config_dir, "V2_MIGRATION_DONE")
+
 ### Mandatory params End
 
 build_metadata_raw = get_var_from_path_or_env(config_dir, "BUILD_METADATA", "{}")
@@ -130,6 +132,8 @@ runtime_metadata = [
 ]
 
 config :plausible, :runtime_metadata, runtime_metadata
+
+config :plausible, :v2_migration_done, v2_migration_done
 
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
@@ -275,17 +279,27 @@ config :plausible, :google,
   reporting_api_url: "https://analyticsreporting.googleapis.com",
   max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
 
+ch_transport_opts = [
+  keepalive: true,
+  show_econnreset: true
+]
+
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
-  url: ch_db_url
+  url: ch_db_url,
+  transport_opts: ch_transport_opts,
+  settings: [
+    readonly: 1
+  ]
 
 config :plausible, Plausible.IngestRepo,
   loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
+  transport_opts: ch_transport_opts,
   flush_interval_ms: ch_flush_interval_ms,
   max_buffer_size: ch_max_buffer_size,
   pool_size: ingest_pool_size
@@ -295,11 +309,20 @@ config :plausible, Plausible.AsyncInsertRepo,
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
+  transport_opts: ch_transport_opts,
   pool_size: 1,
-  clickhouse_settings: [
+  settings: [
     async_insert: 1,
     wait_for_async_insert: 0
   ]
+
+config :plausible, Plausible.ImportDeletionRepo,
+  loggers: [Ecto.LogEntry],
+  queue_target: 500,
+  queue_interval: 2000,
+  url: ch_db_url,
+  transport_opts: ch_transport_opts,
+  pool_size: 1
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
@@ -356,16 +379,10 @@ case mailer_adapter do
     """
 end
 
-config :plausible, PlausibleWeb.Firewall,
-  blocklist:
-    get_var_from_path_or_env(config_dir, "IP_BLOCKLIST", "")
-    |> String.split(",")
-    |> Enum.map(&String.trim/1)
-
 base_cron = [
   # Daily at midnight
   {"0 0 * * *", Plausible.Workers.RotateSalts},
-  #  hourly
+  # hourly
   {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
   # hourly
   {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
@@ -376,7 +393,9 @@ base_cron = [
   # Every day at midnight
   {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes},
   # Every day at 1am
-  {"0 1 * * *", Plausible.Workers.CleanInvitations}
+  {"0 1 * * *", Plausible.Workers.CleanInvitations},
+  # Every 2 hours
+  {"0 */2 * * *", Plausible.Workers.ExpireDomainChangeTransitions}
 ]
 
 cloud_cron = [
@@ -402,7 +421,7 @@ base_queues = [
   clean_email_verification_codes: 1,
   clean_invitations: 1,
   google_analytics_imports: 1,
-  site_stats_removal: 1
+  domain_change_transition: 1
 ]
 
 cloud_queues = [

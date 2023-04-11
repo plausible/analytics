@@ -24,7 +24,11 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "calculates timezone correctly" do
-      site = insert(:site, timezone: "US/Eastern")
+      site =
+        insert(:site,
+          timezone: "US/Eastern"
+        )
+
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       now = Timex.now(site.timezone)
@@ -35,17 +39,17 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       create_pageviews([
         # Sunday before last, not counted
-        %{domain: site.domain, timestamp: Timezone.convert(sunday_before_last, "UTC")},
+        %{site: site, timestamp: Timezone.convert(sunday_before_last, "UTC")},
         # Sunday before last, not counted
-        %{domain: site.domain, timestamp: Timezone.convert(sunday_before_last, "UTC")},
+        %{site: site, timestamp: Timezone.convert(sunday_before_last, "UTC")},
         # Last monday, counted
-        %{domain: site.domain, timestamp: Timezone.convert(last_monday, "UTC")},
+        %{site: site, timestamp: Timezone.convert(last_monday, "UTC")},
         # Last sunday, counted
-        %{domain: site.domain, timestamp: Timezone.convert(last_sunday, "UTC")},
+        %{site: site, timestamp: Timezone.convert(last_sunday, "UTC")},
         # This monday, not counted
-        %{domain: site.domain, timestamp: Timezone.convert(this_monday, "UTC")},
+        %{site: site, timestamp: Timezone.convert(this_monday, "UTC")},
         # This monday, not counted
-        %{domain: site.domain, timestamp: Timezone.convert(this_monday, "UTC")}
+        %{site: site, timestamp: Timezone.convert(this_monday, "UTC")}
       ])
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
@@ -61,9 +65,9 @@ defmodule Plausible.Workers.SendEmailReportTest do
     end
 
     test "includes the correct stats" do
-      site = insert(:site, domain: "test-site.com")
-      insert(:weekly_report, site: site, recipients: ["user@email.com"])
       now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      site = insert(:site, domain: "test-site.com", inserted_at: Timex.shift(now, days: -8))
+      insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
       populate_stats(site, [
         build(:pageview,

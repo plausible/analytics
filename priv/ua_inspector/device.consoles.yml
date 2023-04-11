@@ -40,6 +40,11 @@ Sega:
   device: 'console'
   model: 'Dreamcast'
 
+JXD:
+  regex: 'JXD_S601WIFI'
+  device: 'console'
+  model: 'S601 WiFi'
+
 Sony:
   regex: 'PlayStation ?(2|3|4 Pro|4|5|Portable|Vita)'
   device: 'console'

@@ -1,6 +1,6 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
-  import Plausible.Stats.{Base, Imported}
+  import Plausible.Stats.{Base, Imported, Util}
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.Query
   alias Plausible.Goals
@@ -13,8 +13,8 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, "event:goal" = property, metrics, pagination) do
     {event_goals, pageview_goals} =
-      site.domain
-      |> Goals.for_domain()
+      site
+      |> Goals.for_site()
       |> Enum.split_with(fn goal -> goal.event_name end)
 
     events = Enum.map(event_goals, & &1.event_name)
@@ -44,14 +44,14 @@ defmodule Plausible.Stats.Breakdown do
           offset: ^offset,
           where:
             fragment(
-              "notEmpty(multiMatchAllIndices(?, array(?)) as indices)",
+              "notEmpty(multiMatchAllIndices(?, ?) as indices)",
               e.pathname,
               ^page_regexes
             ),
           group_by: fragment("index"),
           select: %{
             index: fragment("arrayJoin(indices) as index"),
-            goal: fragment("concat('Visit ', array(?)[index])", ^page_exprs)
+            goal: fragment("concat('Visit ', ?[index])", ^page_exprs)
           }
         )
         |> select_event_metrics(metrics)
@@ -151,24 +151,6 @@ defmodule Plausible.Stats.Breakdown do
     breakdown_events(site, query, property, metrics, pagination)
   end
 
-  def breakdown(site, query, property, metrics, pagination)
-      when property in [
-             "visit:source",
-             "visit:utm_medium",
-             "visit:utm_source",
-             "visit:utm_campaign",
-             "visit:utm_content",
-             "visit:utm_term"
-           ] do
-    query =
-      query
-      |> Query.treat_page_filter_as_entry_page()
-      |> Query.treat_prop_filter_as_entry_prop()
-
-    trace(query, property, metrics)
-    breakdown_sessions(site, query, property, metrics, pagination)
-  end
-
   def breakdown(site, query, property, metrics, pagination) do
     trace(query, property, metrics)
     breakdown_sessions(site, query, property, metrics, pagination)
@@ -260,6 +242,9 @@ defmodule Plausible.Stats.Breakdown do
         "round(sum(td)/count(case when p2 != p then 1 end))"
       end
 
+    pages_idx = length(base_query_raw_params)
+    params = base_query_raw_params ++ [pages]
+
     time_query = "
       SELECT
         p,
@@ -276,11 +261,11 @@ defmodule Plausible.Stats.Breakdown do
             neighbor(p, 1) as p2,
             neighbor(s, 1) as s2
           FROM (#{base_query_raw}))
-        WHERE s=s2 AND p IN tuple(?)
+        WHERE s=s2 AND p IN {$#{pages_idx}:Array(String)}
         GROUP BY p,p2,s)
       GROUP BY p"
 
-    {:ok, res} = ClickhouseRepo.query(time_query, base_query_raw_params ++ [pages])
+    {:ok, res} = ClickhouseRepo.query(time_query, params)
 
     if query.include_imported do
       # Imported page views have pre-calculated values
@@ -327,7 +312,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
          "event:props:" <> prop
        ) do
     q =
@@ -351,7 +336,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
          "event:name"
        ) do
     from(
@@ -363,7 +348,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
          "event:page"
        ) do
     from(
@@ -375,7 +360,7 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events", _}}} = q,
+         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
          "event:page_match"
        ) do
     case Map.get(q, :__private_match_sources__) do
@@ -385,7 +370,7 @@ defmodule Plausible.Stats.Breakdown do
           group_by: fragment("index"),
           select_merge: %{
             index: fragment("arrayJoin(indices) as index"),
-            page_match: fragment("array(?)[index]", ^match_exprs)
+            page_match: fragment("?[index]", ^match_exprs)
           },
           order_by: {:asc, fragment("index")}
         )
@@ -582,18 +567,6 @@ defmodule Plausible.Stats.Breakdown do
       end)
       |> Enum.into(%{})
     end)
-  end
-
-  defp remove_internal_visits_metric(results, metrics) do
-    # "__internal_visits" is fetched when querying bounce rate and visit duration, as it
-    # is needed to calculate these from imported data. Let's remove it from the
-    # result if it wasn't requested.
-    if :bounce_rate in metrics or :visit_duration in metrics do
-      results
-      |> Enum.map(&Map.delete(&1, :__internal_visits))
-    else
-      results
-    end
   end
 
   defp apply_pagination(q, {limit, page}) do

@@ -1,0 +1,30 @@
+INSERT INTO tmp_sessions_v2 (
+site_id, session_id, sign, user_id, hostname, timestamp, start, is_bounce, entry_page, 
+exit_page, pageviews, events, duration, referrer, referrer_source, country_code, 
+screen_size, operating_system, browser, utm_medium, utm_source, utm_campaign, browser_version, 
+operating_system_version, subdivision1_code, subdivision2_code, city_geoname_id, utm_content, 
+utm_term, transferred_from, entry_meta.key, entry_meta.value
+)
+SELECT
+  dictGet(
+    'domains_lookup', 'site_id', domain
+  ),
+  session_id, sign, user_id, hostname, timestamp, start, is_bounce, entry_page, 
+  exit_page, pageviews, events, duration, referrer, referrer_source, country_code, 
+  screen_size, operating_system, browser, utm_medium, utm_source, utm_campaign, browser_version, 
+  operating_system_version, subdivision1_code, subdivision2_code, city_geoname_id, utm_content, 
+  utm_term, transferred_from, entry_meta.key, entry_meta.value
+FROM
+  sessions
+WHERE
+  (
+    domain IN (
+      SELECT
+        domain
+      FROM
+        dictionary('domains_lookup')
+      WHERE
+    partition <= '<%= @partition %>'
+    )
+  )
+AND (_partition_id = '<%= @partition %>')

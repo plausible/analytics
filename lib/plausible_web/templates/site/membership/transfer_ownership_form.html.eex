@@ -2,11 +2,15 @@
   <h2 class="text-xl font-black dark:text-gray-100">Transfer ownership of <%= @site.domain %></h2>
 
   <p class="mt-4 max-w-2xl text-sm text-gray-500">
-    Enter the email address of the new owner. We will contact them over email to offer them the ownership of <%= @site.domain %>.
+    Enter the email address of the new owner. We will contact them over email to
+    offer them the ownership of <%= @site.domain %>. If they don't respond in 48
+    hours, the request will expire automatically.
   </p>
   <p class="mt-4 max-w-2xl text-sm text-gray-500">
-    If they accept the transfer request, the new owner will be responsible for billing. Your access will be downgraded to <b>admin</b> and
-    any other member roles will stay the same. If they don't respond in 48 hours, the request will expire automatically.
+    Do note that a subscription plan is not transferred alongside the site. If
+    they accept the transfer request, the new owner will need to have an active
+    subscription. Your access will be downgraded to <b>admin</b> and any other
+    member roles will stay the same.
   </p>
 
   <%= if @conn.assigns[:error] do %>

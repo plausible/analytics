@@ -1,25 +1,42 @@
+<%= if Plausible.v2?() do %>
+<div class="shadow sm:rounded-md sm:overflow-hidden">
+  <div class="bg-white dark:bg-gray-800 py-6 px-4 space-y-6 sm:p-6">
+    <header class="relative">
+      <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Site domain</h2>
+      <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Moving your site to a different domain? We got you!</p>
+      <%= link(to: "https://plausible.io/docs/change-domain-name/", target: "_blank", rel: "noreferrer") do %>
+        <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
+      <% end %>
+    </header>
+    <div class="grid grid-cols-4 gap-6">
+      <div class="col-span-4 sm:col-span-2">
+        <%= label nil, "Domain", class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300" %>
+        <%= text_input nil, :domain, value: @site.domain, disabled: "disabled", class: "dark:bg-gray-900 w-full mt-1 block pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-500 text-gray-500" %>
+      </div>
+    </div>
+    <span class="inline-flex rounded-md shadow-sm">
+      <%= link "Change domain", to: Routes.site_path(@conn, :change_domain, @site.domain), class: "button" %>
+    </span>
+  </div>
+</div>
+<% end %>
+
 <%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", fn f -> %>
   <div class="shadow sm:rounded-md sm:overflow-hidden">
     <div class="bg-white dark:bg-gray-800 py-6 px-4 space-y-6 sm:p-6">
       <header class="relative">
-        <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">General information</h2>
+        <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Site timezone</h2>
         <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">Update your reporting timezone.</p>
         <%= link(to: "https://plausible.io/docs/general/", target: "_blank", rel: "noreferrer") do %>
           <svg class="w-6 h-6 absolute top-0 right-0 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
         <% end %>
       </header>
-
       <div class="grid grid-cols-4 gap-6">
-        <div class="col-span-4 sm:col-span-2"> <%= label f, :domain, class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300" %> <%= text_input f, :domain, class: "dark:bg-gray-900 mt-1 block w-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:max-w-xs sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-100", disabled: "disabled" %>
-        </div>
-
         <div class="col-span-4 sm:col-span-2">
           <%= label f, :timezone, "Reporting Timezone", class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300" %>
-          <%= select f, :timezone, Plausible.Timezones.options(), class: "dark:bg-gray-900  mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" %>
+          <%= select f, :timezone, Plausible.Timezones.options(), class: "dark:bg-gray-900 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" %>
         </div>
       </div>
-    </div>
-    <div class="px-4 py-3 bg-gray-50 dark:bg-gray-850 text-right sm:px-6">
       <span class="inline-flex rounded-md shadow-sm">
         <%= submit "Save", class: "button" %>
       </span>
