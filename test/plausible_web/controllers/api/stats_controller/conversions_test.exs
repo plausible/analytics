@@ -287,6 +287,37 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    test "returns prop_names=nil when goal :member + property filter are applied at the same time", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"]
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"]
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": ["author"],
+          "meta.value": ["John"]
+        ),
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment"})
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      filters = Jason.encode!(%{goal: "Payment|Signup", props: %{"logged_in" => "true|(none)"}})
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+
+      assert [%{"prop_names" => nil}] = json_response(conn, 200)
+    end
+
     test "can filter by multiple mixed goals", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),

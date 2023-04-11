@@ -1,4 +1,5 @@
 defmodule Plausible.Stats.Props do
+  alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
   import Plausible.Stats.Base
   @event_props ["event:page", "event:page_match", "event:name", "event:goal"]
@@ -30,21 +31,30 @@ defmodule Plausible.Stats.Props do
   def valid_prop?(_), do: false
 
   def props(site, query) do
-    case Plausible.Stats.Query.get_filter_by_prefix(query, "event:props:") do
-      {"event:props:" <> key, _} ->
-        {_, {_, goal_name}} = query.filters["event:goal"]
+    prop_filter = Query.get_filter_by_prefix(query, "event:props:")
+    goal_filter = query.filters["event:goal"]
+
+    case {goal_filter, prop_filter} do
+      {{_, {_, goal_name}}, {"event:props:" <> key, _}} when is_binary(goal_name) ->
         %{goal_name => [key]}
 
-      nil ->
-        ClickhouseRepo.all(
-          from e in base_event_query(site, query),
-            inner_lateral_join: meta in fragment("meta"),
-            select: {e.name, meta.key},
-            distinct: true
+      {{_, values}, {"event:props:" <> _, _}} when is_list(values)->
+        nil
+
+      _ ->
+        from(e in base_event_query(site, query),
+          inner_lateral_join: meta in fragment("meta"),
+          select: {e.name, meta.key},
+          distinct: true
         )
-        |> Enum.reduce(%{}, fn {goal_name, meta_key}, acc ->
-          Map.update(acc, goal_name, [meta_key], fn list -> [meta_key | list] end)
-        end)
+        |> ClickhouseRepo.all()
+        |> group_by_goal_name()
     end
+  end
+
+  defp group_by_goal_name(results_list) do
+    Enum.reduce(results_list, %{}, fn {goal_name, meta_key}, acc ->
+      Map.update(acc, goal_name, [meta_key], fn list -> [meta_key | list] end)
+    end)
   end
 end
