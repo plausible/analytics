@@ -268,7 +268,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           name: "Payment",
           "meta.key": ["author"],
           "meta.value": ["John"]
-        ),
+        )
       ])
 
       insert(:goal, %{site: site, event_name: "Payment"})
@@ -287,10 +287,11 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    test "returns prop_names=nil when goal :member + property filter are applied at the same time", %{
-      conn: conn,
-      site: site
-    } do
+    test "returns prop_names=nil when goal :member + property filter are applied at the same time",
+         %{
+           conn: conn,
+           site: site
+         } do
       populate_stats(site, [
         build(:event,
           name: "Payment",
@@ -306,7 +307,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
           name: "Payment",
           "meta.key": ["author"],
           "meta.value": ["John"]
-        ),
+        )
       ])
 
       insert(:goal, %{site: site, event_name: "Payment"})
@@ -588,7 +589,10 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    test "does not return (none) value in property breakdown with is filter on prop_value", %{conn: conn, site: site} do
+    test "does not return (none) value in property breakdown with is filter on prop_value", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           name: "Purchase",
@@ -618,11 +622,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "unique_conversions" => 1,
                  "total_conversions" => 1,
                  "conversion_rate" => 50.0
-               },
+               }
              ]
     end
 
-    test "returns only (none) value in property breakdown with is (none) filter", %{conn: conn, site: site} do
+    test "returns only (none) value in property breakdown with is (none) filter", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           name: "Purchase",
@@ -652,11 +659,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "unique_conversions" => 1,
                  "total_conversions" => 1,
                  "conversion_rate" => 50.0
-               },
+               }
              ]
     end
 
-    test "returns (none) value in property breakdown with is_not filter on prop_value", %{conn: conn, site: site} do
+    test "returns (none) value in property breakdown with is_not filter on prop_value", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           name: "Purchase",
@@ -698,15 +708,18 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "conversion_rate" => 50.0
                },
                %{
-                "name" => "(none)",
-                "unique_conversions" => 1,
-                "total_conversions" => 1,
-                "conversion_rate" => 25.0
-              },
+                 "name" => "(none)",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "conversion_rate" => 25.0
+               }
              ]
     end
 
-    test "does not return (none) value in property breakdown with is_not (none) filter", %{conn: conn, site: site} do
+    test "does not return (none) value in property breakdown with is_not (none) filter", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           name: "Purchase",
@@ -736,11 +749,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "unique_conversions" => 1,
                  "total_conversions" => 1,
                  "conversion_rate" => 50.0
-               },
+               }
              ]
     end
 
-    test "does not return (none) value in property breakdown with member filter on prop_value", %{conn: conn, site: site} do
+    test "does not return (none) value in property breakdown with member filter on prop_value", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           name: "Purchase",
@@ -782,15 +798,16 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "conversion_rate" => 50.0
                },
                %{
-                "name" => "0",
-                "unique_conversions" => 1,
-                "total_conversions" => 1,
-                "conversion_rate" => 25.0
-              },
+                 "name" => "0",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "conversion_rate" => 25.0
+               }
              ]
     end
 
-    test "returns (none) value in property breakdown with member filter including a (none) value", %{conn: conn, site: site} do
+    test "returns (none) value in property breakdown with member filter including a (none) value",
+         %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
           name: "Purchase",
@@ -832,15 +849,18 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "conversion_rate" => 50.0
                },
                %{
-                "name" => "(none)",
-                "unique_conversions" => 1,
-                "total_conversions" => 1,
-                "conversion_rate" => 25.0
-              },
+                 "name" => "(none)",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "conversion_rate" => 25.0
+               }
              ]
     end
 
-    test "returns (none) value in property breakdown with not_member filter on prop_value", %{conn: conn, site: site} do
+    test "returns (none) value in property breakdown with not_member filter on prop_value", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:event,
           name: "Purchase",
@@ -887,15 +907,16 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "conversion_rate" => 40.0
                },
                %{
-                "name" => "(none)",
-                "unique_conversions" => 1,
-                "total_conversions" => 1,
-                "conversion_rate" => 20.0
-              },
+                 "name" => "(none)",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "conversion_rate" => 20.0
+               }
              ]
     end
 
-    test "does not return (none) value in property breakdown with not_member filter including a (none) value", %{conn: conn, site: site} do
+    test "does not return (none) value in property breakdown with not_member filter including a (none) value",
+         %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
           name: "Purchase",
@@ -935,7 +956,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "unique_conversions" => 2,
                  "total_conversions" => 2,
                  "conversion_rate" => 50.0
-               },
+               }
              ]
     end
 

@@ -184,7 +184,8 @@ defmodule Plausible.Stats.Base do
             as: :meta,
             where:
               (meta.key == ^prop_name and meta.value in ^values) or
-              (^none_value_included and fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
+                (^none_value_included and
+                   fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
           )
 
         {"event:props:" <> prop_name, {:not_member, values}} ->
@@ -196,12 +197,15 @@ defmodule Plausible.Stats.Base do
             as: :meta,
             where:
               (meta.key == ^prop_name and meta.value not in ^values) or
-              (^none_value_included and fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name) and meta.value not in ^values) or
-              (not ^none_value_included and fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
+                (^none_value_included and fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name) and
+                   meta.value not in ^values) or
+                (not (^none_value_included) and
+                   fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
           )
 
-        _ -> q
-        end
+        _ ->
+          q
+      end
 
     q
   end

@@ -272,13 +272,14 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
 
       assert json_response(conn, 200) == [
-        %{"label" => "author", "value" => "author"},
-        %{"label" => "logged_in", "value" => "logged_in"},
-        %{"label" => "dark_mode", "value" => "dark_mode"}
-      ]
+               %{"label" => "author", "value" => "author"},
+               %{"label" => "logged_in", "value" => "logged_in"},
+               %{"label" => "dark_mode", "value" => "dark_mode"}
+             ]
     end
 
-    test "returns suggestions for prop value ordered by count, but (none) value is always first", %{conn: conn, site: site} do
+    test "returns suggestions for prop value ordered by count, but (none) value is always first",
+         %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           "meta.key": ["author"],
@@ -309,13 +310,16 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
 
       assert json_response(conn, 200) == [
-        %{"label" => "(none)", "value" => "(none)"},
-        %{"label" => "Uku Taht", "value" => "Uku Taht"},
-        %{"label" => "Marko Saric", "value" => "Marko Saric"}
-      ]
+               %{"label" => "(none)", "value" => "(none)"},
+               %{"label" => "Uku Taht", "value" => "Uku Taht"},
+               %{"label" => "Marko Saric", "value" => "Marko Saric"}
+             ]
     end
 
-    test "does not show (none) value suggestion when all events have that prop_key", %{conn: conn, site: site} do
+    test "does not show (none) value suggestion when all events have that prop_key", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview,
           "meta.key": ["author"],
@@ -343,9 +347,9 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         )
 
       assert json_response(conn, 200) == [
-        %{"label" => "Uku Taht", "value" => "Uku Taht"},
-        %{"label" => "Marko Saric", "value" => "Marko Saric"}
-      ]
+               %{"label" => "Uku Taht", "value" => "Uku Taht"},
+               %{"label" => "Marko Saric", "value" => "Marko Saric"}
+             ]
     end
 
     test "when date is borked, bad request is returned", %{

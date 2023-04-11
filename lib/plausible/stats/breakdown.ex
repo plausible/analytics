@@ -83,10 +83,11 @@ defmodule Plausible.Stats.Breakdown do
       end
 
     trace(query, property, metrics)
+
     results =
       breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
       |> Kernel.++(none_result)
-      |> Enum.sort_by(&(&1[sorting_key(metrics)]), :desc)
+      |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
 
     if Enum.find_index(results, fn value -> value[custom_prop] == "(none)" end) == limit do
       Enum.slice(results, 0..(limit - 1))
@@ -170,7 +171,7 @@ defmodule Plausible.Stats.Breakdown do
       |> Map.merge(event_row)
       |> Map.merge(session_row)
     end)
-    |> Enum.sort_by(&(&1[sorting_key(metrics)]), :desc)
+    |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
   end
 
   defp include_none_result?({:is, value}), do: value == "(none)"

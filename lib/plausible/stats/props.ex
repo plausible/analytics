@@ -38,7 +38,7 @@ defmodule Plausible.Stats.Props do
       {{_, {_, goal_name}}, {"event:props:" <> key, _}} when is_binary(goal_name) ->
         %{goal_name => [key]}
 
-      {{_, values}, {"event:props:" <> _, _}} when is_list(values)->
+      {{_, values}, {"event:props:" <> _, _}} when is_list(values) ->
         nil
 
       _ ->
