@@ -6,9 +6,12 @@ defimpl Jason.Encoder, for: Plausible.Goal do
         value.page_path -> :page
       end
 
+    domain = value.site.domain
+
     value
     |> Map.put(:goal_type, goal_type)
-    |> Map.take([:id, :domain, :goal_type, :event_name, :page_path])
+    |> Map.take([:id, :goal_type, :event_name, :page_path])
+    |> Map.put(:domain, domain)
     |> Jason.Encode.map(opts)
   end
 end
@@ -18,17 +21,19 @@ defmodule Plausible.Goal do
   import Ecto.Changeset
 
   schema "goals" do
-    field :domain, :string
     field :event_name, :string
     field :page_path, :string
+
+    belongs_to :site, Plausible.Site
 
     timestamps()
   end
 
   def changeset(goal, attrs \\ %{}) do
     goal
-    |> cast(attrs, [:domain, :event_name, :page_path])
-    |> validate_required([:domain])
+    |> cast(attrs, [:site_id, :event_name, :page_path])
+    |> validate_required([:site_id])
+    |> cast_assoc(:site)
     |> validate_event_name_and_page_path()
     |> update_change(:event_name, &String.trim/1)
     |> update_change(:page_path, &String.trim/1)

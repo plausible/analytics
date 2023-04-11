@@ -1,17 +1,16 @@
-const { test } = require('./support/harness');
-const { mockRequest, expectCustomEvent, isMac, mockManyRequests } = require('./support/test-utils');
-const { expect } = require('@playwright/test');
+const { mockRequest, expectCustomEvent, mockManyRequests, metaKey } = require('./support/test-utils');
+const { expect, test } = require('@playwright/test');
 const { LOCAL_SERVER_ADDR } = require('./support/server');
 
 
 test.describe('file-downloads extension', () => {
-  test('sends event and does not start download when link opens in new tab', async ({ page }, workerInfo) => {
+  test('sends event and does not start download when link opens in new tab', async ({ page }) => {
     await page.goto('/file-download.html')
     const downloadURL = await page.locator('#link').getAttribute('href')
 
     const plausibleRequestMock = mockRequest(page, '/api/event')
     const downloadRequestMock = mockRequest(page, downloadURL)
-    await page.click('#link', { modifiers: [isMac(workerInfo) ? 'Meta' : 'Control'] })
+    await page.click('#link', { modifiers: [metaKey()] })
 
     expectCustomEvent(await plausibleRequestMock, 'File Download', { url: downloadURL })
     expect(await downloadRequestMock, "should not make download request").toBeNull()

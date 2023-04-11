@@ -1,0 +1,1 @@
+ALTER TABLE events_v2 ATTACH PARTITION ID '<%= @partition %>' FROM tmp_events_v2

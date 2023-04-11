@@ -31,7 +31,7 @@ defmodule Plausible.Imported do
 
   defp parse_number(nr) do
     {float, ""} = Float.parse(nr)
-    float
+    round(float)
   end
 
   defp new_from_google_analytics(site_id, "imported_visitors", row) do

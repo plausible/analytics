@@ -11,6 +11,7 @@ defmodule Plausible.Application do
       Plausible.ClickhouseRepo,
       Plausible.IngestRepo,
       Plausible.AsyncInsertRepo,
+      Plausible.ImportDeletionRepo,
       Plausible.Ingestion.Counters,
       {Finch, name: Plausible.Finch, pools: finch_pool_config()},
       {Phoenix.PubSub, name: Plausible.PubSub},

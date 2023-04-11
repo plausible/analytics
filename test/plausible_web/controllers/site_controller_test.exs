@@ -41,10 +41,12 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
 
     test "lists all of your sites with last 24h visitors", %{conn: conn, user: user} do
-      insert(:site, members: [user], domain: "test-site.com")
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [build(:pageview), build(:pageview), build(:pageview)])
       conn = get(conn, "/sites")
 
-      assert html_response(conn, 200) =~ "test-site.com"
+      assert html_response(conn, 200) =~ site.domain
       assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
     end
 
@@ -108,27 +110,16 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
-    test "refuses to create the site when events exist (pending deletion)", %{conn: conn} do
-      domain = "events-exist.example.com"
-
-      populate_stats(%{domain: domain}, [
-        build(:pageview)
-      ])
-
-      :inserted = eventually(fn -> {Plausible.Sites.has_events?(domain), :inserted} end)
-
+    test "fails to create the site if only http:// provided", %{conn: conn} do
       conn =
         post(conn, "/sites", %{
           "site" => %{
-            "domain" => domain,
+            "domain" => "http://",
             "timezone" => "Europe/London"
           }
         })
 
-      assert html = html_response(conn, 200)
-      assert html =~ "This domain cannot be registered"
-      assert html =~ "please contact support"
-      refute Repo.get_by(Plausible.Site, domain: domain)
+      assert html_response(conn, 200) =~ "can&#39;t be blank"
     end
 
     test "starts trial if user does not have trial yet", %{conn: conn, user: user} do
@@ -293,6 +284,23 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~
                "This domain cannot be registered. Perhaps one of your colleagues registered it?"
     end
+
+    test "renders form again when domain was changed from elsewhere", %{conn: conn} do
+      :site
+      |> insert(domain: "example.com")
+      |> Plausible.Site.Domain.change("new.example.com")
+
+      conn =
+        post(conn, "/sites", %{
+          "site" => %{
+            "domain" => "example.com",
+            "timezone" => "Europe/London"
+          }
+        })
+
+      assert html_response(conn, 200) =~
+               "This domain cannot be registered. Perhaps one of your colleagues registered it?"
+    end
   end
 
   describe "GET /:website/snippet" do
@@ -314,7 +322,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/general")
       resp = html_response(conn, 200)
 
-      assert resp =~ "General information"
+      assert resp =~ "Site timezone"
       assert resp =~ "Data Import from Google Analytics"
       assert resp =~ "https://accounts.google.com/o/oauth2/v2/auth?"
       assert resp =~ "analytics.readonly"
@@ -326,8 +334,8 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "lists goals for the site", %{conn: conn, site: site} do
-      insert(:goal, domain: site.domain, event_name: "Custom event")
-      insert(:goal, domain: site.domain, page_path: "/register")
+      insert(:goal, site: site, event_name: "Custom event")
+      insert(:goal, site: site, page_path: "/register")
 
       conn = get(conn, "/#{site.domain}/settings/goals")
 
@@ -652,7 +660,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     setup [:create_user, :log_in, :create_site]
 
     test "deletes goal", %{conn: conn, site: site} do
-      goal = insert(:goal, domain: site.domain, event_name: "Custom event")
+      goal = insert(:goal, site: site, event_name: "Custom event")
 
       conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
 
@@ -662,7 +670,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "fails to delete goal for a foreign site", %{conn: conn, site: site} do
       another_site = insert(:site)
-      goal = insert(:goal, domain: another_site.domain, event_name: "Custom event")
+      goal = insert(:goal, site: another_site, event_name: "Custom event")
 
       conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
 
@@ -1152,6 +1160,118 @@ defmodule PlausibleWeb.SiteControllerTest do
       delete(conn, "/#{site.domain}/settings/forget-imported")
 
       assert Repo.reload(job).state == "cancelled"
+    end
+  end
+
+  describe "domain change" do
+    setup [:create_user, :log_in, :create_site]
+
+    @tag :v2_only
+    test "shows domain change in the settings form", %{conn: conn, site: site} do
+      conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
+      resp = html_response(conn, 200)
+
+      assert resp =~ "Site domain"
+      assert resp =~ "Change domain"
+      assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
+    end
+
+    @tag :v2_only
+    test "domain change form renders", %{conn: conn, site: site} do
+      conn = get(conn, Routes.site_path(conn, :change_domain, site.domain))
+      resp = html_response(conn, 200)
+      assert resp =~ Routes.site_path(conn, :change_domain_submit, site.domain)
+
+      assert resp =~
+               "Once you change your domain, you must update the JavaScript snippet on your site within 72 hours"
+    end
+
+    @tag :v2_only
+    test "domain change form submission when no change is made", %{conn: conn, site: site} do
+      conn =
+        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+          "site" => %{"domain" => site.domain}
+        })
+
+      resp = html_response(conn, 200)
+      assert resp =~ "New domain must be different than the current one"
+    end
+
+    @tag :v2_only
+    test "domain change form submission to an existing domain", %{conn: conn, site: site} do
+      another_site = insert(:site)
+
+      conn =
+        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+          "site" => %{"domain" => another_site.domain}
+        })
+
+      resp = html_response(conn, 200)
+      assert resp =~ "This domain cannot be registered"
+
+      site = Repo.reload!(site)
+      assert site.domain != another_site.domain
+      assert is_nil(site.domain_changed_from)
+    end
+
+    @tag :v2_only
+    test "domain change form submission to a domain in transition period", %{
+      conn: conn,
+      site: site
+    } do
+      another_site = insert(:site, domain_changed_from: "foo.example.com")
+
+      conn =
+        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+          "site" => %{"domain" => "foo.example.com"}
+        })
+
+      resp = html_response(conn, 200)
+      assert resp =~ "This domain cannot be registered"
+
+      site = Repo.reload!(site)
+      assert site.domain != another_site.domain
+      assert is_nil(site.domain_changed_from)
+    end
+
+    @tag :v2_only
+    test "domain change succcessful form submission redirects to snippet change info", %{
+      conn: conn,
+      site: site
+    } do
+      original_domain = site.domain
+
+      conn =
+        put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+          "site" => %{"domain" => "foo.example.com"}
+        })
+
+      assert redirected_to(conn) ==
+               Routes.site_path(conn, :add_snippet_after_domain_change, "foo.example.com")
+
+      site = Repo.reload!(site)
+      assert site.domain == "foo.example.com"
+      assert site.domain_changed_from == original_domain
+    end
+
+    @tag :v2_only
+    test "snippet info after domain change", %{
+      conn: conn,
+      site: site
+    } do
+      put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
+        "site" => %{"domain" => "foo.example.com"}
+      })
+
+      resp =
+        conn
+        |> get(Routes.site_path(conn, :add_snippet_after_domain_change, "foo.example.com"))
+        |> html_response(200)
+        |> Floki.parse_document!()
+        |> Floki.text()
+
+      assert resp =~
+               "Your domain has been changed. You must update the JavaScript snippet on your site within 72 hours"
     end
   end
 end

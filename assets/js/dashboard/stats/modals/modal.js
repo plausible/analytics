@@ -1,6 +1,7 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import { withRouter } from 'react-router-dom';
+import { shouldIgnoreKeypress } from '../../keybinding'
 
 // This corresponds to the 'md' breakpoint on TailwindCSS.
 const MD_WIDTH = 768;
@@ -46,7 +47,7 @@ class Modal extends React.Component {
   }
 
   handleKeyup(e) {
-    if (e.code === 'Escape') {
+    if (!shouldIgnoreKeypress(e) && e.code === 'Escape') {
       this.close()
     }
   }

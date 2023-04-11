@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS events_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %> SYNC

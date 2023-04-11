@@ -6,7 +6,8 @@ export const METRIC_MAPPING = {
   'Unique visitors': 'visitors',
   'Visit duration': 'visit_duration',
   'Total pageviews': 'pageviews',
-  'Visits': 'visits',
+  'Views per visit': 'views_per_visit',
+  'Total visits': 'visits',
   'Bounce rate': 'bounce_rate',
   'Unique conversions': 'conversions',
 }
@@ -14,6 +15,7 @@ export const METRIC_MAPPING = {
 export const METRIC_LABELS = {
   'visitors': 'Visitors',
   'pageviews': 'Pageviews',
+  'views_per_visit': 'Views per Visit',
   'visits': 'Visits',
   'bounce_rate': 'Bounce Rate',
   'visit_duration': 'Visit Duration',
@@ -24,6 +26,7 @@ export const METRIC_FORMATTER = {
   'visitors': numberFormatter,
   'pageviews': numberFormatter,
   'visits': numberFormatter,
+  'views_per_visit': (number) => (number),
   'bounce_rate': (number) => (`${number}%`),
   'visit_duration': durationFormatter,
   'conversions': numberFormatter,
@@ -37,17 +40,11 @@ export const LoadingState = {
   isLoadedOrRefreshing: function (state) { return [this.loaded, this.refreshing].includes(state) }
 }
 
-const buildComparisonDataset = function(comparisonPlot, presentIndex) {
+const buildComparisonDataset = function(comparisonPlot) {
   if (!comparisonPlot) return []
 
-  let data = [...comparisonPlot]
-  if (presentIndex) {
-    const dashedPartIncludedIndex = presentIndex + 1
-    data = data.slice(0, dashedPartIncludedIndex)
-  }
-
   return [{
-    data: data,
+    data: comparisonPlot,
     borderColor: 'rgba(60,70,110,0.2)',
     pointBackgroundColor: 'rgba(60,70,110,0.2)',
     pointHoverBackgroundColor: 'rgba(60, 70, 110)',
@@ -95,7 +92,7 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) =>
   const dataset = [
     ...buildMainPlotDataset(plot, present_index),
     ...buildDashedDataset(plot, present_index),
-    ...buildComparisonDataset(comparisonPlot, present_index)
+    ...buildComparisonDataset(comparisonPlot)
   ]
 
   return dataset.map((item) => Object.assign(item, defaultOptions))

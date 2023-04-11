@@ -62,6 +62,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
           referrer_source: "Facebook",
           referrer: "facebook.com",
           timestamp: ~N[2021-01-01 00:00:00]
@@ -77,7 +84,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "visitors" => 1}
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -108,8 +116,15 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
           referrer_source: "Facebook",
           referrer: "facebook.com",
+          "meta.key": ["author"],
+          "meta.value": ["John Doe"],
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -123,8 +138,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Facebook", "visitors" => 1},
-               %{"name" => "Google", "visitors" => 1}
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -156,6 +171,11 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           referrer_source: "Facebook",
           referrer: "facebook.com",
           timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          referrer_source: "Facebook",
+          referrer: "facebook.com",
+          timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
 
@@ -168,7 +188,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Facebook", "visitors" => 1}
+               %{"name" => "Facebook", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -199,6 +220,13 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com",
+          "meta.key": ["author"],
+          "meta.value": ["another"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
           referrer_source: "Facebook",
           referrer: "facebook.com",
           timestamp: ~N[2021-01-01 00:00:00]
@@ -214,7 +242,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "visitors" => 1}
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
 
@@ -442,7 +471,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "shows sources for a page", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
-        build(:pageview, pathname: "/page2", referrer_source: "Google"),
+        build(:pageview, pathname: "/page1", referrer_source: "Google"),
         build(:pageview, user_id: 1, pathname: "/page2", referrer_source: "DuckDuckGo"),
         build(:pageview, user_id: 1, pathname: "/page1", referrer_source: "DuckDuckGo")
       ])
@@ -451,7 +480,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       conn = get(conn, "/api/stats/#{site.domain}/sources?filters=#{filters}")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Google", "visitors" => 1}
+               %{"name" => "Google", "visitors" => 2},
+               %{"name" => "DuckDuckGo", "visitors" => 1}
              ]
     end
   end

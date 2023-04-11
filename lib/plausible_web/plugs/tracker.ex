@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Tracker do
     "local",
     "manual",
     "file-downloads",
-    "dimensions",
+    "pageview-props",
     "tagged-events"
   ]
 

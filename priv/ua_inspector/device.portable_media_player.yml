@@ -38,7 +38,7 @@ FiiO:
   models:
     - regex: 'M11 Plus LTD'
       model: 'M11 Plus LTD'
-    - regex: 'M(1[57])'
+    - regex: 'FiiO M(1[157]|6)'
       model: 'M$1'
 
 Microsoft:
@@ -94,3 +94,9 @@ Shanling:
   models:
     - regex: 'Shanling (M6\(21\))'
       model: '$1'
+
+# Sylvania
+Sylvania:
+  regex: '(SLTDVD102[34])'
+  device: 'portable media player'
+  model: '$1'

@@ -7,27 +7,18 @@ on:
       - 'tracker/**'
 
 jobs:
-  build:
-    name: Build and test
+  test:
+    timeout-minutes: 15
     runs-on: buildjet-4vcpu-ubuntu-2004
     steps:
-    - uses: actions/checkout@v2
-    - name: Read .tool-versions
-      uses: marocchino/tool-versions-action@v1
-      id: versions
-    - name: Set up Node
-      uses: actions/setup-node@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
       with:
-        node-version: ${{steps.versions.outputs.nodejs}}
-    - name: 'BrowserStack Env Setup'
-      uses: 'browserstack/github-actions/setup-env@master'
-      with:
-        username:  ${{ secrets.BROWSERSTACK_USERNAME }}
-        access-key: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
-        build-name: 'BUILD_INFO'
-    - run: npm install --prefix ./tracker
-    - run: npm run deploy --prefix ./tracker
-    - name: "Install Playwright dependencies"
+        node-version: 16
+    - name: Install dependencies
+      run: npm --prefix ./tracker ci
+    - name: Install Playwright Browsers
       working-directory: ./tracker
-      run: npx playwright install-deps
-    - run: npm --prefix ./tracker test
+      run: npx playwright install --with-deps
+    - name: Run Playwright tests
+      run: npm --prefix ./tracker test

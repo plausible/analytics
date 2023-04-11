@@ -123,6 +123,33 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     )
   end
 
+  @tag :v2_only
+  test "can access with either site_id after domain change", %{
+    conn: conn,
+    user: user,
+    api_key: api_key
+  } do
+    old_domain = "old.example.com"
+    new_domain = "new.example.com"
+    site = insert(:site, domain: old_domain, members: [user])
+
+    Plausible.Site.Domain.change(site, new_domain)
+
+    conn
+    |> with_api_key(api_key)
+    |> get("/api/v1/stats/aggregate", %{"site_id" => new_domain, "metrics" => "pageviews"})
+    |> assert_ok(%{
+      "results" => %{"pageviews" => %{"value" => 0}}
+    })
+
+    conn
+    |> with_api_key(api_key)
+    |> get("/api/v1/stats/aggregate", %{"site_id" => old_domain, "metrics" => "pageviews"})
+    |> assert_ok(%{
+      "results" => %{"pageviews" => %{"value" => 0}}
+    })
+  end
+
   defp with_api_key(conn, api_key) do
     Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key}")
   end

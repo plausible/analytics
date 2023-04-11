@@ -3,13 +3,23 @@ defmodule Plausible.Goals do
   alias Plausible.Goal
 
   def create(site, params) do
-    params = Map.merge(params, %{"domain" => site.domain})
+    params = Map.merge(params, %{"site_id" => site.id})
 
-    Goal.changeset(%Goal{}, params) |> Repo.insert()
+    case Repo.insert(Goal.changeset(%Goal{}, params)) do
+      {:ok, goal} -> {:ok, Repo.preload(goal, :site)}
+      error -> error
+    end
   end
 
   def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name}) do
-    goal = Repo.get_by(Plausible.Goal, domain: site.domain, event_name: event_name)
+    query =
+      from g in Goal,
+        inner_join: assoc(g, :site),
+        where: g.site_id == ^site.id,
+        where: g.event_name == ^event_name,
+        preload: [:site]
+
+    goal = Repo.one(query)
 
     case goal do
       nil -> create(site, %{"event_name" => event_name})
@@ -20,7 +30,14 @@ defmodule Plausible.Goals do
   def find_or_create(_, %{"goal_type" => "event"}), do: {:missing, "event_name"}
 
   def find_or_create(site, %{"goal_type" => "page", "page_path" => page_path}) do
-    goal = Repo.get_by(Plausible.Goal, domain: site.domain, page_path: page_path)
+    query =
+      from g in Goal,
+        inner_join: assoc(g, :site),
+        where: g.site_id == ^site.id,
+        where: g.page_path == ^page_path,
+        preload: [:site]
+
+    goal = Repo.one(query)
 
     case goal do
       nil -> create(site, %{"page_path" => page_path})
@@ -30,21 +47,23 @@ defmodule Plausible.Goals do
 
   def find_or_create(_, %{"goal_type" => "page"}), do: {:missing, "page_path"}
 
-  def for_domain(domain) do
+  def for_site(site) do
     query =
       from g in Goal,
-        where: g.domain == ^domain
+        inner_join: assoc(g, :site),
+        where: g.site_id == ^site.id,
+        preload: [:site]
 
     query
     |> Repo.all()
     |> Enum.map(&maybe_trim/1)
   end
 
-  def delete(id, domain) do
+  def delete(id, site) do
     case Repo.delete_all(
            from g in Goal,
              where: g.id == ^id,
-             where: g.domain == ^domain
+             where: g.site_id == ^site.id
          ) do
       {1, _} -> :ok
       {0, _} -> {:error, :not_found}

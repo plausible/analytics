@@ -4,7 +4,7 @@ import { Link, withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../util/number-formatter'
-import {parseQuery, toHuman} from '../../query'
+import {parseQuery} from '../../query'
 import RocketIcon from './rocket-icon'
 
 class GoogleKeywordsModal extends React.Component {
@@ -124,7 +124,6 @@ class GoogleKeywordsModal extends React.Component {
           <main className="modal__content">
             <h1 className="text-xl font-semibold mb-0 leading-none dark:text-gray-200">
               {this.state.totalVisitors} visitors from Google<br />
-              {toHuman(this.state.query)}
             </h1>
             {this.renderGoalText()}
             { this.renderKeywords() }

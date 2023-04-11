@@ -14,7 +14,7 @@ defmodule Plausible.Ingestion.Counters do
   aggregate into a 1-minute resolution.
 
   Clickhouse connection is set to insert counters asynchronously every time
-  a pool checkout is made. Those properties are reverted once the insert is done 
+  a pool checkout is made. Those properties are reverted once the insert is done
   (or naturally, if the connection crashes).
   """
 
@@ -84,8 +84,12 @@ defmodule Plausible.Ingestion.Counters do
           {_, _} = AsyncInsertRepo.insert_all(Record, records)
         catch
           _, thrown ->
-            Logger.error(
-              "Caught an error when trying to flush ingest counters: #{inspect(thrown)}"
+            Sentry.capture_message(
+              "Caught an error when trying to flush ingest counters.",
+              extra: %{
+                number_of_records: Enum.count(records),
+                error: inspect(thrown)
+              }
             )
         end
     end

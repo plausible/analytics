@@ -122,3 +122,8 @@
 - regex: 'eM Client/(\d+\.[\.\d]+)'
   name: 'eM Client'
   version: '$1'
+
+# NAVER Mail (https://play.google.com/store/apps/details?id=com.nhn.android.mail)
+- regex: 'NaverMailApp/(\d+\.[\.\d]+)'
+  name: 'NAVER Mail'
+  version: '$1'

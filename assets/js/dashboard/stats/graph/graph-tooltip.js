@@ -37,12 +37,12 @@ const buildTooltipData = function(query, graphData, metric, tooltipModel) {
   const data = tooltipModel.dataPoints.find((dataPoint) => dataPoint.dataset.yAxisID == "y")
   const comparisonData = tooltipModel.dataPoints.find((dataPoint) => dataPoint.dataset.yAxisID == "yComparison")
 
-  const label = renderBucketLabel(query, graphData, graphData.labels[data.dataIndex])
-  const comparisonLabel = comparisonData && renderBucketLabel(query, graphData, graphData.comparison_labels[data.dataIndex], true)
+  const label = data && renderBucketLabel(query, graphData, graphData.labels[data.dataIndex])
+  const comparisonLabel = comparisonData && renderBucketLabel(query, graphData, graphData.comparison_labels[comparisonData.dataIndex], true)
 
   const value = data?.raw || 0
   const comparisonValue = comparisonData?.raw || 0
-  const comparisonDifference = comparisonData && calculatePercentageDifference(comparisonValue, value)
+  const comparisonDifference = label && comparisonLabel && calculatePercentageDifference(comparisonValue, value)
 
   const metricFormatter = METRIC_FORMATTER[metric]
   const formattedValue = metricFormatter(value)
@@ -84,21 +84,23 @@ export default function GraphTooltip(graphData, metric, query) {
         <aside class="text-gray-100 flex flex-col">
           <div class="flex justify-between items-center">
             <span class="font-semibold mr-4 text-lg">${METRIC_LABELS[metric]}</span>
-            <div class="inline-flex items-center space-x-1">
+            ${tooltipData.comparisonDifference ?
+            `<div class="inline-flex items-center space-x-1">
               ${tooltipData.comparisonDifference > 0 ? `<span class="font-semibold text-sm text-green-500">&uarr;</span><span>${tooltipData.comparisonDifference}%</span>` : ""}
               ${tooltipData.comparisonDifference < 0 ? `<span class="font-semibold text-sm text-red-400">&darr;</span><span>${tooltipData.comparisonDifference * -1}%</span>` : ""}
               ${tooltipData.comparisonDifference == 0 ? `<span class="font-semibold text-sm">〰 0%</span>` : ""}
-            </div>
+            </div>` : ''}
           </div>
 
-          <div class="flex flex-col">
+          ${tooltipData.label ?
+          `<div class="flex flex-col">
             <div class="flex flex-row justify-between items-center">
               <span class="flex items-center mr-4">
                 <div class="w-3 h-3 mr-1 rounded-full" style="background-color: rgba(101,116,205)"></div>
                 <span>${tooltipData.label}</span>
               </span>
               <span class="text-base font-bold">${tooltipData.formattedValue}</span>
-            </div>
+            </div>` : ''}
 
             ${tooltipData.comparisonLabel ?
             `<div class="flex flex-row justify-between items-center">

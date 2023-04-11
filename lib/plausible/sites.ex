@@ -1,6 +1,5 @@
 defmodule Plausible.Sites do
   use Plausible.Repo
-  alias Plausible.ClickhouseRepo
   alias Plausible.Site
   alias Plausible.Site.SharedLink
   import Ecto.Query
@@ -24,13 +23,6 @@ defmodule Plausible.Sites do
       end
     end)
     |> Ecto.Multi.insert(:site, site_changeset)
-    |> Ecto.Multi.run(:existing_events, fn _, _ ->
-      site_changeset
-      |> Ecto.Changeset.validate_change(:domain, fn :domain, domain ->
-        check_for_existing_events(domain, params)
-      end)
-      |> Ecto.Changeset.apply_action(:insert)
-    end)
     |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
       membership_changeset =
         Site.Membership.changeset(%Site.Membership{}, %{
@@ -84,11 +76,6 @@ defmodule Plausible.Sites do
     !!stats_start_date(site)
   end
 
-  def has_events?(domain) do
-    q = from e in "events", where: e.domain == ^domain, select: true, limit: 1
-    ClickhouseRepo.one(q) == true
-  end
-
   def create_shared_link(site, name, password \\ nil) do
     changes =
       SharedLink.changeset(
@@ -120,7 +107,7 @@ defmodule Plausible.Sites do
       on: sm.site_id == s.id,
       where: sm.user_id == ^user_id,
       where: sm.role in ^roles,
-      where: s.domain == ^domain,
+      where: s.domain == ^domain or s.domain_changed_from == ^domain,
       select: s
     )
   end
@@ -128,7 +115,7 @@ defmodule Plausible.Sites do
   def has_goals?(site) do
     Repo.exists?(
       from g in Plausible.Goal,
-        where: g.domain == ^site.domain
+        where: g.site_id == ^site.id
     )
   end
 
@@ -165,6 +152,13 @@ defmodule Plausible.Sites do
     |> Repo.all()
   end
 
+  def owned_site_ids(user) do
+    user
+    |> owned_sites_query()
+    |> select([site], site.id)
+    |> Repo.all()
+  end
+
   defp owned_sites_query(user) do
     from(s in Site,
       join: sm in Site.Membership,
@@ -182,20 +176,5 @@ defmodule Plausible.Sites do
         where: sm.site_id == ^site.id,
         where: sm.role == :owner
     )
-  end
-
-  defp check_for_existing_events(domain, params) do
-    if has_events?(domain) do
-      Sentry.capture_message("Refused to create a site with existing events",
-        extra: %{params: params}
-      )
-
-      [
-        domain:
-          "This domain cannot be registered. Perhaps one of your colleagues registered it? Or did you recently delete it from your account? The deletion may take up to 48 hours before you can add the same site again. If that's not the case, please contact support@plausible.io"
-      ]
-    else
-      []
-    end
   end
 end

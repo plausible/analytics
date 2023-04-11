@@ -1,8 +1,13 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
-import {formatDay, formatMonthYYYY, nowForSite, parseUTCDate} from './util/date'
+import {nowForSite} from './util/date'
 import * as storage from './util/storage'
-import { COMPARISON_DISABLED_PERIODS } from './comparison-input'
+import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled } from './comparison-input'
+
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc)
 
 const PERIODS = ['realtime', 'day', 'month', '7d', '30d', '6mo', '12mo', 'year', 'all', 'custom']
 
@@ -19,16 +24,18 @@ export function parseQuery(querystring, site) {
     period = '30d'
   }
 
-  let comparison = !!q.get('comparison')
-  if (COMPARISON_DISABLED_PERIODS.includes(period)) comparison = null
+  let comparison = q.get('comparison') || getStoredComparisonMode(site.domain)
+  if (COMPARISON_DISABLED_PERIODS.includes(period) || !isComparisonEnabled(comparison)) comparison = null
 
   return {
     period,
-    date: q.get('date') ? parseUTCDate(q.get('date')) : nowForSite(site),
-    from: q.get('from') ? parseUTCDate(q.get('from')) : undefined,
-    to: q.get('to') ? parseUTCDate(q.get('to')) : undefined,
+    comparison,
+    compare_from: q.get('compare_from') ? dayjs.utc(q.get('compare_from')) : undefined,
+    compare_to: q.get('compare_to') ? dayjs.utc(q.get('compare_to')) : undefined,
+    date: q.get('date') ? dayjs.utc(q.get('date')) : nowForSite(site),
+    from: q.get('from') ? dayjs.utc(q.get('from')) : undefined,
+    to: q.get('to') ? dayjs.utc(q.get('to')) : undefined,
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
-    comparison: comparison,
     filters: {
       'goal': q.get('goal'),
       'props': JSON.parse(q.get('props')),
@@ -133,23 +140,6 @@ function QueryButton({history, query, to, disabled, className, children, onClick
 const QueryButtonWithRouter = withRouter(QueryButton)
 export { QueryButtonWithRouter as QueryButton };
 
-export function toHuman(query) {
-  if (query.period === 'day') {
-    return `on ${formatDay(query.date)}`
-  } if (query.period === 'month') {
-    return `in ${formatMonthYYYY(query.date)}`
-  } if (query.period === '7d') {
-    return 'in the last 7 days'
-  } if (query.period === '30d') {
-    return 'in the last 30 days'
-  } if (query.period === '6mo') {
-    return 'in the last 6 months'
-  } if (query.period === '12mo') {
-    return 'in the last 12 months'
-  }
-  return ''
-}
-
 export function eventName(query) {
   if (query.filters.goal) {
     if (query.filters.goal.startsWith('Visit ')) {
@@ -158,29 +148,4 @@ export function eventName(query) {
     return 'events'
   }
   return 'pageviews'
-}
-
-export const formattedFilters = {
-  'goal': 'Goal',
-  'props': 'Property',
-  'prop_key': 'Property',
-  'prop_value': 'Value',
-  'source': 'Source',
-  'utm_medium': 'UTM Medium',
-  'utm_source': 'UTM Source',
-  'utm_campaign': 'UTM Campaign',
-  'utm_content': 'UTM Content',
-  'utm_term': 'UTM Term',
-  'referrer': 'Referrer URL',
-  'screen': 'Screen size',
-  'browser': 'Browser',
-  'browser_version': 'Browser Version',
-  'os': 'Operating System',
-  'os_version': 'Operating System Version',
-  'country': 'Country',
-  'region': 'Region',
-  'city': 'City',
-  'page': 'Page',
-  'entry_page': 'Entry Page',
-  'exit_page': 'Exit Page'
 }

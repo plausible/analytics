@@ -158,7 +158,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def delete_goal(conn, %{"id" => goal_id}) do
-    case Plausible.Goals.delete(goal_id, conn.assigns[:site].domain) do
+    case Plausible.Goals.delete(goal_id, conn.assigns[:site]) do
       :ok ->
         conn
         |> put_flash(:success, "Goal deleted successfully")
@@ -225,7 +225,7 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_goals(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    goals = Goals.for_domain(site.domain)
+    goals = Goals.for_site(site)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -329,11 +329,10 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def update_settings(conn, %{"site" => site_params}) do
-    site = conn.assigns[:site]
-    changeset = site |> Plausible.Site.changeset(site_params)
-    res = changeset |> Repo.update()
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    changeset = Plausible.Site.update_changeset(site, site_params)
 
-    case res do
+    case Repo.update(changeset) do
       {:ok, site} ->
         site_session_key = "authorized_site__" <> site.domain
 
@@ -343,13 +342,19 @@ defmodule PlausibleWeb.SiteController do
         |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
 
       {:error, changeset} ->
-        render(conn, "settings_general.html", site: site, changeset: changeset)
+        conn
+        |> put_flash(:error, "Could not update your site settings")
+        |> render("settings_general.html",
+          site: site,
+          changeset: changeset,
+          layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+        )
     end
   end
 
   def reset_stats(conn, _params) do
     site = conn.assigns[:site]
-    Plausible.Purge.delete_native_stats!(site)
+    Plausible.Purge.reset!(site)
 
     conn
     |> put_flash(:success, "#{site.domain} stats will be reset in a few minutes")
@@ -866,5 +871,50 @@ defmodule PlausibleWeb.SiteController do
         |> put_flash(:error, "No data has been imported")
         |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
     end
+  end
+
+  def change_domain(conn, _params) do
+    if Plausible.v2?() do
+      changeset = Plausible.Site.update_changeset(conn.assigns.site)
+
+      render(conn, "change_domain.html",
+        changeset: changeset,
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
+    else
+      render_error(conn, 404)
+    end
+  end
+
+  def change_domain_submit(conn, %{"site" => %{"domain" => new_domain}}) do
+    if Plausible.v2?() do
+      case Plausible.Site.Domain.change(conn.assigns.site, new_domain) do
+        {:ok, updated_site} ->
+          conn
+          |> put_flash(:success, "Website domain changed successfully")
+          |> redirect(
+            to: Routes.site_path(conn, :add_snippet_after_domain_change, updated_site.domain)
+          )
+
+        {:error, changeset} ->
+          render(conn, "change_domain.html",
+            changeset: changeset,
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
+      end
+    else
+      render_error(conn, 404)
+    end
+  end
+
+  def add_snippet_after_domain_change(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("snippet_after_domain_change.html",
+      site: site,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 end
