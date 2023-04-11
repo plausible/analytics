@@ -20,7 +20,7 @@ const DEFAULT_COMPARISON_MODE = 'previous_period'
 export const COMPARISON_DISABLED_PERIODS = ['realtime', 'all']
 
 export const getStoredMatchDayOfWeek = function(domain) {
-  return storage.getItem(`comparison_match_day_of_week__${domain}`)
+  return storage.getItem(`comparison_match_day_of_week__${domain}`) || 'true'
 }
 
 export const getStoredComparisonMode = function(domain) {
@@ -85,26 +85,30 @@ function ComparisonModeOption({ label, value, isCurrentlySelected, updateMode, s
 }
 
 function MatchDayOfWeekInput({ history, query, site }) {
-  const click = () => {
-    const toggle = !query.match_day_of_week
-    storage.setItem(`comparison_match_day_of_week__${site.domain}`, toggle.toString())
-    navigateToQuery(history, query, { match_day_of_week: toggle.toString() })
+  const click = (matchDayOfWeek) => {
+    storage.setItem(`comparison_match_day_of_week__${site.domain}`, matchDayOfWeek.toString())
+    navigateToQuery(history, query, { match_day_of_week: matchDayOfWeek.toString() })
   }
 
-  const render = ({ active }) => {
-    const buttonClass = classNames("px-4 py-2 w-full text-left font-medium text-sm dark:text-white cursor-pointer", {
-      "bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100": active,
-      "font-bold": query.match_day_of_week,
+  const buttonClass = (hover, selected) =>
+    classNames("px-4 py-2 w-full text-left font-medium text-sm dark:text-white cursor-pointer", {
+      "bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100": hover,
+      "font-bold": selected,
     })
 
-    return <button className={buttonClass}>Match day of the week</button>
-  }
-
-  return (
-    <Menu.Item key="match_day_of_week" onClick={click}>
-      { render }
+  return <>
+    <Menu.Item key="match_day_of_week" onClick={() => click(true)}>
+      {({ active }) => (
+        <button className={buttonClass(active, query.match_day_of_week)}>Match day of the week</button>
+      )}
     </Menu.Item>
-  )
+
+    <Menu.Item key="match_exact_date" onClick={() => click(false)}>
+      {({ active }) => (
+        <button className={buttonClass(active, !query.match_day_of_week)}>Match exact date</button>
+      )}
+    </Menu.Item>
+  </>
 }
 
 const ComparisonInput = function({ site, query, history }) {
