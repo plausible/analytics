@@ -7,7 +7,6 @@ import {
   shiftDays,
   shiftMonths,
   formatDay,
-  formatDayShort,
   formatMonthYYYY,
   formatYear,
   formatISO,
@@ -19,7 +18,8 @@ import {
   isThisYear,
   parseUTCDate,
   isBefore,
-  isAfter
+  isAfter,
+  formatDateRange
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
@@ -137,7 +137,7 @@ function DisplayPeriod({query, site}) {
   } if (query.period === 'all') {
     return 'All time'
   } if (query.period === 'custom') {
-    return `${formatDayShort(query.from)} - ${formatDayShort(query.to)}`
+    return formatDateRange(site, query.from, query.to)
   }
   return 'Realtime'
 }

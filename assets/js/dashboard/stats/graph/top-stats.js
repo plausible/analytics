@@ -4,43 +4,64 @@ import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { METRIC_MAPPING } from './graph-util'
+import { formatDateRange } from '../../util/date.js'
+
+function Maybe({condition, children}) {
+  if (condition) {
+    return children
+  } else {
+    return null
+  }
+}
 
 export default class TopStats extends React.Component {
-  renderComparison(name, comparison) {
+  renderPercentageComparison(name, comparison, forceDarkMode = false) {
     const formattedComparison = numberFormatter(Math.abs(comparison))
+
+    const defaultClassName = classNames({
+      "text-xs dark:text-gray-100": !forceDarkMode,
+      "text-xs text-gray-100": forceDarkMode
+    })
+
+    const noChangeClassName = classNames({
+      "text-xs text-gray-700 dark:text-gray-300": !forceDarkMode,
+      "text-xs text-gray-300": forceDarkMode
+    })
 
     if (comparison > 0) {
       const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
-      return <span className="text-xs dark:text-gray-100"><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
+      return <span className={defaultClassName}><span className={color + ' font-bold'}>&uarr;</span> {formattedComparison}%</span>
     } else if (comparison < 0) {
       const color = name === 'Bounce rate' ? 'text-green-500' : 'text-red-400'
-      return <span className="text-xs dark:text-gray-100"><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
+      return <span className={defaultClassName}><span className={color + ' font-bold'}>&darr;</span> {formattedComparison}%</span>
     } else if (comparison === 0) {
-      return <span className="text-xs text-gray-700 dark:text-gray-300">&#12336; 0%</span>
-    }
-  }
-
-  topStatNumberShort(stat) {
-    if (['visit duration', 'time on page'].includes(stat.name.toLowerCase())) {
-      return durationFormatter(stat.value)
-    } else if (['bounce rate', 'conversion rate'].includes(stat.name.toLowerCase())) {
-      return stat.value + '%'
+      return <span className={noChangeClassName}>&#12336; 0%</span>
     } else {
-      return numberFormatter(stat.value)
+      return null
     }
   }
 
-  topStatNumberLong(stat) {
-    if (['visit duration', 'time on page'].includes(stat.name.toLowerCase())) {
-      return durationFormatter(stat.value)
-    } else if (['bounce rate', 'conversion rate'].includes(stat.name.toLowerCase())) {
-      return stat.value + '%'
+  topStatNumberShort(name, value) {
+    if (['visit duration', 'time on page'].includes(name.toLowerCase())) {
+      return durationFormatter(value)
+    } else if (['bounce rate', 'conversion rate'].includes(name.toLowerCase())) {
+      return value + '%'
     } else {
-      return stat.value.toLocaleString()
+      return numberFormatter(value)
     }
   }
 
-  topStatTooltip(stat) {
+  topStatNumberLong(name, value) {
+    if (['visit duration', 'time on page'].includes(name.toLowerCase())) {
+      return durationFormatter(value)
+    } else if (['bounce rate', 'conversion rate'].includes(name.toLowerCase())) {
+      return value + '%'
+    } else {
+      return (value || 0).toLocaleString()
+    }
+  }
+
+  topStatTooltip(stat, query) {
     let statName = stat.name.toLowerCase()
     statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
@@ -49,7 +70,15 @@ export default class TopStats extends React.Component {
 
     return (
       <div>
-        <div className="whitespace-nowrap">{this.topStatNumberLong(stat)} {statName}</div>
+        {query.comparison && <div className="whitespace-nowrap">
+          {this.topStatNumberLong(stat.name, stat.value)} vs. {this.topStatNumberLong(stat.name, stat.comparison_value)} {statName}
+          <span className="ml-2">{this.renderPercentageComparison(stat.name, stat.change, true)}</span>
+        </div>}
+
+        {!query.comparison && <div className="whitespace-nowrap">
+          {this.topStatNumberLong(stat.name, stat.value)} {statName}
+        </div>}
+
         {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp}/>s ago</p>}
         {stat.name === 'Views per visit' && showingImported && <p className="font-normal text-xs whitespace-nowrap">Based only on native data</p>}
       </div>
@@ -95,7 +124,7 @@ export default class TopStats extends React.Component {
   }
 
   render() {
-    const { topStatData, query } = this.props
+    const { topStatData, query, site } = this.props
 
     const stats = topStatData && topStatData.top_stats.map((stat, index) => {
 
@@ -106,11 +135,27 @@ export default class TopStats extends React.Component {
       })
 
       return (
-          <Tooltip key={stat.name} info={this.topStatTooltip(stat)} className={className} onClick={() => { this.maybeUpdateMetric(stat) }} boundary={this.props.tooltipBoundary}>
+          <Tooltip key={stat.name} info={this.topStatTooltip(stat, query)} className={className} onClick={() => { this.maybeUpdateMetric(stat) }} boundary={this.props.tooltipBoundary}>
             {this.renderStatName(stat)}
-            <div className="flex items-center justify-between my-1 whitespace-nowrap">
-              <b className="mr-4 text-xl md:text-2xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat)}</b>
-              {this.renderComparison(stat.name, stat.change)}
+            <div className="my-1 space-y-2">
+              <div>
+                <span className="flex items-center justify-between whitespace-nowrap">
+                  <p className="font-bold text-xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat.name, stat.value)}</p>
+                  <Maybe condition={!query.comparison}>
+                    {this.renderPercentageComparison(stat.name, stat.change)}
+                  </Maybe>
+                </span>
+                  <Maybe condition={query.comparison}>
+                    <p className="text-xs dark:text-gray-100">{ formatDateRange(site, topStatData.from, topStatData.to) }</p>
+                  </Maybe>
+              </div>
+
+              <Maybe condition={query.comparison}>
+                <div>
+                  <p className="font-bold text-xl text-gray-500 dark:text-gray-400">{ this.topStatNumberShort(stat.name, stat.comparison_value) }</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{ formatDateRange(site, topStatData.comparing_from, topStatData.comparing_to) }</p>
+                </div>
+              </Maybe>
             </div>
           </Tooltip>
       )

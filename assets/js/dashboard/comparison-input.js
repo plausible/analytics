@@ -6,7 +6,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from './util/storage'
 import Flatpickr from 'react-flatpickr'
-import { formatISO, parseUTCDate } from './util/date.js'
+import { formatISO, parseUTCDate, formatDateRange } from './util/date.js'
 
 const COMPARISON_MODES = {
   'off': 'Disable comparison',
@@ -90,11 +90,9 @@ const ComparisonInput = function({ site, query, history }) {
     navigateToQuery(history, query, { comparison: mode, compare_from: from, compare_to: to })
   }
 
-  const buildLabel = (query) => {
+  const buildLabel = (site, query) => {
     if (query.comparison == "custom") {
-      const from = query.compare_from.format('D MMM')
-      const to = query.compare_to.format('D MMM')
-      return `${from} - ${to}`
+      return formatDateRange(site, query.compare_from, query.compare_to)
     } else {
       return COMPARISON_MODES[query.comparison]
     }
@@ -127,7 +125,7 @@ const ComparisonInput = function({ site, query, history }) {
         <div className="min-w-32 md:w-48 md:relative">
           <Menu as="div" className="relative inline-block pl-2 w-full">
             <Menu.Button className="bg-white text-gray-800 text-xs md:text-sm font-medium dark:bg-gray-800 dark:hover:bg-gray-900 dark:text-gray-200 hover:bg-gray-200 flex md:px-3 px-2 py-2 items-center justify-between leading-tight rounded shadow cursor-pointer w-full truncate">
-              <span className="truncate">{ buildLabel(query) }</span>
+              <span className="truncate">{ buildLabel(site, query) }</span>
               <ChevronDownIcon className="hidden sm:inline-block h-4 w-4 md:h-5 md:w-5 text-gray-500 ml-2" aria-hidden="true" />
             </Menu.Button>
             <Transition
