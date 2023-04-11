@@ -32,7 +32,8 @@ class RegularFilterModal extends React.Component {
     super(props)
     const query = parseQuery(props.location.search, props.site)
     const formState = getFormState(props.filterGroup, query)
-
+    
+    this.handleKeydown = this.handleKeydown.bind(this)
     this.state = { query, formState }
   }
 
