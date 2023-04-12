@@ -7,7 +7,7 @@ import { FILTER_TYPES } from "../../util/filters";
 import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath } from '../../util/url'
-import { toFilterQuery, parsePrefix } from '../../util/filters';
+import { toFilterQuery, parseQueryFilter } from '../../util/filters';
 
 function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
@@ -16,10 +16,9 @@ function PropFilterModal(props) {
   function getFormState() {
     const rawValue = query.filters['props']
     if (rawValue) {
-      const [[propKey, propVal]] = Object.entries(rawValue)
-      const {type, values} = parsePrefix(propVal)
-      const clauses = values.map(val => { return {value: val, label: val}})
-      
+      const [[propKey, _propValue]] = Object.entries(query.filters['props'])
+      const {type, clauses} = parseQueryFilter(query, 'props')
+
       return {
         prop_key: {value: propKey, label: propKey},
         prop_value: { type: type, clauses: clauses }
