@@ -44,6 +44,11 @@ resource "checkly_check" "plausible-io-api-health" {
 
   group_id = checkly_check_group.reachability.id
 
+  alert_channel_subscription {
+    channel_id = checkly_alert_channel.instatus.id
+    activated  = true
+  }
+
   request {
     url              = "https://plausible.io/api/health"
     follow_redirects = false
