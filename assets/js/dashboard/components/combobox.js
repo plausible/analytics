@@ -42,7 +42,7 @@ export default function PlausibleCombobox(props) {
   const [loading, setLoading] = useState(false)
   const [isOpen, setOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [initialRender, setInitialRender] = useState(true)
+  const [searchBoxHidden, setSearchBoxHidden] = useState(!!props.singleOption && props.values.length === 1)
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const searchRef = useRef(null);
   const containerRef = useRef(null);
@@ -75,6 +75,7 @@ export default function PlausibleCombobox(props) {
     if (e.key === 'Escape') {
       if (!isOpen || loading) return null
       setOpen(false)
+      searchRef.current?.focus()
       e.preventDefault()
     }
     if (e.key === 'ArrowDown') {
@@ -119,6 +120,7 @@ export default function PlausibleCombobox(props) {
   function toggleOpen() {
     if (!isOpen) {
       fetchOptions(input)
+      searchRef.current.focus()
     } else {
       setInput('')
       setOpen(false)
@@ -129,8 +131,10 @@ export default function PlausibleCombobox(props) {
     if (isDisabled(option)) return
 
     if (props.singleOption) {
+      setSearchBoxHidden(true)
       props.onSelect([option])
     } else {
+      searchRef.current.focus()
       props.onSelect([...props.values, option])
     }
 
@@ -142,6 +146,11 @@ export default function PlausibleCombobox(props) {
     e.stopPropagation()
     const newValues = props.values.filter((val) => val.value !== option.value)
     props.onSelect(newValues)
+    if (searchBoxHidden) {
+      setSearchBoxHidden(false)
+    } else {
+      searchRef.current.focus()
+    }
     setOpen(false)
   }
 
@@ -153,20 +162,21 @@ export default function PlausibleCombobox(props) {
   })
 
   useEffect(() => {
-    if (!initialRender) { searchRef.current.focus() }
-    setInitialRender(false)
-  }, [isOpen, props.values])
-
-  useEffect(() => {
     document.addEventListener("mousedown", handleClick, false);
     return () => { document.removeEventListener("mousedown", handleClick, false); }
   }, [])
+
+  useEffect(() => {
+    if (props.singleOption && !searchBoxHidden) {
+      searchRef.current.focus()
+    }
+  }, [searchBoxHidden])
 
   const matchesFound = !loading && visibleOptions.length > 0
   const noMatchesFound = !loading && visibleOptions.length === 0
   
   const searchBoxClass = classNames('border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm', {
-    'hidden': props.singleOption && props.values.length === 1
+    'hidden': searchBoxHidden
   })
 
   const containerClass = classNames('relative w-full', {
