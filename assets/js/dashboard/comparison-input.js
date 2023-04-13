@@ -151,7 +151,7 @@ const ComparisonInput = function({ site, query, history }) {
 
   return (
     <>
-      <span className="pl-2 text-sm font-medium text-gray-800 dark:text-gray-200">vs.</span>
+      <span className="hidden md:block pl-2 text-sm font-medium text-gray-800 dark:text-gray-200">vs.</span>
       <div className="flex">
         <div className="min-w-32 md:w-48 md:relative">
           <Menu as="div" className="relative inline-block pl-2 w-full">
