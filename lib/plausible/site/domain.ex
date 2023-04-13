@@ -43,11 +43,11 @@ defmodule Plausible.Site.Domain do
 
   @spec change(Site.t(), String.t(), Keyword.t()) ::
           {:ok, Site.t()} | {:error, Ecto.Changeset.t()}
-  def change(%Site{} = site, new_domain, opts \\ []) do
+  def change(site = %Site{}, new_domain, opts \\ []) do
     changeset = Site.update_changeset(site, %{domain: new_domain}, opts)
 
     changeset =
-      if Enum.empty?(changeset.changes) and is_nil(changeset.errors[:domain]) do
+      if is_nil(changeset.errors[:domain]) and is_nil(changeset.changes[:domain]) do
         Ecto.Changeset.add_error(
           changeset,
           :domain,

@@ -107,7 +107,11 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.get_by(Plausible.Site, domain: "example.com")
+      assert site = Repo.get_by(Plausible.Site, domain: "example.com")
+      assert site.domain == "example.com"
+      assert site.timezone == "Europe/London"
+      assert site.ingest_rate_limit_scale_seconds == 60
+      assert site.ingest_rate_limit_threshold == 1_000_000
     end
 
     test "fails to create the site if only http:// provided", %{conn: conn} do
