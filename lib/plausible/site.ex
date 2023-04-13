@@ -19,6 +19,7 @@ defmodule Plausible.Site do
     field :native_stats_start_at, :naive_datetime
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
+    # default is set via changeset/2
     field :ingest_rate_limit_threshold, :integer
 
     field :domain_changed_from, :string
@@ -60,6 +61,10 @@ defmodule Plausible.Site do
     |> unique_constraint(:domain,
       name: "domain_change_disallowed",
       message: @domain_unique_error
+    )
+    |> put_change(
+      :ingest_rate_limit_threshold,
+      Application.get_env(:plausible, __MODULE__)[:default_ingest_threshold]
     )
   end
 

@@ -580,3 +580,17 @@ config :plausible, Plausible.PromEx,
   drop_metrics_groups: [],
   grafana: :disabled,
   metrics_server: :disabled
+
+if not is_selfhost do
+  site_default_ingest_threshold =
+    case System.get_env("SITE_DEFAULT_INGEST_THRESHOLD") do
+      threshold when byte_size(threshold) > 0 ->
+        {value, ""} = Integer.parse(threshold)
+        value
+
+      _ ->
+        nil
+    end
+
+  config :plausible, Plausible.Site, default_ingest_threshold: site_default_ingest_threshold
+end
