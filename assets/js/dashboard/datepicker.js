@@ -25,6 +25,7 @@ import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
 import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
 import classNames from "classnames"
+import dayjs from "dayjs"
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -254,34 +255,18 @@ function DatePicker({query, site, history}) {
     return () => { document.removeEventListener("mousedown", handleClick, false); }
   }, [])
 
-  function setCustomDate(dates) {
-    if (dates.length === 2) {
-      const [from, to] = dates.map(parseUTCDate)
-      if (formatISO(from) === formatISO(to)) {
-        navigateToQuery(
-          history,
-          query,
-          {
-            period: 'day',
-            date: formatISO(from),
-            from: false,
-            to: false
-          }
-        )
+  function setCustomDate([from, to], _dateStr, _instance) {
+    if (from && to) {
+      [from, to] = [dayjs(from), dayjs(to)]
+
+      if (from.isSame(to)) {
+        navigateToQuery( history, query, { period: 'day', date: formatISO(from), from: false, to: false })
       } else {
-        navigateToQuery(
-          history,
-          query,
-          {
-            period: 'custom',
-            date: false,
-            from: formatISO(from),
-            to: formatISO(to),
-          }
-        )
+        navigateToQuery( history, query, { period: 'custom', date: false, from: formatISO(from), to: formatISO(to) })
       }
-      setOpen(false)
     }
+
+    setOpen(false)
   }
 
   function toggle() {
@@ -406,7 +391,7 @@ function DatePicker({query, site, history}) {
               animate: true}}
             ref={calendar}
             className="invisible"
-            onChange={setCustomDate}
+            onClose={setCustomDate}
           />
         </div>
       )

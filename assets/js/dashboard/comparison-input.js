@@ -7,6 +7,7 @@ import classNames from 'classnames'
 import * as storage from './util/storage'
 import Flatpickr from 'react-flatpickr'
 import { formatISO, parseUTCDate, formatDateRange } from './util/date.js'
+import dayjs from 'dayjs'
 
 const COMPARISON_MODES = {
   'off': 'Disable comparison',
@@ -145,7 +146,11 @@ const ComparisonInput = function({ site, query, history }) {
     static: true,
     onClose: ([from, to], _dateStr, _instance) => {
       setUiMode("menu")
-      if (from && to) updateMode("custom", formatISO(parseUTCDate(from)), formatISO(parseUTCDate(to)))
+
+      if (from && to) {
+        [from, to] = [dayjs(from), dayjs(to)]
+        updateMode("custom", formatISO(from), formatISO(to))
+      }
     }
   }
 
