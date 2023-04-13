@@ -6,7 +6,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from './util/storage'
 import Flatpickr from 'react-flatpickr'
-import { formatISO, parseUTCDate, formatDateRange } from './util/date.js'
+import { formatISO, formatDateRange } from './util/date.js'
 import dayjs from 'dayjs'
 
 const COMPARISON_MODES = {
@@ -141,7 +141,7 @@ const ComparisonInput = function({ site, query, history }) {
     mode: 'range',
     showMonths: 1,
     maxDate: 'today',
-    minDate: parseUTCDate(site.statsBegin),
+    minDate: site.statsBegin,
     animate: true,
     static: true,
     onClose: ([from, to], _dateStr, _instance) => {

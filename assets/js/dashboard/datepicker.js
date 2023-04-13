@@ -385,7 +385,7 @@ function DatePicker({query, site, history}) {
             options={{
               mode: 'range',
               maxDate: 'today',
-              minDate: parseUTCDate(site.statsBegin),
+              minDate: site.statsBegin,
               showMonths: 1,
               static: true,
               animate: true}}
