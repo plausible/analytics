@@ -76,10 +76,16 @@ function PropFilterModal(props) {
 
   function renderFilterInputs() {
     return (
-      <div className="flex items-start mt-6">
-        <Combobox className="mr-2" fetchOptions={fetchOptions('prop_key')} singleOption={true} values={formState.prop_key ? [formState.prop_key] : []} onSelect={onPropKeySelect()} placeholder={'Property'} />
-        <FilterTypeSelector isDisabled={!formState.prop_key} forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
-        <Combobox isDisabled={!formState.prop_key} fetchOptions={fetchOptions('prop_value')} values={formState.prop_value.clauses} onSelect={onPropValueSelect()} placeholder={'Value'} />
+      <div className="grid grid-cols-11 mt-6">
+        <div className="col-span-4">
+          <Combobox className="mr-2" fetchOptions={fetchOptions('prop_key')} singleOption={true} values={formState.prop_key ? [formState.prop_key] : []} onSelect={onPropKeySelect()} placeholder={'Property'} />
+        </div>
+        <div className="col-span-3 mx-2">
+          <FilterTypeSelector isDisabled={!formState.prop_key} forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
+        </div>
+        <div className="col-span-4">
+          <Combobox isDisabled={!formState.prop_key} fetchOptions={fetchOptions('prop_value')} values={formState.prop_value.clauses} onSelect={onPropValueSelect()} placeholder={'Value'} />
+        </div>
       </div>
     )
   }

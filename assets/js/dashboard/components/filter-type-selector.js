@@ -30,12 +30,16 @@ export default function FilterTypeSelector(props) {
     )
   }
 
+  const containerClass = classNames("w-full", {
+    'opacity-20 cursor-default pointer-events-none': props.isDisabled
+  })
+
   return (
-    <div className={props.isDisabled ? 'opacity-20 cursor-default pointer-events-none' : ''}>
-      <Menu as="div" className="relative inline-block text-left mr-2">
+    <div className={containerClass}>
+      <Menu as="div" className="relative inline-block text-left w-full">
         {({ open }) => (
           <>
-            <div className="w-24">
+            <div className="w-full">
               <Menu.Button className="inline-flex justify-between items-center w-full rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 dark:focus:ring-offset-gray-900 focus:ring-indigo-500">
                 {props.selectedType}
                 <ChevronDownIcon className="-mr-2 ml-2 h-4 w-4 text-gray-500 dark:text-gray-400" aria-hidden="true" />
@@ -54,7 +58,7 @@ export default function FilterTypeSelector(props) {
             >
               <Menu.Items
                 static
-                className="z-10 origin-top-left absolute left-0 mt-2 w-24 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
+                className="z-10 origin-top-left absolute left-0 mt-2 w-full rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
               >
                 <div className="py-1">
                   {renderTypeItem(FILTER_TYPES.is, true)}

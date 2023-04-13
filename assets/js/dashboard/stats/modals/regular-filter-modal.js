@@ -149,9 +149,13 @@ class RegularFilterModal extends React.Component {
       return (
         <div className="mt-4" key={filter}>
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{formattedFilters[filter]}</div>
-          <div className="flex items-start mt-1">
-            <FilterTypeSelector forFilter={filter} onSelect={this.onFilterTypeSelect(filter)} selectedType={this.selectedFilterType(filter)}/>
-            <Combobox fetchOptions={this.fetchOptions(filter)} freeChoice={isFreeChoiceFilter(filter)} values={this.state.formState[filter].clauses} onSelect={this.onComboboxSelect(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
+          <div className="grid grid-cols-11 mt-1">
+            <div className="col-span-3 mr-2">
+              <FilterTypeSelector forFilter={filter} onSelect={this.onFilterTypeSelect(filter)} selectedType={this.selectedFilterType(filter)}/>
+            </div>
+            <div className="col-span-8">
+              <Combobox fetchOptions={this.fetchOptions(filter)} freeChoice={isFreeChoiceFilter(filter)} values={this.state.formState[filter].clauses} onSelect={this.onComboboxSelect(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`}/>
+            </div>
           </div>
         </div>
       )
