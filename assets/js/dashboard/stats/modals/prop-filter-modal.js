@@ -7,31 +7,30 @@ import { FILTER_TYPES } from "../../util/filters";
 import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath } from '../../util/url'
-import { toFilterQuery, parsePrefix } from '../../util/filters';
+import { toFilterQuery, parseQueryFilter } from '../../util/filters';
 import { shouldIgnoreKeypress } from '../../keybinding';
+
+function getFormState(query) {
+  const rawValue = query.filters['props']
+  if (rawValue) {
+    const [[propKey, _propValue]] = Object.entries(rawValue)
+    const {type, clauses} = parseQueryFilter(query, 'props')
+
+    return {
+      prop_key: {value: propKey, label: propKey},
+      prop_value: { type: type, clauses: clauses }
+    }
+  }
+
+  return {
+    prop_key: null,
+    prop_value: { type: FILTER_TYPES.is, clauses: [] }
+  }
+}
 
 function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
-  const [formState, setFormState] = useState(getFormState())
-
-  function getFormState() {
-    const rawValue = query.filters['props']
-    if (rawValue) {
-      const [[propKey, propVal]] = Object.entries(rawValue)
-      const {type, values} = parsePrefix(propVal)
-      const clauses = values.map(val => { return {value: val, label: val}})
-      
-      return {
-        prop_key: {value: propKey, label: propKey},
-        prop_value: { type: type, clauses: clauses }
-      }
-    }
-
-    return {
-      prop_key: null,
-      prop_value: { type: FILTER_TYPES.is, clauses: [] }
-    }
-  }
+  const [formState, setFormState] = useState(getFormState(query))
 
   function fetchOptions(filter) {
     return (input) => {
