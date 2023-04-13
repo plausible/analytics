@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { withRouter } from "react-router-dom";
 
 import Combobox from '../../components/combobox'
@@ -8,6 +8,7 @@ import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath } from '../../util/url'
 import { toFilterQuery, parsePrefix } from '../../util/filters';
+import { shouldIgnoreKeypress } from '../../keybinding';
 
 function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
@@ -114,6 +115,21 @@ function PropFilterModal(props) {
 
     props.history.replace({ pathname: siteBasePath(props.site), search: queryString.toString() })
   }
+
+  const handleKeydown = (e) => {
+    if (shouldIgnoreKeypress(e)) return
+
+    if (e.target.tagName === 'BODY' && e.key === 'Enter') {
+      handleSubmit()
+    }
+  }
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeydown)
+    return () => {
+      document.removeEventListener('keydown', handleKeydown)
+    }
+  }, [handleSubmit])
 
   return (
     <>
