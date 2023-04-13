@@ -50,6 +50,7 @@ export function serializeQuery(query, extraQuery=[]) {
     queryObj.comparison = query.comparison
     queryObj.compare_from = query.compare_from ? formatISO(query.compare_from) : undefined
     queryObj.compare_to = query.compare_to ? formatISO(query.compare_to) : undefined
+    queryObj.match_day_of_week = query.match_day_of_week
   }
 
   Object.assign(queryObj, ...extraQuery)
