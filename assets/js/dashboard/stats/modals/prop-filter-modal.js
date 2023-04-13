@@ -32,15 +32,17 @@ function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
   const [formState, setFormState] = useState(getFormState(query))
 
-  function fetchOptions(filter) {
+  function fetchPropKeyOptions() {
     return (input) => {
-      if (filter === 'prop_key') {
-        return api.get(apiPath(props.site, `/suggestions/${filter}`), query, { q: input.trim() })
-      } else {
-        const propKey = formState.prop_key?.value
-        const updatedQuery = { ...query, filters: { ...query.filters, props: {[propKey]: '!(none)'} } }
-        return api.get(apiPath(props.site, `/suggestions/${filter}`), updatedQuery, { q: input.trim() })
-      }
+      return api.get(apiPath(props.site, "/suggestions/prop_key"), query, { q: input.trim() })
+    }
+  }
+
+  function fetchPropValueOptions() {
+    return (input) => {
+      const propKey = formState.prop_key?.value
+      const updatedQuery = { ...query, filters: { ...query.filters, props: {[propKey]: '!(none)'} } }
+      return api.get(apiPath(props.site, "/suggestions/prop_value"), updatedQuery, { q: input.trim() })
     }
   }
 
@@ -78,13 +80,13 @@ function PropFilterModal(props) {
     return (
       <div className="grid grid-cols-11 mt-6">
         <div className="col-span-4">
-          <Combobox className="mr-2" fetchOptions={fetchOptions('prop_key')} singleOption={true} values={formState.prop_key ? [formState.prop_key] : []} onSelect={onPropKeySelect()} placeholder={'Property'} />
+          <Combobox className="mr-2" fetchOptions={fetchPropKeyOptions()} singleOption={true} values={formState.prop_key ? [formState.prop_key] : []} onSelect={onPropKeySelect()} placeholder={'Property'} />
         </div>
         <div className="col-span-3 mx-2">
           <FilterTypeSelector isDisabled={!formState.prop_key} forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
         </div>
         <div className="col-span-4">
-          <Combobox isDisabled={!formState.prop_key} fetchOptions={fetchOptions('prop_value')} values={formState.prop_value.clauses} onSelect={onPropValueSelect()} placeholder={'Value'} />
+          <Combobox isDisabled={!formState.prop_key} fetchOptions={fetchPropValueOptions()} values={formState.prop_value.clauses} onSelect={onPropValueSelect()} placeholder={'Value'} />
         </div>
       </div>
     )
