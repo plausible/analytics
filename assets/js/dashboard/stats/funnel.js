@@ -4,8 +4,7 @@ import Chart from 'chart.js/auto';
 import * as api from '../api'
 import LazyLoader from '../components/lazy-loader'
 
-const FUNNEL_ID = 1
-
+const FUNNEL_ID = 5
 
 export default class Funnel extends React.Component {
   constructor(props) {

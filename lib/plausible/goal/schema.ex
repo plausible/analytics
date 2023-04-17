@@ -87,4 +87,12 @@ defmodule Plausible.Goal do
       changeset
     end
   end
+
+  def display_name(%__MODULE__{page_path: page_path}) when is_binary(page_path) do
+    "Visit " <> page_path
+  end
+
+  def display_name(%__MODULE__{event_name: name}) when is_binary(name) do
+    name
+  end
 end

@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/conversions", StatsController, :conversions
     get "/:domain/property/:prop_name", StatsController, :prop_breakdown
     get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
-    get "/:domain/funnels/:funnel_name", FunnelsController, :show
+    get "/:domain/funnels/:id", FunnelsController, :show
   end
 
   scope "/api/v1/stats", PlausibleWeb.Api do
