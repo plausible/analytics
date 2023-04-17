@@ -31,15 +31,6 @@ defmodule Plausible.Funnels do
   end
 
   def evaluate(query, funnel) do
-    # select count(1), chain from 
-    # (select 
-    # session_id, windowFunnel(5184000)(timestamp, pathname like '/blog%', name = 'Signup') AS chain 
-    # FROM events_v2 
-    # WHERE site_id = 2 
-    # GROUP BY session_id 
-    # having chain > 0 order by chain desc) group by chain;
-    #
-
     q_events =
       from e in "events_v2",
         select: %{
