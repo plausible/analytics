@@ -9,7 +9,7 @@ import Sources from './stats/sources'
 import Pages from './stats/pages'
 import Locations from './stats/locations';
 import Devices from './stats/devices'
-import Conversions from './stats/conversions'
+import Funnel from './stats/funnel'
 import ComparisonInput from './comparison-input'
 import { withPinnedHeader } from './pinned-header-hoc';
 
@@ -20,7 +20,7 @@ function Historical(props) {
     if (props.site.hasGoals) {
       return (
         <div className="items-start justify-between block w-full mt-6 md:flex">
-          <Conversions site={props.site} query={props.query} />
+          <Funnel site={props.site} query={props.query} / >
         </div>
       )
     }
