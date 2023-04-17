@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Api.FunnelsController do
 
   def show(conn, _params) do
     json(conn, %{
+      name: "Signup Funnel",
       conversion_rate: "38%",
       steps: [
         %{
