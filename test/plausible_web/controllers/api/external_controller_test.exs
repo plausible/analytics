@@ -169,7 +169,29 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       )
       |> post("/api/event", params)
 
-      assert get_event("headless-chrome-test.com") == nil
+      refute get_event("headless-chrome-test.com")
+    end
+
+    test "Headless Chrome is not ignored on staging environment", %{conn: conn} do
+      initial_env = Application.get_env(:plausible, :system_environment)
+      Application.put_env(:plausible, :system_environment, "staging")
+
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/",
+        domain: "headless-chrome-stg-test.com"
+      }
+
+      conn
+      |> put_req_header(
+        "user-agent",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/85.0.4183.83 Safari/537.36"
+      )
+      |> post("/api/event", params)
+
+      assert get_event("headless-chrome-stg-test.com")
+
+      Application.put_env(:plausible, :system_environment, initial_env)
     end
 
     test "parses user_agent", %{conn: conn} do
