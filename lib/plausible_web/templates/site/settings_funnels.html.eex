@@ -1,0 +1,41 @@
+  <header class="relative">
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Your Funnels</h2>
+  </header>
+
+<ul>
+<%= for funnel <- @funnels do %>
+  <li>[ID: <%= funnel.id %>] <a href="#<%= funnel.id %>"><%= funnel.name %></a></li>
+<% end %>
+</ul>
+
+<hr/>
+  <header class="relative">
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">New funnel</h2>
+  </header>
+
+<% goal_options = [{"N/A", ""} | Enum.map(@goals, fn goal -> {Plausible.Goal.display_name(goal), goal.id} end)] %>
+
+<%= form_for @conn, "/#{@site.domain}/settings/funnels", [class: "max-w-sm"], fn f -> %>
+    <%= label f, :funnel_name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= text_input f, :funnel_name, class: "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800" %>
+
+    <%= label f, :step_1, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+
+    <%= select f, :step_1, goal_options, class: "dark:bg-gray-900  mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" %>
+
+    <%= label f, :step_2, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= select f, :step_2, goal_options, class: "dark:bg-gray-900  mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" %>
+
+
+    <%= label f, :step_3, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= select f, :step_3, goal_options, class: "dark:bg-gray-900  mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" %>
+
+    <%= label f, :step_4, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= select f, :step_4, goal_options, class: "dark:bg-gray-900  mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" %>
+
+    <%= label f, :step_5, class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
+    <%= select f, :step_5, goal_options, class: "dark:bg-gray-900  mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" %>
+
+    <%= submit "Save funnel", class: "button mt-4" %>
+<% end %>
+
