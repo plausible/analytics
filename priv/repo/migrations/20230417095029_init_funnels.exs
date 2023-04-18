@@ -16,5 +16,6 @@ defmodule Plausible.Repo.Migrations.InitFunnels do
     end
 
     create unique_index(:funnel_steps, [:goal_id, :funnel_id])
+    create unique_index(:funnels, [:name, :site_id])
   end
 end
