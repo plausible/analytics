@@ -8,8 +8,8 @@ defmodule Plausible.Funnels do
   import Ecto.Changeset
   import Ecto.Query
 
-  def create(site, name, goals) when is_list(goals) do
-    funnel_goals =
+  def create(site, name, goals, id \\ 5) when is_list(goals) do
+    steps =
       goals
       |> Enum.with_index(1)
       |> Enum.map(fn {goal, index} ->
@@ -22,13 +22,28 @@ defmodule Plausible.Funnels do
     change(%Funnel{
       site_id: site.id,
       name: name,
-      id: 5
+      id: id
     })
-    |> put_assoc(:funnel_goals, funnel_goals)
+    |> put_assoc(:steps, steps)
     |> Repo.insert!()
   end
 
-  def list_funnels(site) do
+  def get(%Plausible.Site{id: site_id}, by) do
+    get(site_id, by)
+  end
+
+  def get(site_id, funnel_id) when is_integer(site_id) and is_integer(funnel_id) do
+    q =
+      from f in Funnel,
+        where: f.site_id == ^site_id,
+        where: f.id == ^funnel_id,
+        inner_join: steps in assoc(f, :steps),
+        inner_join: goal in assoc(steps, :goal),
+        preload: [
+          steps: {steps, goal: goal}
+        ]
+
+    Repo.one(q)
   end
 
   def evaluate(_query, funnel_id, site_id) do
@@ -38,7 +53,7 @@ defmodule Plausible.Funnels do
         site_id: site_id
       )
       # XXX: make inner join
-      |> Repo.preload(funnel_goals: :goal)
+      |> Repo.preload(steps: :goal)
 
     q_events =
       from e in "events_v2",
@@ -74,17 +89,17 @@ defmodule Plausible.Funnels do
   end
 
   defp update_step_defaults(funnel, funnel_result) do
-    max_step = Enum.max_by(funnel.funnel_goals, & &1.step_order).step_order
+    max_step = Enum.max_by(funnel.steps, & &1.step_order).step_order
 
-    funnel.funnel_goals
+    funnel.steps
     |> Enum.sort_by(& &1.step_order)
-    |> Enum.map(fn funnel_goal ->
+    |> Enum.map(fn step ->
       label =
-        Plausible.Goal.display_name(funnel_goal.goal)
+        Plausible.Goal.display_name(step.goal)
         |> IO.inspect(label: :label)
 
       visitors_total =
-        Enum.reduce(funnel_goal.step_order..max_step, 0, fn step_order, acc ->
+        Enum.reduce(step.step_order..max_step, 0, fn step_order, acc ->
           visitors =
             Map.get(funnel_result, step_order, 0)
             |> IO.inspect(label: "visitors_#{step_order}")

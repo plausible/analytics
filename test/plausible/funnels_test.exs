@@ -24,7 +24,7 @@ defmodule Plausible.GoalsTest do
 
     assert funnel.inserted_at
     assert funnel.name == "From blog to signup and purchase"
-    assert [fg1, fg2, fg3] = funnel.funnel_goals
+    assert [fg1, fg2, fg3] = funnel.steps
 
     assert fg1.goal_id == g1.id
     assert fg2.goal_id == g2.id
@@ -33,6 +33,20 @@ defmodule Plausible.GoalsTest do
     assert fg1.step_order == 1
     assert fg2.step_order == 2
     assert fg3.step_order == 3
+  end
+
+  test "retrieve a funnel by id and site", %{site: site, goals: goals} do
+    funnel =
+      Funnels.create(
+        site,
+        "Lorem ipsum",
+        goals,
+        nil
+      )
+
+    assert got =
+             Funnels.get(site, funnel.id)
+             |> IO.inspect(label: :got)
   end
 
   test "a funnel can be made of max n(TBD) goals" do

@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.FunnelsController do
 
   alias Plausible.Funnels
 
-  """
+  @snippet """
   Plausible.Repo.delete_all(Plausible.Goal)
   Plausible.Repo.delete_all(Plausible.Funnel)
   site = Plausible.Sites.get_by_domain("dummy.site") 

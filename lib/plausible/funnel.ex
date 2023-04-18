@@ -6,8 +6,12 @@ defmodule Plausible.Funnel do
     field :name, :string
     belongs_to :site, Plausible.Site
 
-    has_many :funnel_goals, Plausible.Funnel.Goals
-    has_many :goals, through: [:funnel_goals, :goal]
+    has_many :steps, Plausible.FunnelStep,
+      preload_order: [
+        asc: :step_order
+      ]
+
+    has_many :goals, through: [:steps, :goal]
     timestamps()
   end
 end
