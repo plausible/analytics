@@ -2,8 +2,7 @@ defmodule Plausible.FunnelStep do
   use Ecto.Schema
 
   @type t() :: %__MODULE__{}
-  # XXX rename funnel_steps
-  schema "funnel_goals" do
+  schema "funnel_steps" do
     field :step_order, :integer
     belongs_to :funnel, Plausible.Funnel
     belongs_to :goal, Plausible.Goal
