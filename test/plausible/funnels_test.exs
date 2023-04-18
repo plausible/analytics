@@ -19,7 +19,8 @@ defmodule Plausible.FunnelsTest do
       Funnels.create(
         site,
         "From blog to signup and purchase",
-        [g1, g2, g3]
+        [g1, g2, g3],
+        nil
       )
 
     assert funnel.inserted_at
@@ -66,7 +67,12 @@ defmodule Plausible.FunnelsTest do
       |> IO.inspect(label: :err)
   end
 
-  test "funnels can be listed per site" do
+  test "funnels can be listed per site", %{site: site, goals: [g1, g2, g3]} do
+    Funnels.create(site, "Funnel 1", [g3, g1, g2], nil)
+    Funnels.create(site, "Funnel 2", [g2, g1, g3], nil)
+
+    funnels_list = Funnels.list(site)
+    assert [%{name: "Funnel 1"}, %{name: "Funnel 2"}] = funnels_list
   end
 
   test "funnels can be evaluated per site within a time range", %{site: site, goals: goals} do

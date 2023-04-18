@@ -18,6 +18,7 @@
     data-domain="<%= @site.domain %>"
     data-offset="<%= Plausible.Site.tz_offset(@site) %>"
     data-has-goals="<%= @has_goals %>"
+    data-funnels="<%= Jason.encode!(@funnels) %>"
     data-logged-in="<%= !!@conn.assigns[:current_user] %>"
     data-stats-begin="<%= @stats_start_date %>"
     data-native-stats-begin="<%= @native_stats_start_date %>"

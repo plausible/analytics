@@ -26,6 +26,14 @@ defmodule Plausible.Funnels do
     |> Repo.insert()
   end
 
+  def list(%Plausible.Site{id: site_id}) do
+    Repo.all(
+      from f in Funnel,
+        where: f.site_id == ^site_id,
+        select: %{name: f.name, id: f.id}
+    )
+  end
+
   def get(%Plausible.Site{id: site_id}, by) do
     get(site_id, by)
   end
@@ -45,7 +53,7 @@ defmodule Plausible.Funnels do
     Repo.one(q)
   end
 
-  def evaluate(query, funnel_id, site_id) do
+  def evaluate(_query, funnel_id, site_id) do
     funnel = get(site_id, funnel_id)
 
     q_events =
