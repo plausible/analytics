@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.{Sites, Goals}
+  alias Plausible.{Sites, Goals, Funnels}
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -234,6 +234,42 @@ defmodule PlausibleWeb.SiteController do
       goals: goals,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
+  end
+
+  def settings_funnels(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    funnels = Funnels.list(site)
+    goals = Goals.for_site(site)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_funnels.html",
+      site: site,
+      funnels: funnels,
+      goals: goals,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def save_funnel(conn, params) do
+    site = conn.assigns[:site]
+    IO.inspect(params)
+
+    sanitized_params =
+      ["step_1", "step_2", "step_3", "step_4", "step_5"]
+      |> Enum.map(&params[&1])
+      |> Enum.filter(fn
+        "" -> false
+        goal_id -> true
+      end)
+      |> Enum.map(fn goal_id -> %{id: String.to_integer(goal_id)} end)
+      |> IO.inspect(label: :params)
+
+    funnel_name = params["funnel_name"]
+
+    {:ok, funnel} = Plausible.Funnels.create(site, funnel_name, sanitized_params, nil)
+
+    redirect(conn, to: Routes.site_path(conn, :settings_funnels, site.domain))
   end
 
   def settings_search_console(conn, _params) do

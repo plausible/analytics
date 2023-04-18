@@ -32,6 +32,7 @@ defmodule Plausible.Funnels do
         where: f.site_id == ^site_id,
         select: %{name: f.name, id: f.id}
     )
+    |> IO.inspect(label: :listing_funnels)
   end
 
   def get(%Plausible.Site{id: site_id}, by) do

@@ -64,7 +64,6 @@ defmodule Plausible.FunnelsTest do
         [g1, g1],
         nil
       )
-      |> IO.inspect(label: :err)
   end
 
   test "funnels can be listed per site", %{site: site, goals: [g1, g2, g3]} do
