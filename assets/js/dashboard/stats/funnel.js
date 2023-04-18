@@ -48,8 +48,8 @@ export default class Funnel extends React.Component {
         data: stepData,
         backgroundColor: [gradient],
         borderColor: ['rgba(101,116,205)'],
-        borderWidth: 1,
-        borderRadius: 8
+        borderWidth: 3,
+        borderRadius: 4
       }]
     };
 
