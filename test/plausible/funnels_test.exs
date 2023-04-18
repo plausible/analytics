@@ -44,9 +44,9 @@ defmodule Plausible.GoalsTest do
         nil
       )
 
-    assert got =
-             Funnels.get(site, funnel.id)
-             |> IO.inspect(label: :got)
+    funnel = Funnels.get(site, funnel.id)
+    assert funnel.name == "Lorem ipsum"
+    assert [%{step_order: 1}, %{step_order: 2}, %{step_order: 3}] = funnel.steps
   end
 
   test "a funnel can be made of max n(TBD) goals" do
@@ -72,14 +72,20 @@ defmodule Plausible.GoalsTest do
     populate_stats(site, [
       build(:pageview, pathname: "/go/to/blog/foo", user_id: 123),
       build(:event, name: "Signup", user_id: 123),
-      build(:pageview, pathname: "/checkout", user_id: 123)
+      build(:pageview, pathname: "/checkout", user_id: 123),
+      build(:pageview, pathname: "/go/to/blog/bar", user_id: 666),
+      build(:event, name: "Signup", user_id: 666)
     ])
 
     query = Plausible.Stats.Query.from(site, %{"period" => "all"})
-    funnel_data = Funnels.evaluate(query, funnel)
+    funnel_data = Funnels.evaluate(query, funnel.id, site.id)
 
     assert %{
-             steps: [%{step: 3, visitors: 1}]
+             steps: [
+               %{label: "Visit /go/to/blog/**", visitors: 2},
+               %{label: "Signup", visitors: 2},
+               %{label: "Visit /checkout", visitors: 1}
+             ]
            } = funnel_data
   end
 end

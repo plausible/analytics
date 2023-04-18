@@ -46,29 +46,20 @@ defmodule Plausible.Funnels do
     Repo.one(q)
   end
 
-  def evaluate(_query, funnel_id, site_id) do
-    funnel =
-      Repo.get_by(Funnel,
-        id: funnel_id,
-        site_id: site_id
-      )
-      # XXX: make inner join
-      |> Repo.preload(steps: :goal)
+  def evaluate(query, funnel_id, site_id) do
+    funnel = get(site_id, funnel_id)
 
     q_events =
-      from e in "events_v2",
+      from(e in "events_v2",
         select: %{
-          session_id: e.session_id,
-          step:
-            fragment(
-              "windowFunnel(?)(timestamp, pathname = '/product/car', name = 'Add to cart', pathname = '/view/checkout', name = 'Purchase')",
-              @funnel_window_duration
-            )
+          session_id: e.session_id
         },
         where: e.site_id == ^funnel.site_id,
         group_by: e.session_id,
         having: fragment("step > 0"),
         order_by: [desc: fragment("step")]
+      )
+      |> select_funnel(query)
 
     query =
       from f in subquery(q_events),
@@ -78,7 +69,6 @@ defmodule Plausible.Funnels do
     funnel_result =
       ClickhouseRepo.all(query)
       |> Enum.into(%{})
-      |> IO.inspect(label: :query)
 
     steps = update_step_defaults(funnel, funnel_result)
 
@@ -88,25 +78,35 @@ defmodule Plausible.Funnels do
     }
   end
 
+  defp select_funnel(db_query, _stats_query) do
+    from(
+      q in db_query,
+      select_merge: %{
+        step:
+          fragment(
+            "windowFunnel(?)(timestamp, ?, ?, ?, ?)",
+            @funnel_window_duration
+          )
+      }
+    )
+  end
+
+  defp funnel_step_conditions() do
+  end
+
   defp update_step_defaults(funnel, funnel_result) do
     max_step = Enum.max_by(funnel.steps, & &1.step_order).step_order
 
     funnel.steps
-    |> Enum.sort_by(& &1.step_order)
     |> Enum.map(fn step ->
-      label =
-        Plausible.Goal.display_name(step.goal)
-        |> IO.inspect(label: :label)
+      label = Plausible.Goal.display_name(step.goal)
 
       visitors_total =
         Enum.reduce(step.step_order..max_step, 0, fn step_order, acc ->
-          visitors =
-            Map.get(funnel_result, step_order, 0)
-            |> IO.inspect(label: "visitors_#{step_order}")
+          visitors = Map.get(funnel_result, step_order, 0)
 
           acc + visitors
         end)
-        |> IO.inspect(label: :visitors_total)
 
       %{
         visitors: visitors_total,

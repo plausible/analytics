@@ -4,9 +4,10 @@ defmodule PlausibleWeb.Api.FunnelsController do
   alias Plausible.Funnels
 
   @snippet """
+    import Plausible.Factory
   Plausible.Repo.delete_all(Plausible.Goal)
   Plausible.Repo.delete_all(Plausible.Funnel)
-  site = Plausible.Sites.get_by_domain("dummy.site") 
+  site = Plausible.Sites.get_by_domain("dummy.site")
 
   g1 = insert(:goal, site: site, page_path: "/product/car")
   g2 = insert(:goal, site: site, event_name: "Add to cart")
@@ -58,6 +59,7 @@ defmodule PlausibleWeb.Api.FunnelsController do
 
   def show(conn, %{"id" => funnel_id}) do
     site_id = conn.assigns.site.id
+    {funnel_id, ""} = Integer.parse(funnel_id)
     funnel = Funnels.evaluate(:nop, funnel_id, site_id)
 
     json(conn, funnel)
