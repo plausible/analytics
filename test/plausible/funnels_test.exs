@@ -15,7 +15,7 @@ defmodule Plausible.FunnelsTest do
   end
 
   test "create and store a funnel given a set of goals", %{site: site, goals: [g1, g2, g3]} do
-    funnel =
+    {:ok, funnel} =
       Funnels.create(
         site,
         "From blog to signup and purchase",
@@ -36,7 +36,7 @@ defmodule Plausible.FunnelsTest do
   end
 
   test "retrieve a funnel by id and site, get steps in order", %{site: site, goals: [g1, g2, g3]} do
-    funnel =
+    {:ok, funnel} =
       Funnels.create(
         site,
         "Lorem ipsum",
@@ -55,14 +55,22 @@ defmodule Plausible.FunnelsTest do
   test "a funnel can be deleted" do
   end
 
-  test "a goal can only appear once in a funnel" do
+  test "a goal can only appear once in a funnel", %{goals: [g1 | _], site: site} do
+    {:error, changeset} =
+      Funnels.create(
+        site,
+        "Lorem ipsum",
+        [g1, g1],
+        nil
+      )
+      |> IO.inspect(label: :err)
   end
 
   test "funnels can be listed per site" do
   end
 
   test "funnels can be evaluated per site within a time range", %{site: site, goals: goals} do
-    funnel =
+    {:ok, funnel} =
       Funnels.create(
         site,
         "From blog to signup and purchase",

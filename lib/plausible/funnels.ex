@@ -5,7 +5,6 @@ defmodule Plausible.Funnels do
   alias Plausible.Repo
   alias Plausible.ClickhouseRepo
 
-  import Ecto.Changeset
   import Ecto.Query
 
   def create(site, name, goals, id \\ 5) when is_list(goals) do
@@ -19,13 +18,12 @@ defmodule Plausible.Funnels do
         }
       end)
 
-    change(%Funnel{
+    %Funnel{
       site_id: site.id,
-      name: name,
       id: id
-    })
-    |> put_assoc(:steps, steps)
-    |> Repo.insert!()
+    }
+    |> Funnel.changeset(%{name: name, steps: steps})
+    |> Repo.insert()
   end
 
   def get(%Plausible.Site{id: site_id}, by) do

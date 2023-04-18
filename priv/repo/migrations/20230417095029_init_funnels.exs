@@ -14,5 +14,7 @@ defmodule Plausible.Repo.Migrations.InitFunnels do
       add :step_order, :integer, null: false
       timestamps()
     end
+
+    create unique_index(:funnel_steps, [:goal_id, :funnel_id])
   end
 end
