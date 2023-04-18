@@ -168,11 +168,7 @@ defmodule PlausibleWeb.Api.ExternalController do
   defp is_bot?(%UAInspector.Result.Bot{}), do: true
 
   defp is_bot?(%UAInspector.Result{client: %UAInspector.Result.Client{name: "Headless Chrome"}}) do
-    if Application.get_env(:plausible, :system_environment) in ["staging", "rc"] do
-      false
-    else
-      true
-    end
+    Application.get_env(:plausible, :system_environment) not in ["staging", "rc"]
   end
 
   defp is_bot?(_), do: false
