@@ -35,12 +35,12 @@ defmodule Plausible.FunnelsTest do
     assert fg3.step_order == 3
   end
 
-  test "retrieve a funnel by id and site", %{site: site, goals: goals} do
+  test "retrieve a funnel by id and site, get steps in order", %{site: site, goals: [g1, g2, g3]} do
     funnel =
       Funnels.create(
         site,
         "Lorem ipsum",
-        goals,
+        [g3, g1, g2],
         nil
       )
 

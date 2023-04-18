@@ -39,6 +39,7 @@ defmodule Plausible.Funnels do
         where: f.id == ^funnel_id,
         inner_join: steps in assoc(f, :steps),
         inner_join: goal in assoc(steps, :goal),
+        order_by: steps.step_order,
         preload: [
           steps: {steps, goal: goal}
         ]
