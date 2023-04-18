@@ -1,4 +1,4 @@
-defmodule Plausible.GoalsTest do
+defmodule Plausible.FunnelsTest do
   use Plausible.DataCase
 
   alias Plausible.Goals

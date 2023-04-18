@@ -51,15 +51,13 @@ defmodule Plausible.Funnels do
 
     q_events =
       from(e in "events_v2",
-        select: %{
-          session_id: e.session_id
-        },
+        select: %{session_id: e.session_id},
         where: e.site_id == ^funnel.site_id,
         group_by: e.session_id,
         having: fragment("step > 0"),
         order_by: [desc: fragment("step")]
       )
-      |> select_funnel(query)
+      |> select_funnel(funnel)
 
     query =
       from f in subquery(q_events),
@@ -78,20 +76,43 @@ defmodule Plausible.Funnels do
     }
   end
 
-  defp select_funnel(db_query, _stats_query) do
+  defp select_funnel(db_query, funnel) do
+    window_funnel_steps =
+      Enum.reduce(funnel.steps, nil, fn step, acc ->
+        step_condition =
+          case step.goal do
+            %Plausible.Goal{event_name: event} when is_binary(event) ->
+              dynamic([], fragment("name = ?", ^event))
+
+            %Plausible.Goal{page_path: pathname} when is_binary(pathname) ->
+              if String.contains?(pathname, "*") do
+                regex = Plausible.Stats.Base.page_regex(pathname)
+                dynamic([], fragment("match(pathname, ?)", ^regex))
+              else
+                dynamic([], fragment("pathname = ?", ^pathname))
+              end
+          end
+
+        if acc do
+          dynamic([q], fragment("?, ?", ^acc, ^step_condition))
+        else
+          dynamic([q], fragment("?", ^step_condition))
+        end
+      end)
+
+    dynamic_window_funnel =
+      dynamic(
+        [q],
+        fragment("windowFunnel(?)(timestamp, ?)", @funnel_window_duration, ^window_funnel_steps)
+      )
+
     from(
       q in db_query,
-      select_merge: %{
-        step:
-          fragment(
-            "windowFunnel(?)(timestamp, ?, ?, ?, ?)",
-            @funnel_window_duration
-          )
-      }
+      select_merge:
+        ^%{
+          step: dynamic_window_funnel
+        }
     )
-  end
-
-  defp funnel_step_conditions() do
   end
 
   defp update_step_defaults(funnel, funnel_result) do
