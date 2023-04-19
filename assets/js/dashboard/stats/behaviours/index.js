@@ -59,7 +59,7 @@ function Tabs({tab, setTab, funnelNames}) {
 }
 
 export default function Behaviours({ query, site }) {
-  const [tab, setTab] = useState('Signup funnel')
+  const [tab, setTab] = useState('conversions')
   const funnelNames = site.funnels.map(({name}) => name)
   const selectedFunnel = site.funnels.find(funnel => funnel.name === tab)
 
