@@ -264,7 +264,7 @@ defmodule PlausibleWeb.SiteController do
 
     funnel_name = params["funnel_name"]
 
-    {:ok, funnel} = Plausible.Funnels.create(site, funnel_name, sanitized_params, nil)
+    {:ok, _funnel} = Plausible.Funnels.create(site, funnel_name, sanitized_params, nil)
 
     redirect(conn, to: Routes.site_path(conn, :settings_funnels, site.domain))
   end
