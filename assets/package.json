@@ -27,6 +27,7 @@
     "autoprefixer": "^10.2.6",
     "babel-loader": "^8.2.2",
     "chart.js": "^3.3.2",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "classnames": "^2.3.1",
     "copy-webpack-plugin": "^9.0.0",
     "css-loader": "^5.2.6",
