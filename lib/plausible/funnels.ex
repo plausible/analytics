@@ -32,7 +32,6 @@ defmodule Plausible.Funnels do
         where: f.site_id == ^site_id,
         select: %{name: f.name, id: f.id}
     )
-    |> IO.inspect(label: :listing_funnels)
   end
 
   def get(%Plausible.Site{id: site_id}, by) do
@@ -72,11 +71,11 @@ defmodule Plausible.Funnels do
         select: {f.step, count(1)},
         group_by: f.step
 
-    funnel_result =
-      ClickhouseRepo.all(query)
+    steps =
+      query
+      |> ClickhouseRepo.all()
       |> Enum.into(%{})
-
-    steps = update_step_defaults(funnel, funnel_result)
+      |> backfill_steps(funnel)
 
     %{
       name: funnel.name,
@@ -123,23 +122,20 @@ defmodule Plausible.Funnels do
     )
   end
 
-  defp update_step_defaults(funnel, funnel_result) do
+  defp backfill_steps(funnel_result, funnel) do
     max_step = Enum.max_by(funnel.steps, & &1.step_order).step_order
 
-    funnel.steps
+    funnel
+    |> Map.fetch!(:steps)
     |> Enum.map(fn step ->
-      label = Plausible.Goal.display_name(step.goal)
-
       visitors_total =
         Enum.reduce(step.step_order..max_step, 0, fn step_order, acc ->
-          visitors = Map.get(funnel_result, step_order, 0)
-
-          acc + visitors
+          acc + Map.get(funnel_result, step_order, 0)
         end)
 
       %{
         visitors: visitors_total,
-        label: label
+        label: Plausible.Goal.display_name(step.goal)
       }
     end)
   end

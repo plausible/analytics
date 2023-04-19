@@ -57,7 +57,7 @@ defmodule Plausible.FunnelsTest do
   end
 
   test "a goal can only appear once in a funnel", %{goals: [g1 | _], site: site} do
-    {:error, changeset} =
+    {:error, _changeset} =
       Funnels.create(
         site,
         "Lorem ipsum",
