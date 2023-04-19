@@ -258,7 +258,7 @@ defmodule PlausibleWeb.SiteController do
     sanitized_params =
       ["step_1", "step_2", "step_3", "step_4", "step_5"]
       |> Enum.map(&params[&1])
-      |> Enum.reject(fn v == "")
+      |> Enum.reject(&(&1 == ""))
       |> Enum.map(fn goal_id -> %{id: String.to_integer(goal_id)} end)
       |> IO.inspect(label: :params)
 
