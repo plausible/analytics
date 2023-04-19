@@ -31,7 +31,9 @@ export default class Funnel extends React.Component {
   }
 
   formatDataLabel(visitors) {
-    return `${visitors} Visitors`
+    const total = this.state.funnel.steps[0].visitors
+    const percentage = (visitors / total) * 100
+    return `${visitors} Visitors (${percentage}%)`
   }
 
   fetchFunnel() {
@@ -94,9 +96,14 @@ export default class Funnel extends React.Component {
     if (this.state.loading) {
       return <div className="mx-auto my-2 loading"><div></div></div>
     } else if (this.state.funnel) {
+      const firstStep = this.state.funnel.steps[0].visitors
+      const lastStep = this.state.funnel.steps[this.state.funnel.steps.length - 1].visitors
+      const conversionRate = (lastStep / firstStep) * 100
+
       return (
         <React.Fragment>
-          <h3 className="font-bold dark:text-gray-100">{this.state.funnel.name}</h3>
+          <h3 className="font-semibold dark:text-gray-100">{this.state.funnel.name}</h3>
+          <p className="text-gray-600">{this.state.funnel.steps.length}-step funnel • {conversionRate}% conversion rate</p>
           <canvas className="mt-8" id="funnel" height="100px"></canvas>
         </React.Fragment>
       )
@@ -105,7 +112,7 @@ export default class Funnel extends React.Component {
 
   render() {
     return (
-      <LazyLoader onVisible={this.onVisible} ref={this.htmlNode}>
+      <LazyLoader className="mt-2" onVisible={this.onVisible} ref={this.htmlNode}>
         {this.renderInner()}
       </LazyLoader>
     )
