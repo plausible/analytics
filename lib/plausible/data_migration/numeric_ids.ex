@@ -62,10 +62,9 @@ defmodule Plausible.DataMigration.NumericIDs do
     start_from = start_from || List.first(partitions)
 
     IO.puts("""
-    Got the following migration settings: 
+    Got the following migration settings:
 
       - max_threads: #{max_threads}
-      - dict_password: ✅
       - table_settings: #{table_settings}
       - db url: #{db_url}
       - cluster?: #{cluster?}
@@ -90,8 +89,28 @@ defmodule Plausible.DataMigration.NumericIDs do
         end
       end
 
-    {:ok, _} = run_sql_fn.("drop-events-v2", cluster?: cluster?)
-    {:ok, _} = run_sql_fn.("drop-sessions-v2", cluster?: cluster?)
+    drop_v2_extra_opts = fn table ->
+      case @repo.query("select count(*) from {$0:Identifier}", [table]) do
+        {:ok, %{rows: [[count]]}} when count > 0 ->
+          [
+            prompt_message: "The table contains #{count} rows. Execute?",
+            prompt_default_choice: :no
+          ]
+
+        {:ok, _} ->
+          [prompt_default_choice: :no]
+
+        {:error, _} ->
+          []
+      end
+    end
+
+    {:ok, _} =
+      run_sql_fn.("drop-events-v2", [cluster?: cluster?] ++ drop_v2_extra_opts.("events_v2"))
+
+    {:ok, _} =
+      run_sql_fn.("drop-sessions-v2", [cluster?: cluster?] ++ drop_v2_extra_opts.("sessions_v2"))
+
     {:ok, _} = run_sql_fn.("drop-tmp-events-v2", [])
     {:ok, _} = run_sql_fn.("drop-tmp-sessions-v2", [])
     {:ok, _} = run_sql_fn.("drop-domains-lookup", [])
