@@ -10,7 +10,7 @@ INSERT INTO tmp_events_v2 (
   transferred_from
 )
 SELECT
-  (SELECT site_id from domains_lookup WHERE domain = domain LIMIT 1),
+  site_id,
   timestamp,
   name,
   user_id,
@@ -38,4 +38,5 @@ SELECT
   transferred_from
 FROM
   events
+INNER JOIN domains_lookup ON domains_lookup.domain = events.domain
 WHERE (_partition_id = '<%= @partition %>')

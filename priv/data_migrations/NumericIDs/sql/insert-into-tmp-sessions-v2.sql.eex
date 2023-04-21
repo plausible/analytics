@@ -6,7 +6,7 @@ operating_system_version, subdivision1_code, subdivision2_code, city_geoname_id,
 utm_term, transferred_from, entry_meta.key, entry_meta.value
 )
 SELECT
-  (SELECT site_id from domains_lookup WHERE domain = domain LIMIT 1),
+  site_id,
   session_id, sign, user_id, hostname, timestamp, start, is_bounce, entry_page, 
   exit_page, pageviews, events, duration, referrer, referrer_source, country_code, 
   screen_size, operating_system, browser, utm_medium, utm_source, utm_campaign, browser_version, 
@@ -14,4 +14,5 @@ SELECT
   utm_term, transferred_from, entry_meta.key, entry_meta.value
 FROM
   sessions
+INNER JOIN domains_lookup ON domains_lookup.domain = sessions.domain
 WHERE (_partition_id = '<%= @partition %>')
