@@ -212,6 +212,18 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                }
              ]
     end
+
+    test "garbage filters don't crash the call", %{conn: conn, site: site} do
+      filters =
+        "{\"source\":\"Direct / None\",\"screen\":\"Desktop\",\"browser\":\"Chrome\",\"os\":\"Mac\",\"os_version\":\"10.15\",\"country\":\"DE\",\"city\":\"2950159\"}%' AND 2*3*8=6*8 AND 'L9sv'!='L9sv%"
+
+      resp =
+        conn
+        |> get("/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+        |> json_response(200)
+
+      assert resp == []
+    end
   end
 
   describe "GET /api/stats/:domain/conversions - with goal filter" do

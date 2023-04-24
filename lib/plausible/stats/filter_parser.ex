@@ -27,7 +27,8 @@ defmodule Plausible.Stats.FilterParser do
   """
   def parse_filters(filters) when is_binary(filters) do
     case Jason.decode(filters) do
-      {:ok, parsed} -> parsed
+      {:ok, parsed} when is_map(parsed) -> parsed
+      {:ok, _} -> %{}
       {:error, err} -> parse_filter_expression(err.data)
     end
   end

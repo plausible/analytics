@@ -82,6 +82,11 @@ defmodule Plausible.Stats.FilterParserTest do
       |> assert_parsed(%{})
     end
 
+    test "gracefully fails to parse garbage with double quotes" do
+      "\";print(md5(31337));$a=\""
+      |> assert_parsed(%{})
+    end
+
     test "gracefully fails to parse garbage country code" do
       "visit:country==AKSJSDFKJSS"
       |> assert_parsed(%{})
