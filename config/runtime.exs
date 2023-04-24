@@ -131,8 +131,6 @@ runtime_metadata = [
 
 config :plausible, :runtime_metadata, runtime_metadata
 
-config :plausible, :v2_migration_done, true
-
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
 honeycomb_dataset = get_var_from_path_or_env(config_dir, "HONEYCOMB_DATASET")
