@@ -69,7 +69,9 @@ defmodule Plausible.Stats.FilterParser do
   end
 
   defp reject_invalid_country_codes({"visit:country", {_, code_or_codes}} = filter) do
-    Enum.reduce_while(List.wrap(code_or_codes), filter, fn
+    code_or_codes
+    |> List.wrap()
+    |> Enum.reduce_while(filter, fn
       value, _ when byte_size(value) == 2 -> {:cont, filter}
       _, _ -> {:halt, :error}
     end)
