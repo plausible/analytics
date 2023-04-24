@@ -7,6 +7,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
   require Logger
 
+  plug :validate_common_input
+
   @doc """
   Returns a time-series based on given parameters.
 
@@ -92,26 +94,25 @@ defmodule PlausibleWeb.Api.StatsController do
   def main_graph(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params) do
-      query = Query.from(site, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
-      selected_metric =
-        if !params["metric"] || params["metric"] == "conversions" do
-          :visitors
-        else
-          String.to_existing_atom(params["metric"])
-        end
+    selected_metric =
+      if !params["metric"] || params["metric"] == "conversions" do
+        :visitors
+      else
+        String.to_existing_atom(params["metric"])
+      end
 
-      timeseries_query =
-        if query.period == "realtime" do
-          %Query{query | period: "30m"}
-        else
-          query
-        end
+    timeseries_query =
+      if query.period == "realtime" do
+        %Query{query | period: "30m"}
+      else
+        query
+      end
 
-      timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
+    timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
 
-      comparison_opts = parse_comparison_opts(params)
+    comparison_opts = parse_comparison_opts(params)
 
       {comparison_query, comparison_result} =
         case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
@@ -122,10 +123,11 @@ defmodule PlausibleWeb.Api.StatsController do
             {nil, nil}
         end
 
-      labels = label_timeseries(timeseries_result, comparison_result)
-      present_index = present_index_for(site, query, labels)
-      full_intervals = build_full_intervals(query, labels)
+    labels = label_timeseries(timeseries_result, comparison_result)
+    present_index = present_index_for(site, query, labels)
+    full_intervals = build_full_intervals(query, labels)
 
+<<<<<<< HEAD
       json(conn, %{
         plot: plot_timeseries(timeseries_result, selected_metric),
         labels: labels,
@@ -191,8 +193,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def top_stats(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params) do
-      query = Query.from(site, params) |> Filters.add_prefix()
+    query = Query.from(site, params) |> Filters.add_prefix()
 
       comparison_opts = parse_comparison_opts(params)
 
@@ -202,7 +203,7 @@ defmodule PlausibleWeb.Api.StatsController do
           {:error, _cause} -> nil
         end
 
-      {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
+    {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
 
       json(conn, %{
         top_stats: top_stats,
@@ -1129,18 +1130,14 @@ defmodule PlausibleWeb.Api.StatsController do
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params) do
-      query =
-        Query.from(site, params)
-        |> Filters.add_prefix()
+    query =
+      Query.from(site, params)
+      |> Filters.add_prefix()
 
-      json(
-        conn,
-        Stats.filter_suggestions(site, query, params["filter_name"], params["q"])
-      )
-    else
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
-    end
+    json(
+      conn,
+      Stats.filter_suggestions(site, query, params["filter_name"], params["q"])
+    )
   end
 
   defp transform_keys(results, keys_to_replace) do
@@ -1238,24 +1235,33 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  defp validate_common_input(conn, _opts) do
+    case validate_params(conn.params) do
+      :ok -> conn
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
+    end
+  end
+
   defp validate_params(params) do
-    with :ok <- validate_date(params),
+    with :ok <- validate_dates(params),
          :ok <- validate_interval(params),
          do: validate_interval_granularity(params)
   end
 
-  defp validate_date(params) do
-    with %{"date" => date} <- params,
-         {:ok, _} <- Date.from_iso8601(date) do
-      :ok
-    else
-      %{} ->
-        :ok
+  defp validate_dates(params) do
+    params
+    |> Map.take(["from", "to", "date"])
+    |> Enum.reduce_while(:ok, fn {key, value}, _ ->
+      case Date.from_iso8601(value) do
+        {:ok, _} ->
+          {:cont, :ok}
 
-      {:error, _reason} ->
-        {:error,
-         "Failed to parse date argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}
-    end
+        _ ->
+          {:halt,
+           {:error,
+            "Failed to parse '#{key}' argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}}
+      end
+    end)
   end
 
   defp validate_interval(params) do
@@ -1290,6 +1296,7 @@ defmodule PlausibleWeb.Api.StatsController do
     conn
     |> put_status(400)
     |> json(%{error: message})
+    |> halt()
   end
 
   defp parse_comparison_opts(params) do
