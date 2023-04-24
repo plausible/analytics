@@ -38,35 +38,19 @@ defmodule Plausible.Factory do
   def ch_session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
-    if Plausible.v2?() do
-      %Plausible.ClickhouseSessionV2{
-        sign: 1,
-        session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-        user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-        hostname: hostname,
-        site_id: Enum.random(1000..10_000),
-        entry_page: "/",
-        pageviews: 1,
-        events: 1,
-        start: Timex.now(),
-        timestamp: Timex.now(),
-        is_bounce: false
-      }
-    else
-      %Plausible.ClickhouseSession{
-        sign: 1,
-        session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-        user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-        hostname: hostname,
-        domain: hostname,
-        entry_page: "/",
-        pageviews: 1,
-        events: 1,
-        start: Timex.now(),
-        timestamp: Timex.now(),
-        is_bounce: false
-      }
-    end
+    %Plausible.ClickhouseSessionV2{
+      sign: 1,
+      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
+      user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
+      hostname: hostname,
+      site_id: Enum.random(1000..10_000),
+      entry_page: "/",
+      pageviews: 1,
+      events: 1,
+      start: Timex.now(),
+      timestamp: Timex.now(),
+      is_bounce: false
+    }
   end
 
   def pageview_factory do
@@ -81,25 +65,14 @@ defmodule Plausible.Factory do
   def event_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
-    if Plausible.v2?() do
-      %Plausible.ClickhouseEventV2{
-        hostname: hostname,
-        site_id: Enum.random(1000..10_000),
-        pathname: "/",
-        timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-        user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-        session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())
-      }
-    else
-      %Plausible.ClickhouseEvent{
-        hostname: hostname,
-        domain: hostname,
-        pathname: "/",
-        timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-        user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-        session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())
-      }
-    end
+    %Plausible.ClickhouseEventV2{
+      hostname: hostname,
+      site_id: Enum.random(1000..10_000),
+      pathname: "/",
+      timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+      user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
+      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())
+    }
   end
 
   def goal_factory do

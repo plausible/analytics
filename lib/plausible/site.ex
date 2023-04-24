@@ -74,13 +74,6 @@ defmodule Plausible.Site do
       |> Keyword.get(:at, NaiveDateTime.utc_now())
       |> NaiveDateTime.truncate(:second)
 
-    attrs =
-      if Plausible.v2?() do
-        attrs
-      else
-        Map.delete(attrs, :domain)
-      end
-
     site
     |> changeset(attrs)
     |> handle_domain_change(at)

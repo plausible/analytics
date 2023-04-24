@@ -419,7 +419,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       delete(conn, "/#{site.domain}")
 
-      refute Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
+      refute Repo.exists?(from(s in Plausible.Site, where: s.id == ^site.id))
     end
 
     test "fails to delete a site with insufficient permissions", %{conn: conn, user: user} do
@@ -431,7 +431,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/#{site.domain}")
 
       assert conn.status == 404
-      assert Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
+      assert Repo.exists?(from(s in Plausible.Site, where: s.id == ^site.id))
     end
 
     test "fails to delete a foreign site", %{conn: my_conn, user: me} do
@@ -446,7 +446,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       my_conn = delete(my_conn, "/#{other_site.domain}")
       assert my_conn.status == 404
-      assert Repo.exists?(from s in Plausible.Site, where: s.id == ^other_site.id)
+      assert Repo.exists?(from(s in Plausible.Site, where: s.id == ^other_site.id))
     end
   end
 
@@ -1170,7 +1170,6 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "domain change" do
     setup [:create_user, :log_in, :create_site]
 
-    @tag :v2_only
     test "shows domain change in the settings form", %{conn: conn, site: site} do
       conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
@@ -1180,7 +1179,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
     end
 
-    @tag :v2_only
     test "domain change form renders", %{conn: conn, site: site} do
       conn = get(conn, Routes.site_path(conn, :change_domain, site.domain))
       resp = html_response(conn, 200)
@@ -1190,7 +1188,6 @@ defmodule PlausibleWeb.SiteControllerTest do
                "Once you change your domain, you must update the JavaScript snippet on your site within 72 hours"
     end
 
-    @tag :v2_only
     test "domain change form submission when no change is made", %{conn: conn, site: site} do
       conn =
         put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
@@ -1201,7 +1198,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "New domain must be different than the current one"
     end
 
-    @tag :v2_only
     test "domain change form submission to an existing domain", %{conn: conn, site: site} do
       another_site = insert(:site)
 
@@ -1218,7 +1214,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert is_nil(site.domain_changed_from)
     end
 
-    @tag :v2_only
     test "domain change form submission to a domain in transition period", %{
       conn: conn,
       site: site
@@ -1238,7 +1233,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert is_nil(site.domain_changed_from)
     end
 
-    @tag :v2_only
     test "domain change succcessful form submission redirects to snippet change info", %{
       conn: conn,
       site: site
@@ -1258,7 +1252,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert site.domain_changed_from == original_domain
     end
 
-    @tag :v2_only
     test "snippet info after domain change", %{
       conn: conn,
       site: site
