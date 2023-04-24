@@ -115,7 +115,6 @@ defmodule Plausible.Site.CacheTest do
       assert %Site{domain: ^domain2} = Cache.get(domain2, cache_opts)
     end
 
-    @tag :v2_only
     test "sites with recently changed domains are refreshed", %{test: test} do
       {:ok, _} = start_test_cache(test)
       cache_opts = [cache_name: test, force?: true]

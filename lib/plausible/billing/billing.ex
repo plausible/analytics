@@ -114,35 +114,19 @@ defmodule Plausible.Billing do
   def last_two_billing_months_usage(user, today \\ Timex.today()) do
     {first, second} = last_two_billing_cycles(user, today)
 
-    if Plausible.v2?() do
-      site_ids = Plausible.Sites.owned_site_ids(user)
+    site_ids = Plausible.Sites.owned_site_ids(user)
 
-      usage_for_sites = fn site_ids, date_range ->
-        {pageviews, custom_events} =
-          Plausible.Stats.Clickhouse.usage_breakdown(site_ids, date_range)
+    usage_for_sites = fn site_ids, date_range ->
+      {pageviews, custom_events} =
+        Plausible.Stats.Clickhouse.usage_breakdown(site_ids, date_range)
 
-        pageviews + custom_events
-      end
-
-      {
-        usage_for_sites.(site_ids, first),
-        usage_for_sites.(site_ids, second)
-      }
-    else
-      domains = Plausible.Sites.owned_sites_domains(user)
-
-      usage_for_sites = fn domains, date_range ->
-        {pageviews, custom_events} =
-          Plausible.Stats.Clickhouse.usage_breakdown(domains, date_range)
-
-        pageviews + custom_events
-      end
-
-      {
-        usage_for_sites.(domains, first),
-        usage_for_sites.(domains, second)
-      }
+      pageviews + custom_events
     end
+
+    {
+      usage_for_sites.(site_ids, first),
+      usage_for_sites.(site_ids, second)
+    }
   end
 
   def last_two_billing_cycles(user, today \\ Timex.today()) do
@@ -166,13 +150,8 @@ defmodule Plausible.Billing do
   end
 
   def usage_breakdown(user) do
-    if Plausible.v2?() do
-      site_ids = Plausible.Sites.owned_site_ids(user)
-      Plausible.Stats.Clickhouse.usage_breakdown(site_ids)
-    else
-      domains = Plausible.Sites.owned_sites_domains(user)
-      Plausible.Stats.Clickhouse.usage_breakdown(domains)
-    end
+    site_ids = Plausible.Sites.owned_site_ids(user)
+    Plausible.Stats.Clickhouse.usage_breakdown(site_ids)
   end
 
   @doc """

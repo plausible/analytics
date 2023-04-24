@@ -6,8 +6,6 @@ defmodule Plausible.Workers.ExpireDomainChangeTransitionsTest do
 
   import ExUnit.CaptureLog
 
-  @moduletag :v2_only
-
   test "doesn't log when there is nothing to do" do
     log =
       capture_log(fn ->

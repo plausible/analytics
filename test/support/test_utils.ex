@@ -73,15 +73,9 @@ defmodule Plausible.TestUtils do
     pageviews =
       Enum.map(pageviews, fn pageview ->
         pageview =
-          if Plausible.v2?() do
-            pageview
-            |> Map.delete(:site)
-            |> Map.put(:site_id, pageview.site.id)
-          else
-            pageview
-            |> Map.delete(:site)
-            |> Map.put(:domain, pageview.site.domain)
-          end
+          pageview
+          |> Map.delete(:site)
+          |> Map.put(:site_id, pageview.site.id)
 
         Factory.build(:pageview, pageview)
         |> Map.from_struct()
@@ -89,46 +83,24 @@ defmodule Plausible.TestUtils do
         |> update_in([:timestamp], &to_naive_truncate/1)
       end)
 
-    if Plausible.v2?() do
-      Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, pageviews)
-    else
-      Plausible.IngestRepo.insert_all(Plausible.ClickhouseEvent, pageviews)
-    end
+    Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, pageviews)
   end
 
   def create_events(events) do
     events =
       Enum.map(events, fn event ->
-        event =
-          if Plausible.v2?() do
-            Map.delete(event, :domain)
-          else
-            Map.delete(event, :site_id)
-          end
-
         Factory.build(:event, event)
         |> Map.from_struct()
         |> Map.delete(:__meta__)
         |> update_in([:timestamp], &to_naive_truncate/1)
       end)
 
-    if Plausible.v2?() do
-      Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, events)
-    else
-      Plausible.IngestRepo.insert_all(Plausible.ClickhouseEvent, events)
-    end
+    Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, events)
   end
 
   def create_sessions(sessions) do
     sessions =
       Enum.map(sessions, fn session ->
-        session =
-          if Plausible.v2?() do
-            Map.delete(session, :domain)
-          else
-            Map.delete(session, :site_id)
-          end
-
         Factory.build(:ch_session, session)
         |> Map.from_struct()
         |> Map.delete(:__meta__)
@@ -136,11 +108,7 @@ defmodule Plausible.TestUtils do
         |> update_in([:start], &to_naive_truncate/1)
       end)
 
-    if Plausible.v2?() do
-      Plausible.IngestRepo.insert_all(Plausible.ClickhouseSessionV2, sessions)
-    else
-      Plausible.IngestRepo.insert_all(Plausible.ClickhouseSession, sessions)
-    end
+    Plausible.IngestRepo.insert_all(Plausible.ClickhouseSessionV2, sessions)
   end
 
   def log_in(%{user: user, conn: conn}) do
@@ -173,9 +141,6 @@ defmodule Plausible.TestUtils do
         %Plausible.ClickhouseEventV2{} ->
           Map.put(event, :site_id, site.id)
 
-        %Plausible.ClickhouseEvent{} ->
-          Map.put(event, :domain, site.domain)
-
         _ ->
           Map.put(event, :site_id, site.id)
       end
@@ -200,9 +165,6 @@ defmodule Plausible.TestUtils do
           %Plausible.ClickhouseEventV2{} ->
             true
 
-          %Plausible.ClickhouseEvent{} ->
-            true
-
           _ ->
             false
         end
@@ -216,22 +178,11 @@ defmodule Plausible.TestUtils do
     sessions =
       Enum.reduce(events, %{}, fn event, sessions ->
         session_id = Plausible.Session.CacheStore.on_event(event, nil)
-
-        if Plausible.v2?() do
-          Map.put(sessions, {event.site_id, event.user_id}, session_id)
-        else
-          Map.put(sessions, {event.domain, event.user_id}, session_id)
-        end
+        Map.put(sessions, {event.site_id, event.user_id}, session_id)
       end)
 
     Enum.each(events, fn event ->
-      event =
-        if Plausible.v2?() do
-          Map.put(event, :session_id, sessions[{event.site_id, event.user_id}])
-        else
-          Map.put(event, :session_id, sessions[{event.domain, event.user_id}])
-        end
-
+      event = Map.put(event, :session_id, sessions[{event.site_id, event.user_id}])
       Plausible.Event.WriteBuffer.insert(event)
     end)
 

@@ -8,23 +8,13 @@ defmodule Plausible.Stats.Clickhouse do
   @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
   def pageview_start_date_local(site) do
     datetime =
-      if Plausible.v2?() do
-        ClickhouseRepo.one(
-          from(e in "events_v2",
-            select: fragment("min(?)", e.timestamp),
-            where: e.site_id == ^site.id,
-            where: e.timestamp >= ^site.native_stats_start_at
-          )
+      ClickhouseRepo.one(
+        from(e in "events_v2",
+          select: fragment("min(?)", e.timestamp),
+          where: e.site_id == ^site.id,
+          where: e.timestamp >= ^site.native_stats_start_at
         )
-      else
-        ClickhouseRepo.one(
-          from(e in "events",
-            select: fragment("min(?)", e.timestamp),
-            where: e.domain == ^site.domain,
-            where: e.timestamp >= ^site.native_stats_start_at
-          )
-        )
-      end
+      )
 
     case datetime do
       # no stats for this domain yet
@@ -193,60 +183,34 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   def has_pageviews?(site) do
-    if Plausible.v2?() do
-      ClickhouseRepo.exists?(
-        from(e in "events_v2",
-          where:
-            e.site_id == ^site.id and
-              e.name == "pageview" and
-              e.timestamp >=
-                ^site.native_stats_start_at
-        )
+    ClickhouseRepo.exists?(
+      from(e in "events_v2",
+        where:
+          e.site_id == ^site.id and
+            e.name == "pageview" and
+            e.timestamp >=
+              ^site.native_stats_start_at
       )
-    else
-      ClickhouseRepo.exists?(
-        from(e in "events",
-          where:
-            e.domain == ^site.domain and
-              e.name == "pageview" and
-              e.timestamp >=
-                ^site.native_stats_start_at
-        )
-      )
-    end
+    )
   end
 
   def last_24h_visitors([]), do: %{}
 
   def last_24h_visitors(sites) do
-    if Plausible.v2?() do
-      site_id_to_domain_mapping = for site <- sites, do: {site.id, site.domain}, into: %{}
+    site_id_to_domain_mapping = for site <- sites, do: {site.id, site.domain}, into: %{}
 
-      ClickhouseRepo.all(
-        from(e in "events_v2",
-          group_by: e.site_id,
-          where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
-          where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
-          select: {e.site_id, fragment("uniq(user_id)")}
-        )
+    ClickhouseRepo.all(
+      from(e in "events_v2",
+        group_by: e.site_id,
+        where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
+        where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
+        select: {e.site_id, fragment("uniq(user_id)")}
       )
-      |> Enum.map(fn {site_id, user_id} ->
-        {site_id_to_domain_mapping[site_id], user_id}
-      end)
-      |> Enum.into(%{})
-    else
-      domains = Enum.map(sites, & &1.domain)
-
-      ClickhouseRepo.all(
-        from(e in "events",
-          group_by: e.domain,
-          where: e.domain in ^domains,
-          where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
-          select: {e.domain, fragment("uniq(user_id)")}
-        )
-      )
-      |> Enum.into(%{})
-    end
+    )
+    |> Enum.map(fn {site_id, user_id} ->
+      {site_id_to_domain_mapping[site_id], user_id}
+    end)
+    |> Enum.into(%{})
   end
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
@@ -254,19 +218,11 @@ defmodule Plausible.Stats.Clickhouse do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
-      if Plausible.v2?() do
-        from(s in "sessions_v2",
-          hints: ["SAMPLE 10000000"],
-          where: s.site_id == ^site.id,
-          where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
-        )
-      else
-        from(s in "sessions",
-          hints: ["SAMPLE 10000000"],
-          where: s.domain == ^site.domain,
-          where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
-        )
-      end
+      from(s in "sessions_v2",
+        hints: ["SAMPLE 10000000"],
+        where: s.site_id == ^site.id,
+        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
+      )
 
     q =
       if query.filters["source"] do
@@ -382,19 +338,11 @@ defmodule Plausible.Stats.Clickhouse do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
-      if Plausible.v2?() do
-        from(e in "events_v2",
-          hints: ["SAMPLE 10000000"],
-          where: e.site_id == ^site.id,
-          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
-        )
-      else
-        from(e in "events",
-          hints: ["SAMPLE 10000000"],
-          where: e.domain == ^site.domain,
-          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
-        )
-      end
+      from(e in "events_v2",
+        hints: ["SAMPLE 10000000"],
+        where: e.site_id == ^site.id,
+        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+      )
 
     q =
       if query.filters["screen"] do

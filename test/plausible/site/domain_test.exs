@@ -4,8 +4,6 @@ defmodule Plausible.Site.DomainTest do
 
   use Plausible.DataCase, async: true
 
-  @moduletag :v2_only
-
   test "successful change" do
     site = insert(:site)
     assert {:ok, updated} = Domain.change(site, "new-domain.example.com")

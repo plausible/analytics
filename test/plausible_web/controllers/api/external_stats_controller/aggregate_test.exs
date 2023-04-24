@@ -793,7 +793,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     } do
       create_sessions([
         %{
-          domain: site.domain,
           site_id: site.id,
           session_id: 1000,
           country_code: "EE",
@@ -801,7 +800,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           events: 1
         },
         %{
-          domain: site.domain,
           site_id: site.id,
           session_id: 1000,
           country_code: "EE",
@@ -809,7 +807,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           events: 1
         },
         %{
-          domain: site.domain,
           site_id: site.id,
           session_id: 1000,
           country_code: "EE",
@@ -820,21 +817,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       create_events([
         %{
-          domain: site.domain,
           site_id: site.id,
           session_id: 1000,
           country_code: "EE",
           name: "pageview"
         },
         %{
-          domain: site.domain,
           site_id: site.id,
           session_id: 1000,
           country_code: "EE",
           name: "pageview"
         },
         %{
-          domain: site.domain,
           site_id: site.id,
           session_id: 1000,
           country_code: "EE",

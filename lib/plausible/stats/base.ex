@@ -35,19 +35,11 @@ defmodule Plausible.Stats.Base do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
-      if Plausible.v2?() do
-        from(
-          e in "events_v2",
-          where: e.site_id == ^site.id,
-          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
-        )
-      else
-        from(
-          e in "events",
-          where: e.domain == ^site.domain,
-          where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
-        )
-      end
+      from(
+        e in "events_v2",
+        where: e.site_id == ^site.id,
+        where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
+      )
       |> add_sample_hint(query)
 
     q =
@@ -198,19 +190,11 @@ defmodule Plausible.Stats.Base do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     sessions_q =
-      if Plausible.v2?() do
-        from(
-          s in "sessions_v2",
-          where: s.site_id == ^site.id,
-          where: s.start >= ^first_datetime and s.start < ^last_datetime
-        )
-      else
-        from(
-          s in "sessions",
-          where: s.domain == ^site.domain,
-          where: s.start >= ^first_datetime and s.start < ^last_datetime
-        )
-      end
+      from(
+        s in "sessions_v2",
+        where: s.site_id == ^site.id,
+        where: s.start >= ^first_datetime and s.start < ^last_datetime
+      )
       |> add_sample_hint(query)
       |> filter_by_entry_props(query)
 

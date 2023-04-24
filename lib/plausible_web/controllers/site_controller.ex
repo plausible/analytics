@@ -874,36 +874,28 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def change_domain(conn, _params) do
-    if Plausible.v2?() do
-      changeset = Plausible.Site.update_changeset(conn.assigns.site)
+    changeset = Plausible.Site.update_changeset(conn.assigns.site)
 
-      render(conn, "change_domain.html",
-        changeset: changeset,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
-    else
-      render_error(conn, 404)
-    end
+    render(conn, "change_domain.html",
+      changeset: changeset,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
   end
 
   def change_domain_submit(conn, %{"site" => %{"domain" => new_domain}}) do
-    if Plausible.v2?() do
-      case Plausible.Site.Domain.change(conn.assigns.site, new_domain) do
-        {:ok, updated_site} ->
-          conn
-          |> put_flash(:success, "Website domain changed successfully")
-          |> redirect(
-            to: Routes.site_path(conn, :add_snippet_after_domain_change, updated_site.domain)
-          )
+    case Plausible.Site.Domain.change(conn.assigns.site, new_domain) do
+      {:ok, updated_site} ->
+        conn
+        |> put_flash(:success, "Website domain changed successfully")
+        |> redirect(
+          to: Routes.site_path(conn, :add_snippet_after_domain_change, updated_site.domain)
+        )
 
-        {:error, changeset} ->
-          render(conn, "change_domain.html",
-            changeset: changeset,
-            layout: {PlausibleWeb.LayoutView, "focus.html"}
-          )
-      end
-    else
-      render_error(conn, 404)
+      {:error, changeset} ->
+        render(conn, "change_domain.html",
+          changeset: changeset,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
     end
   end
 

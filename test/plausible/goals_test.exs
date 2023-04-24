@@ -22,7 +22,6 @@ defmodule Plausible.GoalsTest do
     assert [%{event_name: "Signup"}, %{page_path: "/Signup"}] = goals
   end
 
-  @tag :v2_only
   test "goals are present after domain change" do
     site = insert(:site)
     insert(:goal, %{site: site, event_name: " Signup "})

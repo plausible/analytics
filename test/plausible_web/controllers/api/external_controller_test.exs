@@ -30,11 +30,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert pageview.hostname == "gigride.live"
 
-      if Plausible.v2?() do
-        assert pageview.site_id == site.id
-      else
-        assert pageview.domain == site.domain
-      end
+      assert pageview.site_id == site.id
 
       assert pageview.pathname == "/"
     end
@@ -56,11 +52,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert response(conn, 202) == "ok"
       assert pageview.hostname == "gigride.live"
 
-      if Plausible.v2?() do
-        assert pageview.site_id == site.id
-      else
-        assert pageview.domain == site.domain
-      end
+      assert pageview.site_id == site.id
 
       assert pageview.pathname == "/"
     end
@@ -139,11 +131,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       pageview = get_event(site)
 
-      if Plausible.v2?() do
-        assert pageview.site_id == site.id
-      else
-        assert pageview.domain == site.domain
-      end
+      assert pageview.site_id == site.id
     end
 
     test "www. is stripped from hostname", %{conn: conn, site: site} do
@@ -1251,40 +1239,22 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
   defp get_event(site) do
     Plausible.Event.WriteBuffer.flush()
 
-    if Plausible.v2?() do
-      ClickhouseRepo.one(
-        from(e in Plausible.ClickhouseEventV2,
-          where: e.site_id == ^site.id,
-          order_by: [desc: e.timestamp]
-        )
+    ClickhouseRepo.one(
+      from(e in Plausible.ClickhouseEventV2,
+        where: e.site_id == ^site.id,
+        order_by: [desc: e.timestamp]
       )
-    else
-      ClickhouseRepo.one(
-        from(e in Plausible.ClickhouseEvent,
-          where: e.domain == ^site.domain,
-          order_by: [desc: e.timestamp]
-        )
-      )
-    end
+    )
   end
 
   defp get_events(site) do
     Plausible.Event.WriteBuffer.flush()
 
-    if Plausible.v2?() do
-      ClickhouseRepo.all(
-        from(e in Plausible.ClickhouseEventV2,
-          where: e.site_id == ^site.id,
-          order_by: [desc: e.timestamp]
-        )
+    ClickhouseRepo.all(
+      from(e in Plausible.ClickhouseEventV2,
+        where: e.site_id == ^site.id,
+        order_by: [desc: e.timestamp]
       )
-    else
-      ClickhouseRepo.all(
-        from(e in Plausible.ClickhouseEvent,
-          where: e.domain == ^site.domain,
-          order_by: [desc: e.timestamp]
-        )
-      )
-    end
+    )
   end
 end
