@@ -17,6 +17,7 @@ import {
   isThisMonth,
   isThisYear,
   parseUTCDate,
+  parseNaiveDate,
   isBefore,
   isAfter,
   formatDateRange
@@ -25,7 +26,6 @@ import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
 import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
 import classNames from "classnames"
-import dayjs from "dayjs"
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -257,7 +257,7 @@ function DatePicker({query, site, history}) {
 
   function setCustomDate([from, to], _dateStr, _instance) {
     if (from && to) {
-      [from, to] = [dayjs(from), dayjs(to)]
+      [from, to] = [parseNaiveDate(from), parseNaiveDate(to)]
 
       if (from.isSame(to)) {
         navigateToQuery( history, query, { period: 'day', date: formatISO(from), from: false, to: false })
