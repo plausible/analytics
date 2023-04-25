@@ -24,6 +24,7 @@ import {
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
 import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
+import classNames from "classnames"
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -38,19 +39,29 @@ function renderArrow(query, site, period, prevDate, nextDate) {
     period
   );
 
-  const leftClasses = `flex items-center px-1 sm:px-2 border-r border-gray-300 rounded-l
-      dark:border-gray-500 dark:text-gray-100 ${
-  disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-}`;
-  const rightClasses = `flex items-center px-1 sm:px-2 rounded-r dark:text-gray-100 ${
-    disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-  }`;
+  const isComparing = isComparisonEnabled(query.comparison)
+
+  const leftClass = classNames("flex items-center px-1 sm:px-2 border-r border-gray-300 rounded-l dark:border-gray-500 dark:text-gray-100", {
+    "bg-gray-300 dark:bg-gray-950": disabledLeft,
+    "hover:bg-gray-100 dark:hover:bg-gray-900": !disabledLeft,
+  })
+
+  const rightClass = classNames("flex items-center px-1 sm:px-2 rounded-r dark:text-gray-100", {
+    "bg-gray-300 dark:bg-gray-950": disabledRight,
+    "hover:bg-gray-100 dark:hover:bg-gray-900": !disabledRight,
+  })
+
+  const containerClass = classNames("rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer dark:bg-gray-800", {
+    "hidden md:flex": isComparing,
+    "flex": !isComparing,
+  })
+
   return (
-    <div className="flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer dark:bg-gray-800">
+    <div className={containerClass}>
       <QueryButton
         to={{ date: prevDate }}
         query={query}
-        className={leftClasses}
+        className={leftClass}
         disabled={disabledLeft}
       >
         <svg
@@ -69,7 +80,7 @@ function renderArrow(query, site, period, prevDate, nextDate) {
       <QueryButton
         to={{ date: nextDate }}
         query={query}
-        className={rightClasses}
+        className={rightClass}
         disabled={disabledRight}
       >
         <svg
