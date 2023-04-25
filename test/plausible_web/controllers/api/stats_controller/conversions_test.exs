@@ -37,14 +37,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Signup",
                  "unique_conversions" => 2,
                  "total_conversions" => 3,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "Visit /register",
                  "unique_conversions" => 2,
                  "total_conversions" => 2,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 33.3
                }
              ]
@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "unique_conversions" => 1,
                  "total_conversions" => 2,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 33.3
                }
              ]
@@ -127,7 +127,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "unique_conversions" => 2,
                  "total_conversions" => 2,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 66.7
                }
              ]
@@ -166,7 +166,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "unique_conversions" => 2,
                  "total_conversions" => 3,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 66.7
                }
              ]
@@ -207,7 +207,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "unique_conversions" => 2,
                  "total_conversions" => 3,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 66.7
                }
              ]
@@ -316,7 +316,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       filters = Jason.encode!(%{goal: "Payment|Signup", props: %{"logged_in" => "true|(none)"}})
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert [%{"prop_names" => nil}] = json_response(conn, 200)
+      assert [%{"prop_names" => []}] = json_response(conn, 200)
     end
 
     test "can filter by multiple mixed goals", %{conn: conn, site: site} do
@@ -345,14 +345,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Signup",
                  "unique_conversions" => 2,
                  "total_conversions" => 2,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "Visit /register",
                  "unique_conversions" => 1,
                  "total_conversions" => 1,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 16.7
                }
              ]
@@ -386,14 +386,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "CTA",
                  "unique_conversions" => 1,
                  "total_conversions" => 1,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 16.7
                },
                %{
                  "name" => "Visit /register",
                  "unique_conversions" => 1,
                  "total_conversions" => 1,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 16.7
                }
              ]
@@ -426,14 +426,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /blog**",
                  "unique_conversions" => 2,
                  "total_conversions" => 2,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "Signup",
                  "unique_conversions" => 1,
                  "total_conversions" => 1,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 16.7
                }
              ]
@@ -467,14 +467,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /ano**",
                  "unique_conversions" => 2,
                  "total_conversions" => 2,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "CTA",
                  "unique_conversions" => 1,
                  "total_conversions" => 1,
-                 "prop_names" => nil,
+                 "prop_names" => [],
                  "conversion_rate" => 16.7
                }
              ]
@@ -960,6 +960,39 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    test "returns property breakdown with a pageview goal filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/register"),
+        build(:pageview, pathname: "/register", "meta.key": ["variant"], "meta.value": ["A"]),
+        build(:pageview, pathname: "/register", "meta.key": ["variant"], "meta.value": ["A"])
+      ])
+
+      insert(:goal, %{site: site, page_path: "/register"})
+      filters = Jason.encode!(%{goal: "Visit /register"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/property/variant?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "unique_conversions" => 2,
+                 "name" => "A",
+                 "total_conversions" => 2,
+                 "conversion_rate" => 50.0
+               },
+               %{
+                 "unique_conversions" => 1,
+                 "name" => "(none)",
+                 "total_conversions" => 1,
+                 "conversion_rate" => 25.0
+               }
+             ]
+    end
+
     test "property breakdown with prop filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1),
@@ -1141,56 +1174,93 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "unique_conversions" => 8,
                  "name" => "Visit /**",
                  "total_conversions" => 8,
-                 "prop_names" => nil
+                 "prop_names" => []
                },
                %{
                  "conversion_rate" => 37.5,
                  "unique_conversions" => 3,
                  "name" => "Visit /*",
                  "total_conversions" => 3,
-                 "prop_names" => nil
+                 "prop_names" => []
                },
                %{
                  "conversion_rate" => 37.5,
                  "unique_conversions" => 3,
                  "name" => "Visit /signup/**",
                  "total_conversions" => 3,
-                 "prop_names" => nil
+                 "prop_names" => []
                },
                %{
                  "conversion_rate" => 25.0,
                  "unique_conversions" => 2,
                  "name" => "Visit /billing**/success",
                  "total_conversions" => 2,
-                 "prop_names" => nil
+                 "prop_names" => []
                },
                %{
                  "conversion_rate" => 25.0,
                  "unique_conversions" => 2,
                  "name" => "Visit /reg*",
                  "total_conversions" => 2,
-                 "prop_names" => nil
+                 "prop_names" => []
                },
                %{
                  "conversion_rate" => 12.5,
                  "unique_conversions" => 1,
                  "name" => "Visit /billing*/success",
                  "total_conversions" => 1,
-                 "prop_names" => nil
+                 "prop_names" => []
                },
                %{
                  "conversion_rate" => 12.5,
                  "unique_conversions" => 1,
                  "name" => "Visit /register",
                  "total_conversions" => 1,
-                 "prop_names" => nil
+                 "prop_names" => []
                },
                %{
                  "conversion_rate" => 12.5,
                  "unique_conversions" => 1,
                  "name" => "Visit /signup/*",
                  "total_conversions" => 1,
-                 "prop_names" => nil
+                 "prop_names" => []
+               }
+             ]
+    end
+
+    test "returns prop names when filtered by glob goal", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, page_path: "/register**"})
+
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/register",
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
+          timestamp: ~N[2019-07-01 23:00:00]
+        ),
+        build(:pageview,
+          pathname: "/register-success",
+          "meta.key": ["logged_in", "author"],
+          "meta.value": ["true", "John"],
+          timestamp: ~N[2019-07-01 23:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Visit /register**"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&date=2019-07-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "conversion_rate" => 100.0,
+                 "unique_conversions" => 2,
+                 "name" => "Visit /register**",
+                 "total_conversions" => 2,
+                 "prop_names" => ["logged_in", "author"]
                }
              ]
     end
