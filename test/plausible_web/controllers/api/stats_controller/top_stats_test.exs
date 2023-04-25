@@ -875,11 +875,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true&comparison=year_over_year"
         )
 
-      res = json_response(conn, 200)
+      assert %{"top_stats" => top_stats, "with_imported" => true} = json_response(conn, 200)
 
-      assert %{"change" => 100, "comparison_value" => 2, "name" => "Total visits", "value" => 4} in res[
-               "top_stats"
-             ]
+      assert %{"change" => 100, "comparison_value" => 2, "name" => "Total visits", "value" => 4} in top_stats
     end
 
     test "does not compare imported data when with_imported is set to false", %{
@@ -912,11 +910,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
           "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=false&comparison=year_over_year"
         )
 
-      res = json_response(conn, 200)
+      assert %{"top_stats" => top_stats, "with_imported" => false} = json_response(conn, 200)
 
-      assert %{"change" => 100, "comparison_value" => 0, "name" => "Total visits", "value" => 4} in res[
-               "top_stats"
-             ]
+      assert %{"change" => 100, "comparison_value" => 0, "name" => "Total visits", "value" => 4} in top_stats
     end
   end
 end
