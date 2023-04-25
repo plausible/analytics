@@ -53,7 +53,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} = json_response(conn, 200)
+      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+               json_response(conn, 200)
 
       assert plot == [2] ++ List.duplicate(0, 23)
     end
@@ -119,7 +120,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} = json_response(conn, 200)
+      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+               json_response(conn, 200)
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 2
@@ -139,7 +141,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} = json_response(conn, 200)
+      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+               json_response(conn, 200)
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 1
@@ -861,7 +864,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                "plot" => plot,
                "comparison_plot" => comparison_plot,
                "imported_source" => "Google Analytics",
-        "with_imported" => true
+               "with_imported" => true
              } = json_response(conn, 200)
 
       assert 4 == Enum.sum(plot)
@@ -902,7 +905,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
                "plot" => plot,
                "comparison_plot" => comparison_plot,
                "imported_source" => "Google Analytics",
-        "with_imported" => false
+               "with_imported" => false
              } = json_response(conn, 200)
 
       assert 4 == Enum.sum(plot)
