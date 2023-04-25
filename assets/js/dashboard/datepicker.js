@@ -362,7 +362,7 @@ function DatePicker({query, site, history}) {
                 <span className='font-normal'>C</span>
               </span>
             </div>
-            { !COMPARISON_DISABLED_PERIODS.includes(query.period) && site.flags.comparisons &&
+            { !COMPARISON_DISABLED_PERIODS.includes(query.period) &&
               <div className="py-1 date-option-group border-t border-gray-200 dark:border-gray-500">
                 <span
                   onClick={() => {
