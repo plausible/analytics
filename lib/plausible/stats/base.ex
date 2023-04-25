@@ -42,42 +42,7 @@ defmodule Plausible.Stats.Base do
       )
       |> add_sample_hint(query)
 
-    q =
-      case query.filters["event:page"] do
-        {:is, page} ->
-          from(e in q, where: e.pathname == ^page)
-
-        {:is_not, page} ->
-          from(e in q, where: e.pathname != ^page)
-
-        {:matches_member, glob_exprs} ->
-          page_regexes = Enum.map(glob_exprs, &page_regex/1)
-          from(e in q, where: fragment("multiMatchAny(?, ?)", e.pathname, ^page_regexes))
-
-        {:not_matches_member, glob_exprs} ->
-          page_regexes = Enum.map(glob_exprs, &page_regex/1)
-
-          from(e in q,
-            where: fragment("not(multiMatchAny(?, ?))", e.pathname, ^page_regexes)
-          )
-
-        {:matches, glob_expr} ->
-          regex = page_regex(glob_expr)
-          from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
-
-        {:does_not_match, glob_expr} ->
-          regex = page_regex(glob_expr)
-          from(e in q, where: fragment("not(match(?, ?))", e.pathname, ^regex))
-
-        {:member, list} ->
-          from(e in q, where: e.pathname in ^list)
-
-        {:not_member, list} ->
-          from(e in q, where: e.pathname not in ^list)
-
-        nil ->
-          q
-      end
+    q = from(e in q, where: ^page_filter_condition(query, :pathname))
 
     q =
       case query.filters["event:name"] do
@@ -339,57 +304,64 @@ defmodule Plausible.Stats.Base do
 
   def select_event_metrics(_, [unknown | _]), do: raise("Unknown metric " <> unknown)
 
-  def select_session_metrics(q, []), do: q
 
-  def select_session_metrics(q, [:bounce_rate | rest]) do
+  def select_session_metrics(q, [], _query), do: q
+
+  def select_session_metrics(q, [:bounce_rate | rest], query) do
+    condition = if query, do: page_filter_condition(query, :entry_page), else: true
+
     from(s in q,
       select_merge: %{
         bounce_rate:
-          fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))"),
+          fragment(
+            "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
+            ^condition,
+            ^condition
+          ),
         __internal_visits: fragment("toUInt32(sum(sign))")
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:visits | rest]) do
+  def select_session_metrics(q, [:visits | rest], query) do
     from(s in q,
       select_merge: %{
         visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:pageviews | rest]) do
+  def select_session_metrics(q, [:pageviews | rest], query) do
     from(s in q,
       select_merge: %{
         pageviews:
           fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:events | rest]) do
+  def select_session_metrics(q, [:events | rest], query) do
     from(s in q,
       select_merge: %{
         events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:visitors | rest]) do
+  def select_session_metrics(q, [:visitors | rest], query) do
     from(s in q,
       select_merge: %{
         visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:visit_duration | rest]) do
+  def select_session_metrics(q, [:visit_duration | rest], query) do
     from(s in q,
       select_merge: %{
         :visit_duration =>
@@ -397,27 +369,63 @@ defmodule Plausible.Stats.Base do
         __internal_visits: fragment("toUInt32(sum(sign))")
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:views_per_visit | rest]) do
+  def select_session_metrics(q, [:views_per_visit | rest], query) do
     from(s in q,
       select_merge: %{
         views_per_visit:
           fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:sample_percent | rest]) do
+  def select_session_metrics(q, [:sample_percent | rest], query) do
     from(e in q,
       select_merge: %{
         sample_percent:
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
       }
     )
-    |> select_event_metrics(rest)
+    |> select_session_metrics(rest, query)
+  end
+
+  defp page_filter_condition(query, db_field) do
+    case query.filters["event:page"] do
+      {:is, page} ->
+        dynamic([x], field(x, ^db_field) == ^page)
+
+      {:is_not, page} ->
+        dynamic([x], field(x, ^db_field) != ^page)
+
+      {:matches_member, glob_exprs} ->
+        page_regexes = Enum.map(glob_exprs, &page_regex/1)
+        dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
+
+      {:not_matches_member, glob_exprs} ->
+        page_regexes = Enum.map(glob_exprs, &page_regex/1)
+
+        dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
+
+      {:matches, glob_expr} ->
+        regex = page_regex(glob_expr)
+        dynamic([x], fragment("match(?, ?)", field(x, ^db_field), ^regex))
+
+      {:does_not_match, glob_expr} ->
+        regex = page_regex(glob_expr)
+        dynamic([x], fragment("not(match(?, ?))", field(x, ^db_field), ^regex))
+
+      {:member, list} ->
+        dynamic([x], field(x, ^db_field) in ^list)
+
+      {:not_member, list} ->
+        dynamic([x], field(x, ^db_field) not in ^list)
+
+      nil ->
+        true
+    end
   end
 
   def filter_converted_sessions(db_query, site, query) do
