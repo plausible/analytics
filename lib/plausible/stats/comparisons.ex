@@ -64,14 +64,10 @@ defmodule Plausible.Stats.Comparisons do
       |> Keyword.put_new(:match_day_of_week?, false)
       |> Keyword.put_new(:include_imported?, true)
 
-    with true <- valid_mode?(source_query, mode),
+    with :ok <- validate_mode(source_query, mode),
          {:ok, comparison_query} <- do_compare(source_query, mode, opts),
-         comparison_query <- maybe_include_imported(comparison_query, site, opts) do
-      {:ok, comparison_query}
-    else
-      false -> {:error, :not_supported}
-      {:error, cause} -> {:error, cause}
-    end
+         comparison_query <- maybe_include_imported(comparison_query, site, opts),
+         do: {:ok, comparison_query}
   end
 
   defp do_compare(source_query, "year_over_year", opts) do
@@ -174,14 +170,11 @@ defmodule Plausible.Stats.Comparisons do
     %Stats.Query{query | include_imported: include_imported?}
   end
 
-  @spec valid_mode?(Stats.Query.t(), mode()) :: boolean()
-  @doc """
-  Returns whether the source query and the selected mode support comparisons.
-
-  For example, the realtime view doesn't support comparisons. Additionally, only
-  #{inspect(@modes)} are supported.
-  """
-  def valid_mode?(%Stats.Query{period: period}, mode) do
-    mode in @modes && period not in @disallowed_periods
+  defp validate_mode(%Stats.Query{period: period}, mode) do
+    if mode in @modes && period not in @disallowed_periods do
+      :ok
+    else
+      {:error, :not_supported}
+    end
   end
 end
