@@ -14,13 +14,23 @@ FunWithFlags.enable(:comparisons)
 
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
-beginning_of_time = NaiveDateTime.add(NaiveDateTime.utc_now(), -721, :day)
+native_stats_range =
+  Date.range(
+    Date.add(Date.utc_today(), -720),
+    Date.utc_today()
+  )
+
+imported_stats_range =
+  Date.range(
+    Date.add(native_stats_range.first, -360),
+    Date.add(native_stats_range.first, -1)
+  )
 
 site =
   Plausible.Factory.insert(:site,
     domain: "dummy.site",
-    native_stats_start_at: beginning_of_time,
-    stats_start_date: NaiveDateTime.to_date(beginning_of_time)
+    native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
+    stats_start_date: NaiveDateTime.new!(imported_stats_range.first, ~T[00:00:00])
   )
 
 _membership = Plausible.Factory.insert(:site_membership, user: user, site: site, role: :owner)
@@ -83,17 +93,16 @@ geolocations = [
   []
 ]
 
-Enum.flat_map(-720..0, fn day_index ->
-  date = Date.add(Date.utc_today(), day_index)
-  number_of_events = 0..:rand.uniform(500)
-
-  Enum.map(number_of_events, fn _ ->
+native_stats_range
+|> Enum.with_index()
+|> Enum.flat_map(fn {date, index} ->
+  Enum.map(0..:rand.uniform(500), fn _ ->
     geolocation = Enum.random(geolocations)
 
     [
       site_id: site.id,
       hostname: site.domain,
-      timestamp: put_random_time.(date, day_index),
+      timestamp: put_random_time.(date, index),
       referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
       browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
       browser_version: to_string(Enum.random(0..50)),
@@ -107,51 +116,47 @@ Enum.flat_map(-720..0, fn day_index ->
 end)
 |> Plausible.TestUtils.populate_stats()
 
-days_in_current_month = Date.utc_today().day
-
 site =
-  Plausible.Site.start_import(
-    site,
-    NaiveDateTime.to_date(beginning_of_time),
-    Date.add(Date.utc_today(), -days_in_current_month - 3),
+  site
+  |> Plausible.Site.start_import(
+    imported_stats_range.first,
+    imported_stats_range.last,
     "Google Analytics"
   )
   |> Plausible.Repo.update!()
 
-imported_stats_up_to_previous_month =
-  Enum.flat_map(-720..(-days_in_current_month - 3), fn day_index ->
-    date = Date.add(Date.utc_today(), day_index)
-    number_of_events = 0..:rand.uniform(500)
-
-    Enum.flat_map(number_of_events, fn _ ->
-      [
-        Plausible.Factory.build(:imported_visitors,
-          date: date,
-          pageviews: Enum.random(1..20),
-          visitors: Enum.random(1..20),
-          bounces: Enum.random(1..20),
-          visits: Enum.random(1..200),
-          visit_duration: Enum.random(1..100)
-        ),
-        Plausible.Factory.build(:imported_sources,
-          date: date,
-          source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
-          visitors: Enum.random(1..20),
-          visits: Enum.random(1..200),
-          bounces: Enum.random(1..20),
-          visit_duration: Enum.random(1..100)
-        ),
-        Plausible.Factory.build(:imported_pages,
-          date: date,
-          visitors: Enum.random(1..20),
-          pageviews: Enum.random(1..20),
-          exits: Enum.random(1..20),
-          time_on_page: Enum.random(1..100)
-        )
-      ]
-    end)
+imported_stats_range
+|> Enum.flat_map(fn date ->
+  Enum.flat_map(0..:rand.uniform(500), fn _ ->
+    [
+      Plausible.Factory.build(:imported_visitors,
+        date: date,
+        pageviews: Enum.random(1..20),
+        visitors: Enum.random(1..20),
+        bounces: Enum.random(1..20),
+        visits: Enum.random(1..200),
+        visit_duration: Enum.random(1..100)
+      ),
+      Plausible.Factory.build(:imported_sources,
+        date: date,
+        source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+        visitors: Enum.random(1..20),
+        visits: Enum.random(1..200),
+        bounces: Enum.random(1..20),
+        visit_duration: Enum.random(1..100)
+      ),
+      Plausible.Factory.build(:imported_pages,
+        date: date,
+        visitors: Enum.random(1..20),
+        pageviews: Enum.random(1..20),
+        exits: Enum.random(1..20),
+        time_on_page: Enum.random(1..100)
+      )
+    ]
   end)
+end)
+|> then(&Plausible.TestUtils.populate_stats(site, &1))
 
-Plausible.TestUtils.populate_stats(site, imported_stats_up_to_previous_month)
-
-Plausible.Site.import_success(site) |> Plausible.Repo.update!()
+site
+|> Plausible.Site.import_success()
+|> Plausible.Repo.update!()
