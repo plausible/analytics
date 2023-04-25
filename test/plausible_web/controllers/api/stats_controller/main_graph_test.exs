@@ -840,6 +840,17 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
 
+      site
+      |> Ecto.Changeset.change(
+        imported_data: %{
+          start_date: ~D[2005-01-01],
+          end_date: ~D[2020-01-31],
+          source: "Google Analytics",
+          status: "ok"
+        }
+      )
+      |> Plausible.Repo.update!()
+
       conn =
         get(
           conn,
@@ -868,6 +879,17 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
       ])
+
+      site
+      |> Ecto.Changeset.change(
+        imported_data: %{
+          start_date: ~D[2005-01-01],
+          end_date: ~D[2020-01-31],
+          source: "Google Analytics",
+          status: "ok"
+        }
+      )
+      |> Plausible.Repo.update!()
 
       conn =
         get(
