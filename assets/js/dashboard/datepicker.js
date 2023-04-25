@@ -17,6 +17,7 @@ import {
   isThisMonth,
   isThisYear,
   parseUTCDate,
+  parseNaiveDate,
   isBefore,
   isAfter,
   formatDateRange
@@ -254,34 +255,18 @@ function DatePicker({query, site, history}) {
     return () => { document.removeEventListener("mousedown", handleClick, false); }
   }, [])
 
-  function setCustomDate(dates) {
-    if (dates.length === 2) {
-      const [from, to] = dates.map(parseUTCDate)
-      if (formatISO(from) === formatISO(to)) {
-        navigateToQuery(
-          history,
-          query,
-          {
-            period: 'day',
-            date: formatISO(from),
-            from: false,
-            to: false
-          }
-        )
+  function setCustomDate([from, to], _dateStr, _instance) {
+    if (from && to) {
+      [from, to] = [parseNaiveDate(from), parseNaiveDate(to)]
+
+      if (from.isSame(to)) {
+        navigateToQuery( history, query, { period: 'day', date: formatISO(from), from: false, to: false })
       } else {
-        navigateToQuery(
-          history,
-          query,
-          {
-            period: 'custom',
-            date: false,
-            from: formatISO(from),
-            to: formatISO(to),
-          }
-        )
+        navigateToQuery( history, query, { period: 'custom', date: false, from: formatISO(from), to: formatISO(to) })
       }
-      setOpen(false)
     }
+
+    setOpen(false)
   }
 
   function toggle() {
@@ -400,13 +385,13 @@ function DatePicker({query, site, history}) {
             options={{
               mode: 'range',
               maxDate: 'today',
-              minDate: parseUTCDate(site.statsBegin),
+              minDate: site.statsBegin,
               showMonths: 1,
               static: true,
               animate: true}}
             ref={calendar}
             className="invisible"
-            onChange={setCustomDate}
+            onClose={setCustomDate}
           />
         </div>
       )
