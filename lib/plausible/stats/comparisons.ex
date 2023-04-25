@@ -53,13 +53,24 @@ defmodule Plausible.Stats.Comparisons do
       it will be shifted to start on Sunday, January 2nd, 2022 instead of
       January 1st. Defaults to false.
 
+    * `:include_imported?` - includes imported data in the generated comparison
+      query if there is imported data. Defaults to true.
+
   """
   def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode, opts \\ []) do
-    if valid_mode?(source_query, mode) do
-      opts = Keyword.put_new(opts, :now, Timex.now(site.timezone))
-      do_compare(source_query, mode, opts)
+    opts =
+      opts
+      |> Keyword.put_new(:now, Timex.now(site.timezone))
+      |> Keyword.put_new(:match_day_of_week?, false)
+      |> Keyword.put_new(:include_imported?, true)
+
+    with true <- valid_mode?(source_query, mode),
+         {:ok, comparison_query} <- do_compare(source_query, mode, opts),
+         comparison_query <- maybe_include_imported(comparison_query, site, opts) do
+      {:ok, comparison_query}
     else
-      {:error, :not_supported}
+      false -> {:error, :not_supported}
+      {:error, cause} -> {:error, cause}
     end
   end
 
@@ -113,7 +124,7 @@ defmodule Plausible.Stats.Comparisons do
   end
 
   defp maybe_match_day_of_week(comparison_query, source_query, opts) do
-    if Keyword.get(opts, :match_day_of_week?, false) do
+    if Keyword.fetch!(opts, :match_day_of_week?) do
       day_to_match = Date.day_of_week(source_query.date_range.first)
 
       new_first =
@@ -156,6 +167,11 @@ defmodule Plausible.Stats.Comparisons do
     days_to_subtract = if days_to_subtract > 0, do: days_to_subtract, else: days_to_subtract + 7
 
     Date.add(date, -days_to_subtract)
+  end
+
+  defp maybe_include_imported(query, site, opts) do
+    include_imported? = Stats.Query.include_imported?(query, site, opts[:include_imported?])
+    %Stats.Query{query | include_imported: include_imported?}
   end
 
   @spec valid_mode?(Stats.Query.t(), mode()) :: boolean()
