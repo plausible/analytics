@@ -14,11 +14,12 @@ defmodule Plausible.Stats.CustomProps do
   def props_for_all_event_names(site, query) do
     from(e in base_event_query(site, query),
       inner_lateral_join: meta in fragment("meta"),
-      select: {e.name, meta.key},
+      group_by: e.name,
+      select: {e.name, fragment("groupArray(?)", meta.key)},
       distinct: true
     )
     |> ClickhouseRepo.all()
-    |> group_by_goal_name()
+    |> Enum.into(%{})
   end
 
   @doc """
@@ -46,11 +47,5 @@ defmodule Plausible.Stats.CustomProps do
         )
         |> ClickhouseRepo.all()
     end
-  end
-
-  defp group_by_goal_name(results_list) do
-    Enum.reduce(results_list, %{}, fn {goal_name, meta_key}, acc ->
-      Map.update(acc, goal_name, [meta_key], fn list -> [meta_key | list] end)
-    end)
   end
 end
