@@ -147,8 +147,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     event_only_filter = Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
 
     cond do
+      metric == "views_per_visit" && query.filters["event:page"] ->
+        {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
+
       metric == "views_per_visit" && property != nil ->
-        {:error, "Metric `#{metric}` is not supported in breakdown queries"}
+        {:error, "Metric `#{metric}` is not supported in breakdown queries."}
 
       event_only_property?(property) ->
         {:error, "Session metric `#{metric}` cannot be queried for breakdown by `#{property}`."}
