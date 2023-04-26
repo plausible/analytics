@@ -42,7 +42,7 @@ defmodule Plausible.Stats.Base do
       )
       |> add_sample_hint(query)
 
-    q = from(e in q, where: ^page_filter_condition(query, :pathname))
+    q = from(e in q, where: ^dynamic_filter_condition(query, "event:page", :pathname))
 
     q =
       case query.filters["event:name"] do
@@ -307,7 +307,7 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, [], _query), do: q
 
   def select_session_metrics(q, [:bounce_rate | rest], query) do
-    condition = if query, do: page_filter_condition(query, :entry_page), else: true
+    condition = dynamic_filter_condition(query, "event:page", :entry_page)
 
     from(s in q,
       select_merge:
@@ -395,13 +395,13 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest, query)
   end
 
-  defp page_filter_condition(query, db_field) do
-    case query.filters["event:page"] do
-      {:is, page} ->
-        dynamic([x], field(x, ^db_field) == ^page)
+  defp dynamic_filter_condition(query, filter_key, db_field) do
+    case query && query.filters && query.filters[filter_key] do
+      {:is, value} ->
+        dynamic([x], field(x, ^db_field) == ^value)
 
-      {:is_not, page} ->
-        dynamic([x], field(x, ^db_field) != ^page)
+      {:is_not, value} ->
+        dynamic([x], field(x, ^db_field) != ^value)
 
       {:matches_member, glob_exprs} ->
         page_regexes = Enum.map(glob_exprs, &page_regex/1)
@@ -409,7 +409,6 @@ defmodule Plausible.Stats.Base do
 
       {:not_matches_member, glob_exprs} ->
         page_regexes = Enum.map(glob_exprs, &page_regex/1)
-
         dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
 
       {:matches, glob_expr} ->

@@ -1228,7 +1228,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       end
     end
 
-        test "event:page filter is interpreted as entry_page filter only for bounce_rate", %{
+    test "event:page filter is interpreted as entry_page filter only for bounce_rate", %{
       conn: conn,
       site: site
     } do
