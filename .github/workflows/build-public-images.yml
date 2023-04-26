@@ -43,6 +43,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             BUILD_METADATA=${{ steps.meta.outputs.json }}
+            ERL_FLAGS=+JPperf true
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

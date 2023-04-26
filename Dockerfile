@@ -9,6 +9,11 @@ ENV MIX_ENV=prod
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
+# custom ERL_FLAGS are passed for (public) multi-platform builds
+# to fix qemu segfault, more info: https://github.com/erlang/otp/pull/6340
+ARG ERL_FLAGS
+ENV ERL_FLAGS=$ERL_FLAGS
+
 RUN mkdir /app
 WORKDIR /app
 
