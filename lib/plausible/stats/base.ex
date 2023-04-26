@@ -150,7 +150,6 @@ defmodule Plausible.Stats.Base do
     "city" => "city_geoname_id"
   }
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_sessions(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
@@ -164,57 +163,15 @@ defmodule Plausible.Stats.Base do
       |> filter_by_entry_props(query)
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
-      filter = query.filters["visit:" <> prop_name]
+      filter_key = "visit:" <> prop_name
 
-      prop_name =
+      db_field =
         Map.get(@api_prop_name_to_db, prop_name, prop_name)
         |> String.to_existing_atom()
 
-      case filter do
-        {:is, value} ->
-          value = db_prop_val(prop_name, value)
-          from(s in sessions_q, where: fragment("? = ?", field(s, ^prop_name), ^value))
-
-        {:is_not, value} ->
-          value = db_prop_val(prop_name, value)
-          from(s in sessions_q, where: fragment("? != ?", field(s, ^prop_name), ^value))
-
-        {:member, values} ->
-          list = Enum.map(values, &db_prop_val(prop_name, &1))
-          from(s in sessions_q, where: field(s, ^prop_name) in ^list)
-
-        {:not_member, values} ->
-          list = Enum.map(values, &db_prop_val(prop_name, &1))
-          from(s in sessions_q, where: fragment("? not in ?", field(s, ^prop_name), ^list))
-
-        {:matches, expr} ->
-          regex = page_regex(expr)
-          from(s in sessions_q, where: fragment("match(?, ?)", field(s, ^prop_name), ^regex))
-
-        {:matches_member, exprs} ->
-          page_regexes = Enum.map(exprs, &page_regex/1)
-
-          from(s in sessions_q,
-            where: fragment("multiMatchAny(?, ?)", field(s, ^prop_name), ^page_regexes)
-          )
-
-        {:not_matches_member, exprs} ->
-          page_regexes = Enum.map(exprs, &page_regex/1)
-
-          from(s in sessions_q,
-            where: fragment("not(multiMatchAny(?, ?))", field(s, ^prop_name), ^page_regexes)
-          )
-
-        {:does_not_match, expr} ->
-          regex = page_regex(expr)
-          from(s in sessions_q, where: fragment("not(match(?, ?))", field(s, ^prop_name), ^regex))
-
-        nil ->
-          sessions_q
-
-        _ ->
-          raise "Unknown filter type"
-      end
+      from(s in sessions_q,
+        where: ^dynamic_filter_condition(query, filter_key, db_field)
+      )
     end)
   end
 
@@ -398,9 +355,11 @@ defmodule Plausible.Stats.Base do
   defp dynamic_filter_condition(query, filter_key, db_field) do
     case query && query.filters && query.filters[filter_key] do
       {:is, value} ->
+        value = db_field_val(db_field, value)
         dynamic([x], field(x, ^db_field) == ^value)
 
       {:is_not, value} ->
+        value = db_field_val(db_field, value)
         dynamic([x], field(x, ^db_field) != ^value)
 
       {:matches_member, glob_exprs} ->
@@ -420,9 +379,11 @@ defmodule Plausible.Stats.Base do
         dynamic([x], fragment("not(match(?, ?))", field(x, ^db_field), ^regex))
 
       {:member, list} ->
+        list = Enum.map(list, &db_field_val(db_field, &1))
         dynamic([x], field(x, ^db_field) in ^list)
 
       {:not_member, list} ->
+        list = Enum.map(list, &db_field_val(db_field, &1))
         dynamic([x], field(x, ^db_field) not in ^list)
 
       nil ->
@@ -446,15 +407,15 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  defp db_prop_val(:referrer_source, @no_ref), do: ""
-  defp db_prop_val(:referrer, @no_ref), do: ""
-  defp db_prop_val(:utm_medium, @no_ref), do: ""
-  defp db_prop_val(:utm_source, @no_ref), do: ""
-  defp db_prop_val(:utm_campaign, @no_ref), do: ""
-  defp db_prop_val(:utm_content, @no_ref), do: ""
-  defp db_prop_val(:utm_term, @no_ref), do: ""
-  defp db_prop_val(_, @not_set), do: ""
-  defp db_prop_val(_, val), do: val
+  defp db_field_val(:referrer_source, @no_ref), do: ""
+  defp db_field_val(:referrer, @no_ref), do: ""
+  defp db_field_val(:utm_medium, @no_ref), do: ""
+  defp db_field_val(:utm_source, @no_ref), do: ""
+  defp db_field_val(:utm_campaign, @no_ref), do: ""
+  defp db_field_val(:utm_content, @no_ref), do: ""
+  defp db_field_val(:utm_term, @no_ref), do: ""
+  defp db_field_val(_, @not_set), do: ""
+  defp db_field_val(_, val), do: val
 
   defp beginning_of_time(candidate, native_stats_start_at) do
     if Timex.after?(native_stats_start_at, candidate) do
