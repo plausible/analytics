@@ -304,22 +304,25 @@ defmodule Plausible.Stats.Base do
 
   def select_event_metrics(_, [unknown | _]), do: raise("Unknown metric " <> unknown)
 
-
   def select_session_metrics(q, [], _query), do: q
 
   def select_session_metrics(q, [:bounce_rate | rest], query) do
     condition = if query, do: page_filter_condition(query, :entry_page), else: true
 
     from(s in q,
-      select_merge: %{
-        bounce_rate:
-          fragment(
-            "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
-            ^condition,
-            ^condition
-          ),
-        __internal_visits: fragment("toUInt32(sum(sign))")
-      }
+      select_merge:
+        ^%{
+          bounce_rate:
+            dynamic(
+              [],
+              fragment(
+                "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
+                ^condition,
+                ^condition
+              )
+            ),
+          __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
+        }
     )
     |> select_session_metrics(rest, query)
   end
