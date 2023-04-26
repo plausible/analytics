@@ -65,7 +65,7 @@ export default class TopStats extends React.Component {
       <div>
         {query.comparison && <div className="whitespace-nowrap">
           {this.topStatNumberLong(stat.name, stat.value)} vs. {this.topStatNumberLong(stat.name, stat.comparison_value)} {statName}
-          <span className="ml-2">{this.renderPercentageComparison(stat.name, stat.change, true)}</span>
+          <span className="ml-2">{this.renderPercentageComparison(stat.name, stat.change)}</span>
         </div>}
 
         {!query.comparison && <div className="whitespace-nowrap">
