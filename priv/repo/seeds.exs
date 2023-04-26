@@ -135,7 +135,7 @@ imported_stats_range
         visitors: Enum.random(1..20),
         bounces: Enum.random(1..20),
         visits: Enum.random(1..200),
-        visit_duration: Enum.random(1..100)
+        visit_duration: Enum.random(1000..10000)
       ),
       Plausible.Factory.build(:imported_sources,
         date: date,
@@ -143,14 +143,14 @@ imported_stats_range
         visitors: Enum.random(1..20),
         visits: Enum.random(1..200),
         bounces: Enum.random(1..20),
-        visit_duration: Enum.random(1..100)
+        visit_duration: Enum.random(1000..10000)
       ),
       Plausible.Factory.build(:imported_pages,
         date: date,
         visitors: Enum.random(1..20),
         pageviews: Enum.random(1..20),
         exits: Enum.random(1..20),
-        time_on_page: Enum.random(1..100)
+        time_on_page: Enum.random(1000..10000)
       )
     ]
   end)
