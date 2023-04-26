@@ -757,7 +757,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :settings_general, site.domain)
-      assert get_flash(conn, :error) =~ "unable to authenticate your Google Analytics"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "unable to authenticate your Google Analytics"
     end
   end
 
