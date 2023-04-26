@@ -104,11 +104,11 @@ function getTaggedEventAttributes(htmlElement) {
   for (var i = 0; i < classList.length; i++) {
     var className = classList.item(i)
 
-    var matchList = className.match(/plausible-event-(.+)=(.+)/)
+    var matchList = className.match(/plausible-event-(.+)(=|--)(.+)/)
     if (!matchList) { continue }
 
     var key = matchList[1]
-    var value = matchList[2].replace(/\+/g, ' ')
+    var value = matchList[3].replace(/\+/g, ' ')
 
     if (key.toLowerCase() === 'name') {
       eventAttrs.name = value
@@ -180,7 +180,7 @@ function isTagged(element) {
   var classList = element && element.classList
   if (classList) {
     for (var i = 0; i < classList.length; i++) {
-      if (classList.item(i).match(/plausible-event-name=(.+)/)) { return true }
+      if (classList.item(i).match(/plausible-event-name(=|--)(.+)/)) { return true }
     }
   }
   return false
