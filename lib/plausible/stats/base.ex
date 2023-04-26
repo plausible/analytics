@@ -352,6 +352,7 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest, query)
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp dynamic_filter_condition(query, filter_key, db_field) do
     case query && query.filters && query.filters[filter_key] do
       {:is, value} ->
