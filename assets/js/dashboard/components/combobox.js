@@ -42,7 +42,6 @@ export default function PlausibleCombobox(props) {
   const [loading, setLoading] = useState(false)
   const [isOpen, setOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [searchBoxHidden, setSearchBoxHidden] = useState(!!props.singleOption && props.values.length === 1)
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const searchRef = useRef(null);
   const containerRef = useRef(null);
@@ -131,7 +130,6 @@ export default function PlausibleCombobox(props) {
     if (isDisabled(option)) return
 
     if (props.singleOption) {
-      setSearchBoxHidden(true)
       props.onSelect([option])
     } else {
       searchRef.current.focus()
@@ -146,9 +144,7 @@ export default function PlausibleCombobox(props) {
     e.stopPropagation()
     const newValues = props.values.filter((val) => val.value !== option.value)
     props.onSelect(newValues)
-    if (searchBoxHidden) {
-      setSearchBoxHidden(false)
-    } else {
+    if (!searchBoxHidden) {
       searchRef.current.focus()
     }
     setOpen(false)
@@ -167,14 +163,15 @@ export default function PlausibleCombobox(props) {
   }, [])
 
   useEffect(() => {
-    if (props.singleOption && !searchBoxHidden) {
+    if (props.singleOption && props.values.length === 0) {
       searchRef.current.focus()
     }
-  }, [searchBoxHidden])
+  }, [props.values.length === 0])
 
   const matchesFound = !loading && visibleOptions.length > 0
   const noMatchesFound = !loading && visibleOptions.length === 0
   
+  const searchBoxHidden = !!props.singleOption && props.values.length === 1
   const searchBoxClass = classNames('border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm', {
     'hidden': searchBoxHidden
   })
