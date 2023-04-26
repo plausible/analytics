@@ -779,7 +779,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   end
 
   describe "GET /api/stats/top-stats - with comparisons" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "defaults to previous period when comparison is not set", %{site: site, conn: conn} do
       populate_stats(site, [
@@ -846,6 +846,73 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                "from" => "2021-01-01",
                "to" => "2021-01-31"
              } = json_response(conn, 200)
+    end
+
+    test "compares native and imported data", %{site: site, conn: conn} do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      site
+      |> Ecto.Changeset.change(
+        imported_data: %{
+          start_date: ~D[2005-01-01],
+          end_date: ~D[2020-01-31],
+          source: "Google Analytics",
+          status: "ok"
+        }
+      )
+      |> Plausible.Repo.update!()
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true&comparison=year_over_year"
+        )
+
+      assert %{"top_stats" => top_stats, "with_imported" => true} = json_response(conn, 200)
+
+      assert %{"change" => 100, "comparison_value" => 2, "name" => "Total visits", "value" => 4} in top_stats
+    end
+
+    test "does not compare imported data when with_imported is set to false", %{
+      site: site,
+      conn: conn
+    } do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      site
+      |> Ecto.Changeset.change(
+        imported_data: %{
+          start_date: ~D[2005-01-01],
+          end_date: ~D[2020-01-31],
+          source: "Google Analytics",
+          status: "ok"
+        }
+      )
+      |> Plausible.Repo.update!()
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=false&comparison=year_over_year"
+        )
+
+      assert %{"top_stats" => top_stats, "with_imported" => false} = json_response(conn, 200)
+
+      assert %{"change" => 100, "comparison_value" => 0, "name" => "Total visits", "value" => 4} in top_stats
     end
   end
 end
