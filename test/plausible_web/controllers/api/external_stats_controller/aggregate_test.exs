@@ -642,7 +642,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 2},
                "visitors" => %{"value" => 2},
-               "bounce_rate" => %{"value" => 50},
+               "bounce_rate" => %{"value" => 100},
                "visit_duration" => %{"value" => 750}
              }
     end

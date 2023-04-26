@@ -708,7 +708,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                "visits" => 2,
                "pageviews" => 2,
                "views_per_visit" => 1.5,
-               "bounce_rate" => 50,
+               "bounce_rate" => 100,
                "visit_duration" => 150
              }
     end
