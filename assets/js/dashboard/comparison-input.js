@@ -131,7 +131,9 @@ const ComparisonInput = function({ site, query, history }) {
 
   const [uiMode, setUiMode] = React.useState("menu")
   React.useEffect(() => {
-    if (uiMode == "datepicker" && calendar) calendar.current.flatpickr.open()
+    if (uiMode == "datepicker") {
+      setTimeout(() => calendar.current.flatpickr.open(), 100)
+    }
   }, [uiMode])
 
   const flatpickrOptions = {
@@ -181,8 +183,7 @@ const ComparisonInput = function({ site, query, history }) {
             { uiMode == "datepicker" &&
             <div className="h-0 absolute">
               <Flatpickr ref={calendar} options={flatpickrOptions} className="invisible" />
-            </div>
-            }
+            </div> }
           </Menu>
         </div>
       </div>
