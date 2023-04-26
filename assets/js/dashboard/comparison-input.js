@@ -42,7 +42,6 @@ export const isComparisonEnabled = function(mode) {
 }
 
 export const toggleComparisons = function(history, query, site) {
-  if (!site.flags.comparisons) return
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return
 
   if (isComparisonEnabled(query.comparison)) {
@@ -112,7 +111,6 @@ function MatchDayOfWeekInput({ history, query, site }) {
 }
 
 const ComparisonInput = function({ site, query, history }) {
-  if (!site.flags.comparisons) return null
   if (COMPARISON_DISABLED_PERIODS.includes(query.period)) return null
   if (!isComparisonEnabled(query.comparison)) return null
 
@@ -133,7 +131,9 @@ const ComparisonInput = function({ site, query, history }) {
 
   const [uiMode, setUiMode] = React.useState("menu")
   React.useEffect(() => {
-    if (uiMode == "datepicker" && calendar) calendar.current.flatpickr.open()
+    if (uiMode == "datepicker") {
+      setTimeout(() => calendar.current.flatpickr.open(), 100)
+    }
   }, [uiMode])
 
   const flatpickrOptions = {
@@ -183,8 +183,7 @@ const ComparisonInput = function({ site, query, history }) {
             { uiMode == "datepicker" &&
             <div className="h-0 absolute">
               <Flatpickr ref={calendar} options={flatpickrOptions} className="invisible" />
-            </div>
-            }
+            </div> }
           </Menu>
         </div>
       </div>

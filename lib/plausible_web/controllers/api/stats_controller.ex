@@ -194,11 +194,10 @@ defmodule PlausibleWeb.Api.StatsController do
     with :ok <- validate_params(params) do
       query = Query.from(site, params) |> Filters.add_prefix()
 
-      comparison_mode = params["comparison"] || "previous_period"
       comparison_opts = parse_comparison_opts(params)
 
       comparison_query =
-        case Stats.Comparisons.compare(site, query, comparison_mode, comparison_opts) do
+        case Stats.Comparisons.compare(site, query, params["comparison"], comparison_opts) do
           {:ok, query} -> query
           {:error, _cause} -> nil
         end
@@ -362,34 +361,21 @@ defmodule PlausibleWeb.Api.StatsController do
     conversion_rate = calculate_cr(unique_visitors, converted_visitors)
     prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
 
-    stats = [
-      %{
-        name: "Unique visitors",
-        value: unique_visitors,
-        comparison_value: prev_unique_visitors,
-        change: percent_change(prev_unique_visitors, unique_visitors)
-      },
-      %{
-        name: "Unique conversions",
-        value: converted_visitors,
-        comparison_value: prev_converted_visitors,
-        change: percent_change(prev_converted_visitors, converted_visitors)
-      },
-      %{
-        name: "Total conversions",
-        value: completions,
-        comparison_value: prev_completions,
-        change: percent_change(prev_completions, completions)
-      },
-      %{
-        name: "Conversion rate",
-        value: conversion_rate,
-        comparison_value: prev_conversion_rate,
-        change: percent_change(prev_conversion_rate, conversion_rate)
-      }
-    ]
+    build_item = fn name, value, comparison_value ->
+      if comparison_value do
+        change = percent_change(comparison_value, value)
+        %{name: name, value: value, comparison_value: comparison_value, change: change}
+      else
+        %{name: name, value: value}
+      end
+    end
 
-    {stats, 100}
+    {[
+       build_item.("Unique visitors", unique_visitors, prev_unique_visitors),
+       build_item.("Unique conversions", converted_visitors, prev_converted_visitors),
+       build_item.("Total conversions", completions, prev_completions),
+       build_item.("Conversion rate", conversion_rate, prev_conversion_rate)
+     ], 100}
   end
 
   defp fetch_top_stats(site, query, comparison_query) do
@@ -437,10 +423,14 @@ defmodule PlausibleWeb.Api.StatsController do
   defp top_stats_entry(current_results, prev_results, name, key) do
     if current_results[key] do
       value = get_in(current_results, [key, :value])
-      prev_value = get_in(prev_results, [key, :value])
-      change = prev_value && calculate_change(key, prev_value, value)
 
-      %{name: name, value: value, comparison_value: prev_value, change: change}
+      if prev_results do
+        prev_value = get_in(prev_results, [key, :value])
+        change = calculate_change(key, prev_value, value)
+        %{name: name, value: value, comparison_value: prev_value, change: change}
+      else
+        %{name: name, value: value}
+      end
     end
   end
 

@@ -15,18 +15,11 @@ function Maybe({condition, children}) {
 }
 
 export default class TopStats extends React.Component {
-  renderPercentageComparison(name, comparison, forceDarkMode = false) {
+  renderPercentageComparison(name, comparison) {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
-    const defaultClassName = classNames({
-      "text-xs dark:text-gray-100": !forceDarkMode,
-      "text-xs text-gray-100": forceDarkMode
-    })
-
-    const noChangeClassName = classNames({
-      "text-xs text-gray-700 dark:text-gray-300": !forceDarkMode,
-      "text-xs text-gray-300": forceDarkMode
-    })
+    const defaultClassName = "text-xs text-gray-100"
+    const noChangeClassName = "text-xs text-gray-300"
 
     if (comparison > 0) {
       const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
@@ -72,7 +65,7 @@ export default class TopStats extends React.Component {
       <div>
         {query.comparison && <div className="whitespace-nowrap">
           {this.topStatNumberLong(stat.name, stat.value)} vs. {this.topStatNumberLong(stat.name, stat.comparison_value)} {statName}
-          <span className="ml-2">{this.renderPercentageComparison(stat.name, stat.change, true)}</span>
+          <span className="ml-2">{this.renderPercentageComparison(stat.name, stat.change)}</span>
         </div>}
 
         {!query.comparison && <div className="whitespace-nowrap">
@@ -141,9 +134,6 @@ export default class TopStats extends React.Component {
               <div>
                 <span className="flex items-center justify-between whitespace-nowrap">
                   <p className="font-bold text-xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat.name, stat.value)}</p>
-                  <Maybe condition={!query.comparison}>
-                    {this.renderPercentageComparison(stat.name, stat.change)}
-                  </Maybe>
                 </span>
                   <Maybe condition={query.comparison}>
                     <p className="text-xs dark:text-gray-100">{ formatDateRange(site, topStatData.from, topStatData.to) }</p>
