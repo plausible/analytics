@@ -66,13 +66,15 @@ class LineGraph extends React.Component {
         onResize: this.updateWindowDimensions,
         elements: { line: { tension: 0 }, point: { radius: 0 } },
         onClick: this.onClick.bind(this),
+        scale: {
+          ticks: { precision: 0, maxTicksLimit: 8 }
+        },
         scales: {
           y: {
             min: 0,
             suggestedMax: calculateMaximumY(dataSet),
             ticks: {
               callback: METRIC_FORMATTER[metric],
-              maxTicksLimit: 8,
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             },
             grid: {
@@ -89,7 +91,6 @@ class LineGraph extends React.Component {
           x: {
             grid: { display: false },
             ticks: {
-              maxTicksLimit: 8,
               callback: function (val, _index, _ticks) {
                 if (this.getLabelForValue(val) == "__blank__") return ""
 
@@ -215,7 +216,6 @@ class LineGraph extends React.Component {
    */
   updateWindowDimensions(chart, dimensions) {
     chart.options.scales.x.ticks.maxTicksLimit = dimensions.width < 720 ? 5 : 8
-    chart.options.scales.y.ticks.maxTicksLimit = dimensions.height < 233 ? 3 : 8
   }
 
   onClick(e) {
