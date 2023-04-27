@@ -1061,15 +1061,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   describe "breakdown by event:goal" do
     test "custom properties from custom events are returned", %{conn: conn, site: site} do
-      insert(:goal, %{site: site, event_name: "404"})
       insert(:goal, %{site: site, event_name: "Purchase"})
       insert(:goal, %{site: site, page_path: "/test"})
 
       populate_stats(site, [
-        build(:pageview,
-          timestamp: ~N[2021-01-01 00:00:00],
-          pathname: "/test"
-        ),
         build(:pageview,
           timestamp: ~N[2021-01-01 00:00:01],
           pathname: "/test",
@@ -1077,28 +1072,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "meta.value": ["HTTP"]
         ),
         build(:event,
-          name: "404",
-          timestamp: ~N[2021-01-01 00:00:02],
-          "meta.key": ["method"],
-          "meta.value": ["HTTP"]
-        ),
-        build(:event,
           name: "Purchase",
-          timestamp: ~N[2021-01-01 00:00:02],
-          "meta.key": ["method"],
-          "meta.value": ["HTTPS"]
-        ),
-        build(:event,
-          name: "404",
           timestamp: ~N[2021-01-01 00:00:03],
           "meta.key": ["OS", "method"],
           "meta.value": ["Linux", "HTTP"]
         ),
         build(:event,
-          name: "404",
-          timestamp: ~N[2021-01-01 00:00:04],
-          "meta.key": ["version"],
-          "meta.value": ["1"]
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:03],
+          "meta.key": ["OS"],
+          "meta.value": ["Linux"]
         )
       ])
 
@@ -1110,28 +1093,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           "property" => "event:goal"
         })
 
-      res =
-        Enum.map(json_response(conn, 200)["results"], fn item ->
-          Map.update(item, "props", [], fn x -> Enum.sort(x) end)
-        end)
-
-      assert res == [
+      assert [
                %{
-                 "goal" => "404",
-                 "props" => ["OS", "method", "version"],
-                 "visitors" => 3
+                 "goal" => "Purchase",
+                 "props" => props,
+                 "visitors" => 2
                },
                %{
                  "goal" => "Visit /test",
                  "props" => [],
-                 "visitors" => 2
-               },
-               %{
-                 "goal" => "Purchase",
-                 "props" => ["method"],
                  "visitors" => 1
                }
-             ]
+             ] = json_response(conn, 200)["results"]
+
+      assert "method" in props
+      assert "OS" in props
     end
   end
 
@@ -1477,6 +1453,94 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                "results" => [
                  %{"name" => "Signup", "visitors" => 2},
                  %{"name" => "Login", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "IN filter for event:props:*", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Safari",
+          "meta.key": ["browser"],
+          "meta.value": ["Safari"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Firefox",
+          "meta.key": ["browser"],
+          "meta.value": ["Firefox"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:browser",
+          "filters" => "event:props:browser == Chrome|Safari"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"browser" => "Chrome", "visitors" => 2},
+                 %{"browser" => "Safari", "visitors" => 1}
+               ]
+             }
+    end
+
+    test "IN filter for event:props:* including (none) value", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Safari",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Firefox",
+          "meta.key": ["browser"],
+          "meta.value": ["Firefox"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:browser",
+          "filters" => "event:props:browser == Chrome|(none)"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"browser" => "Chrome", "visitors" => 2},
+                 %{"browser" => "Safari", "visitors" => 1}
                ]
              }
     end

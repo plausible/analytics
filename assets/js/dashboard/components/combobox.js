@@ -129,17 +129,24 @@ export default function PlausibleCombobox(props) {
   function selectOption(option) {
     if (isDisabled(option)) return
 
-    props.onSelect([...props.values, option])
+    if (props.singleOption) {
+      props.onSelect([option])
+    } else {
+      searchRef.current.focus()
+      props.onSelect([...props.values, option])
+    }
+
     setOpen(false)
     setInput('')
-    searchRef.current.focus()
   }
 
   function removeOption(option, e) {
     e.stopPropagation()
     const newValues = props.values.filter((val) => val.value !== option.value)
     props.onSelect(newValues)
-    searchRef.current.focus()
+    if (!searchBoxHidden) {
+      searchRef.current.focus()
+    }
     setOpen(false)
   }
 
@@ -155,19 +162,38 @@ export default function PlausibleCombobox(props) {
     return () => { document.removeEventListener("mousedown", handleClick, false); }
   }, [])
 
+  useEffect(() => {
+    if (props.singleOption && props.values.length === 0) {
+      searchRef.current.focus()
+    }
+  }, [props.values.length === 0])
+
   const matchesFound = !loading && visibleOptions.length > 0
   const noMatchesFound = !loading && visibleOptions.length === 0
+  
+  const searchBoxHidden = !!props.singleOption && props.values.length === 1
+  const searchBoxClass = classNames('border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm', {
+    'hidden': searchBoxHidden
+  })
+
+  const containerClass = classNames('relative w-full', {
+    [props.className]: !!props.className,
+    'opacity-20 cursor-default pointer-events-none': props.isDisabled
+  })
 
   return (
-    <div onKeyDown={onKeyDown} ref={containerRef} className="relative ml-2 w-full">
+    <div onKeyDown={onKeyDown} ref={containerRef} className={containerClass}>
       <div onClick={toggleOpen} className={classNames('pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500', {'border-indigo-500 ring-1 ring-indigo-500': isOpen, '': !isOpen})}>
         { props.values.map((value) => {
             return (
-              <div key={value.value} className="bg-indigo-100 dark:bg-indigo-600 flex justify-between w-full rounded-sm px-2 py-0.5 m-0.5 text-sm">{value.label} <span onClick={(e) => removeOption(value, e)} className="cursor-pointer font-bold ml-1">&times;</span></div>
+              <div key={value.value} className="bg-indigo-100 dark:bg-indigo-600 flex justify-between w-full rounded-sm px-2 py-0.5 m-0.5 text-sm">
+                <span className='break-all'>{value.label}</span>
+                <span onClick={(e) => removeOption(value, e)} className="cursor-pointer font-bold ml-1">&times;</span>
+              </div>
             )
           })
         }
-        <input className="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" ref={searchRef} value={input} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
+        <input className={searchBoxClass} ref={searchRef} value={input} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
         <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
           {!loading && <ChevronDownIcon className="h-4 w-4 text-gray-500" />}
           {loading && <Spinner />}

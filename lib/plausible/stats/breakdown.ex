@@ -68,12 +68,10 @@ defmodule Plausible.Stats.Breakdown do
     {limit, _} = pagination
 
     none_result =
-      if !Enum.any?(query.filters, fn {key, _} -> String.starts_with?(key, "event:props") end) do
-        none_filters = Map.put(query.filters, "event:props:" <> custom_prop, {:is, "(none)"})
-        none_query = %Query{query | filters: none_filters}
+      if include_none_result?(query.filters[property]) do
+        none_query = Query.put_filter(query, property, {:is, "(none)"})
 
         from(e in base_event_query(site, none_query),
-          order_by: [desc: fragment("uniq(?)", e.user_id)],
           select: %{},
           select_merge: %{^custom_prop => "(none)"},
           having: fragment("uniq(?)", e.user_id) > 0
@@ -85,14 +83,16 @@ defmodule Plausible.Stats.Breakdown do
       end
 
     trace(query, property, metrics)
-    results = breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
 
-    zipped = zip_results(none_result, results, custom_prop, metrics)
+    results =
+      breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
+      |> Kernel.++(none_result)
+      |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
 
-    if Enum.find_index(zipped, fn value -> value[custom_prop] == "(none)" end) == limit do
-      Enum.slice(zipped, 0..(limit - 1))
+    if Enum.find_index(results, fn value -> value[custom_prop] == "(none)" end) == limit do
+      Enum.slice(results, 0..(limit - 1))
     else
-      zipped
+      results
     end
   end
 
@@ -157,18 +157,6 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
-    sort_by = if Enum.member?(metrics, :visitors), do: :visitors, else: List.first(metrics)
-
-    property =
-      if is_binary(property) do
-        property
-        |> String.trim_leading("event:")
-        |> String.trim_leading("visit:")
-        |> String.trim_leading("props:")
-      else
-        property
-      end
-
     null_row = Enum.map(metrics, fn metric -> {metric, nil} end) |> Enum.into(%{})
 
     prop_values =
@@ -179,11 +167,18 @@ defmodule Plausible.Stats.Breakdown do
       event_row = Enum.find(event_result, fn row -> row[property] == value end) || %{}
       session_row = Enum.find(session_result, fn row -> row[property] == value end) || %{}
 
-      Map.merge(null_row, event_row)
+      null_row
+      |> Map.merge(event_row)
       |> Map.merge(session_row)
     end)
-    |> Enum.sort_by(fn row -> row[sort_by] end, :desc)
+    |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
   end
+
+  defp include_none_result?({:is, value}), do: value == "(none)"
+  defp include_none_result?({:is_not, "(none)"}), do: false
+  defp include_none_result?({:member, values}), do: Enum.member?(values, "(none)")
+  defp include_none_result?({:not_member, values}), do: !Enum.member?(values, "(none)")
+  defp include_none_result?(_), do: true
 
   defp breakdown_sessions(_, _, _, [], _), do: []
 
@@ -558,6 +553,10 @@ defmodule Plausible.Stats.Breakdown do
       },
       order_by: {:asc, s.browser_version}
     )
+  end
+
+  defp sorting_key(metrics) do
+    if Enum.member?(metrics, :visitors), do: :visitors, else: List.first(metrics)
   end
 
   defp transform_keys(results, keys_to_replace) do

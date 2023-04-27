@@ -167,6 +167,34 @@ defmodule Plausible.Stats.Base do
             )
           end
 
+        {"event:props:" <> prop_name, {:member, values}} ->
+          none_value_included = Enum.member?(values, "(none)")
+
+          from(
+            e in q,
+            left_lateral_join: meta in "meta",
+            as: :meta,
+            where:
+              (meta.key == ^prop_name and meta.value in ^values) or
+                (^none_value_included and
+                   fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
+          )
+
+        {"event:props:" <> prop_name, {:not_member, values}} ->
+          none_value_included = Enum.member?(values, "(none)")
+
+          from(
+            e in q,
+            left_lateral_join: meta in "meta",
+            as: :meta,
+            where:
+              (meta.key == ^prop_name and meta.value not in ^values) or
+                (^none_value_included and fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name) and
+                   meta.value not in ^values) or
+                (not (^none_value_included) and
+                   fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
+          )
+
         _ ->
           q
       end

@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible.Repo
   use Plug.ErrorHandler
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Filters, Comparisons}
+  alias Plausible.Stats.{Query, Filters, Comparisons, CustomProps}
 
   require Logger
 
@@ -1047,13 +1047,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
-    prop_names =
-      if query.filters["event:goal"] do
-        Stats.props(site, query)
-      else
-        %{}
-      end
-
     conversions =
       Stats.breakdown(site, query, "event:goal", [:visitors, :events], {100, 1})
       |> transform_keys(%{
@@ -1063,7 +1056,7 @@ defmodule PlausibleWeb.Api.StatsController do
       })
       |> Enum.map(fn goal ->
         goal
-        |> Map.put(:prop_names, prop_names[goal[:name]])
+        |> Map.put(:prop_names, CustomProps.props_for_goal(site, query))
         |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal[:unique_conversions]))
       end)
 
@@ -1111,15 +1104,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site, params) |> Filters.add_prefix()
 
-    prop_names =
-      if query.filters["event:goal"] do
-        {_, {_, goal}} = query.filters["event:goal"]
-
-        Stats.props(site, query)
-        |> Map.get(goal, [])
-      else
-        []
-      end
+    prop_names = Plausible.Stats.CustomProps.props_for_goal(site, query)
 
     values =
       prop_names
