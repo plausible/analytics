@@ -328,35 +328,34 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query, comparison_query) do
-    total_q = Query.remove_event_filters(query, [:goal, :props])
-
-    {prev_converted_visitors, prev_completions} =
-      if comparison_query do
-        %{visitors: %{value: prev_converted_visitors}, events: %{value: prev_completions}} =
-          Stats.aggregate(site, comparison_query, [:visitors, :events])
-
-        {prev_converted_visitors, prev_completions}
-      else
-        {nil, nil}
-      end
-
-    prev_unique_visitors =
-      if comparison_query do
-        site
-        |> Stats.aggregate(comparison_query, [:visitors])
-        |> get_in([:visitors, :value])
-      else
-        nil
-      end
+    totals_query = Query.remove_event_filters(query, [:goal, :props])
 
     %{
       visitors: %{value: unique_visitors}
-    } = Stats.aggregate(site, total_q, [:visitors])
+    } = Stats.aggregate(site, totals_query, [:visitors])
 
     %{
       visitors: %{value: converted_visitors},
       events: %{value: completions}
     } = Stats.aggregate(site, query, [:visitors, :events])
+
+    {prev_unique_visitors, prev_converted_visitors, prev_completions} =
+      if comparison_query do
+        totals_comparison_query = Query.remove_event_filters(comparison_query, [:goal, :props])
+
+        %{
+          visitors: %{value: prev_unique_visitors}
+        } = Stats.aggregate(site, totals_comparison_query, [:visitors])
+
+        %{
+          visitors: %{value: prev_converted_visitors},
+          events: %{value: prev_completions}
+        } = Stats.aggregate(site, comparison_query, [:visitors, :events])
+
+        {prev_unique_visitors, prev_converted_visitors, prev_completions}
+      else
+        {nil, nil, nil}
+      end
 
     conversion_rate = calculate_cr(unique_visitors, converted_visitors)
     prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
