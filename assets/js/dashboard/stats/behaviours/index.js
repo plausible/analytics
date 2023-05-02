@@ -63,14 +63,12 @@ export default function Behaviours({ query, site }) {
   const funnelNames = site.funnels.map(({name}) => name)
   const selectedFunnel = site.funnels.find(funnel => funnel.name === tab)
 
+  const tabs = <Tabs tab={tab} setTab={setTab} funnelNames={funnelNames} />
+
   return (
     <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
-      <div className="flex justify-between w-full">
-        <h3 className="font-bold dark:text-gray-100">Behaviors</h3>
-        <Tabs tab={tab} setTab={setTab} funnelNames={funnelNames} />
-      </div>
-      { tab == 'conversions' && <Conversions query={query} site={site} /> }
-      { funnelNames.includes(tab) && <Funnel funnel={selectedFunnel} query={query} site={site} /> }
+      { tab == 'conversions' && <Conversions tabs={tabs} query={query} site={site} /> }
+      { funnelNames.includes(tab) && <Funnel tabs={tabs} funnel={selectedFunnel} query={query} site={site} /> }
     </div>
   )
 }

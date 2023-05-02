@@ -100,6 +100,10 @@ export default class Conversions extends React.Component {
     } else if (this.state.goals) {
       return (
         <React.Fragment>
+          <div className="flex justify-between w-full">
+            <h3 className="font-bold dark:text-gray-100">Goal conversions</h3>
+            {this.props.tabs}
+          </div>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Goal</span>
             <div className="text-right">
