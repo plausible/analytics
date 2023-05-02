@@ -575,6 +575,30 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{"name" => "Total visits", "value" => 2} in res["top_stats"]
     end
+
+    test "does not return the views_per_visit metric when a page filter is applied", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/")
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      refute Enum.any?(res["top_stats"], fn
+               %{"name" => "Views per visit"} -> true
+               _ -> false
+             end)
+    end
   end
 
   describe "GET /api/stats/top-stats - filtered for goal" do

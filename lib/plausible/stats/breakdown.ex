@@ -189,7 +189,7 @@ defmodule Plausible.Stats.Breakdown do
     )
     |> filter_converted_sessions(site, query)
     |> do_group_by(property)
-    |> select_session_metrics(metrics)
+    |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, property, metrics)
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()

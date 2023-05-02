@@ -42,42 +42,7 @@ defmodule Plausible.Stats.Base do
       )
       |> add_sample_hint(query)
 
-    q =
-      case query.filters["event:page"] do
-        {:is, page} ->
-          from(e in q, where: e.pathname == ^page)
-
-        {:is_not, page} ->
-          from(e in q, where: e.pathname != ^page)
-
-        {:matches_member, glob_exprs} ->
-          page_regexes = Enum.map(glob_exprs, &page_regex/1)
-          from(e in q, where: fragment("multiMatchAny(?, ?)", e.pathname, ^page_regexes))
-
-        {:not_matches_member, glob_exprs} ->
-          page_regexes = Enum.map(glob_exprs, &page_regex/1)
-
-          from(e in q,
-            where: fragment("not(multiMatchAny(?, ?))", e.pathname, ^page_regexes)
-          )
-
-        {:matches, glob_expr} ->
-          regex = page_regex(glob_expr)
-          from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
-
-        {:does_not_match, glob_expr} ->
-          regex = page_regex(glob_expr)
-          from(e in q, where: fragment("not(match(?, ?))", e.pathname, ^regex))
-
-        {:member, list} ->
-          from(e in q, where: e.pathname in ^list)
-
-        {:not_member, list} ->
-          from(e in q, where: e.pathname not in ^list)
-
-        nil ->
-          q
-      end
+    q = from(e in q, where: ^dynamic_filter_condition(query, "event:page", :pathname))
 
     q =
       case query.filters["event:name"] do
@@ -213,7 +178,6 @@ defmodule Plausible.Stats.Base do
     "city" => "city_geoname_id"
   }
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_sessions(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
@@ -227,57 +191,15 @@ defmodule Plausible.Stats.Base do
       |> filter_by_entry_props(query)
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
-      filter = query.filters["visit:" <> prop_name]
+      filter_key = "visit:" <> prop_name
 
-      prop_name =
+      db_field =
         Map.get(@api_prop_name_to_db, prop_name, prop_name)
         |> String.to_existing_atom()
 
-      case filter do
-        {:is, value} ->
-          value = db_prop_val(prop_name, value)
-          from(s in sessions_q, where: fragment("? = ?", field(s, ^prop_name), ^value))
-
-        {:is_not, value} ->
-          value = db_prop_val(prop_name, value)
-          from(s in sessions_q, where: fragment("? != ?", field(s, ^prop_name), ^value))
-
-        {:member, values} ->
-          list = Enum.map(values, &db_prop_val(prop_name, &1))
-          from(s in sessions_q, where: field(s, ^prop_name) in ^list)
-
-        {:not_member, values} ->
-          list = Enum.map(values, &db_prop_val(prop_name, &1))
-          from(s in sessions_q, where: fragment("? not in ?", field(s, ^prop_name), ^list))
-
-        {:matches, expr} ->
-          regex = page_regex(expr)
-          from(s in sessions_q, where: fragment("match(?, ?)", field(s, ^prop_name), ^regex))
-
-        {:matches_member, exprs} ->
-          page_regexes = Enum.map(exprs, &page_regex/1)
-
-          from(s in sessions_q,
-            where: fragment("multiMatchAny(?, ?)", field(s, ^prop_name), ^page_regexes)
-          )
-
-        {:not_matches_member, exprs} ->
-          page_regexes = Enum.map(exprs, &page_regex/1)
-
-          from(s in sessions_q,
-            where: fragment("not(multiMatchAny(?, ?))", field(s, ^prop_name), ^page_regexes)
-          )
-
-        {:does_not_match, expr} ->
-          regex = page_regex(expr)
-          from(s in sessions_q, where: fragment("not(match(?, ?))", field(s, ^prop_name), ^regex))
-
-        nil ->
-          sessions_q
-
-        _ ->
-          raise "Unknown filter type"
-      end
+      from(s in sessions_q,
+        where: ^dynamic_filter_condition(query, filter_key, db_field)
+      )
     end)
   end
 
@@ -367,57 +289,67 @@ defmodule Plausible.Stats.Base do
 
   def select_event_metrics(_, [unknown | _]), do: raise("Unknown metric " <> unknown)
 
-  def select_session_metrics(q, []), do: q
+  def select_session_metrics(q, [], _query), do: q
 
-  def select_session_metrics(q, [:bounce_rate | rest]) do
+  def select_session_metrics(q, [:bounce_rate | rest], query) do
+    condition = dynamic_filter_condition(query, "event:page", :entry_page)
+
     from(s in q,
-      select_merge: %{
-        bounce_rate:
-          fragment("toUInt32(ifNotFinite(round(sum(is_bounce * sign) / sum(sign) * 100), 0))"),
-        __internal_visits: fragment("toUInt32(sum(sign))")
-      }
+      select_merge:
+        ^%{
+          bounce_rate:
+            dynamic(
+              [],
+              fragment(
+                "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
+                ^condition,
+                ^condition
+              )
+            ),
+          __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
+        }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:visits | rest]) do
+  def select_session_metrics(q, [:visits | rest], query) do
     from(s in q,
       select_merge: %{
         visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:pageviews | rest]) do
+  def select_session_metrics(q, [:pageviews | rest], query) do
     from(s in q,
       select_merge: %{
         pageviews:
           fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:events | rest]) do
+  def select_session_metrics(q, [:events | rest], query) do
     from(s in q,
       select_merge: %{
         events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:visitors | rest]) do
+  def select_session_metrics(q, [:visitors | rest], query) do
     from(s in q,
       select_merge: %{
         visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:visit_duration | rest]) do
+  def select_session_metrics(q, [:visit_duration | rest], query) do
     from(s in q,
       select_merge: %{
         :visit_duration =>
@@ -425,27 +357,67 @@ defmodule Plausible.Stats.Base do
         __internal_visits: fragment("toUInt32(sum(sign))")
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:views_per_visit | rest]) do
+  def select_session_metrics(q, [:views_per_visit | rest], query) do
     from(s in q,
       select_merge: %{
         views_per_visit:
           fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
       }
     )
-    |> select_session_metrics(rest)
+    |> select_session_metrics(rest, query)
   end
 
-  def select_session_metrics(q, [:sample_percent | rest]) do
+  def select_session_metrics(q, [:sample_percent | rest], query) do
     from(e in q,
       select_merge: %{
         sample_percent:
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
       }
     )
-    |> select_event_metrics(rest)
+    |> select_session_metrics(rest, query)
+  end
+
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
+  defp dynamic_filter_condition(query, filter_key, db_field) do
+    case query && query.filters && query.filters[filter_key] do
+      {:is, value} ->
+        value = db_field_val(db_field, value)
+        dynamic([x], field(x, ^db_field) == ^value)
+
+      {:is_not, value} ->
+        value = db_field_val(db_field, value)
+        dynamic([x], field(x, ^db_field) != ^value)
+
+      {:matches_member, glob_exprs} ->
+        page_regexes = Enum.map(glob_exprs, &page_regex/1)
+        dynamic([x], fragment("multiMatchAny(?, ?)", field(x, ^db_field), ^page_regexes))
+
+      {:not_matches_member, glob_exprs} ->
+        page_regexes = Enum.map(glob_exprs, &page_regex/1)
+        dynamic([x], fragment("not(multiMatchAny(?, ?))", field(x, ^db_field), ^page_regexes))
+
+      {:matches, glob_expr} ->
+        regex = page_regex(glob_expr)
+        dynamic([x], fragment("match(?, ?)", field(x, ^db_field), ^regex))
+
+      {:does_not_match, glob_expr} ->
+        regex = page_regex(glob_expr)
+        dynamic([x], fragment("not(match(?, ?))", field(x, ^db_field), ^regex))
+
+      {:member, list} ->
+        list = Enum.map(list, &db_field_val(db_field, &1))
+        dynamic([x], field(x, ^db_field) in ^list)
+
+      {:not_member, list} ->
+        list = Enum.map(list, &db_field_val(db_field, &1))
+        dynamic([x], field(x, ^db_field) not in ^list)
+
+      nil ->
+        true
+    end
   end
 
   def filter_converted_sessions(db_query, site, query) do
@@ -464,15 +436,15 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  defp db_prop_val(:referrer_source, @no_ref), do: ""
-  defp db_prop_val(:referrer, @no_ref), do: ""
-  defp db_prop_val(:utm_medium, @no_ref), do: ""
-  defp db_prop_val(:utm_source, @no_ref), do: ""
-  defp db_prop_val(:utm_campaign, @no_ref), do: ""
-  defp db_prop_val(:utm_content, @no_ref), do: ""
-  defp db_prop_val(:utm_term, @no_ref), do: ""
-  defp db_prop_val(_, @not_set), do: ""
-  defp db_prop_val(_, val), do: val
+  defp db_field_val(:referrer_source, @no_ref), do: ""
+  defp db_field_val(:referrer, @no_ref), do: ""
+  defp db_field_val(:utm_medium, @no_ref), do: ""
+  defp db_field_val(:utm_source, @no_ref), do: ""
+  defp db_field_val(:utm_campaign, @no_ref), do: ""
+  defp db_field_val(:utm_content, @no_ref), do: ""
+  defp db_field_val(:utm_term, @no_ref), do: ""
+  defp db_field_val(_, @not_set), do: ""
+  defp db_field_val(_, val), do: val
 
   defp beginning_of_time(candidate, native_stats_start_at) do
     if Timex.after?(native_stats_start_at, candidate) do

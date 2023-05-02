@@ -40,7 +40,7 @@ defmodule Plausible.Stats.Aggregate do
   defp aggregate_sessions(site, query, metrics) do
     from(e in query_sessions(site, query), select: %{})
     |> filter_converted_sessions(site, query)
-    |> select_session_metrics(metrics)
+    |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
   end

@@ -1204,6 +1204,63 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       end
     end
 
+    test "event:page filter is interpreted as entry_page filter only for bounce_rate", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          browser: "Chrome",
+          user_id: @user_id,
+          pathname: "/ignore",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Chrome",
+          user_id: @user_id,
+          pathname: "/plausible.io",
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          browser: "Chrome",
+          user_id: 456,
+          pathname: "/important-page",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          browser: "Chrome",
+          user_id: 456,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          browser: "Chrome",
+          pathname: "/plausible.io",
+          timestamp: ~N[2021-01-01 00:01:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,bounce_rate",
+          "property" => "visit:browser",
+          "filters" => "event:page == /plausible.io|/important-page"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "browser" => "Chrome",
+                   "bounce_rate" => 50,
+                   "visitors" => 3
+                 }
+               ]
+             }
+    end
+
     test "event:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

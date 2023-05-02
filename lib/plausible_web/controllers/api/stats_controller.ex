@@ -385,7 +385,6 @@ defmodule PlausibleWeb.Api.StatsController do
           :visitors,
           :visits,
           :pageviews,
-          :views_per_visit,
           :bounce_rate,
           :time_on_page,
           :sample_percent
