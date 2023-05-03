@@ -106,7 +106,9 @@ native_stats_range
       browser_version: to_string(Enum.random(0..50)),
       screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
       operating_system: Enum.random(["Windows", "macOS", "Linux"]),
-      operating_system_version: to_string(Enum.random(0..15))
+      operating_system_version: to_string(Enum.random(0..15)),
+      pathname:
+        Enum.random(["/", "/login", "/settings", "/register", "/docs", "/docs/1", "/docs/2"])
     ]
     |> Keyword.merge(geolocation)
     |> then(&Plausible.Factory.build(:pageview, &1))

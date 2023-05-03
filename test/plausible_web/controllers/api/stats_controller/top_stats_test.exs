@@ -826,5 +826,34 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{"change" => 100, "comparison_value" => 0, "name" => "Total visits", "value" => 4} in top_stats
     end
+
+    test "compares conversion rates", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2023-01-03T00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2023-01-03T00:00:00]),
+        build(:pageview, timestamp: ~N[2023-01-03T00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2023-01-03T00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2023-01-02T00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2023-01-02T00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2023-01-02T00:00:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2023-01-03&comparison=previous_period&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{
+               "change" => -50,
+               "comparison_value" => 66.7,
+               "name" => "Conversion rate",
+               "value" => 33.3
+             } in res["top_stats"]
+    end
   end
 end
