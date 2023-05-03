@@ -20,6 +20,7 @@
     data-has-goals="<%= @has_goals %>"
     data-logged-in="<%= !!@conn.assigns[:current_user] %>"
     data-stats-begin="<%= @stats_start_date %>"
+    data-native-stats-begin="<%= @native_stats_start_date %>"
     data-shared-link-auth="<%= assigns[:shared_link_auth] %>"
     data-embedded="<%= @conn.assigns[:embedded] %>"
     data-background="<%= @conn.assigns[:background] %>"

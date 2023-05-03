@@ -13,6 +13,7 @@ import { IntervalPicker, getStoredInterval, storeInterval } from './interval-pic
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import classNames from 'classnames';
+import { parseNaiveDate, isBefore } from '../../util/date'
 
 const calculateMaximumY = function(dataset) {
   const yAxisValues = dataset
@@ -284,9 +285,22 @@ class LineGraph extends React.Component {
   }
 
   importedNotice() {
-    const source = this.props.topStatData && this.props.topStatData.imported_source;
+    if (!this.props.topStatData?.imported_source) return
 
-    if (source) {
+    const isBeforeNativeStats = (date) => {
+      if (!date) return false
+
+      const nativeStatsBegin = parseNaiveDate(this.props.site.nativeStatsBegin)
+      const parsedDate = parseNaiveDate(date)
+
+      return isBefore(parsedDate, nativeStatsBegin, "day")
+    }
+
+    const isQueryingImportedPeriod = isBeforeNativeStats(this.props.topStatData.from)
+    const isComparingImportedPeriod = isBeforeNativeStats(this.props.topStatData.comparing_from)
+
+    if (isQueryingImportedPeriod || isComparingImportedPeriod) {
+      const source = this.props.topStatData.imported_source
       const withImported = this.props.topStatData.with_imported;
       const strike = withImported ? "" : " line-through"
       const target =  url.setQuery('with_imported', !withImported)
