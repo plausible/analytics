@@ -145,6 +145,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       )
 
     ClickhouseRepo.all(q)
+    |> Plausible.Stats.CustomProps.drop_garbage_props(site)
     |> wrap_suggestions()
   end
 
