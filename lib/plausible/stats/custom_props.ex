@@ -32,6 +32,7 @@ defmodule Plausible.Stats.CustomProps do
       {:matches, _} -> fetch_prop_names(site, query)
       _ -> []
     end
+    |> drop_garbage_props(site)
   end
 
   defp fetch_prop_names(site, query) do
