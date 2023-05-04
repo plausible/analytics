@@ -226,4 +226,10 @@ defmodule Plausible.Ingestion.RequestTest do
     assert {:error, changeset} = Request.build(conn)
     assert {"should be at most %{count} character(s)", _} = changeset.errors[:pathname]
   end
+
+  test "malicious input, technically valid json" do
+    conn = build_conn(:post, "/api/events", "\"<script>\"")
+    assert {:error, changeset} = Request.build(conn)
+    assert changeset.errors[:request]
+  end
 end

@@ -74,7 +74,7 @@ defmodule Plausible.Ingestion.Request do
         {:ok, body, _conn} = Plug.Conn.read_body(conn)
 
         case Jason.decode(body) do
-          {:ok, params} -> {:ok, params}
+          {:ok, params} when is_map(params) -> {:ok, params}
           _ -> {:error, :invalid_json}
         end
 

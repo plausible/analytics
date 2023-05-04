@@ -382,7 +382,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
       assert json_response(conn, 400) == %{
                "error" =>
-                 "Failed to parse date argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"
+                 "Failed to parse 'date' argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"
              }
     end
   end
