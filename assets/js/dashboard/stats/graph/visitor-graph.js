@@ -14,6 +14,7 @@ import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import classNames from 'classnames';
 import { parseNaiveDate, isBefore } from '../../util/date'
+import { isComparisonEnabled } from '../../comparison-input'
 
 const calculateMaximumY = function(dataset) {
   const yAxisValues = dataset
@@ -474,7 +475,10 @@ export default class VisitorGraph extends React.Component {
   }
 
   fetchTopStatData() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
+    const query = { ...this.props.query }
+    if (!isComparisonEnabled(query.comparison)) query.comparison = 'previous_period'
+
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, query)
       .then((res) => {
         res.top_stats = this.maybeRemoveFeatureFlaggedMetrics(res.top_stats)
         this.setState({ topStatsLoadingState: LoadingState.loaded, topStatData: res }, () => {
