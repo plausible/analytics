@@ -144,7 +144,8 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
                  site.domain
                )
 
-      assert Phoenix.Flash.get(req2.assigns.flash, :error) =~ "This invitation has been already sent."
+      assert Phoenix.Flash.get(req2.assigns.flash, :error) =~
+               "This invitation has been already sent."
     end
   end
 
@@ -294,7 +295,9 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       membership = Repo.reload!(membership)
 
       assert membership.role == :admin
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "You are not allowed to grant the owner role"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "You are not allowed to grant the owner role"
     end
 
     test "owner cannot downgrade themselves", %{
@@ -310,7 +313,9 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       membership = Repo.reload!(membership)
 
       assert membership.role == :owner
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "You are not allowed to grant the admin role"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "You are not allowed to grant the admin role"
     end
 
     test "admin can make another user admin", %{
@@ -355,7 +360,9 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       membership = Repo.reload!(membership)
 
       assert membership.role == :admin
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "You are not allowed to grant the owner role"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "You are not allowed to grant the owner role"
     end
   end
 
@@ -397,7 +404,9 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         )
 
       conn = delete(conn, "/sites/#{site.domain}/memberships/#{foreign_membership.id}")
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Failed to find membership to remove"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Failed to find membership to remove"
 
       assert Repo.exists?(
                from sm in Plausible.Site.Membership,

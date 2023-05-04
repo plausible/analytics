@@ -1028,7 +1028,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       domain = insert(:custom_domain, site: site)
 
       conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
-      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Custom domain deleted successfully"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+               "Custom domain deleted successfully"
 
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
     end
