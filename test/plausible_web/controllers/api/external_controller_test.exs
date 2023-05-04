@@ -250,6 +250,23 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.referrer_source == "Facebook"
     end
 
+    test "limits referrer string size", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://gigride.live/",
+        referrer: "https://facebook.com/#{for _ <- 1..2500, do: "a", into: ""}",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      assert %{"errors" => %{"referrer" => ["should be at most 2000 character(s)"]}} =
+               json_response(conn, 400)
+    end
+
     test "strips trailing slash from referrer", %{conn: conn, site: site} do
       params = %{
         name: "pageview",

@@ -57,6 +57,7 @@ defmodule Plausible.Ingestion.Request do
           :timestamp
         ])
         |> Changeset.validate_length(:pathname, max: 2000)
+        |> Changeset.validate_length(:referrer, max: 2000)
         |> Changeset.apply_action(nil)
 
       {:error, :invalid_json} ->
