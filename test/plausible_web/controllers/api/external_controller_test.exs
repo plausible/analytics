@@ -35,6 +35,23 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/"
     end
 
+    test "validates event name length", %{conn: conn, site: site} do
+      params = %{
+        domain: site.domain,
+        name: for(_ <- 1..500, do: "a", into: ""),
+        url: "http://gigride.live/",
+        referrer: "http://m.facebook.com/"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      assert %{"errors" => %{"event_name" => ["should be at most 300 character(s)"]}} =
+               json_response(conn, 400)
+    end
+
     test "works with Content-Type: text/plain", %{conn: conn, site: site} do
       params = %{
         domain: site.domain,
