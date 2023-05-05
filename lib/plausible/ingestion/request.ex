@@ -47,6 +47,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_hostname()
         |> put_user_agent(conn)
         |> put_request_params(request_body)
+        |> put_props(request_body)
         |> put_pathname()
         |> put_query_params()
         |> map_domains(request_body)
@@ -90,8 +91,7 @@ defmodule Plausible.Ingestion.Request do
       changeset,
       event_name: request_body["n"] || request_body["name"],
       referrer: request_body["r"] || request_body["referrer"],
-      hash_mode: request_body["h"] || request_body["hashMode"],
-      props: parse_props(request_body)
+      hash_mode: request_body["h"] || request_body["hashMode"]
     )
   end
 
@@ -153,42 +153,56 @@ defmodule Plausible.Ingestion.Request do
     Changeset.put_change(changeset, :hostname, sanitize_hostname(host))
   end
 
-  defp parse_props(%{} = request_body) do
-    raw_props =
-      request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"]
+  defp put_props(changeset, %{} = request_body) do
+    props =
+      (request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"])
+      |> decode_props_or_fallback()
+      |> Enum.reject(fn {_k, v} -> is_nil(v) || is_list(v) || is_map(v) || v == "" end)
+      |> Map.new()
 
-    case decode_raw_props(raw_props) do
-      {:ok, parsed_json} ->
-        parsed_json
-        |> Enum.filter(&valid_prop_value?/1)
-        |> Map.new()
+    changeset
+    |> Changeset.put_change(:props, props)
+    |> validate_props()
+  end
 
-      _error ->
-        %{}
+  defp decode_props_or_fallback(raw) do
+    with raw when is_binary(raw) <- raw,
+         {:ok, %{} = decoded} <- Jason.decode(raw) do
+      decoded
+    else
+      already_a_map when is_map(already_a_map) -> already_a_map
+      {:ok, _list_or_other} -> %{}
+      {:error, _decode_error} -> %{}
+      _any -> %{}
     end
   end
 
-  defp decode_raw_props(props) when is_map(props), do: {:ok, props}
+  @max_props 50
+  @max_prop_key_length 300
+  @max_prop_value_length 2000
+  defp validate_props(changeset) do
+    props = Changeset.get_field(changeset, :props)
 
-  defp decode_raw_props(raw_json) when is_binary(raw_json) do
-    case Jason.decode(raw_json) do
-      {:ok, parsed_props} when is_map(parsed_props) ->
-        {:ok, parsed_props}
+    props_too_large? =
+      Enum.any?(props, fn
+        {key, _value} when byte_size(key) > @max_prop_key_length -> true
+        {_key, value} when byte_size(value) > @max_prop_value_length -> true
+        _prop -> false
+      end)
 
-      _ ->
-        :not_a_map
-    end
-  end
+    cond do
+      Enum.count(props) > @max_props ->
+        Changeset.add_error(changeset, :props, "should not have more than #{@max_props} items")
 
-  defp decode_raw_props(_), do: :bad_format
+      props_too_large? ->
+        Changeset.add_error(
+          changeset,
+          :props,
+          "keys should have at most #{@max_prop_key_length} chars and values #{@max_prop_value_length} chars"
+        )
 
-  defp valid_prop_value?({key, value}) do
-    case {key, value} do
-      {_key, ""} -> false
-      {_key, nil} -> false
-      {_key, value} when is_list(value) -> false
-      {_key, value} when is_map(value) -> false
-      {_key, _value} -> true
+      true ->
+        changeset
     end
   end
 

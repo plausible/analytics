@@ -621,6 +621,58 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :"meta.value") == ["true", "12"]
     end
 
+    test "validates props key length", %{conn: conn, site: site} do
+      long_string = for _ <- 1..500, do: "a", into: ""
+
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: site.domain,
+        props: %{long_string => "abc"}
+      }
+
+      conn = post(conn, "/api/event", params)
+
+      assert %{
+               "errors" => %{
+                 "props" => ["keys should have at most 300 chars and values 2000 chars"]
+               }
+             } = json_response(conn, 400)
+    end
+
+    test "validates props value length", %{conn: conn, site: site} do
+      long_string = for _ <- 1..2500, do: "a", into: ""
+
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: site.domain,
+        props: %{"key" => long_string}
+      }
+
+      conn = post(conn, "/api/event", params)
+
+      assert %{
+               "errors" => %{
+                 "props" => ["keys should have at most 300 chars and values 2000 chars"]
+               }
+             } = json_response(conn, 400)
+    end
+
+    test "validates props items length", %{conn: conn, site: site} do
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: site.domain,
+        props: for(i <- 1..500, do: {"#{i}", i}, into: %{})
+      }
+
+      conn = post(conn, "/api/event", params)
+
+      assert %{"errors" => %{"props" => ["should not have more than 50 items"]}} =
+               json_response(conn, 400)
+    end
+
     test "ignores malformed custom props", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
