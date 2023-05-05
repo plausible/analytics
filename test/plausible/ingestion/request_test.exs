@@ -213,7 +213,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert {"scheme is not allowed", _} = changeset.errors[:url]
   end
 
-  test "returns validation error when pathname is too long" do
+  test "returns validation error when url is too long" do
     long_string = for _ <- 1..5000, do: "a", into: ""
 
     payload = %{
@@ -224,7 +224,7 @@ defmodule Plausible.Ingestion.RequestTest do
 
     conn = build_conn(:post, "/api/events", payload)
     assert {:error, changeset} = Request.build(conn)
-    assert {"should be at most %{count} character(s)", _} = changeset.errors[:pathname]
+    assert {"must be a valid url", _} = changeset.errors[:url]
   end
 
   test "malicious input, technically valid json" do

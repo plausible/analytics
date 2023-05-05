@@ -12,7 +12,7 @@ defmodule Plausible.Ingestion.Request do
     field :remote_ip, :string
     field :user_agent, :string
     field :event_name, :string
-    field :uri, :string
+    field :uri, :map
     field :hostname, :string
     field :referrer, :string
     field :domains, {:array, :string}
@@ -129,15 +129,17 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
+  @max_url_size 2_000
   @disallowed_schemes ~w(data)
   defp put_uri(changeset, %{} = request_body) do
     with url when is_binary(url) <- request_body["u"] || request_body["url"],
+         url when byte_size(url) <= @max_url_size <- url,
          %URI{} = uri when uri.scheme not in @disallowed_schemes <- URI.parse(url) do
       Changeset.put_change(changeset, :uri, uri)
     else
       nil -> Changeset.add_error(changeset, :url, "is required")
       %URI{} -> Changeset.add_error(changeset, :url, "scheme is not allowed")
-      _ -> Changeset.add_error(changeset, :url, "must be a string")
+      _ -> Changeset.add_error(changeset, :url, "must be a valid url")
     end
   end
 

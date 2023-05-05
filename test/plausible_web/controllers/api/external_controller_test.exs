@@ -448,6 +448,28 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.utm_campaign == "video_story"
     end
 
+    test "validates url length with query params", %{conn: conn, site: site} do
+      long_string = for _ <- 1..500, do: "a", into: ""
+
+      utm_tags =
+        URI.encode_query(%{
+          utm_content: long_string,
+          utm_medium: long_string,
+          utm_source: long_string,
+          utm_campaign: long_string,
+          utm_term: long_string
+        })
+
+      params = %{
+        name: "pageview",
+        url: "http://www.example.com/?#{utm_tags}",
+        domain: site.domain
+      }
+
+      conn = post(conn, "/api/event", params)
+      assert %{"errors" => %{"url" => ["must be a valid url"]}} = json_response(conn, 400)
+    end
+
     test "if it's an :unknown referrer, just the domain is used", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
