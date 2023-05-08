@@ -16,11 +16,11 @@ import { withPinnedHeader } from './pinned-header-hoc';
 function Historical(props) {
   const tooltipBoundary = React.useRef(null)
 
-  function renderConversions() {
+  function renderBehaviours() {
     if (props.site.hasGoals) {
       return (
         <div className="items-start justify-between block w-full mt-6 md:flex">
-          <Behaviours site={props.site} query={props.query} / >
+          <Behaviours site={props.site} query={props.query} />
         </div>
       )
     }
@@ -51,7 +51,7 @@ function Historical(props) {
         <Locations site={props.site} query={props.query} />
         <Devices site={props.site} query={props.query} />
       </div>
-      { renderConversions() }
+      {renderBehaviours()}
     </div>
   )
 }
