@@ -4,6 +4,7 @@ defmodule Plausible.Funnels do
   alias Plausible.Funnel
   alias Plausible.Repo
   alias Plausible.ClickhouseRepo
+  alias Plausible.Stats.Base
 
   import Ecto.Query
 
@@ -53,11 +54,12 @@ defmodule Plausible.Funnels do
     Repo.one(q)
   end
 
-  def evaluate(_query, funnel_id, site_id) do
-    funnel = get(site_id, funnel_id)
+  def evaluate(query, funnel_id, site) do
+    # TODO: handle non-existing funnel
+    funnel = get(site.id, funnel_id)
 
     q_events =
-      from(e in "events_v2",
+      from(e in Base.base_event_query(site, query),
         select: %{session_id: e.session_id},
         where: e.site_id == ^funnel.site_id,
         group_by: e.session_id,

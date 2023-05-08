@@ -846,6 +846,30 @@ defmodule PlausibleWeb.Api.StatsController do
     )
   end
 
+  def funnel(conn, %{"id" => funnel_id} = params) do
+    site = conn.assigns[:site]
+
+    with :ok <- validate_params(params),
+         query <- Query.from(site, params) |> Filters.add_prefix(),
+         :ok <- validate_funnel_query(query) do
+      {funnel_id, ""} = Integer.parse(funnel_id)
+      funnel = Plausible.Funnels.evaluate(query, funnel_id, site)
+
+      json(conn, funnel)
+    else
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
+    end
+  end
+
+  defp validate_funnel_query(query) do
+    if query.filters["event:page"] || query.filters["event:goal"] || query.period == "realtime" do
+      raise "Implement me properly"
+      {:error, "Funnels unavailable for current set of filters"}
+    else
+      :ok
+    end
+  end
+
   defp calculate_cr(nil, _converted_visitors), do: nil
 
   defp calculate_cr(unique_visitors, converted_visitors) do
