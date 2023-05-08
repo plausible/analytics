@@ -253,14 +253,12 @@ defmodule PlausibleWeb.SiteController do
 
   def save_funnel(conn, params) do
     site = conn.assigns[:site]
-    IO.inspect(params)
 
     sanitized_params =
       ["step_1", "step_2", "step_3", "step_4", "step_5"]
       |> Enum.map(&params[&1])
       |> Enum.reject(&(&1 == ""))
       |> Enum.map(fn goal_id -> %{id: String.to_integer(goal_id)} end)
-      |> IO.inspect(label: :params)
 
     funnel_name = params["funnel_name"]
 
