@@ -144,52 +144,6 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp plot_timeseries(timeseries, metric) do
-    Enum.map(timeseries, fn row -> row[metric] || 0 end)
-  end
-
-  defp label_timeseries(main_result, nil) do
-    Enum.map(main_result, & &1.date)
-  end
-
-  @blank_value "__blank__"
-  defp label_timeseries(main_result, comparison_result) do
-    blanks_to_fill = Enum.count(comparison_result) - Enum.count(main_result)
-
-    if blanks_to_fill > 0 do
-      blanks = List.duplicate(@blank_value, blanks_to_fill)
-      Enum.map(main_result, & &1.date) ++ blanks
-    else
-      Enum.map(main_result, & &1.date)
-    end
-  end
-
-  defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
-    for label <- labels, into: %{} do
-      interval_start = Timex.beginning_of_week(label)
-      interval_end = Timex.end_of_week(label)
-
-      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
-
-      {label, within_interval?}
-    end
-  end
-
-  defp build_full_intervals(%{interval: "month", date_range: range}, labels) do
-    for label <- labels, into: %{} do
-      interval_start = Timex.beginning_of_month(label)
-      interval_end = Timex.end_of_month(label)
-
-      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
-
-      {label, within_interval?}
-    end
-  end
-
-  defp build_full_intervals(_query, _labels) do
-    nil
-  end
-
   def top_stats(conn, params) do
     site = conn.assigns[:site]
 
@@ -219,241 +173,6 @@ defmodule PlausibleWeb.Api.StatsController do
       })
     else
       {:error, message} when is_binary(message) -> bad_request(conn, message)
-    end
-  end
-
-  defp present_index_for(site, query, dates) do
-    case query.interval do
-      "hour" ->
-        current_date =
-          Timex.now(site.timezone)
-          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:00:00")
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "date" ->
-        current_date =
-          Timex.now(site.timezone)
-          |> Timex.to_date()
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "week" ->
-        current_date =
-          Timex.now(site.timezone)
-          |> Timex.to_date()
-          |> date_or_weekstart(query)
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "month" ->
-        current_date =
-          Timex.now(site.timezone)
-          |> Timex.to_date()
-          |> Timex.beginning_of_month()
-
-        Enum.find_index(dates, &(&1 == current_date))
-
-      "minute" ->
-        current_date =
-          Timex.now(site.timezone)
-          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}:00")
-
-        Enum.find_index(dates, &(&1 == current_date))
-    end
-  end
-
-  defp date_or_weekstart(date, query) do
-    weekstart = Timex.beginning_of_week(date)
-
-    if Enum.member?(query.date_range, weekstart) do
-      weekstart
-    else
-      date
-    end
-  end
-
-  defp fetch_top_stats(
-         site,
-         %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query,
-         _comparison_query
-       ) do
-    query_30m = %Query{query | period: "30m"}
-
-    %{
-      visitors: %{value: unique_conversions},
-      events: %{value: total_conversions}
-    } = Stats.aggregate(site, query_30m, [:visitors, :events])
-
-    stats = [
-      %{
-        name: "Current visitors",
-        value: Stats.current_visitors(site)
-      },
-      %{
-        name: "Unique conversions (last 30 min)",
-        value: unique_conversions
-      },
-      %{
-        name: "Total conversions (last 30 min)",
-        value: total_conversions
-      }
-    ]
-
-    {stats, 100}
-  end
-
-  defp fetch_top_stats(site, %Query{period: "realtime"} = query, _comparison_query) do
-    query_30m = %Query{query | period: "30m"}
-
-    %{
-      visitors: %{value: visitors},
-      pageviews: %{value: pageviews}
-    } = Stats.aggregate(site, query_30m, [:visitors, :pageviews])
-
-    stats = [
-      %{
-        name: "Current visitors",
-        value: Stats.current_visitors(site)
-      },
-      %{
-        name: "Unique visitors (last 30 min)",
-        value: visitors
-      },
-      %{
-        name: "Pageviews (last 30 min)",
-        value: pageviews
-      }
-    ]
-
-    {stats, 100}
-  end
-
-  defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query, comparison_query) do
-    totals_query = Query.remove_event_filters(query, [:goal, :props])
-
-    %{
-      visitors: %{value: unique_visitors}
-    } = Stats.aggregate(site, totals_query, [:visitors])
-
-    %{
-      visitors: %{value: converted_visitors},
-      events: %{value: completions}
-    } = Stats.aggregate(site, query, [:visitors, :events])
-
-    {prev_unique_visitors, prev_converted_visitors, prev_completions} =
-      if comparison_query do
-        totals_comparison_query = Query.remove_event_filters(comparison_query, [:goal, :props])
-
-        %{
-          visitors: %{value: prev_unique_visitors}
-        } = Stats.aggregate(site, totals_comparison_query, [:visitors])
-
-        %{
-          visitors: %{value: prev_converted_visitors},
-          events: %{value: prev_completions}
-        } = Stats.aggregate(site, comparison_query, [:visitors, :events])
-
-        {prev_unique_visitors, prev_converted_visitors, prev_completions}
-      else
-        {nil, nil, nil}
-      end
-
-    conversion_rate = calculate_cr(unique_visitors, converted_visitors)
-    prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
-
-    build_item = fn name, value, comparison_value ->
-      if comparison_value do
-        change = percent_change(comparison_value, value)
-        %{name: name, value: value, comparison_value: comparison_value, change: change}
-      else
-        %{name: name, value: value}
-      end
-    end
-
-    {[
-       build_item.("Unique visitors", unique_visitors, prev_unique_visitors),
-       build_item.("Unique conversions", converted_visitors, prev_converted_visitors),
-       build_item.("Total conversions", completions, prev_completions),
-       build_item.("Conversion rate", conversion_rate, prev_conversion_rate)
-     ], 100}
-  end
-
-  defp fetch_top_stats(site, query, comparison_query) do
-    metrics =
-      if query.filters["event:page"] do
-        [
-          :visitors,
-          :visits,
-          :pageviews,
-          :bounce_rate,
-          :time_on_page,
-          :sample_percent
-        ]
-      else
-        [
-          :visitors,
-          :visits,
-          :pageviews,
-          :views_per_visit,
-          :bounce_rate,
-          :visit_duration,
-          :sample_percent
-        ]
-      end
-
-    current_results = Stats.aggregate(site, query, metrics)
-    prev_results = comparison_query && Stats.aggregate(site, comparison_query, metrics)
-
-    stats =
-      [
-        top_stats_entry(current_results, prev_results, "Unique visitors", :visitors),
-        top_stats_entry(current_results, prev_results, "Total visits", :visits),
-        top_stats_entry(current_results, prev_results, "Total pageviews", :pageviews),
-        top_stats_entry(current_results, prev_results, "Views per visit", :views_per_visit),
-        top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate),
-        top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration),
-        top_stats_entry(current_results, prev_results, "Time on page", :time_on_page)
-      ]
-      |> Enum.filter(& &1)
-
-    {stats, current_results[:sample_percent][:value]}
-  end
-
-  defp top_stats_entry(current_results, prev_results, name, key) do
-    if current_results[key] do
-      value = get_in(current_results, [key, :value])
-
-      if prev_results do
-        prev_value = get_in(prev_results, [key, :value])
-        change = calculate_change(key, prev_value, value)
-        %{name: name, value: value, comparison_value: prev_value, change: change}
-      else
-        %{name: name, value: value}
-      end
-    end
-  end
-
-  defp calculate_change(:bounce_rate, old_count, new_count) do
-    if old_count > 0, do: new_count - old_count
-  end
-
-  defp calculate_change(_metric, old_count, new_count) do
-    percent_change(old_count, new_count)
-  end
-
-  defp percent_change(nil, _new_count), do: nil
-
-  defp percent_change(old_count, new_count) do
-    cond do
-      old_count == 0 and new_count > 0 ->
-        100
-
-      old_count == 0 and new_count == 0 ->
-        0
-
-      true ->
-        round((new_count - old_count) / old_count * 100)
     end
   end
 
@@ -1024,14 +743,6 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp calculate_cr(nil, _converted_visitors), do: nil
-
-  defp calculate_cr(unique_visitors, converted_visitors) do
-    if unique_visitors > 0,
-      do: Float.round(converted_visitors / unique_visitors * 100, 1),
-      else: 0.0
-  end
-
   def conversions(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site, params) |> Filters.add_prefix()
@@ -1122,12 +833,6 @@ defmodule PlausibleWeb.Api.StatsController do
     json(conn, Stats.current_visitors(site))
   end
 
-  defp google_api(), do: Application.fetch_env!(:plausible, :google_api)
-
-  def handle_errors(conn, %{kind: kind, reason: reason}) do
-    json(conn, %{error: Exception.format_banner(kind, reason)})
-  end
-
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]
 
@@ -1140,6 +845,251 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.filter_suggestions(site, query, params["filter_name"], params["q"])
     )
   end
+
+  defp calculate_cr(nil, _converted_visitors), do: nil
+
+  defp calculate_cr(unique_visitors, converted_visitors) do
+    if unique_visitors > 0,
+      do: Float.round(converted_visitors / unique_visitors * 100, 1),
+      else: 0.0
+  end
+
+  defp present_index_for(site, query, dates) do
+    case query.interval do
+      "hour" ->
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:00:00")
+
+        Enum.find_index(dates, &(&1 == current_date))
+
+      "date" ->
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.to_date()
+
+        Enum.find_index(dates, &(&1 == current_date))
+
+      "week" ->
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.to_date()
+          |> date_or_weekstart(query)
+
+        Enum.find_index(dates, &(&1 == current_date))
+
+      "month" ->
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.to_date()
+          |> Timex.beginning_of_month()
+
+        Enum.find_index(dates, &(&1 == current_date))
+
+      "minute" ->
+        current_date =
+          Timex.now(site.timezone)
+          |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{0m}:00")
+
+        Enum.find_index(dates, &(&1 == current_date))
+    end
+  end
+
+  defp date_or_weekstart(date, query) do
+    weekstart = Timex.beginning_of_week(date)
+
+    if Enum.member?(query.date_range, weekstart) do
+      weekstart
+    else
+      date
+    end
+  end
+
+  defp fetch_top_stats(
+         site,
+         %Query{period: "realtime", filters: %{"event:goal" => _goal}} = query,
+         _comparison_query
+       ) do
+    query_30m = %Query{query | period: "30m"}
+
+    %{
+      visitors: %{value: unique_conversions},
+      events: %{value: total_conversions}
+    } = Stats.aggregate(site, query_30m, [:visitors, :events])
+
+    stats = [
+      %{
+        name: "Current visitors",
+        value: Stats.current_visitors(site)
+      },
+      %{
+        name: "Unique conversions (last 30 min)",
+        value: unique_conversions
+      },
+      %{
+        name: "Total conversions (last 30 min)",
+        value: total_conversions
+      }
+    ]
+
+    {stats, 100}
+  end
+
+  defp fetch_top_stats(site, %Query{period: "realtime"} = query, _comparison_query) do
+    query_30m = %Query{query | period: "30m"}
+
+    %{
+      visitors: %{value: visitors},
+      pageviews: %{value: pageviews}
+    } = Stats.aggregate(site, query_30m, [:visitors, :pageviews])
+
+    stats = [
+      %{
+        name: "Current visitors",
+        value: Stats.current_visitors(site)
+      },
+      %{
+        name: "Unique visitors (last 30 min)",
+        value: visitors
+      },
+      %{
+        name: "Pageviews (last 30 min)",
+        value: pageviews
+      }
+    ]
+
+    {stats, 100}
+  end
+
+  defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query, comparison_query) do
+    totals_query = Query.remove_event_filters(query, [:goal, :props])
+
+    %{
+      visitors: %{value: unique_visitors}
+    } = Stats.aggregate(site, totals_query, [:visitors])
+
+    %{
+      visitors: %{value: converted_visitors},
+      events: %{value: completions}
+    } = Stats.aggregate(site, query, [:visitors, :events])
+
+    {prev_unique_visitors, prev_converted_visitors, prev_completions} =
+      if comparison_query do
+        totals_comparison_query = Query.remove_event_filters(comparison_query, [:goal, :props])
+
+        %{
+          visitors: %{value: prev_unique_visitors}
+        } = Stats.aggregate(site, totals_comparison_query, [:visitors])
+
+        %{
+          visitors: %{value: prev_converted_visitors},
+          events: %{value: prev_completions}
+        } = Stats.aggregate(site, comparison_query, [:visitors, :events])
+
+        {prev_unique_visitors, prev_converted_visitors, prev_completions}
+      else
+        {nil, nil, nil}
+      end
+
+    conversion_rate = calculate_cr(unique_visitors, converted_visitors)
+    prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
+
+    build_item = fn name, value, comparison_value ->
+      if comparison_value do
+        change = percent_change(comparison_value, value)
+        %{name: name, value: value, comparison_value: comparison_value, change: change}
+      else
+        %{name: name, value: value}
+      end
+    end
+
+    {[
+       build_item.("Unique visitors", unique_visitors, prev_unique_visitors),
+       build_item.("Unique conversions", converted_visitors, prev_converted_visitors),
+       build_item.("Total conversions", completions, prev_completions),
+       build_item.("Conversion rate", conversion_rate, prev_conversion_rate)
+     ], 100}
+  end
+
+  defp fetch_top_stats(site, query, comparison_query) do
+    metrics =
+      if query.filters["event:page"] do
+        [
+          :visitors,
+          :visits,
+          :pageviews,
+          :bounce_rate,
+          :time_on_page,
+          :sample_percent
+        ]
+      else
+        [
+          :visitors,
+          :visits,
+          :pageviews,
+          :views_per_visit,
+          :bounce_rate,
+          :visit_duration,
+          :sample_percent
+        ]
+      end
+
+    current_results = Stats.aggregate(site, query, metrics)
+    prev_results = comparison_query && Stats.aggregate(site, comparison_query, metrics)
+
+    stats =
+      [
+        top_stats_entry(current_results, prev_results, "Unique visitors", :visitors),
+        top_stats_entry(current_results, prev_results, "Total visits", :visits),
+        top_stats_entry(current_results, prev_results, "Total pageviews", :pageviews),
+        top_stats_entry(current_results, prev_results, "Views per visit", :views_per_visit),
+        top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate),
+        top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration),
+        top_stats_entry(current_results, prev_results, "Time on page", :time_on_page)
+      ]
+      |> Enum.filter(& &1)
+
+    {stats, current_results[:sample_percent][:value]}
+  end
+
+  defp top_stats_entry(current_results, prev_results, name, key) do
+    if current_results[key] do
+      value = get_in(current_results, [key, :value])
+
+      if prev_results do
+        prev_value = get_in(prev_results, [key, :value])
+        change = calculate_change(key, prev_value, value)
+        %{name: name, value: value, comparison_value: prev_value, change: change}
+      else
+        %{name: name, value: value}
+      end
+    end
+  end
+
+  defp calculate_change(:bounce_rate, old_count, new_count) do
+    if old_count > 0, do: new_count - old_count
+  end
+
+  defp calculate_change(_metric, old_count, new_count) do
+    percent_change(old_count, new_count)
+  end
+
+  defp percent_change(nil, _new_count), do: nil
+
+  defp percent_change(old_count, new_count) do
+    cond do
+      old_count == 0 and new_count > 0 ->
+        100
+
+      old_count == 0 and new_count == 0 ->
+        0
+
+      true ->
+        round((new_count - old_count) / old_count * 100)
+    end
+  end
+
+  defp google_api(), do: Application.fetch_env!(:plausible, :google_api)
 
   defp transform_keys(results, keys_to_replace) do
     Enum.map(results, fn map ->
@@ -1314,5 +1264,51 @@ defmodule PlausibleWeb.Api.StatsController do
       comparison_query && comparison_query.include_imported -> true
       true -> false
     end
+  end
+
+  defp plot_timeseries(timeseries, metric) do
+    Enum.map(timeseries, fn row -> row[metric] || 0 end)
+  end
+
+  defp label_timeseries(main_result, nil) do
+    Enum.map(main_result, & &1.date)
+  end
+
+  @blank_value "__blank__"
+  defp label_timeseries(main_result, comparison_result) do
+    blanks_to_fill = Enum.count(comparison_result) - Enum.count(main_result)
+
+    if blanks_to_fill > 0 do
+      blanks = List.duplicate(@blank_value, blanks_to_fill)
+      Enum.map(main_result, & &1.date) ++ blanks
+    else
+      Enum.map(main_result, & &1.date)
+    end
+  end
+
+  defp build_full_intervals(%{interval: "week", date_range: range}, labels) do
+    for label <- labels, into: %{} do
+      interval_start = Timex.beginning_of_week(label)
+      interval_end = Timex.end_of_week(label)
+
+      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
+
+      {label, within_interval?}
+    end
+  end
+
+  defp build_full_intervals(%{interval: "month", date_range: range}, labels) do
+    for label <- labels, into: %{} do
+      interval_start = Timex.beginning_of_month(label)
+      interval_end = Timex.end_of_month(label)
+
+      within_interval? = Enum.member?(range, interval_start) && Enum.member?(range, interval_end)
+
+      {label, within_interval?}
+    end
+  end
+
+  defp build_full_intervals(_query, _labels) do
+    nil
   end
 end
