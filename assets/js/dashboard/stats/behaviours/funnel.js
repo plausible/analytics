@@ -22,7 +22,7 @@ export default class Funnel extends React.Component {
 
   componentDidUpdate(prevProps) {
     const queryChanged = this.props.query !== prevProps.query
-    const funnelChanged = this.props.funnel !== prevProps.funnel
+    const funnelChanged = this.props.funnelName !== prevProps.funnelName
 
     if (queryChanged || funnelChanged) {
       this.setState({ loading: true, error: null })
@@ -41,8 +41,9 @@ export default class Funnel extends React.Component {
   }
 
   fetchFunnel() {
-    if (this.props.funnel) {
-      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/funnels/${this.props.funnel.id}`, this.props.query)
+    if (this.props.funnelName) {
+      const funnel = this.props.site.funnels.find(funnel => funnel.name === this.props.funnelName)
+      api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/funnels/${funnel.id}`, this.props.query)
         .then((res) => {
           this.setState({ loading: false, funnel: res, error: null })
         })
@@ -129,10 +130,10 @@ export default class Funnel extends React.Component {
     this.chart = new Chart(ctx, config);
   }
 
-  tabs() {
+  header() {
     return (
       <div className="flex justify-between w-full">
-        <h3 className="font-bold dark:text-gray-100">Funnels</h3>
+        <h3 className="font-bold dark:text-gray-100">Funnel: {this.props.funnelName}</h3>
         {this.props.tabs}
       </div>
     )
@@ -142,15 +143,15 @@ export default class Funnel extends React.Component {
     if (this.state.loading) {
       return <div className="mx-auto loading pt-44"><div></div></div>
     } else if (this.state.error) {
-      if (this.state.error && this.state.error.payload.level === "normal") {
+      if (this.state.error.payload.level === "normal") {
         return (<React.Fragment>
-          {this.tabs()}
+          {this.header()}
           <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">{this.state.error.message}</div>
         </React.Fragment>)
       } else {
         return (
           <React.Fragment>
-            {this.tabs()}
+            {this.header()}
             <div className="text-center text-gray-900 dark:text-gray-100 mt-16">
               <RocketIcon />
               <div className="text-lg font-bold">Oops! Something went wrong</div>
@@ -167,7 +168,7 @@ export default class Funnel extends React.Component {
 
       return (
         <React.Fragment>
-          {this.tabs()}
+          {this.header()}
           <p className="mt-1 text-gray-500 text-sm">{this.state.funnel.steps.length}-step funnel • {conversionRate}% conversion rate</p>
           <canvas className="py-4" id="funnel" height="100px"></canvas>
         </React.Fragment>

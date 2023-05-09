@@ -45,10 +45,6 @@ export default class Behaviours extends React.Component {
     }
   }
 
-  selectedFunnel() {
-    return this.props.site.funnels.find(funnel => funnel.name === this.state.selectedFunnelName)
-  }
-
   hasFunnels() {
     const site = this.props.site
     return site.flags.funnels && site.funnels.length > 0
@@ -74,19 +70,19 @@ export default class Behaviours extends React.Component {
       >
         <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
           <div className="py-1">
-            {this.state.funnelNames.map((option) => {
+            {this.state.funnelNames.map((funnelName) => {
               return (
-                <Menu.Item key={option}>
+                <Menu.Item key={funnelName}>
                   {({ active }) => (
                     <span
-                      onClick={this.setFunnel(option)}
+                      onClick={this.setFunnel(funnelName)}
                       className={classNames(
                         active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
                         'block px-4 py-2 text-sm',
-                        this.state.mode === option ? 'font-bold' : ''
+                        this.state.mode === funnelName ? 'font-bold' : ''
                       )}
                     >
-                      {option}
+                      {funnelName}
                     </span>
                   )}
                 </Menu.Item>
@@ -118,7 +114,7 @@ export default class Behaviours extends React.Component {
       case CONVERSIONS:
         return <Conversions tabs={this.tabs()} site={this.props.site} query={this.props.query} />
       case FUNNELS:
-        return <Funnel tabs={this.tabs()} funnel={this.selectedFunnel()} query={this.props.query} site={this.props.site} />
+        return <Funnel tabs={this.tabs()} funnelName={this.state.selectedFunnelName} query={this.props.query} site={this.props.site} />
     }
   }
 
