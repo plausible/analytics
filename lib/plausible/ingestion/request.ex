@@ -179,7 +179,7 @@ defmodule Plausible.Ingestion.Request do
   @max_props 50
   @max_prop_key_length 300
   @max_prop_value_length 2000
-defp validate_props(changeset) do
+  defp validate_props(changeset) do
     case Changeset.get_field(changeset, :props) do
       props when map_size(props) > @max_props ->
         Changeset.add_error(changeset, :props, "should not have more than #{@max_props} items")
@@ -193,7 +193,7 @@ defp validate_props(changeset) do
              Changeset.add_error(
                changeset,
                :props,
-               "keys should have at most #{@max_prop_key_length} chars and values #{@max_prop_value_length} chars"
+               "keys should have at most #{@max_prop_key_length} bytes and values #{@max_prop_value_length} bytes"
              )}
 
           _, changeset ->

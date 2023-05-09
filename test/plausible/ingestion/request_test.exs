@@ -261,7 +261,7 @@ defmodule Plausible.Ingestion.RequestTest do
     conn = build_conn(:post, "/api/events", payload)
     assert {:error, changeset} = Request.build(conn)
 
-    assert {"keys should have at most 300 chars and values 2000 chars", _} =
+    assert {"keys should have at most 300 bytes and values 2000 bytes", _} =
              changeset.errors[:props]
   end
 
@@ -276,7 +276,7 @@ defmodule Plausible.Ingestion.RequestTest do
     conn = build_conn(:post, "/api/events", payload)
     assert {:error, changeset} = Request.build(conn)
 
-    assert {"keys should have at most 300 chars and values 2000 chars", _} =
+    assert {"keys should have at most 300 bytes and values 2000 bytes", _} =
              changeset.errors[:props]
   end
 

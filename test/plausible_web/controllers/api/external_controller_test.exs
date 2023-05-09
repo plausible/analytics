@@ -635,7 +635,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert %{
                "errors" => %{
-                 "props" => ["keys should have at most 300 chars and values 2000 chars"]
+                 "props" => ["keys should have at most 300 bytes and values 2000 bytes"]
                }
              } = json_response(conn, 400)
     end
@@ -654,7 +654,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert %{
                "errors" => %{
-                 "props" => ["keys should have at most 300 chars and values 2000 chars"]
+                 "props" => ["keys should have at most 300 bytes and values 2000 bytes"]
                }
              } = json_response(conn, 400)
     end
