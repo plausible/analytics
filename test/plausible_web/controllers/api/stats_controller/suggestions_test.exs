@@ -313,7 +313,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
-    test "does not filter out prop key suggestions by default (when site.allowed_event_props=[])",
+    test "does not filter out prop key suggestions by default (when site.allowed_event_props is nil)",
          %{
            conn: conn,
            site: site

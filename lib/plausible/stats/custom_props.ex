@@ -52,7 +52,7 @@ defmodule Plausible.Stats.CustomProps do
 
   def drop_garbage_props(props, site) do
     case site.allowed_event_props do
-      [] -> props
+      nil -> props
       allowed_props -> Enum.filter(props, &(&1 in allowed_props))
     end
   end

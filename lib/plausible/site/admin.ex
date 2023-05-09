@@ -41,7 +41,14 @@ defmodule Plausible.SiteAdmin do
       public: nil,
       owner: %{value: &get_owner_email/1},
       other_members: %{value: &get_other_members/1},
-      allowed_event_props: %{value: &Enum.join(&1.allowed_event_props, ", ")},
+      allowed_event_props: %{
+        value: fn site ->
+          case site.allowed_event_props do
+            nil -> ""
+            list -> Enum.join(list, ", ")
+          end
+        end
+      },
       limits: %{
         value: fn site ->
           case site.ingest_rate_limit_threshold do
@@ -74,7 +81,9 @@ defmodule Plausible.SiteAdmin do
   def set_allowed_props_for_site(_conn, [site], params) do
     props_list =
       case params["props"] do
-        "" -> []
+        "" ->
+          nil
+
         props ->
           props
           |> String.trim()
@@ -83,6 +92,7 @@ defmodule Plausible.SiteAdmin do
 
     Plausible.Site.set_allowed_event_props(site, props_list)
     |> Repo.update!()
+
     :ok
   end
 

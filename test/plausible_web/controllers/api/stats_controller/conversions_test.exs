@@ -362,7 +362,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert [%{"prop_names" => []}] = json_response(conn, 200)
     end
 
-    test "does not filter any prop names by default (when allowed_event_props=[])",
+    test "does not filter any prop names by default (when site.allowed_event_props is nil)",
          %{
            conn: conn,
            site: site
