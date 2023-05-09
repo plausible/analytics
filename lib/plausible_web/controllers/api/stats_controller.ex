@@ -851,23 +851,43 @@ defmodule PlausibleWeb.Api.StatsController do
 
     with :ok <- validate_params(params),
          query <- Query.from(site, params) |> Filters.add_prefix(),
-         :ok <- validate_funnel_query(query) do
-      {funnel_id, ""} = Integer.parse(funnel_id)
-      funnel = Plausible.Funnels.evaluate(query, funnel_id, site)
-
+         :ok <- validate_funnel_query(query),
+         {funnel_id, ""} <- Integer.parse(funnel_id),
+         {:ok, funnel} <- Plausible.Funnels.evaluate(query, funnel_id, site) do
       json(conn, funnel)
     else
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
+      {:error, {:invalid_funnel_query, due_to}} ->
+        bad_request(
+          conn,
+          "We are unable to show funnels when the dashboard is filtered by #{due_to}",
+          %{
+            level: :normal
+          }
+        )
+
+      {:error, message} when is_binary(message) ->
+        bad_request(conn, message)
+
+      _ ->
+        bad_request(conn, "There was an error with your request")
     end
   end
 
   defp validate_funnel_query(query) do
-    if query.filters["event:page"] || query.filters["event:goal"] || query.period == "realtime" do
-      raise "Implement me properly"
-      {:error, "Funnels unavailable for current set of filters"}
-    else
-      :ok
+    case query do
+      _ when is_map_key(query.filters, "event:goal") ->
+        {:error, {:invalid_funnel_query, "goals"}}
+
+      _ when is_map_key(query.filters, "event:page") ->
+        {:error, {:invalid_funnel_query, "pages"}}
+
+      _ when query.period == "realtime" ->
+        {:error, {:invalid_funnel_query, "realtime period"}}
+
+      _ ->
+        :ok
     end
+    |> IO.inspect(label: :query_valid?)
   end
 
   defp calculate_cr(nil, _converted_visitors), do: nil
@@ -1267,10 +1287,12 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp bad_request(conn, message) do
+  defp bad_request(conn, message, extra \\ %{}) do
+    payload = Map.merge(extra, %{error: message})
+
     conn
     |> put_status(400)
-    |> json(%{error: message})
+    |> json(payload)
     |> halt()
   end
 

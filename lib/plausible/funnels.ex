@@ -51,38 +51,44 @@ defmodule Plausible.Funnels do
           steps: {steps, goal: goal}
         ]
 
-    Repo.one(q)
+    funnel = Repo.one(q)
+
+    if funnel do
+      {:ok, funnel}
+    else
+      {:error, "Funnel not found"}
+    end
   end
 
   def evaluate(query, funnel_id, site) do
-    # TODO: handle non-existing funnel
-    funnel = get(site.id, funnel_id)
+    with {:ok, funnel} <- get(site.id, funnel_id) do
+      q_events =
+        from(e in Base.base_event_query(site, query),
+          select: %{session_id: e.session_id},
+          where: e.site_id == ^funnel.site_id,
+          group_by: e.session_id,
+          having: fragment("step > 0"),
+          order_by: [desc: fragment("step")]
+        )
+        |> select_funnel(funnel)
 
-    q_events =
-      from(e in Base.base_event_query(site, query),
-        select: %{session_id: e.session_id},
-        where: e.site_id == ^funnel.site_id,
-        group_by: e.session_id,
-        having: fragment("step > 0"),
-        order_by: [desc: fragment("step")]
-      )
-      |> select_funnel(funnel)
+      query =
+        from f in subquery(q_events),
+          select: {f.step, count(1)},
+          group_by: f.step
 
-    query =
-      from f in subquery(q_events),
-        select: {f.step, count(1)},
-        group_by: f.step
+      steps =
+        query
+        |> ClickhouseRepo.all()
+        |> Enum.into(%{})
+        |> backfill_steps(funnel)
 
-    steps =
-      query
-      |> ClickhouseRepo.all()
-      |> Enum.into(%{})
-      |> backfill_steps(funnel)
-
-    %{
-      name: funnel.name,
-      steps: steps
-    }
+      {:ok,
+       %{
+         name: funnel.name,
+         steps: steps
+       }}
+    end
   end
 
   defp select_funnel(db_query, funnel) do
