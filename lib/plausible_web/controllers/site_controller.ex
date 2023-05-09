@@ -116,9 +116,9 @@ defmodule PlausibleWeb.SiteController do
       )
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("snippet.html",
       site: site,
+      skip_plausible_tracking: true,
       is_first_site: is_first_site,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )

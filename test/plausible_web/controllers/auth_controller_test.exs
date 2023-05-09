@@ -503,12 +503,15 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert Password.match?("new-password", user.password_hash)
     end
 
-    test "with valid token - redirects the user to login", %{conn: conn} do
+    test "with valid token - redirects the user to login and shows success message", %{conn: conn} do
       user = insert(:user)
       token = Token.sign_password_reset(user.email)
       conn = post(conn, "/password/reset", %{token: token, password: "new-password"})
 
-      assert redirected_to(conn, 302) == "/login"
+      assert location = "/login" = redirected_to(conn, 302)
+
+      conn = get(recycle(conn), location)
+      assert html_response(conn, 200) =~ "Password updated successfully"
     end
   end
 
@@ -757,7 +760,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, Routes.auth_path(conn, :google_auth_callback), callback_params)
 
       assert redirected_to(conn, 302) == Routes.site_path(conn, :settings_general, site.domain)
-      assert get_flash(conn, :error) =~ "unable to authenticate your Google Analytics"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "unable to authenticate your Google Analytics"
     end
   end
 

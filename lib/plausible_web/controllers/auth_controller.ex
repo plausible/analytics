@@ -58,7 +58,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register(conn, params) do
-    conn = put_layout(conn, {PlausibleWeb.LayoutView, "focus.html"})
+    conn = put_layout(conn, html: {PlausibleWeb.LayoutView, :focus})
     user = Plausible.Auth.User.new(params["user"])
 
     if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do

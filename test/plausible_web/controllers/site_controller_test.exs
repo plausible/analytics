@@ -679,7 +679,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
 
       assert Repo.aggregate(Plausible.Goal, :count, :id) == 1
-      assert get_flash(conn, :error) == "Could not find goal"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find goal"
     end
   end
 
@@ -1006,7 +1006,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       refute Repo.one(Plausible.Site.SharedLink)
       assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
-      assert get_flash(conn, :success) == "Shared Link deleted"
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Shared Link deleted"
     end
 
     test "fails to delete shared link from the outside", %{conn: conn, site: site} do
@@ -1017,7 +1017,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert Repo.one(Plausible.Site.SharedLink)
       assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
-      assert get_flash(conn, :error) == "Could not find Shared Link"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find Shared Link"
     end
   end
 
@@ -1028,7 +1028,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       domain = insert(:custom_domain, site: site)
 
       conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
-      assert get_flash(conn, :success) == "Custom domain deleted successfully"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+               "Custom domain deleted successfully"
 
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
     end
@@ -1042,7 +1044,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
 
       conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{foreign_domain.id}")
-      assert get_flash(conn, :error) == "Failed to delete custom domain"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Failed to delete custom domain"
 
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
     end

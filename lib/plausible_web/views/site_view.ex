@@ -34,7 +34,7 @@ defmodule PlausibleWeb.SiteView do
     img_tag(img, opts)
   end
 
-  def snippet(site) do
+  def render_snippet(site) do
     tracker =
       if site.custom_domain do
         "https://" <> site.custom_domain.domain <> "/js/index.js"
