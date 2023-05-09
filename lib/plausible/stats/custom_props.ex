@@ -40,16 +40,19 @@ defmodule Plausible.Stats.CustomProps do
         [key]
 
       _ ->
-        all_props_allowed = is_nil(site.allowed_event_props)
-        allowed_props = if all_props_allowed, do: [], else: site.allowed_event_props
-
         from(e in base_event_query(site, query),
           inner_lateral_join: meta in fragment("meta"),
           select: meta.key,
-          where: ^all_props_allowed or meta.key in ^allowed_props,
           distinct: true
         )
+        |> maybe_allowed_props_only(site.allowed_event_props)
         |> ClickhouseRepo.all()
     end
   end
+
+  def maybe_allowed_props_only(q, allowed_props) when is_list(allowed_props) do
+    from [_e, m] in q, where: m.key in ^allowed_props
+  end
+
+  def maybe_allowed_props_only(q, nil), do: q
 end
