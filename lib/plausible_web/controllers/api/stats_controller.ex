@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   require Logger
 
-  plug :validate_common_input
+  plug(:validate_common_input)
 
   @doc """
   Returns a time-series based on given parameters.
@@ -887,7 +887,6 @@ defmodule PlausibleWeb.Api.StatsController do
       _ ->
         :ok
     end
-    |> IO.inspect(label: :query_valid?)
   end
 
   defp calculate_cr(nil, _converted_visitors), do: nil
