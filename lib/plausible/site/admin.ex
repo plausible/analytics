@@ -41,6 +41,7 @@ defmodule Plausible.SiteAdmin do
       public: nil,
       owner: %{value: &get_owner_email/1},
       other_members: %{value: &get_other_members/1},
+      allowed_event_props: %{value: &Enum.join(&1.allowed_event_props, ", ")},
       limits: %{
         value: fn site ->
           case site.ingest_rate_limit_threshold do
@@ -51,6 +52,42 @@ defmodule Plausible.SiteAdmin do
         end
       }
     ]
+  end
+
+  def list_actions(_conn) do
+    [
+      set_allowed_event_props: %{
+        inputs: [
+          %{
+            name: "props",
+            title:
+              "Insert comma separated property names (e.g: author, logged_in, url, ...). Submit a blank field to allow all property names",
+            default: ""
+          }
+        ],
+        name: "Allow only these custom properties",
+        action: &set_allowed_props_for_site/3
+      }
+    ]
+  end
+
+  def set_allowed_props_for_site(_conn, [site], params) do
+    props_list =
+      case params["props"] do
+        "" -> []
+        props ->
+          props
+          |> String.trim()
+          |> String.split(~r/\s*,\s*/)
+      end
+
+    Plausible.Site.set_allowed_event_props(site, props_list)
+    |> Repo.update!()
+    :ok
+  end
+
+  def set_allowed_props_for_site(_, _, _) do
+    {:error, "Please select only one site for this action"}
   end
 
   defp format_date(date) do
