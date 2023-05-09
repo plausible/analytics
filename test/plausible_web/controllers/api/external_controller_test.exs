@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "validates event name length", %{conn: conn, site: site} do
       params = %{
         domain: site.domain,
-        name: for(_ <- 1..500, do: "a", into: ""),
+        name: String.duplicate("a", 500),
         url: "http://gigride.live/",
         referrer: "http://m.facebook.com/"
       }
@@ -271,7 +271,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         url: "http://gigride.live/",
-        referrer: "https://facebook.com/#{for _ <- 1..2500, do: "a", into: ""}",
+        referrer: "https://facebook.com/" <> String.duplicate("a", 2500),
         domain: site.domain
       }
 
@@ -449,7 +449,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
 
     test "validates url length with query params", %{conn: conn, site: site} do
-      long_string = for _ <- 1..500, do: "a", into: ""
+      long_string = String.duplicate("a", 500)
 
       utm_tags =
         URI.encode_query(%{
@@ -622,7 +622,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
 
     test "validates props key length", %{conn: conn, site: site} do
-      long_string = for _ <- 1..500, do: "a", into: ""
+      long_string = String.duplicate("a", 500)
 
       params = %{
         name: "Signup",
@@ -641,7 +641,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
 
     test "validates props value length", %{conn: conn, site: site} do
-      long_string = for _ <- 1..2500, do: "a", into: ""
+      long_string = String.duplicate("a", 2500)
 
       params = %{
         name: "Signup",
