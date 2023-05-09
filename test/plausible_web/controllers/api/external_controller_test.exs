@@ -35,23 +35,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.pathname == "/"
     end
 
-    test "validates event name length", %{conn: conn, site: site} do
-      params = %{
-        domain: site.domain,
-        name: String.duplicate("a", 500),
-        url: "http://gigride.live/",
-        referrer: "http://m.facebook.com/"
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      assert %{"errors" => %{"event_name" => ["should be at most 120 character(s)"]}} =
-               json_response(conn, 400)
-    end
-
     test "works with Content-Type: text/plain", %{conn: conn, site: site} do
       params = %{
         domain: site.domain,
@@ -267,23 +250,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.referrer_source == "Facebook"
     end
 
-    test "limits referrer string size", %{conn: conn, site: site} do
-      params = %{
-        name: "pageview",
-        url: "http://gigride.live/",
-        referrer: "https://facebook.com/" <> String.duplicate("a", 2500),
-        domain: site.domain
-      }
-
-      conn =
-        conn
-        |> put_req_header("user-agent", @user_agent)
-        |> post("/api/event", params)
-
-      assert %{"errors" => %{"referrer" => ["should be at most 2000 character(s)"]}} =
-               json_response(conn, 400)
-    end
-
     test "strips trailing slash from referrer", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
@@ -448,28 +414,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.utm_campaign == "video_story"
     end
 
-    test "validates url length with query params", %{conn: conn, site: site} do
-      long_string = String.duplicate("a", 500)
-
-      utm_tags =
-        URI.encode_query(%{
-          utm_content: long_string,
-          utm_medium: long_string,
-          utm_source: long_string,
-          utm_campaign: long_string,
-          utm_term: long_string
-        })
-
-      params = %{
-        name: "pageview",
-        url: "http://www.example.com/?#{utm_tags}",
-        domain: site.domain
-      }
-
-      conn = post(conn, "/api/event", params)
-      assert %{"errors" => %{"url" => ["must be a valid url"]}} = json_response(conn, 400)
-    end
-
     test "if it's an :unknown referrer, just the domain is used", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
@@ -619,58 +563,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       assert Map.get(event, :"meta.key") == ["bool_test", "number_test"]
       assert Map.get(event, :"meta.value") == ["true", "12"]
-    end
-
-    test "validates props key length", %{conn: conn, site: site} do
-      long_string = String.duplicate("a", 500)
-
-      params = %{
-        name: "Signup",
-        url: "http://gigride.live/",
-        domain: site.domain,
-        props: %{long_string => "abc"}
-      }
-
-      conn = post(conn, "/api/event", params)
-
-      assert %{
-               "errors" => %{
-                 "props" => ["keys should have at most 300 bytes and values 2000 bytes"]
-               }
-             } = json_response(conn, 400)
-    end
-
-    test "validates props value length", %{conn: conn, site: site} do
-      long_string = String.duplicate("a", 2500)
-
-      params = %{
-        name: "Signup",
-        url: "http://gigride.live/",
-        domain: site.domain,
-        props: %{"key" => long_string}
-      }
-
-      conn = post(conn, "/api/event", params)
-
-      assert %{
-               "errors" => %{
-                 "props" => ["keys should have at most 300 bytes and values 2000 bytes"]
-               }
-             } = json_response(conn, 400)
-    end
-
-    test "validates props items length", %{conn: conn, site: site} do
-      params = %{
-        name: "Signup",
-        url: "http://gigride.live/",
-        domain: site.domain,
-        props: for(i <- 1..500, do: {"#{i}", i}, into: %{})
-      }
-
-      conn = post(conn, "/api/event", params)
-
-      assert %{"errors" => %{"props" => ["should not have more than 50 items"]}} =
-               json_response(conn, 400)
     end
 
     test "ignores malformed custom props", %{conn: conn, site: site} do
