@@ -48,7 +48,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> put_req_header("user-agent", @user_agent)
         |> post("/api/event", params)
 
-      assert %{"errors" => %{"event_name" => ["should be at most 300 character(s)"]}} =
+      assert %{"errors" => %{"event_name" => ["should be at most 120 character(s)"]}} =
                json_response(conn, 400)
     end
 
