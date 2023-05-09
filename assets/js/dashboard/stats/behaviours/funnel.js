@@ -10,10 +10,12 @@ import LazyLoader from '../../components/lazy-loader'
 
 Chart.register(ChartDataLabels);
 
+// TODO: still need to update the state nicely if a funnel gets deleted
+
 export default class Funnel extends React.Component {
   constructor(props) {
     super(props)
-    this.state = { loading: true, error: null }
+    this.state = { loading: true, error: undefined }
     this.onVisible = this.onVisible.bind(this)
     this.fetchFunnel = this.fetchFunnel.bind(this)
   }
@@ -27,7 +29,7 @@ export default class Funnel extends React.Component {
     const funnelChanged = this.props.funnelName !== prevProps.funnelName
 
     if (queryChanged || funnelChanged) {
-      this.setState({ loading: true, error: null })
+      this.setState({ loading: true, error: undefined })
       this.fetchFunnel()
     }
   }
@@ -42,19 +44,23 @@ export default class Funnel extends React.Component {
     }
   }
 
+  getFunnel() {
+    return this.props.site.funnels.find(funnel => funnel.name === this.props.funnelName)
+  }
+
   fetchFunnel() {
-    if (this.props.funnelName) {
-      const funnel = this.props.site.funnels.find(funnel => funnel.name === this.props.funnelName)
+    const funnel = this.getFunnel()
+    if (typeof funnel === 'undefined') {
+      this.setState({ loading: false, error: { message: "Failed to locate funnel" } })
+    } else {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/funnels/${funnel.id}`, this.props.query)
         .then((res) => {
-          this.setState({ loading: false, funnel: res, error: null })
+          this.setState({ loading: false, funnel: res, error: undefined })
         })
         .then(this.initialiseChart.bind(this))
         .catch((error) => {
           this.setState({ loading: false, error: error })
         })
-    } else {
-      this.setState({ loading: false, error: { message: "Failed to locate funnel" } })
     }
   }
 
@@ -93,7 +99,7 @@ export default class Funnel extends React.Component {
         {
           label: 'Dropoff',
           data: dropOffData,
-          backgroundColor: ['rgb(224, 231, 255)'],
+          backgroundColor: ['rgb(224, 231, 255)'], // TODO: support dark mode
           borderRadius: 4,
           stack: 'Stack 0',
         }
@@ -141,28 +147,32 @@ export default class Funnel extends React.Component {
     )
   }
 
+  renderError() {
+    if (this.state.error.payload && this.state.error.payload.level === "normal") {
+      return (<React.Fragment>
+        {this.header()}
+        <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">{this.state.error.message}</div>
+      </React.Fragment>)
+    } else {
+      return (
+        <React.Fragment>
+          {this.header()}
+          <div className="text-center text-gray-900 dark:text-gray-100 mt-16">
+            <RocketIcon />
+            <div className="text-lg font-bold">Oops! Something went wrong</div>
+            <div className="text-lg">{this.state.error.message ? this.state.error.message : "Failed to render funnel"}</div>
+            <div className="text-xs mt-8">Please try refreshing your browser or selecting the funnel again.</div>
+          </div>
+        </React.Fragment>
+      )
+    }
+  }
+
   renderInner() {
     if (this.state.loading) {
       return <div className="mx-auto loading pt-44"><div></div></div>
     } else if (this.state.error) {
-      if (this.state.error.payload.level === "normal") {
-        return (<React.Fragment>
-          {this.header()}
-          <div className="font-medium text-center text-gray-500 mt-44 dark:text-gray-400">{this.state.error.message}</div>
-        </React.Fragment>)
-      } else {
-        return (
-          <React.Fragment>
-            {this.header()}
-            <div className="text-center text-gray-900 dark:text-gray-100 mt-16">
-              <RocketIcon />
-              <div className="text-lg font-bold">Oops! Something went wrong</div>
-              <div className="text-lg">{this.state.error.message ? this.state.error.message : "Failed to render funnel"}</div>
-              <div className="text-xs mt-8">Please try refreshing your browser and selecting the funnel again.</div>
-            </div>
-          </React.Fragment>
-        )
-      }
+      return this.renderError()
     } else if (this.state.funnel) {
       const firstStep = this.state.funnel.steps[0].visitors
       const lastStep = this.state.funnel.steps[this.state.funnel.steps.length - 1].visitors
