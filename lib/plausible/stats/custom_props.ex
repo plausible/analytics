@@ -32,7 +32,6 @@ defmodule Plausible.Stats.CustomProps do
       {:matches, _} -> fetch_prop_names(site, query)
       _ -> []
     end
-    |> drop_garbage_props(site)
   end
 
   defp fetch_prop_names(site, query) do
@@ -41,19 +40,16 @@ defmodule Plausible.Stats.CustomProps do
         [key]
 
       _ ->
+        all_props_allowed = is_nil(site.allowed_event_props)
+        allowed_props = if all_props_allowed, do: [], else: site.allowed_event_props
+
         from(e in base_event_query(site, query),
           inner_lateral_join: meta in fragment("meta"),
           select: meta.key,
+          where: ^all_props_allowed or meta.key in ^allowed_props,
           distinct: true
         )
         |> ClickhouseRepo.all()
-    end
-  end
-
-  def drop_garbage_props(props, site) do
-    case site.allowed_event_props do
-      nil -> props
-      allowed_props -> Enum.filter(props, &(&1 in allowed_props))
     end
   end
 end

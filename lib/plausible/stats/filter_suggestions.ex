@@ -133,19 +133,23 @@ defmodule Plausible.Stats.FilterSuggestions do
   def filter_suggestions(site, query, "prop_key", filter_search) do
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
+    all_props_allowed = is_nil(site.allowed_event_props)
+    allowed_props = if all_props_allowed, do: [], else: site.allowed_event_props
+
     q =
       from(e in base_event_query(site, Query.remove_event_filters(query, [:props])),
         inner_lateral_join: meta in "meta",
         as: :meta,
         select: meta.key,
-        where: fragment("? ilike ?", meta.key, ^filter_query),
+        where:
+          fragment("? ilike ?", meta.key, ^filter_query) and
+            (^all_props_allowed or meta.key in ^allowed_props),
         group_by: meta.key,
         order_by: [desc: fragment("count(*)")],
         limit: 25
       )
 
     ClickhouseRepo.all(q)
-    |> Plausible.Stats.CustomProps.drop_garbage_props(site)
     |> wrap_suggestions()
   end
 
