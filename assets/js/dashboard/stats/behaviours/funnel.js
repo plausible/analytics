@@ -1,12 +1,14 @@
 import React from 'react';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-Chart.register(ChartDataLabels);
+import numberFormatter from '../../util/number-formatter'
 
 import RocketIcon from '../modals/rocket-icon'
 
 import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'
+
+Chart.register(ChartDataLabels);
 
 export default class Funnel extends React.Component {
   constructor(props) {
@@ -34,7 +36,7 @@ export default class Funnel extends React.Component {
     if (ctx.dataset.label === 'Visitors') {
       const total = this.state.funnel.steps[0].visitors
       const percentage = (visitors / total) * 100
-      return `${percentage}%\n${visitors} Visitors`
+      return `${percentage}%\n${numberFormatter(visitors)} Visitors`
     } else {
       return null
     }
