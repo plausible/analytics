@@ -80,14 +80,9 @@ defmodule Plausible.SiteAdmin do
 
   def set_allowed_props_for_site(_conn, [site], params) do
     props_list =
-      case params["props"] do
-        "" ->
-          nil
-
-        props ->
-          props
-          |> String.trim()
-          |> String.split(~r/\s*,\s*/)
+      case String.trim(params["props"]) do
+        "" -> nil
+        props -> String.split(props, ~r/\s*,\s*/)
       end
 
     Plausible.Site.set_allowed_event_props(site, props_list)
