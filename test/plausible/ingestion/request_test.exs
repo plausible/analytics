@@ -214,17 +214,83 @@ defmodule Plausible.Ingestion.RequestTest do
   end
 
   test "returns validation error when url is too long" do
-    long_string = for _ <- 1..5000, do: "a", into: ""
-
     payload = %{
       name: "pageview",
       domain: "dummy.site",
-      url: "https://dummy.site/#{long_string}"
+      url: "https://dummy.site/#{String.duplicate("a", 5000)}"
     }
 
     conn = build_conn(:post, "/api/events", payload)
     assert {:error, changeset} = Request.build(conn)
     assert {"must be a valid url", _} = changeset.errors[:url]
+  end
+
+  test "returns validation error when event name is too long" do
+    payload = %{
+      name: String.duplicate("a", 500),
+      domain: "dummy.site",
+      url: "https://dummy.site/"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"should be at most %{count} character(s)", _} = changeset.errors[:event_name]
+  end
+
+  test "returns validaton error when referrer is too long" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "https://dummy.site/",
+      referrer: String.duplicate("a", 2500)
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"should be at most %{count} character(s)", _} = changeset.errors[:referrer]
+  end
+
+  test "returns validation error when props keys are too long" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "https://dummy.site/",
+      props: %{String.duplicate("a", 500) => "abc"}
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+
+    assert {"keys should have at most 300 chars and values 2000 chars", _} =
+             changeset.errors[:props]
+  end
+
+  test "returns validation error when props values are too long" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "https://dummy.site/",
+      props: %{"abc" => String.duplicate("a", 2500)}
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+
+    assert {"keys should have at most 300 chars and values 2000 chars", _} =
+             changeset.errors[:props]
+  end
+
+  test "returns validation error when there are too many props" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "https://dummy.site/",
+      props: for(i <- 1..100, do: {"key_#{i}", "value"}, into: %{})
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"should not have more than 50 items", _} = changeset.errors[:props]
   end
 
   test "malicious input, technically valid json" do
