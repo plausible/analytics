@@ -8,7 +8,7 @@ defmodule Plausible.Funnels do
 
   import Ecto.Query
 
-  def create(site, name, goals, id \\ 5) when is_list(goals) do
+  def create(site, name, goals) when is_list(goals) do
     steps =
       goals
       |> Enum.with_index(1)
@@ -20,8 +20,7 @@ defmodule Plausible.Funnels do
       end)
 
     %Funnel{
-      site_id: site.id,
-      id: id
+      site_id: site.id
     }
     |> Funnel.changeset(%{name: name, steps: steps})
     |> Repo.insert()

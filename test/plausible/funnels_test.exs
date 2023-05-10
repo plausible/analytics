@@ -19,8 +19,7 @@ defmodule Plausible.FunnelsTest do
       Funnels.create(
         site,
         "From blog to signup and purchase",
-        [g1, g2, g3],
-        nil
+        [g1, g2, g3]
       )
 
     assert funnel.inserted_at
@@ -41,11 +40,10 @@ defmodule Plausible.FunnelsTest do
       Funnels.create(
         site,
         "Lorem ipsum",
-        [g3, g1, g2],
-        nil
+        [g3, g1, g2]
       )
 
-    funnel = Funnels.get(site, funnel.id)
+    assert {:ok, funnel} = Funnels.get(site, funnel.id)
     assert funnel.name == "Lorem ipsum"
     assert [%{step_order: 1}, %{step_order: 2}, %{step_order: 3}] = funnel.steps
   end
@@ -61,14 +59,13 @@ defmodule Plausible.FunnelsTest do
       Funnels.create(
         site,
         "Lorem ipsum",
-        [g1, g1],
-        nil
+        [g1, g1]
       )
   end
 
   test "funnels can be listed per site", %{site: site, goals: [g1, g2, g3]} do
-    Funnels.create(site, "Funnel 1", [g3, g1, g2], nil)
-    Funnels.create(site, "Funnel 2", [g2, g1, g3], nil)
+    Funnels.create(site, "Funnel 1", [g3, g1, g2])
+    Funnels.create(site, "Funnel 2", [g2, g1, g3])
 
     funnels_list = Funnels.list(site)
     assert [%{name: "Funnel 1"}, %{name: "Funnel 2"}] = funnels_list
@@ -91,14 +88,15 @@ defmodule Plausible.FunnelsTest do
     ])
 
     query = Plausible.Stats.Query.from(site, %{"period" => "all"})
-    funnel_data = Funnels.evaluate(query, funnel.id, site.id)
+    funnel_data = Funnels.evaluate(query, funnel.id, site)
 
-    assert %{
-             steps: [
-               %{label: "Visit /go/to/blog/**", visitors: 2},
-               %{label: "Signup", visitors: 2},
-               %{label: "Visit /checkout", visitors: 1}
-             ]
-           } = funnel_data
+    assert {:ok,
+            %{
+              steps: [
+                %{label: "Visit /go/to/blog/**", visitors: 2},
+                %{label: "Signup", visitors: 2},
+                %{label: "Visit /checkout", visitors: 1}
+              ]
+            }} = funnel_data
   end
 end
