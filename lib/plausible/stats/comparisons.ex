@@ -54,7 +54,8 @@ defmodule Plausible.Stats.Comparisons do
       January 1st. Defaults to false.
 
     * `:include_imported?` - includes imported data in the generated comparison
-      query if there is imported data. Defaults to true.
+      query if there is imported data. Defaults to `source_query.include_imported`,
+      or `true` if that's not specified either.
 
   """
   def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode, opts \\ []) do
@@ -62,11 +63,10 @@ defmodule Plausible.Stats.Comparisons do
       opts
       |> Keyword.put_new(:now, Timex.now(site.timezone))
       |> Keyword.put_new(:match_day_of_week?, false)
-      |> Keyword.put_new(:include_imported?, true)
 
     with :ok <- validate_mode(source_query, mode),
          {:ok, comparison_query} <- do_compare(source_query, mode, opts),
-         comparison_query <- maybe_include_imported(comparison_query, site, opts),
+         comparison_query <- maybe_include_imported(comparison_query, source_query, site, opts),
          do: {:ok, comparison_query}
   end
 
@@ -165,8 +165,15 @@ defmodule Plausible.Stats.Comparisons do
     Date.add(date, -days_to_subtract)
   end
 
-  defp maybe_include_imported(query, site, opts) do
-    include_imported? = Stats.Query.include_imported?(query, site, opts[:include_imported?])
+  defp maybe_include_imported(query, source_query, site, opts) do
+    requested? =
+      cond do
+        is_boolean(opts[:include_imported?]) -> opts[:include_imported?]
+        source_query.include_imported == false -> false
+        true -> true
+      end
+
+    include_imported? = Stats.Query.include_imported?(query, site, requested?)
     %Stats.Query{query | include_imported: include_imported?}
   end
 
