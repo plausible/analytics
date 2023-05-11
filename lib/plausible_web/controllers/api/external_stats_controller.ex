@@ -137,6 +137,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end)
   end
 
+  defp validate_metric("events", nil, %{include_imported: true}) do
+    {:error, "Metric `events` cannot be queried with imported data"}
+  end
+
   defp validate_metric(metric, _, _) when metric in @event_metrics, do: {:ok, metric}
 
   defp validate_metric(metric, property, query) when metric in @session_metrics do

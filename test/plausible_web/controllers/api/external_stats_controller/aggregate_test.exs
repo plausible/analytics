@@ -338,8 +338,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "visitors" => %{"value" => 1, "change" => 100},
+               "visitors" => %{"value" => 1, "change" => 100}
              }
+    end
+
+    test "events metric with imported data is disallowed", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2023-01-01])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2023-01-02",
+          "metrics" => "events",
+          "with_imported" => "true"
+        })
+
+      assert %{"error" => msg} = json_response(conn, 400)
+      assert msg == "Metric `events` cannot be queried with imported data"
     end
   end
 
