@@ -28,9 +28,10 @@ defmodule Plausible.Funnels do
 
   def list(%Plausible.Site{id: site_id}) do
     Repo.all(
-      from f in Funnel,
+      from(f in Funnel,
         where: f.site_id == ^site_id,
         select: %{name: f.name, id: f.id}
+      )
     )
   end
 
@@ -40,7 +41,7 @@ defmodule Plausible.Funnels do
 
   def get(site_id, funnel_id) when is_integer(site_id) and is_integer(funnel_id) do
     q =
-      from f in Funnel,
+      from(f in Funnel,
         where: f.site_id == ^site_id,
         where: f.id == ^funnel_id,
         inner_join: steps in assoc(f, :steps),
@@ -49,6 +50,7 @@ defmodule Plausible.Funnels do
         preload: [
           steps: {steps, goal: goal}
         ]
+      )
 
     funnel = Repo.one(q)
 
@@ -60,39 +62,44 @@ defmodule Plausible.Funnels do
   end
 
   def evaluate(query, funnel_id, site) do
-    with {:ok, funnel} <- get(site.id, funnel_id) do
-      q_events =
-        from(e in Base.base_event_query(site, query),
-          select: %{session_id: e.session_id},
-          where: e.site_id == ^funnel.site_id,
-          group_by: e.session_id,
-          having: fragment("step > 0"),
-          order_by: [desc: fragment("step")]
-        )
-        |> select_funnel(funnel)
-
-      query =
-        from f in subquery(q_events),
-          select: {f.step, count(1)},
-          group_by: f.step
-
+    with {:ok, funnel_definition} <- get(site.id, funnel_id) do
       steps =
-        query
-        |> ClickhouseRepo.all()
-        |> Enum.into(%{})
-        |> backfill_steps(funnel)
+        site
+        |> Base.base_event_query(query)
+        |> query_funnel(funnel_definition)
+        |> backfill_steps(funnel_definition)
 
       {:ok,
        %{
-         name: funnel.name,
+         name: funnel_definition.name,
          steps: steps
        }}
     end
   end
 
-  defp select_funnel(db_query, funnel) do
+  defp query_funnel(query, funnel_definition) do
+    q_events =
+      from(e in query,
+        select: %{session_id: e.session_id},
+        where: e.site_id == ^funnel_definition.site_id,
+        group_by: e.session_id,
+        having: fragment("step > 0"),
+        order_by: [desc: fragment("step")]
+      )
+      |> select_funnel(funnel_definition)
+
+    query =
+      from(f in subquery(q_events),
+        select: {f.step, count(1)},
+        group_by: f.step
+      )
+
+    ClickhouseRepo.all(query)
+  end
+
+  defp select_funnel(db_query, funnel_definition) do
     window_funnel_steps =
-      Enum.reduce(funnel.steps, nil, fn step, acc ->
+      Enum.reduce(funnel_definition.steps, nil, fn step, acc ->
         step_condition =
           case step.goal do
             %Plausible.Goal{event_name: event} when is_binary(event) ->
@@ -130,20 +137,50 @@ defmodule Plausible.Funnels do
   end
 
   defp backfill_steps(funnel_result, funnel) do
+    # Directly from ClickHouse we only get {step_idx(), visitor_count()} tuples.
+    # but no totals including previous steps are aggregated.
+    # Hence we need to perform the appropriate backfill 
+    # and also calculate dropoff and conversion rate for each step.
+    funnel_result = Enum.into(funnel_result, %{})
     max_step = Enum.max_by(funnel.steps, & &1.step_order).step_order
 
     funnel
     |> Map.fetch!(:steps)
     |> Enum.map(fn step ->
       visitors_total =
-        Enum.reduce(step.step_order..max_step, 0, fn step_order, acc ->
-          acc + Map.get(funnel_result, step_order, 0)
-        end)
+        step.step_order..max_step
+        |> Enum.map(&Map.get(funnel_result, &1, 0))
+        |> Enum.sum()
 
       %{
         visitors: visitors_total,
         label: Plausible.Goal.display_name(step.goal)
       }
     end)
+    |> Enum.reduce({nil, nil, []}, fn step, {total_visitors, visitors_at_previous, acc} ->
+      # accumulate current_visitors for the next iteration
+      current_visitors = step.visitors
+
+      # First step contains the total number of visitors that we base percentage dropoff on
+      total_visitors = total_visitors || current_visitors
+
+      # Dropoff is 0 for the first step, otherwise we subtract current from previous
+      dropoff = if visitors_at_previous, do: visitors_at_previous - step.visitors, else: 0
+
+      conversion_rate =
+        (current_visitors / total_visitors * 100)
+        |> Decimal.from_float()
+        |> Decimal.round(2)
+        |> Decimal.to_string()
+
+      step =
+        step
+        |> Map.put(:dropoff, dropoff)
+        |> Map.put(:conversion_rate, conversion_rate)
+
+      {total_visitors, current_visitors, [step | acc]}
+    end)
+    |> elem(2)
+    |> Enum.reverse()
   end
 end

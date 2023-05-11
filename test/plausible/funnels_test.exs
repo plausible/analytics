@@ -88,14 +88,20 @@ defmodule Plausible.FunnelsTest do
     ])
 
     query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+
     funnel_data = Funnels.evaluate(query, funnel.id, site)
 
     assert {:ok,
             %{
               steps: [
-                %{label: "Visit /go/to/blog/**", visitors: 2},
-                %{label: "Signup", visitors: 2},
-                %{label: "Visit /checkout", visitors: 1}
+                %{
+                  label: "Visit /go/to/blog/**",
+                  visitors: 2,
+                  conversion_rate: "100.00",
+                  dropoff: 0
+                },
+                %{label: "Signup", visitors: 2, conversion_rate: "100.00", dropoff: 0},
+                %{label: "Visit /checkout", visitors: 1, conversion_rate: "50.00", dropoff: 1}
               ]
             }} = funnel_data
   end
