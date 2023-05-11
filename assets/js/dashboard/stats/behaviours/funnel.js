@@ -36,9 +36,8 @@ export default class Funnel extends React.Component {
 
   formatDataLabel(visitors, ctx) {
     if (ctx.dataset.label === 'Visitors') {
-      const total = this.state.funnel.steps[0].visitors
-      const percentage = (visitors / total) * 100
-      return `${percentage}%\n${numberFormatter(visitors)} Visitors`
+      const conversionRate = this.state.funnel.steps[ctx.dataIndex].conversion_rate
+      return `${conversionRate}%\n${numberFormatter(visitors)} Visitors`
     } else {
       return null
     }
@@ -70,16 +69,8 @@ export default class Funnel extends React.Component {
     }
     const labels = this.state.funnel.steps.map((step, i) => `${i + 1}. ${step.label}`);
     const stepData = this.state.funnel.steps.map(step => step.visitors)
-    const dropOffData = this.state.funnel.steps.map((step, i) => {
-      const thisVisitors = step.visitors
-      const prevEntry = this.state.funnel.steps[i - 1]
-      if (prevEntry) {
-        return prevEntry.visitors - thisVisitors
-      } else {
-        return 0
-      }
-    })
 
+    const dropOffData = this.state.funnel.steps.map((step) => step.dropoff)
     const ctx = document.getElementById('funnel').getContext('2d')
 
     var gradient = ctx.createLinearGradient(0, 0, 0, 300);
@@ -148,6 +139,7 @@ export default class Funnel extends React.Component {
   }
 
   renderError() {
+
     if (this.state.error.payload && this.state.error.payload.level === "normal") {
       return (<React.Fragment>
         {this.header()}
@@ -174,15 +166,13 @@ export default class Funnel extends React.Component {
     } else if (this.state.error) {
       return this.renderError()
     } else if (this.state.funnel) {
-      const firstStep = this.state.funnel.steps[0].visitors
-      const lastStep = this.state.funnel.steps[this.state.funnel.steps.length - 1].visitors
-      const conversionRate = (lastStep / firstStep) * 100
+      const conversionRate = this.state.funnel.steps[this.state.funnel.steps.length - 1].conversion_rate
 
       return (
         <React.Fragment>
           {this.header()}
           <p className="mt-1 text-gray-500 text-sm">{this.state.funnel.steps.length}-step funnel • {conversionRate}% conversion rate</p>
-          <canvas className="py-4" id="funnel" height="100px"></canvas>
+          <canvas className="py-4" id="funnel"></canvas>
         </React.Fragment>
       )
     }
