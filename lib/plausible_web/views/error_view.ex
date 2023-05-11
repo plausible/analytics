@@ -12,7 +12,7 @@ defmodule PlausibleWeb.ErrorView do
     assigns =
       assigns
       |> Map.put(:status, 404)
-      |> Map.put(:message, "Oops! There's nothing here")
+      |> Map.put_new(:message, "Oops! There's nothing here")
 
     render("generic_error.html", assigns)
   end
@@ -42,8 +42,8 @@ defmodule PlausibleWeb.ErrorView do
   def template_not_found(template, assigns) do
     assigns =
       assigns
+      |> Map.put_new(:message, Phoenix.Controller.status_message_from_template(template))
       |> Map.put(:status, String.trim_trailing(template, ".html"))
-      |> Map.put(:message, Phoenix.Controller.status_message_from_template(template))
 
     render("generic_error.html", assigns)
   end
