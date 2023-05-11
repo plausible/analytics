@@ -42,10 +42,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           Plausible.Stats.aggregate(site, query, metrics)
         end
 
-      results =
-        results
-        |> Map.take(metrics)
-
       json(conn, %{results: results})
     else
       {:error, msg} ->
