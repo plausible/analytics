@@ -12,6 +12,8 @@
 
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
+FunWithFlags.enable(:funnels)
+
 native_stats_range =
   Date.range(
     Date.add(Date.utc_today(), -720),
@@ -30,6 +32,12 @@ site =
     native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
     stats_start_date: NaiveDateTime.new!(imported_stats_range.first, ~T[00:00:00])
   )
+
+{:ok, goal1} = Plausible.Goals.create(site, %{"page_path" => "/"})
+{:ok, goal2} = Plausible.Goals.create(site, %{"page_path" => "/register"})
+{:ok, goal3} = Plausible.Goals.create(site, %{"page_path" => "/login"})
+
+{:ok, _funnel} = Plausible.Funnels.create(site, "From homepage to login", [goal1, goal2, goal3])
 
 _membership = Plausible.Factory.insert(:site_membership, user: user, site: site, role: :owner)
 
@@ -108,7 +116,8 @@ native_stats_range
       operating_system: Enum.random(["Windows", "macOS", "Linux"]),
       operating_system_version: to_string(Enum.random(0..15)),
       pathname:
-        Enum.random(["/", "/login", "/settings", "/register", "/docs", "/docs/1", "/docs/2"])
+        Enum.random(["/", "/login", "/settings", "/register", "/docs", "/docs/1", "/docs/2"]),
+      user_id: Enum.random(1..121)
     ]
     |> Keyword.merge(geolocation)
     |> then(&Plausible.Factory.build(:pageview, &1))
