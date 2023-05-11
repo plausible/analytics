@@ -52,7 +52,7 @@ jobs:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
       - name: Restore dependencies cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             deps
