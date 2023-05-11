@@ -42,6 +42,14 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
                  "input[type=\"hidden\"][name=\"error[trace_id]\"][value=\"some-event-id\"]"
                )
       end
+
+      test "does not include tracking script: #{error}", %{user: user} do
+        assert html =
+                 render_to_string(ErrorView, unquote(error) <> ".html", %{
+                   current_user: user
+                 })
+        refute html =~ "plausible.js"
+      end
     end
 
     test "submitting the feedback form for authenticated user", %{conn: conn, user: user} do
