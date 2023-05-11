@@ -344,6 +344,11 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       populate_stats(site, [
         build(:event,
           name: "Payment",
+          "meta.key": ["author"],
+          "meta.value": ["Valdis"]
+        ),
+        build(:event,
+          name: "Payment",
           "meta.key": ["Garbage"],
           "meta.value": ["321"]
         ),
@@ -359,7 +364,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       filters = Jason.encode!(%{goal: "Payment"})
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
-      assert [%{"prop_names" => []}] = json_response(conn, 200)
+      assert [%{"prop_names" => ["author"]}] = json_response(conn, 200)
     end
 
     test "does not filter any prop names by default (when site.allowed_event_props is nil)",
