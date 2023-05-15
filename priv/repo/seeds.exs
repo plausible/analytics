@@ -102,7 +102,7 @@ geolocations = [
 native_stats_range
 |> Enum.with_index()
 |> Enum.flat_map(fn {date, index} ->
-  Enum.map(0..:rand.uniform(500), fn _ ->
+  Enum.map(0..Enum.random(1..500), fn _ ->
     geolocation = Enum.random(geolocations)
 
     [
@@ -117,7 +117,7 @@ native_stats_range
       operating_system_version: to_string(Enum.random(0..15)),
       pathname:
         Enum.random(["/", "/login", "/settings", "/register", "/docs", "/docs/1", "/docs/2"]),
-      user_id: Enum.random(1..121)
+      user_id: Enum.random(1..1200)
     ]
     |> Keyword.merge(geolocation)
     |> then(&Plausible.Factory.build(:pageview, &1))
@@ -136,7 +136,7 @@ site =
 
 imported_stats_range
 |> Enum.flat_map(fn date ->
-  Enum.flat_map(0..:rand.uniform(500), fn _ ->
+  Enum.flat_map(0..Enum.random(1..500), fn _ ->
     [
       Plausible.Factory.build(:imported_visitors,
         date: date,
