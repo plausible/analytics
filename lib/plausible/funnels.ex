@@ -154,26 +154,22 @@ defmodule Plausible.Funnels do
 
     funnel
     |> Map.fetch!(:steps)
-    |> Enum.map(fn step ->
-      visitors_total =
+    |> Enum.reduce({nil, nil, []}, fn step, {total_visitors, visitors_at_previous, acc} ->
+      # first step contains the total number of all visitors qualifying for the funnel,
+      # with each subsequent step needing to accumulate sum of the previous one(s)
+      visitors_at_step =
         step.step_order..max_step
         |> Enum.map(&Map.get(funnel_result, &1, 0))
         |> Enum.sum()
 
-      %{
-        visitors: visitors_total,
-        label: Plausible.Goal.display_name(step.goal)
-      }
-    end)
-    |> Enum.reduce({nil, nil, []}, fn step, {total_visitors, visitors_at_previous, acc} ->
       # accumulate current_visitors for the next iteration
-      current_visitors = step.visitors
+      current_visitors = visitors_at_step
 
       # First step contains the total number of visitors that we base percentage dropoff on
       total_visitors = total_visitors || current_visitors
 
       # Dropoff is 0 for the first step, otherwise we subtract current from previous
-      dropoff = if visitors_at_previous, do: visitors_at_previous - step.visitors, else: 0
+      dropoff = if visitors_at_previous, do: visitors_at_previous - current_visitors, else: 0
 
       conversion_rate =
         (current_visitors / total_visitors * 100)
@@ -181,10 +177,12 @@ defmodule Plausible.Funnels do
         |> Decimal.round(2)
         |> Decimal.to_string()
 
-      step =
-        step
-        |> Map.put(:dropoff, dropoff)
-        |> Map.put(:conversion_rate, conversion_rate)
+      step = %{
+        dropoff: dropoff,
+        conversion_rate: conversion_rate,
+        visitors: visitors_at_step,
+        label: Plausible.Goal.display_name(step.goal)
+      }
 
       {total_visitors, current_visitors, [step | acc]}
     end)
