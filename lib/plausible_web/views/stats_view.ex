@@ -43,29 +43,12 @@ defmodule PlausibleWeb.StatsView do
     end
   end
 
-  def bar(count, all, color \\ :blue) do
-    ~E"""
-    <div class="bg-<%= color %>-100" style="width: <%= bar_width(count, all) %>%; height: 30px"></div>
-    """
-  end
-
   def stats_container_class(conn) do
     cond do
       conn.assigns[:embedded] && conn.assigns[:width] == "manual" -> ""
       conn.assigns[:embedded] -> "max-w-screen-xl mx-auto px-6"
       !conn.assigns[:embedded] -> "container"
     end
-  end
-
-  defp bar_width(count, all) do
-    max =
-      Enum.max_by(all, fn
-        {_, count} -> count
-        {_, count, _} -> count
-      end)
-      |> elem(1)
-
-    count / max * 100
   end
 
   @doc """

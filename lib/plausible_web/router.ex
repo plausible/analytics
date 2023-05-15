@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
+  import Phoenix.LiveView.Router
   @two_weeks_in_seconds 60 * 60 * 24 * 14
 
   pipeline :browser do
@@ -246,8 +247,10 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
 
-    get "/:website/settings/funnels", SiteController, :settings_funnels
-    post "/:website/settings/funnels", SiteController, :save_funnel
+    # get "/:website/settings/funnels", SiteController, :settings_funnels
+    # post "/:website/settings/funnels", SiteController, :save_funnel
+
+    live "/:website/settings/funnels", FunnelSettingsLive
 
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports

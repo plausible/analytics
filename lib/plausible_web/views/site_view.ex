@@ -55,9 +55,8 @@ defmodule PlausibleWeb.SiteView do
     end
   end
 
-  def google_logo() do
-    ~E"""
-    <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+  def google_logo(assigns \\ %{}) do
+    ~H"""
     <svg width="46px" height="46px" viewBox="0 0 46 46" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
     <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
       <g transform="translate(-1.000000, -1.000000)">
