@@ -1,5 +1,7 @@
 defmodule Plausible.Funnels do
   @funnel_window_duration 86_400
+  @min_funnel_size 2
+  @max_funnel_size 5
 
   alias Plausible.Funnel
   alias Plausible.Repo
@@ -8,7 +10,9 @@ defmodule Plausible.Funnels do
 
   import Ecto.Query
 
-  def create(site, name, goals) when is_list(goals) do
+  def create(site, name, goals)
+      when is_list(goals) and length(goals) >= @min_funnel_size and
+             length(goals) <= @max_funnel_size do
     steps =
       goals
       |> Enum.with_index(1)
@@ -24,6 +28,10 @@ defmodule Plausible.Funnels do
     }
     |> Funnel.changeset(%{name: name, steps: steps})
     |> Repo.insert()
+  end
+
+  def create(_site, _name, _goals) do
+    {:error, :invalid_funnel_size}
   end
 
   def list(%Plausible.Site{id: site_id}) do
@@ -139,7 +147,7 @@ defmodule Plausible.Funnels do
   defp backfill_steps(funnel_result, funnel) do
     # Directly from ClickHouse we only get {step_idx(), visitor_count()} tuples.
     # but no totals including previous steps are aggregated.
-    # Hence we need to perform the appropriate backfill 
+    # Hence we need to perform the appropriate backfill
     # and also calculate dropoff and conversion rate for each step.
     funnel_result = Enum.into(funnel_result, %{})
     max_step = Enum.max_by(funnel.steps, & &1.step_order).step_order
