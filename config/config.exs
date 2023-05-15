@@ -4,6 +4,7 @@ config :plausible,
   ecto_repos: [Plausible.Repo, Plausible.IngestRepo]
 
 config :plausible, PlausibleWeb.Endpoint,
+  live_view: [signing_salt: "F19F4RBTbQ66AiYD"],
   pubsub_server: Plausible.PubSub,
   render_errors: [
     view: PlausibleWeb.ErrorView,

@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_live_flash
     plug :put_secure_browser_headers
     plug PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
@@ -247,10 +247,10 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
 
-    # get "/:website/settings/funnels", SiteController, :settings_funnels
+    get "/:website/settings/funnels", SiteController, :settings_funnels
     # post "/:website/settings/funnels", SiteController, :save_funnel
 
-    live "/:website/settings/funnels", FunnelSettingsLive
+    # live "/:website/settings/funnels", Live.FunnelSettings
 
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports

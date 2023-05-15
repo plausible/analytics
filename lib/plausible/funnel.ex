@@ -37,7 +37,7 @@ defmodule Plausible.Funnel do
     timestamps()
   end
 
-  def changeset(funnel, attrs \\ %{}) do
+  def changeset(funnel \\ %__MODULE__{}, attrs \\ %{}) do
     funnel
     |> cast(attrs, [:name])
     |> cast_assoc(:steps, with: &Step.changeset/2)

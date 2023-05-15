@@ -5,6 +5,23 @@ import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import "phoenix_html"
 import 'alpinejs'
 
+import { Socket } from "phoenix"
+import { LiveSocket } from "phoenix_live_view"
+
+let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken } })
+
+// Connect if there are any LiveViews on the page
+liveSocket.connect()
+
+// Expose liveSocket on window for web console debug logs and latency simulation:
+// >> liveSocket.enableDebug()
+// >> liveSocket.enableLatencySim(1000)
+// The latency simulator is enabled for the duration of the browser session.
+// Call disableLatencySim() to disable:
+// >> liveSocket.disableLatencySim()
+window.liveSocket = liveSocket
+
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 
 for (const trigger of triggers) {
@@ -49,7 +66,7 @@ if (registerForm) {
       }
     }
     /* eslint-disable-next-line no-undef */
-    plausible('Signup', {callback: submitForm});
+    plausible('Signup', { callback: submitForm });
   })
 }
 
@@ -58,12 +75,12 @@ const changelogNotification = document.getElementById('changelog-notification')
 if (changelogNotification) {
   showChangelogNotification(changelogNotification)
 
-  fetch('https://plausible.io/changes.txt', {headers: {'Content-Type': 'text/plain'}})
+  fetch('https://plausible.io/changes.txt', { headers: { 'Content-Type': 'text/plain' } })
     .then((res) => res.text())
     .then((res) => {
       localStorage.lastChangelogUpdate = new Date(res).getTime()
       showChangelogNotification(changelogNotification)
-  })
+    })
 }
 
 function showChangelogNotification(el) {
@@ -71,7 +88,7 @@ function showChangelogNotification(el) {
   const lastChecked = Number(localStorage.lastChangelogClick)
 
   const hasNewUpdateSinceLastClicked = lastUpdated > lastChecked
-  const notOlderThanThreeDays = Date.now() - lastUpdated <  1000 * 60 * 60 * 72
+  const notOlderThanThreeDays = Date.now() - lastUpdated < 1000 * 60 * 60 * 72
   if ((!lastChecked || hasNewUpdateSinceLastClicked) && notOlderThanThreeDays) {
     el.innerHTML = `
       <a href="https://plausible.io/changelog" target="_blank">
