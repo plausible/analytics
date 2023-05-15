@@ -56,7 +56,6 @@ defmodule PlausibleWeb.StatsController do
       stats_start_date && can_see_stats? ->
         demo = site.domain == PlausibleWeb.Endpoint.host()
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
-        funnels = Plausible.Funnels.list(site)
 
         conn
         |> assign(:skip_plausible_tracking, !demo)
@@ -65,7 +64,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
-          funnels: funnels,
+          funnels: Plausible.Funnels.list(site),
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: "Plausible · " <> site.domain,
@@ -293,7 +292,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Sites.has_goals?(shared_link.site),
-          funnels: nil,
+          funnels: Plausible.Funnels.list(shared_link.site),
           stats_start_date: shared_link.site.stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: "Plausible · " <> shared_link.site.domain,
