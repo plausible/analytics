@@ -205,7 +205,7 @@ defmodule Plausible.Stats.ComparisonsTest do
   describe "include_imported" do
     setup [:create_user, :create_new_site, :add_imported_data]
 
-    test "defaults to source_query.include_imported if not specified by opts", %{site: site} do
+    test "defaults to source_query.include_imported", %{site: site} do
       query = Query.from(site, %{"period" => "day", "date" => "2023-01-01"})
       assert query.include_imported == false
 
