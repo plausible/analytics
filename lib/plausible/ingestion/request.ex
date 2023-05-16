@@ -8,6 +8,8 @@ defmodule Plausible.Ingestion.Request do
   use Ecto.Schema
   alias Ecto.Changeset
 
+  @max_url_size 2_000
+
   embedded_schema do
     field :remote_ip, :string
     field :user_agent, :string
@@ -47,6 +49,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_hostname()
         |> put_user_agent(conn)
         |> put_request_params(request_body)
+        |> put_referrer(request_body)
         |> put_props(request_body)
         |> put_pathname()
         |> put_query_params()
@@ -57,7 +60,6 @@ defmodule Plausible.Ingestion.Request do
           :pathname,
           :timestamp
         ])
-        |> Changeset.validate_length(:referrer, max: 2000)
         |> Changeset.validate_length(:event_name, max: 120)
         |> Changeset.apply_action(nil)
 
@@ -89,9 +91,19 @@ defmodule Plausible.Ingestion.Request do
     Changeset.change(
       changeset,
       event_name: request_body["n"] || request_body["name"],
-      referrer: request_body["r"] || request_body["referrer"],
       hash_mode: request_body["h"] || request_body["hashMode"]
     )
+  end
+
+  defp put_referrer(changeset, %{} = request_body) do
+    referrer = request_body["r"] || request_body["referrer"]
+
+    if is_binary(referrer) do
+      referrer = String.slice(referrer, 0..(@max_url_size - 1))
+      Changeset.put_change(changeset, :referrer, referrer)
+    else
+      changeset
+    end
   end
 
   defp put_pathname(changeset) do
@@ -128,7 +140,6 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  @max_url_size 2_000
   @disallowed_schemes ~w(data)
   defp put_uri(changeset, %{} = request_body) do
     with url when is_binary(url) <- request_body["u"] || request_body["url"],

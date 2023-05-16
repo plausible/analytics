@@ -237,7 +237,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert {"should be at most %{count} character(s)", _} = changeset.errors[:event_name]
   end
 
-  test "returns validaton error when referrer is too long" do
+  test "truncates referrer when too long" do
     payload = %{
       name: "pageview",
       domain: "dummy.site",
@@ -246,8 +246,8 @@ defmodule Plausible.Ingestion.RequestTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:error, changeset} = Request.build(conn)
-    assert {"should be at most %{count} character(s)", _} = changeset.errors[:referrer]
+    assert {:ok, request} = Request.build(conn)
+    assert request.referrer == String.duplicate("a", 2000)
   end
 
   test "returns validation error when props keys are too long" do
