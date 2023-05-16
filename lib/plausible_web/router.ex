@@ -250,7 +250,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/funnels", SiteController, :settings_funnels
     # post "/:website/settings/funnels", SiteController, :save_funnel
 
-    # live "/:website/settings/funnels", Live.FunnelSettings
+    # live "/:website/settings/funnel2", Live.FunnelSettings
 
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports

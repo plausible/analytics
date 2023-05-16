@@ -16,23 +16,24 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     ~H"""
     <div class="grid grid-cols-4 gap-6 mt-6">
       <div class="col-span-4 sm:col-span-2">
-        <.form :let={f} for={@form} phx-change="validate" phx-submit="save">
+        <.form :let={f} for={@form} phx-change="validate" phx-submit="save" onkeydown="return event.key != 'Enter';">
         <%= label f, "Funnel name", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
         <.input field={@form[:name]} />
 
         <%= label f, "Funnel Steps", class: "mt-6 block text-sm font-medium text-gray-700 dark:text-gray-300" %>
 
-        <%= for _step_number <- 1..@step_count do %>
-          <.select goals={@goals} myself={@myself} />
-        <% end %>
+          <.live_component
+            :for={step_number <- 1..@step_count}
+            module={PlausibleWeb.Live.FunnelSettings.InputPicker}
+            id={"step-#{step_number}"}
+            options={Enum.map(@goals, fn goal -> {goal.id, Plausible.Goal.display_name(goal)} end)}
+          />
 
-        <%= if @step_count < 5 do %>
-          <a class="underline text-indigo-600 cursor-pointer" phx-click="add-step" phx-target={@myself}>Add another step</a>
-        <% end %>
+          <a :if={@step_count < 5} class="underline text-indigo-600 cursor-pointer" phx-click="add-step" phx-target={@myself}>Add another step</a>
 
     <br/><hr/>
 
-        <button type="button" class="button mt-6">Save</button>
+        <button type="submit" class="button mt-6">Save</button>
         <button type="button" class="button mt-6" phx-click="cancel_add_funnel">Cancel</button>
     </.form>
       </div>
@@ -40,26 +41,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     """
   end
 
-  attr :field, Phoenix.HTML.FormField
+  attr(:field, Phoenix.HTML.FormField)
 
   def input(assigns) do
     ~H"""
-    <input type="text" id={@field.id} name={@field.name} value={@field.value} class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-full rounded-md sm:text-sm border-gray-300 dark:border-gray-500" />
-    """
-  end
-
-  attr :goals, :map, required: true
-  attr :myself, :any, required: true
-
-  def select(assigns) do
-    ~H"""
-    <select phx-change="changed" phx-target={@myself} name="steps[]" class="dark:bg-gray-900 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100 cursor-pointer" id="site_timezone">
-    <%= for goal <- @goals do %>
-      <option value={goal.id}>
-        <%= Plausible.Goal.display_name(goal) %>
-      </option>
-    <% end %>
-    </select>
+    <input type="text" id={@field.id} name={@field.name} value={@field.value} phx-debounce="300" class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-full rounded-md sm:text-sm border-gray-300 dark:border-gray-500" />
     """
   end
 
@@ -80,7 +66,3 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     {:noreply, assign(socket, goals: except_first)}
   end
 end
-
-# goal_options = [{"N/A", ""} | Enum.map(@goals, fn goal -> {Plausible.Goal.display_name(goal), goal.id} end)] %>
-#
-# end

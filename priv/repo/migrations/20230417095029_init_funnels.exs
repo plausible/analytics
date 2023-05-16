@@ -4,12 +4,12 @@ defmodule Plausible.Repo.Migrations.InitFunnels do
   def change do
     create table(:funnels) do
       add :name, :string, null: false
-      add :site_id, references(:sites), null: false
+      add :site_id, references(:sites, on_delete: :delete_all), null: false
       timestamps()
     end
 
     create table(:funnel_steps) do
-      add :goal_id, references(:goals), null: false
+      add :goal_id, references(:goals, on_delete: :delete_all), null: false
       add :funnel_id, references(:funnels, on_delete: :delete_all), null: false
       add :step_order, :integer, null: false
       timestamps()

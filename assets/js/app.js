@@ -22,6 +22,11 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+window.addEventListener(`phx:update-value`, (e) => {
+  let el = document.getElementById(e.detail.id)
+  el.value = e.detail.value
+})
+
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 
 for (const trigger of triggers) {
