@@ -29,13 +29,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             options={Enum.map(@goals, fn goal -> {goal.id, Plausible.Goal.display_name(goal)} end)}
           />
 
-          <a :if={@step_count < 5} class="underline text-indigo-600 cursor-pointer" phx-click="add-step" phx-target={@myself}>Add another step</a>
+          <a :if={@step_count < 5} class="underline text-indigo-600 text-sm cursor-pointer" phx-click="add-step" phx-target={@myself}>+ Add another step</a>
 
-    <br/><hr/>
-
-        <button type="submit" class="button mt-6">Save</button>
-        <button type="button" class="button mt-6" phx-click="cancel_add_funnel">Cancel</button>
-    </.form>
+          <div class="mt-6">
+            <button type="submit" class="button mt-6">Save</button>
+            <button type="button" class="inline-block mt-4 ml-2 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150 " phx-click="cancel_add_funnel">Cancel</button>
+          </div>
+      </.form>
       </div>
     </div>
     """
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def input(assigns) do
     ~H"""
-    <input type="text" id={@field.id} name={@field.name} value={@field.value} phx-debounce="300" class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-full rounded-md sm:text-sm border-gray-300 dark:border-gray-500" />
+    <input autofocus type="text" id={@field.id} name={@field.name} value={@field.value} phx-debounce="300" class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-full rounded-md sm:text-sm border-gray-300 dark:border-gray-500" />
     """
   end
 

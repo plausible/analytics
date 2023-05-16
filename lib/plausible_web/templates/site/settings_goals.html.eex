@@ -24,6 +24,6 @@
 
   <%= link("+ Add goal", to: "/#{URI.encode_www_form(@site.domain)}/goals/new", class: "button mt-6") %>
   <%= if Enum.count(@goals) >= 2 do %>
-  <%= link("Set up funnels", to: Routes.site_path(@conn, :settings_funnels, @site.domain), class: "button mt-6 ml-2") %>
+  <%= link("Set up funnels", to: Routes.site_path(@conn, :settings_funnels, @site.domain), class: "mt-6 ml-2 text-indigo-600 underline text-sm") %>
   <% end %>
 </div>

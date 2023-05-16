@@ -10,13 +10,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   attr :goal_id, :string, default: ""
   attr :higlighted, :integer, default: nil
 
+  ## XXX handle phx-blur properly on tab
   def render(assigns) do
     ~H"""
     <div class="mb-3">
     <div class="relative w-full">
       <div class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 ">
 
-        <input autocomplete="off" phx-debounce="10" phx-keyup="keypress" phx-target={@myself} name={@id} id={@id} class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" style="background-color: inherit;" placeholder={@placeholder} type="text" value={@value}>
+
+        <input autocomplete="off" phx-debounce="10" phx-keyup="keypress" phx-click="show-picker" phx-target={@myself} name={@id} id={@id} class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" style="background-color: inherit;" placeholder={@placeholder} type="text" value={@value}>
 
         <div phx-click="show-picker" phx-target={@myself} class="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" class="h-4 w-4 text-gray-500"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg>
