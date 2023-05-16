@@ -27,6 +27,7 @@ defmodule PlausibleWeb.BillingController do
 
       true ->
         render(conn, "upgrade.html",
+          skip_plausible_tracking: true,
           usage: Plausible.Billing.usage(user),
           user: user,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -45,6 +46,7 @@ defmodule PlausibleWeb.BillingController do
 
       plan ->
         render(conn, "upgrade_to_plan.html",
+          skip_plausible_tracking: true,
           user: user,
           plan: plan,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -56,7 +58,10 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade_success(conn, _params) do
-    render(conn, "upgrade_success.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    render(conn, "upgrade_success.html",
+      layout: {PlausibleWeb.LayoutView, "focus.html"},
+      skip_plausible_tracking: true
+    )
   end
 
   def change_plan_form(conn, _params) do
@@ -76,6 +81,7 @@ defmodule PlausibleWeb.BillingController do
       subscription && user.enterprise_plan &&
           subscription.paddle_plan_id == user.enterprise_plan.paddle_plan_id ->
         render(conn, "change_enterprise_plan_contact_us.html",
+          skip_plausible_tracking: true,
           user: user,
           plan: user.enterprise_plan,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -83,6 +89,7 @@ defmodule PlausibleWeb.BillingController do
 
       subscription ->
         render(conn, "change_plan.html",
+          skip_plausible_tracking: true,
           subscription: subscription,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
@@ -106,6 +113,7 @@ defmodule PlausibleWeb.BillingController do
 
       true ->
         render(conn, "change_enterprise_plan.html",
+          skip_plausible_tracking: true,
           user: user,
           plan: new_plan,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
@@ -117,6 +125,7 @@ defmodule PlausibleWeb.BillingController do
     with {:ok, {subscription, preview_info}} <-
            preview_subscription(conn.assigns.current_user, new_plan_id) do
       render(conn, "change_plan_preview.html",
+        skip_plausible_tracking: true,
         subscription: subscription,
         preview_info: preview_info,
         layout: {PlausibleWeb.LayoutView, "focus.html"}

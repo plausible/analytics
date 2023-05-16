@@ -877,6 +877,7 @@ defmodule PlausibleWeb.SiteController do
     changeset = Plausible.Site.update_changeset(conn.assigns.site)
 
     render(conn, "change_domain.html",
+      skip_plausible_tracking: true,
       changeset: changeset,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
@@ -893,6 +894,7 @@ defmodule PlausibleWeb.SiteController do
 
       {:error, changeset} ->
         render(conn, "change_domain.html",
+          skip_plausible_tracking: true,
           changeset: changeset,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )

@@ -7,7 +7,7 @@ config :plausible, PlausibleWeb.Endpoint,
   pubsub_server: Plausible.PubSub,
   render_errors: [
     view: PlausibleWeb.ErrorView,
-    layout: {PlausibleWeb.LayoutView, "focus.html"},
+    layout: {PlausibleWeb.LayoutView, "base_error.html"},
     accepts: ~w(html json)
   ]
 
