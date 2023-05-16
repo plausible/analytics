@@ -60,7 +60,7 @@ defmodule PlausibleWeb.StatsController do
         conn
         |> assign(:skip_plausible_tracking, !demo)
         |> remove_email_report_banner(site)
-        |> put_resp_header("x-robots-tag", "noindex")
+        |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
@@ -286,7 +286,7 @@ defmodule PlausibleWeb.StatsController do
       !shared_link.site.locked ->
         conn
         |> assign(:skip_plausible_tracking, true)
-        |> put_resp_header("x-robots-tag", "noindex")
+        |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")
         |> render("stats.html",
           site: shared_link.site,
