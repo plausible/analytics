@@ -17,6 +17,7 @@ defmodule Plausible.Site do
     field :locked, :boolean
     field :stats_start_date, :date
     field :native_stats_start_at, :naive_datetime
+    field :allowed_event_props, {:array, :string}
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     # default is set via changeset/2
@@ -158,6 +159,10 @@ defmodule Plausible.Site do
         source: imported_source
       }
     )
+  end
+
+  def set_allowed_event_props(site, list) do
+    change(site, allowed_event_props: list)
   end
 
   def remove_imported_data(site) do

@@ -299,7 +299,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    test "returns prop_names=nil when goal :member + property filter are applied at the same time",
+    test "returns prop_names=[] when goal :member + property filter are applied at the same time",
          %{
            conn: conn,
            site: site
@@ -329,6 +329,70 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
 
       assert [%{"prop_names" => []}] = json_response(conn, 200)
+    end
+
+    test "filters out garbage prop_names",
+         %{
+           conn: conn,
+           site: site
+         } do
+      site =
+        site
+        |> Plausible.Site.set_allowed_event_props(["author"])
+        |> Plausible.Repo.update!()
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          "meta.key": ["author"],
+          "meta.value": ["Valdis"]
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": ["Garbage"],
+          "meta.value": ["321"]
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": ["OnlyGarbage"],
+          "meta.value": ["123"]
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment"})
+
+      filters = Jason.encode!(%{goal: "Payment"})
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+
+      assert [%{"prop_names" => ["author"]}] = json_response(conn, 200)
+    end
+
+    test "does not filter any prop names by default (when site.allowed_event_props is nil)",
+         %{
+           conn: conn,
+           site: site
+         } do
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          "meta.key": ["Garbage"],
+          "meta.value": ["321"]
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": ["OnlyGarbage"],
+          "meta.value": ["123"]
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment"})
+
+      filters = Jason.encode!(%{goal: "Payment"})
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+
+      assert [%{"prop_names" => prop_names}] = json_response(conn, 200)
+      assert "Garbage" in prop_names
+      assert "OnlyGarbage" in prop_names
     end
 
     test "can filter by multiple mixed goals", %{conn: conn, site: site} do

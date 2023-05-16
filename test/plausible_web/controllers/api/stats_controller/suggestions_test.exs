@@ -278,6 +278,73 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
+    test "returns suggestions for prop key based on site.allowed_event_props list", %{
+      conn: conn,
+      site: site
+    } do
+      site =
+        site
+        |> Plausible.Site.set_allowed_event_props(["author"])
+        |> Plausible.Repo.update!()
+
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["garbage1"],
+          "meta.value": ["somegarbage1"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["garbage2"],
+          "meta.value": ["somegarbage2"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
+
+      assert json_response(conn, 200) == [
+               %{"label" => "author", "value" => "author"}
+             ]
+    end
+
+    test "does not filter out prop key suggestions by default (when site.allowed_event_props is nil)",
+         %{
+           conn: conn,
+           site: site
+         } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["garbage1"],
+          "meta.value": ["somegarbage1"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["garbage2"],
+          "meta.value": ["somegarbage2"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
+
+      suggestions = json_response(conn, 200)
+      assert %{"label" => "author", "value" => "author"} in suggestions
+      assert %{"label" => "garbage1", "value" => "garbage1"} in suggestions
+      assert %{"label" => "garbage2", "value" => "garbage2"} in suggestions
+    end
+
     test "returns suggestions for prop value ordered by count, but (none) value is always first",
          %{conn: conn, site: site} do
       populate_stats(site, [
