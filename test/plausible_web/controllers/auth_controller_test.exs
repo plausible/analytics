@@ -749,8 +749,7 @@ defmodule PlausibleWeb.AuthControllerTest do
           }
         })
 
-      key = Plausible.Auth.ApiKey |> where(user_id: ^user.id) |> Repo.one()
-      assert html_response(conn2, 200) =~ "Key <> already exists"
+      assert html_response(conn2, 200) =~ "has already been taken"
     end
 
     test "can't create api key into another site", %{conn: conn, user: me} do
