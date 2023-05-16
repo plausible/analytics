@@ -51,7 +51,7 @@ defmodule Plausible.Stats.CustomProps do
   end
 
   def maybe_allowed_props_only(q, allowed_props) when is_list(allowed_props) do
-    from [_e, m] in q, where: m.key in ^allowed_props
+    from [..., m] in q, where: m.key in ^allowed_props
   end
 
   def maybe_allowed_props_only(q, nil), do: q
