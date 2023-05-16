@@ -97,15 +97,10 @@ defmodule PlausibleWeb.StatsController do
     query = Query.from(site, params) |> Filters.add_prefix()
 
     metrics =
-      cond do
-        query.filters["event:goal"] ->
-          [:visitors]
-
-        FunWithFlags.enabled?(:visits_metric, for: conn.assigns[:current_user]) ->
-          [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
-
-        true ->
-          [:visitors, :pageviews, :bounce_rate, :visit_duration]
+      if query.filters["event:goal"] do
+        [:visitors]
+      else
+        [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
       end
 
     graph = Plausible.Stats.timeseries(site, query, metrics)
@@ -332,7 +327,6 @@ defmodule PlausibleWeb.StatsController do
   defp get_flags(user) do
     %{
       custom_dimension_filter: FunWithFlags.enabled?(:custom_dimension_filter, for: user),
-      visits_metric: FunWithFlags.enabled?(:visits_metric, for: user),
       views_per_visit_metric: FunWithFlags.enabled?(:views_per_visit_metric, for: user)
     }
   end
