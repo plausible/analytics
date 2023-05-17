@@ -371,7 +371,7 @@ defmodule PlausibleWeb.AuthController do
       |> redirect(to: login_dest)
     else
       :wrong_password ->
-        Logger.warning("[login] wrong password for #{email}")
+        maybe_log_failed_login_attempts("wrong password for #{email}")
 
         render(conn, "login_form.html",
           error: "Wrong email or password. Please try again.",
@@ -379,7 +379,7 @@ defmodule PlausibleWeb.AuthController do
         )
 
       :user_not_found ->
-        Logger.warning("[login] user not found for #{email}")
+        maybe_log_failed_login_attempts("user not found for #{email}")
         Plausible.Auth.Password.dummy_calculation()
 
         render(conn, "login_form.html",
@@ -388,13 +388,19 @@ defmodule PlausibleWeb.AuthController do
         )
 
       {:rate_limit, _} ->
-        Logger.warning("[login] too many logging attempts for #{email}")
+        maybe_log_failed_login_attempts("too many logging attempts for #{email}")
 
         render_error(
           conn,
           429,
           "Too many login attempts. Wait a minute before trying again."
         )
+    end
+  end
+
+  defp maybe_log_failed_login_attempts(message) do
+    if Application.get_env(:plausible, :log_failed_login_attempts) do
+      Logger.warning("[login] #{message}")
     end
   end
 
