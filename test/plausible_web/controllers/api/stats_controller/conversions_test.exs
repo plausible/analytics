@@ -367,6 +367,45 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert [%{"prop_names" => ["author"]}] = json_response(conn, 200)
     end
 
+    test "filters out garbage prop_names when session filters are applied",
+         %{
+           conn: conn,
+           site: site
+         } do
+      site =
+        site
+        |> Plausible.Site.set_allowed_event_props(["author", "logged_in"])
+        |> Plausible.Repo.update!()
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          pathname: "/",
+          "meta.key": ["author"],
+          "meta.value": ["Valdis"]
+        ),
+        build(:event,
+          name: "Payment",
+          pathname: "/ignore",
+          "meta.key": ["logged_in"],
+          "meta.value": ["true"]
+        ),
+        build(:event,
+          name: "Payment",
+          pathname: "/",
+          "meta.key": ["garbage"],
+          "meta.value": ["123"]
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment"})
+
+      filters = Jason.encode!(%{goal: "Payment", entry_page: "/"})
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+
+      assert [%{"prop_names" => ["author"]}] = json_response(conn, 200)
+    end
+
     test "does not filter any prop names by default (when site.allowed_event_props is nil)",
          %{
            conn: conn,
