@@ -34,7 +34,7 @@ window.addEventListener(`phx:hide`, (e) => {
 
 window.addEventListener(`phx:scroll-to`, (e) => {
   let el = document.getElementById(e.detail.id)
-  el.scrollIntoView({ block: 'center', behavior: 'smooth', inline: 'nearest' })
+  el.scrollIntoView({ block: 'center', behavior: 'smooth', inline: 'start' })
 })
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')

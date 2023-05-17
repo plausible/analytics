@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
         phx-target={@myself}
         name={"display-#{@id}"}
         value={@display_value}
-        class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" />
+        class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" style="background-color: inherit;" />
 
         <.dropdown_anchor id={@id}/>
 
@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     <ul
       id={"dropdown-#{@ref}"}
       phx-target={@target}
-      class="dropdown hidden z-50 absolute mt-1 max-h-40 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
+      class="dropdown hidden z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
       <.option :if={@choices != []} :for={{{submit_value, display_value}, idx} <- Enum.with_index(@choices)}
         idx={idx}
         submit_value={submit_value}
@@ -124,7 +124,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
         </span>
       </a>
     </li>
-    <li :if={@idx == @max_options_displayed - 1} class="text-xs text-gray-500 relative py-2 px-3">Max results reached. Refine your search by typing.</li>
+    <li :if={@idx == @max_options_displayed - 1} class="text-xs text-gray-500 relative py-2 px-3">Max results reached. Refine your search by typing in goal name.</li>
     """
   end
 
