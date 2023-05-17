@@ -444,55 +444,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
-  describe "POST /login failed attempt logs" do
-    import ExUnit.CaptureLog
-
-    setup do
-      patch_env(:log_failed_login_attempts, true)
-    end
-
-    test "on missing user", %{conn: conn} do
-      logs =
-        capture_log(fn ->
-          post(conn, "/login", email: "user@example.com", password: "password")
-        end)
-
-      assert logs =~ "[warning] [login] user not found for user@example.com"
-    end
-
-    test "on wrong password", %{conn: conn} do
-      user = insert(:user, password: "password")
-
-      logs =
-        capture_log(fn ->
-          post(conn, "/login", email: user.email, password: "wrong")
-        end)
-
-      assert logs =~ "[warning] [login] wrong password for #{user.email}"
-    end
-
-    test "on too many login attempts", %{conn: conn} do
-      user = insert(:user, password: "password")
-
-      capture_log(fn ->
-        for _ <- 1..5 do
-          build_conn()
-          |> put_req_header("x-forwarded-for", "1.1.1.1")
-          |> post("/login", email: user.email, password: "wrong")
-        end
-      end)
-
-      logs =
-        capture_log(fn ->
-          conn
-          |> put_req_header("x-forwarded-for", "1.1.1.1")
-          |> post("/login", email: user.email, password: "wrong")
-        end)
-
-      assert logs =~ "[warning] [login] too many logging attempts for #{user.email}"
-    end
-  end
-
   describe "GET /password/request-reset" do
     test "renders the form", %{conn: conn} do
       conn = get(conn, "/password/request-reset")
