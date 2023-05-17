@@ -280,7 +280,7 @@ defmodule Plausible.Ingestion.RequestTest do
              changeset.errors[:props]
   end
 
-  test "returns validation error when there are too many props" do
+  test "does not fail when sending many props" do
     payload = %{
       name: "pageview",
       domain: "dummy.site",
@@ -289,8 +289,8 @@ defmodule Plausible.Ingestion.RequestTest do
     }
 
     conn = build_conn(:post, "/api/events", payload)
-    assert {:error, changeset} = Request.build(conn)
-    assert {"should not have more than 50 items", _} = changeset.errors[:props]
+    assert {:ok, request} = Request.build(conn)
+    assert map_size(request.props) == 100
   end
 
   test "malicious input, technically valid json" do

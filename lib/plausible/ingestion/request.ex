@@ -187,14 +187,10 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  @max_props 50
   @max_prop_key_length 300
   @max_prop_value_length 2000
   defp validate_props(changeset) do
     case Changeset.get_field(changeset, :props) do
-      props when map_size(props) > @max_props ->
-        Changeset.add_error(changeset, :props, "should not have more than #{@max_props} items")
-
       props ->
         Enum.reduce_while(props, changeset, fn
           {key, value}, changeset
