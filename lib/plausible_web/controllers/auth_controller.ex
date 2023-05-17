@@ -371,12 +371,15 @@ defmodule PlausibleWeb.AuthController do
       |> redirect(to: login_dest)
     else
       :wrong_password ->
+        Logger.warning("[login] wrong password for #{email}")
+
         render(conn, "login_form.html",
           error: "Wrong email or password. Please try again.",
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
       :user_not_found ->
+        Logger.warning("[login] user not found for #{email}")
         Plausible.Auth.Password.dummy_calculation()
 
         render(conn, "login_form.html",
@@ -385,6 +388,8 @@ defmodule PlausibleWeb.AuthController do
         )
 
       {:rate_limit, _} ->
+        Logger.warning("[login] too many logging attempts for #{email}")
+
         render_error(
           conn,
           429,
