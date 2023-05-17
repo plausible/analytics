@@ -58,10 +58,7 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade_success(conn, _params) do
-    render(conn, "upgrade_success.html",
-      layout: {PlausibleWeb.LayoutView, "focus.html"},
-      skip_plausible_tracking: true
-    )
+    render(conn, "upgrade_success.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
   def change_plan_form(conn, _params) do
