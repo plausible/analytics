@@ -37,6 +37,7 @@ defmodule Plausible.Goal do
     |> validate_event_name_and_page_path()
     |> update_change(:event_name, &String.trim/1)
     |> update_change(:page_path, &String.trim/1)
+    |> validate_length(:event_name, max: 120)
   end
 
   defp validate_event_name_and_page_path(changeset) do

@@ -12,6 +12,12 @@ defmodule Plausible.GoalsTest do
     assert goal.event_name == "some event name"
   end
 
+  test "create/2 validates goal name is at most 120 chars" do
+    site = insert(:site)
+    assert {:error, changeset} = Goals.create(site, %{"event_name" => String.duplicate("a", 130)})
+    assert {"should be at most %{count} character(s)", _} = changeset.errors[:event_name]
+  end
+
   test "for_site2 returns trimmed input even if it was saved with trailing whitespace" do
     site = insert(:site)
     insert(:goal, %{site: site, event_name: " Signup "})
