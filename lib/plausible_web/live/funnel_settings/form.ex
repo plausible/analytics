@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             options={Enum.map(@goals, fn goal -> {goal.id, Plausible.Goal.display_name(goal)} end)}
           />
 
-          <a :if={@step_count < 5} class="underline text-indigo-600 text-sm cursor-pointer" phx-click="add-step" phx-target={@myself}>+ Add another step</a>
+          <a :if={@step_count < 5} class="underline text-indigo-600 text-sm cursor-pointer mt-6" phx-click="add-step" phx-target={@myself}>+ Add another step</a>
 
           <div class="mt-6">
             <button type="submit" class="button mt-6">Save</button>

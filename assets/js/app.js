@@ -27,6 +27,12 @@ window.addEventListener(`phx:update-value`, (e) => {
   el.value = e.detail.value
 })
 
+window.addEventListener(`phx:hide`, (e) => {
+  console.info(e)
+  let el = document.getElementById(e.detail.id)
+  el.style.display = 'none'
+})
+
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 
 for (const trigger of triggers) {
