@@ -72,6 +72,14 @@ super_admin_user_ids =
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
 mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
 mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
+
+mailer_email =
+  if mailer_name = get_var_from_path_or_env(config_dir, "MAILER_NAME") do
+    {mailer_name, mailer_email}
+  else
+    mailer_email
+  end
+
 app_version = get_var_from_path_or_env(config_dir, "APP_VERSION", "0.0.1")
 
 ch_db_url =

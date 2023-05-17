@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 - 'Last updated X seconds ago' info to 'current visitors' tooltips
 - Add support for more Bamboo adapters, i.e. `Bamboo.MailgunAdapter`, `Bamboo.MandrillAdapter`, `Bamboo.SendGridAdapter` plausible/analytics#2649
 - Ability to change domain for existing site (requires numeric IDs data migration, instructions will be provided separately) UI + API (`PUT /api/v1/sites`)
+- Add `MAILER_NAME` environment variable support plausible/analytics#2937
 
 ### Fixed
 - Make goal-filtered CSV export return only unique_conversions timeseries in the 'visitors.csv' file
