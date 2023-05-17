@@ -48,6 +48,23 @@ defmodule Plausible.ConfigTest do
              ]
     end
 
+    test "Bamboo.MailgunAdapter with custom MAILGUN_BASE_URI" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.MailgunAdapter"},
+        {"MAILGUN_API_KEY", "some-mailgun-key"},
+        {"MAILGUN_DOMAIN", "example.com"},
+        {"MAILGUN_BASE_URI", "https://api.eu.mailgun.net/v3"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               adapter: Bamboo.MailgunAdapter,
+               hackney_opts: [recv_timeout: 10_000],
+               api_key: "some-mailgun-key",
+               domain: "example.com",
+               base_uri: "https://api.eu.mailgun.net/v3"
+             ]
+    end
+
     test "Bamboo.MandrillAdapter" do
       env = [
         {"MAILER_ADAPTER", "Bamboo.MandrillAdapter"},
