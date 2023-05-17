@@ -356,6 +356,7 @@ case mailer_adapter do
       password: get_var_from_path_or_env(config_dir, "SMTP_USER_PWD"),
       tls: :if_available,
       allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
+      tls_cacertfile: CAStore.file_path(),
       ssl: get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED") || false,
       retries: get_var_from_path_or_env(config_dir, "SMTP_RETRIES") || 2,
       no_mx_lookups: get_var_from_path_or_env(config_dir, "SMTP_MX_LOOKUPS_ENABLED") || true
