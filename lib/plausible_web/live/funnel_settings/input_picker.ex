@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
 
-  @max_options_displayed 100
+  @max_options_displayed 15
 
   def update(assigns, socket) do
     socket =
@@ -88,7 +88,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     <ul
       id={"dropdown-#{@ref}"}
       phx-target={@target}
-      class="dropdown hidden z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
+      class="dropdown hidden z-50 absolute mt-1 max-h-40 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
       <.option :if={@choices != []} :for={{{submit_value, display_value}, idx} <- Enum.with_index(@choices)}
         idx={idx}
         submit_value={submit_value}
@@ -112,6 +112,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   attr :candidate, :integer, required: true
 
   def option(assigns) do
+    assigns = assign(assigns, :max_options_displayed, @max_options_displayed)
+
     ~H"""
       <li class={["relative select-none py-2 px-3 cursor-pointer dark:text-gray-300", @idx == @candidate && "text-white bg-indigo-500"]}
       id={"dropdown-#{@ref}-option-#{@idx}"}>
@@ -122,6 +124,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
         </span>
       </a>
     </li>
+    <li :if={@idx == @max_options_displayed - 1} class="text-xs text-gray-500 relative py-2 px-3">Max results reached. Refine your search by typing.</li>
     """
   end
 
