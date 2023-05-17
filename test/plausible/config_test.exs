@@ -14,6 +14,7 @@ defmodule Plausible.ConfigTest do
                password: nil,
                tls: :if_available,
                allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
+               tls_cacertfile: CAStore.file_path(),
                ssl: false,
                retries: 2,
                no_mx_lookups: true
@@ -87,17 +88,18 @@ defmodule Plausible.ConfigTest do
       ]
 
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
-               {:adapter, Bamboo.SMTPAdapter},
-               {:server, "localhost"},
-               {:hostname, "localhost"},
-               {:port, "2525"},
-               {:username, "neo"},
-               {:password, "one"},
-               {:tls, :if_available},
-               {:allowed_tls_versions, [:tlsv1, :"tlsv1.1", :"tlsv1.2"]},
-               {:ssl, "true"},
-               {:retries, "3"},
-               {:no_mx_lookups, "true"}
+               adapter: Bamboo.SMTPAdapter,
+               server: "localhost",
+               hostname: "localhost",
+               port: "2525",
+               username: "neo",
+               password: "one",
+               tls: :if_available,
+               allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
+               tls_cacertfile: CAStore.file_path(),
+               ssl: "true",
+               retries: "3",
+               no_mx_lookups: "true"
              ]
     end
 
