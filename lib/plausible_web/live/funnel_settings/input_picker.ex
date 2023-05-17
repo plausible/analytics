@@ -22,7 +22,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     ~H"""
     <div class="mb-3">
     <div class="relative w-full">
-      <div class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 ">
+      <div
+        phx-click-away={close_dropdown(@id)}
+        class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
 
         <input
         type="text"
@@ -32,7 +34,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
         phx-keyup="keypress"
         phx-focus={open_dropdown(@id)}
         phx-target={@myself}
-        phx-click-away={close_dropdown(@id)}
         name={"display-#{@id}"}
         value={@display_value}
         class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm" />
@@ -61,11 +62,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   end
 
   def open_dropdown(js \\ %JS{}, id) do
-    JS.show(js, to: "#dropdown-#{id}")
+    js |> close_all_dropdowns() |> JS.show(to: "#dropdown-#{id}")
   end
 
   def close_dropdown(js \\ %JS{}, id) do
     JS.hide(js, to: "#dropdown-#{id}")
+  end
+
+  def close_all_dropdowns(js \\ %JS{}) do
+    JS.hide(js, to: ".dropdown")
   end
 
   attr :ref, :string, required: true
@@ -79,7 +84,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     <ul
       id={"dropdown-#{@ref}"}
       phx-target={@target}
-      class="hidden z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
+      class="dropdown hidden z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
         <.option :if={@choices != []} :for={{{submit_value, display_value}, idx} <- Enum.with_index(@choices)} idx={idx} submit_value={submit_value} display_value={display_value} target={@target} ref={@ref} candidate={@candidate} />
         <div :if={@choices == []} class="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
           No matches found. Try searching for something different.
@@ -97,16 +102,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
   def option(assigns) do
     ~H"""
-    <li phx-click={select_option(@ref, @submit_value, @display_value)}
-        phx-value-display-value={@display_value}
-        phx-target={@target}
-        class={[
-          "relative select-none py-2 px-3 cursor-pointer dark:text-gray-300",
-          @idx == @candidate && "text-white bg-indigo-500"
-        ]}>
-          <span class="block truncate">
-            <%= @display_value %>
-          </span>
+    <li class={["relative select-none py-2 px-3 cursor-pointer dark:text-gray-300", @idx == @candidate && "text-white bg-indigo-500"]}>
+      <a phx-click={select_option(@ref, @submit_value, @display_value)} phx-value-display-value={@display_value} phx-target={@target}>
+        <span class="block truncate">
+          <%= @display_value %>
+        </span>
+      </a>
     </li>
     """
   end
