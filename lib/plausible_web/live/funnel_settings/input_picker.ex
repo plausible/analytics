@@ -2,6 +2,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
 
+  @max_options_displayed 100
+
   def update(assigns, socket) do
     socket =
       socket
@@ -9,12 +11,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
       |> assign(:candidate, 0)
       |> assign_new(:display_value, fn -> "" end)
       |> assign_new(:submit_value, fn -> "" end)
-      |> assign_new(:choices, fn -> assigns.options end)
+      |> assign_new(:choices, fn ->
+        Enum.take(assigns.options, @max_options_displayed)
+      end)
 
     {:ok, socket}
   end
 
-  attr :placeholder, :string, default: "Select option"
+  attr :placeholder, :string, default: "Select option or search by typing"
   attr :id, :any, default: nil
   attr :options, :list, required: true
 
@@ -85,7 +89,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
       id={"dropdown-#{@ref}"}
       phx-target={@target}
       class="dropdown hidden z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
-        <.option :if={@choices != []} :for={{{submit_value, display_value}, idx} <- Enum.with_index(@choices)} idx={idx} submit_value={submit_value} display_value={display_value} target={@target} ref={@ref} candidate={@candidate} />
+      <.option :if={@choices != []} :for={{{submit_value, display_value}, idx} <- Enum.with_index(@choices)}
+        idx={idx}
+        submit_value={submit_value}
+        display_value={display_value}
+        target={@target}
+        ref={@ref}
+        candidate={@candidate} />
+
         <div :if={@choices == []} class="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
           No matches found. Try searching for something different.
         </div>
@@ -102,7 +113,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
   def option(assigns) do
     ~H"""
-    <li class={["relative select-none py-2 px-3 cursor-pointer dark:text-gray-300", @idx == @candidate && "text-white bg-indigo-500"]}>
+      <li class={["relative select-none py-2 px-3 cursor-pointer dark:text-gray-300", @idx == @candidate && "text-white bg-indigo-500"]}
+      id={"dropdown-#{@ref}-option-#{@idx}"}>
+
       <a phx-click={select_option(@ref, @submit_value, @display_value)} phx-value-display-value={@display_value} phx-target={@target}>
         <span class="block truncate">
           <%= @display_value %>
@@ -133,22 +146,32 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
         "keypress",
         %{"key" => "ArrowDown"},
         %{
-          assigns: %{candidate: c, choices: choices}
+          assigns: %{candidate: c, choices: choices, id: id}
         } = socket
       )
       when c < length(choices) - 1 do
-    {:noreply, assign(socket, candidate: c + 1)}
+    socket =
+      socket
+      |> push_event("scroll-to", %{id: "dropdown-#{id}-option-#{c}"})
+      |> assign(candidate: c + 1)
+
+    {:noreply, socket}
   end
 
   def handle_event(
         "keypress",
         %{"key" => "ArrowUp"},
         %{
-          assigns: %{candidate: c}
+          assigns: %{candidate: c, id: id}
         } = socket
       )
       when c > 0 do
-    {:noreply, assign(socket, candidate: c - 1)}
+    socket =
+      socket
+      |> push_event("scroll-to", %{id: "dropdown-#{id}-option-#{c}"})
+      |> assign(candidate: c - 1)
+
+    {:noreply, socket}
   end
 
   def handle_event(
@@ -184,11 +207,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
           fn {_, display_value} -> String.jaro_distance(display_value, typed) end,
           :desc
         )
-        |> Enum.take(10)
+        |> Enum.take(@max_options_displayed)
 
       {:noreply, assign(socket, %{choices: choices, candidate: 0})}
     else
-      {:noreply, assign(socket, %{choices: Enum.take(socket.assigns.options, 10), candidate: 0})}
+      {:noreply,
+       assign(socket, %{
+         choices: Enum.take(socket.assigns.options, @max_options_displayed),
+         candidate: 0
+       })}
     end
   end
 

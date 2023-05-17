@@ -28,9 +28,13 @@ window.addEventListener(`phx:update-value`, (e) => {
 })
 
 window.addEventListener(`phx:hide`, (e) => {
-  console.info(e)
   let el = document.getElementById(e.detail.id)
   el.style.display = 'none'
+})
+
+window.addEventListener(`phx:scroll-to`, (e) => {
+  let el = document.getElementById(e.detail.id)
+  el.scrollIntoView({ block: 'center' })
 })
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')

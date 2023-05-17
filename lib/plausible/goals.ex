@@ -52,6 +52,7 @@ defmodule Plausible.Goals do
       from g in Goal,
         inner_join: assoc(g, :site),
         where: g.site_id == ^site.id,
+        order_by: [desc: g.id],
         preload: [:site]
 
     query
