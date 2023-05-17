@@ -29,7 +29,7 @@ window.addEventListener(`phx:update-value`, (e) => {
 
 window.addEventListener(`phx:hide`, (e) => {
   let el = document.getElementById(e.detail.id)
-  el.style.display = 'none'
+  el.classList.add('hidden')
 })
 
 window.addEventListener(`phx:scroll-to`, (e) => {
