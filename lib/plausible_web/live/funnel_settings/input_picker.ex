@@ -168,6 +168,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     {:noreply, socket}
   end
 
+  def handle_event("keypress", %{"key" => "Escape"}, socket) do
+    socket = do_select(socket, "", "")
+    {:noreply, socket}
+  end
+
   def handle_event("keypress", %{"key" => _other, "value" => typed}, socket) do
     if String.length(typed) > 0 do
       choices =
