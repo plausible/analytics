@@ -30,9 +30,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
           <%= label(f, "Funnel name",
             class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
           ) %>
-          <.input field={@form[:name]} />
+          <.input field={f[:name]} />
 
-          <div :if={String.trim(@form[:name].value) != ""} id="steps-builder">
+          <div :if={String.trim(f[:name].value) != ""} id="steps-builder">
             <%= label(f, "Funnel Steps",
               class: "mt-6 block text-sm font-medium text-gray-700 dark:text-gray-300"
             ) %>
@@ -117,7 +117,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         params["name"],
         params["steps"] || []
       )
-      |> Map.put(:action, :insert)
+      |> Map.put(:action, :validate)
 
     {:noreply, assign(socket, form: to_form(changeset))}
   end

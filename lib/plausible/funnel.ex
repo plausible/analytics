@@ -51,7 +51,9 @@ defmodule Plausible.Funnel do
 
     funnel
     |> cast(attrs, [:name])
-    |> cast_assoc(:steps, with: &Step.changeset/2)
+    |> validate_required([:name])
+    |> cast_assoc(:steps, with: &Step.changeset/2, required: true)
+    |> validate_length(:steps, min: 2, max: 5)
     |> unique_constraint(:name,
       name: :funnels_name_site_id_index
     )
