@@ -53,20 +53,16 @@ defmodule Plausible.Stats.Comparisons do
       it will be shifted to start on Sunday, January 2nd, 2022 instead of
       January 1st. Defaults to false.
 
-    * `:include_imported?` - includes imported data in the generated comparison
-      query if there is imported data. Defaults to true.
-
   """
   def compare(%Plausible.Site{} = site, %Stats.Query{} = source_query, mode, opts \\ []) do
     opts =
       opts
       |> Keyword.put_new(:now, Timex.now(site.timezone))
       |> Keyword.put_new(:match_day_of_week?, false)
-      |> Keyword.put_new(:include_imported?, true)
 
     with :ok <- validate_mode(source_query, mode),
          {:ok, comparison_query} <- do_compare(source_query, mode, opts),
-         comparison_query <- maybe_include_imported(comparison_query, site, opts),
+         comparison_query <- maybe_include_imported(comparison_query, source_query, site),
          do: {:ok, comparison_query}
   end
 
@@ -165,8 +161,9 @@ defmodule Plausible.Stats.Comparisons do
     Date.add(date, -days_to_subtract)
   end
 
-  defp maybe_include_imported(query, site, opts) do
-    include_imported? = Stats.Query.include_imported?(query, site, opts[:include_imported?])
+  defp maybe_include_imported(query, source_query, site) do
+    requested? = source_query.imported_data_requested
+    include_imported? = Stats.Query.include_imported?(query, site, requested?)
     %Stats.Query{query | include_imported: include_imported?}
   end
 
