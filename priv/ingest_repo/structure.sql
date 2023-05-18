@@ -1,10 +1,12 @@
-CREATE TABLE plausible_events_db.sessions
+CREATE TABLE plausible_events_db.sessions_v2
 (
     `session_id` UInt64,
     `sign` Int8,
-    `domain` String,
+    `site_id` UInt64,
     `user_id` UInt64,
     `hostname` String,
+    `timestamp` DateTime CODEC(DoubleDelta, LZ4),
+    `start` DateTime CODEC(DoubleDelta, LZ4),
     `is_bounce` UInt8,
     `entry_page` String,
     `exit_page` String,
@@ -17,8 +19,6 @@ CREATE TABLE plausible_events_db.sessions
     `screen_size` LowCardinality(String),
     `operating_system` LowCardinality(String),
     `browser` LowCardinality(String),
-    `start` DateTime,
-    `timestamp` DateTime,
     `utm_medium` String,
     `utm_source` String,
     `utm_campaign` String,
@@ -35,7 +35,8 @@ CREATE TABLE plausible_events_db.sessions
 )
 ENGINE = CollapsingMergeTree(sign)
 PARTITION BY toYYYYMM(start)
-ORDER BY (domain, toDate(start), user_id, session_id)
+PRIMARY KEY (site_id, toDate(start), user_id, session_id)
+ORDER BY (site_id, toDate(start), user_id, session_id)
 SAMPLE BY user_id
 SETTINGS index_granularity = 8192;
 
@@ -182,21 +183,21 @@ ENGINE = MergeTree
 ORDER BY (site_id, date, browser)
 SETTINGS index_granularity = 8192;
 
-CREATE TABLE plausible_events_db.events
+CREATE TABLE plausible_events_db.events_v2
 (
-    `name` String,
-    `domain` String,
+    `timestamp` DateTime CODEC(Delta(4), LZ4),
+    `name` LowCardinality(String),
+    `site_id` UInt64,
     `user_id` UInt64,
     `session_id` UInt64,
     `hostname` String,
-    `pathname` String,
+    `pathname` String CODEC(ZSTD(3)),
     `referrer` String,
     `referrer_source` String,
-    `country_code` LowCardinality(FixedString(2)),
+    `country_code` FixedString(2),
     `screen_size` LowCardinality(String),
     `operating_system` LowCardinality(String),
     `browser` LowCardinality(String),
-    `timestamp` DateTime,
     `utm_medium` String,
     `utm_source` String,
     `utm_campaign` String,
@@ -213,7 +214,8 @@ CREATE TABLE plausible_events_db.events
 )
 ENGINE = MergeTree
 PARTITION BY toYYYYMM(timestamp)
-ORDER BY (domain, toDate(timestamp), user_id)
+PRIMARY KEY (site_id, toDate(timestamp), name, user_id)
+ORDER BY (site_id, toDate(timestamp), name, user_id, timestamp)
 SAMPLE BY user_id
 SETTINGS index_granularity = 8192;
 
@@ -225,18 +227,8 @@ CREATE TABLE plausible_events_db.schema_migrations
 ENGINE = TinyLog;
 
 INSERT INTO "plausible_events_db"."schema_migrations" (version, inserted_at) VALUES
-(20200915070607,'2023-03-08 10:03:33'),
-(20200918075025,'2023-03-08 10:03:33'),
-(20201020083739,'2023-03-08 10:03:33'),
-(20201106125234,'2023-03-08 10:03:33'),
-(20210323130440,'2023-03-08 10:03:33'),
-(20210712214034,'2023-03-08 10:03:33'),
-(20211017093035,'2023-03-08 10:03:33'),
-(20211112130238,'2023-03-08 10:03:33'),
-(20220310104931,'2023-03-08 10:03:33'),
-(20220404123000,'2023-03-08 10:03:33'),
-(20220421161259,'2023-03-08 10:03:33'),
-(20220422075510,'2023-03-08 10:03:33'),
-(20230124140348,'2023-03-08 10:03:33'),
-(20230210140348,'2023-03-08 10:03:33'),
-(20230214114402,'2023-03-08 10:03:33');
+(20211112130238,'2023-05-18 07:51:20'),
+(20230124140348,'2023-05-18 07:51:20'),
+(20230210140348,'2023-05-18 07:51:20'),
+(20230214114402,'2023-05-18 07:51:20'),
+(20230320094327,'2023-05-18 07:51:20');
