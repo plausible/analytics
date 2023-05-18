@@ -10,23 +10,11 @@ defmodule Plausible.Funnels do
 
   import Ecto.Query
 
-  def create(site, name, goals)
-      when is_list(goals) and length(goals) >= @min_funnel_size and
-             length(goals) <= @max_funnel_size do
-    steps =
-      goals
-      |> Enum.with_index(1)
-      |> Enum.map(fn {goal, index} ->
-        %{
-          goal_id: goal.id,
-          step_order: index
-        }
-      end)
-
-    %Funnel{
-      site_id: site.id
-    }
-    |> Funnel.changeset(%{name: name, steps: steps})
+  def create(site, name, steps)
+      when is_list(steps) and length(steps) >= @min_funnel_size and
+             length(steps) <= @max_funnel_size do
+    site
+    |> create_changeset(name, steps)
     |> Repo.insert()
   end
 
@@ -34,11 +22,16 @@ defmodule Plausible.Funnels do
     {:error, :invalid_funnel_size}
   end
 
+  def create_changeset(site, name, steps) do
+    Funnel.changeset(%Funnel{site_id: site.id}, %{name: name, steps: steps})
+  end
+
   def list(%Plausible.Site{id: site_id}) do
     Repo.all(
       from(f in Funnel,
         where: f.site_id == ^site_id,
-        select: %{name: f.name, id: f.id}
+        select: %{name: f.name, id: f.id},
+        order_by: [desc: :id]
       )
     )
   end

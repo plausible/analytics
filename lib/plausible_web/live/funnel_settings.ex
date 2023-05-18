@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         module={PlausibleWeb.Live.FunnelSettings.Form}
         id="funnelForm"
         site={@site}
-        form={to_form(Plausible.Funnel.changeset())}
+        form={to_form(Plausible.Funnels.create_changeset(@site, "", []))}
         goals={@goals}
       />
     <% else %>
@@ -52,40 +52,15 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     """
   end
 
-  def handle_event("save", data, socket) do
-    site = socket.assigns.site
-    step_keys = for i <- 1..5, do: "step-#{i}"
-
-    goals =
-      Map.take(data, step_keys)
-      |> Enum.reject(fn {_key, value} -> String.trim(value) == "" end)
-      |> Enum.sort_by(&elem(&1, 0))
-      |> Enum.map(&Goals.by_id!(site, String.to_integer(elem(&1, 1))))
-
-    funnel_name = data["funnel"]["name"]
-
-    {:ok, _funnel} = Plausible.Funnels.create(site, funnel_name, goals)
-
-    funnels = Funnels.list(site)
-
-    {:noreply, assign(socket, add_funnel?: false, funnels: funnels)}
-  end
-
   def handle_event("add_funnel", _value, socket) do
-    {:noreply, assign(socket, :add_funnel?, true)}
+    {:noreply, assign(socket, add_funnel?: true)}
   end
 
   def handle_event("cancel_add_funnel", _value, socket) do
-    {:noreply, assign(socket, :add_funnel?, false)}
+    {:noreply, assign(socket, add_funnel?: false)}
   end
 
-  def handle_event("validate", value, socket) do
-    IO.inspect(value, label: :validate)
-    {:noreply, socket}
-  end
-
-  def handle_info(:goal_picked, socket) do
-    IO.inspect("Picker notified")
-    {:noreply, socket}
+  def handle_info({:funnel_saved, funnel}, socket) do
+    {:noreply, assign(socket, add_funnel?: false, funnels: [funnel | socket.assigns.funnels])}
   end
 end

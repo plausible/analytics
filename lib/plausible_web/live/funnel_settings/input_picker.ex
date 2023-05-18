@@ -21,6 +21,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   attr(:placeholder, :string, default: "Select option or search by typing")
   attr(:id, :any, default: nil)
   attr(:options, :list, required: true)
+  attr(:submit_name, :string, required: true)
 
   def render(assigns) do
     ~H"""
@@ -34,11 +35,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
             type="text"
             autocomplete="off"
             id={@id}
+            name={"display-#{@id}"}
             placeholder={@placeholder}
             phx-keyup="keypress"
             phx-focus={open_dropdown(@id)}
             phx-target={@myself}
-            name={"display-#{@id}"}
             value={@display_value}
             class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
             style="background-color: inherit;"
@@ -46,7 +47,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
           <.dropdown_anchor id={@id} />
 
-          <input type="hidden" name={@id} value={@submit_value} />
+          <input type="hidden" name={@submit_name} value={@submit_value} />
         </div>
       </div>
 
@@ -261,12 +262,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
          candidate: 0
        })}
     end
-  end
-
-  def handle_event(event, payload, socket) do
-    IO.inspect(event, label: :event)
-    IO.inspect(payload, label: :payload)
-    {:noreply, socket}
   end
 
   defp do_select(socket, submit_value, display_value) do
