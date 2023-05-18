@@ -2,8 +2,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  # good
-
   def mount(socket) do
     {:ok, assign(socket, step_count: 2)}
   end

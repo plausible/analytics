@@ -53,8 +53,22 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   end
 
   def handle_event("save", data, socket) do
-    IO.inspect(data, label: :save)
-    {:noreply, socket}
+    site = socket.assigns.site
+    step_keys = for i <- 1..5, do: "step-#{i}"
+
+    goals =
+      Map.take(data, step_keys)
+      |> Enum.reject(fn {_key, value} -> String.trim(value) == "" end)
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.map(&Goals.by_id!(site, String.to_integer(elem(&1, 1))))
+
+    funnel_name = data["funnel"]["name"]
+
+    {:ok, _funnel} = Plausible.Funnels.create(site, funnel_name, goals)
+
+    funnels = Funnels.list(site)
+
+    {:noreply, assign(socket, add_funnel?: false, funnels: funnels)}
   end
 
   def handle_event("add_funnel", _value, socket) do

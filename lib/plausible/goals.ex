@@ -13,11 +13,12 @@ defmodule Plausible.Goals do
 
   def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name}) do
     query =
-      from g in Goal,
+      from(g in Goal,
         inner_join: assoc(g, :site),
         where: g.site_id == ^site.id,
         where: g.event_name == ^event_name,
         preload: [:site]
+      )
 
     goal = Repo.one(query)
 
@@ -31,11 +32,12 @@ defmodule Plausible.Goals do
 
   def find_or_create(site, %{"goal_type" => "page", "page_path" => page_path}) do
     query =
-      from g in Goal,
+      from(g in Goal,
         inner_join: assoc(g, :site),
         where: g.site_id == ^site.id,
         where: g.page_path == ^page_path,
         preload: [:site]
+      )
 
     goal = Repo.one(query)
 
@@ -49,22 +51,33 @@ defmodule Plausible.Goals do
 
   def for_site(site) do
     query =
-      from g in Goal,
+      from(g in Goal,
         inner_join: assoc(g, :site),
         where: g.site_id == ^site.id,
         order_by: [desc: g.id],
         preload: [:site]
+      )
 
     query
     |> Repo.all()
     |> Enum.map(&maybe_trim/1)
   end
 
+  def by_id!(site, id) do
+    Repo.one(
+      from(g in Goal,
+        where: g.id == ^id,
+        where: g.site_id == ^site.id
+      )
+    )
+  end
+
   def delete(id, site) do
     case Repo.delete_all(
-           from g in Goal,
+           from(g in Goal,
              where: g.id == ^id,
              where: g.site_id == ^site.id
+           )
          ) do
       {1, _} -> :ok
       {0, _} -> {:error, :not_found}

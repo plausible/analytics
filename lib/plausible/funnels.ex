@@ -166,16 +166,22 @@ defmodule Plausible.Funnels do
       current_visitors = visitors_at_step
 
       # First step contains the total number of visitors that we base percentage dropoff on
-      total_visitors = total_visitors || current_visitors
+      total_visitors =
+        total_visitors ||
+          current_visitors
 
       # Dropoff is 0 for the first step, otherwise we subtract current from previous
       dropoff = if visitors_at_previous, do: visitors_at_previous - current_visitors, else: 0
 
       conversion_rate =
-        (current_visitors / total_visitors * 100)
-        |> Decimal.from_float()
-        |> Decimal.round(2)
-        |> Decimal.to_string()
+        if current_visitors == 0 or total_visitors == 0 do
+          "0.00"
+        else
+          (current_visitors / total_visitors * 100)
+          |> Decimal.from_float()
+          |> Decimal.round(2)
+          |> Decimal.to_string()
+        end
 
       step = %{
         dropoff: dropoff,

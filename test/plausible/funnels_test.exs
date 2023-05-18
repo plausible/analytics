@@ -126,4 +126,34 @@ defmodule Plausible.FunnelsTest do
               ]
             }} = funnel_data
   end
+
+  test "funnels can be evaluated even where there are no visits yet", %{
+    site: site,
+    goals: [g1, g2, g3 | _]
+  } do
+    {:ok, funnel} =
+      Funnels.create(
+        site,
+        "From blog to signup and purchase",
+        [g1, g2, g3]
+      )
+
+    query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+
+    funnel_data = Funnels.evaluate(query, funnel.id, site)
+
+    assert {:ok,
+            %{
+              steps: [
+                %{
+                  label: "Visit /go/to/blog/**",
+                  visitors: 0,
+                  conversion_rate: "0.00",
+                  dropoff: 0
+                },
+                %{label: "Signup", visitors: 0, conversion_rate: "0.00", dropoff: 0},
+                %{label: "Visit /checkout", visitors: 0, conversion_rate: "0.00", dropoff: 0}
+              ]
+            }} = funnel_data
+  end
 end
