@@ -14,10 +14,10 @@ defmodule Plausible.FunnelsTest do
     {:ok, g5} = Goals.create(site, %{"page_path" => "/recommend"})
     {:ok, g6} = Goals.create(site, %{"event_name" => "Extra event"})
 
-    {:ok, %{site: site, goals: [g1, g2, g3, g4, g5, g6]}}
+    {:ok, %{site: site, steps: [g1, g2, g3, g4, g5, g6] |> Enum.map(&%{"goal_id" => &1.id})}}
   end
 
-  test "create and store a funnel given a set of goals", %{site: site, goals: [g1, g2, g3 | _]} do
+  test "create and store a funnel given a set of goals", %{site: site, steps: [g1, g2, g3 | _]} do
     {:ok, funnel} =
       Funnels.create(
         site,
@@ -29,9 +29,9 @@ defmodule Plausible.FunnelsTest do
     assert funnel.name == "From blog to signup and purchase"
     assert [fg1, fg2, fg3] = funnel.steps
 
-    assert fg1.goal_id == g1.id
-    assert fg2.goal_id == g2.id
-    assert fg3.goal_id == g3.id
+    assert fg1.goal_id == g1["goal_id"]
+    assert fg2.goal_id == g2["goal_id"]
+    assert fg3.goal_id == g3["goal_id"]
 
     assert fg1.step_order == 1
     assert fg2.step_order == 2
@@ -40,7 +40,7 @@ defmodule Plausible.FunnelsTest do
 
   test "retrieve a funnel by id and site, get steps in order", %{
     site: site,
-    goals: [g1, g2, g3 | _]
+    steps: [g1, g2, g3 | _]
   } do
     {:ok, funnel} =
       Funnels.create(
@@ -54,7 +54,7 @@ defmodule Plausible.FunnelsTest do
     assert [%{step_order: 1}, %{step_order: 2}, %{step_order: 3}] = funnel.steps
   end
 
-  test "a funnel cannot be made of < 2 goals", %{site: site, goals: [g1 | _]} do
+  test "a funnel cannot be made of < 2 steps", %{site: site, steps: [g1 | _]} do
     assert {:error, :invalid_funnel_size} =
              Funnels.create(
                site,
@@ -63,16 +63,16 @@ defmodule Plausible.FunnelsTest do
              )
   end
 
-  test "a funnel can be made of 5 goals maximum", %{site: site, goals: too_many_goals} do
+  test "a funnel can be made of 5 steps maximum", %{site: site, steps: too_many_steps} do
     assert {:error, :invalid_funnel_size} =
              Funnels.create(
                site,
                "Lorem ipsum",
-               too_many_goals
+               too_many_steps
              )
   end
 
-  test "a goal can only appear once in a funnel", %{goals: [g1 | _], site: site} do
+  test "a goal can only appear once in a funnel", %{steps: [g1 | _], site: site} do
     {:error, _changeset} =
       Funnels.create(
         site,
@@ -81,17 +81,20 @@ defmodule Plausible.FunnelsTest do
       )
   end
 
-  test "funnels can be listed per site", %{site: site, goals: [g1, g2, g3 | _]} do
+  test "funnels can be listed per site, starting from most recently added", %{
+    site: site,
+    steps: [g1, g2, g3 | _]
+  } do
     Funnels.create(site, "Funnel 1", [g3, g1, g2])
     Funnels.create(site, "Funnel 2", [g2, g1, g3])
 
     funnels_list = Funnels.list(site)
-    assert [%{name: "Funnel 1"}, %{name: "Funnel 2"}] = funnels_list
+    assert [%{name: "Funnel 2"}, %{name: "Funnel 1"}] = funnels_list
   end
 
   test "funnels can be evaluated per site within a time range", %{
     site: site,
-    goals: [g1, g2, g3 | _]
+    steps: [g1, g2, g3 | _]
   } do
     {:ok, funnel} =
       Funnels.create(
@@ -129,7 +132,7 @@ defmodule Plausible.FunnelsTest do
 
   test "funnels can be evaluated even where there are no visits yet", %{
     site: site,
-    goals: [g1, g2, g3 | _]
+    steps: [g1, g2, g3 | _]
   } do
     {:ok, funnel} =
       Funnels.create(

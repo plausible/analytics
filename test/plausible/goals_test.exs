@@ -25,7 +25,7 @@ defmodule Plausible.GoalsTest do
 
     goals = Goals.for_site(site)
 
-    assert [%{event_name: "Signup"}, %{page_path: "/Signup"}] = goals
+    assert [%{page_path: "/Signup"}, %{event_name: "Signup"}] = goals
   end
 
   test "goals are present after domain change" do

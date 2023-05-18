@@ -42,7 +42,7 @@ defmodule Plausible.Funnel do
     step_attrs =
       attrs
       |> Map.get(:steps, [])
-      |> Enum.with_index()
+      |> Enum.with_index(1)
       |> Enum.map(fn {goal_params, step_order} ->
         Map.put(goal_params, "step_order", step_order)
       end)
