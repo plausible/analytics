@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Ability to change domain for existing site (requires numeric IDs data migration, instructions will be provided separately) UI + API (`PUT /api/v1/sites`)
 
 ### Fixed
+- Fix tracker bug - call callback function even when event is ignored
 - Make goal-filtered CSV export return only unique_conversions timeseries in the 'visitors.csv' file
 - Stop treating page filter as an entry page filter
 - City report showing N/A instead of city names with imported data plausible/analytics#2675
