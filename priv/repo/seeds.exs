@@ -37,7 +37,12 @@ site =
 {:ok, goal2} = Plausible.Goals.create(site, %{"page_path" => "/register"})
 {:ok, goal3} = Plausible.Goals.create(site, %{"page_path" => "/login"})
 
-{:ok, _funnel} = Plausible.Funnels.create(site, "From homepage to login", [goal1, goal2, goal3])
+{:ok, _funnel} =
+  Plausible.Funnels.create(site, "From homepage to login", [
+    %{"goal_id" => goal1.id},
+    %{"goal_id" => goal2.id},
+    %{"goal_id" => goal3.id}
+  ])
 
 _membership = Plausible.Factory.insert(:site_membership, user: user, site: site, role: :owner)
 
