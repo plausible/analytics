@@ -277,6 +277,31 @@ defmodule Plausible.Stats.Base do
     |> select_event_metrics(rest)
   end
 
+  def select_event_metrics(q, [:total_revenue | rest]) do
+    from(e in q,
+      select_merge: %{
+        total_revenue: fragment("sum(?) * any(_sample_factor)", e.revenue_reporting_amount)
+      }
+    )
+    |> select_event_metrics(rest)
+  end
+
+  def select_event_metrics(q, [:average_revenue | rest]) do
+    from(e in q,
+      select_merge: %{
+        average_revenue:
+          fragment(
+            "if(isNaN(avgIf(?, ? > 0.0)), 0.0, avgIf(?, ? > 0.0)) * any(_sample_factor)",
+            e.revenue_reporting_amount,
+            e.revenue_reporting_amount,
+            e.revenue_reporting_amount,
+            e.revenue_reporting_amount
+          )
+      }
+    )
+    |> select_event_metrics(rest)
+  end
+
   def select_event_metrics(q, [:sample_percent | rest]) do
     from(e in q,
       select_merge: %{

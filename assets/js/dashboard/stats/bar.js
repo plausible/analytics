@@ -10,13 +10,12 @@ function barWidth(count, all, plot) {
   return count / maxVal * 100
 }
 
-export default function Bar({count, all, bg, maxWidthDeduction, children, plot = "visitors"}) {
+export default function Bar({count, all, bg, children, plot = "visitors"}) {
   const width = barWidth(count, all, plot)
 
   return (
     <div
-      className="w-full relative"
-      style={{maxWidth: `calc(100% - ${maxWidthDeduction})`}}
+      className="flex-grow relative"
     >
       <div
         className={`absolute top-0 left-0 h-full ${bg || ''}`}

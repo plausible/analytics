@@ -56,17 +56,12 @@ export default class Conversions extends React.Component {
     }
   }
 
-  getBarMaxWidth() {
-    const { viewport } = this.state;
-    return viewport > MOBILE_UPPER_WIDTH ? "16rem" : "10rem";
-  }
-
   fetchConversions() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/conversions`, this.props.query)
       .then((res) => this.setState({loading: false, goals: res, prevHeight: null}))
   }
 
-  renderGoal(goal) {
+  renderGoal(goal, renderRevenueColumn) {
     const { viewport } = this.state;
     const renderProps = this.props.query.filters['goal'] == goal.name && goal.prop_names
 
@@ -77,7 +72,6 @@ export default class Conversions extends React.Component {
             count={goal.unique_conversions}
             all={this.state.goals}
             bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
-            maxWidthDeduction={this.getBarMaxWidth()}
             plot="unique_conversions"
           >
             <Link to={url.setQuery('goal', escapeFilterValue(goal.name))} className="block px-2 py-1.5 hover:underline relative z-9 break-all lg:truncate dark:text-gray-200">{goal.name}</Link>
@@ -86,11 +80,24 @@ export default class Conversions extends React.Component {
             <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.unique_conversions)}</span>
             {viewport > MOBILE_UPPER_WIDTH && <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.total_conversions)}</span>}
             <span className="inline-block w-20 font-medium text-right">{goal.conversion_rate}%</span>
+            {viewport > MOBILE_UPPER_WIDTH && renderRevenueColumn && <span className="inline-block w-20 font-medium text-right">{this.renderMoney(goal.average_revenue)}</span>}
+            {viewport > MOBILE_UPPER_WIDTH && renderRevenueColumn && <span className="inline-block w-20 font-medium text-right">{this.renderMoney(goal.total_revenue)}</span>}
+
           </div>
         </div>
-        { renderProps && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
+        { renderProps && !goal.total_revenue && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
       </div>
     )
+  }
+
+  renderMoney(moneyObject) {
+    if (moneyObject) {
+      return (
+        <span tooltip={moneyObject.long}>{moneyObject.short}</span>
+      )
+    } else {
+      return '-'
+    }
   }
 
   renderInner() {
@@ -98,6 +105,8 @@ export default class Conversions extends React.Component {
     if (this.state.loading) {
       return <div className="mx-auto my-2 loading"><div></div></div>
     } else if (this.state.goals) {
+      const hasRevenue = this.state.goals.some((goal) => goal.total_revenue)
+
       return (
         <React.Fragment>
           <h3 className="font-bold dark:text-gray-100">{this.props.title || "Goal Conversions"}</h3>
@@ -107,10 +116,12 @@ export default class Conversions extends React.Component {
               <span className="inline-block w-20">Uniques</span>
               {viewport > MOBILE_UPPER_WIDTH && <span className="inline-block w-20">Total</span>}
               <span className="inline-block w-20">CR</span>
+              {viewport > MOBILE_UPPER_WIDTH && hasRevenue && <span className="inline-block w-20">Average</span>}
+              {viewport > MOBILE_UPPER_WIDTH && hasRevenue && <span className="inline-block w-20">Total</span>}
             </div>
           </div>
           <FlipMove>
-            { this.state.goals.map(this.renderGoal.bind(this)) }
+            { this.state.goals.map((goal) => this.renderGoal.bind(this)(goal, hasRevenue) ) }
           </FlipMove>
         </React.Fragment>
       )
