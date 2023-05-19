@@ -116,7 +116,8 @@ defmodule Plausible.MixProject do
       {:siphash, "~> 3.2"},
       {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.0"},
-      {:ex_doc, "~> 0.28", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
+      {:ex_money, "~> 5.12"}
     ]
   end
 
