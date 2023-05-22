@@ -177,11 +177,15 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
   def handle_event("search", %{"_target" => [target]} = params, socket) do
     input = params[target]
+    input_len = String.length(input)
 
-    if String.length(input) > 0 do
+    if input_len > 0 do
       suggestions =
-        Enum.sort_by(
-          socket.assigns.options,
+        socket.assigns.options
+        |> Enum.reject(fn {_, value} ->
+          input_len > String.length(value)
+        end)
+        |> Enum.sort_by(
           fn {_, value} ->
             if value == input do
               3
