@@ -11,6 +11,10 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
             <div class="border-b border-gray-300 dark:border-gray-500 py-3 flex justify-between">
               <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
                 <%= funnel.name %>
+                <br />
+                <span class="text-sm text-gray-400 font-normal">
+                  <%= funnel.steps_count %>-step funnel
+                </span>
               </span>
               <%= button(to: "", method: :delete, class: "text-sm text-red-600", data: [confirm: "Are you sure you want to remove funnel '#{funnel.name}'? This will just affect the UI, all of your analytics data will stay intact."]) do %>
                 <svg

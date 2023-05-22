@@ -85,11 +85,13 @@ defmodule Plausible.FunnelsTest do
     site: site,
     steps: [g1, g2, g3 | _]
   } do
-    Funnels.create(site, "Funnel 1", [g3, g1, g2])
+    Funnels.create(site, "Funnel 1", [g3, g1])
     Funnels.create(site, "Funnel 2", [g2, g1, g3])
 
     funnels_list = Funnels.list(site)
-    assert [%{name: "Funnel 2"}, %{name: "Funnel 1"}] = funnels_list
+
+    assert [%{name: "Funnel 2", steps_count: 3}, %{name: "Funnel 1", steps_count: 2}] =
+             funnels_list
   end
 
   test "funnels can be evaluated per site within a time range", %{

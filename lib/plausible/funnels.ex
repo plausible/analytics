@@ -29,8 +29,10 @@ defmodule Plausible.Funnels do
   def list(%Plausible.Site{id: site_id}) do
     Repo.all(
       from(f in Funnel,
+        inner_join: steps in assoc(f, :steps),
         where: f.site_id == ^site_id,
-        select: %{name: f.name, id: f.id},
+        select: %{name: f.name, id: f.id, steps_count: count(steps)},
+        group_by: f.id,
         order_by: [desc: :id]
       )
     )
