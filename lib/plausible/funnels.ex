@@ -1,7 +1,7 @@
 defmodule Plausible.Funnels do
   @funnel_window_duration 86_400
-  @min_funnel_size 2
-  @max_funnel_size 5
+
+  require Plausible.Funnel
 
   alias Plausible.Funnel
   alias Plausible.Repo
@@ -11,8 +11,8 @@ defmodule Plausible.Funnels do
   import Ecto.Query
 
   def create(site, name, steps)
-      when is_list(steps) and length(steps) >= @min_funnel_size and
-             length(steps) <= @max_funnel_size do
+      when is_list(steps) and length(steps) >= Funnel.min_steps() and
+             length(steps) <= Funnel.max_steps() do
     site
     |> create_changeset(name, steps)
     |> Repo.insert()

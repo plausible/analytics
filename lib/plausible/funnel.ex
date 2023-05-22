@@ -2,6 +2,21 @@ defmodule Plausible.Funnel do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @min_steps 2
+  @max_steps 5
+
+  defmacro min_steps() do
+    quote do
+      unquote(@min_steps)
+    end
+  end
+
+  defmacro max_steps() do
+    quote do
+      unquote(@max_steps)
+    end
+  end
+
   defmodule Step do
     use Ecto.Schema
     import Ecto.Changeset
@@ -53,7 +68,7 @@ defmodule Plausible.Funnel do
     |> cast(attrs, [:name])
     |> validate_required([:name])
     |> cast_assoc(:steps, with: &Step.changeset/2, required: true)
-    |> validate_length(:steps, min: 2, max: 5)
+    |> validate_length(:steps, min: @min_steps, max: @max_steps)
     |> unique_constraint(:name,
       name: :funnels_name_site_id_index
     )

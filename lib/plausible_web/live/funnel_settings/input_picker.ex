@@ -9,8 +9,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
       socket
       |> assign(assigns)
       |> assign(:candidate, 0)
-      |> assign_new(:display_value, fn -> "" end)
-      |> assign_new(:submit_value, fn -> "" end)
       |> assign_new(:choices, fn ->
         Enum.take(assigns.options, @max_options_displayed)
       end)
@@ -22,6 +20,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   attr(:id, :any, default: nil)
   attr(:options, :list, required: true)
   attr(:submit_name, :string, required: true)
+  attr(:display_value, :string, default: "")
+  attr(:submit_value, :string, default: "")
 
   def render(assigns) do
     ~H"""
@@ -47,7 +47,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
           <.dropdown_anchor id={@id} />
 
-          <input type="hidden" name={@submit_name} value={@submit_value} />
+          <input
+            type="hidden"
+            name={@submit_name}
+            value={@submit_value}
+            phx-change="update-value"
+            phx-target={@myself}
+            id={"submit-#{@id}"}
+          />
         </div>
       </div>
 
@@ -262,6 +269,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
          candidate: 0
        })}
     end
+  end
+
+  def handle_event(a, b, socket) do
+    a |> IO.inspect(label: :a)
+    b |> IO.inspect(label: :b)
+    {:noreply, socket}
   end
 
   defp do_select(socket, submit_value, display_value) do

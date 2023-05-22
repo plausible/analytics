@@ -9,7 +9,7 @@ import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken } })
+let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken }, hooks: {} })
 
 // Connect if there are any LiveViews on the page
 liveSocket.connect()
@@ -25,6 +25,7 @@ window.liveSocket = liveSocket
 window.addEventListener(`phx:update-value`, (e) => {
   let el = document.getElementById(e.detail.id)
   el.value = e.detail.value
+  el.dispatchEvent(new Event("input", { bubbles: true }))
 })
 
 window.addEventListener(`phx:hide`, (e) => {
