@@ -12,7 +12,10 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     site = Sites.get_for_user!(user_id, domain, [:owner, :admin])
 
     funnels = Funnels.list(site)
-    goals = Goals.for_site(site)
+
+    goals =
+      Goals.for_site(site)
+      |> Enum.map(fn goal -> {goal.id, Plausible.Goal.display_name(goal)} end)
 
     {:ok, assign(socket, site: site, funnels: funnels, goals: goals, add_funnel?: false)}
   end

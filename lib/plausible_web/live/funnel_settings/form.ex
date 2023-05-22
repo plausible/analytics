@@ -46,9 +46,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                   submit_name="funnel[steps][][goal_id]"
                   module={PlausibleWeb.Live.FunnelSettings.InputPicker}
                   id={"step-#{step_idx}"}
-                  options={
-                    Enum.map(@goals, fn goal -> {goal.id, Plausible.Goal.display_name(goal)} end)
-                  }
+                  options={@goals}
                 />
               </div>
 
