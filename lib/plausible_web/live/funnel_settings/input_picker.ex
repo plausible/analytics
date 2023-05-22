@@ -248,15 +248,21 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     {:noreply, socket}
   end
 
-  def handle_event("keypress", %{"key" => _other, "value" => typed}, socket) do
-    if String.length(typed) > 0 do
+  def handle_event("keypress", %{"key" => _other, "value" => input}, socket) do
+    if String.length(input) > 0 do
       choices =
-        Enum.filter(socket.assigns.options, fn {_submit_value, display_value} ->
-          String.contains?(display_value, typed) ||
-            String.jaro_distance(String.upcase(display_value), String.upcase(typed)) > 0.6
-        end)
-        |> Enum.sort_by(
-          fn {_, display_value} -> String.jaro_distance(display_value, typed) end,
+        Enum.sort_by(
+          socket.assigns.options,
+          fn {_, value} ->
+            if value == input do
+              3
+            else
+              input = String.downcase(input)
+              value = String.downcase(value)
+              weight = if String.contains?(value, input), do: 1, else: 0
+              weight + String.jaro_distance(value, input)
+            end
+          end,
           :desc
         )
         |> Enum.take(@max_options_displayed)
@@ -269,12 +275,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
          candidate: 0
        })}
     end
-  end
-
-  def handle_event(a, b, socket) do
-    a |> IO.inspect(label: :a)
-    b |> IO.inspect(label: :b)
-    {:noreply, socket}
   end
 
   defp do_select(socket, submit_value, display_value) do
