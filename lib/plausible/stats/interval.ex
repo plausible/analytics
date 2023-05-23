@@ -38,6 +38,34 @@ defmodule Plausible.Stats.Interval do
     end
   end
 
+  @doc """
+  Returns the suggested interval for the given `Date.Range` struct.
+
+  ## Examples
+
+    iex> Plausible.Stats.Interval.default_for_date_range(Date.range(~D[2022-01-01], ~D[2023-01-01]))
+    "month"
+
+    iex> Plausible.Stats.Interval.default_for_date_range(Date.range(~D[2022-01-01], ~D[2022-01-15]))
+    "date"
+
+    iex> Plausible.Stats.Interval.default_for_date_range(Date.range(~D[2022-01-01], ~D[2022-01-01]))
+    "hour"
+  """
+
+  def default_for_date_range(%Date.Range{first: first, last: last}) do
+    cond do
+      Timex.diff(last, first, :months) > 0 ->
+        "month"
+
+      Timex.diff(last, first, :days) > 0 ->
+        "date"
+
+      true ->
+        "hour"
+    end
+  end
+
   @valid_by_period %{
     "realtime" => ["minute"],
     "day" => ["minute", "hour"],
