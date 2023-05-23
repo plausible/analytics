@@ -8,8 +8,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     socket =
       socket
       |> assign(assigns)
-      |> assign(:candidate, 0)
-      |> assign_new(:choices, fn ->
+      |> assign_new(:suggestions, fn ->
         Enum.take(assigns.options, @max_options_displayed)
       end)
 
@@ -25,46 +24,47 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
   def render(assigns) do
     ~H"""
-    <div class="mb-3">
-      <div class="relative w-full">
-        <div
-          phx-click-away={close_dropdown(@id)}
-          class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
-        >
-          <input
-            type="text"
-            autocomplete="off"
-            id={@id}
-            name={"display-#{@id}"}
-            placeholder={@placeholder}
-            phx-keyup="keypress"
-            phx-focus={open_dropdown(@id)}
-            phx-target={@myself}
-            value={@display_value}
-            class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
-            style="background-color: inherit;"
-          />
+    <div>
+      <div
+        class="mb-3"
+        x-data={"window.suggestionsDropdown('#{@id}')"}
+        x-on:keydown.arrow-up="focusPrev"
+        x-on:keydown.arrow-down="focusNext"
+        x-on:keydown.enter="select()"
+      >
+        <div class="relative w-full">
+          <div
+            @click.away="close"
+            class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+          >
+            <input
+              type="text"
+              autocomplete="off"
+              id={@id}
+              name={"display-#{@id}"}
+              placeholder={@placeholder}
+              x-on:focus="open"
+              phx-change="search"
+              phx-target={@myself}
+              value={@display_value}
+              class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
+              style="background-color: inherit;"
+            />
 
-          <.dropdown_anchor id={@id} />
+            <.dropdown_anchor id={@id} />
 
-          <input
-            type="hidden"
-            name={@submit_name}
-            value={@submit_value}
-            phx-change="update-value"
-            phx-target={@myself}
-            id={"submit-#{@id}"}
-          />
+            <input
+              type="hidden"
+              name={@submit_name}
+              value={@submit_value}
+              phx-target={@myself}
+              id={"submit-#{@id}"}
+            />
+          </div>
         </div>
-      </div>
 
-      <.dropdown
-        ref={@id}
-        options={@options}
-        choices={@choices}
-        target={@myself}
-        candidate={@candidate}
-      />
+        <.dropdown ref={@id} options={@options} suggestions={@suggestions} target={@myself} />
+      </div>
     </div>
     """
   end
@@ -73,10 +73,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
   def dropdown_anchor(assigns) do
     ~H"""
-    <div
-      phx-click={open_dropdown(@id)}
-      class="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2"
-    >
+    <div x-on:click="open" class="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 20 20"
@@ -95,24 +92,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     """
   end
 
-  def open_dropdown(js \\ %JS{}, id) do
-    js
-    |> close_all_dropdowns()
-    |> JS.remove_class("hidden", to: "#dropdown-#{id}")
-  end
-
-  def close_dropdown(js \\ %JS{}, id) do
-    JS.add_class(js, "hidden", to: "#dropdown-#{id}")
-  end
-
-  def close_all_dropdowns(js \\ %JS{}) do
-    JS.add_class(js, "hidden", to: ".dropdown")
-  end
-
   attr(:ref, :string, required: true)
   attr(:options, :list, default: [])
-  attr(:choices, :list, default: [])
-  attr(:candidate, :integer, required: true)
+  attr(:suggestions, :list, default: [])
   attr(:target, :any)
 
   def dropdown(assigns) do
@@ -120,21 +102,22 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     <ul
       tabindex="-1"
       id={"dropdown-#{@ref}"}
-      class="dropdown hidden z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
+      x-show="isOpen"
+      x-ref="suggestions"
+      class="dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
     >
       <.option
-        :for={{{submit_value, display_value}, idx} <- Enum.with_index(@choices)}
-        :if={@choices != []}
+        :for={{{submit_value, display_value}, idx} <- Enum.with_index(@suggestions)}
+        :if={@suggestions != []}
         idx={idx}
         submit_value={submit_value}
         display_value={display_value}
         target={@target}
         ref={@ref}
-        candidate={@candidate}
       />
 
       <div
-        :if={@choices == []}
+        :if={@suggestions == []}
         class="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300"
       >
         No matches found. Try searching for something different.
@@ -148,20 +131,19 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   attr(:ref, :string, required: true)
   attr(:target, :any)
   attr(:idx, :integer, required: true)
-  attr(:candidate, :integer, required: true)
 
   def option(assigns) do
     assigns = assign(assigns, :max_options_displayed, @max_options_displayed)
 
     ~H"""
     <li
-      class={[
-        "relative select-none py-2 px-3 cursor-pointer dark:text-gray-300",
-        @idx == @candidate && "text-white bg-indigo-500"
-      ]}
+      class="relative select-none py-2 px-3 cursor-pointer dark:text-gray-300"
+      @mouseenter={"setFocus(#{@idx})"}
+      x-bind:class={ "{'text-white bg-indigo-500': focus === #{@idx}}" }
       id={"dropdown-#{@ref}-option-#{@idx}"}
     >
       <a
+        x-ref={"dropdown-#{@ref}-option-#{@idx}"}
         phx-click={select_option(@ref, @submit_value, @display_value)}
         phx-value-display-value={@display_value}
         phx-target={@target}
@@ -177,12 +159,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     """
   end
 
-  def select_option(js \\ %JS{}, id, submit_value, display_value) do
+  def select_option(js \\ %JS{}, _id, submit_value, display_value) do
     js
     |> JS.push("select-option",
       value: %{"submit-value" => submit_value, "display-value" => display_value}
     )
-    |> close_dropdown(id)
   end
 
   def handle_event(
@@ -194,63 +175,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     {:noreply, socket}
   end
 
-  def handle_event(
-        "keypress",
-        %{"key" => "ArrowDown"},
-        %{
-          assigns: %{candidate: c, choices: choices, id: id}
-        } = socket
-      )
-      when c < length(choices) - 1 do
-    socket =
-      socket
-      |> push_event("scroll-to", %{id: "dropdown-#{id}-option-#{c}"})
-      |> assign(candidate: c + 1)
+  def handle_event("search", %{"_target" => [target]} = params, socket) do
+    input = params[target]
 
-    {:noreply, socket}
-  end
-
-  def handle_event(
-        "keypress",
-        %{"key" => "ArrowUp"},
-        %{
-          assigns: %{candidate: c, id: id}
-        } = socket
-      )
-      when c > 0 do
-    socket =
-      socket
-      |> push_event("scroll-to", %{id: "dropdown-#{id}-option-#{c}"})
-      |> assign(candidate: c - 1)
-
-    {:noreply, socket}
-  end
-
-  def handle_event(
-        "keypress",
-        %{"key" => "Enter"},
-        %{assigns: %{candidate: c, choices: choices}} = socket
-      ) do
-    socket =
-      case Enum.at(choices, c) do
-        {submit_value, display_value} ->
-          do_select(socket, submit_value, display_value)
-
-        nil ->
-          assign(socket, candidate: 0)
-      end
-
-    {:noreply, socket}
-  end
-
-  def handle_event("keypress", %{"key" => "Escape"}, socket) do
-    socket = do_select(socket, "", "")
-    {:noreply, socket}
-  end
-
-  def handle_event("keypress", %{"key" => _other, "value" => input}, socket) do
     if String.length(input) > 0 do
-      choices =
+      suggestions =
         Enum.sort_by(
           socket.assigns.options,
           fn {_, value} ->
@@ -267,13 +196,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
         )
         |> Enum.take(@max_options_displayed)
 
-      {:noreply, assign(socket, %{choices: choices, candidate: 0})}
+      {:noreply, assign(socket, %{suggestions: suggestions})}
     else
-      {:noreply,
-       assign(socket, %{
-         choices: Enum.take(socket.assigns.options, @max_options_displayed),
-         candidate: 0
-       })}
+      {:noreply, socket}
     end
   end
 
@@ -281,9 +206,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     id = socket.assigns.id
 
     socket
-    |> push_event("update-value", %{id: id, value: display_value})
+    |> push_event("update-value", %{id: id, value: display_value, fire: false})
+    |> push_event("update-value", %{id: "submit-#{id}", value: submit_value, fire: true})
     |> push_event("hide", %{id: "dropdown-#{id}"})
-    |> assign(:candidate, 0)
     |> assign(:display_value, display_value)
     |> assign(:submit_value, submit_value)
   end

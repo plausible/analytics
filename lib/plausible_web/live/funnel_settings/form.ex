@@ -193,7 +193,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     {:noreply, assign(socket, step_ids: step_ids)}
   end
 
-  def handle_event("validate", %{"funnel" => params}, socket) do
+  def handle_event("validate", %{"funnel" => params} = p, socket) do
+    p |> IO.inspect(label: :validate)
+
     changeset =
       socket.assigns.site
       |> Plausible.Funnels.create_changeset(
