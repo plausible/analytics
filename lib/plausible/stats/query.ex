@@ -163,7 +163,13 @@ defmodule Plausible.Stats.Query do
   end
 
   defp put_sample_threshold(query, params) do
-    sample_threshold = Map.get(params, "sample_threshold", @default_sample_threshold)
+    sample_threshold =
+      case params["sample_threshold"] do
+        nil -> @default_sample_threshold
+        "infinite" -> :infinite
+        value -> String.to_integer(value)
+      end
+
     Map.put(query, :sample_threshold, sample_threshold)
   end
 
