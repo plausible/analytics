@@ -709,6 +709,49 @@ defmodule PlausibleWeb.AuthControllerTest do
     setup [:create_user, :log_in]
     import Ecto.Query
 
+    test "can create an API key", %{conn: conn, user: user} do
+      site = insert(:site)
+      insert(:site_membership, site: site, user: user, role: "owner")
+
+      conn =
+        post(conn, "/settings/api-keys", %{
+          "api_key" => %{
+            "user_id" => user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      key = Plausible.Auth.ApiKey |> where(user_id: ^user.id) |> Repo.one()
+      assert conn.status == 302
+      assert key.name == "all your code are belong to us"
+    end
+
+    test "cannot create a duplicate API key", %{conn: conn, user: user} do
+      site = insert(:site)
+      insert(:site_membership, site: site, user: user, role: "owner")
+
+      conn =
+        post(conn, "/settings/api-keys", %{
+          "api_key" => %{
+            "user_id" => user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      conn2 =
+        post(conn, "/settings/api-keys", %{
+          "api_key" => %{
+            "user_id" => user.id,
+            "name" => "all your code are belong to us",
+            "key" => "swordfish"
+          }
+        })
+
+      assert html_response(conn2, 200) =~ "has already been taken"
+    end
+
     test "can't create api key into another site", %{conn: conn, user: me} do
       my_site = insert(:site)
       insert(:site_membership, site: my_site, user: me, role: "owner")
