@@ -11,8 +11,10 @@ defmodule Plausible.ClickhouseSessionV2 do
 
     use Ecto.Type
 
+    u8 = Ecto.ParameterizedType.init(Ch, type: "UInt8")
+
     @impl true
-    def type, do: :u8
+    def type, do: unquote(Macro.escape(u8))
 
     @impl true
     def cast(true), do: {:ok, 1}
