@@ -658,6 +658,62 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert goal.page_path == nil
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
     end
+
+    test "creates a custom event goal with a revenue value", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/#{site.domain}/goals", %{
+          goal: %{
+            page_path: "",
+            event_name: "Purchase",
+            currency: "EUR"
+          }
+        })
+
+      goal = Repo.get_by(Plausible.Goal, site_id: site.id)
+
+      assert goal.event_name == "Purchase"
+      assert goal.page_path == nil
+      assert goal.currency == :EUR
+
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
+    end
+
+    test "fails to create a custom event goal with a non-existant currency", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/#{site.domain}/goals", %{
+          goal: %{
+            page_path: "",
+            event_name: "Purchase",
+            currency: "EEEE"
+          }
+        })
+
+      refute Repo.get_by(Plausible.Goal, site_id: site.id)
+
+      assert html_response(conn, 200) =~ "is invalid"
+    end
+
+    test "Cleans currency for pageview goal creation", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/#{site.domain}/goals", %{
+          goal: %{
+            page_path: "/purchase",
+            event_name: "",
+            currency: "EUR"
+          }
+        })
+
+      goal = Repo.get_by(Plausible.Goal, site_id: site.id)
+
+      assert goal.event_name == nil
+      assert goal.page_path == "/purchase"
+      assert goal.currency == nil
+
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
+    end
   end
 
   describe "DELETE /:website/goals/:id" do

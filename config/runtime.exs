@@ -320,6 +320,9 @@ config :plausible, Plausible.ImportDeletionRepo,
   transport_opts: ch_transport_opts,
   pool_size: 1
 
+config :ex_money,
+  open_exchange_rates_app_id: get_var_from_path_or_env(config_dir, "OPEN_EXCHANGE_RATES_APP_ID")
+
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
