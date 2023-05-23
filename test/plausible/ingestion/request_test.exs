@@ -158,6 +158,91 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.props["custom2"] == "property2"
   end
 
+  test "parses revenue source field from a json string" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: "{\"amount\":20.2,\"currency\":\"EUR\"}"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert %Money{amount: amount, currency: :EUR} = request.revenue_source
+    assert Decimal.new("20.2") == amount
+  end
+
+  test "sets revenue source with integer amount" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: %{
+        "amount" => 20,
+        "currency" => "USD"
+      }
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert %Money{amount: amount, currency: :USD} = request.revenue_source
+    assert Decimal.equal?(amount, Decimal.new("20.0"))
+  end
+
+  test "sets revenue source with float amount" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: %{
+        "amount" => 20.1,
+        "currency" => "USD"
+      }
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert %Money{amount: amount, currency: :USD} = request.revenue_source
+    assert Decimal.equal?(amount, Decimal.new("20.1"))
+  end
+
+  test "parses string amounts into money structs" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: %{
+        "amount" => "12.3",
+        "currency" => "USD"
+      }
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert %Money{amount: amount, currency: :USD} = request.revenue_source
+    assert Decimal.equal?(amount, Decimal.new("12.3"))
+  end
+
+  test "rejects the event when currency is invalid" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: %{
+        "amount" => 1233.2,
+        "currency" => "EEEE"
+      }
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"currency is not supported or invalid", _} = changeset.errors[:revenue_source]
+  end
+
   test "pathname is set" do
     payload = %{
       name: "pageview",
