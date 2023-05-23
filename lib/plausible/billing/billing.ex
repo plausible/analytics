@@ -201,11 +201,14 @@ defmodule Plausible.Billing do
   end
 
   defp handle_subscription_updated(params) do
-    Subscription
-    |> Repo.get_by!(paddle_subscription_id: params["subscription_id"])
-    |> Subscription.changeset(format_subscription(params))
-    |> Repo.update!()
-    |> after_subscription_update()
+    subscription = Repo.get_by(Subscription, paddle_subscription_id: params["subscription_id"])
+
+    if subscription do
+      subscription
+      |> Subscription.changeset(format_subscription(params))
+      |> Repo.update!()
+      |> after_subscription_update()
+    end
   end
 
   defp handle_subscription_cancelled(params) do
