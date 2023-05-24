@@ -12,10 +12,24 @@
 
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
-beginning_of_time = NaiveDateTime.add(NaiveDateTime.utc_now(), -721, :day)
+native_stats_range =
+  Date.range(
+    Date.add(Date.utc_today(), -720),
+    Date.utc_today()
+  )
+
+imported_stats_range =
+  Date.range(
+    Date.add(native_stats_range.first, -360),
+    Date.add(native_stats_range.first, -1)
+  )
 
 site =
-  Plausible.Factory.insert(:site, domain: "dummy.site", native_stats_start_at: beginning_of_time)
+  Plausible.Factory.insert(:site,
+    domain: "dummy.site",
+    native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
+    stats_start_date: NaiveDateTime.new!(imported_stats_range.first, ~T[00:00:00])
+  )
 
 _membership = Plausible.Factory.insert(:site_membership, user: user, site: site, role: :owner)
 
@@ -77,40 +91,72 @@ geolocations = [
   []
 ]
 
-Enum.flat_map(-720..0, fn day_index ->
-  date = Date.add(Date.utc_today(), day_index)
-  number_of_events = 0..:rand.uniform(500)
-
-  Enum.map(number_of_events, fn _ ->
+native_stats_range
+|> Enum.with_index()
+|> Enum.flat_map(fn {date, index} ->
+  Enum.map(0..:rand.uniform(500), fn _ ->
     geolocation = Enum.random(geolocations)
 
-    if Plausible.v2?() do
-      [
-        site_id: site.id,
-        hostname: site.domain,
-        timestamp: put_random_time.(date, day_index),
-        referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
-        browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
-        browser_version: to_string(Enum.random(0..50)),
-        screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
-        operating_system: Enum.random(["Windows", "macOS", "Linux"]),
-        operating_system_version: to_string(Enum.random(0..15))
-      ]
-    else
-      [
-        domain: site.domain,
-        hostname: site.domain,
-        timestamp: put_random_time.(date, day_index),
-        referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
-        browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
-        browser_version: to_string(Enum.random(0..50)),
-        screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
-        operating_system: Enum.random(["Windows", "macOS", "Linux"]),
-        operating_system_version: to_string(Enum.random(0..15))
-      ]
-    end
+    [
+      site_id: site.id,
+      hostname: site.domain,
+      timestamp: put_random_time.(date, index),
+      referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+      browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
+      browser_version: to_string(Enum.random(0..50)),
+      screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
+      operating_system: Enum.random(["Windows", "macOS", "Linux"]),
+      operating_system_version: to_string(Enum.random(0..15)),
+      pathname:
+        Enum.random(["/", "/login", "/settings", "/register", "/docs", "/docs/1", "/docs/2"])
+    ]
     |> Keyword.merge(geolocation)
     |> then(&Plausible.Factory.build(:pageview, &1))
   end)
 end)
 |> Plausible.TestUtils.populate_stats()
+
+site =
+  site
+  |> Plausible.Site.start_import(
+    imported_stats_range.first,
+    imported_stats_range.last,
+    "Google Analytics"
+  )
+  |> Plausible.Repo.update!()
+
+imported_stats_range
+|> Enum.flat_map(fn date ->
+  Enum.flat_map(0..:rand.uniform(500), fn _ ->
+    [
+      Plausible.Factory.build(:imported_visitors,
+        date: date,
+        pageviews: Enum.random(1..20),
+        visitors: Enum.random(1..20),
+        bounces: Enum.random(1..20),
+        visits: Enum.random(1..200),
+        visit_duration: Enum.random(1000..10000)
+      ),
+      Plausible.Factory.build(:imported_sources,
+        date: date,
+        source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+        visitors: Enum.random(1..20),
+        visits: Enum.random(1..200),
+        bounces: Enum.random(1..20),
+        visit_duration: Enum.random(1000..10000)
+      ),
+      Plausible.Factory.build(:imported_pages,
+        date: date,
+        visitors: Enum.random(1..20),
+        pageviews: Enum.random(1..20),
+        exits: Enum.random(1..20),
+        time_on_page: Enum.random(1000..10000)
+      )
+    ]
+  end)
+end)
+|> then(&Plausible.TestUtils.populate_stats(site, &1))
+
+site
+|> Plausible.Site.import_success()
+|> Plausible.Repo.update!()

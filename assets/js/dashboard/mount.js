@@ -17,6 +17,7 @@ if (container) {
     offset: container.dataset.offset,
     hasGoals: container.dataset.hasGoals === 'true',
     statsBegin: container.dataset.statsBegin,
+    nativeStatsBegin: container.dataset.nativeStatsBegin,
     embedded: container.dataset.embedded,
     background: container.dataset.background,
     isDbip: container.dataset.isDbip === 'true',

@@ -9,6 +9,11 @@ ENV MIX_ENV=prod
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
+# custom ERL_FLAGS are passed for (public) multi-platform builds
+# to fix qemu segfault, more info: https://github.com/erlang/otp/pull/6340
+ARG ERL_FLAGS
+ENV ERL_FLAGS=$ERL_FLAGS
+
 RUN mkdir /app
 WORKDIR /app
 
@@ -48,7 +53,7 @@ COPY rel rel
 RUN mix release plausible
 
 # Main Docker Image
-FROM alpine:3.17.0@sha256:c0d488a800e4127c334ad20d61d7bc21b4097540327217dfab52262adc02380c
+FROM alpine:3.18.0
 LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}

@@ -6,7 +6,6 @@ defmodule Plausible.Ingestion.Event do
   (e.g. due to spam blocklist) from the processing pipeline.
   """
   alias Plausible.Ingestion.Request
-  alias Plausible.ClickhouseEvent
   alias Plausible.ClickhouseEventV2
   alias Plausible.Site.GateKeeper
 
@@ -30,7 +29,7 @@ defmodule Plausible.Ingestion.Event do
           domain: String.t() | nil,
           site_id: pos_integer() | nil,
           clickhouse_event_attrs: map(),
-          clickhouse_event: %ClickhouseEvent{} | %ClickhouseEventV2{} | nil,
+          clickhouse_event: %ClickhouseEventV2{} | nil,
           dropped?: boolean(),
           drop_reason: drop_reason(),
           request: Request.t(),
@@ -225,15 +224,9 @@ defmodule Plausible.Ingestion.Event do
 
   defp validate_clickhouse_event(%__MODULE__{} = event) do
     clickhouse_event =
-      if Plausible.v2?() do
-        event
-        |> Map.fetch!(:clickhouse_event_attrs)
-        |> ClickhouseEventV2.new()
-      else
-        event
-        |> Map.fetch!(:clickhouse_event_attrs)
-        |> ClickhouseEvent.new()
-      end
+      event
+      |> Map.fetch!(:clickhouse_event_attrs)
+      |> ClickhouseEventV2.new()
 
     case Ecto.Changeset.apply_action(clickhouse_event, nil) do
       {:ok, valid_clickhouse_event} ->

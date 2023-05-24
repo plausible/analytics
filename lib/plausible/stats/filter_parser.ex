@@ -27,7 +27,8 @@ defmodule Plausible.Stats.FilterParser do
   """
   def parse_filters(filters) when is_binary(filters) do
     case Jason.decode(filters) do
-      {:ok, parsed} -> parsed
+      {:ok, parsed} when is_map(parsed) -> parsed
+      {:ok, _} -> %{}
       {:error, err} -> parse_filter_expression(err.data)
     end
   end
@@ -61,11 +62,23 @@ defmodule Plausible.Stats.FilterParser do
           is_negated -> {key, {:is_not, final_value}}
           true -> {key, {:is, final_value}}
         end
+        |> reject_invalid_country_codes()
 
       _ ->
         :error
     end
   end
+
+  defp reject_invalid_country_codes({"visit:country", {_, code_or_codes}} = filter) do
+    code_or_codes
+    |> List.wrap()
+    |> Enum.reduce_while(filter, fn
+      value, _ when byte_size(value) == 2 -> {:cont, filter}
+      _, _ -> {:halt, :error}
+    end)
+  end
+
+  defp reject_invalid_country_codes(filter), do: filter
 
   defp to_kv(str) do
     str

@@ -19,7 +19,7 @@
         </a>
     </div>
 
-    <%= if @conn.private[:phoenix_flash] do %>
+    <%= if assigns[:flash] do %>
       <%= render("_flash.html", assigns) %>
     <% end %>
     <%= @inner_content %>

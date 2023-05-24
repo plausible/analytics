@@ -5,11 +5,20 @@ defmodule Plausible.DataMigration.NumericIDs do
   """
   use Plausible.DataMigration, dir: "NumericIDs"
 
-  @table_settings "SETTINGS index_granularity = 8192, storage_policy = 'tiered'"
+  import Ecto.Query
 
-  def ready?() do
-    Application.get_env(:plausible, :v2_migration_done) || false
+  defmodule DomainsLookup do
+    @moduledoc false
+    use Ecto.Schema
+
+    @primary_key false
+    schema "domains_lookup" do
+      field :site_id, Ch.Types.UInt64
+      field :domain, :string
+    end
   end
+
+  @table_settings "SETTINGS index_granularity = 8192"
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def run(opts \\ []) do
@@ -24,13 +33,6 @@ defmodule Plausible.DataMigration.NumericIDs do
     max_threads =
       "NUMERIC_IDS_MIGRATION_MAX_THREADS" |> System.get_env("16") |> String.to_integer()
 
-    # TBD: There's most likely a bug in Clickhouse defining Postgres dictionaries,
-    # we'll use a static URL for now
-    dict_url = Keyword.get(opts, :dict_url) || System.get_env("DOMAINS_DICT_URL") || ""
-
-    dict_password =
-      Keyword.get(opts, :dict_password) || System.get_env("DOMAINS_DICT_PASSWORD") || ""
-
     table_settings =
       Keyword.get(opts, :table_settings) || System.get_env("NUMERIC_IDS_TABLE_SETTINGS") ||
         @table_settings
@@ -38,12 +40,7 @@ defmodule Plausible.DataMigration.NumericIDs do
     start_from =
       Keyword.get(opts, :start_from) || System.get_env("NUMERIC_IDS_PARTITION_START_FROM")
 
-    stop_at =
-      Keyword.get(opts, :stop_at) || System.get_env("NUMERIC_IDS_PARTITION_STOP_AT") ||
-        previous_part()
-
-    (byte_size(dict_url) > 0 and byte_size(dict_password) > 0) ||
-      raise "Set DOMAINS_DICT_URL and DOMAINS_DICT_PASSWORD"
+    stop_at = Keyword.get(opts, :stop_at) || System.get_env("NUMERIC_IDS_PARTITION_STOP_AT")
 
     @repo.start(db_url, max_threads)
 
@@ -61,11 +58,9 @@ defmodule Plausible.DataMigration.NumericIDs do
     start_from = start_from || List.first(partitions)
 
     IO.puts("""
-    Got the following migration settings: 
+    Got the following migration settings:
 
       - max_threads: #{max_threads}
-      - dict_url: #{dict_url}
-      - dict_password: ✅
       - table_settings: #{table_settings}
       - db url: #{db_url}
       - cluster?: #{cluster?}
@@ -90,17 +85,31 @@ defmodule Plausible.DataMigration.NumericIDs do
         end
       end
 
-    {:ok, _} = run_sql_fn.("drop-events-v2", cluster?: cluster?)
-    {:ok, _} = run_sql_fn.("drop-sessions-v2", cluster?: cluster?)
-    {:ok, _} = run_sql_fn.("drop-tmp-events-v2", [])
-    {:ok, _} = run_sql_fn.("drop-tmp-sessions-v2", [])
-    {:ok, _} = run_sql_fn.("drop-dict", [])
+    drop_v2_extra_opts = fn table ->
+      case @repo.query("select count(*) from {$0:Identifier}", [table]) do
+        {:ok, %{rows: [[count]]}} when count > 0 ->
+          [
+            prompt_message: "The table contains #{count} rows. Execute?",
+            prompt_default_choice: :no
+          ]
+
+        {:ok, _} ->
+          [prompt_default_choice: :no]
+
+        {:error, _} ->
+          []
+      end
+    end
 
     {:ok, _} =
-      run_sql_fn.("create-dict-from-static-file",
-        dict_url: dict_url,
-        dict_password: dict_password
-      )
+      run_sql_fn.("drop-events-v2", [cluster?: cluster?] ++ drop_v2_extra_opts.("events_v2"))
+
+    {:ok, _} =
+      run_sql_fn.("drop-sessions-v2", [cluster?: cluster?] ++ drop_v2_extra_opts.("sessions_v2"))
+
+    {:ok, _} = run_sql_fn.("drop-tmp-events-v2", [])
+    {:ok, _} = run_sql_fn.("drop-tmp-sessions-v2", [])
+    {:ok, _} = run_sql_fn.("drop-domains-lookup", [])
 
     {:ok, _} = run_sql_fn.("create-events-v2", table_settings: table_settings, cluster?: cluster?)
 
@@ -109,6 +118,21 @@ defmodule Plausible.DataMigration.NumericIDs do
 
     {:ok, _} = run_sql_fn.("create-tmp-events-v2", table_settings: table_settings)
     {:ok, _} = run_sql_fn.("create-tmp-sessions-v2", table_settings: table_settings)
+
+    case run_sql_fn.("create-domains-lookup", table_settings: table_settings) do
+      {:ok, _} ->
+        confirm_fn.("Populate domains-lookup with postgres sites", fn ->
+          mappings =
+            Plausible.Site
+            |> select([s], %{site_id: s.id, domain: s.domain})
+            |> Plausible.Repo.all()
+
+          @repo.insert_all(DomainsLookup, mappings)
+        end)
+
+      _ ->
+        :ignore
+    end
 
     confirm_fn.("Start migration? (starting from partition: #{start_from})", fn ->
       IO.puts("start.. #{DateTime.utc_now()}")
@@ -134,12 +158,5 @@ defmodule Plausible.DataMigration.NumericIDs do
 
       IO.puts("end.. #{DateTime.utc_now()}")
     end)
-  end
-
-  defp previous_part() do
-    now = NaiveDateTime.utc_now()
-    month = String.pad_leading("#{now.month - 1}", 2, "0")
-    year = "#{now.year}"
-    "#{year}#{month}"
   end
 end

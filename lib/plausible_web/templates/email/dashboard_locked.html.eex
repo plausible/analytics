@@ -13,6 +13,6 @@ Based on that we recommend you select the <%= @suggested_plan[:volume] %>/mo pla
 <br /><br />
 The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
 <br /><br />
-Was this only a temporary spike in traffic? Do you have questions or need help with anything? Just reply to this email and we'll gladly help.
+Do you have questions or need help with anything? Just reply to this email and we'll gladly help.
 <br /><br />
 Thanks for understanding and for being a Plausible subscriber!

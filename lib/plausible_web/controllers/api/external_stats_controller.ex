@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use Plug.ErrorHandler
-  alias Plausible.Stats.{Query, Props}
+  alias Plausible.Stats.{Query, CustomProps}
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns[:site]
@@ -42,10 +42,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           Plausible.Stats.aggregate(site, query, metrics)
         end
 
-      results =
-        results
-        |> Map.take(metrics)
-
       json(conn, %{results: results})
     else
       {:error, msg} ->
@@ -70,7 +66,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
       results =
         if property == "event:goal" do
-          prop_names = Props.props(site, query)
+          prop_names = CustomProps.props_for_all_event_names(site, query)
 
           Enum.map(results, fn row ->
             Map.put(row, "props", prop_names[row[:goal]] || [])
@@ -141,14 +137,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end)
   end
 
+  defp validate_metric("events", nil, %{include_imported: true}) do
+    {:error, "Metric `events` cannot be queried with imported data"}
+  end
+
   defp validate_metric(metric, _, _) when metric in @event_metrics, do: {:ok, metric}
 
   defp validate_metric(metric, property, query) when metric in @session_metrics do
     event_only_filter = Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
 
     cond do
+      metric == "views_per_visit" && query.filters["event:page"] ->
+        {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
+
       metric == "views_per_visit" && property != nil ->
-        {:error, "Metric `#{metric}` is not supported in breakdown queries"}
+        {:error, "Metric `#{metric}` is not supported in breakdown queries."}
 
       event_only_property?(property) ->
         {:error, "Session metric `#{metric}` cannot be queried for breakdown by `#{property}`."}

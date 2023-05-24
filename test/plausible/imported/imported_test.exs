@@ -1119,36 +1119,12 @@ defmodule Plausible.ImportedTest do
 
       assert %{
                "top_stats" => [
-                 %{
-                   "change" => 100,
-                   "name" => "Unique visitors",
-                   "value" => 1
-                 },
-                 %{
-                   "change" => 100,
-                   "name" => "Total visits",
-                   "value" => 1
-                 },
-                 %{
-                   "change" => 100,
-                   "name" => "Total pageviews",
-                   "value" => 1
-                 },
-                 %{
-                   "change" => 0,
-                   "name" => "Views per visit",
-                   "value" => 0.0
-                 },
-                 %{
-                   "change" => nil,
-                   "name" => "Bounce rate",
-                   "value" => 0
-                 },
-                 %{
-                   "change" => 100,
-                   "name" => "Visit duration",
-                   "value" => 60
-                 }
+                 %{"name" => "Unique visitors", "value" => 1},
+                 %{"name" => "Total visits", "value" => 1},
+                 %{"name" => "Total pageviews", "value" => 1},
+                 %{"name" => "Views per visit", "value" => 0.0},
+                 %{"name" => "Bounce rate", "value" => 0},
+                 %{"name" => "Visit duration", "value" => 60}
                ]
              } = json_response(conn, 200)
     end

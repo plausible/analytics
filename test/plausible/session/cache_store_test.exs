@@ -1,14 +1,16 @@
 defmodule Plausible.Session.CacheStoreTest do
   use Plausible.DataCase
-  import Double
-  alias Plausible.Session.{CacheStore, WriteBuffer}
+  alias Plausible.Session.CacheStore
+
+  defmodule FakeBuffer do
+    def insert(sessions) do
+      send(self(), {WriteBuffer, :insert, [sessions]})
+      {:ok, sessions}
+    end
+  end
 
   setup do
-    buffer =
-      WriteBuffer
-      |> stub(:insert, fn _sessions -> nil end)
-
-    [buffer: buffer]
+    [buffer: FakeBuffer]
   end
 
   test "creates a session from an event", %{buffer: buffer} do
@@ -38,11 +40,7 @@ defmodule Plausible.Session.CacheStoreTest do
     assert [session] = sessions
     assert session.hostname == event.hostname
 
-    if Plausible.v2?() do
-      assert session.site_id == event.site_id
-    else
-      assert session.domain == event.domain
-    end
+    assert session.site_id == event.site_id
 
     assert session.user_id == event.user_id
     assert session.entry_page == event.pathname

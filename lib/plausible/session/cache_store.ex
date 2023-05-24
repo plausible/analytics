@@ -22,12 +22,7 @@ defmodule Plausible.Session.CacheStore do
   defp find_session(_domain, nil), do: nil
 
   defp find_session(event, user_id) do
-    from_cache =
-      if Plausible.v2?() do
-        Cachex.get(:sessions, {event.site_id, user_id})
-      else
-        Cachex.get(:sessions, {event.domain, user_id})
-      end
+    from_cache = Cachex.get(:sessions, {event.site_id, user_id})
 
     case from_cache do
       {:ok, nil} ->
@@ -45,13 +40,7 @@ defmodule Plausible.Session.CacheStore do
   end
 
   defp persist_session(session) do
-    key =
-      if Plausible.v2?() do
-        {session.site_id, session.user_id}
-      else
-        {session.domain, session.user_id}
-      end
-
+    key = {session.site_id, session.user_id}
     Cachex.put(:sessions, key, session, ttl: :timer.minutes(30))
     session
   end
@@ -81,74 +70,38 @@ defmodule Plausible.Session.CacheStore do
   end
 
   defp new_session_from_event(event) do
-    if Plausible.v2?() do
-      %Plausible.ClickhouseSessionV2{
-        sign: 1,
-        session_id: Plausible.ClickhouseSession.random_uint64(),
-        hostname: event.hostname,
-        site_id: event.site_id,
-        user_id: event.user_id,
-        entry_page: event.pathname,
-        exit_page: event.pathname,
-        is_bounce: true,
-        duration: 0,
-        pageviews: if(event.name == "pageview", do: 1, else: 0),
-        events: 1,
-        referrer: event.referrer,
-        referrer_source: event.referrer_source,
-        utm_medium: event.utm_medium,
-        utm_source: event.utm_source,
-        utm_campaign: event.utm_campaign,
-        utm_content: event.utm_content,
-        utm_term: event.utm_term,
-        country_code: event.country_code,
-        subdivision1_code: event.subdivision1_code,
-        subdivision2_code: event.subdivision2_code,
-        city_geoname_id: event.city_geoname_id,
-        screen_size: event.screen_size,
-        operating_system: event.operating_system,
-        operating_system_version: event.operating_system_version,
-        browser: event.browser,
-        browser_version: event.browser_version,
-        timestamp: event.timestamp,
-        start: event.timestamp,
-        "entry_meta.key": Map.get(event, :"meta.key"),
-        "entry_meta.value": Map.get(event, :"meta.value")
-      }
-    else
-      %Plausible.ClickhouseSession{
-        sign: 1,
-        session_id: Plausible.ClickhouseSession.random_uint64(),
-        hostname: event.hostname,
-        domain: event.domain,
-        user_id: event.user_id,
-        entry_page: event.pathname,
-        exit_page: event.pathname,
-        is_bounce: true,
-        duration: 0,
-        pageviews: if(event.name == "pageview", do: 1, else: 0),
-        events: 1,
-        referrer: event.referrer,
-        referrer_source: event.referrer_source,
-        utm_medium: event.utm_medium,
-        utm_source: event.utm_source,
-        utm_campaign: event.utm_campaign,
-        utm_content: event.utm_content,
-        utm_term: event.utm_term,
-        country_code: event.country_code,
-        subdivision1_code: event.subdivision1_code,
-        subdivision2_code: event.subdivision2_code,
-        city_geoname_id: event.city_geoname_id,
-        screen_size: event.screen_size,
-        operating_system: event.operating_system,
-        operating_system_version: event.operating_system_version,
-        browser: event.browser,
-        browser_version: event.browser_version,
-        timestamp: event.timestamp,
-        start: event.timestamp,
-        "entry_meta.key": Map.get(event, :"meta.key"),
-        "entry_meta.value": Map.get(event, :"meta.value")
-      }
-    end
+    %Plausible.ClickhouseSessionV2{
+      sign: 1,
+      session_id: Plausible.ClickhouseSessionV2.random_uint64(),
+      hostname: event.hostname,
+      site_id: event.site_id,
+      user_id: event.user_id,
+      entry_page: event.pathname,
+      exit_page: event.pathname,
+      is_bounce: true,
+      duration: 0,
+      pageviews: if(event.name == "pageview", do: 1, else: 0),
+      events: 1,
+      referrer: event.referrer,
+      referrer_source: event.referrer_source,
+      utm_medium: event.utm_medium,
+      utm_source: event.utm_source,
+      utm_campaign: event.utm_campaign,
+      utm_content: event.utm_content,
+      utm_term: event.utm_term,
+      country_code: event.country_code,
+      subdivision1_code: event.subdivision1_code,
+      subdivision2_code: event.subdivision2_code,
+      city_geoname_id: event.city_geoname_id,
+      screen_size: event.screen_size,
+      operating_system: event.operating_system,
+      operating_system_version: event.operating_system_version,
+      browser: event.browser,
+      browser_version: event.browser_version,
+      timestamp: event.timestamp,
+      start: event.timestamp,
+      "entry_meta.key": Map.get(event, :"meta.key"),
+      "entry_meta.value": Map.get(event, :"meta.value")
+    }
   end
 end

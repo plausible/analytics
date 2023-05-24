@@ -23,6 +23,8 @@ defmodule PlausibleWeb.ErrorReportController do
   defp thanks(conn) do
     conn
     |> put_view(PlausibleWeb.ErrorView)
-    |> render("server_error_report_thanks.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    |> render("server_error_report_thanks.html",
+      layout: {PlausibleWeb.LayoutView, "base_error.html"}
+    )
   end
 end

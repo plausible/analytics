@@ -2,12 +2,16 @@ import React from "react"
 import { withRouter } from 'react-router-dom'
 import Modal from './modal'
 import RegularFilterModal from './regular-filter-modal'
+import PropFilterModal from "./prop-filter-modal"
 
 function FilterModal(props) {
   function renderBody() {
     const filterGroup = props.match.params.field || 'page'
-
-    return <RegularFilterModal site={props.site} filterGroup={filterGroup}/>
+    if (filterGroup === 'props') {
+      return <PropFilterModal site={props.site} />
+    } else {
+      return <RegularFilterModal site={props.site} filterGroup={filterGroup} />
+    }
   }
 
   return (

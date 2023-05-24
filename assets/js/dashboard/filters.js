@@ -43,7 +43,7 @@ function filterText(key, _rawValue, query) {
 
   if (key === "props") {
     const [[propKey, _propValue]] = Object.entries(query.filters['props'])
-    return <>props.{propKey} {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    return <>Property <b>{propKey}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   } else if (formattedFilter) {
     return <>{formattedFilter} {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
@@ -55,21 +55,36 @@ function renderDropdownFilter(site, history, [key, value], query) {
   return (
     <Menu.Item key={key}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={key + value}>
-        <Link
-          title={`Edit filter: ${formattedFilters[key]}`}
-          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}
-          className="group flex w-full justify-between items-center"
-          style={{ width: 'calc(100% - 1.5rem)' }}
-        >
-          <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
-          <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
-        </Link>
+        {shouldLinkToFilterModal(site, key) &&
+          <Link
+            title={`Edit filter: ${formattedFilters[key]}`}
+            to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}
+            className="group flex w-full justify-between items-center"
+            style={{ width: 'calc(100% - 1.5rem)' }}
+          >
+            <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
+            <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
+          </Link>
+        }
+        {!shouldLinkToFilterModal(site, key) && 
+          <div
+            onClick={(e) => {e.preventDefault()}}
+            className="group flex w-full justify-between items-center"
+            style={{ width: 'calc(100% - 1.5rem)' }}
+          >
+            <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
+          </div>
+        }
         <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
           <XMarkIcon className="w-4 h-4" />
         </b>
       </div>
     </Menu.Item>
   )
+}
+
+function shouldLinkToFilterModal(site, key) {
+  return key !== 'props' || site.flags.custom_dimension_filter
 }
 
 function filterDropdownOption(site, option) {
@@ -204,9 +219,16 @@ class Filters extends React.Component {
   renderListFilter(history, [key, value], query) {
     return (
       <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
-        <Link title={`Edit filter: ${formattedFilters[key]}`} className="flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
-          <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
-        </Link>
+        {shouldLinkToFilterModal(this.props.site, key) &&
+          <Link title={`Edit filter: ${formattedFilters[key]}`} className="flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
+            <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
+          </Link>
+        }
+        {!shouldLinkToFilterModal(this.props.site, key) &&
+          <div className="flex w-full h-full items-center py-2 pl-3">
+            <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
+          </div>
+        }
         <span title={`Remove filter: ${formattedFilters[key]}`} className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => removeFilter(key, history, query)}>
           <XMarkIcon className="w-4 h-4" />
         </span>

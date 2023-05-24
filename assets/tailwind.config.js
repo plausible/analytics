@@ -8,7 +8,7 @@ module.exports = {
   safelist: [
     // PlausibleWeb.StatsView.stats_container_class/1 uses this class
     // it's not used anywhere else in the templates or scripts
-    "max-w-screen-lg"
+    "max-w-screen-xl"
   ],
   darkMode: 'class',
   theme: {

@@ -107,7 +107,11 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.get_by(Plausible.Site, domain: "example.com")
+      assert site = Repo.get_by(Plausible.Site, domain: "example.com")
+      assert site.domain == "example.com"
+      assert site.timezone == "Europe/London"
+      assert site.ingest_rate_limit_scale_seconds == 60
+      assert site.ingest_rate_limit_threshold == 1_000_000
     end
 
     test "fails to create the site if only http:// provided", %{conn: conn} do
@@ -415,7 +419,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       delete(conn, "/#{site.domain}")
 
-      refute Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
+      refute Repo.exists?(from(s in Plausible.Site, where: s.id == ^site.id))
     end
 
     test "fails to delete a site with insufficient permissions", %{conn: conn, user: user} do
@@ -427,7 +431,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/#{site.domain}")
 
       assert conn.status == 404
-      assert Repo.exists?(from s in Plausible.Site, where: s.id == ^site.id)
+      assert Repo.exists?(from(s in Plausible.Site, where: s.id == ^site.id))
     end
 
     test "fails to delete a foreign site", %{conn: my_conn, user: me} do
@@ -442,7 +446,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       my_conn = delete(my_conn, "/#{other_site.domain}")
       assert my_conn.status == 404
-      assert Repo.exists?(from s in Plausible.Site, where: s.id == ^other_site.id)
+      assert Repo.exists?(from(s in Plausible.Site, where: s.id == ^other_site.id))
     end
   end
 
@@ -654,6 +658,62 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert goal.page_path == nil
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
     end
+
+    test "creates a custom event goal with a revenue value", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/#{site.domain}/goals", %{
+          goal: %{
+            page_path: "",
+            event_name: "Purchase",
+            currency: "EUR"
+          }
+        })
+
+      goal = Repo.get_by(Plausible.Goal, site_id: site.id)
+
+      assert goal.event_name == "Purchase"
+      assert goal.page_path == nil
+      assert goal.currency == :EUR
+
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
+    end
+
+    test "fails to create a custom event goal with a non-existant currency", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        post(conn, "/#{site.domain}/goals", %{
+          goal: %{
+            page_path: "",
+            event_name: "Purchase",
+            currency: "EEEE"
+          }
+        })
+
+      refute Repo.get_by(Plausible.Goal, site_id: site.id)
+
+      assert html_response(conn, 200) =~ "is invalid"
+    end
+
+    test "Cleans currency for pageview goal creation", %{conn: conn, site: site} do
+      conn =
+        post(conn, "/#{site.domain}/goals", %{
+          goal: %{
+            page_path: "/purchase",
+            event_name: "",
+            currency: "EUR"
+          }
+        })
+
+      goal = Repo.get_by(Plausible.Goal, site_id: site.id)
+
+      assert goal.event_name == nil
+      assert goal.page_path == "/purchase"
+      assert goal.currency == nil
+
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
+    end
   end
 
   describe "DELETE /:website/goals/:id" do
@@ -675,7 +735,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
 
       assert Repo.aggregate(Plausible.Goal, :count, :id) == 1
-      assert get_flash(conn, :error) == "Could not find goal"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find goal"
     end
   end
 
@@ -1002,7 +1062,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       refute Repo.one(Plausible.Site.SharedLink)
       assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
-      assert get_flash(conn, :success) == "Shared Link deleted"
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Shared Link deleted"
     end
 
     test "fails to delete shared link from the outside", %{conn: conn, site: site} do
@@ -1013,7 +1073,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert Repo.one(Plausible.Site.SharedLink)
       assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
-      assert get_flash(conn, :error) == "Could not find Shared Link"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find Shared Link"
     end
   end
 
@@ -1024,7 +1084,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       domain = insert(:custom_domain, site: site)
 
       conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
-      assert get_flash(conn, :success) == "Custom domain deleted successfully"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+               "Custom domain deleted successfully"
 
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
     end
@@ -1038,7 +1100,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
 
       conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{foreign_domain.id}")
-      assert get_flash(conn, :error) == "Failed to delete custom domain"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Failed to delete custom domain"
 
       assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
     end
@@ -1166,7 +1228,6 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "domain change" do
     setup [:create_user, :log_in, :create_site]
 
-    @tag :v2_only
     test "shows domain change in the settings form", %{conn: conn, site: site} do
       conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
@@ -1176,7 +1237,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
     end
 
-    @tag :v2_only
     test "domain change form renders", %{conn: conn, site: site} do
       conn = get(conn, Routes.site_path(conn, :change_domain, site.domain))
       resp = html_response(conn, 200)
@@ -1186,7 +1246,6 @@ defmodule PlausibleWeb.SiteControllerTest do
                "Once you change your domain, you must update the JavaScript snippet on your site within 72 hours"
     end
 
-    @tag :v2_only
     test "domain change form submission when no change is made", %{conn: conn, site: site} do
       conn =
         put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
@@ -1197,7 +1256,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "New domain must be different than the current one"
     end
 
-    @tag :v2_only
     test "domain change form submission to an existing domain", %{conn: conn, site: site} do
       another_site = insert(:site)
 
@@ -1214,7 +1272,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert is_nil(site.domain_changed_from)
     end
 
-    @tag :v2_only
     test "domain change form submission to a domain in transition period", %{
       conn: conn,
       site: site
@@ -1234,7 +1291,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert is_nil(site.domain_changed_from)
     end
 
-    @tag :v2_only
     test "domain change succcessful form submission redirects to snippet change info", %{
       conn: conn,
       site: site
@@ -1254,7 +1310,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert site.domain_changed_from == original_domain
     end
 
-    @tag :v2_only
     test "snippet info after domain change", %{
       conn: conn,
       site: site

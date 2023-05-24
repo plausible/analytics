@@ -3,9 +3,11 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible.Repo
   use Plug.ErrorHandler
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Filters, Comparisons}
+  alias Plausible.Stats.{Query, Filters, Comparisons, CustomProps}
 
   require Logger
+
+  plug :validate_common_input
 
   @doc """
   Returns a time-series based on given parameters.
@@ -111,13 +113,15 @@ defmodule PlausibleWeb.Api.StatsController do
 
       timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
 
-      comparison_result =
-        case Comparisons.compare(site, query, params["comparison"],
-               from: params["compare_from"],
-               to: params["compare_to"]
-             ) do
-          {:ok, comparison_query} -> Stats.timeseries(site, comparison_query, [selected_metric])
-          {:error, :not_supported} -> nil
+      comparison_opts = parse_comparison_opts(params)
+
+      {comparison_query, comparison_result} =
+        case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
+          {:ok, comparison_query} ->
+            {comparison_query, Stats.timeseries(site, comparison_query, [selected_metric])}
+
+          {:error, :not_supported} ->
+            {nil, nil}
         end
 
       labels = label_timeseries(timeseries_result, comparison_result)
@@ -131,7 +135,7 @@ defmodule PlausibleWeb.Api.StatsController do
         comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
         present_index: present_index,
         interval: query.interval,
-        with_imported: query.include_imported,
+        with_imported: with_imported?(query, comparison_query),
         imported_source: site.imported_data && site.imported_data.source,
         full_intervals: full_intervals
       })
@@ -192,11 +196,10 @@ defmodule PlausibleWeb.Api.StatsController do
     with :ok <- validate_params(params) do
       query = Query.from(site, params) |> Filters.add_prefix()
 
-      comparison_mode = params["comparison"] || "previous_period"
-      comparison_opts = [from: params["compare_from"], to: params["compare_to"]]
+      comparison_opts = parse_comparison_opts(params)
 
       comparison_query =
-        case Stats.Comparisons.compare(site, query, comparison_mode, comparison_opts) do
+        case Stats.Comparisons.compare(site, query, params["comparison"], comparison_opts) do
           {:ok, query} -> query
           {:error, _cause} -> nil
         end
@@ -207,7 +210,7 @@ defmodule PlausibleWeb.Api.StatsController do
         top_stats: top_stats,
         interval: query.interval,
         sample_percent: sample_percent,
-        with_imported: query.include_imported,
+        with_imported: with_imported?(query, comparison_query),
         imported_source: site.imported_data && site.imported_data.source,
         comparing_from: comparison_query && comparison_query.date_range.first,
         comparing_to: comparison_query && comparison_query.date_range.last,
@@ -327,67 +330,53 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query, comparison_query) do
-    total_q = Query.remove_event_filters(query, [:goal, :props])
-
-    {prev_converted_visitors, prev_completions} =
-      if comparison_query do
-        %{visitors: %{value: prev_converted_visitors}, events: %{value: prev_completions}} =
-          Stats.aggregate(site, comparison_query, [:visitors, :events])
-
-        {prev_converted_visitors, prev_completions}
-      else
-        {nil, nil}
-      end
-
-    prev_unique_visitors =
-      if comparison_query do
-        site
-        |> Stats.aggregate(comparison_query, [:visitors])
-        |> get_in([:visitors, :value])
-      else
-        nil
-      end
+    totals_query = Query.remove_event_filters(query, [:goal, :props])
 
     %{
       visitors: %{value: unique_visitors}
-    } = Stats.aggregate(site, total_q, [:visitors])
+    } = Stats.aggregate(site, totals_query, [:visitors])
 
     %{
       visitors: %{value: converted_visitors},
       events: %{value: completions}
     } = Stats.aggregate(site, query, [:visitors, :events])
 
+    {prev_unique_visitors, prev_converted_visitors, prev_completions} =
+      if comparison_query do
+        totals_comparison_query = Query.remove_event_filters(comparison_query, [:goal, :props])
+
+        %{
+          visitors: %{value: prev_unique_visitors}
+        } = Stats.aggregate(site, totals_comparison_query, [:visitors])
+
+        %{
+          visitors: %{value: prev_converted_visitors},
+          events: %{value: prev_completions}
+        } = Stats.aggregate(site, comparison_query, [:visitors, :events])
+
+        {prev_unique_visitors, prev_converted_visitors, prev_completions}
+      else
+        {nil, nil, nil}
+      end
+
     conversion_rate = calculate_cr(unique_visitors, converted_visitors)
     prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
 
-    stats = [
-      %{
-        name: "Unique visitors",
-        value: unique_visitors,
-        comparison_value: prev_unique_visitors,
-        change: percent_change(prev_unique_visitors, unique_visitors)
-      },
-      %{
-        name: "Unique conversions",
-        value: converted_visitors,
-        comparison_value: prev_converted_visitors,
-        change: percent_change(prev_converted_visitors, converted_visitors)
-      },
-      %{
-        name: "Total conversions",
-        value: completions,
-        comparison_value: prev_completions,
-        change: percent_change(prev_completions, completions)
-      },
-      %{
-        name: "Conversion rate",
-        value: conversion_rate,
-        comparison_value: prev_conversion_rate,
-        change: percent_change(prev_conversion_rate, conversion_rate)
-      }
-    ]
+    build_item = fn name, value, comparison_value ->
+      if comparison_value do
+        change = percent_change(comparison_value, value)
+        %{name: name, value: value, comparison_value: comparison_value, change: change}
+      else
+        %{name: name, value: value}
+      end
+    end
 
-    {stats, 100}
+    {[
+       build_item.("Unique visitors", unique_visitors, prev_unique_visitors),
+       build_item.("Unique conversions", converted_visitors, prev_converted_visitors),
+       build_item.("Total conversions", completions, prev_completions),
+       build_item.("Conversion rate", conversion_rate, prev_conversion_rate)
+     ], 100}
   end
 
   defp fetch_top_stats(site, query, comparison_query) do
@@ -397,7 +386,6 @@ defmodule PlausibleWeb.Api.StatsController do
           :visitors,
           :visits,
           :pageviews,
-          :views_per_visit,
           :bounce_rate,
           :time_on_page,
           :sample_percent
@@ -435,10 +423,14 @@ defmodule PlausibleWeb.Api.StatsController do
   defp top_stats_entry(current_results, prev_results, name, key) do
     if current_results[key] do
       value = get_in(current_results, [key, :value])
-      prev_value = get_in(prev_results, [key, :value])
-      change = prev_value && calculate_change(key, prev_value, value)
 
-      %{name: name, value: value, comparison_value: prev_value, change: change}
+      if prev_results do
+        prev_value = get_in(prev_results, [key, :value])
+        change = calculate_change(key, prev_value, value)
+        %{name: name, value: value, comparison_value: prev_value, change: change}
+      else
+        %{name: name, value: value}
+      end
     end
   end
 
@@ -1055,13 +1047,6 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
-    prop_names =
-      if query.filters["event:goal"] do
-        Stats.props(site, query)
-      else
-        %{}
-      end
-
     conversions =
       Stats.breakdown(site, query, "event:goal", [:visitors, :events], {100, 1})
       |> transform_keys(%{
@@ -1071,7 +1056,7 @@ defmodule PlausibleWeb.Api.StatsController do
       })
       |> Enum.map(fn goal ->
         goal
-        |> Map.put(:prop_names, prop_names[goal[:name]])
+        |> Map.put(:prop_names, CustomProps.props_for_goal(site, query))
         |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal[:unique_conversions]))
       end)
 
@@ -1119,15 +1104,7 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
     query = Query.from(site, params) |> Filters.add_prefix()
 
-    prop_names =
-      if query.filters["event:goal"] do
-        {_, {_, goal}} = query.filters["event:goal"]
-
-        Stats.props(site, query)
-        |> Map.get(goal, [])
-      else
-        []
-      end
+    prop_names = Plausible.Stats.CustomProps.props_for_goal(site, query)
 
     values =
       prop_names
@@ -1154,18 +1131,14 @@ defmodule PlausibleWeb.Api.StatsController do
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params) do
-      query =
-        Query.from(site, params)
-        |> Filters.add_prefix()
+    query =
+      Query.from(site, params)
+      |> Filters.add_prefix()
 
-      json(
-        conn,
-        Stats.filter_suggestions(site, query, params["filter_name"], params["q"])
-      )
-    else
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
-    end
+    json(
+      conn,
+      Stats.filter_suggestions(site, query, params["filter_name"], params["q"])
+    )
   end
 
   defp transform_keys(results, keys_to_replace) do
@@ -1263,24 +1236,33 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  defp validate_common_input(conn, _opts) do
+    case validate_params(conn.params) do
+      :ok -> conn
+      {:error, message} when is_binary(message) -> bad_request(conn, message)
+    end
+  end
+
   defp validate_params(params) do
-    with :ok <- validate_date(params),
+    with :ok <- validate_dates(params),
          :ok <- validate_interval(params),
          do: validate_interval_granularity(params)
   end
 
-  defp validate_date(params) do
-    with %{"date" => date} <- params,
-         {:ok, _} <- Date.from_iso8601(date) do
-      :ok
-    else
-      %{} ->
-        :ok
+  defp validate_dates(params) do
+    params
+    |> Map.take(["from", "to", "date"])
+    |> Enum.reduce_while(:ok, fn {key, value}, _ ->
+      case Date.from_iso8601(value) do
+        {:ok, _} ->
+          {:cont, :ok}
 
-      {:error, _reason} ->
-        {:error,
-         "Failed to parse date argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}
-    end
+        _ ->
+          {:halt,
+           {:error,
+            "Failed to parse '#{key}' argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"}}
+      end
+    end)
   end
 
   defp validate_interval(params) do
@@ -1315,5 +1297,22 @@ defmodule PlausibleWeb.Api.StatsController do
     conn
     |> put_status(400)
     |> json(%{error: message})
+    |> halt()
+  end
+
+  defp parse_comparison_opts(params) do
+    [
+      from: params["compare_from"],
+      to: params["compare_to"],
+      match_day_of_week?: params["match_day_of_week"] == "true"
+    ]
+  end
+
+  defp with_imported?(source_query, comparison_query) do
+    cond do
+      source_query.include_imported -> true
+      comparison_query && comparison_query.include_imported -> true
+      true -> false
+    end
   end
 end
