@@ -230,8 +230,6 @@ defmodule Plausible.Ingestion.Request do
       decoded
     else
       already_a_map when is_map(already_a_map) -> already_a_map
-      {:ok, _list_or_other} -> %{}
-      {:error, _decode_error} -> %{}
       _any -> %{}
     end
   end
