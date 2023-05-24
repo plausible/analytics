@@ -533,21 +533,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def delete_me(conn, params) do
-    user =
-      conn.assigns[:current_user]
-      |> Repo.preload(site_memberships: :site)
-      |> Repo.preload(:subscription)
-
-    for membership <- user.site_memberships do
-      Repo.delete!(membership)
-
-      if membership.role == :owner do
-        Plausible.Site.Removal.run(membership.site.domain)
-      end
-    end
-
-    if user.subscription, do: Repo.delete!(user.subscription)
-    Repo.delete!(user)
+    Plausible.Auth.delete_user(conn.assigns[:current_user])
 
     logout(conn, params)
   end

@@ -692,6 +692,8 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
+      assert Repo.reload(site) == nil
+      assert Repo.reload(user) == nil
     end
 
     test "deletes sites that the user owns", %{conn: conn, user: user, site: owner_site} do
