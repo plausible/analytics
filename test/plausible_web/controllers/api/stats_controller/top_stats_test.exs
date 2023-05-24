@@ -18,8 +18,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert %{
-               "change" => 100,
-               "comparison_value" => 0,
                "name" => "Unique visitors",
                "value" => 2
              } in res["top_stats"]
@@ -37,8 +35,6 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert %{
-               "change" => 100,
-               "comparison_value" => 0,
                "name" => "Total pageviews",
                "value" => 3
              } in res["top_stats"]
@@ -56,9 +52,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"change" => 100, "comparison_value" => 0, "name" => "Total visits", "value" => 3} in res[
-               "top_stats"
-             ]
+      assert %{"name" => "Total visits", "value" => 3} in res["top_stats"]
     end
 
     test "counts pages per visit", %{conn: conn, site: site} do
@@ -73,12 +67,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0.0,
-               "name" => "Views per visit",
-               "value" => 1.33
-             } in res["top_stats"]
+      assert %{"name" => "Views per visit", "value" => 1.33} in res["top_stats"]
     end
 
     test "calculates bounce rate", %{conn: conn, site: site} do
@@ -92,9 +81,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"change" => nil, "comparison_value" => 0, "name" => "Bounce rate", "value" => 50} in res[
-               "top_stats"
-             ]
+      assert %{"name" => "Bounce rate", "value" => 50} in res["top_stats"]
     end
 
     test "calculates average visit duration", %{conn: conn, site: site} do
@@ -116,12 +103,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Visit duration",
-               "value" => 450
-             } in res["top_stats"]
+      assert %{"name" => "Visit duration", "value" => 450} in res["top_stats"]
     end
 
     test "calculates time on page instead when filtered for page", %{conn: conn, site: site} do
@@ -152,9 +134,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"change" => 100, "comparison_value" => 0, "name" => "Time on page", "value" => 900} in res[
-               "top_stats"
-             ]
+      assert %{"name" => "Time on page", "value" => 900} in res["top_stats"]
     end
 
     test "calculates time on page when filtered for multiple pages", %{
@@ -193,9 +173,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"change" => 100, "comparison_value" => 0, "name" => "Time on page", "value" => 480} in res[
-               "top_stats"
-             ]
+      assert %{"name" => "Time on page", "value" => 480} in res["top_stats"]
     end
 
     test "calculates time on page when filtered for multiple negated pages", %{
@@ -234,9 +212,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"change" => 100, "comparison_value" => 0, "name" => "Time on page", "value" => 60} in res[
-               "top_stats"
-             ]
+      assert %{"name" => "Time on page", "value" => 60} in res["top_stats"]
     end
 
     test "calculates time on page when filtered for multiple wildcard pages", %{
@@ -276,9 +252,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"change" => 100, "comparison_value" => 0, "name" => "Time on page", "value" => 480} in res[
-               "top_stats"
-             ]
+      assert %{"name" => "Time on page", "value" => 480} in res["top_stats"]
     end
 
     test "calculates time on page when filtered for multiple negated wildcard pages", %{
@@ -320,9 +294,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"change" => 100, "comparison_value" => 0, "name" => "Time on page", "value" => 600} in res[
-               "top_stats"
-             ]
+      assert %{"name" => "Time on page", "value" => 600} in res["top_stats"]
     end
   end
 
@@ -357,42 +329,12 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert res["top_stats"] == [
-               %{
-                 "change" => 100,
-                 "comparison_value" => 0,
-                 "name" => "Unique visitors",
-                 "value" => 3
-               },
-               %{
-                 "change" => 100,
-                 "comparison_value" => 0,
-                 "name" => "Total visits",
-                 "value" => 3
-               },
-               %{
-                 "change" => 100,
-                 "comparison_value" => 0,
-                 "name" => "Total pageviews",
-                 "value" => 4
-               },
-               %{
-                 "change" => 100,
-                 "comparison_value" => 0.0,
-                 "name" => "Views per visit",
-                 "value" => 1.5
-               },
-               %{
-                 "change" => nil,
-                 "comparison_value" => 0,
-                 "name" => "Bounce rate",
-                 "value" => 33
-               },
-               %{
-                 "change" => 100,
-                 "comparison_value" => 0,
-                 "name" => "Visit duration",
-                 "value" => 303
-               }
+               %{"name" => "Unique visitors", "value" => 3},
+               %{"name" => "Total visits", "value" => 3},
+               %{"name" => "Total pageviews", "value" => 4},
+               %{"name" => "Views per visit", "value" => 1.5},
+               %{"name" => "Bounce rate", "value" => 33},
+               %{"name" => "Visit duration", "value" => 303}
              ]
     end
   end
@@ -498,12 +440,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Unique visitors",
-               "value" => 2
-             } in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
     end
 
     test "page glob filter", %{conn: conn, site: site} do
@@ -523,12 +460,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Unique visitors",
-               "value" => 2
-             } in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
     end
 
     test "contains (~) filter", %{conn: conn, site: site} do
@@ -548,12 +480,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Unique visitors",
-               "value" => 2
-             } in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
     end
 
     test "returns only visitors with specific screen size", %{conn: conn, site: site} do
@@ -573,12 +500,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Unique visitors",
-               "value" => 2
-             } in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
     end
 
     test "returns only visitors with specific browser", %{conn: conn, site: site} do
@@ -598,12 +520,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Unique visitors",
-               "value" => 2
-             } in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
     end
 
     test "returns only visitors with specific operating system", %{conn: conn, site: site} do
@@ -623,12 +540,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Unique visitors",
-               "value" => 2
-             } in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 2} in res["top_stats"]
     end
 
     test "returns number of visits from one specific referral source", %{conn: conn, site: site} do
@@ -661,9 +573,31 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"change" => 100, "comparison_value" => 0, "name" => "Total visits", "value" => 2} in res[
-               "top_stats"
-             ]
+      assert %{"name" => "Total visits", "value" => 2} in res["top_stats"]
+    end
+
+    test "does not return the views_per_visit metric when a page filter is applied", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/")
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      refute Enum.any?(res["top_stats"], fn
+               %{"name" => "Views per visit"} -> true
+               _ -> false
+             end)
     end
   end
 
@@ -688,12 +622,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Unique visitors",
-               "value" => 3
-             } in res["top_stats"]
+      assert %{"name" => "Unique visitors", "value" => 3} in res["top_stats"]
     end
 
     test "returns converted visitors", %{conn: conn, site: site} do
@@ -714,12 +643,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0,
-               "name" => "Unique conversions",
-               "value" => 1
-             } in res["top_stats"]
+      assert %{"name" => "Unique conversions", "value" => 1} in res["top_stats"]
     end
 
     test "returns conversion rate", %{conn: conn, site: site} do
@@ -740,15 +664,10 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => 100,
-               "comparison_value" => 0.0,
-               "name" => "Conversion rate",
-               "value" => 33.3
-             } in res["top_stats"]
+      assert %{"name" => "Conversion rate", "value" => 33.3} in res["top_stats"]
     end
 
-    test "returns conversion rate with change=nil when comparison mode disallowed", %{
+    test "returns conversion rate without change when comparison mode disallowed", %{
       conn: conn,
       site: site
     } do
@@ -764,22 +683,17 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}"
+          "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}&comparison_mode=year_over_year"
         )
 
       res = json_response(conn, 200)
 
-      assert %{
-               "change" => nil,
-               "comparison_value" => nil,
-               "name" => "Conversion rate",
-               "value" => 33.3
-             } in res["top_stats"]
+      assert %{"name" => "Conversion rate", "value" => 33.3} in res["top_stats"]
     end
   end
 
   describe "GET /api/stats/top-stats - with comparisons" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "defaults to previous period when comparison is not set", %{site: site, conn: conn} do
       populate_stats(site, [
@@ -794,9 +708,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"change" => 50, "comparison_value" => 2, "name" => "Total visits", "value" => 3} in res[
-               "top_stats"
-             ]
+      assert %{"name" => "Total visits", "value" => 3} in res["top_stats"]
     end
 
     test "returns comparison data when mode is custom", %{site: site, conn: conn} do
@@ -846,6 +758,102 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                "from" => "2021-01-01",
                "to" => "2021-01-31"
              } = json_response(conn, 200)
+    end
+
+    test "compares native and imported data", %{site: site, conn: conn} do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      site
+      |> Ecto.Changeset.change(
+        imported_data: %{
+          start_date: ~D[2005-01-01],
+          end_date: ~D[2020-01-31],
+          source: "Google Analytics",
+          status: "ok"
+        }
+      )
+      |> Plausible.Repo.update!()
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=true&comparison=year_over_year"
+        )
+
+      assert %{"top_stats" => top_stats, "with_imported" => true} = json_response(conn, 200)
+
+      assert %{"change" => 100, "comparison_value" => 2, "name" => "Total visits", "value" => 4} in top_stats
+    end
+
+    test "does not compare imported data when with_imported is set to false", %{
+      site: site,
+      conn: conn
+    } do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      site
+      |> Ecto.Changeset.change(
+        imported_data: %{
+          start_date: ~D[2005-01-01],
+          end_date: ~D[2020-01-31],
+          source: "Google Analytics",
+          status: "ok"
+        }
+      )
+      |> Plausible.Repo.update!()
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=month&date=2021-01-01&with_imported=false&comparison=year_over_year"
+        )
+
+      assert %{"top_stats" => top_stats, "with_imported" => false} = json_response(conn, 200)
+
+      assert %{"change" => 100, "comparison_value" => 0, "name" => "Total visits", "value" => 4} in top_stats
+    end
+
+    test "compares conversion rates", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2023-01-03T00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2023-01-03T00:00:00]),
+        build(:pageview, timestamp: ~N[2023-01-03T00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2023-01-03T00:00:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2023-01-02T00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2023-01-02T00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2023-01-02T00:00:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2023-01-03&comparison=previous_period&filters=#{filters}"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{
+               "change" => -50,
+               "comparison_value" => 66.7,
+               "name" => "Conversion rate",
+               "value" => 33.3
+             } in res["top_stats"]
     end
   end
 end

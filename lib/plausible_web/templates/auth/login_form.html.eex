@@ -1,7 +1,7 @@
 <%= form_for @conn, "/login", [class: "w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mt-8"], fn f -> %>
-  <h1 class="text-xl font-black dark:text-gray-100"><%= get_flash(@conn, :login_title) || "Enter your email and password" %></h1>
-  <%= if get_flash(@conn, :login_instructions) do %>
-    <p class="text-gray-500 text-sm mt-1 mb-2"><%= get_flash(@conn, :login_instructions) %></p>
+  <h1 class="text-xl font-black dark:text-gray-100"><%= Phoenix.Flash.get(@flash, :login_title) || "Enter your email and password" %></h1>
+  <%= if Phoenix.Flash.get(@flash, :login_instructions) do %>
+    <p class="text-gray-500 text-sm mt-1 mb-2"><%= Phoenix.Flash.get(@flash, :login_instructions) %></p>
   <% end %>
   <%= if @conn.assigns[:error] do %>
     <div class="text-red-500 text-xs italic mt-4"><%= @conn.assigns[:error] %></div>

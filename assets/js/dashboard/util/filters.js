@@ -55,9 +55,7 @@ function parsePrefix(rawValue) {
   const type = Object.keys(FILTER_PREFIXES)
     .find(type => FILTER_PREFIXES[type] === rawValue[0]) || FILTER_TYPES.is;
 
-  const value = [FILTER_TYPES.isNot, FILTER_TYPES.contains].includes(type)
-    ? rawValue.substring(1)
-    : rawValue;
+  const value = type === FILTER_TYPES.is ? rawValue : rawValue.substring(1)
 
   const values = value
     .split(NON_ESCAPED_PIPE_REGEX)

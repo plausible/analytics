@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Aggregate do
   alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
-  import Plausible.Stats.{Base, Imported}
+  import Plausible.Stats.{Base, Imported, Util}
 
   @event_metrics [:visitors, :pageviews, :events, :sample_percent]
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
@@ -40,9 +40,10 @@ defmodule Plausible.Stats.Aggregate do
   defp aggregate_sessions(site, query, metrics) do
     from(e in query_sessions(site, query), select: %{})
     |> filter_converted_sessions(site, query)
-    |> select_session_metrics(metrics)
+    |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
+    |> remove_internal_visits_metric()
   end
 
   defp aggregate_time_on_page(site, query) do

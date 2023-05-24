@@ -6,13 +6,16 @@ defmodule PlausibleWeb.ControllerHelpers do
     conn
     |> put_status(status)
     |> put_view(PlausibleWeb.ErrorView)
-    |> render("#{status}.html", layout: false, message: message)
+    |> render("#{status}.html", message: message, layout: error_layout())
   end
 
   def render_error(conn, status) do
     conn
     |> put_status(status)
     |> put_view(PlausibleWeb.ErrorView)
-    |> render("#{status}.html", layout: false)
+    |> render("#{status}.html", layout: error_layout())
   end
+
+  defp error_layout,
+    do: Application.get_env(:plausible, PlausibleWeb.Endpoint)[:render_errors][:layout]
 end

@@ -1,4 +1,4 @@
-CREATE TABLE sessions_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+CREATE TABLE IF NOT EXISTS sessions_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
 (
     `session_id` UInt64,
     `sign` Int8,

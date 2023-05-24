@@ -1,9 +1,0 @@
-CREATE DICTIONARY domains_lookup (
-`id` UInt64,
-`site_id` UInt64,
-`domain` String,
-`partition` String
-) PRIMARY KEY domain
-SOURCE(HTTP(URL '<%= @dict_url %>' CREDENTIALS(user 'user' password '<%= @dict_password %>') FORMAT 'CSVWithNames'))
-LIFETIME(3600)
-LAYOUT(COMPLEX_KEY_HASHED())

@@ -52,14 +52,14 @@ jobs:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
       - name: Restore dependencies cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-mix-v3-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-v3-
+          key: ${{ runner.os }}-mix-v4-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-v4-
       - name: Install dependencies
         run: mix deps.get && npm install --prefix ./tracker
       - name: Check Formatting
@@ -70,12 +70,8 @@ jobs:
         run: npm run deploy --prefix ./tracker
       - name: Check Credo Warnings
         run: mix credo diff --from-git-merge-base origin/master
-      - name: Run tests (against v1 schema)
+      - name: Run tests
         run: mix test --include slow --max-failures 1 --warnings-as-errors
-      - name: Run tests (against v2 schema)
-        run: mix test --include slow --max-failures 1 --warnings-as-errors
-        env:
-          V2_MIGRATION_DONE: 1
       - name: Check Dialyzer
         run: mix dialyzer
 env:

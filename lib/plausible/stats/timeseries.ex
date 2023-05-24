@@ -46,7 +46,7 @@ defmodule Plausible.Stats.Timeseries do
     from(e in query_sessions(site, query), select: %{})
     |> filter_converted_sessions(site, query)
     |> select_bucket(site, query)
-    |> select_session_metrics(metrics)
+    |> select_session_metrics(metrics, query)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
     |> remove_internal_visits_metric(metrics)

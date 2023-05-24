@@ -234,11 +234,26 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
   describe "suggestions for props" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "returns suggestions for prop key with no filter", %{conn: conn, site: site} do
+    test "returns suggestions for prop key ordered by count", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           "meta.key": ["author"],
           "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
           timestamp: ~N[2022-01-01 00:00:00]
         ),
         build(:pageview,
@@ -256,14 +271,22 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
 
-      assert json_response(conn, 200) |> Enum.map(& &1["value"]) |> Enum.sort() == [
-               "author",
-               "dark_mode",
-               "logged_in"
+      assert json_response(conn, 200) == [
+               %{"label" => "author", "value" => "author"},
+               %{"label" => "logged_in", "value" => "logged_in"},
+               %{"label" => "dark_mode", "value" => "dark_mode"}
              ]
     end
 
-    test "returns suggestions for prop key with value filter", %{conn: conn, site: site} do
+    test "returns suggestions for prop key based on site.allowed_event_props list", %{
+      conn: conn,
+      site: site
+    } do
+      site =
+        site
+        |> Plausible.Site.set_allowed_event_props(["author"])
+        |> Plausible.Repo.update!()
+
       populate_stats(site, [
         build(:pageview,
           "meta.key": ["author"],
@@ -271,61 +294,30 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           timestamp: ~N[2022-01-01 00:00:00]
         ),
         build(:pageview,
-          "meta.key": ["logged_in"],
-          "meta.value": ["true"],
+          "meta.key": ["garbage1"],
+          "meta.value": ["somegarbage1"],
           timestamp: ~N[2022-01-01 00:00:00]
         ),
         build(:pageview,
-          "meta.key": ["dark_mode"],
-          "meta.value": ["true"],
-          timestamp: ~N[2022-01-01 00:00:00]
-        )
-      ])
-
-      filters = Jason.encode!(%{props: %{"": "true"}})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) |> Enum.map(& &1["value"]) |> Enum.sort() == [
-               "dark_mode",
-               "logged_in"
-             ]
-    end
-
-    test "returns suggestions for prop value with no filter", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          "meta.key": ["author"],
-          "meta.value": ["Uku Taht"],
-          timestamp: ~N[2022-01-01 00:00:00]
-        ),
-        build(:pageview,
-          "meta.key": ["logged_in"],
-          "meta.value": ["false"],
-          timestamp: ~N[2022-01-01 00:00:00]
-        ),
-        build(:pageview,
-          "meta.key": ["dark_mode"],
-          "meta.value": ["true"],
+          "meta.key": ["garbage2"],
+          "meta.value": ["somegarbage2"],
           timestamp: ~N[2022-01-01 00:00:00]
         )
       ])
 
       conn =
-        get(conn, "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01")
+        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
 
-      assert json_response(conn, 200) |> Enum.map(& &1["value"]) |> Enum.sort() == [
-               "Uku Taht",
-               "false",
-               "true"
+      assert json_response(conn, 200) == [
+               %{"label" => "author", "value" => "author"}
              ]
     end
 
-    test "returns suggestions for prop value with filter on prop key", %{conn: conn, site: site} do
+    test "does not filter out prop key suggestions by default (when site.allowed_event_props is nil)",
+         %{
+           conn: conn,
+           site: site
+         } do
       populate_stats(site, [
         build(:pageview,
           "meta.key": ["author"],
@@ -333,13 +325,45 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           timestamp: ~N[2022-01-01 00:00:00]
         ),
         build(:pageview,
-          "meta.key": ["logged_in"],
-          "meta.value": ["false"],
+          "meta.key": ["garbage1"],
+          "meta.value": ["somegarbage1"],
           timestamp: ~N[2022-01-01 00:00:00]
         ),
         build(:pageview,
-          "meta.key": ["dark_mode"],
-          "meta.value": ["true"],
+          "meta.key": ["garbage2"],
+          "meta.value": ["somegarbage2"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
+
+      suggestions = json_response(conn, 200)
+      assert %{"label" => "author", "value" => "author"} in suggestions
+      assert %{"label" => "garbage1", "value" => "garbage1"} in suggestions
+      assert %{"label" => "garbage2", "value" => "garbage2"} in suggestions
+    end
+
+    test "returns suggestions for prop value ordered by count, but (none) value is always first",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Marko Saric"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
           timestamp: ~N[2022-01-01 00:00:00]
         )
       ])
@@ -352,7 +376,47 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
           "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) |> Enum.map(& &1["value"]) |> Enum.sort() == ["Uku Taht"]
+      assert json_response(conn, 200) == [
+               %{"label" => "(none)", "value" => "(none)"},
+               %{"label" => "Uku Taht", "value" => "Uku Taht"},
+               %{"label" => "Marko Saric", "value" => "Marko Saric"}
+             ]
+    end
+
+    test "does not show (none) value suggestion when all events have that prop_key", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Marko Saric"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{author: "!(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_value?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "Uku Taht", "value" => "Uku Taht"},
+               %{"label" => "Marko Saric", "value" => "Marko Saric"}
+             ]
     end
 
     test "when date is borked, bad request is returned", %{
@@ -385,7 +449,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
       assert json_response(conn, 400) == %{
                "error" =>
-                 "Failed to parse date argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"
+                 "Failed to parse 'date' argument. Only ISO 8601 dates are allowed, e.g. `2019-09-07`, `2020-01-01`"
              }
     end
   end

@@ -7,7 +7,7 @@ config :plausible, PlausibleWeb.Endpoint,
   pubsub_server: Plausible.PubSub,
   render_errors: [
     view: PlausibleWeb.ErrorView,
-    layout: {PlausibleWeb.LayoutView, "focus.html"},
+    layout: {PlausibleWeb.LayoutView, "base_error.html"},
     accepts: ~w(html json)
   ]
 
@@ -53,5 +53,9 @@ config :plausible,
   sites_by_domain_cache_refresh_interval: :timer.minutes(15)
 
 config :plausible, Plausible.Ingestion.Counters, enabled: true
+
+config :ex_cldr,
+  default_locale: "en",
+  default_backend: Plausible.Cldr
 
 import_config "#{config_env()}.exs"

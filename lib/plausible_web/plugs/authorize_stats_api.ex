@@ -32,7 +32,7 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
       {:error, :rate_limit, limit} ->
         H.too_many_requests(
           conn,
-          "Too many API requests. Your API key is limited to #{limit} requests per hour."
+          "Too many API requests. Your API key is limited to #{limit} requests per hour. Please contact us to request more capacity."
         )
 
       {:error, :invalid_api_key} ->

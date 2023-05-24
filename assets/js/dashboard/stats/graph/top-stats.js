@@ -15,18 +15,18 @@ function Maybe({condition, children}) {
 }
 
 export default class TopStats extends React.Component {
-  renderPercentageComparison(name, comparison, forceDarkMode = false) {
+  renderPercentageComparison(name, comparison, forceDarkBg = false) {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     const defaultClassName = classNames({
-      "text-xs dark:text-gray-100": !forceDarkMode,
-      "text-xs text-gray-100": forceDarkMode
-    })
+       "text-xs dark:text-gray-100": !forceDarkBg,
+       "text-xs text-gray-100": forceDarkBg
+     })
 
-    const noChangeClassName = classNames({
-      "text-xs text-gray-700 dark:text-gray-300": !forceDarkMode,
-      "text-xs text-gray-300": forceDarkMode
-    })
+     const noChangeClassName = classNames({
+       "text-xs text-gray-700 dark:text-gray-300": !forceDarkBg,
+       "text-xs text-gray-300": forceDarkBg
+     })
 
     if (comparison > 0) {
       const color = name === 'Bounce rate' ? 'text-red-400' : 'text-green-500'
@@ -142,7 +142,7 @@ export default class TopStats extends React.Component {
                 <span className="flex items-center justify-between whitespace-nowrap">
                   <p className="font-bold text-xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat.name, stat.value)}</p>
                   <Maybe condition={!query.comparison}>
-                    {this.renderPercentageComparison(stat.name, stat.change)}
+                    { this.renderPercentageComparison(stat.name, stat.change) }
                   </Maybe>
                 </span>
                   <Maybe condition={query.comparison}>

@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     # for now this only allows to change the domain
     site = Sites.get_for_user(conn.assigns[:current_user].id, site_id, [:owner, :admin])
 
-    if site && Plausible.v2?() do
+    if site do
       case Plausible.Site.Domain.change(site, params["domain"]) do
         {:ok, site} ->
           json(conn, site)

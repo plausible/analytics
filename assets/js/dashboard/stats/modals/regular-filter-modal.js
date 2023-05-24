@@ -11,21 +11,6 @@ import { shouldIgnoreKeypress } from '../../keybinding'
 import { isFreeChoiceFilter } from "../../util/filters";
 
 function getFormState(filterGroup, query) {
-  if (filterGroup === 'props') {
-    const propsObject = query.filters['props']
-    const entries = propsObject && Object.entries(propsObject)
-
-    if (entries && entries.length == 1) {
-      const [[propKey, _propVal]] = entries
-      const {type, clauses} = parseQueryFilter(query, 'props')
-
-      return {
-        'prop_key': { type: FILTER_TYPES.is, clauses: [{label: propKey, value: propKey}] },
-        'prop_value': { type, clauses }
-      }
-    }
-  }
-
   return FILTER_GROUPS[filterGroup].reduce((result, filter) => {
     const {type, clauses} = parseQueryFilter(query, filter)
 
@@ -47,7 +32,8 @@ class RegularFilterModal extends React.Component {
     super(props)
     const query = parseQuery(props.location.search, props.site)
     const formState = getFormState(props.filterGroup, query)
-
+    
+    this.handleKeydown = this.handleKeydown.bind(this)
     this.state = { query, formState }
   }
 
@@ -75,12 +61,6 @@ class RegularFilterModal extends React.Component {
       if (filterKey === 'country') { res.push({ filter: 'country_labels', value: clauses.map(clause => clause.label).join('|') }) }
       if (filterKey === 'region') { res.push({ filter: 'region_labels', value: clauses.map(clause => clause.label).join('|') }) }
       if (filterKey === 'city') { res.push({ filter: 'city_labels', value: clauses.map(clause => clause.label).join('|') }) }
-      if (filterKey === 'prop_value') { return res }
-      if (filterKey === 'prop_key') {
-        const [{value: propKey}] = clauses
-        res.push({ filter: 'props', value: JSON.stringify({ [propKey]: toFilterQuery(formState.prop_value.type, formState.prop_value.clauses) }) })
-        return res
-      }
 
       res.push({ filter: filterKey, value: toFilterQuery(type, clauses) })
       return res
@@ -125,15 +105,7 @@ class RegularFilterModal extends React.Component {
   }
 
   queryForSuggestions(query, formFilters, filter) {
-    if (filter === 'prop_key') {
-      const propsFilter = formFilters.prop_value ? { '': formFilters.prop_value } : null
-      return { ...query, filters: { ...query.filters, props: propsFilter } }
-    } else if (filter === 'prop_value') {
-      const propsFilter = formFilters.prop_key ? { [formFilters.prop_key]: '!(none)' } : null
-      return { ...query, filters: { ...query.filters, props: propsFilter } }
-    } else {
-      return { ...query, filters: { ...query.filters, ...formFilters, [filter]: this.negate(formFilters[filter]) } }
-    }
+    return { ...query, filters: { ...query.filters, ...formFilters, [filter]: this.negate(formFilters[filter]) } }
   }
 
   negate(filterVal) {
@@ -153,11 +125,7 @@ class RegularFilterModal extends React.Component {
   }
 
   isDisabled() {
-    if (this.props.filterGroup === 'props') {
-      return Object.entries(this.state.formState).some(([_key, { clauses }]) => clauses.length === 0)
-    } else {
-      return Object.entries(this.state.formState).every(([_key, { clauses }]) => clauses.length === 0)
-    }
+    return Object.entries(this.state.formState).every(([_key, { clauses }]) => clauses.length === 0)
   }
 
   selectFiltersAndCloseModal(filters) {
@@ -181,9 +149,13 @@ class RegularFilterModal extends React.Component {
       return (
         <div className="mt-4" key={filter}>
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{formattedFilters[filter]}</div>
-          <div className="flex items-start mt-1">
-            <FilterTypeSelector forFilter={filter} onSelect={this.onFilterTypeSelect(filter)} selectedType={this.selectedFilterType(filter)}/>
-            <Combobox fetchOptions={this.fetchOptions(filter)} freeChoice={isFreeChoiceFilter(filter)} values={this.state.formState[filter].clauses} onSelect={this.onComboboxSelect(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`} />
+          <div className="grid grid-cols-11 mt-1">
+            <div className="col-span-3 mr-2">
+              <FilterTypeSelector forFilter={filter} onSelect={this.onFilterTypeSelect(filter)} selectedType={this.selectedFilterType(filter)}/>
+            </div>
+            <div className="col-span-8">
+              <Combobox fetchOptions={this.fetchOptions(filter)} freeChoice={isFreeChoiceFilter(filter)} values={this.state.formState[filter].clauses} onSelect={this.onComboboxSelect(filter)} placeholder={`Select ${withIndefiniteArticle(formattedFilters[filter])}`}/>
+            </div>
           </div>
         </div>
       )
