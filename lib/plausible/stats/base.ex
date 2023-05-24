@@ -514,7 +514,7 @@ defmodule Plausible.Stats.Base do
 
   defp add_sample_hint(db_q, query) do
     case query.sample_threshold do
-      "infinite" ->
+      :infinite ->
         db_q
 
       threshold ->

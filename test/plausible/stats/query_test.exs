@@ -142,6 +142,16 @@ defmodule Plausible.Stats.QueryTest do
     assert q.interval == "date"
   end
 
+  test "adds sample_threshold :infinite to query struct" do
+    q = Query.from(@site, %{"period" => "30d", "sample_threshold" => "infinite"})
+    assert q.sample_threshold == :infinite
+  end
+
+  test "casts sample_threshold to integer in query struct" do
+    q = Query.from(@site, %{"period" => "30d", "sample_threshold" => "30000000"})
+    assert q.sample_threshold == 30_000_000
+  end
+
   describe "filters" do
     test "parses goal filter" do
       filters = Jason.encode!(%{"goal" => "Signup"})

@@ -13,60 +13,53 @@ defmodule Plausible.Stats.Query do
 
   @type t :: %__MODULE__{}
 
-  def from(site, %{"period" => "realtime"} = params) do
+  def from(site, params) do
+    query_by_period(site, params)
+    |> maybe_put_interval(params)
+    |> put_parsed_filters(params)
+    |> put_imported_opts(site, params)
+    |> put_sample_threshold(params)
+  end
+
+  defp query_by_period(site, %{"period" => "realtime"}) do
     date = today(site.timezone)
 
     %__MODULE__{
       period: "realtime",
-      interval: params["interval"] || Interval.default_for_period(params["period"]),
-      date_range: Date.range(date, date),
-      filters: FilterParser.parse_filters(params["filters"]),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+      date_range: Date.range(date, date)
     }
   end
 
-  def from(site, %{"period" => "day"} = params) do
+  defp query_by_period(site, %{"period" => "day"} = params) do
     date = parse_single_date(site.timezone, params)
 
     %__MODULE__{
       period: "day",
-      date_range: Date.range(date, date),
-      interval: params["interval"] || Interval.default_for_period(params["period"]),
-      filters: FilterParser.parse_filters(params["filters"]),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+      date_range: Date.range(date, date)
     }
-    |> put_imported_opts(site, params)
   end
 
-  def from(site, %{"period" => "7d"} = params) do
+  defp query_by_period(site, %{"period" => "7d"} = params) do
     end_date = parse_single_date(site.timezone, params)
     start_date = end_date |> Timex.shift(days: -6)
 
     %__MODULE__{
       period: "7d",
-      date_range: Date.range(start_date, end_date),
-      interval: params["interval"] || Interval.default_for_period(params["period"]),
-      filters: FilterParser.parse_filters(params["filters"]),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+      date_range: Date.range(start_date, end_date)
     }
-    |> put_imported_opts(site, params)
   end
 
-  def from(site, %{"period" => "30d"} = params) do
+  defp query_by_period(site, %{"period" => "30d"} = params) do
     end_date = parse_single_date(site.timezone, params)
     start_date = end_date |> Timex.shift(days: -30)
 
     %__MODULE__{
       period: "30d",
-      date_range: Date.range(start_date, end_date),
-      interval: params["interval"] || Interval.default_for_period(params["period"]),
-      filters: FilterParser.parse_filters(params["filters"]),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+      date_range: Date.range(start_date, end_date)
     }
-    |> put_imported_opts(site, params)
   end
 
-  def from(site, %{"period" => "month"} = params) do
+  defp query_by_period(site, %{"period" => "month"} = params) do
     date = parse_single_date(site.timezone, params)
 
     start_date = Timex.beginning_of_month(date)
@@ -74,15 +67,11 @@ defmodule Plausible.Stats.Query do
 
     %__MODULE__{
       period: "month",
-      date_range: Date.range(start_date, end_date),
-      interval: params["interval"] || Interval.default_for_period(params["period"]),
-      filters: FilterParser.parse_filters(params["filters"]),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+      date_range: Date.range(start_date, end_date)
     }
-    |> put_imported_opts(site, params)
   end
 
-  def from(site, %{"period" => "6mo"} = params) do
+  defp query_by_period(site, %{"period" => "6mo"} = params) do
     end_date =
       parse_single_date(site.timezone, params)
       |> Timex.end_of_month()
@@ -93,15 +82,11 @@ defmodule Plausible.Stats.Query do
 
     %__MODULE__{
       period: "6mo",
-      date_range: Date.range(start_date, end_date),
-      interval: params["interval"] || Interval.default_for_period(params["period"]),
-      filters: FilterParser.parse_filters(params["filters"]),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+      date_range: Date.range(start_date, end_date)
     }
-    |> put_imported_opts(site, params)
   end
 
-  def from(site, %{"period" => "12mo"} = params) do
+  defp query_by_period(site, %{"period" => "12mo"} = params) do
     end_date =
       parse_single_date(site.timezone, params)
       |> Timex.end_of_month()
@@ -112,15 +97,11 @@ defmodule Plausible.Stats.Query do
 
     %__MODULE__{
       period: "12mo",
-      date_range: Date.range(start_date, end_date),
-      interval: params["interval"] || Interval.default_for_period(params["period"]),
-      filters: FilterParser.parse_filters(params["filters"]),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+      date_range: Date.range(start_date, end_date)
     }
-    |> put_imported_opts(site, params)
   end
 
-  def from(site, %{"period" => "year"} = params) do
+  defp query_by_period(site, %{"period" => "year"} = params) do
     end_date =
       parse_single_date(site.timezone, params)
       |> Timex.end_of_year()
@@ -129,76 +110,67 @@ defmodule Plausible.Stats.Query do
 
     %__MODULE__{
       period: "year",
-      date_range: Date.range(start_date, end_date),
-      interval: params["interval"] || Interval.default_for_period(params["period"]),
-      filters: FilterParser.parse_filters(params["filters"]),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+      date_range: Date.range(start_date, end_date)
     }
-    |> put_imported_opts(site, params)
   end
 
-  def from(site, %{"period" => "all"} = params) do
+  defp query_by_period(site, %{"period" => "all"}) do
     now = today(site.timezone)
     start_date = Plausible.Site.local_start_date(site) || now
 
-    cond do
-      Timex.diff(now, start_date, :months) > 0 ->
-        from(
-          site,
-          Map.merge(params, %{
-            "period" => "custom",
-            "from" => Date.to_iso8601(start_date),
-            "to" => Date.to_iso8601(now),
-            "interval" => params["interval"] || "month"
-          })
-        )
-        |> Map.put(:period, "all")
+    date_range = Date.range(start_date, now)
 
-      Timex.diff(now, start_date, :days) > 0 ->
-        from(
-          site,
-          Map.merge(params, %{
-            "period" => "custom",
-            "from" => Date.to_iso8601(start_date),
-            "to" => Date.to_iso8601(now),
-            "interval" => params["interval"] || "date"
-          })
-        )
-        |> Map.put(:period, "all")
-
-      true ->
-        from(site, Map.merge(params, %{"period" => "day", "date" => "today"}))
-        |> Map.put(:period, "all")
-    end
+    %__MODULE__{
+      period: "all",
+      date_range: date_range,
+      interval: Interval.default_for_date_range(date_range)
+    }
   end
 
-  def from(site, %{"period" => "custom", "from" => from, "to" => to} = params) do
+  defp query_by_period(site, %{"period" => "custom", "from" => from, "to" => to} = params) do
     new_params =
       params
-      |> Map.delete("from")
-      |> Map.delete("to")
+      |> Map.drop(["from", "to"])
       |> Map.put("date", Enum.join([from, to], ","))
 
-    from(site, new_params)
+    query_by_period(site, new_params)
   end
 
-  def from(site, %{"period" => "custom", "date" => date} = params) do
+  defp query_by_period(_site, %{"period" => "custom", "date" => date}) do
     [from, to] = String.split(date, ",")
     from_date = Date.from_iso8601!(String.trim(from))
     to_date = Date.from_iso8601!(String.trim(to))
 
     %__MODULE__{
       period: "custom",
-      date_range: Date.range(from_date, to_date),
-      interval: params["interval"] || Interval.default_for_period(params["period"]),
-      filters: FilterParser.parse_filters(params["filters"]),
-      sample_threshold: Map.get(params, "sample_threshold", @default_sample_threshold)
+      date_range: Date.range(from_date, to_date)
     }
-    |> put_imported_opts(site, params)
   end
 
-  def from(tz, params) do
-    __MODULE__.from(tz, Map.merge(params, %{"period" => "30d"}))
+  defp query_by_period(site, params) do
+    query_by_period(site, Map.merge(params, %{"period" => "30d"}))
+  end
+
+  defp maybe_put_interval(%{interval: nil} = query, params) do
+    interval = Map.get(params, "interval", Interval.default_for_period(query.period))
+    Map.put(query, :interval, interval)
+  end
+
+  defp maybe_put_interval(query, _), do: query
+
+  defp put_parsed_filters(query, params) do
+    Map.put(query, :filters, FilterParser.parse_filters(params["filters"]))
+  end
+
+  defp put_sample_threshold(query, params) do
+    sample_threshold =
+      case params["sample_threshold"] do
+        nil -> @default_sample_threshold
+        "infinite" -> :infinite
+        value -> String.to_integer(value)
+      end
+
+    Map.put(query, :sample_threshold, sample_threshold)
   end
 
   def put_filter(query, key, val) do
@@ -244,7 +216,7 @@ defmodule Plausible.Stats.Query do
     case params["date"] do
       "today" -> Timex.now(tz) |> Timex.to_date()
       date when is_binary(date) -> Date.from_iso8601!(date)
-      _ -> Timex.now(tz) |> Timex.to_date()
+      _ -> today(tz)
     end
   end
 
