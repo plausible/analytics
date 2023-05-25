@@ -110,6 +110,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     ~H"""
     <div class="inline-flex items-center ml-2 mb-2 text-red-600">
       <svg
+        id={"remove-step-#{@step_idx}"}
         class="feather feather-sm cursor-pointer"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -148,7 +149,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def submit_button(assigns) do
     ~H"""
-    <button type="submit" class="button mt-6">Save</button>
+    <button id="save" type="submit" class="button mt-6">Save</button>
     """
   end
 
@@ -156,6 +157,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     ~H"""
     <button
       type="none"
+      id="save"
       class="inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 active:bg-gray-50 transition ease-in-out duration-150 cursor-not-allowed"
     >
       Save
@@ -167,6 +169,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     ~H"""
     <button
       type="button"
+      id="cancel"
       class="inline-block mt-4 ml-2 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150 "
       phx-click="cancel-add-funnel"
     >
