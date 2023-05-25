@@ -38,6 +38,16 @@ defmodule Plausible.Funnels do
     )
   end
 
+  def delete(%Plausible.Site{id: site_id}, funnel_id) do
+    Repo.delete_all(
+      from f in Funnel,
+        where: f.site_id == ^site_id,
+        where: f.id == ^funnel_id
+    )
+
+    :ok
+  end
+
   def get(%Plausible.Site{id: site_id}, by) do
     get(site_id, by)
   end

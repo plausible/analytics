@@ -14,6 +14,10 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.LastSeenPlug
   end
 
+  pipeline :liveview do
+    plug :fetch_live_flash
+  end
+
   pipeline :shared_link do
     plug :accepts, ["html"]
     plug :put_secure_browser_headers
@@ -148,6 +152,11 @@ defmodule PlausibleWeb.Router do
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
   end
 
+  scope "/:website/settings/funnels/", PlausibleWeb do
+    pipe_through [:browser, :csrf, :liveview]
+    get "/", SiteController, :settings_funnels
+  end
+
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
@@ -246,8 +255,6 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/people", SiteController, :settings_people
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
-
-    get "/:website/settings/funnels", SiteController, :settings_funnels
 
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports

@@ -16,7 +16,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
                   <%= funnel.steps_count %>-step funnel
                 </span>
               </span>
-              <%= button(to: "", method: :delete, class: "text-sm text-red-600", data: [confirm: "Are you sure you want to remove funnel '#{funnel.name}'? This will just affect the UI, all of your analytics data will stay intact."]) do %>
+              <button
+                phx-click="delete-funnel"
+                phx-value-funnel-id={funnel.id}
+                class="text-sm text-red-600"
+                data-confirm="Are you sure you want to remove funnel '#{funnel.name}'? This will just affect the UI, all of your analytics data will stay intact."
+              >
                 <svg
                   class="feather feather-sm"
                   xmlns="http://www.w3.org/2000/svg"
@@ -33,7 +38,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
                   <line x1="10" y1="11" x2="10" y2="17"></line>
                   <line x1="14" y1="11" x2="14" y2="17"></line>
                 </svg>
-              <% end %>
+              </button>
             </div>
           <% end %>
         </div>

@@ -54,6 +54,20 @@ defmodule Plausible.FunnelsTest do
     assert [%{step_order: 1}, %{step_order: 2}, %{step_order: 3}] = funnel.steps
   end
 
+  test "funnels can be deleted by id and a site", %{site: site, steps: [g1, g2 | _]} do
+    {:ok, funnel} =
+      Funnels.create(
+        site,
+        "Sample funnel",
+        [g1, g2]
+      )
+
+    assert :ok = Funnels.delete(site, funnel.id)
+    # deletion is idempotent
+    assert :ok = Funnels.delete(site, funnel.id)
+    assert {:error, "Funnel not found"} = Funnels.get(site, funnel.id)
+  end
+
   test "a funnel cannot be made of < 2 steps", %{site: site, steps: [g1 | _]} do
     assert {:error, :invalid_funnel_size} =
              Funnels.create(

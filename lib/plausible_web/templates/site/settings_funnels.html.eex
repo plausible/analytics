@@ -7,7 +7,7 @@
     <% end %>
     </header>
 
-      <script>
-      </script>
+
       <%= live_render(@conn, PlausibleWeb.Live.FunnelSettings, session: %{"site_id" =>  @site.id, "domain" => @site.domain}) %>
+
     </div>
