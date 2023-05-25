@@ -100,6 +100,18 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.uri.host == "dummy.site"
   end
 
+  test "request can be built with numeric event name" do
+    payload = %{
+      n: 404,
+      d: "dummy.site",
+      u: "http://dummy.site/index"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:ok, request} = Request.build(conn)
+    assert request.event_name == "404"
+  end
+
   test "hostname is (none) if host-less uri provided" do
     payload = %{
       name: "pageview",
@@ -235,6 +247,30 @@ defmodule Plausible.Ingestion.RequestTest do
     conn = build_conn(:post, "/api/events", payload)
     assert {:error, changeset} = Request.build(conn)
     assert {"should be at most %{count} character(s)", _} = changeset.errors[:event_name]
+  end
+
+  test "returns validation error when event name is blank" do
+    payload = %{
+      name: nil,
+      domain: "dummy.site",
+      url: "https://dummy.site/"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"can't be blank", _} = changeset.errors[:event_name]
+  end
+
+  test "returns validation error when event name cannot be cast to string" do
+    payload = %{
+      name: ["list", "of", "things"],
+      domain: "dummy.site",
+      url: "https://dummy.site/"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"is invalid", _} = changeset.errors[:event_name]
   end
 
   test "truncates referrer when too long" do

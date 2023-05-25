@@ -119,59 +119,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert NaiveDateTime.compare(e1.timestamp, e2.timestamp) == :gt
     end
 
-    test "can send custom event name", %{conn: conn, site: site} do
-      params = %{
-        name: "custom event",
-        url: "http://www.example.com/path ",
-        domain: site.domain
-      }
-
-      post(conn, "/api/event", params)
-
-      event = get_event(site)
-
-      assert event.name == "custom event"
-    end
-
-    test "numeric names are cast to string", %{conn: conn, site: site} do
-      params = %{
-        name: 404,
-        url: "http://www.example.com/path ",
-        domain: site.domain
-      }
-
-      post(conn, "/api/event", params)
-
-      event = get_event(site)
-
-      assert event.name == "404"
-    end
-
-    test "responds with validation error if name is blank", %{conn: conn, site: site} do
-      params = %{
-        name: nil,
-        url: "http://www.example.com/path ",
-        domain: site.domain
-      }
-
-      conn = post(conn, "/api/event", params)
-      assert json_response(conn, 400) == %{"errors" => %{"event_name" => ["can't be blank"]}}
-    end
-
-    test "responds with validation error if name cannot be cast to string", %{
-      conn: conn,
-      site: site
-    } do
-      params = %{
-        name: ["list", "of", "things"],
-        url: "http://www.example.com/path ",
-        domain: site.domain
-      }
-
-      conn = post(conn, "/api/event", params)
-      assert json_response(conn, 400) == %{"errors" => %{"event_name" => ["is invalid"]}}
-    end
-
     test "www. is stripped from domain", %{conn: conn, site: site} do
       params = %{
         name: "custom event",
