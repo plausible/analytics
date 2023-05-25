@@ -72,6 +72,14 @@ defmodule Plausible.Goals do
     )
   end
 
+  def belongs_to_funnels?(%Goal{id: goal_id}) do
+    belongs_to_funnels?(goal_id)
+  end
+
+  def belongs_to_funnels?(goal_id) do
+    Repo.exists?(from fs in Plausible.Funnel.Step, where: fs.goal_id == ^goal_id)
+  end
+
   def delete(id, site) do
     case Repo.delete_all(
            from(g in Goal,
