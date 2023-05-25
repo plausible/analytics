@@ -1294,14 +1294,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                %{
                  "conversion_rate" => 37.5,
                  "unique_conversions" => 3,
-                 "name" => "Visit /*",
+                 "name" => "Visit /signup/**",
                  "total_conversions" => 3,
                  "prop_names" => []
                },
                %{
                  "conversion_rate" => 37.5,
                  "unique_conversions" => 3,
-                 "name" => "Visit /signup/**",
+                 "name" => "Visit /*",
                  "total_conversions" => 3,
                  "prop_names" => []
                },
@@ -1322,6 +1322,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                %{
                  "conversion_rate" => 12.5,
                  "unique_conversions" => 1,
+                 "name" => "Visit /signup/*",
+                 "total_conversions" => 1,
+                 "prop_names" => []
+               },
+               %{
+                 "conversion_rate" => 12.5,
+                 "unique_conversions" => 1,
                  "name" => "Visit /billing*/success",
                  "total_conversions" => 1,
                  "prop_names" => []
@@ -1330,13 +1337,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "conversion_rate" => 12.5,
                  "unique_conversions" => 1,
                  "name" => "Visit /register",
-                 "total_conversions" => 1,
-                 "prop_names" => []
-               },
-               %{
-                 "conversion_rate" => 12.5,
-                 "unique_conversions" => 1,
-                 "name" => "Visit /signup/*",
                  "total_conversions" => 1,
                  "prop_names" => []
                }
