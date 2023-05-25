@@ -337,6 +337,10 @@ case mailer_adapter do
       api_key: get_var_from_path_or_env(config_dir, "MAILGUN_API_KEY"),
       domain: get_var_from_path_or_env(config_dir, "MAILGUN_DOMAIN")
 
+    if mailgun_base_uri = get_var_from_path_or_env(config_dir, "MAILGUN_BASE_URI") do
+      config :plausible, Plausible.Mailer, base_uri: mailgun_base_uri
+    end
+
   "Bamboo.MandrillAdapter" ->
     config :plausible, Plausible.Mailer,
       adapter: Bamboo.MandrillAdapter,
