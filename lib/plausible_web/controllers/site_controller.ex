@@ -238,15 +238,11 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_funnels(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    funnels = Funnels.list(site)
-    goals = Goals.for_site(site)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_funnels.html",
       site: site,
-      funnels: funnels,
-      goals: goals,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
