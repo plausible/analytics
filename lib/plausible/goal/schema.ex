@@ -21,12 +21,13 @@ defmodule Plausible.Goal do
   import Ecto.Changeset
 
   schema "goals" do
-    field :event_name, :string
-    field :page_path, :string
+    field(:event_name, :string)
+    field(:page_path, :string)
+    field(:currency, Ecto.Enum, values: Money.Currency.known_current_currencies())
 
-    field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
+    many_to_many(:funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step)
 
-    belongs_to :site, Plausible.Site
+    belongs_to(:site, Plausible.Site)
 
     timestamps()
   end

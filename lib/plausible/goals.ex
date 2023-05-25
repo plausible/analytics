@@ -49,7 +49,7 @@ defmodule Plausible.Goals do
 
   def find_or_create(_, %{"goal_type" => "page"}), do: {:missing, "page_path"}
 
-  def for_site(site) do
+  def for_site(site, opts \\ []) do
     query =
       from(g in Goal,
         inner_join: assoc(g, :site),
@@ -57,6 +57,17 @@ defmodule Plausible.Goals do
         order_by: [desc: g.id],
         preload: [:site]
       )
+
+    query =
+      if opts[:preload_funnels?] do
+        from(g in query,
+          left_join: assoc(g, :funnels),
+          group_by: g.id,
+          preload: [:funnels]
+        )
+      else
+        query
+      end
 
     query
     |> Repo.all()
@@ -77,18 +88,22 @@ defmodule Plausible.Goals do
   end
 
   def belongs_to_funnels?(goal_id) do
-    Repo.exists?(from fs in Plausible.Funnel.Step, where: fs.goal_id == ^goal_id)
+    Repo.exists?(from(fs in Plausible.Funnel.Step, where: fs.goal_id == ^goal_id))
   end
 
   def delete(id, site) do
-    case Repo.delete_all(
-           from(g in Goal,
-             where: g.id == ^id,
-             where: g.site_id == ^site.id
-           )
-         ) do
-      {1, _} -> :ok
-      {0, _} -> {:error, :not_found}
+    if not belongs_to_funnels?(id) do
+      case Repo.delete_all(
+             from(g in Goal,
+               where: g.id == ^id,
+               where: g.site_id == ^site.id
+             )
+           ) do
+        {1, _} -> :ok
+        {0, _} -> {:error, :not_found}
+      end
+    else
+      raise "Implement me"
     end
   end
 

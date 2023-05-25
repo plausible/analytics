@@ -47,4 +47,68 @@ defmodule Plausible.GoalsTest do
 
     assert [] = Goals.for_site(site)
   end
+
+  test "goals can be deleted" do
+    site = insert(:site)
+    goal = insert(:goal, %{site: site, event_name: " Signup "})
+    :ok = Goals.delete(goal.id, site)
+    assert [] = Goals.for_site(site)
+  end
+
+  test "goals can be fetched with funnel count preloaded" do
+    site = insert(:site)
+
+    goals =
+      Enum.map(1..4, fn i ->
+        {:ok, g} = Goals.create(site, %{"page_path" => "/#{i}"})
+        g
+      end)
+
+    {:ok, %{id: funnel_id1}} =
+      Plausible.Funnels.create(
+        site,
+        "Funnel1",
+        [
+          %{"goal_id" => Enum.at(goals, 1).id},
+          %{"goal_id" => Enum.at(goals, 2).id},
+          %{"goal_id" => Enum.at(goals, 3).id}
+        ]
+      )
+
+    {:ok, %{id: funnel_id2}} =
+      Plausible.Funnels.create(
+        site,
+        "Funnel2",
+        [
+          %{"goal_id" => Enum.at(goals, 1).id},
+          %{"goal_id" => Enum.at(goals, 3).id}
+        ]
+      )
+
+    assert [goal, _, _, _] = Goals.for_site(site, preload_funnels?: false)
+    assert %Ecto.Association.NotLoaded{} = goal.funnels
+
+    assert [goal, _, _, _] = Goals.for_site(site, preload_funnels?: true)
+    assert [%{id: ^funnel_id1}, %{id: ^funnel_id2}] = goal.funnels
+  end
+
+  test "deleting goals with funnels triggers funnel reduction" do
+    site = insert(:site)
+    {:ok, g1} = Goals.create(site, %{"page_path" => "/1"})
+    {:ok, g2} = Goals.create(site, %{"page_path" => "/2"})
+    {:ok, g3} = Goals.create(site, %{"page_path" => "/3"})
+
+    {:ok, _} =
+      Plausible.Funnels.create(
+        site,
+        "Funnel",
+        [
+          %{"goal_id" => g1.id},
+          %{"goal_id" => g2.id},
+          %{"goal_id" => g3.id}
+        ]
+      )
+
+    :ok = Goals.delete(g1.id, site)
+  end
 end
