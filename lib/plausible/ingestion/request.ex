@@ -10,7 +10,6 @@ defmodule Plausible.Ecto.EventName do
   def cast(val) when is_binary(val), do: {:ok, val}
   def cast(val) when is_integer(val), do: {:ok, Integer.to_string(val)}
 
-  # Everything else is a failure though
   def cast(_), do: :error
   def load(val), do: {:ok, val}
   def dump(val), do: {:ok, val}
