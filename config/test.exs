@@ -29,4 +29,6 @@ config :plausible,
   http_impl: Plausible.HTTPClient.Mock,
   sites_by_domain_cache_enabled: false
 
+config :ex_money, api_module: Plausible.ExchangeRateMock
+
 config :plausible, Plausible.Ingestion.Counters, enabled: false

@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.ComparisonsTest do
   use Plausible.DataCase
   alias Plausible.Stats.{Query, Comparisons}
+  import Plausible.TestUtils
 
   describe "with period set to this month" do
     test "shifts back this month period when mode is previous_period" do
@@ -198,6 +199,18 @@ defmodule Plausible.Stats.ComparisonsTest do
 
       assert {:error, :invalid_dates} ==
                Comparisons.compare(site, query, "custom", from: "2022-05-30", to: "2022-05-25")
+    end
+  end
+
+  describe "include_imported" do
+    setup [:create_user, :create_new_site, :add_imported_data]
+
+    test "defaults to source_query.include_imported", %{site: site} do
+      query = Query.from(site, %{"period" => "day", "date" => "2023-01-01"})
+      assert query.include_imported == false
+
+      {:ok, comparison_query} = Comparisons.compare(site, query, "previous_period")
+      assert comparison_query.include_imported == false
     end
   end
 end

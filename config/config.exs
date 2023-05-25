@@ -54,4 +54,8 @@ config :plausible,
 
 config :plausible, Plausible.Ingestion.Counters, enabled: true
 
+config :ex_cldr,
+  default_locale: "en",
+  default_backend: Plausible.Cldr
+
 import_config "#{config_env()}.exs"

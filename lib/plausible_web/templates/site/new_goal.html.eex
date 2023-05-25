@@ -7,9 +7,19 @@
   </div>
   <div class="my-6">
     <div id="event-fields">
-      <%= label f, :event_name, class: "block text-sm font-bold dark:text-gray-100" %>
-      <%= text_input f, :event_name, class: "transition mt-3 bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500", placeholder: "Signup" %>
-      <%= error_tag f, :event_name %>
+      <div>
+        <%= label f, :event_name, class: "block text-sm font-bold dark:text-gray-100" %>
+        <%= text_input f, :event_name, class: "transition mt-3 bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500", placeholder: "Signup" %>
+        <%= error_tag f, :event_name %>
+      </div>
+
+      <%= if FunWithFlags.enabled?(:revenue_goals, for: @current_user) do %>
+        <div class="mt-3">
+          <%= label f, :currency, "Reporting currency for revenue tracking (optional)", class: "block text-sm font-bold dark:text-gray-100" %>
+          <%= select f, :currency, Plausible.Goal.currency_options(), class: "transition mt-3 bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500" %>
+          <%= error_tag f, :currency %>
+        </div>
+      <% end %>
     </div>
     <div id="pageview-fields" class="hidden">
       <%= label f, :page_path, class: "block text-sm font-bold dark:text-gray-100" %>

@@ -424,7 +424,10 @@ defmodule Plausible.Stats.Base do
     if Query.has_event_filters?(query) do
       converted_sessions =
         from(e in query_events(site, query),
-          select: %{session_id: fragment("DISTINCT ?", e.session_id)}
+          select: %{
+            session_id: fragment("DISTINCT ?", e.session_id),
+            _sample_factor: fragment("_sample_factor")
+          }
         )
 
       from(s in db_query,
@@ -511,7 +514,7 @@ defmodule Plausible.Stats.Base do
 
   defp add_sample_hint(db_q, query) do
     case query.sample_threshold do
-      "infinite" ->
+      :infinite ->
         db_q
 
       threshold ->

@@ -24,6 +24,7 @@ defmodule Plausible.Auth.ApiKey do
     |> validate_required(@required)
     |> generate_key()
     |> process_key()
+    |> unique_constraint(:key_hash, error_key: :key)
   end
 
   def update(schema, attrs \\ %{}) do

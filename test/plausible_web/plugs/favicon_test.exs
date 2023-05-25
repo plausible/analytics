@@ -38,6 +38,24 @@ defmodule PlausibleWeb.FaviconTest do
     assert conn.resp_body == "favicon response body"
   end
 
+  test "requests favicon from DDG when domain contains a forward slash", %{plug_opts: plug_opts} do
+    expect(
+      Plausible.HTTPClient.Mock,
+      :get,
+      fn "https://icons.duckduckgo.com/ip3/site.com/subfolder.ico" ->
+        {:ok, %Finch.Response{status: 200, body: "favicon response body"}}
+      end
+    )
+
+    conn =
+      conn(:get, "/favicon/sources/site.com/subfolder")
+      |> Favicon.call(plug_opts)
+
+    assert conn.halted
+    assert conn.status == 200
+    assert conn.resp_body == "favicon response body"
+  end
+
   test "sets content-disposition and content-security-policy", %{plug_opts: plug_opts} do
     expect(
       Plausible.HTTPClient.Mock,
