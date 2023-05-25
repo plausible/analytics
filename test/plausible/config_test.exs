@@ -2,6 +2,28 @@ defmodule Plausible.ConfigTest do
   use ExUnit.Case
 
   describe "mailer" do
+    test "mailer email default" do
+      env = [{"MAILER_EMAIL", nil}]
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) == "hello@plausible.local"
+    end
+
+    test "mailer email custom" do
+      env = [{"MAILER_EMAIL", "custom@mailer.email"}]
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) == "custom@mailer.email"
+    end
+
+    test "mailer name" do
+      env = [{"MAILER_EMAIL", nil}, {"MAILER_NAME", "John"}]
+
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) ==
+               {"John", "hello@plausible.local"}
+
+      env = [{"MAILER_EMAIL", "custom@mailer.email"}, {"MAILER_NAME", "John"}]
+
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) ==
+               {"John", "custom@mailer.email"}
+    end
+
     test "defaults to Bamboo.SMTPAdapter" do
       env = {"MAILER_ADAPTER", nil}
 
