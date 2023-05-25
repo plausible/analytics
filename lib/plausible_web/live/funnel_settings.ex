@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           funnels={@funnels}
           site={@site}
         />
-        <button type="button" class="button mt-6" phx-click="add_funnel">+ Add funnel</button>
+        <button type="button" class="button mt-6" phx-click="add-funnel">+ Add funnel</button>
       </div>
       <div :if={Enum.count(@goals) < 2}>
         <div class="rounded-md bg-yellow-100 p-4 mt-8">
@@ -55,11 +55,11 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     """
   end
 
-  def handle_event("add_funnel", _value, socket) do
+  def handle_event("add-funnel", _value, socket) do
     {:noreply, assign(socket, add_funnel?: true)}
   end
 
-  def handle_event("cancel_add_funnel", _value, socket) do
+  def handle_event("cancel-add-funnel", _value, socket) do
     {:noreply, assign(socket, add_funnel?: false)}
   end
 

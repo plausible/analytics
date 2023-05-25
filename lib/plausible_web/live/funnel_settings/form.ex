@@ -168,7 +168,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     <button
       type="button"
       class="inline-block mt-4 ml-2 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150 "
-      phx-click="cancel_add_funnel"
+      phx-click="cancel-add-funnel"
     >
       Cancel
     </button>
