@@ -4,21 +4,46 @@ defmodule Plausible.ClickhouseSessionV2 do
   """
   use Ecto.Schema
 
+  defmodule BoolUInt8 do
+    @moduledoc """
+    Custom type to cast Bool as UInt8
+    """
+
+    use Ecto.Type
+
+    @impl true
+    def type, do: :u8
+
+    @impl true
+    def cast(true), do: {:ok, 1}
+    def cast(false), do: {:ok, 0}
+    def cast(nil), do: {:ok, 0}
+
+    @impl true
+    def load(1), do: {:ok, true}
+    def load(0), do: {:ok, false}
+
+    @impl true
+    def dump(true), do: {:ok, 1}
+    def dump(false), do: {:ok, 0}
+    def dump(nil), do: {:ok, 0}
+  end
+
   @primary_key false
   schema "sessions_v2" do
     field :hostname, :string
-    field :site_id, Ch.Types.UInt64
-    field :user_id, Ch.Types.UInt64
-    field :session_id, Ch.Types.UInt64
+    field :site_id, Ch, type: "UInt64"
+    field :user_id, Ch, type: "UInt64"
+    field :session_id, Ch, type: "UInt64"
 
     field :start, :naive_datetime
-    field :duration, Ch.Types.UInt32
-    field :is_bounce, :boolean
+    field :duration, Ch, type: "UInt32"
+    field :is_bounce, BoolUInt8
     field :entry_page, :string
     field :exit_page, :string
-    field :pageviews, Ch.Types.Int32
-    field :events, Ch.Types.Int32
-    field :sign, Ch.Types.Int8
+    field :pageviews, Ch, type: "Int32"
+    field :events, Ch, type: "Int32"
+    field :sign, Ch, type: "Int8"
 
     field :"entry_meta.key", {:array, :string}
     field :"entry_meta.value", {:array, :string}
@@ -31,16 +56,16 @@ defmodule Plausible.ClickhouseSessionV2 do
     field :referrer, :string
     field :referrer_source, :string
 
-    field :country_code, Ch.Types.FixedString, size: 2
-    field :subdivision1_code, :string
-    field :subdivision2_code, :string
-    field :city_geoname_id, Ch.Types.UInt32
+    field :country_code, Ch, type: "LowCardinality(FixedString(2))"
+    field :subdivision1_code, Ch, type: "LowCardinality(String)"
+    field :subdivision2_code, Ch, type: "LowCardinality(String)"
+    field :city_geoname_id, Ch, type: "UInt32"
 
-    field :screen_size, :string
-    field :operating_system, :string
-    field :operating_system_version, :string
-    field :browser, :string
-    field :browser_version, :string
+    field :screen_size, Ch, type: "LowCardinality(String)"
+    field :operating_system, Ch, type: "LowCardinality(String)"
+    field :operating_system_version, Ch, type: "LowCardinality(String)"
+    field :browser, Ch, type: "LowCardinality(String)"
+    field :browser_version, Ch, type: "LowCardinality(String)"
     field :timestamp, :naive_datetime
 
     field :transferred_from, :string
