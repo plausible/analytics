@@ -328,6 +328,9 @@ config :plausible, Plausible.ImportDeletionRepo,
   transport_opts: ch_transport_opts,
   pool_size: 1
 
+config :ex_money,
+  open_exchange_rates_app_id: get_var_from_path_or_env(config_dir, "OPEN_EXCHANGE_RATES_APP_ID")
+
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->
     config :plausible, Plausible.Mailer,
@@ -341,6 +344,10 @@ case mailer_adapter do
       hackney_opts: [recv_timeout: :timer.seconds(10)],
       api_key: get_var_from_path_or_env(config_dir, "MAILGUN_API_KEY"),
       domain: get_var_from_path_or_env(config_dir, "MAILGUN_DOMAIN")
+
+    if mailgun_base_uri = get_var_from_path_or_env(config_dir, "MAILGUN_BASE_URI") do
+      config :plausible, Plausible.Mailer, base_uri: mailgun_base_uri
+    end
 
   "Bamboo.MandrillAdapter" ->
     config :plausible, Plausible.Mailer,

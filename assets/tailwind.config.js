@@ -1,15 +1,17 @@
 const colors = require('tailwindcss/colors')
 
 module.exports = {
-  purge: [
-    './js/**/*.js',
-    '../lib/plausible_web/templates/**/*.html.eex',
-  ],
-  safelist: [
-    // PlausibleWeb.StatsView.stats_container_class/1 uses this class
-    // it's not used anywhere else in the templates or scripts
-    "max-w-screen-lg"
-  ],
+  purge: {
+    content: [
+      './js/**/*.js',
+      '../lib/plausible_web/templates/**/*.html.eex',
+    ],
+    safelist: [
+      // PlausibleWeb.StatsView.stats_container_class/1 uses this class
+      // it's not used anywhere else in the templates or scripts
+      "max-w-screen-xl"
+    ]
+  },
   darkMode: 'class',
   theme: {
     container: {

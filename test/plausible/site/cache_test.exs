@@ -1,7 +1,7 @@
 defmodule Plausible.Site.CacheTest do
   use Plausible.DataCase, async: true
 
-  alias Plausible.Site
+  alias Plausible.{Site, Goal}
   alias Plausible.Site.Cache
 
   import ExUnit.CaptureLog
@@ -51,6 +51,31 @@ defmodule Plausible.Site.CacheTest do
       assert %Site{from_cache?: false} = Cache.get("site2.example.com", cache_name: test)
 
       refute Cache.get("site3.example.com", cache_name: test, force?: true)
+    end
+
+    test "cache caches revenue goals", %{test: test} do
+      {:ok, _} =
+        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
+          strategy: :one_for_one,
+          name: Test.Supervisor.Cache
+        )
+
+      %{id: site_id} = site = insert(:site, domain: "site1.example.com")
+      insert(:goal, site: site, event_name: "Purchase", currency: :BRL)
+      insert(:goal, site: site, event_name: "Add to Cart", currency: :USD)
+      insert(:goal, site: site, event_name: "Click", currency: nil)
+
+      :ok = Cache.refresh_all(cache_name: test)
+
+      {:ok, _} = Plausible.Repo.delete(site)
+
+      assert %Site{from_cache?: true, id: ^site_id, revenue_goals: cached_goals} =
+               Cache.get("site1.example.com", force?: true, cache_name: test)
+
+      assert [
+               %Goal{event_name: "Add to Cart", currency: :USD},
+               %Goal{event_name: "Purchase", currency: :BRL}
+             ] = Enum.sort_by(cached_goals, & &1.event_name)
     end
 
     test "cache is ready when no sites exist in the db", %{test: test} do

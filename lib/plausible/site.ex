@@ -31,6 +31,7 @@ defmodule Plausible.Site do
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_many :memberships, Plausible.Site.Membership
     has_many :invitations, Plausible.Auth.Invitation
+    has_many :revenue_goals, Plausible.Goal, where: [currency: {:not, nil}]
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport

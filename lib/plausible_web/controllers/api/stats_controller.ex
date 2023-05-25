@@ -1304,8 +1304,7 @@ defmodule PlausibleWeb.Api.StatsController do
     [
       from: params["compare_from"],
       to: params["compare_to"],
-      match_day_of_week?: params["match_day_of_week"] == "true",
-      include_imported?: params["with_imported"] == "true"
+      match_day_of_week?: params["match_day_of_week"] == "true"
     ]
   end
 

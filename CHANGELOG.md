@@ -4,13 +4,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Add support for `with_imported=true` in Stats API aggregate endpoint
 - Ability to use '--' instead of '=' sign in the `tagged-events` classnames
 - 'Last updated X seconds ago' info to 'current visitors' tooltips
 - Add support for more Bamboo adapters, i.e. `Bamboo.MailgunAdapter`, `Bamboo.MandrillAdapter`, `Bamboo.SendGridAdapter` plausible/analytics#2649
 - Ability to change domain for existing site (requires numeric IDs data migration, instructions will be provided separately) UI + API (`PUT /api/v1/sites`)
 - Add `MAILER_NAME` environment variable support plausible/analytics#2937
+- Add `MAILGUN_BASE_URI` support for `Bamboo.MailgunAdapter` plausible/analytics#2935 
 
 ### Fixed
+- Fix tracker bug - call callback function even when event is ignored
 - Make goal-filtered CSV export return only unique_conversions timeseries in the 'visitors.csv' file
 - Stop treating page filter as an entry page filter
 - City report showing N/A instead of city names with imported data plausible/analytics#2675
@@ -24,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Add error message in case a transfer to an invited (but not joined) user is requested plausible/analytics#2651
 - Fix bug with [showing property breakdown with a prop filter](https://github.com/plausible/analytics/issues/1789)
 - Fix bug when combining goal and prop filters plausible/analytics#2654
+- Fix broken favicons when domain includes a slash
 
 ### Changed
 - Treat page filter as entry page filter for `bounce_rate`

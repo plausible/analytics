@@ -42,10 +42,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
           Plausible.Stats.aggregate(site, query, metrics)
         end
 
-      results =
-        results
-        |> Map.take(metrics)
-
       json(conn, %{results: results})
     else
       {:error, msg} ->
@@ -139,6 +135,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {:error, reason} -> {:halt, {:error, reason}}
       end
     end)
+  end
+
+  defp validate_metric("events", nil, %{include_imported: true}) do
+    {:error, "Metric `events` cannot be queried with imported data"}
   end
 
   defp validate_metric(metric, _, _) when metric in @event_metrics, do: {:ok, metric}

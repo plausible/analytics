@@ -507,6 +507,26 @@ defmodule Plausible.BillingTest do
       assert Repo.reload!(site).locked == true
       assert Repo.reload!(user).grace_period.allowance_required == 11_000
     end
+
+    test "ignores if subscription cannot be found" do
+      user = insert(:user)
+
+      res =
+        Billing.subscription_updated(%{
+          "alert_name" => "subscription_updated",
+          "subscription_id" => "666",
+          "subscription_plan_id" => "new-plan-id",
+          "update_url" => "update_url.com",
+          "cancel_url" => "cancel_url.com",
+          "passthrough" => user.id,
+          "status" => "active",
+          "next_bill_date" => "2019-06-01",
+          "new_unit_price" => "12.00",
+          "currency" => "EUR"
+        })
+
+      assert res == {:ok, nil}
+    end
   end
 
   describe "subscription_cancelled" do
