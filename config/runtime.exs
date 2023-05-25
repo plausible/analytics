@@ -217,6 +217,11 @@ disable_cron =
   |> get_var_from_path_or_env("DISABLE_CRON", "false")
   |> String.to_existing_atom()
 
+log_failed_login_attempts =
+  config_dir
+  |> get_var_from_path_or_env("LOG_FAILED_LOGIN_ATTEMPTS", "false")
+  |> String.to_existing_atom()
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -224,7 +229,8 @@ config :plausible,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
-  custom_script_name: custom_script_name
+  custom_script_name: custom_script_name,
+  log_failed_login_attempts: log_failed_login_attempts
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,

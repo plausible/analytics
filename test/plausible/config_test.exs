@@ -149,6 +149,23 @@ defmodule Plausible.ConfigTest do
     end
   end
 
+  describe "log_failed_login_attempts" do
+    test "can be true" do
+      env = {"LOG_FAILED_LOGIN_ATTEMPTS", "true"}
+      assert get_in(runtime_config(env), [:plausible, :log_failed_login_attempts]) == true
+    end
+
+    test "can be false" do
+      env = {"LOG_FAILED_LOGIN_ATTEMPTS", "false"}
+      assert get_in(runtime_config(env), [:plausible, :log_failed_login_attempts]) == false
+    end
+
+    test "is false by default" do
+      env = {"LOG_FAILED_LOGIN_ATTEMPTS", nil}
+      assert get_in(runtime_config(env), [:plausible, :log_failed_login_attempts]) == false
+    end
+  end
+
   defp runtime_config(env) do
     put_system_env_undo(env)
     Config.Reader.read!("config/runtime.exs", env: :prod)
