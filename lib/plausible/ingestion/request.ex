@@ -1,4 +1,9 @@
 defmodule Plausible.Ecto.EventName do
+  @moduledoc """
+    Custom type for event name. Accepts Strings and Integers and stores them as String. Returns
+    cast error if any other type is provided. Accepting integers is important for 404 tracking.
+  """
+
   use Ecto.Type
   def type, do: :string
 
