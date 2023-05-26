@@ -282,7 +282,7 @@ maybe_ch_ipv6 =
 ch_transport_opts = [
   keepalive: true,
   show_econnreset: true,
-  inet6: maybe_ch_ipv6,
+  inet6: maybe_ch_ipv6
 ]
 
 config :plausible, Plausible.ClickhouseRepo,
