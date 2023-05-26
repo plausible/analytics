@@ -217,9 +217,9 @@ defmodule Plausible.Ingestion.Event do
     with %Plausible.Goal{currency: currency} <- matching_goal,
          {:ok, %Money{} = revenue_reporting} <- Money.to_currency(revenue_source, currency) do
       update_attrs(event, %{
-        revenue_source_amount: revenue_source.amount,
+        revenue_source_amount: Money.to_decimal(revenue_source),
         revenue_source_currency: to_string(revenue_source.currency),
-        revenue_reporting_amount: revenue_reporting.amount,
+        revenue_reporting_amount: Money.to_decimal(revenue_reporting),
         revenue_reporting_currency: to_string(revenue_reporting.currency)
       })
     else

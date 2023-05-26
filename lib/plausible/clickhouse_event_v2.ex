@@ -37,10 +37,10 @@ defmodule Plausible.ClickhouseEventV2 do
     field :"meta.key", {:array, :string}
     field :"meta.value", {:array, :string}
 
-    field :revenue_source_amount, Ch.Types.Decimal64, scale: 4
-    field :revenue_source_currency, Ch.Types.FixedString, size: 3
-    field :revenue_reporting_amount, Ch.Types.Decimal64, scale: 4
-    field :revenue_reporting_currency, Ch.Types.FixedString, size: 3
+    field :revenue_source_amount, Plausible.MoneyWithoutCurrency
+    field :revenue_source_currency, Ch, type: "FixedString(3)"
+    field :revenue_reporting_amount, Plausible.MoneyWithoutCurrency
+    field :revenue_reporting_currency, Ch, type: "FixedString(3)"
 
     field :transferred_from, :string
   end
