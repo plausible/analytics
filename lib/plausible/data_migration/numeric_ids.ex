@@ -13,7 +13,7 @@ defmodule Plausible.DataMigration.NumericIDs do
 
     @primary_key false
     schema "domains_lookup" do
-      field :site_id, Ch.Types.UInt64
+      field :site_id, Ch, type: "UInt64"
       field :domain, :string
     end
   end

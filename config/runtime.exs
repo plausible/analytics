@@ -72,6 +72,14 @@ super_admin_user_ids =
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
 mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
 mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
+
+mailer_email =
+  if mailer_name = get_var_from_path_or_env(config_dir, "MAILER_NAME") do
+    {mailer_name, mailer_email}
+  else
+    mailer_email
+  end
+
 app_version = get_var_from_path_or_env(config_dir, "APP_VERSION", "0.0.1")
 
 ch_db_url =
@@ -209,6 +217,11 @@ disable_cron =
   |> get_var_from_path_or_env("DISABLE_CRON", "false")
   |> String.to_existing_atom()
 
+log_failed_login_attempts =
+  config_dir
+  |> get_var_from_path_or_env("LOG_FAILED_LOGIN_ATTEMPTS", "false")
+  |> String.to_existing_atom()
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -216,7 +229,8 @@ config :plausible,
   site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
-  custom_script_name: custom_script_name
+  custom_script_name: custom_script_name,
+  log_failed_login_attempts: log_failed_login_attempts
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -336,6 +350,10 @@ case mailer_adapter do
       hackney_opts: [recv_timeout: :timer.seconds(10)],
       api_key: get_var_from_path_or_env(config_dir, "MAILGUN_API_KEY"),
       domain: get_var_from_path_or_env(config_dir, "MAILGUN_DOMAIN")
+
+    if mailgun_base_uri = get_var_from_path_or_env(config_dir, "MAILGUN_BASE_URI") do
+      config :plausible, Plausible.Mailer, base_uri: mailgun_base_uri
+    end
 
   "Bamboo.MandrillAdapter" ->
     config :plausible, Plausible.Mailer,

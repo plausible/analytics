@@ -2,6 +2,28 @@ defmodule Plausible.ConfigTest do
   use ExUnit.Case
 
   describe "mailer" do
+    test "mailer email default" do
+      env = [{"MAILER_EMAIL", nil}]
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) == "hello@plausible.local"
+    end
+
+    test "mailer email custom" do
+      env = [{"MAILER_EMAIL", "custom@mailer.email"}]
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) == "custom@mailer.email"
+    end
+
+    test "mailer name" do
+      env = [{"MAILER_EMAIL", nil}, {"MAILER_NAME", "John"}]
+
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) ==
+               {"John", "hello@plausible.local"}
+
+      env = [{"MAILER_EMAIL", "custom@mailer.email"}, {"MAILER_NAME", "John"}]
+
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) ==
+               {"John", "custom@mailer.email"}
+    end
+
     test "defaults to Bamboo.SMTPAdapter" do
       env = {"MAILER_ADAPTER", nil}
 
@@ -45,6 +67,23 @@ defmodule Plausible.ConfigTest do
                hackney_opts: [recv_timeout: 10_000],
                api_key: "some-mailgun-key",
                domain: "example.com"
+             ]
+    end
+
+    test "Bamboo.MailgunAdapter with custom MAILGUN_BASE_URI" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.MailgunAdapter"},
+        {"MAILGUN_API_KEY", "some-mailgun-key"},
+        {"MAILGUN_DOMAIN", "example.com"},
+        {"MAILGUN_BASE_URI", "https://api.eu.mailgun.net/v3"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               adapter: Bamboo.MailgunAdapter,
+               hackney_opts: [recv_timeout: 10_000],
+               api_key: "some-mailgun-key",
+               domain: "example.com",
+               base_uri: "https://api.eu.mailgun.net/v3"
              ]
     end
 
@@ -107,6 +146,23 @@ defmodule Plausible.ConfigTest do
       assert_raise ArgumentError,
                    ~r/Unknown mailer_adapter: "Bamboo.FakeAdapter"/,
                    fn -> runtime_config(env) end
+    end
+  end
+
+  describe "log_failed_login_attempts" do
+    test "can be true" do
+      env = {"LOG_FAILED_LOGIN_ATTEMPTS", "true"}
+      assert get_in(runtime_config(env), [:plausible, :log_failed_login_attempts]) == true
+    end
+
+    test "can be false" do
+      env = {"LOG_FAILED_LOGIN_ATTEMPTS", "false"}
+      assert get_in(runtime_config(env), [:plausible, :log_failed_login_attempts]) == false
+    end
+
+    test "is false by default" do
+      env = {"LOG_FAILED_LOGIN_ATTEMPTS", nil}
+      assert get_in(runtime_config(env), [:plausible, :log_failed_login_attempts]) == false
     end
   end
 
