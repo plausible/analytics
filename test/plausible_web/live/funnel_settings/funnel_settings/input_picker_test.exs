@@ -36,30 +36,42 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPickerTest do
       refute element_exists?(doc, suggestion_li(16))
       refute element_exists?(doc, suggestion_li(17))
     end
+  end
 
-    test "search suggestions: favours exact match" do
+  describe "autosuggest" do
+    test "favours exact match" do
       options = fake_options(["yellow", "hello", "cruel hello world"])
 
       assert [{_, "hello"}, {_, "cruel hello world"}, {_, "yellow"}] =
                InputPicker.suggest("hello", options)
     end
 
-    test "search suggestions: skips entries shorter than input" do
+    test "skips entries shorter than input" do
       options = fake_options(["yellow", "hello", "cruel hello world"])
 
       assert [{_, "cruel hello world"}] = InputPicker.suggest("cruel hello", options)
     end
 
-    test "search suggesions: favours similiarity" do
+    test "favours similiarity" do
       options = fake_options(["melon", "hello", "yellow"])
       assert [{_, "hello"}, {_, "yellow"}, {_, "melon"}] = InputPicker.suggest("hell", options)
     end
 
-    test "search suggesions: allows fuzzy matching" do
+    test "allows fuzzy matching" do
       options = fake_options(["/url/0xC0FFEE", "/url/0xDEADBEEF", "/url/other"])
 
       assert [{_, "/url/0xC0FFEE"}, {_, "/url/0xDEADBEEF"}, {_, "/url/other"}] =
                InputPicker.suggest("0x FF", options)
+    end
+
+    test "suggests up to 15 entries" do
+      options =
+        1..20
+        |> Enum.map(&"Option #{&1}")
+        |> fake_options()
+
+      suggestions = InputPicker.suggest("Option", options)
+      assert Enum.count(suggestions) == 15
     end
   end
 
