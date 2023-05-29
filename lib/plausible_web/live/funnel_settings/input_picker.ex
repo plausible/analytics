@@ -24,47 +24,44 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
   def render(assigns) do
     ~H"""
-    <div>
-      <div
-        class="mb-3"
-        x-data={"window.suggestionsDropdown('#{@id}')"}
-        x-on:keydown.arrow-up="focusPrev"
-        x-on:keydown.arrow-down="focusNext"
-        x-on:keydown.enter="select()"
-      >
-        <div class="relative w-full">
-          <div
-            @click.away="close"
-            class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
-          >
-            <input
-              type="text"
-              autocomplete="off"
-              id={@id}
-              name={"display-#{@id}"}
-              placeholder={@placeholder}
-              x-on:focus="open"
-              phx-change="search"
-              phx-target={@myself}
-              value={@display_value}
-              class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
-              style="background-color: inherit;"
-            />
+    <div
+      id={"input-picker-main-#{@id}"}
+      class="mb-3"
+      x-data={"window.suggestionsDropdown('#{@id}')"}
+      x-on:keydown.arrow-up="focusPrev"
+      x-on:keydown.arrow-down="focusNext"
+      x-on:keydown.enter="select()"
+      @click.away="close"
+    >
+      <div class="relative w-full">
+        <div class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
+          <input
+            type="text"
+            autocomplete="off"
+            id={@id}
+            name={"display-#{@id}"}
+            placeholder={@placeholder}
+            x-on:focus="open"
+            phx-change="search"
+            phx-target={@myself}
+            value={@display_value}
+            class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
+            style="background-color: inherit;"
+          />
 
-            <.dropdown_anchor id={@id} />
+          <.dropdown_anchor id={@id} />
 
-            <input
-              type="hidden"
-              name={@submit_name}
-              value={@submit_value}
-              phx-target={@myself}
-              id={"submit-#{@id}"}
-            />
-          </div>
+          <input
+            type="hidden"
+            name={@submit_name}
+            value={@submit_value}
+            phx-target={@myself}
+            id={"submit-#{@id}"}
+          />
         </div>
-
-        <.dropdown ref={@id} options={@options} suggestions={@suggestions} target={@myself} />
       </div>
+
+      <.dropdown ref={@id} options={@options} suggestions={@suggestions} target={@myself} />
     </div>
     """
   end

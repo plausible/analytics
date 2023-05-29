@@ -26,4 +26,11 @@ defmodule Plausible.Test.Support.HTML do
     |> Floki.text()
     |> String.trim()
   end
+
+  def text_of_attr(element, attr) do
+    element
+    |> Floki.attribute(attr)
+    |> Floki.text()
+    |> String.trim()
+  end
 end
