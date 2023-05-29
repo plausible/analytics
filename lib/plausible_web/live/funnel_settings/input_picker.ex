@@ -213,7 +213,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
     socket
     |> push_event("update-value", %{id: id, value: display_value, fire: false})
     |> push_event("update-value", %{id: "submit-#{id}", value: submit_value, fire: true})
-    |> push_event("hide", %{id: "dropdown-#{id}"})
     |> assign(:display_value, display_value)
     |> assign(:submit_value, submit_value)
   end
