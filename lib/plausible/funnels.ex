@@ -1,9 +1,8 @@
 defmodule Plausible.Funnels do
   @funnel_window_duration 86_400
 
-  require Plausible.Funnel
+  use Plausible.Funnel
 
-  alias Plausible.Funnel
   alias Plausible.Repo
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.Base

@@ -3,7 +3,7 @@ defmodule Plausible.Goals do
   alias Plausible.Goal
   alias Ecto.Multi
 
-  require Plausible.Funnel
+  use Plausible.Funnel
 
   def create(site, params) do
     params = Map.merge(params, %{"site_id" => site.id})
@@ -118,7 +118,7 @@ defmodule Plausible.Goals do
         _, %{goal: %{funnels: funnels}} ->
           funnels_to_wipe =
             funnels
-            |> Enum.filter(&(Enum.count(&1.steps) == Plausible.Funnel.min_steps()))
+            |> Enum.filter(&(Enum.count(&1.steps) == Funnel.min_steps()))
             |> Enum.map(& &1.id)
 
           {:ok, funnels_to_wipe}
@@ -131,7 +131,7 @@ defmodule Plausible.Goals do
           Ecto.Multi.new()
           |> Multi.delete_all(
             :delete_funnels,
-            from(f in Plausible.Funnel,
+            from(f in Funnel,
               where: f.id in ^funnel_ids
             )
           )

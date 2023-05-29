@@ -1,9 +1,7 @@
 defmodule PlausibleWeb.Live.FunnelSettings.Form do
   use Phoenix.LiveComponent
   use Phoenix.HTML
-
-  require Plausible.Funnel
-  alias Plausible.Funnel
+  use Plausible.Funnel
 
   def mount(socket) do
     {:ok, assign(socket, step_ids: Enum.to_list(1..Funnel.min_steps()))}

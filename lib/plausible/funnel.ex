@@ -17,6 +17,13 @@ defmodule Plausible.Funnel do
     end
   end
 
+  defmacro __using__(_opts \\ []) do
+    quote do
+      require Plausible.Funnel
+      alias Plausible.Funnel
+    end
+  end
+
   defmodule Step do
     use Ecto.Schema
     import Ecto.Changeset
