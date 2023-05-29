@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPickerTest do
       assert text_of_element(doc, "#dropdown-step-1-option-0") == "Plausible"
     end
 
-    test "selecting an option prefills submit value", %{conn: conn, site: site} do
+    test "selecting an option prefills input values", %{conn: conn, site: site} do
       {:ok, [_, _, g3]} = setup_goals(site, ["Hello World", "Plausible", "Another World"])
       lv = get_liveview(conn, site)
 
@@ -105,17 +105,21 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPickerTest do
         })
 
       refute element_exists?(doc, ~s/input[type="hidden"][value="#{g3.id}"]/)
+      refute element_exists?(doc, ~s/input[type="text"][value="Another World"]/)
 
       lv
       |> element("li#dropdown-step-1-option-0 a")
       |> render_click()
 
-      rendered =
-        lv
-        |> element("#submit-step-1")
-        |> render()
+      assert lv
+             |> element("#submit-step-1")
+             |> render()
+             |> element_exists?(~s/input[type="hidden"][value="#{g3.id}"]/)
 
-      assert element_exists?(rendered, ~s/input[type="hidden"][value="#{g3.id}"]/)
+      assert lv
+             |> element("#step-1")
+             |> render()
+             |> element_exists?(~s/input[type="text"][value="Another World"]/)
     end
   end
 
