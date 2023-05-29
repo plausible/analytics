@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   end
 
   attr(:placeholder, :string, default: "Select option or search by typing")
-  attr(:id, :any, default: nil)
+  attr(:id, :any, required: true)
   attr(:options, :list, required: true)
   attr(:submit_name, :string, required: true)
   attr(:display_value, :string, default: "")
@@ -177,33 +177,37 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
   def handle_event("search", %{"_target" => [target]} = params, socket) do
     input = params[target]
-    input_len = String.length(input)
+    input_len = input |> String.trim() |> String.length()
 
     if input_len > 0 do
-      suggestions =
-        socket.assigns.options
-        |> Enum.reject(fn {_, value} ->
-          input_len > String.length(value)
-        end)
-        |> Enum.sort_by(
-          fn {_, value} ->
-            if value == input do
-              3
-            else
-              input = String.downcase(input)
-              value = String.downcase(value)
-              weight = if String.contains?(value, input), do: 1, else: 0
-              weight + String.jaro_distance(value, input)
-            end
-          end,
-          :desc
-        )
-        |> Enum.take(@max_options_displayed)
-
+      suggestions = suggest(input, socket.assigns.options)
       {:noreply, assign(socket, %{suggestions: suggestions})}
     else
       {:noreply, socket}
     end
+  end
+
+  def suggest(input, options) do
+    input_len = String.length(input)
+
+    options
+    |> Enum.reject(fn {_, value} ->
+      input_len > String.length(value)
+    end)
+    |> Enum.sort_by(
+      fn {_, value} ->
+        if value == input do
+          3
+        else
+          input = String.downcase(input)
+          value = String.downcase(value)
+          weight = if String.contains?(value, input), do: 1, else: 0
+          weight + String.jaro_distance(value, input)
+        end
+      end,
+      :desc
+    )
+    |> Enum.take(@max_options_displayed)
   end
 
   defp do_select(socket, submit_value, display_value) do

@@ -1,6 +1,7 @@
-defmodule PlausibleWeb.FunnelSettingsTest do
+defmodule PlausibleWeb.Live.FunnelSettingsTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
+  import Plausible.Test.Support.HTML
 
   describe "GET /:website/settings/funnels" do
     setup [:create_user, :log_in, :create_site]
@@ -222,18 +223,5 @@ defmodule PlausibleWeb.FunnelSettingsTest do
     conn = assign(conn, :live_module, PlausibleWeb.Live.FunnelSettings)
     {:ok, lv, _html} = live(conn, "/#{site.domain}/settings/funnels")
     lv
-  end
-
-  defp element_exists?(html, selector) do
-    html
-    |> find(selector)
-    |> Enum.empty?()
-    |> Kernel.not()
-  end
-
-  defp find(html, value) do
-    html
-    |> Floki.parse_document!()
-    |> Floki.find(value)
   end
 end
