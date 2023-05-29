@@ -72,7 +72,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPickerTest do
     test "Alpine.js: component sets up close on click-away" do
       assert new_options(2)
              |> render_sample_component()
-             |> find("div#input-picker-main-test-component")
+             |> find("div#input-picker-main-test-component div div")
              |> text_of_attr("@click.away") == "close"
     end
 

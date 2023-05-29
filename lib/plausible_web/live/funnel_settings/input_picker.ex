@@ -31,10 +31,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
       x-on:keydown.arrow-up="focusPrev"
       x-on:keydown.arrow-down="focusNext"
       x-on:keydown.enter="select()"
-      @click.away="close"
     >
       <div class="relative w-full">
-        <div class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
+        <div
+          @click.away="close"
+          class="pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500"
+        >
           <input
             type="text"
             autocomplete="off"
