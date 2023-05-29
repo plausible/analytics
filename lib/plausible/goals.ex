@@ -1,6 +1,9 @@
 defmodule Plausible.Goals do
   use Plausible.Repo
   alias Plausible.Goal
+  alias Ecto.Multi
+
+  require Plausible.Funnel
 
   def create(site, params) do
     params = Map.merge(params, %{"site_id" => site.id})
@@ -83,27 +86,70 @@ defmodule Plausible.Goals do
     )
   end
 
-  def belongs_to_funnels?(%Goal{id: goal_id}) do
-    belongs_to_funnels?(goal_id)
-  end
+  @doc """
+  If a goal belongs to funnel(s), we need to inspect their number of steps.
 
-  def belongs_to_funnels?(goal_id) do
-    Repo.exists?(from(fs in Plausible.Funnel.Step, where: fs.goal_id == ^goal_id))
-  end
+  If it exceeds the minimum allowed (defined via `Plausible.Funnel.min_steps/0`),
+  the funnel will be reduced (i.e. a step associated with the goal to be deleted
+  is removed), so that the minimum number of steps is preserved. This is done
+  implicitly, by postgres, as per on_delete: :delete_all.
 
+  Otherwise, for associated funnel(s) consisting of minimum number steps only,
+  funnel record(s) are removed completely along with the targeted goal.
+  """
   def delete(id, site) do
-    if not belongs_to_funnels?(id) do
-      case Repo.delete_all(
-             from(g in Goal,
-               where: g.id == ^id,
-               where: g.site_id == ^site.id
-             )
-           ) do
-        {1, _} -> :ok
-        {0, _} -> {:error, :not_found}
-      end
-    else
-      raise "Implement me"
+    result =
+      Multi.new()
+      |> Multi.one(
+        :goal,
+        from(g in Goal,
+          where: g.id == ^id,
+          where: g.site_id == ^site.id,
+          preload: [funnels: :steps]
+        )
+      )
+      |> Multi.run(:funnel_ids_to_wipe, fn
+        _, %{goal: nil} ->
+          {:error, :not_found}
+
+        _, %{goal: %{funnels: []}} ->
+          {:ok, []}
+
+        _, %{goal: %{funnels: funnels}} ->
+          funnels_to_wipe =
+            funnels
+            |> Enum.filter(&(Enum.count(&1.steps) == Plausible.Funnel.min_steps()))
+            |> Enum.map(& &1.id)
+
+          {:ok, funnels_to_wipe}
+      end)
+      |> Multi.merge(fn
+        %{funnel_ids_to_wipe: []} ->
+          Ecto.Multi.new()
+
+        %{funnel_ids_to_wipe: [_ | _] = funnel_ids} ->
+          Ecto.Multi.new()
+          |> Multi.delete_all(
+            :delete_funnels,
+            from(f in Plausible.Funnel,
+              where: f.id in ^funnel_ids
+            )
+          )
+      end)
+      |> Multi.delete_all(
+        :delete_goals,
+        fn _ ->
+          from(g in Goal,
+            where: g.id == ^id,
+            where: g.site_id == ^site.id
+          )
+        end
+      )
+      |> Repo.transaction()
+
+    case result do
+      {:ok, _} -> :ok
+      {:error, _step, reason, _context} -> {:error, reason}
     end
   end
 
