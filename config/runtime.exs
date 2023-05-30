@@ -7,6 +7,7 @@ if config_env() in [:dev, :test] do
 end
 
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
+storage_dir = get_var_from_path_or_env(config_dir, "STORAGE_DIR", System.tmp_dir!())
 
 # Listen IP supports IPv4 and IPv6 addresses.
 listen_ip =
@@ -164,6 +165,7 @@ ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", ge
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
+maxmind_database_cache_file = get_var_from_path_or_env(config_dir, "MAXMIND_DATABASE_CACHE_FILE")
 
 if System.get_env("DISABLE_AUTH") do
   require Logger
@@ -527,6 +529,7 @@ geo_opts =
       [
         license_key: maxmind_license_key,
         edition: maxmind_edition,
+        database_cache_file: maxmind_database_cache_file,
         async: true
       ]
 
@@ -582,9 +585,7 @@ else
     traces_exporter: :none
 end
 
-config :tzdata,
-       :data_dir,
-       get_var_from_path_or_env(config_dir, "STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
+config :tzdata, :data_dir, Path.join(storage_dir, "plausible_tzdata_data")
 
 promex_disabled? =
   config_dir
