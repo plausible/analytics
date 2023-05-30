@@ -2,6 +2,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
 
+  ## FIXME: rename to ComboBox
+
   @max_options_displayed 15
 
   def update(assigns, socket) do
@@ -96,6 +98,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   attr(:suggestions, :list, default: [])
   attr(:target, :any)
 
+  # FIXME: bug when skipping via Tab
   def dropdown(assigns) do
     ~H"""
     <ul

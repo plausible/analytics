@@ -11,6 +11,7 @@ import LazyLoader from '../../components/lazy-loader'
 Chart.register(ChartDataLabels);
 
 // TODO: still need to update the state nicely if a funnel gets deleted
+// TODO: refactor to a function component
 
 export default class Funnel extends React.Component {
   constructor(props) {
@@ -50,6 +51,7 @@ export default class Funnel extends React.Component {
   fetchFunnel() {
     const funnel = this.getFunnel()
     if (typeof funnel === 'undefined') {
+      // TODO: clear local storage for funnels
       this.setState({ loading: false, error: { message: "Failed to locate funnel" } })
     } else {
       api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/funnels/${funnel.id}`, this.props.query)

@@ -2,6 +2,8 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   use Phoenix.LiveView
   use Phoenix.HTML
 
+  use Plausible.Funnel
+
   alias Plausible.{Sites, Goals, Funnels}
 
   def mount(
@@ -38,7 +40,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         goals={@goals}
       />
     <% else %>
-      <div :if={Enum.count(@goals) >= 2}>
+      <div :if={Enum.count(@goals) >= Funnel.min_steps()}>
         <.live_component
           module={PlausibleWeb.Live.FunnelSettings.List}
           id="funnels-list"
@@ -47,7 +49,8 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         />
         <button type="button" class="button mt-6" phx-click="add-funnel">+ Add funnel</button>
       </div>
-      <div :if={Enum.count(@goals) < 2}>
+
+      <div :if={Enum.count(@goals) < Funnel.min_steps()}>
         <div class="rounded-md bg-yellow-100 p-4 mt-8">
           <p class="text-sm leading-5 text-gray-900 dark:text-gray-100">
             You need to define at least two goals to create a funnel. Go ahead and <%= link(

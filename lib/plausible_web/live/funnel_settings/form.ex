@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     {:ok,
      assign(socket,
        form: assigns.form,
+       # XXX: assigns goals at the top level/mount?
        goals: assigns.goals,
        site: assigns.site
      )}

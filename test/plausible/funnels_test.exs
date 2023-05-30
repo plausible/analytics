@@ -91,6 +91,7 @@ defmodule Plausible.FunnelsTest do
              )
   end
 
+  # But really? XXX: ref: Robert's question
   test "a goal can only appear once in a funnel", %{steps: [g1 | _], site: site} do
     {:error, _changeset} =
       Funnels.create(
@@ -113,7 +114,7 @@ defmodule Plausible.FunnelsTest do
              funnels_list
   end
 
-  test "funnels can be evaluated per site within a time range against an interim definition", %{
+  test "funnels can be evaluated per site within a time range against an ephemeral definition", %{
     site: site,
     goals: [g1, g2, g3 | _]
   } do
