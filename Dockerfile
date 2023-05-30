@@ -58,16 +58,16 @@ LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}
 ENV BUILD_METADATA=$BUILD_METADATA
-ENV LANG=C.UTF-8
+ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 ENV LISTEN_IP=0.0.0.0
-
-RUN apk upgrade --no-cache && \
-  apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
 WORKDIR /app
 
 RUN adduser -u 1000 -s /bin/sh -D plausibleuser && \
   chown plausibleuser /app
+
+RUN apk upgrade --no-cache && \
+  apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
 USER plausibleuser
 
