@@ -74,10 +74,11 @@ RUN adduser -u 1000 -s /bin/sh -D plausibleuser && \
 RUN apk upgrade --no-cache && \
   apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
-USER plausibleuser
-
 COPY --from=buildcontainer --chown=plausibleuser:plausibleuser /app/_build/prod/rel/plausible /app
 COPY --chown=plausibleuser:plausibleuser ./rel/docker-entrypoint.sh /entrypoint.sh
+RUN chmod a+x /entrypoint.sh
+
+USER plausibleuser
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["run"]
