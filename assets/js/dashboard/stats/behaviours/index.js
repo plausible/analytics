@@ -4,7 +4,6 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
-import Funnel from './funnel'
 import Conversions from './conversions'
 
 const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
@@ -114,7 +113,7 @@ export default class Behaviours extends React.Component {
       case CONVERSIONS:
         return <Conversions tabs={this.tabs()} site={this.props.site} query={this.props.query} />
       case FUNNELS:
-        return <Funnel tabs={this.tabs()} funnelName={this.state.selectedFunnelName} query={this.props.query} site={this.props.site} />
+        return null
     }
   }
 
