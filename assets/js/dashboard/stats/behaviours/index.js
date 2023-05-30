@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react'
+import React, { Fragment, useState } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -11,49 +11,40 @@ const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
 const CONVERSIONS = 'conversions'
 const FUNNELS = 'funnels'
 
-export default class Behaviours extends React.Component {
-  constructor(props) {
-    super(props)
-    this.tabKey = `behavioursTab__${props.site.domain}`
-    this.funnelKey = `behavioursTabFunnel__${props.site.domain}`
-
-    const storedTab = storage.getItem(this.tabKey)
-    const storedFunnelName = storage.getItem(this.funnelKey)
-
-    const funnelNames = props.site.funnels.map(({ name }) => name)
-
-    this.state = {
-      mode: storedTab || CONVERSIONS,
-      funnelNames: funnelNames,
-      selectedFunnelName: storedFunnelName
-    }
-  }
-
-  setConversions() {
+export default function Behaviours(props) {
+  const tabKey = `behavioursTab__${props.site.domain}`
+  const funnelKey = `behavioursTabFunnel__${props.site.domain}`
+  
+  const [mode, setMode] = useState(storage.getItem(tabKey) || CONVERSIONS)
+  const [funnelNames, setFunnelNames] = useState(props.site.funnels.map(({ name }) => name))
+  const [selectedFunnel, setSelectedFunnel] = useState(storage.getItem(funnelKey))
+  
+  function setConversions() {
     return () => {
-      storage.setItem(this.tabKey, CONVERSIONS)
-      this.setState({ mode: CONVERSIONS })
+      storage.setItem(tabKey, CONVERSIONS)
+      setMode(CONVERSIONS)
     }
   }
 
-  setFunnel(selectedFunnelName) {
+  function setFunnel(selectedFunnel) {
     return () => {
-      storage.setItem(this.tabKey, FUNNELS)
-      storage.setItem(this.funnelKey, selectedFunnelName)
-      this.setState({ mode: FUNNELS, selectedFunnelName: selectedFunnelName })
+      storage.setItem(tabKey, FUNNELS)
+      storage.setItem(funnelKey, selectedFunnel)
+      setMode(FUNNELS)
+      setSelectedFunnel(selectedFunnel)
     }
   }
 
-  hasFunnels() {
-    const site = this.props.site
+  function hasFunnels() {
+    const site = props.site
     return site.flags.funnels && site.funnels.length > 0
   }
 
-  tabFunnelPicker() {
+  function tabFunnelPicker() {
     return <Menu as="div" className="relative inline-block text-left">
       <div>
         <Menu.Button className="inline-flex justify-between focus:outline-none">
-          <span className={(this.state.mode == FUNNELS) ? ACTIVE_CLASS : DEFAULT_CLASS}>Funnels</span>
+          <span className={(mode == FUNNELS) ? ACTIVE_CLASS : DEFAULT_CLASS}>Funnels</span>
           <ChevronDownIcon className="-mr-1 ml-1 h-4 w-4" aria-hidden="true" />
         </Menu.Button>
       </div>
@@ -69,16 +60,16 @@ export default class Behaviours extends React.Component {
       >
         <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
           <div className="py-1">
-            {this.state.funnelNames.map((funnelName) => {
+            {funnelNames.map((funnelName) => {
               return (
                 <Menu.Item key={funnelName}>
                   {({ active }) => (
                     <span
-                      onClick={this.setFunnel(funnelName)}
+                      onClick={setFunnel(funnelName)}
                       className={classNames(
                         active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
                         'block px-4 py-2 text-sm',
-                        this.state.mode === funnelName ? 'font-bold' : ''
+                        mode === funnelName ? 'font-bold' : ''
                       )}
                     >
                       {funnelName}
@@ -93,33 +84,33 @@ export default class Behaviours extends React.Component {
     </Menu>
   }
 
-  tabConversions() {
+  function tabConversions() {
     return (
-      <div className={classNames({ [ACTIVE_CLASS]: this.state.mode == CONVERSIONS, [DEFAULT_CLASS]: this.state.mode !== CONVERSIONS })} onClick={this.setConversions()}>Conversions</div>
+      <div className={classNames({ [ACTIVE_CLASS]: mode == CONVERSIONS, [DEFAULT_CLASS]: mode !== CONVERSIONS })} onClick={setConversions()}>Conversions</div>
     )
   }
 
-  tabs() {
+  function tabs() {
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-        {this.tabConversions()}
-        {this.hasFunnels() ? this.tabFunnelPicker() : null}
+        {tabConversions()}
+        {hasFunnels() ? tabFunnelPicker() : null}
       </div>
     )
   }
 
-  renderContent() {
-    switch (this.state.mode) {
+  function renderContent() {
+    switch (mode) {
       case CONVERSIONS:
-        return <Conversions tabs={this.tabs()} site={this.props.site} query={this.props.query} />
+        return <Conversions tabs={tabs()} site={props.site} query={props.query} />
       case FUNNELS:
         return null
     }
   }
 
-  render() {
-    return (<div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
-      {this.renderContent()}
-    </div>)
-  }
+  return (
+    <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
+      {renderContent()}
+    </div>
+  )
 }
