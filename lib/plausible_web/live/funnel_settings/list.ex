@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
                 phx-click="delete-funnel"
                 phx-value-funnel-id={funnel.id}
                 class="text-sm text-red-600"
-                data-confirm="Are you sure you want to remove funnel '#{funnel.name}'? This will just affect the UI, all of your analytics data will stay intact."
+                data-confirm={"Are you sure you want to remove funnel '#{funnel.name}'? This will just affect the UI, all of your analytics data will stay intact."}
               >
                 <svg
                   class="feather feather-sm"
