@@ -25,6 +25,12 @@ defmodule Plausible.Funnels do
     Funnel.changeset(%Funnel{site_id: site.id}, %{name: name, steps: steps})
   end
 
+  def ephemeral_definition(site, name, steps) do
+    site
+    |> create_changeset(name, steps)
+    |> Ecto.Changeset.apply_changes()
+  end
+
   def list(%Plausible.Site{id: site_id}) do
     Repo.all(
       from(f in Funnel,
@@ -73,20 +79,24 @@ defmodule Plausible.Funnels do
     end
   end
 
-  def evaluate(query, funnel_id, site) do
+  def evaluate(query, funnel_id, site) when is_integer(funnel_id) do
     with {:ok, funnel_definition} <- get(site.id, funnel_id) do
-      steps =
-        site
-        |> Base.base_event_query(query)
-        |> query_funnel(funnel_definition)
-        |> backfill_steps(funnel_definition)
-
-      {:ok,
-       %{
-         name: funnel_definition.name,
-         steps: steps
-       }}
+      evaluate(query, funnel_definition, site)
     end
+  end
+
+  def evaluate(query, funnel_definition, site) do
+    steps =
+      site
+      |> Base.base_event_query(query)
+      |> query_funnel(funnel_definition)
+      |> backfill_steps(funnel_definition)
+
+    {:ok,
+     %{
+       name: funnel_definition.name,
+       steps: steps
+     }}
   end
 
   defp query_funnel(query, funnel_definition) do
@@ -191,7 +201,7 @@ defmodule Plausible.Funnels do
         dropoff: dropoff,
         conversion_rate: conversion_rate,
         visitors: visitors_at_step,
-        label: Plausible.Goal.display_name(step.goal)
+        label: to_string(step.goal)
       }
 
       {total_visitors, current_visitors, [step | acc]}

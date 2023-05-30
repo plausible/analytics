@@ -1,21 +1,3 @@
-defimpl Jason.Encoder, for: Plausible.Goal do
-  def encode(value, opts) do
-    goal_type =
-      cond do
-        value.event_name -> :event
-        value.page_path -> :page
-      end
-
-    domain = value.site.domain
-
-    value
-    |> Map.put(:goal_type, goal_type)
-    |> Map.take([:id, :goal_type, :event_name, :page_path])
-    |> Map.put(:domain, domain)
-    |> Jason.Encode.map(opts)
-  end
-end
-
 defmodule Plausible.Goal do
   use Ecto.Schema
   import Ecto.Changeset
@@ -51,7 +33,7 @@ defmodule Plausible.Goal do
 
   def changeset(goal, attrs \\ %{}) do
     goal
-    |> cast(attrs, [:site_id, :event_name, :page_path, :currency])
+    |> cast(attrs, [:id, :site_id, :event_name, :page_path, :currency])
     |> validate_required([:site_id])
     |> cast_assoc(:site)
     |> validate_event_name_and_page_path()
@@ -88,12 +70,32 @@ defmodule Plausible.Goal do
       changeset
     end
   end
+end
 
-  def display_name(%__MODULE__{page_path: page_path}) when is_binary(page_path) do
+defimpl Jason.Encoder, for: Plausible.Goal do
+  def encode(value, opts) do
+    goal_type =
+      cond do
+        value.event_name -> :event
+        value.page_path -> :page
+      end
+
+    domain = value.site.domain
+
+    value
+    |> Map.put(:goal_type, goal_type)
+    |> Map.take([:id, :goal_type, :event_name, :page_path])
+    |> Map.put(:domain, domain)
+    |> Jason.Encode.map(opts)
+  end
+end
+
+defimpl String.Chars, for: Plausible.Goal do
+  def to_string(%{page_path: page_path}) when is_binary(page_path) do
     "Visit " <> page_path
   end
 
-  def display_name(%__MODULE__{event_name: name}) when is_binary(name) do
+  def to_string(%{event_name: name}) when is_binary(name) do
     name
   end
 end

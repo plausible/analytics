@@ -38,8 +38,9 @@ defmodule Plausible.Funnel do
 
     def changeset(step, attrs \\ %{}) do
       step
-      |> cast(attrs, [:step_order, :goal_id])
-      |> validate_required([:goal_id, :step_order])
+      |> cast(attrs, [:goal_id])
+      |> cast_assoc(:goal)
+      |> validate_required([:goal_id])
       |> unique_constraint(:goal,
         name: :funnel_steps_goal_id_funnel_id_index
       )
@@ -61,23 +62,24 @@ defmodule Plausible.Funnel do
   end
 
   def changeset(funnel \\ %__MODULE__{}, attrs \\ %{}) do
-    step_attrs =
-      attrs
-      |> Map.get(:steps, [])
-      |> Enum.with_index(1)
-      |> Enum.map(fn {goal_params, step_order} ->
-        Map.put(goal_params, "step_order", step_order)
-      end)
-
-    attrs = Map.replace(attrs, :steps, step_attrs)
-
     funnel
     |> cast(attrs, [:name])
     |> validate_required([:name])
     |> cast_assoc(:steps, with: &Step.changeset/2, required: true)
     |> validate_length(:steps, min: @min_steps, max: @max_steps)
+    |> put_step_orders()
     |> unique_constraint(:name,
       name: :funnels_name_site_id_index
     )
+  end
+
+  def put_step_orders(changeset) do
+    if steps = Ecto.Changeset.get_change(changeset, :steps) do
+      steps
+      |> Enum.with_index(fn step, step_order ->
+        Ecto.Changeset.put_change(step, :step_order, step_order + 1)
+      end)
+      |> then(&Ecto.Changeset.put_change(changeset, :steps, &1))
+    end
   end
 end

@@ -14,7 +14,12 @@ defmodule Plausible.FunnelsTest do
     {:ok, g5} = Goals.create(site, %{"page_path" => "/recommend"})
     {:ok, g6} = Goals.create(site, %{"event_name" => "Extra event"})
 
-    {:ok, %{site: site, steps: [g1, g2, g3, g4, g5, g6] |> Enum.map(&%{"goal_id" => &1.id})}}
+    {:ok,
+     %{
+       site: site,
+       goals: [g1, g2, g3],
+       steps: [g1, g2, g3, g4, g5, g6] |> Enum.map(&%{"goal_id" => &1.id})
+     }}
   end
 
   test "create and store a funnel given a set of goals", %{site: site, steps: [g1, g2, g3 | _]} do
@@ -106,6 +111,69 @@ defmodule Plausible.FunnelsTest do
 
     assert [%{name: "Funnel 2", steps_count: 3}, %{name: "Funnel 1", steps_count: 2}] =
              funnels_list
+  end
+
+  test "funnels can be evaluated per site within a time range against an interim definition", %{
+    site: site,
+    goals: [g1, g2, g3 | _]
+  } do
+    funnel_definition =
+      Funnels.ephemeral_definition(
+        site,
+        "From blog to signup and purchase",
+        [
+          %{
+            "goal_id" => "#{g1.id}",
+            "goal" => %{
+              "id" => "#{g1.id}",
+              "event_name" => g1.event_name,
+              "page_path" => g1.page_path
+            }
+          },
+          %{
+            "goal_id" => g2.id,
+            "goal" => %{
+              "id" => g2.id,
+              "event_name" => g2.event_name,
+              "page_path" => g2.page_path
+            }
+          },
+          %{
+            "goal_id" => g3.id,
+            "goal" => %{
+              "id" => g3.id,
+              "event_name" => g3.event_name,
+              "page_path" => g3.page_path
+            }
+          }
+        ]
+      )
+
+    populate_stats(site, [
+      build(:pageview, pathname: "/go/to/blog/foo", user_id: 123),
+      build(:event, name: "Signup", user_id: 123),
+      build(:pageview, pathname: "/checkout", user_id: 123),
+      build(:pageview, pathname: "/go/to/blog/bar", user_id: 666),
+      build(:event, name: "Signup", user_id: 666)
+    ])
+
+    query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+
+    funnel_data = Funnels.evaluate(query, funnel_definition, site)
+
+    assert {:ok,
+            %{
+              steps: [
+                %{
+                  label: "Visit /go/to/blog/**",
+                  visitors: 2,
+                  conversion_rate: "100.00",
+                  dropoff: 0
+                },
+                %{label: "Signup", visitors: 2, conversion_rate: "100.00", dropoff: 0},
+                %{label: "Visit /checkout", visitors: 1, conversion_rate: "50.00", dropoff: 1}
+              ]
+            }} = funnel_data
   end
 
   test "funnels can be evaluated per site within a time range", %{

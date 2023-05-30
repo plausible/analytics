@@ -106,7 +106,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
       class="dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
     >
       <.option
-        :for={{{submit_value, display_value}, idx} <- Enum.with_index(@suggestions)}
+        :for={
+          {{submit_value, display_value}, idx} <-
+            Enum.with_index(
+              @suggestions,
+              fn {option_value, option}, idx -> {{option_value, to_string(option)}, idx} end
+            )
+        }
         :if={@suggestions != []}
         idx={idx}
         submit_value={submit_value}
@@ -191,13 +197,14 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
 
     options
     |> Enum.reject(fn {_, value} ->
-      input_len > String.length(value)
+      input_len > String.length(to_string(value))
     end)
     |> Enum.sort_by(
       fn {_, value} ->
-        if value == input do
+        if to_string(value) == input do
           3
         else
+          value = to_string(value)
           input = String.downcase(input)
           value = String.downcase(value)
           weight = if String.contains?(value, input), do: 1, else: 0

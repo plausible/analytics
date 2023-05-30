@@ -13,9 +13,16 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
     funnels = Funnels.list(site)
 
+    # We'll have the options trimmed to only the data we care about, to keep
+    # it minimal at the socket assigns, yet, we want to retain specific %Goal{}
+    # fields, so that `String.Chars` protocol and `Funnels.ephemeral_definition/3`
+    # are applicable downstream.
     goals =
-      Goals.for_site(site)
-      |> Enum.map(fn goal -> {goal.id, Plausible.Goal.display_name(goal)} end)
+      site
+      |> Goals.for_site()
+      |> Enum.map(fn goal ->
+        {goal.id, struct!(Plausible.Goal, Map.take(goal, [:id, :event_name, :page_path]))}
+      end)
 
     {:ok, assign(socket, site: site, funnels: funnels, goals: goals, add_funnel?: false)}
   end
@@ -25,7 +32,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     <%= if @add_funnel? do %>
       <.live_component
         module={PlausibleWeb.Live.FunnelSettings.Form}
-        id="funnelForm"
+        id="funnel-form"
         site={@site}
         form={to_form(Plausible.Funnels.create_changeset(@site, "", []))}
         goals={@goals}
@@ -34,7 +41,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       <div :if={Enum.count(@goals) >= 2}>
         <.live_component
           module={PlausibleWeb.Live.FunnelSettings.List}
-          id="funnelsList"
+          id="funnels-list"
           funnels={@funnels}
           site={@site}
         />
