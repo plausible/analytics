@@ -10,8 +10,7 @@ defmodule Plausible.Funnels do
   import Ecto.Query
 
   def create(site, name, steps)
-      when is_list(steps) and length(steps) >= Funnel.min_steps() and
-             length(steps) <= Funnel.max_steps() do
+      when is_list(steps) and length(steps) in Funnel.min_steps()..Funnel.max_steps() do
     site
     |> create_changeset(name, steps)
     |> Repo.insert()
