@@ -75,8 +75,7 @@ RUN apk upgrade --no-cache && \
   apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
 COPY --from=buildcontainer --chown=plausibleuser:plausibleuser /app/_build/prod/rel/plausible /app
-COPY ./rel/docker-entrypoint.sh /entrypoint.sh
-RUN chmod a+x /entrypoint.sh
+COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
 USER plausibleuser
 
