@@ -1,8 +1,6 @@
-defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
+defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
-
-  ## FIXME: rename to ComboBox
 
   @max_options_displayed 15
 

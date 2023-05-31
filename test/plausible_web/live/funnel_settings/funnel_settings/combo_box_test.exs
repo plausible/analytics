@@ -1,9 +1,9 @@
-defmodule PlausibleWeb.Live.FunnelSettings.InputPickerTest do
+defmodule PlausibleWeb.Live.FunnelSettings.ComboBoxTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
-  alias PlausibleWeb.Live.FunnelSettings.InputPicker
+  alias PlausibleWeb.Live.FunnelSettings.ComboBox
 
   @ul "ul#dropdown-test-component[x-show=isOpen][x-ref=suggestions]"
 
@@ -106,25 +106,25 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPickerTest do
       options = fake_options(["yellow", "hello", "cruel hello world"])
 
       assert [{_, "hello"}, {_, "cruel hello world"}, {_, "yellow"}] =
-               InputPicker.suggest("hello", options)
+               ComboBox.suggest("hello", options)
     end
 
     test "skips entries shorter than input" do
       options = fake_options(["yellow", "hello", "cruel hello world"])
 
-      assert [{_, "cruel hello world"}] = InputPicker.suggest("cruel hello", options)
+      assert [{_, "cruel hello world"}] = ComboBox.suggest("cruel hello", options)
     end
 
     test "favours similiarity" do
       options = fake_options(["melon", "hello", "yellow"])
-      assert [{_, "hello"}, {_, "yellow"}, {_, "melon"}] = InputPicker.suggest("hell", options)
+      assert [{_, "hello"}, {_, "yellow"}, {_, "melon"}] = ComboBox.suggest("hell", options)
     end
 
     test "allows fuzzy matching" do
       options = fake_options(["/url/0xC0FFEE", "/url/0xDEADBEEF", "/url/other"])
 
       assert [{_, "/url/0xC0FFEE"}, {_, "/url/0xDEADBEEF"}, {_, "/url/other"}] =
-               InputPicker.suggest("0x FF", options)
+               ComboBox.suggest("0x FF", options)
     end
 
     test "suggests up to 15 entries" do
@@ -133,7 +133,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPickerTest do
         |> Enum.map(&"Option #{&1}")
         |> fake_options()
 
-      suggestions = InputPicker.suggest("Option", options)
+      suggestions = ComboBox.suggest("Option", options)
       assert Enum.count(suggestions) == 15
     end
   end
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPickerTest do
   end
 
   defp render_sample_component(options) do
-    render_component(InputPicker,
+    render_component(ComboBox,
       options: options,
       submit_name: "test-submit-name",
       id: "test-component"

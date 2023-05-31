@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               <div class="inline-flex items-center">
                 <.live_component
                   submit_name="funnel[steps][][goal_id]"
-                  module={PlausibleWeb.Live.FunnelSettings.InputPicker}
+                  module={PlausibleWeb.Live.FunnelSettings.ComboBox}
                   id={"step-#{step_idx}"}
                   options={@goals}
                 />
