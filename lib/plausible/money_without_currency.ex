@@ -10,81 +10,77 @@ defmodule Plausible.MoneyWithoutCurrency do
   `UInt64` value and loaded as `nil` in runtime.
   """
 
-  use Ecto.Type
+  # This custom type does not have any params, but it is still defined as
+  # Ecto.ParameterizedType to work with nils. Ecto.Type does not defer nils to
+  # load and dump functions.
+  use Ecto.ParameterizedType
 
   @exponent 6
   @max_uint64 18_446_744_073_709_551_615
+  @positive_sign 1
 
-  def type, do: :u64
+  def init(opts) do
+    Enum.into(opts, %{})
+  end
+
+  def type(_params) do
+    :u64
+  end
 
   @doc """
   Casts a %Decimal{} value. If nil or negative, handles it as a missing value.
   """
-  def cast(value)
-
-  def cast(%Decimal{} = decimal) do
-    if Decimal.positive?(decimal) do
-      {:ok, decimal}
-    else
-      {:ok, nil}
+  def cast(data, _params) do
+    case data do
+      %Decimal{} = decimal -> {:ok, decimal}
+      nil -> {:ok, nil}
+      _any -> :error
     end
   end
-
-  def cast(nil) do
-    {:ok, nil}
-  end
-
-  def cast(_any) do
-    :error
-  end
-
-  @positive_sign 1
 
   @doc """
   Loads the value from the database as a %Decimal{} or `nil` if missing.
   """
-  def load(value)
+  def load(data, _loader, _params) do
+    case data do
+      data when data == @max_uint64 ->
+        {:ok, nil}
 
-  def load(missing_value) when missing_value == @max_uint64 do
-    {:ok, nil}
-  end
+      data when is_integer(data) ->
+        decimal =
+          @positive_sign
+          |> Decimal.new(data, -@exponent)
+          |> Decimal.normalize()
 
-  def load(integer) when is_integer(integer) do
-    decimal =
-      @positive_sign
-      |> Decimal.new(integer, -@exponent)
-      |> Decimal.normalize()
+        {:ok, decimal}
 
-    {:ok, decimal}
-  end
-
-  def load(_any) do
-    :error
+      _any ->
+        :error
+    end
   end
 
   @doc """
   Dumps a %Decimal{} to the database as integer with a fixed precision of
   #{@exponent} digits.
   """
-  def dump(value)
+  def dump(data, _dumper, _params) do
+    case data do
+      %Decimal{} = decimal ->
+        rounded =
+          decimal
+          |> Decimal.round(@exponent, :half_even)
+          |> Decimal.normalize()
 
-  def dump(%Decimal{} = decimal) do
-    rounded =
-      decimal
-      |> Decimal.round(@exponent, :half_even)
-      |> Decimal.normalize()
+        exponent_adjustment = Kernel.abs(-@exponent - rounded.exp)
+        integer = Cldr.Math.power_of_10(exponent_adjustment) * rounded.coef * rounded.sign
 
-    exponent_adjustment = Kernel.abs(-@exponent - rounded.exp)
-    integer = Cldr.Math.power_of_10(exponent_adjustment) * rounded.coef * rounded.sign
+        {:ok, integer}
 
-    {:ok, integer}
-  end
+      nil ->
+        {:ok, @max_uint64}
 
-  def dump(nil) do
-    {:ok, @max_uint64}
-  end
-
-  def dump(_any) do
-    :error
+      _any ->
+        :error
+    end
   end
 end

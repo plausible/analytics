@@ -753,7 +753,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert %{status: 202} = post(conn, "/api/event", params)
       assert %{revenue_reporting_amount: amount} = get_event(site)
 
-      assert Decimal.equal?(Decimal.new("0.0"), amount)
+      assert is_nil(amount)
     end
 
     test "ignores a malformed referrer URL", %{conn: conn, site: site} do
