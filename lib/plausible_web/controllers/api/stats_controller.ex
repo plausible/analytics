@@ -846,7 +846,6 @@ defmodule PlausibleWeb.Api.StatsController do
     )
   end
 
-  # TODO: tests
   def funnel(conn, %{"id" => funnel_id} = params) do
     site = conn.assigns[:site]
 
