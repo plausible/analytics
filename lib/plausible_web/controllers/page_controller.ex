@@ -8,10 +8,6 @@ defmodule PlausibleWeb.PageController do
   This controller action is only ever triggered in self-hosted Plausible.
   """
   def index(conn, _params) do
-    render(conn, "index.html",
-      # TODO compile in
-      version: "v2.0.0-rc.1",
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
+    render(conn, "index.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 end
