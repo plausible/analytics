@@ -191,8 +191,8 @@ defmodule Plausible.Funnels do
           "0.00"
         else
           # XXX: Talk to Vini
-          (current_visitors / total_visitors * 100)
-          |> Decimal.from_float()
+          Decimal.div(current_visitors, total_visitors)
+          |> Decimal.mult(100)
           |> Decimal.round(2)
           |> Decimal.to_string()
         end
