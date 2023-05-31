@@ -283,12 +283,12 @@ defmodule Plausible.Stats.Base do
         total_revenue:
           type(
             fragment(
-              "sumIf(?, ? != ?) * any(_sample_factor)",
+              "toUInt64(sumIf(?, ? != ?) * any(_sample_factor))",
               e.revenue_reporting_amount,
               e.revenue_reporting_amount,
               ^Plausible.MoneyWithoutCurrency.missing_value()
             ),
-            e.revenue_reporting_amount
+              e.revenue_reporting_amount
           )
       }
     )
@@ -301,12 +301,12 @@ defmodule Plausible.Stats.Base do
         average_revenue:
           type(
             fragment(
-              "round(avgIf(?, ? != ?)) * any(_sample_factor)",
+              "toUInt64(avgIf(?, ? != ?) * any(_sample_factor))",
               e.revenue_reporting_amount,
               e.revenue_reporting_amount,
               ^Plausible.MoneyWithoutCurrency.missing_value()
             ),
-            e.revenue_reporting_amount
+              e.revenue_reporting_amount
           )
       }
     )

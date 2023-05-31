@@ -24,7 +24,7 @@ defmodule Plausible.MoneyWithoutCurrency do
   end
 
   def type(_params) do
-    :u64
+    Ecto.ParameterizedType.init(Ch, type: "UInt64")
   end
 
   @doc """

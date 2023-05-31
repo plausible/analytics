@@ -39,6 +39,8 @@ defmodule Plausible.Stats.Breakdown do
         []
       end
 
+    IO.inspect(event_results)
+
     event_results =
       if Enum.empty?(revenue_goals) do
         event_results
