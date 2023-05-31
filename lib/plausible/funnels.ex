@@ -190,8 +190,8 @@ defmodule Plausible.Funnels do
         if current_visitors == 0 or total_visitors == 0 do
           "0.00"
         else
-          # XXX: Talk to Vini
-          Decimal.div(current_visitors, total_visitors)
+          current_visitors
+          |> Decimal.div(total_visitors)
           |> Decimal.mult(100)
           |> Decimal.round(2)
           |> Decimal.to_string()
