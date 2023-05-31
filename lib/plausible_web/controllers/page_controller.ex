@@ -2,6 +2,8 @@ defmodule PlausibleWeb.PageController do
   use PlausibleWeb, :controller
   use Plausible.Repo
 
+  plug PlausibleWeb.RequireLoggedOutPlug
+
   @doc """
   The root path is never accessible in Plausible.Cloud because it is handled by the upstream reverse proxy.
 
