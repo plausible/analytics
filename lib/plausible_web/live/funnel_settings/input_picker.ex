@@ -46,6 +46,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
             name={"display-#{@id}"}
             placeholder={@placeholder}
             x-on:focus="open"
+            x-on:blur="close"
             phx-change="search"
             phx-target={@myself}
             value={@display_value}
@@ -98,7 +99,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.InputPicker do
   attr(:suggestions, :list, default: [])
   attr(:target, :any)
 
-  # FIXME: bug when skipping via Tab
   def dropdown(assigns) do
     ~H"""
     <ul
