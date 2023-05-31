@@ -31,6 +31,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
       x-on:keydown.arrow-up="focusPrev"
       x-on:keydown.arrow-down="focusNext"
       x-on:keydown.enter="select()"
+      x-on:keydown.tab="close"
     >
       <div class="relative w-full">
         <div
@@ -44,7 +45,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
             name={"display-#{@id}"}
             placeholder={@placeholder}
             x-on:focus="open"
-            x-on:blur="close"
             phx-change="search"
             phx-target={@myself}
             value={@display_value}
