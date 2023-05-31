@@ -1,0 +1,14 @@
+<div class="bg-white px-8 py-6 mx-auto max-w-xl rounded shadow">
+  <p class="font-semibold leading-10 text-gray-900">
+    Welcome to Plausible <a href="https://github.com/plausible/analytics/tree/v2.0.0-rc.1"><small class="bg-gray-300 rounded-full ml-0.5 px-2 py-0.5 font-medium leading-6"><%= @version %></small></a>
+  </p>
+  <ul>
+    <li><a href="/login">Login</a></li>
+    <li><a href="/register">Register</a></li>
+    <li><a href="https://plausible.io/docs/self-hosting">Guides &amp; Docs</a></li>
+    <li><a href="https://github.com/plausible/analytics">Source Code
+    <li><a href="https://github.com/plausible/analytics/discussions">Discuss</a></li>
+    <li><a href="https://github.com/plausible/analytics/blob/<%= @version %>/CHANGELOG.md">Changelog</a></li>
+    <li><a href="https://twitter.com/PlausibleHQ">Follow on Twitter</a></li>
+  </ul>
+</div>
