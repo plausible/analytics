@@ -91,7 +91,6 @@ defmodule Plausible.FunnelsTest do
              )
   end
 
-  # But really? XXX: ref: Robert's question
   test "a goal can only appear once in a funnel", %{steps: [g1 | _], site: site} do
     {:error, _changeset} =
       Funnels.create(
