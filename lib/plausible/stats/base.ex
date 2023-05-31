@@ -277,6 +277,42 @@ defmodule Plausible.Stats.Base do
     |> select_event_metrics(rest)
   end
 
+  def select_event_metrics(q, [:total_revenue | rest]) do
+    from(e in q,
+      select_merge: %{
+        total_revenue:
+          type(
+            fragment(
+              "sumIf(?, ? != ?) * any(_sample_factor)",
+              e.revenue_reporting_amount,
+              e.revenue_reporting_amount,
+              ^Plausible.MoneyWithoutCurrency.missing_value()
+            ),
+            e.revenue_reporting_amount
+          )
+      }
+    )
+    |> select_event_metrics(rest)
+  end
+
+  def select_event_metrics(q, [:average_revenue | rest]) do
+    from(e in q,
+      select_merge: %{
+        average_revenue:
+          type(
+            fragment(
+              "round(avgIf(?, ? != ?)) * any(_sample_factor)",
+              e.revenue_reporting_amount,
+              e.revenue_reporting_amount,
+              ^Plausible.MoneyWithoutCurrency.missing_value()
+            ),
+            e.revenue_reporting_amount
+          )
+      }
+    )
+    |> select_event_metrics(rest)
+  end
+
   def select_event_metrics(q, [:sample_percent | rest]) do
     from(e in q,
       select_merge: %{

@@ -17,10 +17,19 @@ defmodule Plausible.Stats.Breakdown do
       |> Goals.for_site()
       |> Enum.split_with(fn goal -> goal.event_name end)
 
+    revenue_goals = Enum.filter(event_goals, &Plausible.Goal.revenue?/1)
+
     events = Enum.map(event_goals, & &1.event_name)
     event_query = %Query{query | filters: Map.put(query.filters, "event:name", {:member, events})}
 
     trace(query, property, metrics)
+
+    metrics =
+      if Enum.empty?(revenue_goals) do
+        metrics
+      else
+        metrics ++ [:average_revenue, :total_revenue]
+      end
 
     event_results =
       if Enum.any?(event_goals) do
@@ -28,6 +37,13 @@ defmodule Plausible.Stats.Breakdown do
         |> transform_keys(%{name: :goal})
       else
         []
+      end
+
+    event_results =
+      if Enum.empty?(revenue_goals) do
+        event_results
+      else
+        cast_revenue_metrics_to_money(event_results, revenue_goals)
       end
 
     {limit, page} = pagination
@@ -154,6 +170,19 @@ defmodule Plausible.Stats.Breakdown do
   def breakdown(site, query, property, metrics, pagination) do
     trace(query, property, metrics)
     breakdown_sessions(site, query, property, metrics, pagination)
+  end
+
+  defp cast_revenue_metrics_to_money(event_results, revenue_goals) do
+    for result <- event_results do
+      if matching_goal = Enum.find(revenue_goals, &(&1.event_name == result.goal)) do
+        total_revenue = Money.new!(matching_goal.currency, result.total_revenue)
+        average_revenue = Money.new!(matching_goal.currency, result.average_revenue)
+
+        %{result | total_revenue: total_revenue, average_revenue: average_revenue}
+      else
+        %{result | average_revenue: nil, total_revenue: nil}
+      end
+    end
   end
 
   defp zip_results(event_result, session_result, property, metrics) do

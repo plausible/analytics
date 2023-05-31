@@ -1058,6 +1058,7 @@ defmodule PlausibleWeb.Api.StatsController do
         goal
         |> Map.put(:prop_names, CustomProps.props_for_goal(site, query))
         |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal[:unique_conversions]))
+        |> format_revenue_metrics()
       end)
 
     if params["csv"] do
@@ -1066,6 +1067,22 @@ defmodule PlausibleWeb.Api.StatsController do
       json(conn, conversions)
     end
   end
+
+  defp format_revenue_metrics(%{average_revenue: %Money{}, total_revenue: %Money{}} = results) do
+    %{
+      results
+      | average_revenue: %{
+          short: Money.to_string!(results.average_revenue, format: :short, fractional_digits: 1),
+          long: Money.to_string!(results.average_revenue)
+        },
+        total_revenue: %{
+          short: Money.to_string!(results.total_revenue, format: :short, fractional_digits: 1),
+          long: Money.to_string!(results.total_revenue)
+        }
+    }
+  end
+
+  defp format_revenue_metrics(results), do: results
 
   def prop_breakdown(conn, params) do
     site = conn.assigns[:site]

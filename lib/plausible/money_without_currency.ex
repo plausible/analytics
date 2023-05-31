@@ -83,4 +83,8 @@ defmodule Plausible.MoneyWithoutCurrency do
         :error
     end
   end
+
+  def missing_value do
+    @max_uint64
+  end
 end

@@ -751,9 +751,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       insert(:goal, event_name: "Payment", currency: "USD", site: site)
 
       assert %{status: 202} = post(conn, "/api/event", params)
-      assert %{revenue_reporting_amount: amount} = get_event(site)
-
-      assert is_nil(amount)
+      assert %{revenue_reporting_amount: nil} = get_event(site)
     end
 
     test "ignores a malformed referrer URL", %{conn: conn, site: site} do
