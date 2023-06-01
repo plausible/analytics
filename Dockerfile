@@ -69,7 +69,7 @@ COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 RUN addgroup -S plausible && \
   adduser -S -u 999 -g plausible plausible
 
-USER 999
+USER plausible
 
 WORKDIR /app
 ENV LISTEN_IP=0.0.0.0
