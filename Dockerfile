@@ -65,14 +65,14 @@ ENV BUILD_METADATA=$BUILD_METADATA
 ENV MIX_ENV=$MIX_ENV
 ENV LANG=C.UTF-8
 
+RUN addgroup -S plausible && \
+  adduser -S -H -u 999 -g plausible plausible
+
 RUN apk upgrade --no-cache && \
   apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
 COPY --from=buildcontainer --chmod=a+rX /app/_build/prod/rel/plausible /app
 COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
-
-RUN addgroup -S plausible -g 999 && \
-  adduser -S -u 999 -G plausible plausible
 
 USER 999
 
