@@ -277,6 +277,8 @@ defmodule Plausible.Stats.Base do
     |> select_event_metrics(rest)
   end
 
+  @money_type Ecto.ParameterizedType.init(Plausible.MoneyWithoutCurrency, [])
+
   def select_event_metrics(q, [:total_revenue | rest]) do
     from(e in q,
       select_merge: %{
@@ -288,7 +290,7 @@ defmodule Plausible.Stats.Base do
               e.revenue_reporting_amount,
               ^Plausible.MoneyWithoutCurrency.missing_value()
             ),
-              e.revenue_reporting_amount
+            ^@money_type
           )
       }
     )
@@ -306,7 +308,7 @@ defmodule Plausible.Stats.Base do
               e.revenue_reporting_amount,
               ^Plausible.MoneyWithoutCurrency.missing_value()
             ),
-              e.revenue_reporting_amount
+            ^@money_type
           )
       }
     )

@@ -19,12 +19,12 @@ defmodule Plausible.MoneyWithoutCurrency do
   @max_uint64 18_446_744_073_709_551_615
   @positive_sign 1
 
-  def init(opts) do
-    Enum.into(opts, %{})
+  def init(_opts) do
+    Ch.init(type: "UInt64")
   end
 
-  def type(_params) do
-    Ecto.ParameterizedType.init(Ch, type: "UInt64")
+  def type(params) do
+    Ch.type(params)
   end
 
   @doc """
