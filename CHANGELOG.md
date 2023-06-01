@@ -11,7 +11,8 @@ All notable changes to this project will be documented in this file.
 - Ability to change domain for existing site (requires numeric IDs data migration, instructions will be provided separately) UI + API (`PUT /api/v1/sites`)
 - Add `LOG_FAILED_LOGIN_ATTEMPTS` environment variable to enable failed login attempts logs plausible/analytics#2936
 - Add `MAILER_NAME` environment variable support plausible/analytics#2937
-- Add `MAILGUN_BASE_URI` support for `Bamboo.MailgunAdapter` plausible/analytics#2935 
+- Add `MAILGUN_BASE_URI` support for `Bamboo.MailgunAdapter` plausible/analytics#2935
+- Add a landing page for self-hosters plausible/analytics#2989
 
 ### Fixed
 - Fix tracker bug - call callback function even when event is ignored
