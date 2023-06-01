@@ -59,9 +59,6 @@ LABEL maintainer="plausible.io <hello@plausible.io>"
 ARG BUILD_METADATA={}
 ENV BUILD_METADATA=$BUILD_METADATA
 ENV LANG=C.UTF-8
-ENV LISTEN_IP=0.0.0.0
-
-WORKDIR /app
 
 RUN apk upgrade --no-cache && \
   apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
@@ -74,6 +71,8 @@ RUN addgroup -S plausible && \
 
 USER 999
 
+WORKDIR /app
+ENV LISTEN_IP=0.0.0.0
 ENTRYPOINT ["/entrypoint.sh"]
 EXPOSE 8000
 CMD ["run"]
