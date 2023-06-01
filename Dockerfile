@@ -74,8 +74,8 @@ RUN apk upgrade --no-cache && \
 COPY --from=buildcontainer --chmod=a+rX /app/_build/prod/rel/plausible /app
 COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
-RUN addgroup -S plausible \
-  && adduser -S -u 999 -g plausible plausible
+RUN addgroup -S plausible && \
+  adduser -S -u 999 -g plausible plausible
 
 USER 999
 
