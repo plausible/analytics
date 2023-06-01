@@ -1,3 +1,20 @@
+defmodule Plausible.Ecto.EventName do
+  @moduledoc """
+    Custom type for event name. Accepts Strings and Integers and stores them as String. Returns
+    cast error if any other type is provided. Accepting integers is important for 404 tracking.
+  """
+
+  use Ecto.Type
+  def type, do: :string
+
+  def cast(val) when is_binary(val), do: {:ok, val}
+  def cast(val) when is_integer(val), do: {:ok, Integer.to_string(val)}
+
+  def cast(_), do: :error
+  def load(val), do: {:ok, val}
+  def dump(val), do: {:ok, val}
+end
+
 defmodule Plausible.Ingestion.Request do
   @moduledoc """
   The %Plausible.Ingestion.Request{} struct stores all needed fields
@@ -13,12 +30,12 @@ defmodule Plausible.Ingestion.Request do
   embedded_schema do
     field :remote_ip, :string
     field :user_agent, :string
-    field :event_name, :string
+    field :event_name, Plausible.Ecto.EventName
     field :uri, :map
     field :hostname, :string
     field :referrer, :string
     field :domains, {:array, :string}
-    field :hash_mode, :string
+    field :hash_mode, :integer
     field :pathname, :string
     field :props, :map
     field :query_params, :map
@@ -88,10 +105,13 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp put_request_params(changeset, %{} = request_body) do
-    Changeset.change(
+    Changeset.cast(
       changeset,
-      event_name: request_body["n"] || request_body["name"],
-      hash_mode: request_body["h"] || request_body["hashMode"]
+      %{
+        event_name: request_body["n"] || request_body["name"],
+        hash_mode: request_body["h"] || request_body["hashMode"]
+      },
+      [:event_name, :hash_mode]
     )
   end
 
