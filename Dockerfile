@@ -72,7 +72,7 @@ COPY --from=buildcontainer --chmod=a+rX /app/_build/prod/rel/plausible /app
 COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
 RUN addgroup -S plausible && \
-  adduser -S -u 999 -g plausible plausible
+  adduser -S -u 999 -G plausible plausible
 
 USER 999
 
