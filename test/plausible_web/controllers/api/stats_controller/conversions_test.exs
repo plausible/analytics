@@ -248,7 +248,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "total_conversions" => 5,
                  "prop_names" => [],
                  "conversion_rate" => 100.0,
-                 "average_revenue" => %{"short" => "€166.7M", "long" => "€166,733,566.74"},
+                 "average_revenue" => %{"short" => "€166.7M", "long" => "€166,733,566.75"},
                  "total_revenue" => %{"short" => "€500.2M", "long" => "€500,200,700.25"}
                }
              ]
