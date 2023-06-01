@@ -68,15 +68,16 @@ ENV LISTEN_IP=0.0.0.0
 
 WORKDIR /app
 
-RUN adduser -u 1000 -s /bin/sh -D plausibleuser
-
 RUN apk upgrade --no-cache && \
   apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
 COPY --from=buildcontainer --chmod=a+rX /app/_build/prod/rel/plausible /app
 COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
-USER plausibleuser
+RUN addgroup -S plausible \
+  && adduser -S -u 999 -g plausible plausible
+
+USER 999
 
 ENTRYPOINT ["/entrypoint.sh"]
 EXPOSE 8000
