@@ -11,6 +11,11 @@ const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
 const CONVERSIONS = 'conversions'
 const FUNNELS = 'funnels'
 
+export const sectionTitles = {
+  [CONVERSIONS]: 'Goal Conversions',
+  [FUNNELS]: "Funnels"
+}
+
 export default function Behaviours(props) {
   const tabKey = `behavioursTab__${props.site.domain}`
   const funnelKey = `behavioursTabFunnel__${props.site.domain}`
@@ -102,15 +107,21 @@ export default function Behaviours(props) {
   function renderContent() {
     switch (mode) {
       case CONVERSIONS:
-        return <Conversions tabs={tabs()} site={props.site} query={props.query} />
+        return <Conversions site={props.site} query={props.query} />
       case FUNNELS:
         return null
     }
   }
 
   return (
-    <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
-      {renderContent()}
+    <div className="items-start justify-between block w-full mt-6 md:flex">
+      <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
+        <div className="flex justify-between w-full">
+              <h3 className="font-bold dark:text-gray-100">{ sectionTitles[CONVERSIONS] }</h3>
+              {tabs()}
+            </div>
+        {renderContent()}
+      </div>
     </div>
   )
 }

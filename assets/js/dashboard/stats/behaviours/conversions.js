@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move'
-
+import { featureSetupNotice } from '../../components/notice';
 
 import Bar from '../bar'
 import PropBreakdown from './prop-breakdown'
@@ -100,10 +100,6 @@ export default class Conversions extends React.Component {
     } else if (this.state.goals) {
       return (
         <React.Fragment>
-          <div className="flex justify-between w-full">
-            <h3 className="font-bold dark:text-gray-100">Goal conversions</h3>
-            {this.props.tabs}
-          </div>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Goal</span>
             <div className="text-right">
@@ -120,11 +116,30 @@ export default class Conversions extends React.Component {
     }
   }
 
-  render() {
+  renderConversions() {
     return (
-      <LazyLoader style={{minHeight: '132px', height: this.state.prevHeight ?? 'auto'}} onVisible={this.onVisible} ref={this.htmlNode}>
+      <LazyLoader style={{minHeight: '132px', height: this.state.prevHeight ?? 'auto'}} onVisible={this.onVisible}>
         { this.renderInner() }
       </LazyLoader>
+    )
+  }
+
+  renderSetupNotice() {
+    const opts = {
+      title: 'Measure how often visitors complete specific actions',
+      info: 'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.',
+      hideNotice: 'Hide this section by clicking the icon on the top right. You can make goals visible again in your site settings later.',
+      docsLink: 'https://plausible.io/docs/goal-conversions'
+    }
+
+    return featureSetupNotice(this.props.site, 'conversions', opts)
+  }
+
+  render() {
+    return (
+      <div ref={this.htmlNode}>
+        { this.props.site.hasGoals ? this.renderConversions() : this.renderSetupNotice() } 
+      </div>
     )
   }
 }
