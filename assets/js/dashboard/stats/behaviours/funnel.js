@@ -34,7 +34,6 @@ export default function Funnel(props) {
         })
 
       return () => {
-        console.info('cleanup')
         if (chartRef.current) {
           chartRef.current.destroy()
         }
@@ -71,7 +70,6 @@ export default function Funnel(props) {
   }
 
   const initialiseChart = () => {
-    console.info('canvasRef', canvasRef)
     if (chartRef.current) {
       chartRef.current.destroy()
     }
@@ -81,8 +79,6 @@ export default function Funnel(props) {
     const dropOffData = funnel.steps.map((step) => step.dropoff)
 
     const ctx = canvasRef.current.getContext("2d")
-    console.info('ctx canvasRef', canvasRef)
-    console.info('ctx', ctx)
 
     var gradient = ctx.createLinearGradient(0, 0, 0, 300)
     gradient.addColorStop(1, 'rgba(101,116,205, 0.3)')
