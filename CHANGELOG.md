@@ -43,6 +43,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - Remove Firewall plug and `IP_BLOCKLIST` environment variable
 - Remove the ability to collapse the main graph plausible/analytics#2627
+- Remove `custom_dimension_filter` feature flag plausible/analytics#2996
 
 ## v1.5.1 - 2022-12-06
 
