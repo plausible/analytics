@@ -64,13 +64,6 @@ function renderDropdownFilter(site, history, [key, value], query) {
           <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
           <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
-        <div
-          onClick={(e) => {e.preventDefault()}}
-          className="group flex w-full justify-between items-center"
-          style={{ width: 'calc(100% - 1.5rem)' }}
-        >
-          <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
-        </div>
         <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
           <XMarkIcon className="w-4 h-4" />
         </b>
@@ -213,9 +206,6 @@ class Filters extends React.Component {
         <Link title={`Edit filter: ${formattedFilters[key]}`} className="flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
           <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
         </Link>
-        <div className="flex w-full h-full items-center py-2 pl-3">
-          <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
-        </div>
         <span title={`Remove filter: ${formattedFilters[key]}`} className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => removeFilter(key, history, query)}>
           <XMarkIcon className="w-4 h-4" />
         </span>
