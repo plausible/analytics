@@ -169,6 +169,8 @@ defmodule Plausible.Site do
     change(site, allowed_event_props: list)
   end
 
+  def disable_feature(site, "conversions"), do: change(site, conversions_enabled: false)
+
   def remove_imported_data(site) do
     change(site, imported_data: nil)
   end

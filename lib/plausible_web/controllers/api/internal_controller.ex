@@ -30,6 +30,23 @@ defmodule PlausibleWeb.Api.InternalController do
     end
   end
 
+  def disable_feature(conn, %{"domain" => domain, "feature" => feature}) do
+    with %Plausible.Auth.User{id: user_id} <- conn.assigns[:current_user],
+         site <- Plausible.Sites.get_by_domain(domain),
+         true <- Plausible.Sites.has_admin_access?(user_id, site) do
+      Plausible.Site.disable_feature(site, feature)
+      |> Repo.update()
+
+      json(conn, "ok")
+    else
+      _ ->
+        PlausibleWeb.Api.Helpers.unauthorized(
+          conn,
+          "You need to be logged in as the owner or admin account of this site"
+        )
+    end
+  end
+
   defp sites_for(user, params) do
     Repo.paginate(
       from(
