@@ -3,12 +3,12 @@ import { EyeSlashIcon } from '@heroicons/react/20/solid'
 import { sectionTitles } from "../stats/behaviours"
 import * as api from '../api'
 
-export function featureSetupNotice(site, feature, opts) {
-  const {title, info, hideNotice, docsLink} = opts
+export function FeatureSetupNotice({site, feature, title, info, docsLink, hideNotice, onHideAction}) {
   const sectionTitle = sectionTitles[feature]
 
   const requestHideSection = () => {
     api.get(`/api/${encodeURIComponent(site.domain)}/disable-feature`, {}, { feature: feature })
+    onHideAction()
   }
 
   function linkToDocs() {

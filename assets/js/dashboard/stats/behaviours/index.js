@@ -1,4 +1,4 @@
-import React, { Fragment, useState } from 'react'
+import React, { Fragment, useState, useEffect } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -6,7 +6,7 @@ import * as storage from '../../util/storage'
 
 import Conversions from './conversions'
 import Funnel from './funnel'
-import { featureSetupNotice } from '../../components/notice'
+import { FeatureSetupNotice } from '../../components/notice'
 
 const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
 const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
@@ -25,11 +25,20 @@ export default function Behaviours(props) {
   const site = props.site
   const tabKey = `behavioursTab__${site.domain}`
   const funnelKey = `behavioursTabFunnel__${site.domain}`
-  const enabledModes = getEnabledModes()
+  const [enabledModes, setEnabledModes] = useState(getEnabledModes())
   const [mode, setMode] = useState(defaultMode())
 
   const [funnelNames, setFunnelNames] = useState(site.funnels.map(({ name }) => name))
   const [selectedFunnel, setSelectedFunnel] = useState(storage.getItem(funnelKey))
+
+  useEffect(() => {
+    setMode(defaultMode())
+    console.log("effect")
+  }, [enabledModes])
+
+  function disableMode(mode) {
+    setEnabledModes(enabledModes.filter((m) => { return m !== mode }))
+  }
 
   function setFunnel(selectedFunnel) {
     return () => {
@@ -90,7 +99,7 @@ export default function Behaviours(props) {
 
   function tabSwitcher(toMode) {
     const title = sectionTitles[toMode]
-    const className = classNames({[ACTIVE_CLASS]: mode == toMode, [DEFAULT_CLASS]: mode !== toMode})
+    const className = classNames({ [ACTIVE_CLASS]: mode == toMode, [DEFAULT_CLASS]: mode !== toMode })
     const setTab = () => {
       storage.setItem(tabKey, toMode)
       setMode(toMode)
@@ -107,7 +116,7 @@ export default function Behaviours(props) {
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
         {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS)}
-        {isEnabled(FUNNELS) && hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS)}
+        {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS))}
         {isEnabled(PROPS) && tabSwitcher(PROPS)}
       </div>
     )
@@ -117,41 +126,54 @@ export default function Behaviours(props) {
     if (site.hasGoals) {
       return <Conversions site={site} query={props.query} />
     } else {
-      const opts = {
-        title: 'Measure how often visitors complete specific actions',
-        info: 'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.',
-        hideNotice: 'Hide this section by clicking the icon on the top right. You can make goals visible again in your site settings later.',
-        docsLink: 'https://plausible.io/docs/goal-conversions'
-      }
-  
-      return featureSetupNotice(site, CONVERSIONS, opts)
+      return (
+        <FeatureSetupNotice
+          site={site}
+          feature={CONVERSIONS}
+          title={'Measure how often visitors complete specific actions'}
+          info={'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.'}
+          docsLink={'https://plausible.io/docs/goal-conversions'}
+          hideNotice={'Hide this section by clicking the icon on the top right. You can make goals visible again in your site settings later.'}
+          onHideAction={onHideAction(CONVERSIONS)}
+        />
+      )
     }
   }
 
   function renderFunnels() {
     if (selectedFunnel) {
-      <Funnel site={site} query={props.query} funnelName={selectedFunnel}/>
+      <Funnel site={site} query={props.query} funnelName={selectedFunnel} />
     } else {
-      const opts = {
-        title: 'I\'m behind the "funnels" feature flag',
-        info: 'I currently exist only for UI testing. Please update me to something meaningful.',
-        docsLink: 'TODO - the correct docs link',
-        hideNotice: 'Hide the "Funnels" tab from your dashboard by clicking the icon on the top right. You can make funnels visible again in your site settings later'
-      }
-      
-      return featureSetupNotice(site, FUNNELS, opts)
+      return (
+        <FeatureSetupNotice
+          site={site}
+          feature={FUNNELS}
+          title={'I\'m behind the "funnels" feature flag'}
+          info={'I currently exist only for UI testing. Please update me to something meaningful.'}
+          docsLink={'TODO - the correct docs link'}
+          hideNotice={'Hide the "Funnels" tab from your dashboard by clicking the icon on the top right. You can make funnels visible again in your site settings later'}
+          onHideAction={onHideAction(FUNNELS)}
+        />
+      )
     }
   }
 
   function renderProps() {
-    const opts = {
-      title: 'I\'m behind the "props" feature flag',
-			info: 'I currently exist only for UI testing. Please update this text to something meaningful :)',
-			docsLink: 'TODO - the correct docs link',
-      hideNotice: 'Hide the "Custom Properties" tab from your dashboard by clicking the icon on the top right. You can make custom properties visible again in your site settings later'
-    }
-  
-    return featureSetupNotice(site, PROPS, opts)
+    return (
+      <FeatureSetupNotice
+        site={site}
+        feature={PROPS}
+        title={'I\'m behind the "props" feature flag'}
+        info={'I currently exist only for UI testing. Please update me to something meaningful.'}
+        docsLink={'TODO - the correct docs link'}
+        hideNotice={'Hide the "Custom Properties" tab from your dashboard by clicking the icon on the top right. You can make custom properties visible again in your site settings later'}
+        onHideAction={onHideAction(PROPS)}
+      />
+    )
+  }
+
+  function onHideAction(mode) {
+    return () => { disableMode(mode) }
   }
 
   function renderContent() {
@@ -178,7 +200,7 @@ export default function Behaviours(props) {
 
   function getEnabledModes() {
     let enabledModes = []
-    
+
     if (site.conversionsEnabled) {
       enabledModes.push(CONVERSIONS)
     }
@@ -200,9 +222,9 @@ export default function Behaviours(props) {
       <div className="items-start justify-between block w-full mt-6 md:flex">
         <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
           <div className="flex justify-between w-full">
-                <h3 className="font-bold dark:text-gray-100">{ sectionTitles[mode] }</h3>
-                {tabs()}
-              </div>
+            <h3 className="font-bold dark:text-gray-100">{sectionTitles[mode]}</h3>
+            {tabs()}
+          </div>
           {renderContent()}
         </div>
       </div>
