@@ -6,7 +6,7 @@ import * as storage from '../../util/storage'
 
 import Conversions from './conversions'
 import Funnel from './funnel'
-import Props from './props'
+import { featureSetupNotice } from '../../components/notice'
 
 const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
 const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
@@ -113,14 +113,55 @@ export default function Behaviours(props) {
     )
   }
 
+  function renderConversions() {
+    if (site.hasGoals) {
+      return <Conversions site={site} query={props.query} />
+    } else {
+      const opts = {
+        title: 'Measure how often visitors complete specific actions',
+        info: 'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.',
+        hideNotice: 'Hide this section by clicking the icon on the top right. You can make goals visible again in your site settings later.',
+        docsLink: 'https://plausible.io/docs/goal-conversions'
+      }
+  
+      return featureSetupNotice(site, CONVERSIONS, opts)
+    }
+  }
+
+  function renderFunnels() {
+    if (selectedFunnel) {
+      <Funnel site={site} query={props.query} funnelName={selectedFunnel}/>
+    } else {
+      const opts = {
+        title: 'I\'m behind the "funnels" feature flag',
+        info: 'I currently exist only for UI testing. Please update me to something meaningful.',
+        docsLink: 'TODO - the correct docs link',
+        hideNotice: 'Hide the "Funnels" tab from your dashboard by clicking the icon on the top right. You can make funnels visible again in your site settings later'
+      }
+      
+      return featureSetupNotice(site, FUNNELS, opts)
+    }
+  }
+
+  function renderProps() {
+    const opts = {
+      title: 'I\'m behind the "props" feature flag',
+			info: 'I currently exist only for UI testing. Please update this text to something meaningful :)',
+			docsLink: 'TODO - the correct docs link',
+      hideNotice: 'Hide the "Custom Properties" tab from your dashboard by clicking the icon on the top right. You can make custom properties visible again in your site settings later'
+    }
+  
+    return featureSetupNotice(site, PROPS, opts)
+  }
+
   function renderContent() {
     switch (mode) {
       case CONVERSIONS:
-        return <Conversions site={site} query={props.query} />
+        return renderConversions()
       case FUNNELS:
-        return <Funnel site={site} query={props.query} funnelName={selectedFunnel}/>
+        return renderFunnels()
       case PROPS:
-        return <Props site={site} query={props.query} hasProps={false}/>
+        return renderProps()
     }
   }
 

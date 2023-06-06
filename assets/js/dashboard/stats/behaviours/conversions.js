@@ -125,21 +125,10 @@ export default class Conversions extends React.Component {
     )
   }
 
-  renderSetupNotice() {
-    const opts = {
-      title: 'Measure how often visitors complete specific actions',
-      info: 'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.',
-      hideNotice: 'Hide this section by clicking the icon on the top right. You can make goals visible again in your site settings later.',
-      docsLink: 'https://plausible.io/docs/goal-conversions'
-    }
-
-    return featureSetupNotice(this.props.site, CONVERSIONS, opts)
-  }
-
   render() {
     return (
       <div ref={this.htmlNode}>
-        { this.props.site.hasGoals ? this.renderConversions() : this.renderSetupNotice() } 
+        { this.renderConversions() } 
       </div>
     )
   }
