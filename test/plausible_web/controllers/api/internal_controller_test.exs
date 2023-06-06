@@ -59,6 +59,21 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       assert %{conversions_enabled: false} = Plausible.Sites.get_by_domain(site.domain)
     end
 
+    test "can disable conversions, funnels, and props with admin access", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site)
+      insert(:site_membership, user: user, site: site, role: :admin)
+
+      get(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
+      get(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "funnels"})
+      get(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "props"})
+
+      assert %{conversions_enabled: false, funnels_enabled: false, props_enabled: false} =
+               Plausible.Sites.get_by_domain(site.domain)
+    end
+
     test "when the logged-in user is an owner of the site", %{conn: conn, user: user} do
       site = insert(:site)
       insert(:site_membership, user: user, site: site, role: :owner)
