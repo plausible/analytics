@@ -5,31 +5,31 @@ import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
 import Conversions from './conversions'
+import Funnel from './funnel'
+import Props from './props'
 
 const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
 const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
-const CONVERSIONS = 'conversions'
-const FUNNELS = 'funnels'
+
+export const CONVERSIONS = 'conversions'
+export const FUNNELS = 'funnels'
+export const PROPS = 'props'
 
 export const sectionTitles = {
   [CONVERSIONS]: 'Goal Conversions',
-  [FUNNELS]: "Funnels"
+  [FUNNELS]: 'Funnels',
+  [PROPS]: 'Custom Properties'
 }
 
 export default function Behaviours(props) {
-  const tabKey = `behavioursTab__${props.site.domain}`
-  const funnelKey = `behavioursTabFunnel__${props.site.domain}`
-  
-  const [mode, setMode] = useState(storage.getItem(tabKey) || CONVERSIONS)
-  const [funnelNames, setFunnelNames] = useState(props.site.funnels.map(({ name }) => name))
+  const site = props.site
+  const tabKey = `behavioursTab__${site.domain}`
+  const funnelKey = `behavioursTabFunnel__${site.domain}`
+  const enabledModes = getEnabledModes()
+  const [mode, setMode] = useState(defaultMode())
+
+  const [funnelNames, setFunnelNames] = useState(site.funnels.map(({ name }) => name))
   const [selectedFunnel, setSelectedFunnel] = useState(storage.getItem(funnelKey))
-  
-  function setConversions() {
-    return () => {
-      storage.setItem(tabKey, CONVERSIONS)
-      setMode(CONVERSIONS)
-    }
-  }
 
   function setFunnel(selectedFunnel) {
     return () => {
@@ -41,8 +41,7 @@ export default function Behaviours(props) {
   }
 
   function hasFunnels() {
-    const site = props.site
-    return site.flags.funnels && site.funnels.length > 0
+    return site.funnels.length > 0
   }
 
   function tabFunnelPicker() {
@@ -89,17 +88,27 @@ export default function Behaviours(props) {
     </Menu>
   }
 
-  function tabConversions() {
+  function tabSwitcher(toMode) {
+    const title = sectionTitles[toMode]
+    const className = classNames({[ACTIVE_CLASS]: mode == toMode, [DEFAULT_CLASS]: mode !== toMode})
+    const setTab = () => {
+      storage.setItem(tabKey, toMode)
+      setMode(toMode)
+    }
+
     return (
-      <div className={classNames({ [ACTIVE_CLASS]: mode == CONVERSIONS, [DEFAULT_CLASS]: mode !== CONVERSIONS })} onClick={setConversions()}>Conversions</div>
+      <div className={className} onClick={setTab}>
+        {title}
+      </div>
     )
   }
 
   function tabs() {
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-        {tabConversions()}
-        {hasFunnels() ? tabFunnelPicker() : null}
+        {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS)}
+        {isEnabled(FUNNELS) && hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS)}
+        {isEnabled(PROPS) && tabSwitcher(PROPS)}
       </div>
     )
   }
@@ -107,21 +116,57 @@ export default function Behaviours(props) {
   function renderContent() {
     switch (mode) {
       case CONVERSIONS:
-        return <Conversions site={props.site} query={props.query} />
+        return <Conversions site={site} query={props.query} />
       case FUNNELS:
-        return null
+        return <Funnel site={site} query={props.query} funnelName={selectedFunnel}/>
+      case PROPS:
+        return <Props site={site} query={props.query} hasProps={false}/>
     }
   }
 
-  return (
-    <div className="items-start justify-between block w-full mt-6 md:flex">
-      <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
-        <div className="flex justify-between w-full">
-              <h3 className="font-bold dark:text-gray-100">{ sectionTitles[CONVERSIONS] }</h3>
-              {tabs()}
-            </div>
-        {renderContent()}
+  function defaultMode() {
+    if (enabledModes.length === 0) { return null }
+
+    const storedMode = storage.getItem(tabKey)
+    if (storedMode && enabledModes.includes(storedMode)) { return storedMode }
+
+    if (enabledModes.includes(CONVERSIONS)) { return CONVERSIONS }
+    if (enabledModes.includes(FUNNELS)) { return FUNNELS }
+    return PROPS
+  }
+
+  function getEnabledModes() {
+    let enabledModes = []
+    
+    if (site.conversionsEnabled) {
+      enabledModes.push(CONVERSIONS)
+    }
+    if (site.funnelsEnabled && site.flags.funnels) {
+      enabledModes.push(FUNNELS)
+    }
+    if (site.propsEnabled && site.flags.props) {
+      enabledModes.push(PROPS)
+    }
+    return enabledModes
+  }
+
+  function isEnabled(mode) {
+    return enabledModes.includes(mode)
+  }
+
+  if (mode) {
+    return (
+      <div className="items-start justify-between block w-full mt-6 md:flex">
+        <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
+          <div className="flex justify-between w-full">
+                <h3 className="font-bold dark:text-gray-100">{ sectionTitles[mode] }</h3>
+                {tabs()}
+              </div>
+          {renderContent()}
+        </div>
       </div>
-    </div>
-  )
+    )
+  } else {
+    return null
+  }
 }

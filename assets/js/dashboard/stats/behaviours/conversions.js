@@ -10,6 +10,7 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import { escapeFilterValue } from '../../util/filters'
 import LazyLoader from '../../components/lazy-loader'
+import { CONVERSIONS } from '.';
 
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080
@@ -132,7 +133,7 @@ export default class Conversions extends React.Component {
       docsLink: 'https://plausible.io/docs/goal-conversions'
     }
 
-    return featureSetupNotice(this.props.site, 'conversions', opts)
+    return featureSetupNotice(this.props.site, CONVERSIONS, opts)
   }
 
   render() {

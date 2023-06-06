@@ -45,7 +45,7 @@ export function featureSetupNotice(site, feature, opts) {
           {info} {linkToDocs()}
         </div>
 
-        <div className="text-justify mt-2">
+        <div className="text-justify mt-8 text-xs italic text-gray-500">
           {hideNotice}
         </div>
       </div>
