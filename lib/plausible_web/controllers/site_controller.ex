@@ -172,7 +172,6 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def set_feature_status(conn, %{"action" => action, "feature" => feature}) do
-    IO.inspect(action)
     site = conn.assigns[:site]
 
     {change, flash_msg} =
