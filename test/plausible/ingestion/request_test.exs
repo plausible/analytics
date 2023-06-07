@@ -316,17 +316,20 @@ defmodule Plausible.Ingestion.RequestTest do
              changeset.errors[:props]
   end
 
-  test "does not fail when sending many props" do
+  test "trims prop list to 30 items when sending too many items" do
     payload = %{
       name: "pageview",
       domain: "dummy.site",
-      url: "https://dummy.site/",
-      props: for(i <- 1..100, do: {"key_#{i}", "value"}, into: %{})
+      url: "http://dummy.site/index.html",
+      referrer: "https://example.com",
+      hashMode: 1,
+      props: for(i <- 1..50, do: {"#{i}", "foo"}, into: %{})
     }
 
     conn = build_conn(:post, "/api/events", payload)
+
     assert {:ok, request} = Request.build(conn)
-    assert map_size(request.props) == 100
+    assert map_size(request.props) == 30
   end
 
   test "malicious input, technically valid json" do

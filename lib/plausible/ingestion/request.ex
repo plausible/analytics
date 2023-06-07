@@ -183,11 +183,13 @@ defmodule Plausible.Ingestion.Request do
     Changeset.put_change(changeset, :hostname, sanitize_hostname(host))
   end
 
+  @max_props 30
   defp put_props(changeset, %{} = request_body) do
     props =
       (request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"])
       |> decode_props_or_fallback()
       |> Enum.reject(fn {_k, v} -> is_nil(v) || is_list(v) || is_map(v) || v == "" end)
+      |> Enum.take(@max_props)
       |> Map.new()
 
     changeset
