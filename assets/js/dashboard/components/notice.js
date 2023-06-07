@@ -46,7 +46,7 @@ export function FeatureSetupNotice({site, feature, title, info, docsLink, hideNo
         </div>
 
         <div className="text-justify mt-8 text-xs italic text-gray-500">
-          {hideNotice}
+          Hide this section by clicking the icon on the top right. {hideNotice}
         </div>
       </div>
     </div>

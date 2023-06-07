@@ -133,7 +133,7 @@ export default function Behaviours(props) {
           title={'Measure how often visitors complete specific actions'}
           info={'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.'}
           docsLink={'https://plausible.io/docs/goal-conversions'}
-          hideNotice={'Hide this section by clicking the icon on the top right. You can make goals visible again in your site settings later.'}
+          hideNotice={'You can make goals visible again in your site settings later.'}
           onHideAction={onHideAction(CONVERSIONS)}
         />
       )
@@ -148,10 +148,10 @@ export default function Behaviours(props) {
         <FeatureSetupNotice
           site={site}
           feature={FUNNELS}
-          title={'I\'m behind the "funnels" feature flag'}
-          info={'I currently exist only for UI testing. Please update me to something meaningful.'}
-          docsLink={'TODO - the correct docs link'}
-          hideNotice={'Hide the "Funnels" tab from your dashboard by clicking the icon on the top right. You can make funnels visible again in your site settings later'}
+          title={'Follow the visitor journey from entry to conversion'}
+          info={'Funnels allow you to analyze the user flow through your website, uncover possible issues, optimize your site and increase the conversion rate.'}
+          docsLink={'https://plausible.io/docs/funnel-analysis'}
+          hideNotice={'You can make funnels visible again in your site settings later.'}
           onHideAction={onHideAction(FUNNELS)}
         />
       )
@@ -163,10 +163,10 @@ export default function Behaviours(props) {
       <FeatureSetupNotice
         site={site}
         feature={PROPS}
-        title={'I\'m behind the "props" feature flag'}
-        info={'I currently exist only for UI testing. Please update me to something meaningful.'}
-        docsLink={'TODO - the correct docs link'}
-        hideNotice={'Hide the "Custom Properties" tab from your dashboard by clicking the icon on the top right. You can make custom properties visible again in your site settings later'}
+        title={'No custom properties found'}
+        info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
+        docsLink={'https://plausible.io/docs/custom-pageview-props'}
+        hideNotice={'You can make custom properties visible again in your site settings later.'}
         onHideAction={onHideAction(PROPS)}
       />
     )
