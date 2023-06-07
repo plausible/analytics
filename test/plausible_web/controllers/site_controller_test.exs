@@ -739,6 +739,71 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "PUT /:website/settings/features/:action/:feature" do
+    setup [:create_user, :log_in]
+
+    test "can disable conversions, funnels, and props with admin access", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site)
+      insert(:site_membership, user: user, site: site, role: :admin)
+
+      put(conn, "/#{site.domain}/settings/features/disable/conversions")
+      put(conn, "/#{site.domain}/settings/features/disable/funnels")
+      conn = put(conn, "/#{site.domain}/settings/features/disable/props")
+
+      assert %{conversions_enabled: false, funnels_enabled: false, props_enabled: false} =
+               Plausible.Sites.get_by_domain(site.domain)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Goals are now hidden from your dashboard"
+      assert redirected_to(conn, 302) =~ "/#{site.domain}/settings/goals"
+    end
+
+    test "can enable conversions, funnels, and props with admin access", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, conversions_enabled: false, funnels_enabled: false, props_enabled: false)
+      insert(:site_membership, user: user, site: site, role: :owner)
+
+      put(conn, "/#{site.domain}/settings/features/enable/conversions")
+      put(conn, "/#{site.domain}/settings/features/enable/funnels")
+      conn = put(conn, "/#{site.domain}/settings/features/enable/props")
+
+      assert %{conversions_enabled: true, funnels_enabled: true, props_enabled: true} =
+               Plausible.Sites.get_by_domain(site.domain)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Goals are now visible again on your dashboard"
+      assert redirected_to(conn, 302) =~ "/#{site.domain}/settings/goals"
+    end
+
+    test "fails to set feature status with viewer access", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site)
+      insert(:site_membership, user: user, site: site, role: :viewer)
+
+      conn = put(conn, "/#{site.domain}/settings/features/disable/conversions")
+
+      assert %{conversions_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
+      assert conn.status == 404
+    end
+
+    test "fails to set feature status for a foreign site", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site)
+
+      conn = put(conn, "/#{site.domain}/settings/features/disable/conversions")
+
+      assert %{conversions_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
+      assert conn.status == 404
+    end
+  end
+
   describe "POST /sites/:website/weekly-report/enable" do
     setup [:create_user, :log_in, :create_site]
 
