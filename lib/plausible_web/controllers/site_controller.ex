@@ -178,9 +178,12 @@ defmodule PlausibleWeb.SiteController do
     {change, flash_msg} =
       case action do
         "enable" ->
-          {Plausible.Site.enable_feature(site, feature), "Goals are now visible again on your dashboard"}
+          {Plausible.Site.enable_feature(site, feature),
+           "Goals are now visible again on your dashboard"}
+
         "disable" ->
-          {Plausible.Site.disable_feature(site, feature), "Goals are now hidden from your dashboard"}
+          {Plausible.Site.disable_feature(site, feature),
+           "Goals are now hidden from your dashboard"}
       end
 
     Repo.update(change)

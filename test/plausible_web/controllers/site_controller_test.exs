@@ -756,7 +756,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert %{conversions_enabled: false, funnels_enabled: false, props_enabled: false} =
                Plausible.Sites.get_by_domain(site.domain)
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Goals are now hidden from your dashboard"
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+               "Goals are now hidden from your dashboard"
+
       assert redirected_to(conn, 302) =~ "/#{site.domain}/settings/goals"
     end
 
@@ -764,7 +766,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      site = insert(:site, conversions_enabled: false, funnels_enabled: false, props_enabled: false)
+      site =
+        insert(:site, conversions_enabled: false, funnels_enabled: false, props_enabled: false)
+
       insert(:site_membership, user: user, site: site, role: :owner)
 
       put(conn, "/#{site.domain}/settings/features/enable/conversions")
@@ -774,7 +778,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert %{conversions_enabled: true, funnels_enabled: true, props_enabled: true} =
                Plausible.Sites.get_by_domain(site.domain)
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Goals are now visible again on your dashboard"
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+               "Goals are now visible again on your dashboard"
+
       assert redirected_to(conn, 302) =~ "/#{site.domain}/settings/goals"
     end
 
