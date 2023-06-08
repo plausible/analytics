@@ -97,8 +97,7 @@ export default function Behaviours(props) {
     </Menu>
   }
 
-  function tabSwitcher(toMode) {
-    const title = sectionTitles[toMode]
+  function tabSwitcher(toMode, displayName) {
     const className = classNames({ [ACTIVE_CLASS]: mode == toMode, [DEFAULT_CLASS]: mode !== toMode })
     const setTab = () => {
       storage.setItem(tabKey, toMode)
@@ -107,7 +106,7 @@ export default function Behaviours(props) {
 
     return (
       <div className={className} onClick={setTab}>
-        {title}
+        {displayName}
       </div>
     )
   }
@@ -115,9 +114,9 @@ export default function Behaviours(props) {
   function tabs() {
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-        {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS)}
-        {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS))}
-        {isEnabled(PROPS) && tabSwitcher(PROPS)}
+        {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS, 'Goals')}
+        {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
+        {isEnabled(PROPS) && tabSwitcher(PROPS, 'Properties')}
       </div>
     )
   }
