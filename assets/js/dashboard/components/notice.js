@@ -17,12 +17,11 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
 
   function setupButton() {
     return (
-      <a href={settingsLink} className="ml-4 button">
-        <p>Set up {shortFeatureName}</p>
+      <a href={settingsLink} className="ml-2 sm:ml-4 button px-2 sm:px-4">
+        <p className="flex flex-col justify-center text-xs sm:text-sm">Set up {shortFeatureName}</p>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="ml-2 w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
         </svg>
-
       </a>
     )
   }
@@ -31,16 +30,16 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
     return (
       <button
         onClick={requestHideSection}
-        className="inline-block px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition ease-in-out duration-150">
+        className="inline-block px-2 sm:px-4 py-2 border border-gray-300 dark:border-gray-500 leading-5 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition ease-in-out duration-150">
         Hide this report
       </button>
     )
   }
 
   return (
-    <div className="md:mx-32 mt-6 mb-3" >
-      <div className="px-8 py-3">
-        <div className="text-center mt-2 text-lg text-gray-800 dark:text-gray-200">
+    <div className="sm:mx-32 mt-6 mb-3" >
+      <div className="py-3">
+        <div className="text-center mt-2 text-gray-800 dark:text-gray-200">
           {title}
         </div>
 
@@ -48,7 +47,7 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
           {info}
         </div>
 
-        <div className="flex my-6 justify-center">
+        <div className="text-xs sm:text-sm flex my-6 justify-center">
           {hideButton()}
           {setupButton()}
         </div>
