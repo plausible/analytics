@@ -23,6 +23,7 @@ export const sectionTitles = {
 
 export default function Behaviours(props) {
   const site = props.site
+  const adminAccess = ['owner', 'admin'].includes(props.currentUserRole)
   const tabKey = `behavioursTab__${site.domain}`
   const funnelKey = `behavioursTabFunnel__${site.domain}`
   const [enabledModes, setEnabledModes] = useState(getEnabledModes())
@@ -122,9 +123,8 @@ export default function Behaviours(props) {
   }
 
   function renderConversions() {
-    if (site.hasGoals) {
-      return <Conversions site={site} query={props.query} />
-    } else {
+    if (site.hasGoals) { return <Conversions site={site} query={props.query} /> }
+    else if (adminAccess) {
       return (
         <FeatureSetupNotice
           site={site}
@@ -137,12 +137,12 @@ export default function Behaviours(props) {
         />
       )
     }
+    else { return noDataYet() }
   }
 
   function renderFunnels() {
-    if (selectedFunnel) {
-      <Funnel site={site} query={props.query} funnelName={selectedFunnel} />
-    } else {
+    if (selectedFunnel) { return <Funnel site={site} query={props.query} funnelName={selectedFunnel} /> }
+    else if (adminAccess) {
       return (
         <FeatureSetupNotice
           site={site}
@@ -155,19 +155,30 @@ export default function Behaviours(props) {
         />
       )
     }
+    else { return noDataYet() }
   }
 
   function renderProps() {
+    if (adminAccess) {
+      return (
+        <FeatureSetupNotice
+          site={site}
+          feature={PROPS}
+          shortFeatureName={'props'}
+          title={'No custom properties found'}
+          info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
+          settingsLink={`/${encodeURIComponent(site.domain)}/settings/props`}
+          onHideAction={onHideAction(PROPS)}
+        />
+      )
+    } else { return noDataYet() }
+  }
+
+  function noDataYet() {
     return (
-      <FeatureSetupNotice
-        site={site}
-        feature={PROPS}
-        shortFeatureName={'props'}
-        title={'No custom properties found'}
-        info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
-        settingsLink={`/${encodeURIComponent(site.domain)}/settings/props`}
-        onHideAction={onHideAction(PROPS)}
-      />
+      <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
+        No data yet
+      </div>
     )
   }
 

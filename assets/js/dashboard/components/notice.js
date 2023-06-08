@@ -3,13 +3,15 @@ import { EyeSlashIcon } from '@heroicons/react/20/solid'
 import { sectionTitles } from "../stats/behaviours"
 import * as api from '../api'
 
-export function FeatureSetupNotice({site, feature, shortFeatureName, title, info, settingsLink, onHideAction}) {
+export function FeatureSetupNotice({ site, feature, shortFeatureName, title, info, settingsLink, onHideAction }) {
   const sectionTitle = sectionTitles[feature]
 
   const requestHideSection = () => {
     if (window.confirm(`Are you sure you want to hide ${sectionTitle}? You can make it visible again in your site settings later.`)) {
       api.get(`/api/${encodeURIComponent(site.domain)}/disable-feature`, {}, { feature: feature })
-      onHideAction()
+        .then((resp) => {
+          if (resp === 'ok') { onHideAction() }
+        })
     }
   }
 
@@ -30,7 +32,7 @@ export function FeatureSetupNotice({site, feature, shortFeatureName, title, info
       <button
         onClick={requestHideSection}
         className="inline-block px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-850 dark:hover:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 transition ease-in-out duration-150">
-          Hide this report
+        Hide this report
       </button>
     )
   }

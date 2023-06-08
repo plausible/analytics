@@ -39,7 +39,7 @@ function Historical(props) {
         <Locations site={props.site} query={props.query} />
         <Devices site={props.site} query={props.query} />
       </div>
-      <Behaviours site={props.site} query={props.query} />
+      <Behaviours site={props.site} query={props.query} currentUserRole={props.currentUserRole} />
     </div>
   )
 }
