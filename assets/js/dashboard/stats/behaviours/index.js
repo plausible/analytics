@@ -23,7 +23,7 @@ export const sectionTitles = {
 
 export default function Behaviours(props) {
   const site = props.site
-  const adminAccess = ['owner', 'admin'].includes(props.currentUserRole)
+  const adminAccess = ['owner', 'admin', 'super_admin'].includes(props.currentUserRole)
   const tabKey = `behavioursTab__${site.domain}`
   const funnelKey = `behavioursTabFunnel__${site.domain}`
   const [enabledModes, setEnabledModes] = useState(getEnabledModes())

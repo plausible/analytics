@@ -2,9 +2,11 @@ defmodule PlausibleWeb.Api.InternalController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Stats.Clickhouse, as: Stats
+  alias Plausible.{Sites, Site, Auth}
+  alias Plausible.Auth.User
 
   def domain_status(conn, %{"domain" => domain}) do
-    site = Plausible.Sites.get_by_domain(domain)
+    site = Sites.get_by_domain(domain)
 
     if Stats.has_pageviews?(site) do
       json(conn, "READY")
@@ -31,10 +33,10 @@ defmodule PlausibleWeb.Api.InternalController do
   end
 
   def disable_feature(conn, %{"domain" => domain, "feature" => feature}) do
-    with %Plausible.Auth.User{id: user_id} <- conn.assigns[:current_user],
-         site <- Plausible.Sites.get_by_domain(domain),
-         true <- Plausible.Sites.has_admin_access?(user_id, site) do
-      Plausible.Site.disable_feature(site, feature)
+    with %User{id: user_id} <- conn.assigns[:current_user],
+         site <- Sites.get_by_domain(domain),
+         true <- Sites.has_admin_access?(user_id, site) || Auth.is_super_admin?(user_id) do
+      Site.disable_feature(site, feature)
       |> Repo.update()
 
       json(conn, "ok")
@@ -50,8 +52,8 @@ defmodule PlausibleWeb.Api.InternalController do
   defp sites_for(user, params) do
     Repo.paginate(
       from(
-        s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
+        s in Site,
+        join: sm in Site.Membership,
         on: sm.site_id == s.id,
         where: sm.user_id == ^user.id,
         order_by: s.domain
