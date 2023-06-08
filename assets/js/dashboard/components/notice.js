@@ -36,13 +36,13 @@ export function FeatureSetupNotice({site, feature, shortFeatureName, title, info
   }
 
   return (
-    <div className="md:mx-32 mt-6 mb-3 shadow-lg bg-gray-850 rounded-md" >
-      <div className="px-8 py-3 font-small text-sm text-gray-300 dark:text-gray-200">
-        <div className="text-center mt-2 text-lg font-md text-gray-400">
+    <div className="md:mx-32 mt-6 mb-3 shadow-lg dark:bg-gray-850 rounded-md" >
+      <div className="px-8 py-3">
+        <div className="text-center mt-2 text-lg text-gray-800 dark:text-gray-200">
           {title}
         </div>
 
-        <div className="text-justify mt-4">
+        <div className="text-justify mt-4 font-small text-sm text-gray-500">
           {info}
         </div>
 
