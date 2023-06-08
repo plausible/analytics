@@ -324,7 +324,6 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, [:pageviews | rest], query) do
     if has_named_binding?(q, :events) do
       from([s, events: e] in q, select_merge: %{pageviews: field(e, :pageviews)})
-      |> select_session_metrics(rest, query)
     else
       from(s in q,
         select_merge: %{
