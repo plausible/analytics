@@ -322,12 +322,17 @@ defmodule Plausible.Stats.Base do
   end
 
   def select_session_metrics(q, [:pageviews | rest], query) do
-    from(s in q,
-      select_merge: %{
-        pageviews:
-          fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
-      }
-    )
+    if has_named_binding?(q, :events) do
+      from([s, events: e] in q, select_merge: %{pageviews: field(e, :pageviews)})
+      |> select_session_metrics(rest, query)
+    else
+      from(s in q,
+        select_merge: %{
+          pageviews:
+            fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
+        }
+      )
+    end
     |> select_session_metrics(rest, query)
   end
 
@@ -424,14 +429,18 @@ defmodule Plausible.Stats.Base do
     if Query.has_event_filters?(query) do
       converted_sessions =
         from(e in query_events(site, query),
+          group_by: [e.session_id, field(e, :_sample_factor)],
           select: %{
-            session_id: fragment("DISTINCT ?", e.session_id),
-            _sample_factor: fragment("_sample_factor")
+            session_id: e.session_id,
+            _sample_factor: fragment("_sample_factor"),
+            events: count(),
+            pageviews: fragment("countIf(? = ?)", e.name, "pageview")
           }
         )
 
       from(s in db_query,
         join: cs in subquery(converted_sessions),
+        as: :events,
         on: s.session_id == cs.session_id
       )
     else

@@ -1942,5 +1942,40 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                ]
              }
     end
+
+    test "page filter, breakdown by visit:source, metric=pageviews", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page1",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page2",
+          timestamp: ~N[2021-01-01 00:10:00]
+        ),
+        build(:pageview, user_id: 1, pathname: "/page1", timestamp: ~N[2021-01-01 00:25:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "visit:source",
+          "metrics" => "pageviews",
+          "filters" => "event:page==/page1"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "source" => "Direct / None",
+                   "pageviews" => 2
+                 }
+               ]
+             }
+    end
   end
 end

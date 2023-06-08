@@ -192,6 +192,7 @@ defmodule Plausible.Stats.Breakdown do
     |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, property, metrics)
     |> apply_pagination(pagination)
+    |> tap(fn q -> IO.inspect(Ecto.Adapters.SQL.to_sql(:all, ClickhouseRepo, q)) end)
     |> ClickhouseRepo.all()
     |> transform_keys(%{operating_system: :os})
     |> remove_internal_visits_metric(metrics)
