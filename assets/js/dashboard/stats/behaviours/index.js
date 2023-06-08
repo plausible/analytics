@@ -33,7 +33,6 @@ export default function Behaviours(props) {
 
   useEffect(() => {
     setMode(defaultMode())
-    console.log("effect")
   }, [enabledModes])
 
   function disableMode(mode) {
@@ -130,10 +129,10 @@ export default function Behaviours(props) {
         <FeatureSetupNotice
           site={site}
           feature={CONVERSIONS}
+          shortFeatureName={'goals'}
           title={'Measure how often visitors complete specific actions'}
           info={'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.'}
-          docsLink={'https://plausible.io/docs/goal-conversions'}
-          hideNotice={'You can make goals visible again in your site settings later.'}
+          settingsLink={`/${encodeURIComponent(site.domain)}/settings/goals`}
           onHideAction={onHideAction(CONVERSIONS)}
         />
       )
@@ -148,10 +147,10 @@ export default function Behaviours(props) {
         <FeatureSetupNotice
           site={site}
           feature={FUNNELS}
+          shortFeatureName={'funnels'}
           title={'Follow the visitor journey from entry to conversion'}
           info={'Funnels allow you to analyze the user flow through your website, uncover possible issues, optimize your site and increase the conversion rate.'}
-          docsLink={'https://plausible.io/docs/funnel-analysis'}
-          hideNotice={'You can make funnels visible again in your site settings later.'}
+          settingsLink={`/${encodeURIComponent(site.domain)}/settings/funnels`}
           onHideAction={onHideAction(FUNNELS)}
         />
       )
@@ -163,10 +162,10 @@ export default function Behaviours(props) {
       <FeatureSetupNotice
         site={site}
         feature={PROPS}
+        shortFeatureName={'props'}
         title={'No custom properties found'}
         info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
-        docsLink={'https://plausible.io/docs/custom-pageview-props'}
-        hideNotice={'You can make custom properties visible again in your site settings later.'}
+        settingsLink={`/${encodeURIComponent(site.domain)}/settings/props`}
         onHideAction={onHideAction(PROPS)}
       />
     )

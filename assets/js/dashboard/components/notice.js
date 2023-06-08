@@ -3,50 +3,52 @@ import { EyeSlashIcon } from '@heroicons/react/20/solid'
 import { sectionTitles } from "../stats/behaviours"
 import * as api from '../api'
 
-export function FeatureSetupNotice({site, feature, title, info, docsLink, hideNotice, onHideAction}) {
+export function FeatureSetupNotice({site, feature, shortFeatureName, title, info, settingsLink, onHideAction}) {
   const sectionTitle = sectionTitles[feature]
 
   const requestHideSection = () => {
-    api.get(`/api/${encodeURIComponent(site.domain)}/disable-feature`, {}, { feature: feature })
-    onHideAction()
+    if (window.confirm(`Are you sure you want to hide ${sectionTitle}? You can make it visible again in your site settings later.`)) {
+      api.get(`/api/${encodeURIComponent(site.domain)}/disable-feature`, {}, { feature: feature })
+      onHideAction()
+    }
   }
 
-  function linkToDocs() {
+  function setupButton() {
     return (
-      <a target="_blank" rel="noreferrer" href={docsLink} className="hover:underline text-indigo-700 dark:text-indigo-500" >
-        Learn more...
+      <a href={settingsLink} className="ml-4 button">
+        <p>Set up {shortFeatureName}</p>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="ml-2 w-5 h-5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
+        </svg>
+
       </a>
     )
   }
 
   function hideButton() {
     return (
-      <div className="absolute right-0 top-0">
-        <button
-          onClick={requestHideSection}
-          className="text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition tracking-wide"
-          tooltip={ `Hide ${sectionTitle}` }>
-            <EyeSlashIcon className="inline-block w-5 h-5 mr-1" />
-        </button>
-      </div>
+      <button
+        onClick={requestHideSection}
+        className="inline-block px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-850 dark:hover:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 transition ease-in-out duration-150">
+          Hide this report
+      </button>
     )
   }
 
   return (
-    <div className="relative md:mx-32 mt-6 mb-3 shadow-lg bg-gray-850 rounded-md" >
+    <div className="md:mx-32 mt-6 mb-3 shadow-lg bg-gray-850 rounded-md" >
       <div className="px-8 py-3 font-small text-sm text-gray-300 dark:text-gray-200">
-        {hideButton()}
-
         <div className="text-center mt-2 text-lg font-md text-gray-400">
           {title}
         </div>
 
         <div className="text-justify mt-4">
-          {info} {linkToDocs()}
+          {info}
         </div>
 
-        <div className="text-justify mt-8 text-xs italic text-gray-500">
-          Hide this section by clicking the icon on the top right. {hideNotice}
+        <div className="flex my-6 justify-center">
+          {hideButton()}
+          {setupButton()}
         </div>
       </div>
     </div>
