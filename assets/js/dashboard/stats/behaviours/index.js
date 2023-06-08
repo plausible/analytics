@@ -29,7 +29,7 @@ export default function Behaviours(props) {
   const [enabledModes, setEnabledModes] = useState(getEnabledModes())
   const [mode, setMode] = useState(defaultMode())
 
-  const [funnelNames, setFunnelNames] = useState(site.funnels.map(({ name }) => name))
+  const [funnelNames, _setFunnelNames] = useState(site.funnels.map(({ name }) => name))
   const [selectedFunnel, setSelectedFunnel] = useState(storage.getItem(funnelKey))
 
   useEffect(() => {

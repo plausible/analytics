@@ -1,4 +1,4 @@
-export default function Funnel(props) {
+export default function Funnel(_props) {
 	// TODO	
 	return null
 }

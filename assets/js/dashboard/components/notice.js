@@ -1,5 +1,4 @@
 import React from "react"
-import { EyeSlashIcon } from '@heroicons/react/20/solid'
 import { sectionTitles } from "../stats/behaviours"
 import * as api from '../api'
 
