@@ -31,20 +31,20 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
     return (
       <button
         onClick={requestHideSection}
-        className="inline-block px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-850 dark:hover:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 transition ease-in-out duration-150">
+        className="inline-block px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition ease-in-out duration-150">
         Hide this report
       </button>
     )
   }
 
   return (
-    <div className="md:mx-32 mt-6 mb-3 shadow-lg dark:bg-gray-850 rounded-md" >
+    <div className="md:mx-32 mt-6 mb-3" >
       <div className="px-8 py-3">
         <div className="text-center mt-2 text-lg text-gray-800 dark:text-gray-200">
           {title}
         </div>
 
-        <div className="text-justify mt-4 font-small text-sm text-gray-500">
+        <div className="text-justify mt-4 font-small text-sm text-gray-500 dark:text-gray-200">
           {info}
         </div>
 
