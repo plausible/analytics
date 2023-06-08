@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move'
-import { featureSetupNotice } from '../../components/notice';
 
 import Bar from '../bar'
 import PropBreakdown from './prop-breakdown'
@@ -10,7 +9,6 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import { escapeFilterValue } from '../../util/filters'
 import LazyLoader from '../../components/lazy-loader'
-import { CONVERSIONS } from '.';
 
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080

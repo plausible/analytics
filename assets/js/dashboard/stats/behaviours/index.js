@@ -214,10 +214,10 @@ export default function Behaviours(props) {
     if (site.conversionsEnabled) {
       enabledModes.push(CONVERSIONS)
     }
-    if (site.funnelsEnabled && site.flags.funnels) {
+    if (site.funnelsEnabled && !isRealtime() && site.flags.funnels) {
       enabledModes.push(FUNNELS)
     }
-    if (site.propsEnabled && site.flags.props) {
+    if (site.propsEnabled && !isRealtime() && site.flags.props) {
       enabledModes.push(PROPS)
     }
     return enabledModes
@@ -227,12 +227,18 @@ export default function Behaviours(props) {
     return enabledModes.includes(mode)
   }
 
+  function isRealtime() {
+    return props.query.period === 'realtime'
+  }
+
   if (mode) {
     return (
       <div className="items-start justify-between block w-full mt-6 md:flex">
         <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
           <div className="flex justify-between w-full">
-            <h3 className="font-bold dark:text-gray-100">{sectionTitles[mode]}</h3>
+            <h3 className="font-bold dark:text-gray-100">
+              {sectionTitles[mode] + (isRealtime() ? ' (last 30min)' : '')}
+            </h3>
             {tabs()}
           </div>
           {renderContent()}
