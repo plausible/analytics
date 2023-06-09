@@ -24,11 +24,11 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
 
       role =
         cond do
-          user_id && membership_role ->
-            membership_role
-
           Plausible.Auth.is_super_admin?(user_id) ->
             :super_admin
+         
+          user_id && membership_role ->
+            membership_role
 
           site.public ->
             :public
