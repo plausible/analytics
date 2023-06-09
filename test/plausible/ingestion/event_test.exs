@@ -99,4 +99,37 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
     assert dropped.drop_reason == :throttle
   end
+
+  test "saves revenue amount" do
+    site = insert(:site)
+    _goal = insert(:goal, event_name: "checkout", currency: "USD", site: site)
+
+    payload = %{
+      name: "checkout",
+      url: "http://#{site.domain}",
+      revenue: %{amount: 10.2, currency: "USD"}
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [event], dropped: []}} = Event.build_and_buffer(request)
+    assert Decimal.eq?(event.clickhouse_event.revenue_source_amount, Decimal.new("10.2"))
+  end
+
+  test "does not save revenue amount when there is no revenue goal" do
+    site = insert(:site)
+
+    payload = %{
+      name: "checkout",
+      url: "http://#{site.domain}",
+      revenue: %{amount: 10.2, currency: "USD"}
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [event], dropped: []}} = Event.build_and_buffer(request)
+    assert event.clickhouse_event.revenue_source_amount == nil
+  end
 end

@@ -98,6 +98,7 @@ defmodule Plausible.Ingestion.Event do
       &put_utm_tags/1,
       &put_geolocation/1,
       &put_props/1,
+      &put_revenue/1,
       &put_salts/1,
       &put_user_id/1,
       &validate_clickhouse_event/1,
@@ -205,6 +206,38 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_props(%__MODULE__{} = event), do: event
+
+  defp put_revenue(%__MODULE__{request: %{revenue_source: %Money{} = revenue_source}} = event) do
+    revenue_goals = Plausible.Site.Cache.get(event.domain).revenue_goals || []
+
+    matching_goal =
+      Enum.find(revenue_goals, &(&1.event_name == event.clickhouse_event_attrs.name))
+
+    cond do
+      is_nil(matching_goal) ->
+        event
+
+      matching_goal.currency == revenue_source.currency ->
+        update_attrs(event, %{
+          revenue_source_amount: Money.to_decimal(revenue_source),
+          revenue_source_currency: to_string(revenue_source.currency),
+          revenue_reporting_amount: Money.to_decimal(revenue_source),
+          revenue_reporting_currency: to_string(revenue_source.currency)
+        })
+
+      matching_goal.currency != revenue_source.currency ->
+        converted = Money.to_currency!(revenue_source, matching_goal.currency)
+
+        update_attrs(event, %{
+          revenue_source_amount: Money.to_decimal(revenue_source),
+          revenue_source_currency: to_string(revenue_source.currency),
+          revenue_reporting_amount: Money.to_decimal(converted),
+          revenue_reporting_currency: to_string(converted.currency)
+        })
+    end
+  end
+
+  defp put_revenue(event), do: event
 
   defp put_salts(%__MODULE__{} = event) do
     %{event | salts: Plausible.Session.Salts.fetch()}
