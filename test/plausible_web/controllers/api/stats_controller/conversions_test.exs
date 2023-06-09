@@ -224,6 +224,111 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       assert resp == []
     end
+
+    test "returns formatted average and total values for a conversion with revenue value", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("200100300.123"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("300100400.123"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("0"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event, name: "Payment", revenue_reporting_amount: nil),
+        build(:event, name: "Payment", revenue_reporting_amount: nil)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Payment",
+                 "unique_conversions" => 5,
+                 "total_conversions" => 5,
+                 "prop_names" => [],
+                 "conversion_rate" => 100.0,
+                 "average_revenue" => %{"short" => "€166.7M", "long" => "€166,733,566.75"},
+                 "total_revenue" => %{"short" => "€500.2M", "long" => "€500,200,700.25"}
+               }
+             ]
+    end
+
+    test "returns revenue metrics as nil for non-revenue goals", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Signup"),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.00"),
+          revenue_reporting_currency: "EUR"
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Signup",
+                 "unique_conversions" => 2,
+                 "total_conversions" => 2,
+                 "prop_names" => [],
+                 "conversion_rate" => 66.7,
+                 "average_revenue" => nil,
+                 "total_revenue" => nil
+               },
+               %{
+                 "name" => "Payment",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => [],
+                 "conversion_rate" => 33.3,
+                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"}
+               }
+             ]
+    end
+
+    test "does not return revenue metrics if no revenue goals are returned", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup")
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Signup",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => [],
+                 "conversion_rate" => 100.0
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/conversions - with goal filter" do
