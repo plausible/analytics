@@ -671,6 +671,86 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :"meta.value") == ["true"]
     end
 
+    test "converts revenue values into the goal currency", %{conn: conn, site: site} do
+      params = %{
+        name: "Payment",
+        url: "http://gigride.live/",
+        domain: site.domain,
+        revenue: %{amount: 10.2, currency: "USD"}
+      }
+
+      insert(:goal, event_name: "Payment", currency: "BRL", site: site)
+
+      assert %{status: 202} = post(conn, "/api/event", params)
+      assert %{revenue_reporting_amount: amount} = get_event(site)
+
+      assert Decimal.equal?(Decimal.new("7.14"), amount)
+    end
+
+    test "revenue values can be sent with minified keys", %{conn: conn, site: site} do
+      params = %{
+        "n" => "Payment",
+        "u" => "http://gigride.live/",
+        "d" => site.domain,
+        "$" => Jason.encode!(%{amount: 10.2, currency: "USD"})
+      }
+
+      insert(:goal, event_name: "Payment", currency: "BRL", site: site)
+
+      assert %{status: 202} = post(conn, "/api/event", params)
+      assert %{revenue_reporting_amount: amount} = get_event(site)
+
+      assert Decimal.equal?(Decimal.new("7.14"), amount)
+    end
+
+    test "saves the exact same amount when goal currency is the same as the event", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "Payment",
+        url: "http://gigride.live/",
+        domain: site.domain,
+        revenue: %{amount: 10, currency: "BRL"}
+      }
+
+      insert(:goal, event_name: "Payment", currency: "BRL", site: site)
+
+      assert %{status: 202} = post(conn, "/api/event", params)
+      assert %{revenue_reporting_amount: amount} = get_event(site)
+
+      assert Decimal.equal?(Decimal.new("10.0"), amount)
+    end
+
+    test "does not fail when revenue value is invalid", %{conn: conn, site: site} do
+      params = %{
+        name: "Payment",
+        url: "http://gigride.live/",
+        domain: site.domain,
+        revenue: %{amount: "1831d", currency: "ADSIE"}
+      }
+
+      insert(:goal, event_name: "Payment", currency: "BRL", site: site)
+
+      assert %{status: 202} = post(conn, "/api/event", params)
+      assert %Plausible.ClickhouseEventV2{} = get_event(site)
+    end
+
+    test "does not fail when sending revenue without a matching goal", %{conn: conn, site: site} do
+      params = %{
+        name: "Add to Cart",
+        url: "http://gigride.live/",
+        domain: site.domain,
+        revenue: %{amount: 10.2, currency: "USD"}
+      }
+
+      insert(:goal, event_name: "Checkout", currency: "BRL", site: site)
+      insert(:goal, event_name: "Payment", currency: "USD", site: site)
+
+      assert %{status: 202} = post(conn, "/api/event", params)
+      assert %Plausible.ClickhouseEventV2{revenue_reporting_amount: nil} = get_event(site)
+    end
+
     test "ignores a malformed referrer URL", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
