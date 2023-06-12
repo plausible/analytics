@@ -7,9 +7,9 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
 
   const requestHideSection = () => {
     if (window.confirm(`Are you sure you want to hide ${sectionTitle}? You can make it visible again in your site settings later.`)) {
-      api.get(`/api/${encodeURIComponent(site.domain)}/disable-feature`, {}, { feature: feature })
-        .then((resp) => {
-          if (resp === 'ok') { onHideAction() }
+      api.put(`/api/${encodeURIComponent(site.domain)}/disable-feature`, { feature: feature })
+        .then(response => {
+          if (response.ok) { onHideAction() }
         })
     }
   }

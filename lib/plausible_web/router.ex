@@ -117,7 +117,7 @@ defmodule PlausibleWeb.Router do
     post "/paddle/webhook", Api.PaddleController, :webhook
 
     get "/:domain/status", Api.InternalController, :domain_status
-    get "/:domain/disable-feature", Api.InternalController, :disable_feature
+    put "/:domain/disable-feature", Api.InternalController, :disable_feature
 
     get "/sites", Api.InternalController, :sites
   end
