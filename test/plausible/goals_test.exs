@@ -121,10 +121,10 @@ defmodule Plausible.GoalsTest do
 
     :ok = Goals.delete(g1.id, site)
 
-    assert {:ok, f1} = Plausible.Funnels.get(site.id, f1.id)
+    assert f1 = Plausible.Funnels.get(site.id, f1.id)
     assert Enum.count(f1.steps) == 2
 
-    assert {:error, "Funnel not found"} = Plausible.Funnels.get(site.id, f2.id)
+    refute Plausible.Funnels.get(site.id, f2.id)
     assert Repo.all(from fs in Plausible.Funnel.Step, where: fs.funnel_id == ^f2.id) == []
 
     assert [^g3, ^g2] = Goals.for_site(site)

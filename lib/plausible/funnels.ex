@@ -69,7 +69,7 @@ defmodule Plausible.Funnels do
   end
 
   @spec get(Plausible.Site.t() | pos_integer(), pos_integer()) ::
-          {:ok, Funnel.t()} | {:error, String.t()}
+          Funnel.t() | nil
   def get(%Plausible.Site{id: site_id}, by) do
     get(site_id, by)
   end
@@ -86,20 +86,18 @@ defmodule Plausible.Funnels do
           steps: {steps, goal: goal}
         ]
 
-    funnel = Repo.one(q)
-
-    if funnel do
-      {:ok, funnel}
-    else
-      {:error, "Funnel not found"}
-    end
+    Repo.one(q)
   end
 
   @spec evaluate(Plausible.Stats.Query.t(), Funnel.t() | pos_integer(), Plausible.Site.t()) ::
-          {:ok, Funnel.t()} | {:error, String.t()}
+          {:ok, Funnel.t()} | {:error, :funnel_not_found}
   def evaluate(query, funnel_id, site) when is_integer(funnel_id) do
-    with {:ok, funnel_definition} <- get(site.id, funnel_id) do
-      evaluate(query, funnel_definition, site)
+    case get(site.id, funnel_id) do
+      %Funnel{} = funnel_definition ->
+        evaluate(query, funnel_definition, site)
+
+      nil ->
+        {:error, :funnel_not_found}
     end
   end
 
