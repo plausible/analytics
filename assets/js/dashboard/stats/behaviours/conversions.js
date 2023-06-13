@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move'
 
-
 import Bar from '../bar'
 import PropBreakdown from './prop-breakdown'
 import numberFormatter from '../../util/number-formatter'
@@ -51,7 +50,7 @@ export default class Conversions extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       const height = this.htmlNode.current.element.offsetHeight
-      this.setState({loading: true, goals: null, prevHeight: height})
+      this.setState({ loading: true, goals: null, prevHeight: height })
       this.fetchConversions()
     }
   }
@@ -63,7 +62,7 @@ export default class Conversions extends React.Component {
 
   fetchConversions() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/conversions`, this.props.query)
-      .then((res) => this.setState({loading: false, goals: res, prevHeight: null}))
+      .then((res) => this.setState({ loading: false, goals: res, prevHeight: null }))
   }
 
   renderGoal(goal) {
@@ -88,7 +87,7 @@ export default class Conversions extends React.Component {
             <span className="inline-block w-20 font-medium text-right">{goal.conversion_rate}%</span>
           </div>
         </div>
-        { renderProps && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
+        {renderProps && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} />}
       </div>
     )
   }
@@ -100,7 +99,6 @@ export default class Conversions extends React.Component {
     } else if (this.state.goals) {
       return (
         <React.Fragment>
-          <h3 className="font-bold dark:text-gray-100">{this.props.title || "Goal Conversions"}</h3>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Goal</span>
             <div className="text-right">
@@ -110,18 +108,26 @@ export default class Conversions extends React.Component {
             </div>
           </div>
           <FlipMove>
-            { this.state.goals.map(this.renderGoal.bind(this)) }
+            {this.state.goals.map(this.renderGoal.bind(this))}
           </FlipMove>
         </React.Fragment>
       )
     }
   }
 
+  renderConversions() {
+    return (
+      <LazyLoader ref={this.htmlNode} style={{ minHeight: '132px', height: this.state.prevHeight ?? 'auto' }} onVisible={this.onVisible}>
+        {this.renderInner()}
+      </LazyLoader>
+    )
+  }
+
   render() {
     return (
-      <LazyLoader className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825" style={{minHeight: '132px', height: this.state.prevHeight ?? 'auto'}} onVisible={this.onVisible} ref={this.htmlNode}>
-        { this.renderInner() }
-      </LazyLoader>
+      <div>
+        {this.renderConversions()}
+      </div>
     )
   }
 }
