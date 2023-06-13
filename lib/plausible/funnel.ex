@@ -5,11 +5,13 @@ defmodule Plausible.Funnel do
   @moduledoc """
   A funnel is a marketing term used to capture and describe the journey
   that users go through, from initial step to conversion.
-  A funnel may consist of at several steps (here: #{@min_steps}..#{@max_steps}).
+  A funnel consists of several steps (here: #{@min_steps}..#{@max_steps}).
 
   This module defines the database schema for storing funnels
-  and changeset helpers for enumerating steps within. Each step references
-  a goal (either a Custom Event or Visit) - see: `Plausible.Goal`.
+  and changeset helpers for enumerating the steps within.
+
+  Each step references a goal (either a Custom Event or Visit)
+  - see: `Plausible.Goal`.
   """
 
   use Ecto.Schema
