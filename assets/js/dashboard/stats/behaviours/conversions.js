@@ -50,7 +50,7 @@ export default class Conversions extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       const height = this.htmlNode.current.element.offsetHeight
-      this.setState({loading: true, goals: null, prevHeight: height})
+      this.setState({ loading: true, goals: null, prevHeight: height })
       this.fetchConversions()
     }
   }
@@ -62,7 +62,7 @@ export default class Conversions extends React.Component {
 
   fetchConversions() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/conversions`, this.props.query)
-      .then((res) => this.setState({loading: false, goals: res, prevHeight: null}))
+      .then((res) => this.setState({ loading: false, goals: res, prevHeight: null }))
   }
 
   renderGoal(goal) {
@@ -87,7 +87,7 @@ export default class Conversions extends React.Component {
             <span className="inline-block w-20 font-medium text-right">{goal.conversion_rate}%</span>
           </div>
         </div>
-        { renderProps && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
+        {renderProps && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} />}
       </div>
     )
   }
@@ -108,7 +108,7 @@ export default class Conversions extends React.Component {
             </div>
           </div>
           <FlipMove>
-            { this.state.goals.map(this.renderGoal.bind(this)) }
+            {this.state.goals.map(this.renderGoal.bind(this))}
           </FlipMove>
         </React.Fragment>
       )
@@ -117,16 +117,16 @@ export default class Conversions extends React.Component {
 
   renderConversions() {
     return (
-      <LazyLoader style={{minHeight: '132px', height: this.state.prevHeight ?? 'auto'}} onVisible={this.onVisible}>
-        { this.renderInner() }
+      <LazyLoader ref={this.htmlNode} style={{ minHeight: '132px', height: this.state.prevHeight ?? 'auto' }} onVisible={this.onVisible}>
+        {this.renderInner()}
       </LazyLoader>
     )
   }
 
   render() {
     return (
-      <div ref={this.htmlNode}>
-        { this.renderConversions() } 
+      <div>
+        {this.renderConversions()}
       </div>
     )
   }
