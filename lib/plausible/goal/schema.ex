@@ -90,7 +90,6 @@ defimpl Jason.Encoder, for: Plausible.Goal do
   end
 end
 
-# TODO: consider Phoenix.HTML.Safe
 defimpl String.Chars, for: Plausible.Goal do
   def to_string(%{page_path: page_path}) when is_binary(page_path) do
     "Visit " <> page_path
@@ -98,5 +97,11 @@ defimpl String.Chars, for: Plausible.Goal do
 
   def to_string(%{event_name: name}) when is_binary(name) do
     name
+  end
+end
+
+defimpl Phoenix.HTML.Safe, for: Plausible.Goal do
+  def to_iodata(data) do
+    data |> to_string() |> Phoenix.HTML.Engine.html_escape()
   end
 end
