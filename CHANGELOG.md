@@ -4,7 +4,6 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
-- Call to action for tracking Goal Conversions and an option to hide the section from the dashboard
 - Add support for `with_imported=true` in Stats API aggregate endpoint
 - Ability to use '--' instead of '=' sign in the `tagged-events` classnames
 - 'Last updated X seconds ago' info to 'current visitors' tooltips

@@ -9,12 +9,24 @@ import Sources from './stats/sources'
 import Pages from './stats/pages'
 import Locations from './stats/locations';
 import Devices from './stats/devices'
-import Behaviours from './stats/behaviours'
+import Conversions from './stats/conversions'
 import ComparisonInput from './comparison-input'
 import { withPinnedHeader } from './pinned-header-hoc';
 
 function Historical(props) {
   const tooltipBoundary = React.useRef(null)
+
+  function renderConversions() {
+    if (props.site.hasGoals) {
+      return (
+        <div className="items-start justify-between block w-full mt-6 md:flex">
+          <Conversions site={props.site} query={props.query} />
+        </div>
+      )
+    }
+
+    return null
+  }
 
   return (
     <div className="mb-12">
@@ -39,7 +51,7 @@ function Historical(props) {
         <Locations site={props.site} query={props.query} />
         <Devices site={props.site} query={props.query} />
       </div>
-      <Behaviours site={props.site} query={props.query} currentUserRole={props.currentUserRole} />
+      { renderConversions() }
     </div>
   )
 }

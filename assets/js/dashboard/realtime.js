@@ -8,10 +8,22 @@ import Sources from './stats/sources'
 import Pages from './stats/pages'
 import Locations from './stats/locations'
 import Devices from './stats/devices'
-import Behaviours from './stats/behaviours'
+import Conversions from './stats/conversions'
 import { withPinnedHeader } from './pinned-header-hoc';
 
 class Realtime extends React.Component {
+  renderConversions() {
+    if (this.props.site.hasGoals) {
+      return (
+        <div className="items-start justify-between block w-full mt-6 md:flex">
+          <Conversions site={this.props.site} query={this.props.query} title="Goal Conversions (last 30 min)" />
+        </div>
+      )
+    }
+
+    return null
+  }
+
   render() {
     const navClass = this.props.site.embedded ? 'relative' : 'sticky'
 
@@ -36,7 +48,8 @@ class Realtime extends React.Component {
           <Locations site={this.props.site} query={this.props.query} />
           <Devices site={this.props.site} query={this.props.query} />
         </div>
-        <Behaviours site={this.props.site} query={this.props.query} currentUserRole={this.props.currentUserRole} />
+
+        { this.renderConversions() }
       </div>
     )
   }
