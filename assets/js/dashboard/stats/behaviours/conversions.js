@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move'
 
-
 import Bar from '../bar'
 import PropBreakdown from './prop-breakdown'
 import numberFormatter from '../../util/number-formatter'
@@ -100,7 +99,6 @@ export default class Conversions extends React.Component {
     } else if (this.state.goals) {
       return (
         <React.Fragment>
-          <h3 className="font-bold dark:text-gray-100">{this.props.title || "Goal Conversions"}</h3>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Goal</span>
             <div className="text-right">
@@ -117,11 +115,19 @@ export default class Conversions extends React.Component {
     }
   }
 
-  render() {
+  renderConversions() {
     return (
-      <LazyLoader className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825" style={{minHeight: '132px', height: this.state.prevHeight ?? 'auto'}} onVisible={this.onVisible} ref={this.htmlNode}>
+      <LazyLoader style={{minHeight: '132px', height: this.state.prevHeight ?? 'auto'}} onVisible={this.onVisible}>
         { this.renderInner() }
       </LazyLoader>
+    )
+  }
+
+  render() {
+    return (
+      <div ref={this.htmlNode}>
+        { this.renderConversions() } 
+      </div>
     )
   }
 }

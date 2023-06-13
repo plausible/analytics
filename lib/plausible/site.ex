@@ -18,6 +18,9 @@ defmodule Plausible.Site do
     field :stats_start_date, :date
     field :native_stats_start_at, :naive_datetime
     field :allowed_event_props, {:array, :string}
+    field :conversions_enabled, :boolean
+    field :props_enabled, :boolean
+    field :funnels_enabled, :boolean
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     # default is set via changeset/2
@@ -165,6 +168,14 @@ defmodule Plausible.Site do
   def set_allowed_event_props(site, list) do
     change(site, allowed_event_props: list)
   end
+
+  def disable_feature(site, "conversions"), do: change(site, conversions_enabled: false)
+  def disable_feature(site, "funnels"), do: change(site, funnels_enabled: false)
+  def disable_feature(site, "props"), do: change(site, props_enabled: false)
+
+  def enable_feature(site, "conversions"), do: change(site, conversions_enabled: true)
+  def enable_feature(site, "funnels"), do: change(site, funnels_enabled: true)
+  def enable_feature(site, "props"), do: change(site, props_enabled: true)
 
   def remove_imported_data(site) do
     change(site, imported_data: nil)
