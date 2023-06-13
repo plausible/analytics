@@ -73,14 +73,6 @@ defmodule Plausible.Goals do
     |> Enum.map(&maybe_trim/1)
   end
 
-  def by_id!(site, id) do
-    Repo.one(
-      from g in Goal,
-        where: g.id == ^id,
-        where: g.site_id == ^site.id
-    )
-  end
-
   @doc """
   If a goal belongs to funnel(s), we need to inspect their number of steps.
 
