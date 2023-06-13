@@ -71,9 +71,10 @@ export default function ListReport(props) {
 
   function renderListItem(listItem) {
     const query = new URLSearchParams(window.location.search)
+    const filter = props.getFilterFor(listItem)
 
-    Object.entries(props.filter).forEach((([key, valueKey]) => {
-      query.set(key, listItem[valueKey])
+    Object.entries(filter).forEach((([key, value]) => {
+      query.set(key, value)
     }))
 
     const maxWidthDeduction =  showConversionRate ? "10rem" : "5rem"

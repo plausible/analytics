@@ -18,10 +18,14 @@ function Countries({query, site, onClick}) {
     return <span className="mr-1">{country.flag}</span>
   }
 
+  function getFilterFor(listItem) {
+    return { country: listItem['code'], country_labels: listItem['name'] }
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{country: 'code', country_labels: 'name'}}
+      getFilterFor={getFilterFor}
       onClick={onClick}
       keyLabel="Country"
       detailsLink={sitePath(site, '/countries')}
@@ -41,10 +45,14 @@ function Regions({query, site, onClick}) {
     return <span className="mr-1">{region.country_flag}</span>
   }
 
+  function getFilterFor(listItem) {
+    return {region: listItem['code'], region_labels: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{region: 'code', region_labels: 'name'}}
+      getFilterFor={getFilterFor}
       onClick={onClick}
       keyLabel="Region"
       detailsLink={sitePath(site, '/regions')}
@@ -64,10 +72,14 @@ function Cities({query, site}) {
     return <span className="mr-1">{city.country_flag}</span>
   }
 
+  function getFilterFor(listItem) {
+    return {city: listItem['code'], city_labels: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{city: 'code', city_labels: 'name'}}
+      getFilterFor={getFilterFor}
       keyLabel="City"
       detailsLink={sitePath(site, '/cities')}
       query={query}

@@ -10,10 +10,14 @@ function Browsers({ query, site }) {
     return api.get(url.apiPath(site, '/browsers'), query)
   }
 
+  function getFilterFor(listItem) {
+    return { browser: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{ browser: 'name' }}
+      getFilterFor={getFilterFor}
       keyLabel="Browser"
       query={query}
     />
@@ -25,13 +29,17 @@ function BrowserVersions({ query, site }) {
     return api.get(url.apiPath(site, '/browser-versions'), query)
   }
 
-  const isNotSet = query.filters.browser === '(not set)'
-  const filter = isNotSet ? {} : { browser_version: 'name' }
+  function getFilterFor(listItem) {
+    if (query.filters.browser === '(not set)') {
+      return {}
+    }
+    return { browser_version: listItem['name']}
+  }
 
   return (
     <ListReport
       fetchData={fetchData}
-      filter={filter}
+      getFilterFor={getFilterFor}
       keyLabel="Browser version"
       query={query}
     />
@@ -44,10 +52,14 @@ function OperatingSystems({ query, site }) {
     return api.get(url.apiPath(site, '/operating-systems'), query)
   }
 
+  function getFilterFor(listItem) {
+    return { os: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{ os: 'name' }}
+      getFilterFor={getFilterFor}
       keyLabel="Operating system"
       query={query}
     />
@@ -62,10 +74,17 @@ function OperatingSystemVersions({ query, site }) {
   const isNotSet = query.filters.os === '(not set)'
   const filter = isNotSet ? {} : { os_version: 'name' }
 
+  function getFilterFor(listItem) {
+    if (query.filters.os === '(not set)') {
+      return {}
+    }
+    return { os_version: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={filter}
+      getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
       query={query}
     />
@@ -82,10 +101,14 @@ function ScreenSizes({ query, site }) {
     return iconFor(screenSize.name)
   }
 
+  function getFilterFor(listItem) {
+    return { screen: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{ screen: 'name' }}
+      getFilterFor={getFilterFor}
       keyLabel="Screen size"
       query={query}
       renderIcon={renderIcon}

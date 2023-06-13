@@ -14,10 +14,14 @@ function EntryPages({query, site}) {
     return url.externalLinkForPage(site.domain, page.name)
   }
 
+  function getFilterFor(listItem) {
+    return { entry_page: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{entry_page: 'name'}}
+      getFilterFor={getFilterFor}
       keyLabel="Entry page"
       valueLabel="Unique Entrances"
       valueKey="unique_entrances"
@@ -38,10 +42,14 @@ function ExitPages({query, site}) {
     return url.externalLinkForPage(site.domain, page.name)
   }
 
+  function getFilterFor(listItem) {
+    return { exit_page: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{exit_page: 'name'}}
+      getFilterFor={getFilterFor}
       keyLabel="Exit page"
       valueLabel="Unique Exits"
       valueKey="unique_exits"
@@ -62,10 +70,14 @@ function TopPages({query, site}) {
     return url.externalLinkForPage(site.domain, page.name)
   }
 
+  function getFilterFor(listItem) {
+    return { page: listItem['name'] }
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{page: 'name'}}
+      getFilterFor={getFilterFor}
       keyLabel="Page"
       detailsLink={url.sitePath(site, '/pages')}
       query={query}
