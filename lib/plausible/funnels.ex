@@ -1,6 +1,13 @@
 defmodule Plausible.Funnels do
   @funnel_window_duration 86_400
 
+  @moduledoc """
+  This module implements contextual Funnel interface, allowing listing,
+  creating, deleting and evaluating funnel definition.
+
+  For brief explanation of what a Funnel is, please see `Plausible.Funnel` schema.
+  """
+
   use Plausible.Funnel
 
   alias Plausible.Repo
@@ -9,6 +16,9 @@ defmodule Plausible.Funnels do
 
   import Ecto.Query
 
+  @spec create(Plausible.Site.t(), String.t(), [Plausible.Goal.t()]) ::
+          {:ok, Funnel.t()}
+          | {:error, Ecto.Changeset.t() | :invalid_funnel_size}
   def create(site, name, steps)
       when is_list(steps) and length(steps) in Funnel.min_steps()..Funnel.max_steps() do
     site
@@ -20,16 +30,20 @@ defmodule Plausible.Funnels do
     {:error, :invalid_funnel_size}
   end
 
+  @spec create_changeset(Plausible.Site.t(), String.t(), [Plausible.Goal.t()]) ::
+          Ecto.Changeset.t()
   def create_changeset(site, name, steps) do
     Funnel.changeset(%Funnel{site_id: site.id}, %{name: name, steps: steps})
   end
 
+  @spec ephemeral_definition(Plausible.Site.t(), String.t(), [Plausible.Goal.t()]) :: Funnel.t()
   def ephemeral_definition(site, name, steps) do
     site
     |> create_changeset(name, steps)
     |> Ecto.Changeset.apply_changes()
   end
 
+  @spec list(Plausible.Site.t()) :: [Funnel.t()]
   def list(%Plausible.Site{id: site_id}) do
     Repo.all(
       from f in Funnel,
@@ -41,6 +55,7 @@ defmodule Plausible.Funnels do
     )
   end
 
+  @spec delete(Plausible.Site.t(), pos_integer()) :: :ok
   def delete(%Plausible.Site{id: site_id}, funnel_id) do
     Repo.delete_all(
       from f in Funnel,
@@ -51,6 +66,8 @@ defmodule Plausible.Funnels do
     :ok
   end
 
+  @spec get(Plausible.Site.t() | pos_integer(), pos_integer()) ::
+          {:ok, Funnel.t()} | {:error, String.t()}
   def get(%Plausible.Site{id: site_id}, by) do
     get(site_id, by)
   end
@@ -76,6 +93,8 @@ defmodule Plausible.Funnels do
     end
   end
 
+  @spec evaluate(Plausible.Stats.Query.t(), Funnel.t() | pos_integer(), Plausible.Site.t()) ::
+          {:ok, Funnel.t()} | {:error, String.t()}
   def evaluate(query, funnel_id, site) when is_integer(funnel_id) do
     with {:ok, funnel_definition} <- get(site.id, funnel_id) do
       evaluate(query, funnel_definition, site)
