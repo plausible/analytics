@@ -54,7 +54,7 @@ defmodule Plausible.FunnelsTest do
         [g3, g1, g2]
       )
 
-    assert {:ok, funnel} = Funnels.get(site, funnel.id)
+    assert funnel = Funnels.get(site, funnel.id)
     assert funnel.name == "Lorem ipsum"
     assert [%{step_order: 1}, %{step_order: 2}, %{step_order: 3}] = funnel.steps
   end
@@ -70,7 +70,7 @@ defmodule Plausible.FunnelsTest do
     assert :ok = Funnels.delete(site, funnel.id)
     # deletion is idempotent
     assert :ok = Funnels.delete(site, funnel.id)
-    assert {:error, "Funnel not found"} = Funnels.get(site, funnel.id)
+    refute Funnels.get(site, funnel.id)
   end
 
   test "a funnel cannot be made of < 2 steps", %{site: site, steps: [g1 | _]} do
