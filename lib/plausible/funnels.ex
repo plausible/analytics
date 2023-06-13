@@ -43,7 +43,9 @@ defmodule Plausible.Funnels do
     |> Ecto.Changeset.apply_changes()
   end
 
-  @spec list(Plausible.Site.t()) :: [Funnel.t()]
+  @spec list(Plausible.Site.t()) :: [
+          %{name: String.t(), id: pos_integer(), steps_count: pos_integer()}
+        ]
   def list(%Plausible.Site{id: site_id}) do
     Repo.all(
       from f in Funnel,
