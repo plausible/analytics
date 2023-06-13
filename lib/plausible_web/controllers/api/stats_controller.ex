@@ -1033,7 +1033,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def conversions(conn, params) do
-    site = conn.assigns[:site]
+    site = Plausible.Repo.preload(conn.assigns.site, :goals)
     query = Query.from(site, params) |> Filters.add_prefix()
 
     query =
@@ -1047,13 +1047,17 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
+    metrics =
+      if Enum.any?(site.goals, &Plausible.Goal.revenue?/1) do
+        [:visitors, :events, :average_revenue, :total_revenue]
+      else
+        [:visitors, :events]
+      end
+
     conversions =
-      Stats.breakdown(site, query, "event:goal", [:visitors, :events], {100, 1})
-      |> transform_keys(%{
-        goal: :name,
-        visitors: :unique_conversions,
-        events: :total_conversions
-      })
+      site
+      |> Stats.breakdown(query, "event:goal", metrics, {100, 1})
+      |> transform_keys(%{goal: :name, visitors: :unique_conversions, events: :total_conversions})
       |> Enum.map(fn goal ->
         goal
         |> Map.put(:prop_names, CustomProps.props_for_goal(site, query))
@@ -1062,7 +1066,7 @@ defmodule PlausibleWeb.Api.StatsController do
       end)
 
     if params["csv"] do
-      conversions |> to_csv([:name, :unique_conversions, :total_conversions])
+      to_csv(conversions, [:name, :unique_conversions, :total_conversions])
     else
       json(conn, conversions)
     end

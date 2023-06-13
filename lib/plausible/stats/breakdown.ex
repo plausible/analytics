@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Breakdown do
   import Plausible.Stats.{Base, Imported, Util}
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.Query
-  alias Plausible.Goals
+
   @no_ref "Direct / None"
   @not_set "(not set)"
 
@@ -12,24 +12,14 @@ defmodule Plausible.Stats.Breakdown do
   @event_props Plausible.Stats.Props.event_props()
 
   def breakdown(site, query, "event:goal" = property, metrics, pagination) do
-    {event_goals, pageview_goals} =
-      site
-      |> Goals.for_site()
-      |> Enum.split_with(fn goal -> goal.event_name end)
+    site = Plausible.Repo.preload(site, :goals)
 
+    {event_goals, pageview_goals} = Enum.split_with(site.goals, & &1.event_name)
     revenue_goals = Enum.filter(event_goals, &Plausible.Goal.revenue?/1)
 
     events = Enum.map(event_goals, & &1.event_name)
     event_query = %Query{query | filters: Map.put(query.filters, "event:name", {:member, events})}
-
     trace(query, property, metrics)
-
-    metrics =
-      if Enum.empty?(revenue_goals) do
-        metrics
-      else
-        metrics ++ [:average_revenue, :total_revenue]
-      end
 
     event_results =
       if Enum.any?(event_goals) do
@@ -170,7 +160,7 @@ defmodule Plausible.Stats.Breakdown do
     for result <- event_results do
       matching_goal = Enum.find(revenue_goals, &(&1.event_name == result.goal))
 
-      if matching_goal && result.total_revenue && result.average_revenue do
+      if matching_goal && result[:total_revenue] && result[:average_revenue] do
         result
         |> Map.put(:total_revenue, Money.new!(matching_goal.currency, result.total_revenue))
         |> Map.put(:average_revenue, Money.new!(matching_goal.currency, result.average_revenue))
