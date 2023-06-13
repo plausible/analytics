@@ -1,21 +1,3 @@
-defimpl Jason.Encoder, for: Plausible.Goal do
-  def encode(value, opts) do
-    goal_type =
-      cond do
-        value.event_name -> :event
-        value.page_path -> :page
-      end
-
-    domain = value.site.domain
-
-    value
-    |> Map.put(:goal_type, goal_type)
-    |> Map.take([:id, :goal_type, :event_name, :page_path])
-    |> Map.put(:domain, domain)
-    |> Jason.Encode.map(opts)
-  end
-end
-
 defmodule Plausible.Goal do
   use Ecto.Schema
   import Ecto.Changeset
@@ -23,8 +5,9 @@ defmodule Plausible.Goal do
   schema "goals" do
     field :event_name, :string
     field :page_path, :string
-
     field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
+
+    many_to_many :funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step
 
     belongs_to :site, Plausible.Site
 
@@ -50,7 +33,7 @@ defmodule Plausible.Goal do
 
   def changeset(goal, attrs \\ %{}) do
     goal
-    |> cast(attrs, [:site_id, :event_name, :page_path, :currency])
+    |> cast(attrs, [:id, :site_id, :event_name, :page_path, :currency])
     |> validate_required([:site_id])
     |> cast_assoc(:site)
     |> validate_event_name_and_page_path()
@@ -86,5 +69,34 @@ defmodule Plausible.Goal do
     else
       changeset
     end
+  end
+end
+
+defimpl Jason.Encoder, for: Plausible.Goal do
+  def encode(value, opts) do
+    goal_type =
+      cond do
+        value.event_name -> :event
+        value.page_path -> :page
+      end
+
+    domain = value.site.domain
+
+    value
+    |> Map.put(:goal_type, goal_type)
+    |> Map.take([:id, :goal_type, :event_name, :page_path])
+    |> Map.put(:domain, domain)
+    |> Jason.Encode.map(opts)
+  end
+end
+
+# TODO: consider Phoenix.HTML.Safe
+defimpl String.Chars, for: Plausible.Goal do
+  def to_string(%{page_path: page_path}) when is_binary(page_path) do
+    "Visit " <> page_path
+  end
+
+  def to_string(%{event_name: name}) when is_binary(name) do
+    name
   end
 end
