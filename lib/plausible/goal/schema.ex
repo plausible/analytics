@@ -2,6 +2,8 @@ defmodule Plausible.Goal do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   schema "goals" do
     field :event_name, :string
     field :page_path, :string
