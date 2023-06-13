@@ -1,4 +1,9 @@
 defmodule Plausible.Funnel.Step do
+  @moduledoc """
+  This module defines the database schema for a single Funnel step.
+  See: `Plausible.Funnel` for more information.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 

@@ -15,7 +15,7 @@ defmodule Plausible.Funnel do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Plasuible.Funnel.Step
+  alias Plausible.Funnel.Step
 
   defmacro min_steps() do
     quote do
