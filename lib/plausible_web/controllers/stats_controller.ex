@@ -64,7 +64,6 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
-          funnels: [],
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: "Plausible · " <> site.domain,
@@ -292,7 +291,6 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Sites.has_goals?(shared_link.site),
-          funnels: [],
           stats_start_date: shared_link.site.stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: "Plausible · " <> shared_link.site.domain,
@@ -326,11 +324,8 @@ defmodule PlausibleWeb.StatsController do
 
   defp shared_link_cookie_name(slug), do: "shared-link-" <> slug
 
-  defp get_flags(user) do
-    %{
-      funnels: FunWithFlags.enabled?(:funnels, for: user),
-      props: FunWithFlags.enabled?(:props, for: user)
-    }
+  defp get_flags(_user) do
+    %{}
   end
 
   defp is_dbip() do

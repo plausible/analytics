@@ -171,34 +171,6 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def set_feature_status(conn, %{"action" => action, "feature" => feature}) do
-    site = conn.assigns[:site]
-
-    report_title =
-      case feature do
-        "conversions" -> "Goals"
-        "funnels" -> "Funnels"
-        "props" -> "Properties"
-      end
-
-    {change, flash_msg} =
-      case action do
-        "enable" ->
-          {Plausible.Site.enable_feature(site, feature),
-           "#{report_title} are now visible again on your dashboard"}
-
-        "disable" ->
-          {Plausible.Site.disable_feature(site, feature),
-           "#{report_title} are now hidden from your dashboard"}
-      end
-
-    Repo.update(change)
-
-    conn
-    |> put_flash(:success, flash_msg)
-    |> redirect(to: Routes.site_path(conn, :settings_goals, conn.assigns[:site].domain))
-  end
-
   def settings(conn, %{"website" => website}) do
     redirect(conn, to: Routes.site_path(conn, :settings_general, website))
   end
