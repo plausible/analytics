@@ -2,6 +2,8 @@ defmodule Plausible.Funnel do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Plasuible.Funnel.Step
+
   @min_steps 2
   @max_steps 5
 
@@ -21,29 +23,6 @@ defmodule Plausible.Funnel do
     quote do
       require Plausible.Funnel
       alias Plausible.Funnel
-    end
-  end
-
-  defmodule Step do
-    use Ecto.Schema
-    import Ecto.Changeset
-
-    @type t() :: %__MODULE__{}
-    schema "funnel_steps" do
-      field :step_order, :integer
-      belongs_to :funnel, Plausible.Funnel
-      belongs_to :goal, Plausible.Goal
-      timestamps()
-    end
-
-    def changeset(step, attrs \\ %{}) do
-      step
-      |> cast(attrs, [:goal_id])
-      |> cast_assoc(:goal)
-      |> validate_required([:goal_id])
-      |> unique_constraint(:goal,
-        name: :funnel_steps_goal_id_funnel_id_index
-      )
     end
   end
 
