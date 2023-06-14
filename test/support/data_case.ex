@@ -34,8 +34,4 @@ defmodule Plausible.DataCase do
 
     :ok
   end
-
-  def reload(%schema{id: id}) do
-    Plausible.Repo.get(schema, id)
-  end
 end

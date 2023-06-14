@@ -21,11 +21,15 @@ defmodule Plausible.GoalsTest do
   test "create/2 sets site.updated_at for revenue goal" do
     site_1 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
     {:ok, _goal_1} = Goals.create(site_1, %{"event_name" => "Checkout", "currency" => "BRL"})
-    assert NaiveDateTime.compare(site_1.updated_at, reload(site_1).updated_at) == :lt
+
+    assert NaiveDateTime.compare(site_1.updated_at, Plausible.Repo.reload!(site_1).updated_at) ==
+             :lt
 
     site_2 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
     {:ok, _goal_2} = Goals.create(site_2, %{"event_name" => "Read Article", "currency" => nil})
-    assert NaiveDateTime.compare(site_2.updated_at, reload(site_2).updated_at) == :eq
+
+    assert NaiveDateTime.compare(site_2.updated_at, Plausible.Repo.reload!(site_2).updated_at) ==
+             :eq
   end
 
   test "for_site2 returns trimmed input even if it was saved with trailing whitespace" do
