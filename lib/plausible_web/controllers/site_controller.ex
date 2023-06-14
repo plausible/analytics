@@ -253,13 +253,24 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_goals(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    goals = Goals.for_site(site)
+    goals = Goals.for_site(site, preload_funnels?: true)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_goals.html",
       site: site,
       goals: goals,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_funnels(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_funnels.html",
+      site: site,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -877,11 +888,10 @@ defmodule PlausibleWeb.SiteController do
     cond do
       site.imported_data ->
         Oban.cancel_all_jobs(
-          from(j in Oban.Job,
+          from j in Oban.Job,
             where:
               j.queue == "google_analytics_imports" and
                 fragment("(? ->> 'site_id')::int", j.args) == ^site.id
-          )
         )
 
         Plausible.Imported.forget(site)
