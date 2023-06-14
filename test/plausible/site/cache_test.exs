@@ -55,7 +55,8 @@ defmodule Plausible.Site.CacheTest do
 
     test "cache caches revenue goals", %{test: test} do
       {:ok, _} =
-        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
+        Supervisor.start_link(
+          [{Cache, [cache_name: test, child_id: :test_cache_caches_revenue_goals]}],
           strategy: :one_for_one,
           name: Test.Supervisor.Cache
         )
