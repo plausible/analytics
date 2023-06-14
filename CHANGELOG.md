@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 - Device type is now determined from the User-Agent instead of window.innerWidth plausible/analytics#2711
 - Add padding by default to embedded dashboards so that shadows are not cut off plausible/analytics#2744
 - Update the User Agents database (https://github.com/matomo-org/device-detector/releases/tag/6.1.1)
+- Disable registration in self-hosted setups by default plausible/analytics#3014
 
 ### Removed
 - Remove Firewall plug and `IP_BLOCKLIST` environment variable

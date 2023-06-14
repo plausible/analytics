@@ -37,7 +37,10 @@ defmodule PlausibleWeb.AuthController do
         conn
 
       disable_registration in [:invite_only, true] ->
-        conn |> redirect(to: Routes.auth_path(conn, :login_form)) |> halt()
+        conn
+        |> put_flash(:error, "Registration is disabled on this instance")
+        |> redirect(to: Routes.auth_path(conn, :login_form))
+        |> halt()
 
       true ->
         conn
