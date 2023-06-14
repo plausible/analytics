@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## v2.0.0 - 2023-07-12
+
 ### Added
 - Call to action for tracking Goal Conversions and an option to hide the section from the dashboard
 - Add support for `with_imported=true` in Stats API aggregate endpoint
@@ -14,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Add `MAILER_NAME` environment variable support plausible/analytics#2937
 - Add `MAILGUN_BASE_URI` support for `Bamboo.MailgunAdapter` plausible/analytics#2935
 - Add a landing page for self-hosters plausible/analytics#2989
+- Allow optional IPv6 for clickhouse repo plausible/analytics#2970
 
 ### Fixed
 - Fix tracker bug - call callback function even when event is ignored
