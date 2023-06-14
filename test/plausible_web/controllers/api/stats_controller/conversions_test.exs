@@ -619,6 +619,42 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    test "can combine wildcard and no wildcard in matches_member", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post-1"),
+        build(:pageview, pathname: "/blog/post-2"),
+        build(:pageview, pathname: "/billing/upgrade")
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog/**"})
+      insert(:goal, %{site: site, page_path: "/billing/upgrade"})
+
+      filters = Jason.encode!(%{goal: "Visit /blog/**|Visit /billing/upgrade"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Visit /blog/**",
+                 "unique_conversions" => 2,
+                 "total_conversions" => 2,
+                 "prop_names" => [],
+                 "conversion_rate" => 66.7
+               },
+               %{
+                 "name" => "Visit /billing/upgrade",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => [],
+                 "conversion_rate" => 33.3
+               }
+             ]
+    end
+
     test "can filter by matches_member filter type on goals", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
@@ -696,6 +732,37 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "total_conversions" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 16.7
+               }
+             ]
+    end
+
+    test "can combine wildcard and no wildcard in not_matches_member", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post-1"),
+        build(:pageview, pathname: "/blog/post-2"),
+        build(:pageview, pathname: "/billing/upgrade"),
+        build(:pageview, pathname: "/register")
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog/**"})
+      insert(:goal, %{site: site, page_path: "/billing/upgrade"})
+      insert(:goal, %{site: site, page_path: "/register"})
+
+      filters = Jason.encode!(%{goal: "!Visit /blog/**|Visit /billing/upgrade"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Visit /register",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => [],
+                 "conversion_rate" => 25
                }
              ]
     end

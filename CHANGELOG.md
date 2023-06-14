@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - Fix bug with [showing property breakdown with a prop filter](https://github.com/plausible/analytics/issues/1789)
 - Fix bug when combining goal and prop filters plausible/analytics#2654
 - Fix broken favicons when domain includes a slash
+- Fix bug when using multiple [wildcard goal filters](https://github.com/plausible/analytics/pull/3015)
 
 ### Changed
 - Treat page filter as entry page filter for `bounce_rate`

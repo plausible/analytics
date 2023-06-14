@@ -75,20 +75,44 @@ defmodule Plausible.Stats.Base do
         {:matches_member, clauses} ->
           {events, pages} = split_goals(clauses, &page_regex/1)
 
-          from(e in q,
-            where:
-              fragment("multiMatchAny(?, ?)", e.pathname, ^pages) or
-                fragment("multiMatchAny(?, ?)", e.name, ^events)
-          )
+          event_clause =
+            if Enum.any?(events) do
+              dynamic([x], fragment("multiMatchAny(?, ?)", x.name, ^events))
+            else
+              dynamic([x], false)
+            end
+
+          page_clause =
+            if Enum.any?(pages) do
+              dynamic([x], fragment("multiMatchAny(?, ?)", x.pathname, ^pages))
+            else
+              dynamic([x], false)
+            end
+
+          where_clause = dynamic([], ^event_clause or ^page_clause)
+
+          from(e in q, where: ^where_clause)
 
         {:not_matches_member, clauses} ->
           {events, pages} = split_goals(clauses, &page_regex/1)
 
-          from(e in q,
-            where:
-              fragment("not(multiMatchAny(?, ?))", e.pathname, ^pages) and
-                fragment("not(multiMatchAny(?, ?))", e.name, ^events)
-          )
+          event_clause =
+            if Enum.any?(events) do
+              dynamic([x], fragment("multiMatchAny(?, ?)", x.name, ^events))
+            else
+              dynamic([x], false)
+            end
+
+          page_clause =
+            if Enum.any?(pages) do
+              dynamic([x], fragment("multiMatchAny(?, ?)", x.pathname, ^pages))
+            else
+              dynamic([x], false)
+            end
+
+          where_clause = dynamic([], not (^event_clause or ^page_clause))
+
+          from(e in q, where: ^where_clause)
 
         {:not_member, clauses} ->
           {events, pages} = split_goals(clauses)
