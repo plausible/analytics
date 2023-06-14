@@ -91,6 +91,16 @@ defmodule Plausible.Goals do
         query
       end
 
+    query =
+      if opts[:preload_funnels?] do
+        from g in query,
+          left_join: assoc(g, :funnels),
+          group_by: g.id,
+          preload: [:funnels]
+      else
+        query
+      end
+
     query
     |> Repo.all()
     |> Enum.map(&maybe_trim/1)
@@ -149,10 +159,9 @@ defmodule Plausible.Goals do
       |> Multi.delete_all(
         :delete_goals,
         fn _ ->
-          from(g in Goal,
+          from g in Goal,
             where: g.id == ^id,
             where: g.site_id == ^site.id
-          )
         end
       )
       |> Repo.transaction()
