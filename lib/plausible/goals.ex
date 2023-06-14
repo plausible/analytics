@@ -5,12 +5,35 @@ defmodule Plausible.Goals do
 
   use Plausible.Funnel
 
-  def create(site, params) do
+  @doc """
+  Creates a Goal for a site.
+
+  If the created goal is a revenue goal, it sets site.updated_at to be
+  refreshed by the sites cache, as revenue goals are used during ingestion.
+  """
+  def create(site, params, now \\ DateTime.utc_now()) do
     params = Map.merge(params, %{"site_id" => site.id})
 
-    case Repo.insert(Goal.changeset(%Goal{}, params)) do
-      {:ok, goal} -> {:ok, Repo.preload(goal, :site)}
-      error -> error
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert(:goal, Goal.changeset(%Goal{}, params))
+    |> Ecto.Multi.run(:site, fn repo, %{goal: goal} ->
+      if Goal.revenue?(goal) do
+        now =
+          now
+          |> DateTime.truncate(:second)
+          |> DateTime.to_naive()
+
+        site
+        |> Ecto.Changeset.change(updated_at: now)
+        |> repo.update()
+      else
+        {:ok, site}
+      end
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{goal: goal}} -> {:ok, Repo.preload(goal, :site)}
+      {:error, _failed_operation, failed_value, _changes_so_far} -> {:error, failed_value}
     end
   end
 
