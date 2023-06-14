@@ -208,10 +208,8 @@ defmodule Plausible.Ingestion.Event do
   defp put_props(%__MODULE__{} = event), do: event
 
   defp put_revenue(%__MODULE__{request: %{revenue_source: %Money{} = revenue_source}} = event) do
-    revenue_goals = event.site.revenue_goals || []
-
     matching_goal =
-      Enum.find(revenue_goals, &(&1.event_name == event.clickhouse_event_attrs.name))
+      Enum.find(event.site.revenue_goals, &(&1.event_name == event.clickhouse_event_attrs.name))
 
     cond do
       is_nil(matching_goal) ->
