@@ -23,6 +23,7 @@ defmodule PlausibleWeb.LayoutView do
       [key: "People", value: "people"],
       [key: "Visibility", value: "visibility"],
       [key: "Goals", value: "goals"],
+      [key: "Funnels", value: "funnels"],
       [key: "Search Console", value: "search-console"],
       [key: "Email reports", value: "email-reports"],
       if !is_selfhost() && conn.assigns[:site].custom_domain do

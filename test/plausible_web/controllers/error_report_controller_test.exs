@@ -3,6 +3,7 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
   use Bamboo.Test
 
   import Phoenix.View
+  import Plausible.Test.Support.HTML
 
   alias PlausibleWeb.Endpoint
   alias PlausibleWeb.ErrorView
@@ -143,26 +144,5 @@ defmodule PlausibleWeb.ErrorReportControllerTest do
         refute form_exists?(html, action_path)
       end
     end
-  end
-
-  defp form_exists?(html, action_path) do
-    element_exists?(html, "form[action=\"" <> action_path <> "\"]")
-  end
-
-  defp element_exists?(html, selector) do
-    html
-    |> find(selector)
-    |> Enum.empty?()
-    |> Kernel.not()
-  end
-
-  defp submit_button(html, form) do
-    find(html, "#{form} button[type=\"submit\"]")
-  end
-
-  defp find(html, value) do
-    html
-    |> Floki.parse_document!()
-    |> Floki.find(value)
   end
 end
