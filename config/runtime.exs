@@ -175,9 +175,17 @@ enable_email_verification =
   |> get_var_from_path_or_env("ENABLE_EMAIL_VERIFICATION", "false")
   |> String.to_existing_atom()
 
+is_selfhost =
+  config_dir
+  |> get_var_from_path_or_env("SELFHOST", "true")
+  |> String.to_existing_atom()
+
+# by default, registration is disabled in self-hosted setups
+disable_registration_default = to_string(is_selfhost)
+
 disable_registration =
   config_dir
-  |> get_var_from_path_or_env("DISABLE_REGISTRATION", "false")
+  |> get_var_from_path_or_env("DISABLE_REGISTRATION", disable_registration_default)
   |> String.to_existing_atom()
 
 if disable_registration not in [true, false, :invite_only] do
@@ -190,11 +198,6 @@ hcaptcha_secret = get_var_from_path_or_env(config_dir, "HCAPTCHA_SECRET")
 log_level =
   config_dir
   |> get_var_from_path_or_env("LOG_LEVEL", "warn")
-  |> String.to_existing_atom()
-
-is_selfhost =
-  config_dir
-  |> get_var_from_path_or_env("SELFHOST", "true")
   |> String.to_existing_atom()
 
 custom_script_name =
