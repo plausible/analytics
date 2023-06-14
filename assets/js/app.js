@@ -2,84 +2,10 @@ import "../css/app.css"
 import "flatpickr/dist/flatpickr.min.css"
 import "./polyfills/closest"
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
-import "phoenix_html"
 import 'alpinejs'
-
-import { Socket } from "phoenix"
-import { LiveSocket } from "phoenix_live_view"
-
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {
-  params: { _csrf_token: csrfToken }, hooks: {}, dom: {
-    // for alpinejs integration
-    onBeforeElUpdated(from, to) {
-      if (from.__x) {
-        window.Alpine.clone(from.__x, to);
-      }
-    },
-  }
-})
-
-// XXX: maybe figure out a better place to plant this at
-// Courtesy of Benjamin von Polheim:
-// https://blog.devgenius.io/build-a-performat-autocomplete-using-phoenix-liveview-and-alpine-js-8bcbbed17ba7
-let suggestionsDropdown = function(id) {
-  return {
-    isOpen: false,
-    id: id,
-    open() { this.isOpen = true },
-    close() { this.isOpen = false },
-    focus: 0,
-    setFocus(f) {
-      this.focus = f;
-    },
-    select() {
-      this.$refs[`dropdown-${this.id}-option-${this.focus}`]?.click()
-      this.focusPrev()
-    },
-    scrollTo(idx) {
-      this.$refs[`dropdown-${this.id}-option-${idx}`]?.scrollIntoView(
-        { block: 'center', behavior: 'smooth', inline: 'start' }
-      )
-    },
-    focusNext() {
-      const nextIndex = this.focus + 1
-      const total = this.$refs.suggestions?.childElementCount ?? 0
-      if (this.isOpen && nextIndex < total) {
-        this.setFocus(nextIndex)
-        this.scrollTo(nextIndex);
-      }
-    },
-    focusPrev() {
-      const nextIndex = this.focus - 1
-      if (this.isOpen && nextIndex >= 0) {
-        this.setFocus(nextIndex)
-        this.scrollTo(nextIndex)
-      }
-    },
-  }
-}
-
-window.suggestionsDropdown = suggestionsDropdown
-
-// Connect if there are any LiveViews on the page
-liveSocket.connect()
-
-// Expose liveSocket on window for web console debug logs and latency simulation:
-// >> liveSocket.enableDebug()
-// >> liveSocket.enableLatencySim(1000)
-// The latency simulator is enabled for the duration of the browser session.
-// Call disableLatencySim() to disable:
-// >> liveSocket.disableLatencySim()
-window.liveSocket = liveSocket
-
-window.addEventListener(`phx:update-value`, (e) => {
-  let el = document.getElementById(e.detail.id)
-  el.value = e.detail.value
-  if (e.detail.fire) {
-    el.dispatchEvent(new Event("input", { bubbles: true }))
-  }
-})
+import "./liveview/live_socket"
+import "./liveview/suggestions_dropdown"
+import "./liveview/phx_events"
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 
