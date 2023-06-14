@@ -81,6 +81,11 @@
     if (options && options.props) {
       payload.p = options.props
     }
+    {{#if revenue}}
+    if (options && options.revenue) {
+      payload.$ = options.revenue
+    }
+    {{/if}}
 
     {{#if pageview_props}}
     var propAttributes = scriptEl.getAttributeNames().filter(function (name) {
