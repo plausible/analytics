@@ -83,7 +83,7 @@
     }
     {{#if revenue}}
     if (options && options.revenue) {
-      payload.$ = { currency: options.revenue.currency, amount: options.revenue.amount }
+      payload.$ = options.revenue
     }
     {{/if}}
 
