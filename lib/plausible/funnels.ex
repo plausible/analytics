@@ -13,6 +13,11 @@ defmodule Plausible.Funnels do
 
   import Ecto.Query
 
+  @spec enabled_for?(any()) :: boolean()
+  def enabled_for?(actor) do
+    FunWithFlags.enabled?(:funnels, for: actor)
+  end
+
   @spec create(Plausible.Site.t(), String.t(), [Plausible.Goal.t()]) ::
           {:ok, Funnel.t()}
           | {:error, Ecto.Changeset.t() | :invalid_funnel_size}

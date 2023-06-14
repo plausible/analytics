@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         %{"site_id" => _site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
+    true = Plausible.Funnels.enabled_for?("user:#{user_id}")
     site = Sites.get_for_user!(user_id, domain, [:owner, :admin])
 
     funnels = Funnels.list(site)

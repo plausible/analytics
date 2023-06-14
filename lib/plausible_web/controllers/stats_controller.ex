@@ -328,7 +328,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user) do
     %{
-      funnels: FunWithFlags.enabled?(:funnels, for: user),
+      funnels: Plausible.Funnels.enabled_for?(user),
       props: FunWithFlags.enabled?(:props, for: user)
     }
   end

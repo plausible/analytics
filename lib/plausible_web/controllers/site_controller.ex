@@ -265,14 +265,18 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_funnels(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    if Plausible.Funnels.enabled_for?(conn.assigns[:current_user]) do
+      site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("settings_funnels.html",
-      site: site,
-      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-    )
+      conn
+      |> assign(:skip_plausible_tracking, true)
+      |> render("settings_funnels.html",
+        site: site,
+        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+      )
+    else
+      conn |> Plug.Conn.put_status(401) |> Plug.Conn.halt()
+    end
   end
 
   def settings_search_console(conn, _params) do
