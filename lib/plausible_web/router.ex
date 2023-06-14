@@ -1,11 +1,12 @@
 defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
+  import Phoenix.LiveView.Router
   @two_weeks_in_seconds 60 * 60 * 24 * 14
 
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_live_flash
     plug :put_secure_browser_headers
     plug PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
@@ -148,6 +149,11 @@ defmodule PlausibleWeb.Router do
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
   end
 
+  scope "/:website/settings/funnels/", PlausibleWeb do
+    pipe_through [:browser, :csrf]
+    get "/", SiteController, :settings_funnels
+  end
+
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
@@ -246,6 +252,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/people", SiteController, :settings_people
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
+
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
     get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
