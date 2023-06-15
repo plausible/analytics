@@ -1,4 +1,8 @@
 defmodule Plausible.Test.Support.HTML do
+  @moduledoc """
+  Floki wrappers to help make assertions about HTML/DOM structures
+  """
+
   def element_exists?(html, selector) do
     html
     |> find(selector)

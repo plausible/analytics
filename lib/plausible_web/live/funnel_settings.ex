@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Live.FunnelSettings do
+  @moduledoc """
+  LiveView allowing listing, creating and deleting funnels.
+  """
   use Phoenix.LiveView
   use Phoenix.HTML
 

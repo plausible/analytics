@@ -1,4 +1,12 @@
 defmodule PlausibleWeb.Live.FunnelSettings.List do
+  @moduledoc """
+  Phoenix LiveComponent module that renders a list of funnels with their names
+  and the number of steps they have.
+
+  Each funnel is displayed with a delete button, which triggers a confirmation
+  message before deleting the funnel from the UI. If there are no funnels
+  configured for the site, a message is displayed indicating so.
+  """
   use Phoenix.LiveComponent
   use Phoenix.HTML
 

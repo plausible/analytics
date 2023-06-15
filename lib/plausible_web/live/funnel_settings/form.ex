@@ -1,4 +1,10 @@
 defmodule PlausibleWeb.Live.FunnelSettings.Form do
+  @moduledoc """
+  Phoenix LiveComponent that renders a form used for setting up funnels.
+  Makes use of dynamically placed `PlausibleWeb.Live.FunnelSettings.ComboBox` components
+  to allow building searchable funnel definitions out of list of goals available.
+  """
+
   use Phoenix.LiveComponent
   use Phoenix.HTML
   use Plausible.Funnel
