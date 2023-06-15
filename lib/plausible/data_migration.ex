@@ -30,7 +30,12 @@ defmodule Plausible.DataMigration do
           end
 
         prompt = IO.ANSI.white() <> message <> choices <> IO.ANSI.reset()
-        answer = String.downcase(String.trim(IO.gets(prompt)))
+
+        answer =
+          case IO.gets(prompt) do
+            answer when is_binary(answer) -> answer |> String.trim() |> String.downcase()
+            :eof -> ""
+          end
 
         skip = fn ->
           IO.puts("    #{IO.ANSI.cyan()}Skipped.#{IO.ANSI.reset()}")
