@@ -58,11 +58,19 @@ function sendLinkClickEvent(event, link, eventAttrs) {
   }
 
   if (shouldFollowLink(event, link)) {
-    plausible(eventAttrs.name, { props: eventAttrs.props, callback: followLink })
+    var attrs = { props: eventAttrs.props, callback: followLink }
+    {{#if revenue}}
+    attrs.revenue = eventAttrs.revenue
+    {{/if}}
+    plausible(eventAttrs.name, attrs)
     setTimeout(followLink, 5000)
     event.preventDefault()
   } else {
-    plausible(eventAttrs.name, { props: eventAttrs.props })
+    var attrs = { props: eventAttrs.props }
+    {{#if revenue}}
+    attrs.revenue = eventAttrs.revenue
+    {{/if}}
+    plausible(eventAttrs.name, attrs)
   }
 }
 
@@ -97,6 +105,9 @@ function isDownloadToTrack(url) {
 function getTaggedEventAttributes(htmlElement) {
   var taggedElement = isTagged(htmlElement) ? htmlElement : htmlElement && htmlElement.parentNode
   var eventAttrs = { name: null, props: {} }
+  {{#if tagged_events}}
+  eventAttrs.revenue = {}
+  {{/if}}
 
   var classList = taggedElement && taggedElement.classList
   if (!classList) { return eventAttrs }
@@ -110,10 +121,20 @@ function getTaggedEventAttributes(htmlElement) {
     var key = matchList[1]
     var value = matchList[3].replace(/\+/g, ' ')
 
-    if (key.toLowerCase() === 'name') {
-      eventAttrs.name = value
-    } else {
-      eventAttrs.props[key] = value
+    switch (key.toLowerCase()) {
+      case 'name':
+        eventAttrs.name = value
+        break
+      {{#if revenue}}
+      case 'revenue-currency':
+        eventAttrs.revenue.currency = value
+        break
+      case 'revenue-amount':
+        eventAttrs.revenue.amount = value
+        break
+      {{/if}}
+      default:
+        eventAttrs.props[key] = value
     }
   }
 
@@ -136,7 +157,12 @@ function handleTaggedFormSubmitEvent(event) {
   }
 
   setTimeout(submitForm, 5000)
-  plausible(eventAttrs.name, { props: eventAttrs.props, callback: submitForm })
+
+  var attrs = { props: eventAttrs.props, callback: submitForm }
+  {{#if revenue}}
+  attrs.revenue = eventAttrs.revenue
+  {{/if}}
+  plausible(eventAttrs.name, attrs)
 }
 
 function isForm(element) {
@@ -171,7 +197,12 @@ function handleTaggedElementClickEvent(event) {
       eventAttrs.props.url = clickedLink.href
       sendLinkClickEvent(event, clickedLink, eventAttrs)
     } else {
-      plausible(eventAttrs.name, { props: eventAttrs.props })
+      var attrs = {}
+      attrs.props = eventAttrs.props
+      {{#if revenue}}
+      attrs.revenue = eventAttrs.revenue
+      {{/if}}
+      plausible(eventAttrs.name, attrs)
     }
   }
 }
