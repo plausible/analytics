@@ -275,36 +275,48 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
         build(:event, name: "Signup"),
         build(:event,
           name: "Payment",
+          pathname: "/checkout",
           revenue_reporting_amount: Decimal.new("10.00"),
           revenue_reporting_currency: "EUR"
         )
       ])
 
       insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, page_path: "/checkout"})
       insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
 
       conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+      response = json_response(conn, 200)
 
-      assert json_response(conn, 200) == [
+      assert [
                %{
-                 "name" => "Signup",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "conversion_rate" => 33.3,
+                 "name" => "Payment",
                  "prop_names" => [],
-                 "conversion_rate" => 66.7,
-                 "average_revenue" => nil,
-                 "total_revenue" => nil
+                 "total_conversions" => 1,
+                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "unique_conversions" => 1
                },
                %{
-                 "name" => "Payment",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "average_revenue" => nil,
+                 "conversion_rate" => 66.7,
+                 "name" => "Signup",
                  "prop_names" => [],
+                 "total_conversions" => 2,
+                 "total_revenue" => nil,
+                 "unique_conversions" => 2
+               },
+               %{
+                 "average_revenue" => nil,
                  "conversion_rate" => 33.3,
-                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
-                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"}
+                 "name" => "Visit /checkout",
+                 "prop_names" => [],
+                 "total_conversions" => 1,
+                 "total_revenue" => nil,
+                 "unique_conversions" => 1
                }
-             ]
+             ] == Enum.sort_by(response, & &1["name"])
     end
 
     test "does not return revenue metrics if no revenue goals are returned", %{
