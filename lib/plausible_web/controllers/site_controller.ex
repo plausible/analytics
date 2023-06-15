@@ -171,32 +171,40 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def set_feature_status(conn, %{"action" => action, "feature" => feature}) do
+  @feature_titles %{
+    funnels_enabled: "Funnels",
+    conversions_enabled: "Goals",
+    props_enabled: "Properties"
+  }
+  def toggle_feature(conn, %{"property" => property, "r" => "/" <> _ = redirect_path})
+      when property in ~w[conversions_enabled funnels_enabled props_enabled] do
     site = conn.assigns[:site]
 
-    report_title =
-      case feature do
-        "conversions" -> "Goals"
-        "funnels" -> "Funnels"
-        "props" -> "Properties"
-      end
+    property = String.to_existing_atom(property)
+    change = Plausible.Site.feature_toggle_change(site, property)
+    result = Repo.update(change)
 
-    {change, flash_msg} =
-      case action do
-        "enable" ->
-          {Plausible.Site.enable_feature(site, feature),
-           "#{report_title} are now visible again on your dashboard"}
+    case result do
+      {:ok, updated_site} ->
+        message =
+          if Map.fetch!(updated_site, property) do
+            "#{@feature_titles[property]} are now visible again on your dashboard"
+          else
+            "#{@feature_titles[property]} are now hidden from your dashboard"
+          end
 
-        "disable" ->
-          {Plausible.Site.disable_feature(site, feature),
-           "#{report_title} are now hidden from your dashboard"}
-      end
+        conn
+        |> put_flash(:success, message)
+        |> redirect(to: redirect_path)
 
-    Repo.update(change)
-
-    conn
-    |> put_flash(:success, flash_msg)
-    |> redirect(to: Routes.site_path(conn, :settings_goals, conn.assigns[:site].domain))
+      {:error, _} ->
+        conn
+        |> put_flash(
+          :error,
+          "Something went wrong. Failed to toggle #{@feature_titles[property]} on your dashboard."
+        )
+        |> redirect(to: redirect_path)
+    end
   end
 
   def settings(conn, %{"website" => website}) do

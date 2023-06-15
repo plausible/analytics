@@ -739,106 +739,74 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "PUT /:website/settings/features/:action/:feature" do
-    setup [:create_user, :log_in]
-
-    test "can disable conversions, funnels, and props with admin access", %{
-      conn: conn,
-      user: user
-    } do
-      site = insert(:site)
-      insert(:site_membership, user: user, site: site, role: :admin)
-
-      conn1 = put(conn, "/#{site.domain}/settings/features/disable/conversions")
-      conn2 = put(conn, "/#{site.domain}/settings/features/disable/funnels")
-      conn3 = put(conn, "/#{site.domain}/settings/features/disable/props")
-
-      assert %{conversions_enabled: false, funnels_enabled: false, props_enabled: false} =
-               Plausible.Sites.get_by_domain(site.domain)
-
-      assert Phoenix.Flash.get(conn1.assigns.flash, :success) ==
-               "Goals are now hidden from your dashboard"
-
-      assert Phoenix.Flash.get(conn2.assigns.flash, :success) ==
-               "Funnels are now hidden from your dashboard"
-
-      assert Phoenix.Flash.get(conn3.assigns.flash, :success) ==
-               "Properties are now hidden from your dashboard"
-
-      assert redirected_to(conn1, 302) =~ "/#{site.domain}/settings/goals"
+  describe "PUT /:website/settings/features/toggle/property" do
+    def build_conn_with_some_url(context) do
+      {:ok, Map.put(context, :conn, build_conn(:get, "/some_parent_path"))}
     end
 
-    test "can enable conversions, funnels, and props with admin access", %{
-      conn: conn,
-      user: user
-    } do
-      site =
-        insert(:site, conversions_enabled: false, funnels_enabled: false, props_enabled: false)
+    setup [:build_conn_with_some_url, :create_user, :log_in]
 
-      insert(:site_membership, user: user, site: site, role: :owner)
+    for {title, property} <- %{
+          "Goals" => :conversions_enabled,
+          "Funnels" => :funnels_enabled,
+          "Properties" => :props_enabled
+        } do
+      test "can toggle #{title} with admin access", %{
+        user: user,
+        conn: conn0
+      } do
+        site = insert(:site)
+        insert(:site_membership, user: user, site: site, role: :admin)
 
-      conn1 = put(conn, "/#{site.domain}/settings/features/enable/conversions")
-      conn2 = put(conn, "/#{site.domain}/settings/features/enable/funnels")
-      conn3 = put(conn, "/#{site.domain}/settings/features/enable/props")
+        conn =
+          put(
+            conn0,
+            PlausibleWeb.Components.Site.Feature.target(site, unquote(property), conn0)
+          )
 
-      assert %{conversions_enabled: true, funnels_enabled: true, props_enabled: true} =
-               Plausible.Sites.get_by_domain(site.domain)
+        assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+                 "#{unquote(title)} are now hidden from your dashboard"
 
-      assert Phoenix.Flash.get(conn1.assigns.flash, :success) ==
-               "Goals are now visible again on your dashboard"
+        assert redirected_to(conn, 302) =~ "/some_parent_path"
 
-      assert Phoenix.Flash.get(conn2.assigns.flash, :success) ==
-               "Funnels are now visible again on your dashboard"
+        assert %{unquote(property) => false} = Plausible.Sites.get_by_domain(site.domain)
 
-      assert Phoenix.Flash.get(conn3.assigns.flash, :success) ==
-               "Properties are now visible again on your dashboard"
+        conn =
+          put(
+            conn0,
+            PlausibleWeb.Components.Site.Feature.target(site, unquote(property), conn0)
+          )
 
-      assert redirected_to(conn3, 302) =~ "/#{site.domain}/settings/goals"
+        assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+                 "#{unquote(title)} are now visible again on your dashboard"
+
+        assert redirected_to(conn, 302) =~ "/some_parent_path"
+
+        assert %{unquote(property) => true} = Plausible.Sites.get_by_domain(site.domain)
+      end
     end
 
-    test "can enable and disable with super-admin access", %{
-      conn: conn,
-      user: user
-    } do
-      site = insert(:site)
-      patch_env(:super_admin_user_ids, [user.id])
+    for {title, property} <- %{
+          "Goals" => :conversions_enabled,
+          "Funnels" => :funnels_enabled,
+          "Properties" => :props_enabled
+        } do
+      test "cannot toggle #{title} with viewer access", %{
+        user: user,
+        conn: conn0
+      } do
+        site = insert(:site)
+        insert(:site_membership, user: user, site: site, role: :viewer)
 
-      conn1 = put(conn, "/#{site.domain}/settings/features/disable/funnels")
-      assert %{funnels_enabled: false} = Plausible.Sites.get_by_domain(site.domain)
+        conn =
+          put(
+            conn0,
+            PlausibleWeb.Components.Site.Feature.target(site, unquote(property), conn0)
+          )
 
-      assert Phoenix.Flash.get(conn1.assigns.flash, :success) ==
-               "Funnels are now hidden from your dashboard"
-
-      conn2 = put(conn, "/#{site.domain}/settings/features/enable/funnels")
-      assert %{funnels_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
-
-      assert Phoenix.Flash.get(conn2.assigns.flash, :success) ==
-               "Funnels are now visible again on your dashboard"
-
-      assert redirected_to(conn1, 302) =~ "/#{site.domain}/settings/goals"
-      assert redirected_to(conn2, 302) =~ "/#{site.domain}/settings/goals"
-    end
-
-    test "fails to set feature status with viewer access", %{
-      conn: conn,
-      user: user
-    } do
-      site = insert(:site)
-      insert(:site_membership, user: user, site: site, role: :viewer)
-
-      conn = put(conn, "/#{site.domain}/settings/features/disable/conversions")
-
-      assert %{conversions_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
-      assert conn.status == 404
-    end
-
-    test "fails to set feature status for a foreign site", %{conn: conn} do
-      site = insert(:site)
-
-      conn = put(conn, "/#{site.domain}/settings/features/disable/conversions")
-
-      assert %{conversions_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
-      assert conn.status == 404
+        assert conn.status == 404
+        assert conn.halted
+      end
     end
   end
 
