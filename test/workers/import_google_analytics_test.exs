@@ -158,7 +158,10 @@ defmodule Plausible.Workers.ImportGoogleAnalyticsTest do
       api_stub
     )
 
-    assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 0
+    assert eventually(fn ->
+             count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+             {count == 0, count}
+           end)
   end
 
   test "sends email to owner after failed import" do
