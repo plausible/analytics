@@ -58,11 +58,19 @@ function sendLinkClickEvent(event, link, eventAttrs) {
   }
 
   if (shouldFollowLink(event, link)) {
-    plausible(eventAttrs.name, { props: eventAttrs.props, callback: followLink })
+    var attrs = { props: eventAttrs.props, callback: followLink }
+    {{#if revenue}}
+    attrs.revenue = eventAttrs.revenue
+    {{/if}}
+    plausible(eventAttrs.name, attrs)
     setTimeout(followLink, 5000)
     event.preventDefault()
   } else {
-    plausible(eventAttrs.name, { props: eventAttrs.props })
+    var attrs = { props: eventAttrs.props }
+    {{#if revenue}}
+    attrs.revenue = eventAttrs.revenue
+    {{/if}}
+    plausible(eventAttrs.name, attrs)
   }
 }
 
@@ -97,6 +105,9 @@ function isDownloadToTrack(url) {
 function getTaggedEventAttributes(htmlElement) {
   var taggedElement = isTagged(htmlElement) ? htmlElement : htmlElement && htmlElement.parentNode
   var eventAttrs = { name: null, props: {} }
+  {{#if revenue}}
+  eventAttrs.revenue = {}
+  {{/if}}
 
   var classList = taggedElement && taggedElement.classList
   if (!classList) { return eventAttrs }
@@ -105,16 +116,25 @@ function getTaggedEventAttributes(htmlElement) {
     var className = classList.item(i)
 
     var matchList = className.match(/plausible-event-(.+)(=|--)(.+)/)
-    if (!matchList) { continue }
+    if (matchList) {
+      var key = matchList[1]
+      var value = matchList[3].replace(/\+/g, ' ')
 
-    var key = matchList[1]
-    var value = matchList[3].replace(/\+/g, ' ')
-
-    if (key.toLowerCase() === 'name') {
-      eventAttrs.name = value
-    } else {
-      eventAttrs.props[key] = value
+      if (key.toLowerCase() == 'name') {
+        eventAttrs.name = value
+      } else {
+        eventAttrs.props[key] = value
+      }
     }
+
+    {{#if revenue}}
+    var revenueMatchList = className.match(/plausible-revenue-(.+)(=|--)(.+)/)
+    if (revenueMatchList) {
+      var key = revenueMatchList[1]
+      var value = revenueMatchList[3]
+      eventAttrs.revenue[key] = value
+    }
+    {{/if}}
   }
 
   return eventAttrs
@@ -136,7 +156,12 @@ function handleTaggedFormSubmitEvent(event) {
   }
 
   setTimeout(submitForm, 5000)
-  plausible(eventAttrs.name, { props: eventAttrs.props, callback: submitForm })
+
+  var attrs = { props: eventAttrs.props, callback: submitForm }
+  {{#if revenue}}
+  attrs.revenue = eventAttrs.revenue
+  {{/if}}
+  plausible(eventAttrs.name, attrs)
 }
 
 function isForm(element) {
@@ -171,7 +196,12 @@ function handleTaggedElementClickEvent(event) {
       eventAttrs.props.url = clickedLink.href
       sendLinkClickEvent(event, clickedLink, eventAttrs)
     } else {
-      plausible(eventAttrs.name, { props: eventAttrs.props })
+      var attrs = {}
+      attrs.props = eventAttrs.props
+      {{#if revenue}}
+      attrs.revenue = eventAttrs.revenue
+      {{/if}}
+      plausible(eventAttrs.name, attrs)
     }
   }
 }
