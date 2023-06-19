@@ -30,7 +30,7 @@ defmodule Plausible.Site.CacheTest do
       {:ok, _} =
         Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
           strategy: :one_for_one,
-          name: Test.Supervisor.Cache
+          name: :"cache_supervisor_#{test}"
         )
 
       %{id: first_id} = site1 = insert(:site, domain: "site1.example.com")
@@ -58,7 +58,7 @@ defmodule Plausible.Site.CacheTest do
         Supervisor.start_link(
           [{Cache, [cache_name: test, child_id: :test_cache_caches_revenue_goals]}],
           strategy: :one_for_one,
-          name: Test.Supervisor.Cache
+          name: :"cache_supervisor_#{test}"
         )
 
       %{id: site_id} = site = insert(:site, domain: "site1.example.com")
@@ -89,7 +89,7 @@ defmodule Plausible.Site.CacheTest do
         Supervisor.start_link(
           [{Cache, [cache_name: test, child_id: :test_revenue_goals_event_refresh]}],
           strategy: :one_for_one,
-          name: Test.Supervisor.Cache
+          name: :"cache_supervisor_#{test}"
         )
 
       yesterday = DateTime.utc_now() |> DateTime.add(-1 * 60 * 60 * 24)
