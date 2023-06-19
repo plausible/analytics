@@ -33,39 +33,44 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     {:ok, assign(socket, site: site, funnels: funnels, goals: goals, add_funnel?: false)}
   end
 
+  # Flash sharing with live views within dead views can be done via re-rendering the flash partial.
+  # Normally, we'd have to use live_patch which we can't do with views unmounted at the router it seems.
   def render(assigns) do
     ~H"""
-    <%= if @add_funnel? do %>
-      <.live_component
-        module={PlausibleWeb.Live.FunnelSettings.Form}
-        id="funnel-form"
-        site={@site}
-        form={to_form(Plausible.Funnels.create_changeset(@site, "", []))}
-        goals={@goals}
-      />
-    <% else %>
-      <div :if={Enum.count(@goals) >= Funnel.min_steps()}>
+    <div>
+      <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
+      <%= if @add_funnel? do %>
         <.live_component
-          module={PlausibleWeb.Live.FunnelSettings.List}
-          id="funnels-list"
-          funnels={@funnels}
+          module={PlausibleWeb.Live.FunnelSettings.Form}
+          id="funnel-form"
           site={@site}
+          form={to_form(Plausible.Funnels.create_changeset(@site, "", []))}
+          goals={@goals}
         />
-        <button type="button" class="button mt-6" phx-click="add-funnel">+ Add funnel</button>
-      </div>
-
-      <div :if={Enum.count(@goals) < Funnel.min_steps()}>
-        <div class="rounded-md bg-yellow-100 p-4 mt-8">
-          <p class="text-sm leading-5 text-gray-900 dark:text-gray-100">
-            You need to define at least two goals to create a funnel. Go ahead and <%= link(
-              "add goals",
-              to: PlausibleWeb.Router.Helpers.site_path(@socket, :new_goal, @site.domain),
-              class: "text-indigo-500 w-full text-center"
-            ) %> to proceed.
-          </p>
+      <% else %>
+        <div :if={Enum.count(@goals) >= Funnel.min_steps()}>
+          <.live_component
+            module={PlausibleWeb.Live.FunnelSettings.List}
+            id="funnels-list"
+            funnels={@funnels}
+            site={@site}
+          />
+          <button type="button" class="button mt-6" phx-click="add-funnel">+ Add funnel</button>
         </div>
-      </div>
-    <% end %>
+
+        <div :if={Enum.count(@goals) < Funnel.min_steps()}>
+          <div class="rounded-md bg-yellow-100 p-4 mt-8">
+            <p class="text-sm leading-5 text-gray-900 dark:text-gray-100">
+              You need to define at least two goals to create a funnel. Go ahead and <%= link(
+                "add goals",
+                to: PlausibleWeb.Router.Helpers.site_path(@socket, :new_goal, @site.domain),
+                class: "text-indigo-500 w-full text-center"
+              ) %> to proceed.
+            </p>
+          </div>
+        </div>
+      <% end %>
+    </div>
     """
   end
 
@@ -80,10 +85,12 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   def handle_event("delete-funnel", %{"funnel-id" => id}, socket) do
     id = String.to_integer(id)
     :ok = Funnels.delete(socket.assigns.site, id)
+    socket = put_flash(socket, :success, "Funnel deleted successfully")
     {:noreply, assign(socket, funnels: Funnels.list(socket.assigns.site))}
   end
 
   def handle_info({:funnel_saved, funnel}, socket) do
+    socket = put_flash(socket, :success, "Funnel saved successfully")
     {:noreply, assign(socket, add_funnel?: false, funnels: [funnel | socket.assigns.funnels])}
   end
 end
