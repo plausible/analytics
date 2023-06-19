@@ -105,7 +105,7 @@ function isDownloadToTrack(url) {
 function getTaggedEventAttributes(htmlElement) {
   var taggedElement = isTagged(htmlElement) ? htmlElement : htmlElement && htmlElement.parentNode
   var eventAttrs = { name: null, props: {} }
-  {{#if tagged_events}}
+  {{#if revenue}}
   eventAttrs.revenue = {}
   {{/if}}
 
@@ -116,26 +116,25 @@ function getTaggedEventAttributes(htmlElement) {
     var className = classList.item(i)
 
     var matchList = className.match(/plausible-event-(.+)(=|--)(.+)/)
-    if (!matchList) { continue }
+    if (matchList) {
+      var key = matchList[1]
+      var value = matchList[3].replace(/\+/g, ' ')
 
-    var key = matchList[1]
-    var value = matchList[3].replace(/\+/g, ' ')
-
-    switch (key.toLowerCase()) {
-      case 'name':
+      if (key.toLowerCase() == 'name') {
         eventAttrs.name = value
-        break
-      {{#if revenue}}
-      case 'revenue-currency':
-        eventAttrs.revenue.currency = value
-        break
-      case 'revenue-amount':
-        eventAttrs.revenue.amount = value
-        break
-      {{/if}}
-      default:
+      } else {
         eventAttrs.props[key] = value
+      }
     }
+
+    {{#if revenue}}
+    var revenueMatchList = className.match(/plausible-revenue-(.+)(=|--)(.+)/)
+    if (revenueMatchList) {
+      var key = revenueMatchList[1]
+      var value = revenueMatchList[3]
+      eventAttrs.revenue[key] = value
+    }
+    {{/if}}
   }
 
   return eventAttrs
