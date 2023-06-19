@@ -721,8 +721,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!(%{goal: "Payment"})
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
-      assert %{"name" => "Average revenue", "value" => "$1,659.50"} in top_stats
-      assert %{"name" => "Total revenue", "value" => "$3,319.00"} in top_stats
+
+      assert %{
+               "name" => "Average revenue",
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"}
+             } in top_stats
+
+      assert %{
+               "name" => "Total revenue",
+               "value" => %{"long" => "$3,319.00", "short" => "$3.3K"}
+             } in top_stats
     end
 
     test "returns average and total when filtering by many revenue goals with same currency", %{
@@ -769,8 +777,16 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!(%{goal: "Payment|Payment2"})
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
       assert %{"top_stats" => top_stats} = json_response(conn, 200)
-      assert %{"name" => "Average revenue", "value" => "$1,659.50"} in top_stats
-      assert %{"name" => "Total revenue", "value" => "$6,638.00"} in top_stats
+
+      assert %{
+               "name" => "Average revenue",
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"}
+             } in top_stats
+
+      assert %{
+               "name" => "Total revenue",
+               "value" => %{"long" => "$6,638.00", "short" => "$6.6K"}
+             } in top_stats
     end
 
     test "does not return average and total when filtering by many revenue goals with different currencies",
