@@ -32,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - Fix bug when combining goal and prop filters plausible/analytics#2654
 - Fix broken favicons when domain includes a slash
 - Fix bug when using multiple [wildcard goal filters](https://github.com/plausible/analytics/pull/3015)
+- Fix a bug where realtime would fail with imported data
 
 ### Changed
 - Treat page filter as entry page filter for `bounce_rate`
