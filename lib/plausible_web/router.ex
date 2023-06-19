@@ -260,7 +260,11 @@ defmodule PlausibleWeb.Router do
     get "/:website/goals/new", SiteController, :new_goal
     post "/:website/goals", SiteController, :create_goal
     delete "/:website/goals/:id", SiteController, :delete_goal
-    put "/:website/settings/features/toggle/:property", SiteController, :toggle_feature
+
+    put "/:website/settings/features/visibility/:setting",
+        SiteController,
+        :update_feature_visibility
+
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website/settings/google-search", SiteController, :delete_google_auth

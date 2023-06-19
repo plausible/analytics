@@ -176,21 +176,26 @@ defmodule PlausibleWeb.SiteController do
     conversions_enabled: "Goals",
     props_enabled: "Properties"
   }
-  def toggle_feature(conn, %{"property" => property, "r" => "/" <> _ = redirect_path})
-      when property in ~w[conversions_enabled funnels_enabled props_enabled] do
+  def update_feature_visibility(conn, %{
+        "setting" => setting,
+        "r" => "/" <> _ = redirect_path,
+        "set" => value
+      })
+      when setting in ~w[conversions_enabled funnels_enabled props_enabled] and
+             value in ["true", "false"] do
     site = conn.assigns[:site]
 
-    property = String.to_existing_atom(property)
-    change = Plausible.Site.feature_toggle_change(site, property)
+    setting = String.to_existing_atom(setting)
+    change = Plausible.Site.feature_toggle_change(site, setting, override: value == "true")
     result = Repo.update(change)
 
     case result do
       {:ok, updated_site} ->
         message =
-          if Map.fetch!(updated_site, property) do
-            "#{@feature_titles[property]} are now visible again on your dashboard"
+          if Map.fetch!(updated_site, setting) do
+            "#{@feature_titles[setting]} are now visible again on your dashboard"
           else
-            "#{@feature_titles[property]} are now hidden from your dashboard"
+            "#{@feature_titles[setting]} are now hidden from your dashboard"
           end
 
         conn
@@ -201,7 +206,7 @@ defmodule PlausibleWeb.SiteController do
         conn
         |> put_flash(
           :error,
-          "Something went wrong. Failed to toggle #{@feature_titles[property]} on your dashboard."
+          "Something went wrong. Failed to toggle #{@feature_titles[setting]} on your dashboard."
         )
         |> redirect(to: redirect_path)
     end

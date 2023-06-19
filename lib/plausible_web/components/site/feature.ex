@@ -6,7 +6,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
   use PlausibleWeb, :view
 
   attr :site, Plausible.Site, required: true
-  attr :property, :atom, required: true
+  attr :setting, :atom, required: true
   attr :label, :string, required: true
   attr :conn, Plug.Conn, required: true
   slot :inner_block
@@ -15,25 +15,25 @@ defmodule PlausibleWeb.Components.Site.Feature do
     ~H"""
     <div>
       <div class="mt-4 mb-8 flex items-center">
-        <%= if Map.fetch!(@site, @property) do %>
-          <.button_active to={target(@site, @property, @conn)} />
+        <%= if Map.fetch!(@site, @setting) do %>
+          <.button_active to={target(@site, @setting, @conn, false)} />
         <% else %>
-          <.button_inactive to={target(@site, @property, @conn)} />
+          <.button_inactive to={target(@site, @setting, @conn, true)} />
         <% end %>
         <span class="ml-2 text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">
           <%= @label %>
         </span>
       </div>
-      <div :if={Map.fetch!(@site, @property)}>
+      <div :if={Map.fetch!(@site, @setting)}>
         <%= render_slot(@inner_block) %>
       </div>
     </div>
     """
   end
 
-  def target(site, property, conn) do
+  def target(site, setting, conn, set_to) when is_boolean(set_to) do
     r = conn.request_path
-    Routes.site_path(conn, :toggle_feature, site.domain, property, r: r)
+    Routes.site_path(conn, :update_feature_visibility, site.domain, setting, r: r, set: set_to)
   end
 
   def button_active(assigns) do

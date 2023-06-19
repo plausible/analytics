@@ -749,14 +749,14 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "PUT /:website/settings/features/toggle/property" do
+  describe "PUT /:website/settings/features/visibility/:setting" do
     def build_conn_with_some_url(context) do
       {:ok, Map.put(context, :conn, build_conn(:get, "/some_parent_path"))}
     end
 
     setup [:build_conn_with_some_url, :create_user, :log_in]
 
-    for {title, property} <- %{
+    for {title, setting} <- %{
           "Goals" => :conversions_enabled,
           "Funnels" => :funnels_enabled,
           "Properties" => :props_enabled
@@ -771,7 +771,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn =
           put(
             conn0,
-            PlausibleWeb.Components.Site.Feature.target(site, unquote(property), conn0)
+            PlausibleWeb.Components.Site.Feature.target(site, unquote(setting), conn0, false)
           )
 
         assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
@@ -779,12 +779,12 @@ defmodule PlausibleWeb.SiteControllerTest do
 
         assert redirected_to(conn, 302) =~ "/some_parent_path"
 
-        assert %{unquote(property) => false} = Plausible.Sites.get_by_domain(site.domain)
+        assert %{unquote(setting) => false} = Plausible.Sites.get_by_domain(site.domain)
 
         conn =
           put(
             conn0,
-            PlausibleWeb.Components.Site.Feature.target(site, unquote(property), conn0)
+            PlausibleWeb.Components.Site.Feature.target(site, unquote(setting), conn0, true)
           )
 
         assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
@@ -792,11 +792,11 @@ defmodule PlausibleWeb.SiteControllerTest do
 
         assert redirected_to(conn, 302) =~ "/some_parent_path"
 
-        assert %{unquote(property) => true} = Plausible.Sites.get_by_domain(site.domain)
+        assert %{unquote(setting) => true} = Plausible.Sites.get_by_domain(site.domain)
       end
     end
 
-    for {title, property} <- %{
+    for {title, setting} <- %{
           "Goals" => :conversions_enabled,
           "Funnels" => :funnels_enabled,
           "Properties" => :props_enabled
@@ -811,12 +811,37 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn =
           put(
             conn0,
-            PlausibleWeb.Components.Site.Feature.target(site, unquote(property), conn0)
+            PlausibleWeb.Components.Site.Feature.target(site, unquote(setting), conn0, false)
           )
 
         assert conn.status == 404
         assert conn.halted
       end
+    end
+
+    test "setting feature visibility is idempotent", %{user: user, conn: conn0} do
+      site = insert(:site)
+      insert(:site_membership, user: user, site: site, role: :admin)
+
+      setting = :funnels_enabled
+
+      conn =
+        put(
+          conn0,
+          PlausibleWeb.Components.Site.Feature.target(site, setting, conn0, false)
+        )
+
+      assert %{^setting => false} = Plausible.Sites.get_by_domain(site.domain)
+      assert redirected_to(conn, 302) =~ "/some_parent_path"
+
+      conn =
+        put(
+          conn0,
+          PlausibleWeb.Components.Site.Feature.target(site, setting, conn0, false)
+        )
+
+      assert %{^setting => false} = Plausible.Sites.get_by_domain(site.domain)
+      assert redirected_to(conn, 302) =~ "/some_parent_path"
     end
   end
 
