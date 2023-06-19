@@ -330,53 +330,61 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query, comparison_query) do
-    totals_query = Query.remove_event_filters(query, [:goal, :props])
+    query_without_filters = Query.remove_event_filters(query, [:goal, :props])
 
-    %{
-      visitors: %{value: unique_visitors}
-    } = Stats.aggregate(site, totals_query, [:visitors])
+    results_without_filters =
+      site
+      |> Stats.aggregate(query_without_filters, [:visitors])
+      |> transform_keys(%{visitors: :unique_visitors})
 
-    %{
-      visitors: %{value: converted_visitors},
-      events: %{value: completions}
-    } = Stats.aggregate(site, query, [:visitors, :events])
+    results =
+      site
+      |> Stats.aggregate(query, [:visitors, :events])
+      |> transform_keys(%{visitors: :converted_visitors, events: :completions})
+      |> Map.merge(results_without_filters)
 
-    {prev_unique_visitors, prev_converted_visitors, prev_completions} =
+    comparison =
       if comparison_query do
-        totals_comparison_query = Query.remove_event_filters(comparison_query, [:goal, :props])
+        comparison_query_without_filters =
+          Query.remove_event_filters(comparison_query, [:goal, :props])
 
-        %{
-          visitors: %{value: prev_unique_visitors}
-        } = Stats.aggregate(site, totals_comparison_query, [:visitors])
+        comparison_without_filters =
+          site
+          |> Stats.aggregate(comparison_query_without_filters, [:visitors])
+          |> transform_keys(%{visitors: :unique_visitors})
 
-        %{
-          visitors: %{value: prev_converted_visitors},
-          events: %{value: prev_completions}
-        } = Stats.aggregate(site, comparison_query, [:visitors, :events])
-
-        {prev_unique_visitors, prev_converted_visitors, prev_completions}
-      else
-        {nil, nil, nil}
+        site
+        |> Stats.aggregate(comparison_query, [:visitors, :events])
+        |> transform_keys(%{visitors: :converted_visitors, events: :completions})
+        |> Map.merge(comparison_without_filters)
       end
 
-    conversion_rate = calculate_cr(unique_visitors, converted_visitors)
-    prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
+    conversion_rate = %{
+      cr: %{value: calculate_cr(results.unique_visitors.value, results.converted_visitors.value)}
+    }
 
-    build_item = fn name, value, comparison_value ->
-      if comparison_value do
-        change = percent_change(comparison_value, value)
-        %{name: name, value: value, comparison_value: comparison_value, change: change}
+    comparison_conversion_rate =
+      if comparison do
+        value =
+          calculate_cr(comparison.unique_visitors.value, comparison.converted_visitors.value)
+
+        %{cr: %{value: value}}
       else
-        %{name: name, value: value}
+        nil
       end
-    end
 
-    {[
-       build_item.("Unique visitors", unique_visitors, prev_unique_visitors),
-       build_item.("Unique conversions", converted_visitors, prev_converted_visitors),
-       build_item.("Total conversions", completions, prev_completions),
-       build_item.("Conversion rate", conversion_rate, prev_conversion_rate)
-     ], 100}
+    entries =
+      Enum.reject(
+        [
+          top_stats_entry(results, comparison, "Unique visitors", :unique_visitors),
+          top_stats_entry(results, comparison, "Unique conversions", :converted_visitors),
+          top_stats_entry(results, comparison, "Total conversions", :completions),
+          top_stats_entry(conversion_rate, comparison_conversion_rate, "Conversion rate", :cr)
+        ],
+        &is_nil/1
+      )
+
+    {entries, 100}
   end
 
   defp fetch_top_stats(site, query, comparison_query) do
@@ -1162,13 +1170,12 @@ defmodule PlausibleWeb.Api.StatsController do
     )
   end
 
-  defp transform_keys(results, keys_to_replace) do
-    Enum.map(results, fn map ->
-      Enum.map(map, fn {key, val} ->
-        {Map.get(keys_to_replace, key, key), val}
-      end)
-      |> Enum.into(%{})
-    end)
+  defp transform_keys(result, keys_to_replace) when is_map(result) do
+    for {key, val} <- result, do: {Map.get(keys_to_replace, key, key), val}, into: %{}
+  end
+
+  defp transform_keys(results, keys_to_replace) when is_list(results) do
+    Enum.map(results, &transform_keys(&1, keys_to_replace))
   end
 
   defp parse_pagination(params) do
