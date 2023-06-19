@@ -235,6 +235,7 @@ defmodule Plausible.Stats.Query do
       site.imported_data.status != "ok" -> false
       Timex.after?(query.date_range.first, site.imported_data.end_date) -> false
       Enum.any?(query.filters) -> false
+      query.period == "realtime" -> false
       true -> requested?
     end
   end

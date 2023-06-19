@@ -33,10 +33,27 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      zeroes = Stream.repeatedly(fn -> 0 end) |> Stream.take(22) |> Enum.into([])
+      zeroes = List.duplicate(0, 22)
 
       assert Enum.count(plot) == 24
       assert plot == [1] ++ zeroes ++ [1]
+    end
+
+    test "returns empty plot with no native data and recently imported from ga in realtime graph",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, date: Date.utc_today()),
+        build(:imported_visitors, date: Date.utc_today())
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=realtime&with_imported=true"
+        )
+
+      zeroes = List.duplicate(0, 30)
+      assert %{"plot" => ^zeroes, "with_imported" => false} = json_response(conn, 200)
     end
 
     test "displays visitors for a day with imported data", %{conn: conn, site: site} do
