@@ -19,13 +19,13 @@ export default class TopStats extends React.Component {
     const formattedComparison = numberFormatter(Math.abs(comparison))
 
     const defaultClassName = classNames({
-       "text-xs dark:text-gray-100": !forceDarkBg,
-       "text-xs text-gray-100": forceDarkBg
+       "pl-2 text-xs dark:text-gray-100": !forceDarkBg,
+       "pl-2 text-xs text-gray-100": forceDarkBg
      })
 
      const noChangeClassName = classNames({
-       "text-xs text-gray-700 dark:text-gray-300": !forceDarkBg,
-       "text-xs text-gray-300": forceDarkBg
+       "pl-2 text-xs text-gray-700 dark:text-gray-300": !forceDarkBg,
+       "pl-2 text-xs text-gray-300": forceDarkBg
      })
 
     if (comparison > 0) {
@@ -46,6 +46,8 @@ export default class TopStats extends React.Component {
       return durationFormatter(value)
     } else if (['bounce rate', 'conversion rate'].includes(name.toLowerCase())) {
       return value + '%'
+    } else if (['average revenue', 'total revenue'].includes(name.toLowerCase())) {
+      return value?.short
     } else {
       return numberFormatter(value)
     }
@@ -56,6 +58,8 @@ export default class TopStats extends React.Component {
       return durationFormatter(value)
     } else if (['bounce rate', 'conversion rate'].includes(name.toLowerCase())) {
       return value + '%'
+    } else if (['average revenue', 'total revenue'].includes(name.toLowerCase())) {
+      return value?.long
     } else {
       return (value || 0).toLocaleString()
     }
