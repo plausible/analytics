@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Live.Flash do
+  @moduledoc """
+  Flash component for LiveViews - works also when embedded within dead views
+  """
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
   alias Phoenix.Flash
@@ -42,10 +45,10 @@ defmodule PlausibleWeb.Live.Flash do
     """
   end
 
-  slot :icon, required: true
-  slot :title, require: true
-  slot :message, required: true
-  attr :on_close, :any, default: "lv:clear-flash"
+  slot(:icon, required: true)
+  slot(:title, require: true)
+  slot(:message, required: true)
+  attr(:on_close, :any, default: "lv:clear-flash")
 
   def flash(assigns) do
     ~H"""
