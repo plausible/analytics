@@ -59,8 +59,8 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         </div>
 
         <div :if={Enum.count(@goals) < Funnel.min_steps()}>
-          <div class="rounded-md bg-yellow-100 p-4 mt-8">
-            <p class="text-sm leading-5 text-gray-900 dark:text-gray-100">
+          <div class="rounded-md bg-yellow-100 p-4 mt-8 dark:bg-transparent dark:border border-yellow-200">
+            <p class="text-sm leading-5 text-yellow-400 dark:text-yellow-300">
               You need to define at least two goals to create a funnel. Go ahead and <%= link(
                 "add goals",
                 to: PlausibleWeb.Router.Helpers.site_path(@socket, :new_goal, @site.domain),
@@ -86,11 +86,17 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     id = String.to_integer(id)
     :ok = Funnels.delete(socket.assigns.site, id)
     socket = put_flash(socket, :success, "Funnel deleted successfully")
+    Process.send_after(self(), :clear_flash, 5000)
     {:noreply, assign(socket, funnels: Funnels.list(socket.assigns.site))}
   end
 
   def handle_info({:funnel_saved, funnel}, socket) do
     socket = put_flash(socket, :success, "Funnel saved successfully")
+    Process.send_after(self(), :clear_flash, 5000)
     {:noreply, assign(socket, add_funnel?: false, funnels: [funnel | socket.assigns.funnels])}
+  end
+
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
   end
 end
