@@ -59,15 +59,13 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         </div>
 
         <div :if={Enum.count(@goals) < Funnel.min_steps()}>
-          <div class="rounded-md bg-yellow-100 p-4 mt-8 dark:bg-transparent dark:border border-yellow-200">
-            <p class="text-sm leading-5 text-yellow-400 dark:text-yellow-300">
-              You need to define at least two goals to create a funnel. Go ahead and <%= link(
-                "add goals",
-                to: PlausibleWeb.Router.Helpers.site_path(@socket, :new_goal, @site.domain),
-                class: "text-indigo-500 w-full text-center"
-              ) %> to proceed.
-            </p>
-          </div>
+          <PlausibleWeb.Components.Generic.notice>
+            You need to define at least two goals to create a funnel. Go ahead and <%= link(
+              "add goals",
+              to: PlausibleWeb.Router.Helpers.site_path(@socket, :new_goal, @site.domain),
+              class: "text-indigo-500 w-full text-center"
+            ) %> to proceed.
+          </PlausibleWeb.Components.Generic.notice>
         </div>
       <% end %>
     </div>
