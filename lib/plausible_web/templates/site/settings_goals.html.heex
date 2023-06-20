@@ -89,7 +89,7 @@
     <%= if Enum.count(@goals) >= Funnel.min_steps() do %>
       <%= link("Set up funnels",
         to: Routes.site_path(@conn, :settings_funnels, @site.domain),
-        class: "mt-6 ml-2 text-indigo-600 underline text-sm"
+        class: "mt-6 ml-2 text-indigo-500 underline text-sm"
       ) %>
     <% end %>
   </PlausibleWeb.Components.Site.Feature.toggle>
