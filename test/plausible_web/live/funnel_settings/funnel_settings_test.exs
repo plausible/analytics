@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       assert resp =~ "Compose goals into funnels"
       assert resp =~ "From blog to signup"
       assert resp =~ "From signup to blog"
-      assert element_exists?(resp, "a[href=\"https://plausible.io/docs/funnels\"]")
+      assert element_exists?(resp, "a[href=\"https://plausible.io/docs/funnel-analysis\"]")
     end
 
     test "if goals are present, Add Funnel button is rendered", %{conn: conn, site: site} do
