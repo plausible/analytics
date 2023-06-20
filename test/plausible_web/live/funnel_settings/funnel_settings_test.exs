@@ -49,17 +49,10 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       assert element_exists?(doc, ~s/form[phx-change="validate"][phx-submit="save"]/)
       assert element_exists?(doc, ~s/form input[type="text"][name="funnel[name]"]/)
 
-      refute element_exists?(
+      assert element_exists?(
                doc,
                ~s/input[type="hidden"][name="funnel[steps][][goal_id]"]#submit-step-1/
              )
-    end
-
-    test "renders steps input once funnel name is provided", %{conn: conn, site: site} do
-      setup_goals(site)
-      lv = get_liveview(conn, site)
-
-      doc = lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
 
       step_setup_controls = [
         ~s/input[type="hidden"][name="funnel[steps][][goal_id]"]#submit-step-1/,
@@ -68,13 +61,6 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         ~s/input[type="text"][name="display-step-2"]#step-2/,
         ~s/a[phx-click="add-step"]/
       ]
-
-      refute Enum.any?(step_setup_controls, &element_exists?(doc, &1))
-
-      doc =
-        lv
-        |> element("form")
-        |> render_change(%{funnel: %{name: "My test funnel"}})
 
       Enum.each(step_setup_controls, &assert(element_exists?(doc, &1)))
     end
@@ -173,13 +159,6 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       doc = lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
 
       cancel_button = ~s/button#cancel[phx-click="cancel-add-funnel"]/
-
-      refute element_exists?(doc, cancel_button)
-
-      doc =
-        lv
-        |> element("form")
-        |> render_change(%{funnel: %{name: "My test funnel"}})
 
       assert element_exists?(doc, cancel_button)
 

@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
           ) %>
           <.input field={f[:name]} />
 
-          <div :if={String.trim(f[:name].value) != ""} id="steps-builder">
+          <div id="steps-builder">
             <%= label(f, "Funnel Steps",
               class: "mt-6 block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             ) %>
