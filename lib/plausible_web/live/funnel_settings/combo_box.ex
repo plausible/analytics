@@ -158,7 +158,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
 
     ~H"""
     <li
-      class="relative select-none py-2 px-3 cursor-pointer dark:text-gray-300"
+      class="relative select-none cursor-pointer dark:text-gray-300"
       @mouseenter={"setFocus(#{@idx})"}
       x-bind:class={ "{'text-white bg-indigo-500': focus === #{@idx}}" }
       id={"dropdown-#{@ref}-option-#{@idx}"}
@@ -168,6 +168,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
         phx-click={select_option(@ref, @submit_value, @display_value)}
         phx-value-display-value={@display_value}
         phx-target={@target}
+        class="block py-2 px-3"
       >
         <span class="block truncate">
           <%= @display_value %>
