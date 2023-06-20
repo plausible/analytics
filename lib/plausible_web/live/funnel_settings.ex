@@ -37,16 +37,18 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   # Normally, we'd have to use live_patch which we can't do with views unmounted at the router it seems.
   def render(assigns) do
     ~H"""
-    <div>
+    <div id="funnel-settings-main">
       <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
       <%= if @add_funnel? do %>
-        <.live_component
-          module={PlausibleWeb.Live.FunnelSettings.Form}
-          id="funnel-form"
-          site={@site}
-          form={to_form(Plausible.Funnels.create_changeset(@site, "", []))}
-          goals={@goals}
-        />
+        <%= live_render(
+          @socket,
+          PlausibleWeb.Live.FunnelSettings.Form,
+          id: "funnels-form",
+          session: %{
+            "site" => @site,
+            "goals" => @goals
+          }
+        ) %>
       <% else %>
         <div :if={Enum.count(@goals) >= Funnel.min_steps()}>
           <.live_component

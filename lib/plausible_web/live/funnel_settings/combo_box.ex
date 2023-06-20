@@ -236,10 +236,22 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
   defp do_select(socket, submit_value, display_value) do
     id = socket.assigns.id
 
+    socket =
+      socket
+      |> push_event("update-value", %{id: id, value: display_value, fire: false})
+      |> push_event("update-value", %{id: "submit-#{id}", value: submit_value, fire: true})
+      |> assign(:display_value, display_value)
+      |> assign(:submit_value, submit_value)
+
+    send(
+      self(),
+      {:selection_made,
+       %{
+         by: id,
+         submit_value: submit_value
+       }}
+    )
+
     socket
-    |> push_event("update-value", %{id: id, value: display_value, fire: false})
-    |> push_event("update-value", %{id: "submit-#{id}", value: submit_value, fire: true})
-    |> assign(:display_value, display_value)
-    |> assign(:submit_value, submit_value)
   end
 end

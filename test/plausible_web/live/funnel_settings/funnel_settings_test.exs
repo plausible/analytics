@@ -46,6 +46,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       setup_goals(site)
       lv = get_liveview(conn, site)
       doc = render_click(lv, "add-funnel")
+
       assert element_exists?(doc, ~s/form[phx-change="validate"][phx-submit="save"]/)
       assert element_exists?(doc, ~s/form input[type="text"][name="funnel[name]"]/)
 
@@ -73,6 +74,8 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       lv = get_liveview(conn, site)
 
       lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
+
+      assert lv = find_live_child(lv, "funnels-form")
       lv |> element("form") |> render_change(%{funnel: %{name: "My test funnel"}})
       doc = lv |> element(~s/a[phx-click="add-step"]/) |> render_click()
 
@@ -104,6 +107,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       lv = get_liveview(conn, site)
 
       lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
+      assert lv = find_live_child(lv, "funnels-form")
       lv |> element("form") |> render_change(%{funnel: %{name: "My test funnel"}})
       lv |> element(~s/a[phx-click="add-step"]/) |> render_click()
 
@@ -121,6 +125,8 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       setup_goals(site)
       lv = get_liveview(conn, site)
       lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
+
+      assert lv = find_live_child(lv, "funnels-form")
 
       doc =
         lv

@@ -5,33 +5,31 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   to allow building searchable funnel definitions out of list of goals available.
   """
 
-  use Phoenix.LiveComponent
+  use Phoenix.LiveView
   use Phoenix.HTML
   use Plausible.Funnel
 
-  def mount(socket) do
-    {:ok, assign(socket, step_ids: Enum.to_list(1..Funnel.min_steps()))}
-  end
-
-  def update(assigns, socket) do
+  def mount(_params, %{"site" => site, "goals" => goals}, socket) do
     {:ok,
      assign(socket,
-       form: assigns.form,
-       goals: assigns.goals,
-       site: assigns.site
+       step_ids: Enum.to_list(1..Funnel.min_steps()),
+       form: to_form(Plausible.Funnels.create_changeset(site, "", [])),
+       goals: goals,
+       site: site,
+       already_selected: Map.new()
      )}
   end
 
   def render(assigns) do
     ~H"""
-    <div class="grid grid-cols-4 gap-6 mt-6">
+    <div id="funnel-form" class="grid grid-cols-4 gap-6 mt-6">
       <div class="col-span-4 sm:col-span-2">
         <.form
           :let={f}
           for={@form}
           phx-change="validate"
-          phx-target={@myself}
           phx-submit="save"
+          phx-target="#funnel-form"
           onkeydown="return event.key != 'Enter';"
         >
           <%= label(f, "Funnel name",
@@ -50,18 +48,17 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                   submit_name="funnel[steps][][goal_id]"
                   module={PlausibleWeb.Live.FunnelSettings.ComboBox}
                   id={"step-#{step_idx}"}
-                  options={@goals}
+                  options={reject_alrady_selected("step-#{step_idx}", @goals, @already_selected)}
                 />
               </div>
 
-              <.remove_step_button
-                :if={length(@step_ids) > Funnel.min_steps()}
-                target={@myself}
-                step_idx={step_idx}
-              />
+              <.remove_step_button :if={length(@step_ids) > Funnel.min_steps()} step_idx={step_idx} />
             </div>
 
-            <.add_step_button :if={length(@step_ids) < Funnel.max_steps()} target={@myself} />
+            <.add_step_button :if={
+              length(@step_ids) < Funnel.max_steps() and
+                map_size(@already_selected) < length(@goals)
+            } />
 
             <div class="mt-6">
               <%= if has_steps_errors?(f) do %>
@@ -107,8 +104,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     """
   end
 
-  attr :step_idx, :integer, required: true
-  attr :target, :any
+  attr(:step_idx, :integer, required: true)
 
   def remove_step_button(assigns) do
     ~H"""
@@ -124,7 +120,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         stroke-linecap="round"
         stroke-linejoin="round"
         phx-click="remove-step"
-        phx-target={@target}
         phx-value-step-idx={@step_idx}
       >
         <polyline points="3 6 5 6 21 6"></polyline>
@@ -137,15 +132,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     """
   end
 
-  attr :target, :any
-
   def add_step_button(assigns) do
     ~H"""
-    <a
-      class="underline text-indigo-500 text-sm cursor-pointer mt-6"
-      phx-click="add-step"
-      phx-target={@target}
-    >
+    <a class="underline text-indigo-500 text-sm cursor-pointer mt-6" phx-click="add-step">
       + Add another step
     </a>
     """
@@ -176,6 +165,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
       id="cancel"
       class="inline-block mt-4 ml-2 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150 "
       phx-click="cancel-add-funnel"
+      phx-target="#funnel-settings-main"
     >
       Cancel
     </button>
@@ -197,7 +187,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def handle_event("remove-step", %{"step-idx" => idx}, socket) do
     idx = String.to_integer(idx)
     step_ids = List.delete(socket.assigns.step_ids, idx)
-    {:noreply, assign(socket, step_ids: step_ids)}
+    already_selected = socket.assigns.already_selected
+
+    step_input_id = "step-#{idx}"
+
+    new_already_selected = Map.delete(already_selected, step_input_id)
+
+    {:noreply, assign(socket, step_ids: step_ids, already_selected: new_already_selected)}
   end
 
   def handle_event("validate", %{"funnel" => params}, socket) do
@@ -215,7 +211,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def handle_event("save", %{"funnel" => params}, %{assigns: %{site: site}} = socket) do
     case Plausible.Funnels.create(site, params["name"], params["steps"]) do
       {:ok, funnel} ->
-        send(self(), {:funnel_saved, Map.put(funnel, :steps_count, length(params["steps"]))})
+        send(
+          socket.parent_pid,
+          {:funnel_saved, Map.put(funnel, :steps_count, length(params["steps"]))}
+        )
+
         {:noreply, socket}
 
       {:error, changeset} ->
@@ -224,6 +224,17 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
            form: to_form(Map.put(changeset, :action, :validate))
          )}
     end
+  end
+
+  def handle_info({:selection_made, %{submit_value: goal_id, by: combo_box}}, socket) do
+    already_selected = Map.put(socket.assigns.already_selected, combo_box, goal_id)
+    {:noreply, assign(socket, already_selected: already_selected)}
+  end
+
+  defp reject_alrady_selected(combo_box, goals, already_selected) do
+    result = Enum.reject(goals, fn {goal_id, _} -> goal_id in Map.values(already_selected) end)
+    send_update(PlausibleWeb.Live.FunnelSettings.ComboBox, id: combo_box, suggestions: result)
+    result
   end
 
   defp find_sequence_break(input) do
