@@ -1304,7 +1304,10 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       delete(conn, "/#{site.domain}/settings/forget-imported")
 
-      assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 0
+      assert eventually(fn ->
+               count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+               {count == 0, count}
+             end)
     end
 
     test "cancels Oban job if it exists", %{conn: conn, site: site} do
