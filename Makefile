@@ -29,10 +29,10 @@ clickhouse-stop: ## Stop and remove the clickhouse container
 PG_FLAGS ?= --detach -e POSTGRES_PASSWORD="postgres" -p 5432:5432 --name plausible_db
 
 postgres: ## Start a container with a recent version of postgres
-	docker run $(PG_FLAGS) --volume=plausible_db:/var/lib/postgresql/data postgres:14-alpine
+	docker run $(PG_FLAGS) --volume=plausible_db:/var/lib/postgresql/data postgres:latest
 
 postgres-prod: ## Start a container with the same version of postgres as the one in prod
-	docker run $(PG_FLAGS) --volume=plausible_db_prod:/var/lib/postgresql/data postgres:12
+	docker run $(PG_FLAGS) --volume=plausible_db_prod:/var/lib/postgresql/data postgres:15
 
 postgres-stop: ## Stop and remove the postgres container
 	docker stop plausible_db && docker rm plausible_db
