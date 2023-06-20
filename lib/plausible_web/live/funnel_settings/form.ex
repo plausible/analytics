@@ -142,7 +142,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def add_step_button(assigns) do
     ~H"""
     <a
-      class="underline text-indigo-600 text-sm cursor-pointer mt-6"
+      class="underline text-indigo-500 text-sm cursor-pointer mt-6"
       phx-click="add-step"
       phx-target={@target}
     >
