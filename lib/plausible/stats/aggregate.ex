@@ -2,6 +2,7 @@ defmodule Plausible.Stats.Aggregate do
   alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
   import Plausible.Stats.{Base, Imported, Util}
+  import Ecto.Query
 
   @event_metrics [
     :visitors,
@@ -18,7 +19,7 @@ defmodule Plausible.Stats.Aggregate do
     # Aggregating revenue data works only for same currency goals. If the query
     # is filtered by goals with different currencies, for example, one USD and
     # other EUR, revenue metrics are dropped.
-    currency = get_revenue_tracking_currency(site, query)
+    currency = get_revenue_tracking_currency(site, query, metrics)
     metrics = if currency, do: metrics, else: metrics -- @revenue_metrics
 
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
@@ -150,7 +151,7 @@ defmodule Plausible.Stats.Aggregate do
 
   defp maybe_round_value(entry), do: entry
 
-  defp get_revenue_tracking_currency(site, query) do
+  defp get_revenue_tracking_currency(site, query, metrics) do
     goal_filters =
       case query.filters do
         %{"event:goal" => {:is, {_, goal_name}}} -> [goal_name]
@@ -158,22 +159,21 @@ defmodule Plausible.Stats.Aggregate do
         _any -> []
       end
 
-    revenue_goals = Plausible.Site.Cache.get(site.domain).revenue_goals
+    if Enum.any?(metrics, &(&1 in @revenue_metrics)) && Enum.any?(goal_filters) do
+      revenue_goals_currencies =
+        Plausible.Repo.all(
+          from rg in assoc(site, :revenue_goals),
+            where: rg.event_name in ^goal_filters,
+            select: rg.currency,
+            distinct: true
+        )
 
-    revenue_goals_currencies =
-      Enum.reduce(goal_filters, [], fn filter, acc ->
-        revenue_goal = Enum.find(revenue_goals, &(&1.event_name == filter))
-
-        if revenue_goal && revenue_goal.currency not in acc do
-          [revenue_goal.currency | acc]
-        else
-          acc
-        end
-      end)
-
-    if length(revenue_goals_currencies) == 1,
-      do: List.first(revenue_goals_currencies),
-      else: nil
+      if length(revenue_goals_currencies) == 1,
+        do: List.first(revenue_goals_currencies),
+        else: nil
+    else
+      nil
+    end
   end
 
   defp cast_revenue_metric_to_money({metric, value}, currency) do
