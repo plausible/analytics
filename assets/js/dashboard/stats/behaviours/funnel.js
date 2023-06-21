@@ -74,7 +74,7 @@ export default function Funnel(props) {
   const fetchFunnel = async () => {
     const funnelMeta = getFunnel()
     if (typeof funnelMeta === 'undefined') {
-      setError({ message: "Failed to locate funnel" })
+      throw new Error('Could not fetch the funnel. Perhaps it was deleted?')
     } else {
       return api.get(`/api/stats/${encodeURIComponent(props.site.domain)}/funnels/${funnelMeta.id}`, props.query)
     }
