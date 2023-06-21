@@ -8,8 +8,6 @@ import RocketIcon from '../modals/rocket-icon'
 import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'
 
-Chart.register(ChartDataLabels)
-
 export default function Funnel(props) {
   const [loading, setLoading] = useState(true)
   const [visible, setVisible] = useState(false)
