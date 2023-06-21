@@ -50,9 +50,20 @@ export default function Funnel(props) {
   const formatDataLabel = (visitors, ctx) => {
     if (ctx.dataset.label === 'Visitors') {
       const conversionRate = funnel.steps[ctx.dataIndex].conversion_rate
-      return `${conversionRate}%\n${numberFormatter(visitors)} Visitors`
+      return `${conversionRate}% \n(${numberFormatter(visitors)} Visitors)`
     } else {
       return null
+    }
+  }
+
+  const calcOffset = (ctx) => {
+    const conversionRate = parseFloat(funnel.steps[ctx.dataIndex].conversion_rate)
+    if (conversionRate > 90) {
+      return -60
+    } else if (conversionRate > 20) {
+      return -30
+    } else {
+      return 6
     }
   }
 
@@ -73,7 +84,7 @@ export default function Funnel(props) {
     if (chartRef.current) {
       chartRef.current.destroy()
     }
-    const labels = funnel.steps.map((step, i) => `${i + 1}. ${step.label}`)
+    const labels = funnel.steps.map((step) => step.label)
     const stepData = funnel.steps.map((step) => step.visitors)
 
     const dropOffData = funnel.steps.map((step) => step.dropoff)
@@ -83,6 +94,8 @@ export default function Funnel(props) {
     var gradient = ctx.createLinearGradient(0, 0, 0, 300)
     gradient.addColorStop(1, 'rgba(101,116,205, 0.3)')
     gradient.addColorStop(0, 'rgba(101,116,205, 0)')
+    // passing those verbatim to make sure canvas rendering picks them up
+    var fontFamily = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
 
     const data = {
       labels: labels,
@@ -118,22 +131,25 @@ export default function Funnel(props) {
           datalabels: {
             formatter: formatDataLabel,
             anchor: 'end',
+            align: 'end',
+            offset: calcOffset,
             backgroundColor: 'rgba(25, 30, 56)',
             color: 'rgb(243, 244, 246)',
             borderRadius: 4,
-            font: { size: 14, weight: 'bold' },
+            clip: true,
+            font: { size: 12, weight: 'normal', lineHeight: 1.6, family: fontFamily },
             textAlign: 'center',
-            padding: { top: 4, bottom: 4, right: 8, left: 8 },
+            padding: { top: 8, bottom: 8, right: 8, left: 8 },
           },
         },
         scales: {
           y: { display: false },
           x: {
-            position: 'top',
+            position: 'bottom',
             display: true,
             border: { display: false },
             grid: { drawBorder: false, display: false },
-            ticks: { padding: 24, font: { weight: 'bold', size: 14 }, color: 'rgb(17, 24, 39)' },
+            ticks: { padding: 8, font: { weight: 'bold', family: fontFamily, size: 14 }, color: 'rgb(12, 24, 39)' },
           },
         },
       },
@@ -145,7 +161,7 @@ export default function Funnel(props) {
   const header = () => {
     return (
       <div className="flex justify-between w-full">
-        <h3 className="font-bold dark:text-gray-100">Funnel: {props.funnelName}</h3>
+        <h4 className="mt-2 text-sm dark:text-gray-100">{props.funnelName}</h4>
         {props.tabs}
       </div>
     )
@@ -196,7 +212,7 @@ export default function Funnel(props) {
       <LazyLoader onVisible={() => setVisible(true)}>
         {renderInner()}
       </LazyLoader>
-      <canvas className="py-4" id="funnel" ref={canvasRef}></canvas>
+      <canvas className="py-4 mt-4" id="funnel" ref={canvasRef}></canvas>
     </div>
   )
 }
