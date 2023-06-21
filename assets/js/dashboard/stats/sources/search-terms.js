@@ -127,9 +127,7 @@ export default class SearchTerms extends React.Component {
 
   render() {
     return (
-      <div
-        className="stats-item flex flex-col relative bg-white dark:bg-gray-825 shadow-xl rounded p-4 mt-6 w-full"
-      >
+      <div>
         { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading} className="flex-grow">
           <LazyLoader onVisible={this.onVisible}>

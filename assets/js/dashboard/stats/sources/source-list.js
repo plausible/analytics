@@ -114,27 +114,19 @@ class AllSources extends React.Component {
     }
   }
 
-  renderContent() {
-    return (
-      <LazyLoader className="flex flex-col flex-grow" onVisible={this.onVisible}>
-        <div id="sources" className="flex justify-between w-full">
-          <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
-          {this.props.renderTabs()}
-        </div>
-        {this.state.loading && <div className="mx-auto loading mt-44"><div></div></div>}
-        <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
-          {this.renderList()}
-        </FadeIn>
-      </LazyLoader>
-    )
-  }
-
   render() {
     return (
-      <div
-        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col mt-6 w-full dark:bg-gray-825"
-      >
-        {this.renderContent()}
+      <div>
+        <LazyLoader className="flex flex-col flex-grow" onVisible={this.onVisible}>
+          <div id="sources" className="flex justify-between w-full">
+            <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
+            {this.props.renderTabs()}
+          </div>
+          {this.state.loading && <div className="mx-auto loading mt-44"><div></div></div>}
+          <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
+            {this.renderList()}
+          </FadeIn>
+        </LazyLoader>
       </div>
     )
   }
@@ -253,27 +245,19 @@ class UTMSources extends React.Component {
     }
   }
 
-  renderContent() {
-    return (
-      <LazyLoader onVisible={this.onVisible}>
-        <div className="flex justify-between w-full">
-          <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
-          {this.props.renderTabs()}
-        </div>
-        {this.state.loading && <div className="mx-auto loading mt-44"><div></div></div>}
-        <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
-          {this.renderList()}
-        </FadeIn>
-      </LazyLoader>
-    )
-  }
-
   render() {
     return (
-      <div
-        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
-      >
-        {this.renderContent()}
+      <div>
+        <LazyLoader onVisible={this.onVisible}>
+          <div className="flex justify-between w-full">
+            <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
+            {this.props.renderTabs()}
+          </div>
+          {this.state.loading && <div className="mx-auto loading mt-44"><div></div></div>}
+          <FadeIn show={!this.state.loading} className="flex flex-col flex-grow">
+            {this.renderList()}
+          </FadeIn>
+        </LazyLoader>
       </div>
     )
   }

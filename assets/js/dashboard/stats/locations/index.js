@@ -179,25 +179,19 @@ export default class Locations extends React.Component {
 
 	render() {
     return (
-      <div
-        className="stats-item flex flex-col w-full mt-6 stats-item--has-header"
-      >
-        <div
-          className="stats-item-header flex flex-col flex-grow bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative"
-        >
-          <div className="w-full flex justify-between">
-            <h3 className="font-bold dark:text-gray-100">
-              {labelFor[this.state.mode] || 'Locations'}
-            </h3>
-            <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-              { this.renderPill('Map', 'map') }
-              { this.renderPill('Countries', 'countries') }
-              { this.renderPill('Regions', 'regions') }
-              { this.renderPill('Cities', 'cities') }
-            </div>
+      <div>
+        <div className="w-full flex justify-between">
+          <h3 className="font-bold dark:text-gray-100">
+            {labelFor[this.state.mode] || 'Locations'}
+          </h3>
+          <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
+            { this.renderPill('Map', 'map') }
+            { this.renderPill('Countries', 'countries') }
+            { this.renderPill('Regions', 'regions') }
+            { this.renderPill('Cities', 'cities') }
           </div>
-          { this.renderContent() }
         </div>
+        {this.renderContent()}
       </div>
     )
   }

@@ -10,6 +10,7 @@ import Locations from './stats/locations'
 import Devices from './stats/devices'
 import Behaviours from './stats/behaviours'
 import { withPinnedHeader } from './pinned-header-hoc';
+import { statsBoxClass } from '.';
 
 class Realtime extends React.Component {
   render() {
@@ -28,13 +29,21 @@ class Realtime extends React.Component {
           </div>
         </div>
         <VisitorGraph site={this.props.site} query={this.props.query} lastLoadTimestamp={this.props.lastLoadTimestamp} />
-        <div className="items-start justify-between block w-full md:flex">
-          <Sources site={this.props.site} query={this.props.query} />
-          <Pages site={this.props.site} query={this.props.query} />
+        <div className="w-full md:flex">
+          <div className={ statsBoxClass }>
+            <Sources site={this.props.site} query={this.props.query} />
+          </div>
+          <div className={ statsBoxClass }>
+            <Pages site={this.props.site} query={this.props.query} />
+          </div>
         </div>
-        <div className="items-start justify-between block w-full md:flex">
-          <Locations site={this.props.site} query={this.props.query} />
-          <Devices site={this.props.site} query={this.props.query} />
+        <div className="w-full md:flex">
+          <div className={ statsBoxClass }>
+            <Locations site={this.props.site} query={this.props.query} />
+          </div>
+          <div className={ statsBoxClass }>
+            <Devices site={this.props.site} query={this.props.query} />
+          </div>
         </div>
         <Behaviours site={this.props.site} query={this.props.query} currentUserRole={this.props.currentUserRole} />
       </div>
