@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Router do
 
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
-
+    get "/:domain//funnels/:id", StatsController, :funnel
     get "/:domain/current-visitors", StatsController, :current_visitors
     get "/:domain/main-graph", StatsController, :main_graph
     get "/:domain/top-stats", StatsController, :top_stats
