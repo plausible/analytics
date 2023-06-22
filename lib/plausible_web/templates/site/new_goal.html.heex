@@ -18,7 +18,7 @@
         <%= error_tag f, :event_name %>
       </div>
 
-      <div class="mt-6 space-y-3" x-data="<%= Jason.encode!(%{active: !!Ecto.Changeset.get_field(@changeset, :currency), currency: Ecto.Changeset.get_field(@changeset, :currency)}) %>">
+      <div class="mt-6 space-y-3" x-data={Jason.encode!(%{active: !!Ecto.Changeset.get_field(@changeset, :currency), currency: Ecto.Changeset.get_field(@changeset, :currency)})}>
         <div class="flex items-center w-max cursor-pointer" x-on:click="active = !active; currency = ''">
           <button 
             class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
