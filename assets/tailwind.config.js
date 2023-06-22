@@ -5,6 +5,9 @@ module.exports = {
     content: [
       './js/**/*.js',
       '../lib/plausible_web/templates/**/*.html.eex',
+      '../lib/plausible_web/templates/**/*.html.heex',
+      '../lib/plausible_web/live/**/*.ex',
+      '../lib/plausible_web/components/**/*.ex',
     ],
     safelist: [
       // PlausibleWeb.StatsView.stats_container_class/1 uses this class

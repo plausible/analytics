@@ -36,8 +36,15 @@ defmodule PlausibleWeb.Api.InternalController do
     with %User{id: user_id} <- conn.assigns[:current_user],
          site <- Sites.get_by_domain(domain),
          true <- Sites.has_admin_access?(user_id, site) || Auth.is_super_admin?(user_id) do
-      Site.disable_feature(site, feature)
-      |> Repo.update()
+      property =
+        case feature do
+          "funnels" -> :funnels_enabled
+          "props" -> :props_enabled
+          "conversions" -> :conversions_enabled
+        end
+
+      change = Plausible.Site.feature_toggle_change(site, property, override: false)
+      Repo.update!(change)
 
       json(conn, "ok")
     else

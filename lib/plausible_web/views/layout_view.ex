@@ -23,17 +23,16 @@ defmodule PlausibleWeb.LayoutView do
       [key: "People", value: "people"],
       [key: "Visibility", value: "visibility"],
       [key: "Goals", value: "goals"],
+      if Plausible.Funnels.enabled_for?(conn.assigns[:current_user]) do
+        [key: "Funnels", value: "funnels"]
+      end,
       [key: "Search Console", value: "search-console"],
       [key: "Email reports", value: "email-reports"],
       if !is_selfhost() && conn.assigns[:site].custom_domain do
         [key: "Custom domain", value: "custom-domain"]
-      else
-        nil
       end,
       if conn.assigns[:current_user_role] == :owner do
         [key: "Danger zone", value: "danger-zone"]
-      else
-        nil
       end
     ]
   end

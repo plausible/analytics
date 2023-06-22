@@ -1,11 +1,12 @@
 defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
+  import Phoenix.LiveView.Router
   @two_weeks_in_seconds 60 * 60 * 24 * 14
 
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
-    plug :fetch_flash
+    plug :fetch_live_flash
     plug :put_secure_browser_headers
     plug PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
@@ -148,6 +149,11 @@ defmodule PlausibleWeb.Router do
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
   end
 
+  scope "/:website/settings/funnels/", PlausibleWeb do
+    pipe_through [:browser, :csrf]
+    get "/", SiteController, :settings_funnels
+  end
+
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
@@ -246,6 +252,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/people", SiteController, :settings_people
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
+
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
     get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
@@ -253,7 +260,11 @@ defmodule PlausibleWeb.Router do
     get "/:website/goals/new", SiteController, :new_goal
     post "/:website/goals", SiteController, :create_goal
     delete "/:website/goals/:id", SiteController, :delete_goal
-    put "/:website/settings/features/:action/:feature", SiteController, :set_feature_status
+
+    put "/:website/settings/features/visibility/:setting",
+        SiteController,
+        :update_feature_visibility
+
     put "/:website/settings", SiteController, :update_settings
     put "/:website/settings/google", SiteController, :update_google_auth
     delete "/:website/settings/google-search", SiteController, :delete_google_auth
