@@ -106,7 +106,7 @@ class AllSources extends React.Component {
           <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" />
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint="sources" className="pb-3 absolute bottom-0 left-0"/>
         </React.Fragment>
       )
     } else {
@@ -237,7 +237,7 @@ class UTMSources extends React.Component {
           <FlipMove className="flex-grow">
             {this.state.referrers.map(this.renderReferrer.bind(this))}
           </FlipMove>
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={UTM_TAGS[this.props.tab].endpoint} />
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={UTM_TAGS[this.props.tab].endpoint} className="pb-3 absolute bottom-0 left-0"/>
         </div>
       )
     } else {
