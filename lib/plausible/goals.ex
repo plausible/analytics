@@ -173,7 +173,7 @@ defmodule Plausible.Goals do
     end
   end
 
-  @spec count(Site.t()) :: non_neg_integer()
+  @spec count(Plausible.Site.t()) :: non_neg_integer()
   def count(site) do
     Repo.aggregate(
       from(
