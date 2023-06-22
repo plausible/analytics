@@ -43,9 +43,9 @@ defmodule Plausible.Stats.Funnel do
   defp query_funnel(query, funnel_definition) do
     q_events =
       from(e in query,
-        select: %{session_id: e.session_id},
+        select: %{user_id: e.user_id},
         where: e.site_id == ^funnel_definition.site_id,
-        group_by: e.session_id,
+        group_by: e.user_id,
         having: fragment("step > 0"),
         order_by: [desc: fragment("step")]
       )
