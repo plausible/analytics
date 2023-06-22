@@ -39,11 +39,12 @@ defmodule Plausible.Goals do
 
   def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name}) do
     query =
-      from g in Goal,
+      from(g in Goal,
         inner_join: assoc(g, :site),
         where: g.site_id == ^site.id,
         where: g.event_name == ^event_name,
         preload: [:site]
+      )
 
     goal = Repo.one(query)
 
@@ -57,11 +58,12 @@ defmodule Plausible.Goals do
 
   def find_or_create(site, %{"goal_type" => "page", "page_path" => page_path}) do
     query =
-      from g in Goal,
+      from(g in Goal,
         inner_join: assoc(g, :site),
         where: g.site_id == ^site.id,
         where: g.page_path == ^page_path,
         preload: [:site]
+      )
 
     goal = Repo.one(query)
 
@@ -75,28 +77,31 @@ defmodule Plausible.Goals do
 
   def for_site(site, opts \\ []) do
     query =
-      from g in Goal,
+      from(g in Goal,
         inner_join: assoc(g, :site),
         where: g.site_id == ^site.id,
         order_by: [desc: g.id],
         preload: [:site]
+      )
 
     query =
       if opts[:preload_funnels?] do
-        from g in query,
+        from(g in query,
           left_join: assoc(g, :funnels),
           group_by: g.id,
           preload: [:funnels]
+        )
       else
         query
       end
 
     query =
       if opts[:preload_funnels?] do
-        from g in query,
+        from(g in query,
           left_join: assoc(g, :funnels),
           group_by: g.id,
           preload: [:funnels]
+        )
       else
         query
       end
@@ -159,9 +164,10 @@ defmodule Plausible.Goals do
       |> Multi.delete_all(
         :delete_goals,
         fn _ ->
-          from g in Goal,
+          from(g in Goal,
             where: g.id == ^id,
             where: g.site_id == ^site.id
+          )
         end
       )
       |> Repo.transaction()
@@ -170,6 +176,17 @@ defmodule Plausible.Goals do
       {:ok, _} -> :ok
       {:error, _step, reason, _context} -> {:error, reason}
     end
+  end
+
+  @spec count(Site.t()) :: non_neg_integer()
+  def count(site) do
+    Repo.aggregate(
+      from(
+        g in Goal,
+        where: g.site_id == ^site.id
+      ),
+      :count
+    )
   end
 
   defp maybe_trim(%Goal{} = goal) do

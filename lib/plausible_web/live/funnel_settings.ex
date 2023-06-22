@@ -18,19 +18,17 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     site = Sites.get_for_user!(user_id, domain, [:owner, :admin])
 
     funnels = Funnels.list(site)
+    goal_count = Goals.count(site)
 
-    # We'll have the options trimmed to only the data we care about, to keep
-    # it minimal at the socket assigns, yet, we want to retain specific %Goal{}
-    # fields, so that `String.Chars` protocol and `Funnels.ephemeral_definition/3`
-    # are applicable downstream.
-    goals =
-      site
-      |> Goals.for_site()
-      |> Enum.map(fn goal ->
-        {goal.id, struct!(Plausible.Goal, Map.take(goal, [:id, :event_name, :page_path]))}
-      end)
-
-    {:ok, assign(socket, site: site, funnels: funnels, goals: goals, add_funnel?: false)}
+    {:ok,
+     assign(socket,
+       site_id: site.id,
+       domain: site.domain,
+       funnels: funnels,
+       goal_count: goal_count,
+       add_funnel?: false,
+       current_user_id: user_id
+     )}
   end
 
   # Flash sharing with live views within dead views can be done via re-rendering the flash partial.
@@ -45,26 +43,25 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           PlausibleWeb.Live.FunnelSettings.Form,
           id: "funnels-form",
           session: %{
-            "site" => @site,
-            "goals" => @goals
+            "current_user_id" => @current_user_id,
+            "domain" => @domain
           }
         ) %>
       <% else %>
-        <div :if={Enum.count(@goals) >= Funnel.min_steps()}>
+        <div :if={@goal_count >= Funnel.min_steps()}>
           <.live_component
             module={PlausibleWeb.Live.FunnelSettings.List}
             id="funnels-list"
             funnels={@funnels}
-            site={@site}
           />
           <button type="button" class="button mt-6" phx-click="add-funnel">+ Add funnel</button>
         </div>
 
-        <div :if={Enum.count(@goals) < Funnel.min_steps()}>
+        <div :if={@goal_count < Funnel.min_steps()}>
           <PlausibleWeb.Components.Generic.notice>
             You need to define at least two goals to create a funnel. Go ahead and <%= link(
               "add goals",
-              to: PlausibleWeb.Router.Helpers.site_path(@socket, :new_goal, @site.domain),
+              to: PlausibleWeb.Router.Helpers.site_path(@socket, :new_goal, @domain),
               class: "text-indigo-500 w-full text-center"
             ) %> to proceed.
           </PlausibleWeb.Components.Generic.notice>

@@ -9,7 +9,22 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   use Phoenix.HTML
   use Plausible.Funnel
 
-  def mount(_params, %{"site" => site, "goals" => goals}, socket) do
+  alias Plausible.{Sites, Goals}
+
+  def mount(_params, %{"current_user_id" => user_id, "domain" => domain}, socket) do
+    site = Sites.get_for_user!(user_id, domain, [:owner, :admin])
+
+    # We'll have the options trimmed to only the data we care about, to keep
+    # it minimal at the socket assigns, yet, we want to retain specific %Goal{}
+    # fields, so that `String.Chars` protocol and `Funnels.ephemeral_definition/3`
+    # are applicable downstream.
+    goals =
+      site
+      |> Goals.for_site()
+      |> Enum.map(fn goal ->
+        {goal.id, struct!(Plausible.Goal, Map.take(goal, [:id, :event_name, :page_path]))}
+      end)
+
     {:ok,
      assign(socket,
        step_ids: Enum.to_list(1..Funnel.min_steps()),
