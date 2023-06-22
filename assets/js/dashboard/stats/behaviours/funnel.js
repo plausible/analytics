@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react'
+import FlipMove from 'react-flip-move';
 import Chart from 'chart.js/auto'
 import FunnelTooltip from './funnel-tooltip.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import numberFormatter from '../../util/number-formatter'
+import Bar from '../bar'
 
 import RocketIcon from '../modals/rocket-icon'
 
@@ -15,6 +17,7 @@ export default function Funnel(props) {
   const [visible, setVisible] = useState(false)
   const [error, setError] = useState(undefined)
   const [funnel, setFunnel] = useState(null)
+  const [isSmallScreen, setSmallScreen] = useState(false)
   const chartRef = useRef(null)
   const canvasRef = useRef(null)
 
@@ -39,13 +42,25 @@ export default function Funnel(props) {
         }
       }
     }
-  }, [props.query, props.funnelName, visible])
+  }, [props.query, props.funnelName, visible, isSmallScreen])
 
   useEffect(() => {
-    if (canvasRef.current && funnel && visible) {
+    if (canvasRef.current && funnel && visible && !isSmallScreen) {
       initialiseChart()
     }
   }, [funnel, visible])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 600px)')
+    setSmallScreen(mediaQuery.matches)
+    const handleScreenChange = (e) => {
+      setSmallScreen(e.matches);
+    }
+    mediaQuery.addEventListener("change", handleScreenChange);
+    return () => {
+      mediaQuery.removeEventListener("change", handleScreenChange)
+    }
+  }, [])
 
   const isDarkMode = () => {
     return document.querySelector('html').classList.contains('dark') || false
@@ -60,7 +75,8 @@ export default function Funnel(props) {
         dropoffBackground: '#2F3949',
         stepNameLegendColor: 'rgb(228, 228, 231)',
         visitorsLegendClass: 'bg-indigo-500',
-        dropoffLegendClass: 'bg-gray-600'
+        dropoffLegendClass: 'bg-gray-600',
+        smallBarClass: 'bg-indigo-300'
       }
     } else {
       return {
@@ -70,7 +86,8 @@ export default function Funnel(props) {
         dropoffBackground: 'rgb(224, 231, 255)',
         stepNameLegendColor: 'rgb(12, 24, 39)',
         visitorsLegendClass: 'bg-indigo-500',
-        dropoffLegendClass: 'bg-indigo-300'
+        dropoffLegendClass: 'bg-indigo-300',
+        smallBarClass: 'bg-indigo-300'
       }
     }
   }
@@ -246,12 +263,56 @@ export default function Funnel(props) {
     }
   }
 
+  const renderBar = (step) => {
+    const palette = getPalette()
+
+    return (
+      <>
+        <div className="flex items-center justify-between my-1 text-sm">
+          <Bar
+            count={step.visitors}
+            all={funnel.steps}
+            bg={palette.smallBarClass}
+            maxWidthDeduction={"5rem"}
+            plot={'visitors'}
+          >
+
+            <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all">
+              {step.label}
+            </span>
+          </Bar>
+
+          <span className="font-medium dark:text-gray-200 w-20 text-right" tooltip={step.visitors.toLocaleString()}>
+            {numberFormatter(step.visitors)}
+          </span>
+        </div>
+      </>
+    )
+  }
+
+  const renderBars = (funnel) => {
+    return (
+      <>
+        <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
+          <span>&nbsp;</span>
+          <span className="text-right">
+            <span className="inline-block w-20">Visitors</span>
+          </span>
+        </div>
+        <FlipMove>
+          {funnel.steps.map(renderBar)}
+        </FlipMove>
+      </>
+    )
+  }
+
   return (
     <div style={{ minHeight: '400px' }}>
       <LazyLoader onVisible={() => setVisible(true)}>
         {renderInner()}
       </LazyLoader>
-      <canvas className="py-4 mt-4" id="funnel" ref={canvasRef}></canvas>
+      {!isSmallScreen && <canvas className="py-4 mt-4" id="funnel" ref={canvasRef}></canvas>}
+      {isSmallScreen && funnel && <div className="mt-4">{renderBars(funnel)}</div>}
     </div>
   )
 }
