@@ -80,10 +80,10 @@
         </div>
 
         <div x-show="active">
-          <%= label(f, :currency, "Reporting currency", class: "hidden") %>
           <%= select(f, :currency, Plausible.Goal.currency_options(),
             class:
               "transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500",
+            "aria-label": "Reporting currency",
             "x-model": "currency",
             "x-bind:required": "active"
           ) %>
