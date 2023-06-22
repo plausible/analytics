@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
 import Chart from 'chart.js/auto'
+import FunnelTooltip from './funnel-tooltip.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import numberFormatter from '../../util/number-formatter'
 
@@ -7,6 +8,7 @@ import RocketIcon from '../modals/rocket-icon'
 
 import * as api from '../../api'
 import LazyLoader from '../../components/lazy-loader'
+
 
 export default function Funnel(props) {
   const [loading, setLoading] = useState(true)
@@ -45,6 +47,34 @@ export default function Funnel(props) {
     }
   }, [funnel, visible])
 
+  const isDarkMode = () => {
+    return document.querySelector('html').classList.contains('dark') || false
+  }
+
+  const getPalette = () => {
+    if (isDarkMode()) {
+      return {
+        dataLabelBackground: 'rgb(25, 30, 56)',
+        dataLabelTextColor: 'rgb(243, 244, 246)',
+        visitorsBackground: 'rgb(99, 102, 241)',
+        dropoffBackground: '#2F3949',
+        stepNameLegendColor: 'rgb(228, 228, 231)',
+        visitorsLegendClass: 'bg-indigo-500',
+        dropoffLegendClass: 'bg-gray-600'
+      }
+    } else {
+      return {
+        dataLabelBackground: 'rgb(25, 30, 56)',
+        dataLabelTextColor: 'rgb(243, 244, 246)',
+        visitorsBackground: 'rgb(99, 102, 241)',
+        dropoffBackground: 'rgb(224, 231, 255)',
+        stepNameLegendColor: 'rgb(12, 24, 39)',
+        visitorsLegendClass: 'bg-indigo-500',
+        dropoffLegendClass: 'bg-indigo-300'
+      }
+    }
+  }
+
   const formatDataLabel = (visitors, ctx) => {
     if (ctx.dataset.label === 'Visitors') {
       const conversionRate = funnel.steps[ctx.dataIndex].conversion_rate
@@ -79,6 +109,7 @@ export default function Funnel(props) {
   }
 
   const initialiseChart = () => {
+    const palette = getPalette()
     if (chartRef.current) {
       chartRef.current.destroy()
     }
@@ -89,9 +120,6 @@ export default function Funnel(props) {
 
     const ctx = canvasRef.current.getContext("2d")
 
-    var gradient = ctx.createLinearGradient(0, 0, 0, 300)
-    gradient.addColorStop(1, 'rgba(101,116,205, 0.3)')
-    gradient.addColorStop(0, 'rgba(101,116,205, 0)')
     // passing those verbatim to make sure canvas rendering picks them up
     var fontFamily = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
 
@@ -101,14 +129,16 @@ export default function Funnel(props) {
         {
           label: 'Visitors',
           data: stepData,
-          backgroundColor: ['rgb(99, 102, 241)'],
+          backgroundColor: palette.visitorsBackground,
+          hoverBackgroundColor: palette.visitorsBackground,
           borderRadius: 4,
           stack: 'Stack 0',
         },
         {
           label: 'Dropoff',
           data: dropOffData,
-          backgroundColor: ['rgb(224, 231, 255)'], // TODO: support dark mode
+          backgroundColor: palette.dropoffBackground,
+          hoverBackgroundColor: palette.dropoffBackground,
           borderRadius: 4,
           stack: 'Stack 0',
         },
@@ -126,13 +156,20 @@ export default function Funnel(props) {
           legend: {
             display: false,
           },
+          tooltip: {
+            enabled: false,
+            mode: 'index',
+            intersect: true,
+            position: 'average',
+            external: FunnelTooltip(palette, data, funnel)
+          },
           datalabels: {
             formatter: formatDataLabel,
             anchor: 'end',
             align: 'end',
             offset: calcOffset,
-            backgroundColor: 'rgba(25, 30, 56)',
-            color: 'rgb(243, 244, 246)',
+            backgroundColor: palette.dataLabelBackground,
+            color: palette.dataLabelTextColor,
             borderRadius: 4,
             clip: true,
             font: { size: 12, weight: 'normal', lineHeight: 1.6, family: fontFamily },
@@ -147,7 +184,11 @@ export default function Funnel(props) {
             display: true,
             border: { display: false },
             grid: { drawBorder: false, display: false },
-            ticks: { padding: 8, font: { weight: 'bold', family: fontFamily, size: 14 }, color: 'rgb(12, 24, 39)' },
+            ticks: {
+              padding: 8,
+              font: { weight: 'bold', family: fontFamily, size: 14 },
+              color: palette.stepNameLegendColor
+            },
           },
         },
       },
