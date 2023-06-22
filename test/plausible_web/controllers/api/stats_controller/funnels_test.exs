@@ -18,6 +18,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       {:ok, funnel} = setup_funnel(site, @build_funnel_with)
 
       populate_stats(site, [
+        build(:pageview, pathname: "/some/irrelevant", user_id: 9_999_999),
         build(:pageview, pathname: "/blog/announcement", user_id: @user_id),
         build(:pageview, pathname: "/blog/announcement", user_id: @other_user_id),
         build(:event, name: "Signup", user_id: @user_id),
@@ -33,9 +34,15 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
       assert %{
                "name" => "Test funnel",
+               "all_visitors" => 3,
+               "entering_visitors" => 2,
+               "entering_visitors_percentage" => "66.67",
+               "never_entering_visitors" => 1,
+               "never_entering_visitors_percentage" => "33.33",
                "steps" => [
                  %{
                    "conversion_rate" => "100.00",
+                   "conversion_rate_step" => "0.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Visit /blog/announcement",
@@ -43,6 +50,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  },
                  %{
                    "conversion_rate" => "100.00",
+                   "conversion_rate_step" => "100.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Signup",
@@ -50,6 +58,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  },
                  %{
                    "conversion_rate" => "50.00",
+                   "conversion_rate_step" => "50.00",
                    "dropoff" => 1,
                    "dropoff_percentage" => "50.00",
                    "label" => "Visit /cart/add/product",
@@ -57,6 +66,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  },
                  %{
                    "conversion_rate" => "50.00",
+                   "conversion_rate_step" => "100.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Purchase",
@@ -116,9 +126,15 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
       assert %{
                "name" => "Test funnel",
+               "all_visitors" => 1,
+               "entering_visitors" => 1,
+               "entering_visitors_percentage" => "100.00",
+               "never_entering_visitors" => 0,
+               "never_entering_visitors_percentage" => "0.00",
                "steps" => [
                  %{
                    "conversion_rate" => "100.00",
+                   "conversion_rate_step" => "0.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Visit /blog/announcement",
@@ -126,6 +142,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  },
                  %{
                    "conversion_rate" => "100.00",
+                   "conversion_rate_step" => "100.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Signup",
@@ -133,6 +150,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  },
                  %{
                    "conversion_rate" => "0.00",
+                   "conversion_rate_step" => "0.00",
                    "dropoff" => 1,
                    "dropoff_percentage" => "100.00",
                    "label" => "Visit /cart/add/product",
@@ -140,6 +158,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  },
                  %{
                    "conversion_rate" => "0.00",
+                   "conversion_rate_step" => "0.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Purchase",
@@ -159,9 +178,15 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
       assert %{
                "name" => "Test funnel",
+               "all_visitors" => 0,
+               "entering_visitors" => 0,
+               "entering_visitors_percentage" => "0.00",
+               "never_entering_visitors" => 0,
+               "never_entering_visitors_percentage" => "0.00",
                "steps" => [
                  %{
                    "conversion_rate" => "0.00",
+                   "conversion_rate_step" => "0.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Visit /blog/announcement",
@@ -169,6 +194,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  },
                  %{
                    "conversion_rate" => "0.00",
+                   "conversion_rate_step" => "0.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Signup",
@@ -176,6 +202,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  },
                  %{
                    "conversion_rate" => "0.00",
+                   "conversion_rate_step" => "0.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Visit /cart/add/product",
@@ -183,6 +210,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  },
                  %{
                    "conversion_rate" => "0.00",
+                   "conversion_rate_step" => "0.00",
                    "dropoff" => 0,
                    "dropoff_percentage" => "0.00",
                    "label" => "Purchase",

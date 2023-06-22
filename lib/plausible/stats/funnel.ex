@@ -33,11 +33,37 @@ defmodule Plausible.Stats.Funnel do
       |> query_funnel(funnel)
       |> backfill_steps(funnel)
 
+    all_visitors =
+      site
+      |> Base.base_event_query(query)
+      |> query_all_visitors(List.first(funnel.steps).goal)
+
+    visitors_at_first_step = List.first(steps).visitors
+
     {:ok,
      %{
        name: funnel.name,
-       steps: steps
+       steps: steps,
+       all_visitors: all_visitors,
+       entering_visitors: visitors_at_first_step,
+       entering_visitors_percentage: percentage(visitors_at_first_step, all_visitors),
+       never_entering_visitors: all_visitors - visitors_at_first_step,
+       never_entering_visitors_percentage:
+         percentage(all_visitors - visitors_at_first_step, all_visitors)
      }}
+  end
+
+  defp query_all_visitors(query, _goal) do
+    # condition = goal_condition(goal)
+
+    q_events_count =
+      from(
+        e in query,
+        select: fragment("count(DISTINCT ?)", e.user_id)
+        # where: ^condition
+      )
+
+    ClickhouseRepo.one(q_events_count)
   end
 
   defp query_funnel(query, funnel_definition) do
@@ -52,9 +78,10 @@ defmodule Plausible.Stats.Funnel do
       |> select_funnel(funnel_definition)
 
     query =
-      from f in subquery(q_events),
+      from(f in subquery(q_events),
         select: {f.step, count(1)},
         group_by: f.step
+      )
 
     ClickhouseRepo.all(query)
   end
@@ -62,12 +89,12 @@ defmodule Plausible.Stats.Funnel do
   defp select_funnel(db_query, funnel_definition) do
     window_funnel_steps =
       Enum.reduce(funnel_definition.steps, nil, fn step, acc ->
-        step_condition = step_condition(step.goal)
+        goal_condition = goal_condition(step.goal)
 
         if acc do
-          dynamic([q], fragment("?, ?", ^acc, ^step_condition))
+          dynamic([q], fragment("?, ?", ^acc, ^goal_condition))
         else
-          dynamic([q], fragment("?", ^step_condition))
+          dynamic([q], fragment("?", ^goal_condition))
         end
       end)
 
@@ -77,14 +104,15 @@ defmodule Plausible.Stats.Funnel do
         fragment("windowFunnel(?)(timestamp, ?)", @funnel_window_duration, ^window_funnel_steps)
       )
 
-    from q in db_query,
+    from(q in db_query,
       select_merge:
         ^%{
           step: dynamic_window_funnel
         }
+    )
   end
 
-  defp step_condition(goal) do
+  defp goal_condition(goal) do
     case goal do
       %Plausible.Goal{event_name: event} when is_binary(event) ->
         dynamic([], fragment("name = ?", ^event))
@@ -130,11 +158,13 @@ defmodule Plausible.Stats.Funnel do
 
       dropoff_percentage = percentage(dropoff, visitors_at_previous)
       conversion_rate = percentage(current_visitors, total_visitors)
+      conversion_rate_step = percentage(current_visitors, visitors_at_previous)
 
       step = %{
         dropoff: dropoff,
         dropoff_percentage: dropoff_percentage,
         conversion_rate: conversion_rate,
+        conversion_rate_step: conversion_rate_step,
         visitors: visitors_at_step,
         label: to_string(step.goal)
       }
