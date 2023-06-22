@@ -25,12 +25,10 @@ export default function FunnelTooltip(palette, graphData, funnel) {
       return
     }
 
-    console.info(graphData)
 
     if (tooltipModel.body) {
       const currentStep = funnel.steps[dataIndex]
       const previousStep = (dataIndex > 0) ? funnel.steps[dataIndex - 1] : null
-      console.info('prev', previousStep)
 
       tooltipEl.innerHTML = `
         <aside class="text-gray-100 flex flex-col">
