@@ -37,24 +37,28 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  %{
                    "conversion_rate" => "100.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Visit /blog/announcement",
                    "visitors" => 2
                  },
                  %{
                    "conversion_rate" => "100.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Signup",
                    "visitors" => 2
                  },
                  %{
                    "conversion_rate" => "50.00",
                    "dropoff" => 1,
+                   "dropoff_percentage" => "50.00",
                    "label" => "Visit /cart/add/product",
                    "visitors" => 1
                  },
                  %{
                    "conversion_rate" => "50.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Purchase",
                    "visitors" => 1
                  }
@@ -116,24 +120,28 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  %{
                    "conversion_rate" => "100.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Visit /blog/announcement",
                    "visitors" => 1
                  },
                  %{
                    "conversion_rate" => "100.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Signup",
                    "visitors" => 1
                  },
                  %{
                    "conversion_rate" => "0.00",
                    "dropoff" => 1,
+                   "dropoff_percentage" => "100.00",
                    "label" => "Visit /cart/add/product",
                    "visitors" => 0
                  },
                  %{
                    "conversion_rate" => "0.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Purchase",
                    "visitors" => 0
                  }
@@ -155,24 +163,28 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  %{
                    "conversion_rate" => "0.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Visit /blog/announcement",
                    "visitors" => 0
                  },
                  %{
                    "conversion_rate" => "0.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Signup",
                    "visitors" => 0
                  },
                  %{
                    "conversion_rate" => "0.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Visit /cart/add/product",
                    "visitors" => 0
                  },
                  %{
                    "conversion_rate" => "0.00",
                    "dropoff" => 0,
+                   "dropoff_percentage" => "0.00",
                    "label" => "Purchase",
                    "visitors" => 0
                  }

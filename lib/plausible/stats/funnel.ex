@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Funnel do
   alias Plausible.Stats.Base
 
   @spec funnel(Plausible.Site.t(), Plausible.Stats.Query.t(), Funnel.t() | pos_integer()) ::
-          {:ok, Funnel.t()} | {:error, :funnel_not_found}
+          {:ok, map()} | {:error, :funnel_not_found}
   def funnel(site, query, funnel_id) when is_integer(funnel_id) do
     case Funnels.get(site.id, funnel_id) do
       %Funnel{} = funnel ->
@@ -128,19 +128,12 @@ defmodule Plausible.Stats.Funnel do
       # Dropoff is 0 for the first step, otherwise we subtract current from previous
       dropoff = if visitors_at_previous, do: visitors_at_previous - current_visitors, else: 0
 
-      conversion_rate =
-        if current_visitors == 0 or total_visitors == 0 do
-          "0.00"
-        else
-          current_visitors
-          |> Decimal.div(total_visitors)
-          |> Decimal.mult(100)
-          |> Decimal.round(2)
-          |> Decimal.to_string()
-        end
+      dropoff_percentage = percentage(dropoff, visitors_at_previous)
+      conversion_rate = percentage(current_visitors, total_visitors)
 
       step = %{
         dropoff: dropoff,
+        dropoff_percentage: dropoff_percentage,
         conversion_rate: conversion_rate,
         visitors: visitors_at_step,
         label: to_string(step.goal)
@@ -150,5 +143,17 @@ defmodule Plausible.Stats.Funnel do
     end)
     |> elem(2)
     |> Enum.reverse()
+  end
+
+  defp percentage(x, y) when x in [0, nil] or y in [0, nil] do
+    "0.00"
+  end
+
+  defp percentage(x, y) do
+    x
+    |> Decimal.div(y)
+    |> Decimal.mult(100)
+    |> Decimal.round(2)
+    |> Decimal.to_string()
   end
 end
