@@ -76,7 +76,7 @@ export default function Funnel(props) {
         stepNameLegendColor: 'rgb(228, 228, 231)',
         visitorsLegendClass: 'bg-indigo-500',
         dropoffLegendClass: 'bg-gray-600',
-        smallBarClass: 'bg-indigo-300'
+        smallBarClass: 'bg-indigo-500'
       }
     } else {
       return {
@@ -258,6 +258,7 @@ export default function Funnel(props) {
         <>
           {header()}
           <p className="mt-1 text-gray-500 text-sm">{funnel.steps.length}-step funnel • {conversionRate}% conversion rate</p>
+          {isSmallScreen && <div className="mt-4">{renderBars(funnel)}</div>}
         </>
       )
     }
@@ -277,7 +278,7 @@ export default function Funnel(props) {
             plot={'visitors'}
           >
 
-            <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all">
+            <span className="flex px-2 py-1.5 group dark:text-gray-100 relative z-9 break-all">
               {step.label}
             </span>
           </Bar>
@@ -312,7 +313,6 @@ export default function Funnel(props) {
         {renderInner()}
       </LazyLoader>
       {!isSmallScreen && <canvas className="py-4 mt-4" id="funnel" ref={canvasRef}></canvas>}
-      {isSmallScreen && funnel && <div className="mt-4">{renderBars(funnel)}</div>}
     </div>
   )
 }
