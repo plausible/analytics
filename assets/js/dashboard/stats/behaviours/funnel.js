@@ -224,6 +224,7 @@ export default function Funnel(props) {
   }
 
   const renderError = () => {
+    if (error.name === 'AbortError') return
     if (error.payload && error.payload.level === 'normal') {
       return (
         <>
