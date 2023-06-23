@@ -44,7 +44,6 @@ export default function FunnelTooltip(palette, graphData, funnel) {
                   <span>
                   ${dataIndex == 0 ? "Entered the funnel" : "Visitors"}
                   </span>
-                </span>
               </th>
              <td class="text-right font-bold px-4">
                 <span>
