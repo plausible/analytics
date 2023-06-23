@@ -95,7 +95,7 @@ export default function Funnel(props) {
   const formatDataLabel = (visitors, ctx) => {
     if (ctx.dataset.label === 'Visitors') {
       const conversionRate = funnel.steps[ctx.dataIndex].conversion_rate
-      return `${conversionRate}% \n(${numberFormatter(visitors)} Visitors)`
+      return `${formatPercentage(conversionRate)}% \n(${numberFormatter(visitors)} Visitors)`
     } else {
       return null
     }
@@ -306,6 +306,11 @@ export default function Funnel(props) {
         </FlipMove>
       </>
     )
+  }
+
+  const formatPercentage = (value) => {
+    const decimalNumber = parseFloat(value);
+    return decimalNumber % 1 === 0 ? decimalNumber.toFixed(0) : value;
   }
 
   return (
