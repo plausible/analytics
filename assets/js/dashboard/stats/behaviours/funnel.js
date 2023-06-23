@@ -178,7 +178,7 @@ export default function Funnel(props) {
             mode: 'index',
             intersect: true,
             position: 'average',
-            external: FunnelTooltip(palette, data, funnel)
+            external: FunnelTooltip(palette, funnel)
           },
           datalabels: {
             formatter: formatDataLabel,

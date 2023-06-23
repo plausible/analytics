@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 
-export default function FunnelTooltip(palette, graphData, funnel) {
+export default function FunnelTooltip(palette, funnel) {
   return (context) => {
     const tooltipModel = context.tooltip
     const dataIndex = tooltipModel.dataPoints[0].dataIndex
@@ -43,7 +43,7 @@ export default function FunnelTooltip(palette, graphData, funnel) {
             <tr>
               <th>
                 <span className="flex items-center mr-4">
-                  <div className="w-3 h-3 mr-1 rounded-full {palette.visitorsLegendClass}"></div>
+                  <div className={`w-3 h-3 mr-1 rounded-full ${palette.visitorsLegendClass}`}></div>
                   <span>
                     {dataIndex == 0 ? "Entered the funnel" : "Visitors"}
                   </span>
@@ -63,7 +63,7 @@ export default function FunnelTooltip(palette, graphData, funnel) {
             <tr>
               <th>
                 <span className="flex items-center">
-                  <div className="w-3 h-3 mr-1 rounded-full {palette.dropoffLegendClass}"></div>
+                  <div className={`w-3 h-3 mr-1 rounded-full ${palette.dropoffLegendClass}`}></div>
                   <span>
                     {dataIndex == 0 ? "Never entered the funnel" : "Dropoff"}
                   </span>
