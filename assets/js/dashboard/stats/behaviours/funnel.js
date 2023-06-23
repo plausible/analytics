@@ -69,10 +69,11 @@ export default function Funnel(props) {
   const getPalette = () => {
     if (isDarkMode()) {
       return {
-        dataLabelBackground: 'rgb(25, 30, 56)',
+        dataLabelBackground: 'rgba(25, 30, 56, 0.97)',
         dataLabelTextColor: 'rgb(243, 244, 246)',
         visitorsBackground: 'rgb(99, 102, 241)',
         dropoffBackground: '#2F3949',
+        dropoffStripes: 'rgb(25, 30, 56)',
         stepNameLegendColor: 'rgb(228, 228, 231)',
         visitorsLegendClass: 'bg-indigo-500',
         dropoffLegendClass: 'bg-gray-600',
@@ -80,13 +81,14 @@ export default function Funnel(props) {
       }
     } else {
       return {
-        dataLabelBackground: 'rgb(25, 30, 56)',
+        dataLabelBackground: 'rgba(25, 30, 56, 0.97)',
         dataLabelTextColor: 'rgb(243, 244, 246)',
         visitorsBackground: 'rgb(99, 102, 241)',
         dropoffBackground: 'rgb(224, 231, 255)',
+        dropoffStripes: 'rgb(255, 255, 255)',
         stepNameLegendColor: 'rgb(12, 24, 39)',
         visitorsLegendClass: 'bg-indigo-500',
-        dropoffLegendClass: 'bg-indigo-300',
+        dropoffLegendClass: 'bg-indigo-100',
         smallBarClass: 'bg-indigo-300'
       }
     }
@@ -104,11 +106,11 @@ export default function Funnel(props) {
   const calcOffset = (ctx) => {
     const conversionRate = parseFloat(funnel.steps[ctx.dataIndex].conversion_rate)
     if (conversionRate > 90) {
-      return -60
+      return -64
     } else if (conversionRate > 20) {
-      return -30
+      return -28
     } else {
-      return 6
+      return 8
     }
   }
 
@@ -126,19 +128,48 @@ export default function Funnel(props) {
   }
 
   const initialiseChart = () => {
-    const palette = getPalette()
     if (chartRef.current) {
       chartRef.current.destroy()
     }
+
+    const palette = getPalette()
+
+    const createDiagonalPattern = (color1, color2) => {
+      // create a 10x10 px canvas for the pattern's base shape
+      let shape = document.createElement('canvas')
+      shape.width = 10
+      shape.height = 10
+      let c = shape.getContext('2d')
+
+      c.fillStyle = color1
+      c.strokeStyle = color2
+      c.fillRect(0, 0, shape.width, shape.height);
+
+      c.beginPath()
+      c.moveTo(2, 0)
+      c.lineTo(10, 8)
+      c.stroke()
+
+      c.beginPath()
+      c.moveTo(0, 8)
+      c.lineTo(2, 10)
+      c.stroke()
+
+      return c.createPattern(shape, 'repeat')
+    }
+
     const labels = funnel.steps.map((step) => step.label)
     const stepData = funnel.steps.map((step) => step.visitors)
 
     const dropOffData = funnel.steps.map((step) => step.dropoff)
-
     const ctx = canvasRef.current.getContext("2d")
 
     // passing those verbatim to make sure canvas rendering picks them up
     var fontFamily = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
+
+    var gradient = ctx.createLinearGradient(900, 0, 900, 900);
+    gradient.addColorStop(1, palette.dropoffBackground);
+    gradient.addColorStop(0, palette.visitorsBackground);
 
     const data = {
       labels: labels,
@@ -146,15 +177,15 @@ export default function Funnel(props) {
         {
           label: 'Visitors',
           data: stepData,
-          backgroundColor: palette.visitorsBackground,
-          hoverBackgroundColor: palette.visitorsBackground,
+          backgroundColor: gradient,
+          hoverBackgroundColor: gradient,
           borderRadius: 4,
           stack: 'Stack 0',
         },
         {
           label: 'Dropoff',
           data: dropOffData,
-          backgroundColor: palette.dropoffBackground,
+          backgroundColor: createDiagonalPattern(palette.dropoffBackground, palette.dropoffStripes),
           hoverBackgroundColor: palette.dropoffBackground,
           borderRadius: 4,
           stack: 'Stack 0',

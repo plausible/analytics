@@ -36,7 +36,10 @@ export default function FunnelTooltip(palette, funnel) {
       tooltipEl.innerHTML = ReactDOMServer.renderToStaticMarkup((
         <aside className="text-gray-100 flex flex-col">
           <div className="flex justify-between items-center border-b-2 border-gray-700 pb-2">
-            <span className="font-semibold mr-4 text-lg">{previousStep ? `${previousStep.label} → ` : "→"} {tooltipModel.title}</span>
+            <span className="font-semibold mr-4 text-lg">{previousStep && <span className="mr-2">{previousStep.label}</span>}
+              <span className="text-gray-500 mr-2">→</span>
+              {tooltipModel.title}
+            </span>
           </div>
 
           <table className="min-w-full mt-2">
