@@ -13,6 +13,7 @@ import LazyLoader from '../../components/lazy-loader'
 
 
 export default function Funnel(props) {
+  console.info('funnah')
   const [loading, setLoading] = useState(true)
   const [visible, setVisible] = useState(false)
   const [error, setError] = useState(undefined)
@@ -287,11 +288,11 @@ export default function Funnel(props) {
       const conversionRate = funnel.steps[funnel.steps.length - 1].conversion_rate
 
       return (
-        <>
+        <div class="mb-8">
           {header()}
           <p className="mt-1 text-gray-500 text-sm">{funnel.steps.length}-step funnel • {conversionRate}% conversion rate</p>
           {isSmallScreen && <div className="mt-4">{renderBars(funnel)}</div>}
-        </>
+        </div>
       )
     }
   }
@@ -349,7 +350,7 @@ export default function Funnel(props) {
       <LazyLoader onVisible={() => setVisible(true)}>
         {renderInner()}
       </LazyLoader>
-      {!isSmallScreen && <canvas className="py-4 mt-4" id="funnel" ref={canvasRef}></canvas>}
+      {!isSmallScreen && <canvas className="" id="funnel" ref={canvasRef}></canvas>}
     </div>
   )
 }
