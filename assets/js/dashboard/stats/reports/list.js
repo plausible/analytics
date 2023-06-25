@@ -97,12 +97,7 @@ export default function ListReport(props) {
         .then((res) => setState({loading: false, list: res}))
     }, [props.query])
 
-  function onVisible() {
-    setVisible(true)
-    if (isRealtime) {
-      document.addEventListener('tick', fetchData)
-    }
-  }
+  const onVisible = () => { setVisible(true) }
 
   useEffect(() => {
     if (isRealtime) {
@@ -114,12 +109,13 @@ export default function ListReport(props) {
   }, [goalFilterApplied]);
 
   useEffect(() => {
-    if (visible) { fetchData() }
-  }, [props.query, visible]);
+    if (visible) {
+      if (isRealtime) { document.addEventListener('tick', fetchData) }
+      fetchData()
+    }
 
-  useEffect(() => {
     return () => { document.removeEventListener('tick', fetchData) }
-  }, []);
+  }, [props.query, visible]);
 
   function renderReport() {
     if (state.list && state.list.length > 0) {
