@@ -86,7 +86,7 @@
       to: "/#{URI.encode_www_form(@site.domain)}/goals/new",
       class: "button mt-6"
     ) %>
-    <%= if Enum.count(@goals) >= Funnel.min_steps() do %>
+    <%= if Enum.count(@goals) >= Funnel.min_steps() and Plausible.Funnels.enabled_for?(@current_user) do %>
       <%= link("Set up funnels",
         to: Routes.site_path(@conn, :settings_funnels, @site.domain),
         class: "mt-6 ml-2 text-indigo-500 underline text-sm"
