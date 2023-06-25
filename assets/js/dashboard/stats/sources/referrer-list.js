@@ -155,7 +155,7 @@ export default class Referrers extends React.Component {
       return (
         <React.Fragment>
           {this.renderList()}
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={`referrers/${this.props.query.filters.source}`} className="w-full pb-3 absolute bottom-0 left-0"/>
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={`referrers/${this.props.query.filters.source}`} className="w-full pb-4 absolute bottom-0 left-0"/>
         </React.Fragment>
       )
     }

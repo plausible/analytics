@@ -4,6 +4,7 @@ import * as storage from '../../util/storage'
 import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
+import { VISITORS_METRIC, PERCENTAGE_METRIC, maybeWithCR } from '../reports/metrics';
 
 function Browsers({ query, site }) {
   function fetchData() {
@@ -19,6 +20,7 @@ function Browsers({ query, site }) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Browser"
+      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
     />
   )
@@ -41,6 +43,7 @@ function BrowserVersions({ query, site }) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Browser version"
+      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
     />
   )
@@ -61,6 +64,7 @@ function OperatingSystems({ query, site }) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating system"
+      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
     />
   )
@@ -86,6 +90,7 @@ function OperatingSystemVersions({ query, site }) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Operating System Version"
+      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
     />
   )
@@ -110,6 +115,7 @@ function ScreenSizes({ query, site }) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Screen size"
+      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
       renderIcon={renderIcon}
     />

@@ -4,6 +4,7 @@ import * as storage from '../../util/storage'
 import * as url from '../../util/url'
 import * as api from '../../api'
 import ListReport from './../reports/list'
+import { VISITORS_METRIC, UNIQUE_ENTRANCES_METRIC, UNIQUE_EXITS_METRIC, maybeWithCR } from './../reports/metrics';
 
 function EntryPages({query, site}) {
   function fetchData() {
@@ -23,8 +24,7 @@ function EntryPages({query, site}) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Entry page"
-      valueLabel="Unique Entrances"
-      valueKey="unique_entrances"
+      metrics={maybeWithCR([UNIQUE_ENTRANCES_METRIC], query)}
       detailsLink={url.sitePath(site, '/entry-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
@@ -51,8 +51,7 @@ function ExitPages({query, site}) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Exit page"
-      valueLabel="Unique Exits"
-      valueKey="unique_exits"
+      metrics={maybeWithCR([UNIQUE_EXITS_METRIC], query)}
       detailsLink={url.sitePath(site, '/exit-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
@@ -79,6 +78,7 @@ function TopPages({query, site}) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Page"
+      metrics={maybeWithCR([VISITORS_METRIC], query)}
       detailsLink={url.sitePath(site, '/pages')}
       query={query}
       externalLinkDest={externalLinkDest}

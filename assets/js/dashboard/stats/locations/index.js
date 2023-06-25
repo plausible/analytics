@@ -6,6 +6,7 @@ import CountriesMap from './map'
 import * as api from '../../api'
 import {apiPath, sitePath} from '../../util/url'
 import ListReport from '../reports/list'
+import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics';
 
 function Countries({query, site, onClick}) {
   function fetchData() {
@@ -28,6 +29,7 @@ function Countries({query, site, onClick}) {
       getFilterFor={getFilterFor}
       onClick={onClick}
       keyLabel="Country"
+      metrics={maybeWithCR([VISITORS_METRIC], query)}
       detailsLink={sitePath(site, '/countries')}
       query={query}
       renderIcon={renderIcon}
@@ -55,6 +57,7 @@ function Regions({query, site, onClick}) {
       getFilterFor={getFilterFor}
       onClick={onClick}
       keyLabel="Region"
+      metrics={maybeWithCR([VISITORS_METRIC], query)}
       detailsLink={sitePath(site, '/regions')}
       query={query}
       renderIcon={renderIcon}
@@ -81,6 +84,7 @@ function Cities({query, site}) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="City"
+      metrics={maybeWithCR([VISITORS_METRIC], query)}
       detailsLink={sitePath(site, '/cities')}
       query={query}
       renderIcon={renderIcon}
