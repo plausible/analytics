@@ -27,16 +27,21 @@ defmodule Plausible.Stats.Funnel do
   end
 
   def funnel(site, query, %Funnel{} = funnel) do
-    steps =
+    funnel_data =
       site
       |> Base.base_event_query(query)
       |> query_funnel(funnel)
-      |> backfill_steps(funnel)
 
-    all_visitors =
-      site
-      |> Base.base_event_query(query)
-      |> query_all_visitors()
+    # Funnel definition steps are 1-indexed, if there's index 0 in the resulting query,
+    # it signifies the number of visitors that haven't entered the funnel.
+    not_entering_visitors =
+      case funnel_data do
+        [{0, count} | _] -> count
+        _ -> 0
+      end
+
+    all_visitors = Enum.reduce(funnel_data, 0, fn {_, n}, acc -> acc + n end)
+    steps = backfill_steps(funnel_data, funnel)
 
     visitors_at_first_step = List.first(steps).visitors
 
@@ -48,19 +53,8 @@ defmodule Plausible.Stats.Funnel do
        entering_visitors: visitors_at_first_step,
        entering_visitors_percentage: percentage(visitors_at_first_step, all_visitors),
        never_entering_visitors: all_visitors - visitors_at_first_step,
-       never_entering_visitors_percentage:
-         percentage(all_visitors - visitors_at_first_step, all_visitors)
+       never_entering_visitors_percentage: percentage(not_entering_visitors, all_visitors)
      }}
-  end
-
-  defp query_all_visitors(query) do
-    q_events_count =
-      from(
-        e in query,
-        select: fragment("uniq(user_id)")
-      )
-
-    ClickhouseRepo.one(q_events_count)
   end
 
   defp query_funnel(query, funnel_definition) do
@@ -69,7 +63,6 @@ defmodule Plausible.Stats.Funnel do
         select: %{user_id: e.user_id},
         where: e.site_id == ^funnel_definition.site_id,
         group_by: e.user_id,
-        having: fragment("step > 0"),
         order_by: [desc: fragment("step")]
       )
       |> select_funnel(funnel_definition)
@@ -129,6 +122,9 @@ defmodule Plausible.Stats.Funnel do
     # but no totals including previous steps are aggregated.
     # Hence we need to perform the appropriate backfill
     # and also calculate dropoff and conversion rate for each step.
+    # In case ClickHouse returns 0-index funnel result, we're going to ignore it
+    # anyway, since we fold over steps as per definition, that are always
+    # indexed starting from 1.
     funnel_result = Enum.into(funnel_result, %{})
     max_step = Enum.max_by(funnel.steps, & &1.step_order).step_order
 
