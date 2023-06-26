@@ -36,7 +36,7 @@ defmodule Plausible.Stats.Funnel do
     all_visitors =
       site
       |> Base.base_event_query(query)
-      |> query_all_visitors(List.first(funnel.steps).goal)
+      |> query_all_visitors()
 
     visitors_at_first_step = List.first(steps).visitors
 
@@ -53,14 +53,11 @@ defmodule Plausible.Stats.Funnel do
      }}
   end
 
-  defp query_all_visitors(query, _goal) do
-    # condition = goal_condition(goal)
-
+  defp query_all_visitors(query) do
     q_events_count =
       from(
         e in query,
-        select: fragment("count(DISTINCT ?)", e.user_id)
-        # where: ^condition
+        select: fragment("uniq(user_id)")
       )
 
     ClickhouseRepo.one(q_events_count)
