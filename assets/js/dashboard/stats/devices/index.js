@@ -75,9 +75,6 @@ function OperatingSystemVersions({ query, site }) {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
   }
 
-  const isNotSet = query.filters.os === '(not set)'
-  const filter = isNotSet ? {} : { os_version: 'name' }
-
   function getFilterFor(listItem) {
     if (query.filters.os === '(not set)') {
       return {}
