@@ -1,6 +1,3 @@
-import React from 'react';
-import ReactDOMServer from 'react-dom/server';
-
 export default function FunnelTooltip(palette, funnel) {
   return (context) => {
     const tooltipModel = context.tooltip
@@ -33,55 +30,55 @@ export default function FunnelTooltip(palette, funnel) {
       const currentStep = funnel.steps[dataIndex]
       const previousStep = (dataIndex > 0) ? funnel.steps[dataIndex - 1] : null
 
-      tooltipEl.innerHTML = ReactDOMServer.renderToStaticMarkup((
-        <aside className="text-gray-100 flex flex-col">
-          <div className="flex justify-between items-center border-b-2 border-gray-700 pb-2">
-            <span className="font-semibold mr-4 text-lg">{previousStep && <span className="mr-2">{previousStep.label}</span>}
-              <span className="text-gray-500 mr-2">→</span>
-              {tooltipModel.title}
+      tooltipEl.innerHTML = `
+        <aside class="text-gray-100 flex flex-col">
+          <div class="flex justify-between items-center border-b-2 border-gray-700 pb-2">
+            <span class="font-semibold mr-4 text-lg">${previousStep ? `<span class="mr-2">${previousStep.label}</span>` : ""}
+              <span class="text-gray-500 mr-2">→</span>
+              ${tooltipModel.title}
             </span>
           </div>
 
-          <table className="min-w-full mt-2">
+          <table class="min-w-full mt-2">
             <tr>
               <th>
-                <span className="flex items-center mr-4">
-                  <div className={`w-3 h-3 mr-1 rounded-full ${palette.visitorsLegendClass}`}></div>
+                <span class="flex items-center mr-4">
+                  <div class="w-3 h-3 mr-1 rounded-full ${palette.visitorsLegendClass}"></div>
                   <span>
-                    {dataIndex == 0 ? "Entered the funnel" : "Visitors"}
+                    ${dataIndex == 0 ? "Entered the funnel" : "Visitors"}
                   </span>
                 </span>
               </th>
-              <td className="text-right font-bold px-4">
+              <td class="text-right font-bold px-4">
                 <span>
-                  {dataIndex == 0 ? funnel.entering_visitors.toLocaleString() : currentStep.visitors.toLocaleString()}
+                  ${dataIndex == 0 ? funnel.entering_visitors.toLocaleString() : currentStep.visitors.toLocaleString()}
                 </span>
               </td>
-              <td className="text-right text-sm">
+              <td class="text-right text-sm">
                 <span>
-                  {dataIndex == 0 ? formatPercentage(funnel.entering_visitors_percentage) : formatPercentage(currentStep.conversion_rate_step)}%
+                  ${dataIndex == 0 ? formatPercentage(funnel.entering_visitors_percentage) : formatPercentage(currentStep.conversion_rate_step)}%
                 </span>
               </td>
             </tr>
             <tr>
               <th>
-                <span className="flex items-center">
-                  <div className={`w-3 h-3 mr-1 rounded-full ${palette.dropoffLegendClass}`}></div>
+                <span class="flex items-center">
+                  <div class="w-3 h-3 mr-1 rounded-full ${palette.dropoffLegendClass}"></div>
                   <span>
-                    {dataIndex == 0 ? "Never entered the funnel" : "Dropoff"}
+                    ${dataIndex == 0 ? "Never entered the funnel" : "Dropoff"}
                   </span>
                 </span>
               </th>
-              <td className="text-right font-bold px-4">
-                <span>{dataIndex == 0 ? funnel.never_entering_visitors.toLocaleString() : currentStep.dropoff.toLocaleString()}</span>
+              <td class="text-right font-bold px-4">
+                <span>${dataIndex == 0 ? funnel.never_entering_visitors.toLocaleString() : currentStep.dropoff.toLocaleString()}</span>
               </td >
-              <td className="text-right text-sm">
-                <span>{dataIndex == 0 ? formatPercentage(funnel.never_entering_visitors_percentage) : formatPercentage(currentStep.dropoff_percentage)}%</span>
+              <td class="text-right text-sm">
+                <span>${dataIndex == 0 ? formatPercentage(funnel.never_entering_visitors_percentage) : formatPercentage(currentStep.dropoff_percentage)}%</span>
               </td>
             </tr >
           </table >
         </aside >
-      ))
+      `
     }
     tooltipEl.style.display = null
   }
