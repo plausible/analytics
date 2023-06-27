@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## v2.0.0 2023-06-27
+
 ### Added
 - Add support for `with_imported=true` in Stats API aggregate endpoint
 - Ability to use '--' instead of '=' sign in the `tagged-events` classnames
