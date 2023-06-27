@@ -58,4 +58,10 @@ defmodule PlausibleWeb.Endpoint do
 
   plug CORSPlug
   plug PlausibleWeb.Router
+
+  def websocket_url() do
+    :plausible
+    |> Application.fetch_env!(__MODULE__)
+    |> Keyword.fetch!(:websocket_url)
+  end
 end

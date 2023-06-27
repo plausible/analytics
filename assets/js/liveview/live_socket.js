@@ -3,9 +3,12 @@ import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']")
-if (csrfToken) {
+let websocketUrl = document.querySelector("meta[name='websocket-url']")
+if (csrfToken && websocketUrl) {
   let token = csrfToken.getAttribute("content")
-  let liveSocket = new LiveSocket("/live", Socket, {
+  let url = websocketUrl.getAttribute("content")
+  let liveUrl = (url === "") ? "/live" : new URL("/live", url).href;
+  let liveSocket = new LiveSocket(liveUrl, Socket, {
     params: { _csrf_token: token }, hooks: {}, dom: {
       // for alpinejs integration
       onBeforeElUpdated(from, to) {
