@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
        form: to_form(Plausible.Funnels.create_changeset(site, "", [])),
        goals: goals,
        site: site,
-       already_selected: Map.new()
+       selections_made: Map.new()
      )}
   end
 
@@ -63,7 +63,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                   submit_name="funnel[steps][][goal_id]"
                   module={PlausibleWeb.Live.FunnelSettings.ComboBox}
                   id={"step-#{step_idx}"}
-                  options={reject_alrady_selected("step-#{step_idx}", @goals, @already_selected)}
+                  options={reject_alrady_selected("step-#{step_idx}", @goals, @selections_made)}
                 />
               </div>
 
@@ -72,7 +72,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
             <.add_step_button :if={
               length(@step_ids) < Funnel.max_steps() and
-                map_size(@already_selected) < length(@goals)
+                map_size(@selections_made) < length(@goals)
             } />
 
             <div class="mt-6">
@@ -202,13 +202,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def handle_event("remove-step", %{"step-idx" => idx}, socket) do
     idx = String.to_integer(idx)
     step_ids = List.delete(socket.assigns.step_ids, idx)
-    already_selected = socket.assigns.already_selected
+    selections_made = drop_selection(socket.assigns.selections_made, idx)
 
-    step_input_id = "step-#{idx}"
-
-    new_already_selected = Map.delete(already_selected, step_input_id)
-
-    {:noreply, assign(socket, step_ids: step_ids, already_selected: new_already_selected)}
+    {:noreply, assign(socket, step_ids: step_ids, selections_made: selections_made)}
   end
 
   def handle_event("validate", %{"funnel" => params}, socket) do
@@ -242,14 +238,12 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   def handle_info({:selection_made, %{submit_value: goal_id, by: combo_box}}, socket) do
-    already_selected = Map.put(socket.assigns.already_selected, combo_box, goal_id)
-    {:noreply, assign(socket, already_selected: already_selected)}
-  end
+    selections_made = store_selection(socket.assigns, combo_box, goal_id)
 
-  defp reject_alrady_selected(combo_box, goals, already_selected) do
-    result = Enum.reject(goals, fn {goal_id, _} -> goal_id in Map.values(already_selected) end)
-    send_update(PlausibleWeb.Live.FunnelSettings.ComboBox, id: combo_box, suggestions: result)
-    result
+    {:noreply,
+     assign(socket,
+       selections_made: selections_made
+     )}
   end
 
   defp find_sequence_break(input) do
@@ -267,5 +261,35 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   defp has_steps_errors?(f) do
     not f.source.valid?
+  end
+
+  defp get_goal(assigns, id) do
+    assigns
+    |> Map.fetch!(:goals)
+    |> Enum.find_value(fn
+      {goal_id, goal} when goal_id == id -> goal
+      _ -> nil
+    end)
+  end
+
+  defp store_selection(assigns, combo_box, goal_id) do
+    Map.put(assigns.selections_made, combo_box, get_goal(assigns, goal_id))
+  end
+
+  defp drop_selection(selections_made, step_idx) do
+    step_input_id = "step-#{step_idx}"
+    Map.delete(selections_made, step_input_id)
+  end
+
+  defp reject_alrady_selected(combo_box, goals, selections_made) do
+    selection_ids =
+      Enum.map(selections_made, fn
+        {_, %{id: goal_id}} -> goal_id
+      end)
+
+    result = Enum.reject(goals, fn {goal_id, _} -> goal_id in selection_ids end)
+
+    send_update(PlausibleWeb.Live.FunnelSettings.ComboBox, id: combo_box, suggestions: result)
+    result
   end
 end

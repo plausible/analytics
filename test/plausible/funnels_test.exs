@@ -155,6 +155,7 @@ defmodule Plausible.FunnelsTest do
         )
 
       populate_stats(site, [
+        build(:pageview, pathname: "/irrelevant/page/not/in/funnel", user_id: 999),
         build(:pageview, pathname: "/go/to/blog/foo", user_id: 123),
         build(:event, name: "Signup", user_id: 123),
         build(:pageview, pathname: "/checkout", user_id: 123),
@@ -168,15 +169,36 @@ defmodule Plausible.FunnelsTest do
 
       assert {:ok,
               %{
+                all_visitors: 3,
+                entering_visitors: 2,
+                entering_visitors_percentage: "66.67",
+                never_entering_visitors: 1,
+                never_entering_visitors_percentage: "33.33",
                 steps: [
                   %{
                     label: "Visit /go/to/blog/**",
                     visitors: 2,
                     conversion_rate: "100.00",
-                    dropoff: 0
+                    conversion_rate_step: "0.00",
+                    dropoff: 0,
+                    dropoff_percentage: "0.00"
                   },
-                  %{label: "Signup", visitors: 2, conversion_rate: "100.00", dropoff: 0},
-                  %{label: "Visit /checkout", visitors: 1, conversion_rate: "50.00", dropoff: 1}
+                  %{
+                    label: "Signup",
+                    visitors: 2,
+                    conversion_rate: "100.00",
+                    conversion_rate_step: "100.00",
+                    dropoff: 0,
+                    dropoff_percentage: "0.00"
+                  },
+                  %{
+                    label: "Visit /checkout",
+                    visitors: 1,
+                    conversion_rate: "50.00",
+                    conversion_rate_step: "50.00",
+                    dropoff: 1,
+                    dropoff_percentage: "50.00"
+                  }
                 ]
               }} = funnel_data
     end
@@ -206,15 +228,35 @@ defmodule Plausible.FunnelsTest do
 
       assert {:ok,
               %{
+                all_visitors: 2,
+                entering_visitors: 2,
+                entering_visitors_percentage: "100.00",
+                never_entering_visitors: 0,
+                never_entering_visitors_percentage: "0.00",
                 steps: [
                   %{
                     label: "Visit /go/to/blog/**",
                     visitors: 2,
                     conversion_rate: "100.00",
+                    conversion_rate_step: "0.00",
                     dropoff: 0
                   },
-                  %{label: "Signup", visitors: 2, conversion_rate: "100.00", dropoff: 0},
-                  %{label: "Visit /checkout", visitors: 1, conversion_rate: "50.00", dropoff: 1}
+                  %{
+                    label: "Signup",
+                    visitors: 2,
+                    conversion_rate: "100.00",
+                    conversion_rate_step: "100.00",
+                    dropoff: 0,
+                    dropoff_percentage: "0.00"
+                  },
+                  %{
+                    label: "Visit /checkout",
+                    visitors: 1,
+                    conversion_rate: "50.00",
+                    conversion_rate_step: "50.00",
+                    dropoff: 1,
+                    dropoff_percentage: "50.00"
+                  }
                 ]
               }} = funnel_data
     end
@@ -236,15 +278,36 @@ defmodule Plausible.FunnelsTest do
 
       assert {:ok,
               %{
+                all_visitors: 0,
+                entering_visitors: 0,
+                entering_visitors_percentage: "0.00",
+                never_entering_visitors: 0,
+                never_entering_visitors_percentage: "0.00",
                 steps: [
                   %{
                     label: "Visit /go/to/blog/**",
                     visitors: 0,
                     conversion_rate: "0.00",
-                    dropoff: 0
+                    conversion_rate_step: "0.00",
+                    dropoff: 0,
+                    dropoff_percentage: "0.00"
                   },
-                  %{label: "Signup", visitors: 0, conversion_rate: "0.00", dropoff: 0},
-                  %{label: "Visit /checkout", visitors: 0, conversion_rate: "0.00", dropoff: 0}
+                  %{
+                    label: "Signup",
+                    visitors: 0,
+                    conversion_rate: "0.00",
+                    conversion_rate_step: "0.00",
+                    dropoff: 0,
+                    dropoff_percentage: "0.00"
+                  },
+                  %{
+                    label: "Visit /checkout",
+                    visitors: 0,
+                    conversion_rate: "0.00",
+                    conversion_rate_step: "0.00",
+                    dropoff: 0,
+                    dropoff_percentage: "0.00"
+                  }
                 ]
               }} = funnel_data
     end

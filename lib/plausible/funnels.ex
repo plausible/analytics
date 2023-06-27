@@ -18,7 +18,7 @@ defmodule Plausible.Funnels do
     FunWithFlags.enabled?(:funnels, for: actor)
   end
 
-  @spec create(Plausible.Site.t(), String.t(), [Plausible.Goal.t()]) ::
+  @spec create(Plausible.Site.t(), String.t(), [map()]) ::
           {:ok, Funnel.t()}
           | {:error, Ecto.Changeset.t() | :invalid_funnel_size}
   def create(site, name, steps)
@@ -32,13 +32,13 @@ defmodule Plausible.Funnels do
     {:error, :invalid_funnel_size}
   end
 
-  @spec create_changeset(Plausible.Site.t(), String.t(), [Plausible.Goal.t()]) ::
+  @spec create_changeset(Plausible.Site.t(), String.t(), [map()]) ::
           Ecto.Changeset.t()
   def create_changeset(site, name, steps) do
     Funnel.changeset(%Funnel{site_id: site.id}, %{name: name, steps: steps})
   end
 
-  @spec ephemeral_definition(Plausible.Site.t(), String.t(), [Plausible.Goal.t()]) :: Funnel.t()
+  @spec ephemeral_definition(Plausible.Site.t(), String.t(), [map()]) :: Funnel.t()
   def ephemeral_definition(site, name, steps) do
     site
     |> create_changeset(name, steps)

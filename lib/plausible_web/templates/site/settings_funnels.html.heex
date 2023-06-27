@@ -4,6 +4,7 @@
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
       Compose goals into funnels
     </p>
+
     <%= link(to: "https://plausible.io/docs/funnel-analysis", target: "_blank", rel: "noreferrer") do %>
       <svg
         class="w-6 h-6 absolute top-0 right-0 text-gray-400"
@@ -27,6 +28,15 @@
     label="Show funnels in the dashboard"
     conn={@conn}
   >
+    <PlausibleWeb.Components.Generic.notice>
+      Funnels is an upcoming premium feature that's free-to-use
+      during the private preview. Pricing will be announced soon. See
+      examples and learn more in <a
+        class="font-medium text-yellow underline hover:text-yellow-600"
+        href="https://plausible.io/docs/funnel-analysis"
+      >our docs</a>.
+    </PlausibleWeb.Components.Generic.notice>
+
     <%= live_render(@conn, PlausibleWeb.Live.FunnelSettings,
       session: %{"site_id" => @site.id, "domain" => @site.domain},
       router: PlausibleWeb.Router
