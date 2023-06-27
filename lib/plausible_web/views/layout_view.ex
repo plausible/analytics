@@ -9,6 +9,10 @@ defmodule PlausibleWeb.LayoutView do
     PlausibleWeb.Endpoint.url()
   end
 
+  def websocket_url() do
+    PlausibleWeb.Endpoint.websocket_url()
+  end
+
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"

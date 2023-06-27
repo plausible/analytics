@@ -225,6 +225,8 @@ log_failed_login_attempts =
   |> get_var_from_path_or_env("LOG_FAILED_LOGIN_ATTEMPTS", "false")
   |> String.to_existing_atom()
 
+websocket_url = get_var_from_path_or_env(config_dir, "WEBSOCKET_URL", "")
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -247,7 +249,8 @@ config :plausible, PlausibleWeb.Endpoint,
     transport_options: [max_connections: :infinity],
     protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
   ],
-  secret_key_base: secret_key_base
+  secret_key_base: secret_key_base,
+  websocket_url: websocket_url
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
