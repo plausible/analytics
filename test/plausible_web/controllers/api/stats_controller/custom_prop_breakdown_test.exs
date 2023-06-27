@@ -1,13 +1,7 @@
-defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
+defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   use PlausibleWeb.ConnCase
 
-  # TODO: Remove this file once the new Properties feature is live.
-
-  # All tests in this file were copied into `custom_prop_breakdown_test.exs`
-  # testing the exact same features for the new
-  # `/api/stats/:domain/custom-prop-values/:key` route.
-
-  describe "GET /api/stats/:domain/property/:key" do
+  describe "GET /api/stats/:domain/custom-prop-values/:prop_key - with goal filter" do
     setup [:create_user, :log_in, :create_new_site]
 
     test "returns property breakdown for goal", %{conn: conn, site: site} do
@@ -27,7 +21,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -63,7 +57,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -106,7 +100,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/cost?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -143,7 +137,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/cost?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -190,7 +184,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/cost?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -233,7 +227,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/cost?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -280,7 +274,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/cost?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -331,7 +325,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/cost?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -389,7 +383,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/cost?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -440,7 +434,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/cost?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/cost?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -467,7 +461,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/variant?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/variant?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -501,7 +495,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -546,7 +540,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [
@@ -591,7 +585,7 @@ defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
         )
 
       assert json_response(conn, 200) == [

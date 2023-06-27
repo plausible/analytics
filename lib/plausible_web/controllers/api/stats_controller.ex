@@ -1160,6 +1160,35 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  def custom_prop_values(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site, params) |> Filters.add_prefix()
+    pagination = parse_pagination(params)
+
+    total_q = Query.remove_event_filters(query, [:goal, :props])
+
+    %{:visitors => %{value: unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
+
+    prop_key = "event:props:" <> params["prop_key"]
+
+    props =
+      Stats.breakdown(site, query, prop_key, [:visitors, :events], pagination)
+      |> transform_keys(%{
+        params["prop_key"] => :name,
+        :events => :total_conversions,
+        :visitors => :unique_conversions
+      })
+      |> Enum.map(fn prop ->
+        Map.put(
+          prop,
+          :conversion_rate,
+          calculate_cr(unique_visitors, prop[:unique_conversions])
+        )
+      end)
+
+    json(conn, props)
+  end
+
   def prop_breakdown(conn, params) do
     site = conn.assigns[:site]
     query = Query.from(site, params) |> Filters.add_prefix()
