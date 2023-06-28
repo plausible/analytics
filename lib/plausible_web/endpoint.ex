@@ -9,6 +9,7 @@ defmodule PlausibleWeb.Endpoint do
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
     max_age: 60 * 60 * 24 * 365 * 5,
     extra: "SameSite=Lax"
+    # domain added dynamically via RuntimeSessionAdapter, see below
   ]
 
   # Serve at "/" the static files from "priv/static" directory.
@@ -52,7 +53,7 @@ defmodule PlausibleWeb.Endpoint do
   plug Plug.MethodOverride
   plug Plug.Head
 
-  plug Plug.Session, @session_options
+  plug PlausibleWeb.Plugs.RuntimeSessionAdapter, @session_options
 
   socket "/live", Phoenix.LiveView.Socket,
     websocket: [
