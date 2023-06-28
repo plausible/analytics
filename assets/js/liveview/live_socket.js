@@ -9,6 +9,7 @@ if (csrfToken && websocketUrl) {
   let url = websocketUrl.getAttribute("content")
   let liveUrl = (url === "") ? "/live" : new URL("/live", url).href;
   let liveSocket = new LiveSocket(liveUrl, Socket, {
+    heartbeatIntervalMs: 10000,
     params: { _csrf_token: token }, hooks: {}, dom: {
       // for alpinejs integration
       onBeforeElUpdated(from, to) {
