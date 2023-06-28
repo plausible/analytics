@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
     setup [:create_user, :log_in, :create_site]
 
     test "lists funnels for the site and renders help link", %{conn: conn, site: site} do
-      :ok = setup_funnels(site)
+      {:ok, _} = setup_funnels(site)
       conn = get(conn, "/#{site.domain}/settings/funnels")
 
       resp = html_response(conn, 200)
@@ -17,8 +17,25 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       assert element_exists?(resp, "a[href=\"https://plausible.io/docs/funnel-analysis\"]")
     end
 
+    test "lists funnels with delete actions", %{conn: conn, site: site} do
+      {:ok, [f1_id, f2_id]} = setup_funnels(site)
+      conn = get(conn, "/#{site.domain}/settings/funnels")
+
+      resp = html_response(conn, 200)
+
+      assert element_exists?(
+               resp,
+               ~s/button[phx-click="delete-funnel"][phx-value-funnel-id=#{f1_id}]#delete-funnel-#{f1_id}/
+             )
+
+      assert element_exists?(
+               resp,
+               ~s/button[phx-click="delete-funnel"][phx-value-funnel-id=#{f2_id}]#delete-funnel-#{f2_id}/
+             )
+    end
+
     test "if goals are present, Add Funnel button is rendered", %{conn: conn, site: site} do
-      :ok = setup_funnels(site)
+      {:ok, _} = setup_funnels(site)
       conn = get(conn, "/#{site.domain}/settings/funnels")
       resp = conn |> html_response(200)
       assert element_exists?(resp, ~S/button[phx-click="add-funnel"]/)
@@ -41,6 +58,25 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
   describe "FunnelSettings component" do
     setup [:create_user, :log_in, :create_site]
+
+    test "allows to delete funnels", %{conn: conn, site: site} do
+      {:ok, [f1_id, _f2_id]} = setup_funnels(site)
+
+      {lv, html} = get_liveview(conn, site, with_html?: true)
+
+      assert html =~ "From blog to signup"
+      assert html =~ "From signup to blog"
+
+      html = lv |> element(~s/button#delete-funnel-#{f1_id}/) |> render_click()
+
+      refute html =~ "From blog to signup"
+      assert html =~ "From signup to blog"
+
+      html = get(conn, "/#{site.domain}/settings/funnels") |> html_response(200)
+
+      refute html =~ "From blog to signup"
+      assert html =~ "From signup to blog"
+    end
 
     test "renders the funnel form on clicking 'Add Funnel' button", %{conn: conn, site: site} do
       setup_goals(site)
@@ -181,21 +217,21 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
   defp setup_funnels(site) do
     {:ok, [g1, g2]} = setup_goals(site)
 
-    {:ok, _} =
+    {:ok, f1} =
       Plausible.Funnels.create(
         site,
         "From blog to signup",
         [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}]
       )
 
-    {:ok, _} =
+    {:ok, f2} =
       Plausible.Funnels.create(
         site,
         "From signup to blog",
         [%{"goal_id" => g2.id}, %{"goal_id" => g1.id}]
       )
 
-    :ok
+    {:ok, [f1.id, f2.id]}
   end
 
   defp setup_goals(site) do
@@ -204,9 +240,14 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
     {:ok, [g1, g2]}
   end
 
-  defp get_liveview(conn, site) do
+  defp get_liveview(conn, site, opts \\ []) do
     conn = assign(conn, :live_module, PlausibleWeb.Live.FunnelSettings)
-    {:ok, lv, _html} = live(conn, "/#{site.domain}/settings/funnels")
-    lv
+    {:ok, lv, html} = live(conn, "/#{site.domain}/settings/funnels")
+
+    if Keyword.get(opts, :with_html?) do
+      {lv, html}
+    else
+      lv
+    end
   end
 end
