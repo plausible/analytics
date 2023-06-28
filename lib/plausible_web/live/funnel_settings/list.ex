@@ -25,6 +25,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
                 </span>
               </span>
               <button
+                id={"delete-funnel-#{funnel.id}"}
                 phx-click="delete-funnel"
                 phx-value-funnel-id={funnel.id}
                 class="text-sm text-red-600"

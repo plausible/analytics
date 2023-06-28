@@ -80,11 +80,14 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   end
 
   def handle_event("delete-funnel", %{"funnel-id" => id}, socket) do
+    site =
+      Sites.get_for_user!(socket.assigns.current_user_id, socket.assigns.domain, [:owner, :admin])
+
     id = String.to_integer(id)
-    :ok = Funnels.delete(socket.assigns.site, id)
+    :ok = Funnels.delete(site, id)
     socket = put_flash(socket, :success, "Funnel deleted successfully")
     Process.send_after(self(), :clear_flash, 5000)
-    {:noreply, assign(socket, funnels: Funnels.list(socket.assigns.site))}
+    {:noreply, assign(socket, funnels: Enum.reject(socket.assigns.funnels, &(&1.id == id)))}
   end
 
   def handle_info({:funnel_saved, funnel}, socket) do
