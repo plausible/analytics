@@ -5,11 +5,15 @@ defmodule PlausibleWeb.Components.Generic do
   use Phoenix.Component
 
   attr :title, :string, default: "Notice"
+  attr :class, :string, default: ""
   slot :inner_block
 
   def notice(assigns) do
     ~H"""
-    <div class="rounded-md bg-yellow-50 p-4 dark:bg-transparent dark:border border-yellow-200">
+    <div class={[
+      "rounded-md bg-yellow-50 p-4 dark:bg-transparent dark:border border-yellow-200",
+      @class
+    ]}>
       <div class="flex">
         <div class="flex-shrink-0">
           <svg
