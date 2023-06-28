@@ -13,7 +13,6 @@ import LazyLoader from '../../components/lazy-loader'
 
 
 export default function Funnel(props) {
-  console.info('funnah')
   const [loading, setLoading] = useState(true)
   const [visible, setVisible] = useState(false)
   const [error, setError] = useState(undefined)
