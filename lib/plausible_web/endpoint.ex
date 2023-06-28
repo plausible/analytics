@@ -74,7 +74,6 @@ defmodule PlausibleWeb.Endpoint do
     # is used to inject the domain - this way we can authenticate
     # websocket requests within single root domain, in case websocket_url()
     # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
-    @session_options
-    |> Keyword.put(:domain, host())
+    Keyword.put(@session_options, :domain, host())
   end
 end
