@@ -233,7 +233,7 @@ if byte_size(websocket_url) > 0 and
   Cross-domain websocket authentication is not supported for this server.
 
   WEBSOCKET_URL=#{websocket_url} - host must be: '#{base_url.host}',
-  because BASE_URL=#{base_url} so the host is ``.
+  because BASE_URL=#{base_url}.
   """
 end
 
