@@ -55,7 +55,10 @@ defmodule PlausibleWeb.Endpoint do
   plug Plug.Session, @session_options
 
   socket "/live", Phoenix.LiveView.Socket,
-    websocket: [connect_info: [session: {__MODULE__, :patch_session_opts, []}]]
+    websocket: [
+      check_origin: true,
+      connect_info: [session: {__MODULE__, :patch_session_opts, []}]
+    ]
 
   plug CORSPlug
   plug PlausibleWeb.Router
@@ -71,6 +74,7 @@ defmodule PlausibleWeb.Endpoint do
     # is used to inject the domain - this way we can authenticate
     # websocket requests within single root domain, in case websocket_url()
     # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
-    Keyword.put(@session_options, :domain, host())
+    @session_options
+    |> Keyword.put(:domain, host())
   end
 end
