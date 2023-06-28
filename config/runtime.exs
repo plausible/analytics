@@ -227,6 +227,16 @@ log_failed_login_attempts =
 
 websocket_url = get_var_from_path_or_env(config_dir, "WEBSOCKET_URL", "")
 
+if byte_size(websocket_url) > 0 and
+     not String.ends_with?(URI.new!(websocket_url).host, base_url.host) do
+  raise """
+  Cross-domain websocket authentication is not supported for this server.
+
+  WEBSOCKET_URL=#{websocket_url} - host must be: '#{base_url.host}',
+  because BASE_URL=#{base_url} so the host is ``.
+  """
+end
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
