@@ -1,6 +1,6 @@
 defmodule Plausible.Funnel do
   @min_steps 2
-  @max_steps 5
+  @max_steps 8
 
   @moduledoc """
   A funnel is a marketing term used to capture and describe the journey

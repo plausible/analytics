@@ -14,12 +14,15 @@ defmodule Plausible.FunnelsTest do
     {:ok, g4} = Goals.create(site, %{"event_name" => "Leave feedback"})
     {:ok, g5} = Goals.create(site, %{"page_path" => "/recommend"})
     {:ok, g6} = Goals.create(site, %{"event_name" => "Extra event"})
+    {:ok, g7} = Goals.create(site, %{"event_name" => "Extra event 2"})
+    {:ok, g8} = Goals.create(site, %{"event_name" => "Extra event 3"})
+    {:ok, g9} = Goals.create(site, %{"event_name" => "Extra event 4"})
 
     {:ok,
      %{
        site: site,
        goals: [g1, g2, g3],
-       steps: [g1, g2, g3, g4, g5, g6] |> Enum.map(&%{"goal_id" => &1.id})
+       steps: [g1, g2, g3, g4, g5, g6, g7, g8, g9] |> Enum.map(&%{"goal_id" => &1.id})
      }}
   end
 
@@ -84,7 +87,14 @@ defmodule Plausible.FunnelsTest do
                )
     end
 
-    test "a funnel can be made of 5 steps maximum", %{site: site, steps: too_many_steps} do
+    test "a funnel can be made of 8 steps maximum", %{site: site, steps: too_many_steps} do
+      assert {:ok, _} =
+               Funnels.create(
+                 site,
+                 "Lorem ipsum",
+                 Enum.take(too_many_steps, 8)
+               )
+
       assert {:error, :invalid_funnel_size} =
                Funnels.create(
                  site,
