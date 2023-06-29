@@ -51,7 +51,7 @@ export default function Funnel(props) {
   }, [funnel, visible])
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(max-width: 600px)')
+    const mediaQuery = window.matchMedia('(max-width: 768px)')
     setSmallScreen(mediaQuery.matches)
     const handleScreenChange = (e) => {
       setSmallScreen(e.matches);
@@ -164,6 +164,14 @@ export default function Funnel(props) {
     const dropOffData = funnel.steps.map((step) => step.dropoff)
     const ctx = canvasRef.current.getContext("2d")
 
+    const calcBarThickness = (ctx) => {
+      if (ctx.dataset.data.length <= 3) {
+        return 160
+      } else {
+        return Math.floor(650 / ctx.dataset.data.length)
+      }
+    }
+
     // passing those verbatim to make sure canvas rendering picks them up
     var fontFamily = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"'
 
@@ -199,7 +207,7 @@ export default function Funnel(props) {
       data: data,
       options: {
         responsive: true,
-        barThickness: 120,
+        barThickness: calcBarThickness,
         plugins: {
           legend: {
             display: false,
