@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        postgres_version: [12, 13, 14]
+        postgres_version: [13, 14, 15]
 
     services:
       postgres:
@@ -58,8 +58,8 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-mix-v4-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-v4-
+          key: ${{ runner.os }}-mix-v5-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-v5-
       - name: Install dependencies
         run: mix deps.get && npm install --prefix ./tracker
       - name: Check Formatting

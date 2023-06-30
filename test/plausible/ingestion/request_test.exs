@@ -100,6 +100,18 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.uri.host == "dummy.site"
   end
 
+  test "request can be built with numeric event name" do
+    payload = %{
+      n: 404,
+      d: "dummy.site",
+      u: "http://dummy.site/index"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:ok, request} = Request.build(conn)
+    assert request.event_name == "404"
+  end
+
   test "hostname is (none) if host-less uri provided" do
     payload = %{
       name: "pageview",
@@ -156,6 +168,91 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.hash_mode == 1
     assert request.props["custom1"] == "property1"
     assert request.props["custom2"] == "property2"
+  end
+
+  test "parses revenue source field from a json string" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: "{\"amount\":20.2,\"currency\":\"EUR\"}"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert %Money{amount: amount, currency: :EUR} = request.revenue_source
+    assert Decimal.new("20.2") == amount
+  end
+
+  test "sets revenue source with integer amount" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: %{
+        "amount" => 20,
+        "currency" => "USD"
+      }
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert %Money{amount: amount, currency: :USD} = request.revenue_source
+    assert Decimal.equal?(amount, Decimal.new("20.0"))
+  end
+
+  test "sets revenue source with float amount" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: %{
+        "amount" => 20.1,
+        "currency" => "USD"
+      }
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert %Money{amount: amount, currency: :USD} = request.revenue_source
+    assert Decimal.equal?(amount, Decimal.new("20.1"))
+  end
+
+  test "parses string amounts into money structs" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: %{
+        "amount" => "12.3",
+        "currency" => "USD"
+      }
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    assert {:ok, request} = Request.build(conn)
+    assert %Money{amount: amount, currency: :USD} = request.revenue_source
+    assert Decimal.equal?(amount, Decimal.new("12.3"))
+  end
+
+  test "ignores revenue data when currency is invalid" do
+    payload = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "http://dummy.site/index.html",
+      revenue: %{
+        "amount" => 1233.2,
+        "currency" => "EEEE"
+      }
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:ok, request} = Request.build(conn)
+    assert is_nil(request.revenue_source)
   end
 
   test "pathname is set" do
@@ -237,6 +334,30 @@ defmodule Plausible.Ingestion.RequestTest do
     assert {"should be at most %{count} character(s)", _} = changeset.errors[:event_name]
   end
 
+  test "returns validation error when event name is blank" do
+    payload = %{
+      name: nil,
+      domain: "dummy.site",
+      url: "https://dummy.site/"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"can't be blank", _} = changeset.errors[:event_name]
+  end
+
+  test "returns validation error when event name cannot be cast to string" do
+    payload = %{
+      name: ["list", "of", "things"],
+      domain: "dummy.site",
+      url: "https://dummy.site/"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:error, changeset} = Request.build(conn)
+    assert {"is invalid", _} = changeset.errors[:event_name]
+  end
+
   test "truncates referrer when too long" do
     payload = %{
       name: "pageview",
@@ -280,17 +401,20 @@ defmodule Plausible.Ingestion.RequestTest do
              changeset.errors[:props]
   end
 
-  test "does not fail when sending many props" do
+  test "trims prop list to 30 items when sending too many items" do
     payload = %{
       name: "pageview",
       domain: "dummy.site",
-      url: "https://dummy.site/",
-      props: for(i <- 1..100, do: {"key_#{i}", "value"}, into: %{})
+      url: "http://dummy.site/index.html",
+      referrer: "https://example.com",
+      hashMode: 1,
+      props: for(i <- 1..50, do: {"#{i}", "foo"}, into: %{})
     }
 
     conn = build_conn(:post, "/api/events", payload)
+
     assert {:ok, request} = Request.build(conn)
-    assert map_size(request.props) == 100
+    assert map_size(request.props) == 30
   end
 
   test "malicious input, technically valid json" do

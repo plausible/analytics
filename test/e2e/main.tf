@@ -66,7 +66,7 @@ resource "checkly_check" "plausible-io-api-health" {
 }
 
 resource "checkly_check" "plausible-io-lb-health" {
-  name         = "Check one.lb.plausible.io/api/health"
+  name         = "Check ingress.lb.plausible.io/api/health"
   type         = "API"
   activated    = true
   frequency    = 1
@@ -75,7 +75,7 @@ resource "checkly_check" "plausible-io-lb-health" {
   group_id = checkly_check_group.reachability.id
 
   request {
-    url              = "https://one.lb.plausible.io/api/health"
+    url              = "https://ingress.lb.plausible.io/api/health"
     follow_redirects = false
     skip_ssl         = false
     assertion {

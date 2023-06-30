@@ -19,6 +19,9 @@ defmodule Plausible.Site do
     field :stats_start_date, :date
     field :native_stats_start_at, :naive_datetime
     field :allowed_event_props, {:array, :string}
+    field :conversions_enabled, :boolean, default: true
+    field :props_enabled, :boolean, default: true
+    field :funnels_enabled, :boolean, default: true
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     # default is set via changeset/2
@@ -32,6 +35,7 @@ defmodule Plausible.Site do
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_many :memberships, Plausible.Site.Membership
     has_many :invitations, Plausible.Auth.Invitation
+    has_many :goals, Plausible.Goal, preload_order: [desc: :id]
     has_many :revenue_goals, Plausible.Goal, where: [currency: {:not, nil}]
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
@@ -165,6 +169,21 @@ defmodule Plausible.Site do
 
   def set_allowed_event_props(site, list) do
     change(site, allowed_event_props: list)
+  end
+
+  @togglable_features ~w[conversions_enabled funnels_enabled props_enabled]a
+  def feature_toggle_change(site, property, opts \\ [])
+      when property in @togglable_features do
+    override = Keyword.get(opts, :override)
+
+    attrs =
+      if is_boolean(override) do
+        %{property => override}
+      else
+        %{property => !Map.fetch!(site, property)}
+      end
+
+    cast(site, attrs, @togglable_features)
   end
 
   def remove_imported_data(site) do

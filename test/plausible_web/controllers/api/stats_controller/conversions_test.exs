@@ -224,6 +224,123 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
 
       assert resp == []
     end
+
+    test "returns formatted average and total values for a conversion with revenue value", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("200100300.123"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("300100400.123"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("0"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event, name: "Payment", revenue_reporting_amount: nil),
+        build(:event, name: "Payment", revenue_reporting_amount: nil)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Payment",
+                 "unique_conversions" => 5,
+                 "total_conversions" => 5,
+                 "prop_names" => [],
+                 "conversion_rate" => 100.0,
+                 "average_revenue" => %{"short" => "€166.7M", "long" => "€166,733,566.75"},
+                 "total_revenue" => %{"short" => "€500.2M", "long" => "€500,200,700.25"}
+               }
+             ]
+    end
+
+    test "returns revenue metrics as nil for non-revenue goals", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Signup"),
+        build(:event,
+          name: "Payment",
+          pathname: "/checkout",
+          revenue_reporting_amount: Decimal.new("10.00"),
+          revenue_reporting_currency: "EUR"
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, page_path: "/checkout"})
+      insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+      response = json_response(conn, 200)
+
+      assert [
+               %{
+                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "conversion_rate" => 33.3,
+                 "name" => "Payment",
+                 "prop_names" => [],
+                 "total_conversions" => 1,
+                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "unique_conversions" => 1
+               },
+               %{
+                 "average_revenue" => nil,
+                 "conversion_rate" => 66.7,
+                 "name" => "Signup",
+                 "prop_names" => [],
+                 "total_conversions" => 2,
+                 "total_revenue" => nil,
+                 "unique_conversions" => 2
+               },
+               %{
+                 "average_revenue" => nil,
+                 "conversion_rate" => 33.3,
+                 "name" => "Visit /checkout",
+                 "prop_names" => [],
+                 "total_conversions" => 1,
+                 "total_revenue" => nil,
+                 "unique_conversions" => 1
+               }
+             ] == Enum.sort_by(response, & &1["name"])
+    end
+
+    test "does not return revenue metrics if no revenue goals are returned", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup")
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Signup",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => [],
+                 "conversion_rate" => 100.0
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/conversions - with goal filter" do
@@ -514,6 +631,42 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    test "can combine wildcard and no wildcard in matches_member", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post-1"),
+        build(:pageview, pathname: "/blog/post-2"),
+        build(:pageview, pathname: "/billing/upgrade")
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog/**"})
+      insert(:goal, %{site: site, page_path: "/billing/upgrade"})
+
+      filters = Jason.encode!(%{goal: "Visit /blog/**|Visit /billing/upgrade"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Visit /blog/**",
+                 "unique_conversions" => 2,
+                 "total_conversions" => 2,
+                 "prop_names" => [],
+                 "conversion_rate" => 66.7
+               },
+               %{
+                 "name" => "Visit /billing/upgrade",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => [],
+                 "conversion_rate" => 33.3
+               }
+             ]
+    end
+
     test "can filter by matches_member filter type on goals", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
@@ -591,6 +744,37 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "total_conversions" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 16.7
+               }
+             ]
+    end
+
+    test "can combine wildcard and no wildcard in not_matches_member", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post-1"),
+        build(:pageview, pathname: "/blog/post-2"),
+        build(:pageview, pathname: "/billing/upgrade"),
+        build(:pageview, pathname: "/register")
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog/**"})
+      insert(:goal, %{site: site, page_path: "/billing/upgrade"})
+      insert(:goal, %{site: site, page_path: "/register"})
+
+      filters = Jason.encode!(%{goal: "!Visit /blog/**|Visit /billing/upgrade"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Visit /register",
+                 "unique_conversions" => 1,
+                 "total_conversions" => 1,
+                 "prop_names" => [],
+                 "conversion_rate" => 25
                }
              ]
     end
@@ -1294,14 +1478,14 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                %{
                  "conversion_rate" => 37.5,
                  "unique_conversions" => 3,
-                 "name" => "Visit /*",
+                 "name" => "Visit /signup/**",
                  "total_conversions" => 3,
                  "prop_names" => []
                },
                %{
                  "conversion_rate" => 37.5,
                  "unique_conversions" => 3,
-                 "name" => "Visit /signup/**",
+                 "name" => "Visit /*",
                  "total_conversions" => 3,
                  "prop_names" => []
                },
@@ -1322,6 +1506,13 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                %{
                  "conversion_rate" => 12.5,
                  "unique_conversions" => 1,
+                 "name" => "Visit /signup/*",
+                 "total_conversions" => 1,
+                 "prop_names" => []
+               },
+               %{
+                 "conversion_rate" => 12.5,
+                 "unique_conversions" => 1,
                  "name" => "Visit /billing*/success",
                  "total_conversions" => 1,
                  "prop_names" => []
@@ -1330,13 +1521,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "conversion_rate" => 12.5,
                  "unique_conversions" => 1,
                  "name" => "Visit /register",
-                 "total_conversions" => 1,
-                 "prop_names" => []
-               },
-               %{
-                 "conversion_rate" => 12.5,
-                 "unique_conversions" => 1,
-                 "name" => "Visit /signup/*",
                  "total_conversions" => 1,
                  "prop_names" => []
                }

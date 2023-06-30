@@ -4,6 +4,8 @@ config :plausible,
   ecto_repos: [Plausible.Repo, Plausible.IngestRepo]
 
 config :plausible, PlausibleWeb.Endpoint,
+  # Does not to have to be secret, as per: https://github.com/phoenixframework/phoenix/issues/2146
+  live_view: [signing_salt: "f+bZg/crMtgjZJJY7X6OwIWc3XJR2C5Y"],
   pubsub_server: Plausible.PubSub,
   render_errors: [
     view: PlausibleWeb.ErrorView,

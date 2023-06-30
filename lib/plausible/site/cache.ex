@@ -102,9 +102,9 @@ defmodule Plausible.Site.Cache do
   @spec refresh_updated_recently(Keyword.t()) :: :ok
   def refresh_updated_recently(opts \\ []) do
     recently_updated_sites_query =
-      from [s, mg] in sites_by_domain_query(),
+      from [s, _rg] in sites_by_domain_query(),
         order_by: [asc: s.updated_at],
-        where: s.updated_at > ago(^15, "minute") or mg.updated_at > ago(^15, "minute")
+        where: s.updated_at > ago(^15, "minute")
 
     refresh(
       :updated_recently,
@@ -115,13 +115,13 @@ defmodule Plausible.Site.Cache do
 
   defp sites_by_domain_query do
     from s in Site,
-      left_join: mg in assoc(s, :revenue_goals),
+      left_join: rg in assoc(s, :revenue_goals),
       select: {
         s.domain,
         s.domain_changed_from,
         %{struct(s, ^@cached_schema_fields) | from_cache?: true}
       },
-      preload: [revenue_goals: mg]
+      preload: [revenue_goals: rg]
   end
 
   @spec merge(new_items :: [Site.t()], opts :: Keyword.t()) :: :ok

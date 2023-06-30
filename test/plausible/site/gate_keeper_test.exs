@@ -20,7 +20,9 @@ defmodule Plausible.Site.GateKeeperTest do
     domain = "site1.example.com"
 
     %{id: site_id} = add_site_and_refresh_cache(test, domain: domain)
-    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
+
+    assert {:allow, %Plausible.Site{id: ^site_id, from_cache?: true}} =
+             GateKeeper.check(domain, opts)
   end
 
   test "rate limiting works with threshold", %{test: test, opts: opts} do
@@ -33,7 +35,9 @@ defmodule Plausible.Site.GateKeeperTest do
         ingest_rate_limit_scale_seconds: 60
       )
 
-    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
+    assert {:allow, %Plausible.Site{id: ^site_id, from_cache?: true}} =
+             GateKeeper.check(domain, opts)
+
     assert {:deny, :throttle} = GateKeeper.check(domain, opts)
     assert {:deny, :throttle} = GateKeeper.check(domain, opts)
   end
@@ -48,11 +52,15 @@ defmodule Plausible.Site.GateKeeperTest do
         ingest_rate_limit_scale_seconds: 1
       )
 
-    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
+    assert {:allow, %Plausible.Site{id: ^site_id, from_cache?: true}} =
+             GateKeeper.check(domain, opts)
+
     Process.sleep(1)
     assert {:deny, :throttle} = GateKeeper.check(domain, opts)
     Process.sleep(1_000)
-    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
+
+    assert {:allow, %Plausible.Site{id: ^site_id, from_cache?: true}} =
+             GateKeeper.check(domain, opts)
   end
 
   test "rate limiting prioritises cache lookups", %{test: test, opts: opts} do
@@ -71,7 +79,9 @@ defmodule Plausible.Site.GateKeeperTest do
     insert(:site)
     deleted_site_id = site.id
 
-    assert {:allow, ^deleted_site_id} = GateKeeper.check(domain, opts)
+    assert {:allow, %Plausible.Site{id: ^deleted_site_id, from_cache?: true}} =
+             GateKeeper.check(domain, opts)
+
     :ok = Cache.refresh_all(opts[:cache_opts])
     assert {:deny, :not_found} = GateKeeper.check(domain, opts)
   end
@@ -90,14 +100,18 @@ defmodule Plausible.Site.GateKeeperTest do
       )
 
     site_id = site.id
-    assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
+
+    assert {:allow, %Plausible.Site{id: ^site_id, from_cache?: true}} =
+             GateKeeper.check(domain, opts)
+
     assert {:deny, :throttle} = GateKeeper.check(domain, opts)
 
     {:ok, :broken} = break_hammer(site)
 
     log =
       capture_log(fn ->
-        assert {:allow, ^site_id} = GateKeeper.check(domain, opts)
+        assert {:allow, %Plausible.Site{id: ^site_id, from_cache?: true}} =
+                 GateKeeper.check(domain, opts)
       end)
 
     assert log =~ "Error checking rate limit for 'ingest:site:causingerrors.example.com'"

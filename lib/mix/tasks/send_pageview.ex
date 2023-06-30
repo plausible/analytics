@@ -25,7 +25,9 @@ defmodule Mix.Tasks.SendPageview do
     referrer: :string,
     host: :string,
     event: :string,
-    props: :string
+    props: :string,
+    revenue_currency: :string,
+    revenue_amount: :string
   ]
 
   def run(opts) do
@@ -85,12 +87,21 @@ defmodule Mix.Tasks.SendPageview do
     event = Keyword.get(opts, :event, @default_event)
     props = Keyword.get(opts, :props, @default_props)
 
+    revenue =
+      if Keyword.get(opts, :revenue_currency) do
+        %{
+          currency: Keyword.get(opts, :revenue_currency),
+          amount: Keyword.get(opts, :revenue_amount)
+        }
+      end
+
     %{
       name: event,
       url: "http://#{domain}#{page}",
       domain: domain,
       referrer: referrer,
-      props: props
+      props: props,
+      revenue: revenue
     }
   end
 

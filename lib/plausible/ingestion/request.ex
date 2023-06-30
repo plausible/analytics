@@ -1,3 +1,20 @@
+defmodule Plausible.Ecto.EventName do
+  @moduledoc """
+    Custom type for event name. Accepts Strings and Integers and stores them as String. Returns
+    cast error if any other type is provided. Accepting integers is important for 404 tracking.
+  """
+
+  use Ecto.Type
+  def type, do: :string
+
+  def cast(val) when is_binary(val), do: {:ok, val}
+  def cast(val) when is_integer(val), do: {:ok, Integer.to_string(val)}
+
+  def cast(_), do: :error
+  def load(val), do: {:ok, val}
+  def dump(val), do: {:ok, val}
+end
+
 defmodule Plausible.Ingestion.Request do
   @moduledoc """
   The %Plausible.Ingestion.Request{} struct stores all needed fields
@@ -13,14 +30,15 @@ defmodule Plausible.Ingestion.Request do
   embedded_schema do
     field :remote_ip, :string
     field :user_agent, :string
-    field :event_name, :string
+    field :event_name, Plausible.Ecto.EventName
     field :uri, :map
     field :hostname, :string
     field :referrer, :string
     field :domains, {:array, :string}
-    field :hash_mode, :string
+    field :hash_mode, :integer
     field :pathname, :string
     field :props, :map
+    field :revenue_source, :map
     field :query_params, :map
 
     field :timestamp, :naive_datetime
@@ -53,6 +71,7 @@ defmodule Plausible.Ingestion.Request do
         |> put_props(request_body)
         |> put_pathname()
         |> put_query_params()
+        |> put_revenue_source(request_body)
         |> map_domains(request_body)
         |> Changeset.validate_required([
           :event_name,
@@ -88,10 +107,13 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp put_request_params(changeset, %{} = request_body) do
-    Changeset.change(
+    Changeset.cast(
       changeset,
-      event_name: request_body["n"] || request_body["name"],
-      hash_mode: request_body["h"] || request_body["hashMode"]
+      %{
+        event_name: request_body["n"] || request_body["name"],
+        hash_mode: request_body["h"] || request_body["hashMode"]
+      },
+      [:event_name, :hash_mode]
     )
   end
 
@@ -163,28 +185,18 @@ defmodule Plausible.Ingestion.Request do
     Changeset.put_change(changeset, :hostname, sanitize_hostname(host))
   end
 
+  @max_props 30
   defp put_props(changeset, %{} = request_body) do
     props =
       (request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"])
-      |> decode_props_or_fallback()
+      |> decode_json_or_fallback()
       |> Enum.reject(fn {_k, v} -> is_nil(v) || is_list(v) || is_map(v) || v == "" end)
+      |> Enum.take(@max_props)
       |> Map.new()
 
     changeset
     |> Changeset.put_change(:props, props)
     |> validate_props()
-  end
-
-  defp decode_props_or_fallback(raw) do
-    with raw when is_binary(raw) <- raw,
-         {:ok, %{} = decoded} <- Jason.decode(raw) do
-      decoded
-    else
-      already_a_map when is_map(already_a_map) -> already_a_map
-      {:ok, _list_or_other} -> %{}
-      {:error, _decode_error} -> %{}
-      _any -> %{}
-    end
   end
 
   @max_prop_key_length 300
@@ -206,6 +218,46 @@ defmodule Plausible.Ingestion.Request do
           _, changeset ->
             {:cont, changeset}
         end)
+    end
+  end
+
+  defp put_revenue_source(%Ecto.Changeset{} = changeset, %{} = request_body) do
+    with revenue_source <- request_body["revenue"] || request_body["$"],
+         %{"amount" => _, "currency" => _} = revenue_source <-
+           decode_json_or_fallback(revenue_source) do
+      parse_revenue_source(changeset, revenue_source)
+    else
+      _any -> changeset
+    end
+  end
+
+  @valid_currencies Plausible.Goal.valid_currencies()
+  defp parse_revenue_source(changeset, %{"amount" => amount, "currency" => currency}) do
+    with true <- currency in @valid_currencies,
+         {%Decimal{} = amount, _rest} <- parse_decimal(amount),
+         %Money{} = amount <- Money.new(currency, amount) do
+      Changeset.put_change(changeset, :revenue_source, amount)
+    else
+      _any -> changeset
+    end
+  end
+
+  defp decode_json_or_fallback(raw) do
+    with raw when is_binary(raw) <- raw,
+         {:ok, %{} = decoded} <- Jason.decode(raw) do
+      decoded
+    else
+      already_a_map when is_map(already_a_map) -> already_a_map
+      _any -> %{}
+    end
+  end
+
+  defp parse_decimal(value) do
+    case value do
+      value when is_binary(value) -> Decimal.parse(value)
+      value when is_float(value) -> {Decimal.from_float(value), nil}
+      value when is_integer(value) -> {Decimal.new(value), nil}
+      _any -> :error
     end
   end
 

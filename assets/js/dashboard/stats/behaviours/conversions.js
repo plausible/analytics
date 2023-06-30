@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom'
 import FlipMove from 'react-flip-move'
 
-
 import Bar from '../bar'
 import PropBreakdown from './prop-breakdown'
 import numberFormatter from '../../util/number-formatter'
@@ -11,34 +10,25 @@ import * as url from '../../util/url'
 import { escapeFilterValue } from '../../util/filters'
 import LazyLoader from '../../components/lazy-loader'
 
-const MOBILE_UPPER_WIDTH = 767
-const DEFAULT_WIDTH = 1080
+function Money({ formatted }) {
+  if (formatted) {
+    return <span tooltip={formatted.long}>{formatted.short}</span>
+  } else {
+    return "-"
+  }
+}
 
 export default class Conversions extends React.Component {
   constructor(props) {
     super(props)
     this.htmlNode = React.createRef()
-    this.state = {
-      loading: true,
-      viewport: DEFAULT_WIDTH,
-    }
+    this.state = { loading: true, }
     this.onVisible = this.onVisible.bind(this)
     this.fetchConversions = this.fetchConversions.bind(this)
-    this.handleResize = this.handleResize.bind(this);
-  }
-
-  componentDidMount() {
-    window.addEventListener('resize', this.handleResize, false);
-    this.handleResize();
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', this.handleResize, false);
     document.removeEventListener('tick', this.fetchConversions)
-  }
-
-  handleResize() {
-    this.setState({ viewport: window.innerWidth });
   }
 
   onVisible() {
@@ -51,77 +41,84 @@ export default class Conversions extends React.Component {
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
       const height = this.htmlNode.current.element.offsetHeight
-      this.setState({loading: true, goals: null, prevHeight: height})
+      this.setState({ loading: true, goals: null, prevHeight: height })
       this.fetchConversions()
     }
   }
 
-  getBarMaxWidth() {
-    const { viewport } = this.state;
-    return viewport > MOBILE_UPPER_WIDTH ? "16rem" : "10rem";
-  }
-
   fetchConversions() {
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/conversions`, this.props.query)
-      .then((res) => this.setState({loading: false, goals: res, prevHeight: null}))
+      .then((res) => this.setState({ loading: false, goals: res, prevHeight: null }))
   }
 
-  renderGoal(goal) {
-    const { viewport } = this.state;
+  renderGoal(goal, renderRevenueColumn) {
     const renderProps = this.props.query.filters['goal'] == goal.name && goal.prop_names
 
     return (
       <div className="my-2 text-sm" key={goal.name}>
         <div className="flex items-center justify-between my-2">
-          <Bar
-            count={goal.unique_conversions}
-            all={this.state.goals}
-            bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
-            maxWidthDeduction={this.getBarMaxWidth()}
-            plot="unique_conversions"
-          >
-            <Link to={url.setQuery('goal', escapeFilterValue(goal.name))} className="block px-2 py-1.5 hover:underline relative z-9 break-all lg:truncate dark:text-gray-200">{goal.name}</Link>
-          </Bar>
+          <span className="flex-1">
+            <Bar
+              count={goal.unique_conversions}
+              all={this.state.goals}
+              bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
+              plot="unique_conversions"
+            >
+              <Link to={url.setQuery('goal', escapeFilterValue(goal.name))} className="block px-2 py-1.5 hover:underline relative z-9 break-all lg:truncate dark:text-gray-200">{goal.name}</Link>
+            </Bar>
+          </span>
           <div className="dark:text-gray-200">
             <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.unique_conversions)}</span>
-            {viewport > MOBILE_UPPER_WIDTH && <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.total_conversions)}</span>}
+            <span className="hidden md:inline-block md:w-20 font-medium text-right">{numberFormatter(goal.total_conversions)}</span>
             <span className="inline-block w-20 font-medium text-right">{goal.conversion_rate}%</span>
+            {renderRevenueColumn && <span className="hidden md:inline-block md:w-20 font-medium text-right"><Money formatted={goal.total_revenue} /></span>}
+            {renderRevenueColumn && <span className="hidden md:inline-block md:w-20 font-medium text-right"><Money formatted={goal.average_revenue} /></span>}
           </div>
         </div>
-        { renderProps && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
+        { renderProps && !goal.total_revenue && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
       </div>
     )
   }
 
   renderInner() {
-    const { viewport } = this.state;
     if (this.state.loading) {
       return <div className="mx-auto my-2 loading"><div></div></div>
     } else if (this.state.goals) {
+      const hasRevenue = this.state.goals.some((goal) => goal.total_revenue)
+
       return (
         <React.Fragment>
-          <h3 className="font-bold dark:text-gray-100">{this.props.title || "Goal Conversions"}</h3>
           <div className="flex items-center justify-between mt-3 mb-2 text-xs font-bold tracking-wide text-gray-500 dark:text-gray-400">
             <span>Goal</span>
             <div className="text-right">
               <span className="inline-block w-20">Uniques</span>
-              {viewport > MOBILE_UPPER_WIDTH && <span className="inline-block w-20">Total</span>}
+              <span className="hidden md:inline-block md:w-20">Total</span>
               <span className="inline-block w-20">CR</span>
+              {hasRevenue && <span className="hidden md:inline-block md:w-20">Revenue</span>}
+              {hasRevenue && <span className="hidden md:inline-block md:w-20">Average</span>}
             </div>
           </div>
           <FlipMove>
-            { this.state.goals.map(this.renderGoal.bind(this)) }
+            { this.state.goals.map((goal) => this.renderGoal.bind(this)(goal, hasRevenue) ) }
           </FlipMove>
         </React.Fragment>
       )
     }
   }
 
+  renderConversions() {
+    return (
+      <LazyLoader ref={this.htmlNode} style={{ minHeight: '132px', height: this.state.prevHeight ?? 'auto' }} onVisible={this.onVisible}>
+        {this.renderInner()}
+      </LazyLoader>
+    )
+  }
+
   render() {
     return (
-      <LazyLoader className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825" style={{minHeight: '132px', height: this.state.prevHeight ?? 'auto'}} onVisible={this.onVisible} ref={this.htmlNode}>
-        { this.renderInner() }
-      </LazyLoader>
+      <div>
+        {this.renderConversions()}
+      </div>
     )
   }
 }

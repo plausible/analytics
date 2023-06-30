@@ -175,9 +175,17 @@ enable_email_verification =
   |> get_var_from_path_or_env("ENABLE_EMAIL_VERIFICATION", "false")
   |> String.to_existing_atom()
 
+is_selfhost =
+  config_dir
+  |> get_var_from_path_or_env("SELFHOST", "true")
+  |> String.to_existing_atom()
+
+# by default, registration is disabled in self-hosted setups
+disable_registration_default = to_string(is_selfhost)
+
 disable_registration =
   config_dir
-  |> get_var_from_path_or_env("DISABLE_REGISTRATION", "false")
+  |> get_var_from_path_or_env("DISABLE_REGISTRATION", disable_registration_default)
   |> String.to_existing_atom()
 
 if disable_registration not in [true, false, :invite_only] do
@@ -190,11 +198,6 @@ hcaptcha_secret = get_var_from_path_or_env(config_dir, "HCAPTCHA_SECRET")
 log_level =
   config_dir
   |> get_var_from_path_or_env("LOG_LEVEL", "warn")
-  |> String.to_existing_atom()
-
-is_selfhost =
-  config_dir
-  |> get_var_from_path_or_env("SELFHOST", "true")
   |> String.to_existing_atom()
 
 custom_script_name =
@@ -222,6 +225,18 @@ log_failed_login_attempts =
   |> get_var_from_path_or_env("LOG_FAILED_LOGIN_ATTEMPTS", "false")
   |> String.to_existing_atom()
 
+websocket_url = get_var_from_path_or_env(config_dir, "WEBSOCKET_URL", "")
+
+if byte_size(websocket_url) > 0 and
+     not String.ends_with?(URI.new!(websocket_url).host, base_url.host) do
+  raise """
+  Cross-domain websocket authentication is not supported for this server.
+
+  WEBSOCKET_URL=#{websocket_url} - host must be: '#{base_url.host}',
+  because BASE_URL=#{base_url}.
+  """
+end
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -244,7 +259,8 @@ config :plausible, PlausibleWeb.Endpoint,
     transport_options: [max_connections: :infinity],
     protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
   ],
-  secret_key_base: secret_key_base
+  secret_key_base: secret_key_base,
+  websocket_url: websocket_url
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
@@ -335,7 +351,8 @@ config :plausible, Plausible.ImportDeletionRepo,
   pool_size: 1
 
 config :ex_money,
-  open_exchange_rates_app_id: get_var_from_path_or_env(config_dir, "OPEN_EXCHANGE_RATES_APP_ID")
+  open_exchange_rates_app_id: get_var_from_path_or_env(config_dir, "OPEN_EXCHANGE_RATES_APP_ID"),
+  retrieve_every: :timer.hours(24)
 
 case mailer_adapter do
   "Bamboo.PostmarkAdapter" ->

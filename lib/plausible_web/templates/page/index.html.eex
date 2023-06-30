@@ -1,0 +1,34 @@
+<div class="w-full md:max-w-xl md:mx-auto bg-white dark:bg-gray-800 md:shadow-md md:rounded px-8 py-6">
+  <p class="text-gray-900 text-xl font-black dark:text-gray-100">
+    Welcome to Plausible Analytics!
+  </p>
+  <p class="mt-4 text-gray-600 dark:text-gray-200">
+  <a href="https://plausible.io/" class="border-b text-indigo-700 font-semibold dark:text-indigo-400 border-indigo-700 dark:border-indigo-500">Plausible Analytics</a> is a simple, open source, lightweight (&lt; 1 KB) and privacy-friendly alternative to Google Analytics. We're completely independent and solely funded by our 10,000+ paying subscribers. Read more <a href="https://plausible.io/about" class="border-b font-semibold text-indigo-700 dark:text-indigo-400 border-indigo-700 dark:border-indigo-500">about us.</a>
+  </p>
+  <ul class="mt-6 flex flex-wrap text-gray-700 dark:text-gray-300 space-y-1 md:space-y-0">
+    <li class="w-full md:w-1/2 md:order-1">
+      <%= link to: Routes.auth_path(@conn, :login), class: "flex items-center" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-in h-4 w-4"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+        <span class="ml-2 font-semibold underline text-indigo-700 dark:text-indigo-400">Login</span>
+      <% end %>
+    </li>
+    <li class="w-full md:mt-1 md:w-1/2 md:order-3">
+      <%= link to: Routes.auth_path(@conn, :register), class: "flex items-center" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user-plus h-4 w-4"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        <span class="ml-2 font-semibold underline text-indigo-700 dark:text-indigo-400">Register</span>
+      <% end %>
+    </li>
+    <li class="w-full md:w-1/2 md:order-2">
+      <a href="https://plausible.io/docs" class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-book-open h-4 w-4"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        <span class="ml-2 font-semibold underline text-indigo-700 dark:text-indigo-400">Guides &amp; Docs</span>
+      </a>
+    </li>
+    <li class="w-full md:mt-1 md:w-1/2 md:order-4">
+      <a href="https://twitter.com/plausiblehq" class="flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-twitter h-4 w-4"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+        <span class="ml-2 font-semibold underline text-indigo-700 dark:text-indigo-400">Follow on Twitter</span>
+      </a>
+    </li>
+  </ul>
+</div>

@@ -74,7 +74,7 @@ class ReferrerDrilldownModal extends React.Component {
 
     return (
       <span className="flex group items-center">
-        <img src={`https://icons.duckduckgo.com/ip3/${referrer.url}.ico`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 inline" />
+        <img src={`/favicon/sources/${referrer.name}`} referrerPolicy="no-referrer" className="h-4 w-4 mr-2 inline" />
         <Link className="block truncate hover:underline dark:text-gray-200" to={{search: query.toString(), pathname: '/' + this.props.site.domain}} title={referrer.name}>
           {referrer.name}
         </Link>

@@ -45,4 +45,92 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
              }
     end
   end
+
+  describe "PUT /api/:domain/disable-feature" do
+    setup [:create_user, :log_in]
+
+    test "when the logged-in user is an admin of the site", %{conn: conn, user: user} do
+      site = insert(:site)
+      insert(:site_membership, user: user, site: site, role: :admin)
+
+      conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
+
+      assert json_response(conn, 200) == "ok"
+      assert %{conversions_enabled: false} = Plausible.Sites.get_by_domain(site.domain)
+    end
+
+    test "can disable conversions, funnels, and props with admin access", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site)
+      insert(:site_membership, user: user, site: site, role: :admin)
+
+      put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
+      put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "funnels"})
+      put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "props"})
+
+      assert %{conversions_enabled: false, funnels_enabled: false, props_enabled: false} =
+               Plausible.Sites.get_by_domain(site.domain)
+    end
+
+    test "when the logged-in user is an owner of the site", %{conn: conn, user: user} do
+      site = insert(:site)
+      insert(:site_membership, user: user, site: site, role: :owner)
+
+      conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
+
+      assert json_response(conn, 200) == "ok"
+      assert %{conversions_enabled: false} = Plausible.Sites.get_by_domain(site.domain)
+    end
+
+    test "when the logged-in user is an super-admin", %{conn: conn, user: user} do
+      site = insert(:site)
+      patch_env(:super_admin_user_ids, [user.id])
+
+      conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
+
+      assert json_response(conn, 200) == "ok"
+      assert %{conversions_enabled: false} = Plausible.Sites.get_by_domain(site.domain)
+    end
+
+    test "returns 401 when the logged-in user is a viewer of the site", %{conn: conn, user: user} do
+      site = insert(:site)
+      insert(:site_membership, user: user, site: site, role: :viewer)
+
+      conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
+
+      assert json_response(conn, 401) == %{
+               "error" => "You need to be logged in as the owner or admin account of this site"
+             }
+
+      assert %{conversions_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
+    end
+
+    test "returns 401 when the logged-in user doesn't have site access at all", %{conn: conn} do
+      site = insert(:site)
+
+      conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
+
+      assert json_response(conn, 401) == %{
+               "error" => "You need to be logged in as the owner or admin account of this site"
+             }
+
+      assert %{conversions_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
+    end
+  end
+
+  describe "PUT /api/:domain/disable-feature - user not logged in" do
+    test "returns 401 unauthorized", %{conn: conn} do
+      site = insert(:site)
+
+      conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
+
+      assert json_response(conn, 401) == %{
+               "error" => "You need to be logged in as the owner or admin account of this site"
+             }
+
+      assert %{conversions_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
+    end
+  end
 end

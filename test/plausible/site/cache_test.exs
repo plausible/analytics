@@ -30,7 +30,7 @@ defmodule Plausible.Site.CacheTest do
       {:ok, _} =
         Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
           strategy: :one_for_one,
-          name: Test.Supervisor.Cache
+          name: :"cache_supervisor_#{test}"
         )
 
       %{id: first_id} = site1 = insert(:site, domain: "site1.example.com")
@@ -55,15 +55,21 @@ defmodule Plausible.Site.CacheTest do
 
     test "cache caches revenue goals", %{test: test} do
       {:ok, _} =
-        Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
+        Supervisor.start_link(
+          [{Cache, [cache_name: test, child_id: :test_cache_caches_revenue_goals]}],
           strategy: :one_for_one,
-          name: Test.Supervisor.Cache
+          name: :"cache_supervisor_#{test}"
         )
 
       %{id: site_id} = site = insert(:site, domain: "site1.example.com")
-      insert(:goal, site: site, event_name: "Purchase", currency: :BRL)
-      insert(:goal, site: site, event_name: "Add to Cart", currency: :USD)
-      insert(:goal, site: site, event_name: "Click", currency: nil)
+
+      {:ok, _goal} =
+        Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => :BRL})
+
+      {:ok, _goal} =
+        Plausible.Goals.create(site, %{"event_name" => "Add to Cart", "currency" => :USD})
+
+      {:ok, _goal} = Plausible.Goals.create(site, %{"event_name" => "Click", "currency" => nil})
 
       :ok = Cache.refresh_all(cache_name: test)
 
@@ -75,6 +81,47 @@ defmodule Plausible.Site.CacheTest do
       assert [
                %Goal{event_name: "Add to Cart", currency: :USD},
                %Goal{event_name: "Purchase", currency: :BRL}
+             ] = Enum.sort_by(cached_goals, & &1.event_name)
+    end
+
+    test "cache caches revenue goals with event refresh", %{test: test} do
+      {:ok, _} =
+        Supervisor.start_link(
+          [{Cache, [cache_name: test, child_id: :test_revenue_goals_event_refresh]}],
+          strategy: :one_for_one,
+          name: :"cache_supervisor_#{test}"
+        )
+
+      yesterday = DateTime.utc_now() |> DateTime.add(-1 * 60 * 60 * 24)
+
+      # the site was added yesterday so full refresh will pick it up
+      %{id: site_id} = site = insert(:site, domain: "site1.example.com", updated_at: yesterday)
+      # the goal was added yesterday so full refresh will pick it up
+      Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => :BRL}, yesterday)
+      # this goal is added "just now"
+      Plausible.Goals.create(site, %{"event_name" => "Add to Cart", "currency" => :USD})
+      # and this one does not matter
+      Plausible.Goals.create(site, %{"event_name" => "Click", "currency" => nil})
+
+      # at this point, we have 3 goals associated with the cached struct
+      :ok = Cache.refresh_all(cache_name: test)
+
+      # the goal was added 70 seconds ago so partial refresh should pick it up and merge with the rest of goals
+      Plausible.Goals.create(
+        site,
+        %{"event_name" => "Purchase2", "currency" => :BRL},
+        DateTime.add(DateTime.utc_now(), -70)
+      )
+
+      :ok = Cache.refresh_updated_recently(cache_name: test)
+
+      assert %Site{from_cache?: true, id: ^site_id, revenue_goals: cached_goals} =
+               Cache.get("site1.example.com", force?: true, cache_name: test)
+
+      assert [
+               %Goal{event_name: "Add to Cart", currency: :USD},
+               %Goal{event_name: "Purchase", currency: :BRL},
+               %Goal{event_name: "Purchase2", currency: :BRL}
              ] = Enum.sort_by(cached_goals, & &1.event_name)
     end
 

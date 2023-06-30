@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   require Logger
 
-  plug :validate_common_input
+  plug(:validate_common_input)
 
   @doc """
   Returns a time-series based on given parameters.
@@ -329,54 +329,61 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, 100}
   end
 
-  defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _goal}} = query, comparison_query) do
-    totals_query = Query.remove_event_filters(query, [:goal, :props])
+  defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _}} = query, comparison_query) do
+    query_without_filters = Query.remove_event_filters(query, [:goal, :props])
+    metrics = [:visitors, :events, :average_revenue, :total_revenue]
 
-    %{
-      visitors: %{value: unique_visitors}
-    } = Stats.aggregate(site, totals_query, [:visitors])
+    results_without_filters =
+      site
+      |> Stats.aggregate(query_without_filters, [:visitors])
+      |> transform_keys(%{visitors: :unique_visitors})
 
-    %{
-      visitors: %{value: converted_visitors},
-      events: %{value: completions}
-    } = Stats.aggregate(site, query, [:visitors, :events])
+    results =
+      site
+      |> Stats.aggregate(query, metrics)
+      |> transform_keys(%{visitors: :converted_visitors, events: :completions})
+      |> Map.merge(results_without_filters)
 
-    {prev_unique_visitors, prev_converted_visitors, prev_completions} =
+    comparison =
       if comparison_query do
-        totals_comparison_query = Query.remove_event_filters(comparison_query, [:goal, :props])
+        comparison_query_without_filters =
+          Query.remove_event_filters(comparison_query, [:goal, :props])
 
-        %{
-          visitors: %{value: prev_unique_visitors}
-        } = Stats.aggregate(site, totals_comparison_query, [:visitors])
+        comparison_without_filters =
+          site
+          |> Stats.aggregate(comparison_query_without_filters, [:visitors])
+          |> transform_keys(%{visitors: :unique_visitors})
 
-        %{
-          visitors: %{value: prev_converted_visitors},
-          events: %{value: prev_completions}
-        } = Stats.aggregate(site, comparison_query, [:visitors, :events])
-
-        {prev_unique_visitors, prev_converted_visitors, prev_completions}
-      else
-        {nil, nil, nil}
+        site
+        |> Stats.aggregate(comparison_query, metrics)
+        |> transform_keys(%{visitors: :converted_visitors, events: :completions})
+        |> Map.merge(comparison_without_filters)
       end
 
-    conversion_rate = calculate_cr(unique_visitors, converted_visitors)
-    prev_conversion_rate = calculate_cr(prev_unique_visitors, prev_converted_visitors)
+    conversion_rate = %{
+      cr: %{value: calculate_cr(results.unique_visitors.value, results.converted_visitors.value)}
+    }
 
-    build_item = fn name, value, comparison_value ->
-      if comparison_value do
-        change = percent_change(comparison_value, value)
-        %{name: name, value: value, comparison_value: comparison_value, change: change}
+    comparison_conversion_rate =
+      if comparison do
+        value =
+          calculate_cr(comparison.unique_visitors.value, comparison.converted_visitors.value)
+
+        %{cr: %{value: value}}
       else
-        %{name: name, value: value}
+        nil
       end
-    end
 
-    {[
-       build_item.("Unique visitors", unique_visitors, prev_unique_visitors),
-       build_item.("Unique conversions", converted_visitors, prev_converted_visitors),
-       build_item.("Total conversions", completions, prev_completions),
-       build_item.("Conversion rate", conversion_rate, prev_conversion_rate)
-     ], 100}
+    [
+      top_stats_entry(results, comparison, "Unique visitors", :unique_visitors),
+      top_stats_entry(results, comparison, "Unique conversions", :converted_visitors),
+      top_stats_entry(results, comparison, "Total conversions", :completions),
+      top_stats_entry(results, comparison, "Average revenue", :average_revenue, &format_money/1),
+      top_stats_entry(results, comparison, "Total revenue", :total_revenue, &format_money/1),
+      top_stats_entry(conversion_rate, comparison_conversion_rate, "Conversion rate", :cr)
+    ]
+    |> Enum.reject(&is_nil/1)
+    |> then(&{&1, 100})
   end
 
   defp fetch_top_stats(site, query, comparison_query) do
@@ -420,16 +427,22 @@ defmodule PlausibleWeb.Api.StatsController do
     {stats, current_results[:sample_percent][:value]}
   end
 
-  defp top_stats_entry(current_results, prev_results, name, key) do
+  defp top_stats_entry(current_results, prev_results, name, key, formatter \\ & &1) do
     if current_results[key] do
       value = get_in(current_results, [key, :value])
 
       if prev_results do
         prev_value = get_in(prev_results, [key, :value])
         change = calculate_change(key, prev_value, value)
-        %{name: name, value: value, comparison_value: prev_value, change: change}
+
+        %{
+          name: name,
+          value: formatter.(value),
+          comparison_value: formatter.(prev_value),
+          change: change
+        }
       else
-        %{name: name, value: value}
+        %{name: name, value: formatter.(value)}
       end
     end
   end
@@ -443,6 +456,12 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp percent_change(nil, _new_count), do: nil
+
+  defp percent_change(%Money{} = old_count, %Money{} = new_count) do
+    old_count = old_count |> Money.to_decimal() |> Decimal.to_float()
+    new_count = new_count |> Money.to_decimal() |> Decimal.to_float()
+    percent_change(old_count, new_count)
+  end
 
   defp percent_change(old_count, new_count) do
     cond do
@@ -484,6 +503,52 @@ defmodule PlausibleWeb.Api.StatsController do
       end
     else
       json(conn, res)
+    end
+  end
+
+  def funnel(conn, %{"id" => funnel_id} = params) do
+    site = conn.assigns[:site]
+
+    with :ok <- validate_params(params),
+         query <- Query.from(site, params) |> Filters.add_prefix(),
+         :ok <- validate_funnel_query(query),
+         {funnel_id, ""} <- Integer.parse(funnel_id),
+         {:ok, funnel} <- Stats.funnel(site, query, funnel_id) do
+      json(conn, funnel)
+    else
+      {:error, {:invalid_funnel_query, due_to}} ->
+        bad_request(
+          conn,
+          "We are unable to show funnels when the dashboard is filtered by #{due_to}",
+          %{
+            level: :normal
+          }
+        )
+
+      {:error, :funnel_not_found} ->
+        conn
+        |> put_status(404)
+        |> json(%{error: "Funnel not found"})
+        |> halt()
+
+      _ ->
+        bad_request(conn, "There was an error with your request")
+    end
+  end
+
+  defp validate_funnel_query(query) do
+    case query do
+      _ when is_map_key(query.filters, "event:goal") ->
+        {:error, {:invalid_funnel_query, "goals"}}
+
+      _ when is_map_key(query.filters, "event:page") ->
+        {:error, {:invalid_funnel_query, "pages"}}
+
+      _ when query.period == "realtime" ->
+        {:error, {:invalid_funnel_query, "realtime period"}}
+
+      _ ->
+        :ok
     end
   end
 
@@ -1033,7 +1098,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def conversions(conn, params) do
-    site = conn.assigns[:site]
+    site = Plausible.Repo.preload(conn.assigns.site, :goals)
     query = Query.from(site, params) |> Filters.add_prefix()
 
     query =
@@ -1047,23 +1112,51 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
+    metrics =
+      if Enum.any?(site.goals, &Plausible.Goal.revenue?/1) do
+        [:visitors, :events, :average_revenue, :total_revenue]
+      else
+        [:visitors, :events]
+      end
+
     conversions =
-      Stats.breakdown(site, query, "event:goal", [:visitors, :events], {100, 1})
-      |> transform_keys(%{
-        goal: :name,
-        visitors: :unique_conversions,
-        events: :total_conversions
-      })
+      site
+      |> Stats.breakdown(query, "event:goal", metrics, {100, 1})
+      |> transform_keys(%{goal: :name, visitors: :unique_conversions, events: :total_conversions})
       |> Enum.map(fn goal ->
         goal
         |> Map.put(:prop_names, CustomProps.props_for_goal(site, query))
         |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal[:unique_conversions]))
+        |> Enum.map(&format_revenue_metric/1)
+        |> Map.new()
       end)
 
     if params["csv"] do
-      conversions |> to_csv([:name, :unique_conversions, :total_conversions])
+      to_csv(conversions, [:name, :unique_conversions, :total_conversions])
     else
       json(conn, conversions)
+    end
+  end
+
+  @revenue_metrics [:average_revenue, :total_revenue]
+  defp format_revenue_metric({metric, value}) do
+    if metric in @revenue_metrics do
+      {metric, format_money(value)}
+    else
+      {metric, value}
+    end
+  end
+
+  defp format_money(value) do
+    case value do
+      %Money{} ->
+        %{
+          short: Money.to_string!(value, format: :short, fractional_digits: 1),
+          long: Money.to_string!(value)
+        }
+
+      _any ->
+        value
     end
   end
 
@@ -1141,13 +1234,12 @@ defmodule PlausibleWeb.Api.StatsController do
     )
   end
 
-  defp transform_keys(results, keys_to_replace) do
-    Enum.map(results, fn map ->
-      Enum.map(map, fn {key, val} ->
-        {Map.get(keys_to_replace, key, key), val}
-      end)
-      |> Enum.into(%{})
-    end)
+  defp transform_keys(result, keys_to_replace) when is_map(result) do
+    for {key, val} <- result, do: {Map.get(keys_to_replace, key, key), val}, into: %{}
+  end
+
+  defp transform_keys(results, keys_to_replace) when is_list(results) do
+    Enum.map(results, &transform_keys(&1, keys_to_replace))
   end
 
   defp parse_pagination(params) do
@@ -1293,10 +1385,12 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp bad_request(conn, message) do
+  defp bad_request(conn, message, extra \\ %{}) do
+    payload = Map.merge(extra, %{error: message})
+
     conn
     |> put_status(400)
-    |> json(%{error: message})
+    |> json(payload)
     |> halt()
   end
 

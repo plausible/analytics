@@ -20,6 +20,7 @@ defmodule PlausibleWeb do
 
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
+      use Phoenix.Component
 
       import PlausibleWeb.ErrorHelpers
       import PlausibleWeb.FormHelpers
