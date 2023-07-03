@@ -217,10 +217,10 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       assert text_of_element(doc, ~s/#step-eval-0/) =~ "Entering Visitors: 0"
 
       doc = lv |> element("#step-eval-1") |> render()
-      assert text_of_element(doc, ~s/#step-eval-1/) =~ "Dropoff: 0.00%"
+      assert text_of_element(doc, ~s/#step-eval-1/) =~ "Dropoff: 0%"
 
       doc = lv |> element("#funnel-eval") |> render()
-      assert text_of_element(doc, ~s/#funnel-eval/) =~ "Last month conversion rate: 0.00%"
+      assert text_of_element(doc, ~s/#funnel-eval/) =~ "Last month conversion rate: 0%"
     end
 
     test "cancel buttons renders the funnel list", %{
