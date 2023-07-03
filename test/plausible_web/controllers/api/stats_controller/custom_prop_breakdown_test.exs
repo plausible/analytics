@@ -26,15 +26,15 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "unique_conversions" => 2,
+                 "visitors" => 2,
                  "name" => "B",
-                 "total_conversions" => 2,
+                 "events" => 2,
                  "conversion_rate" => 33.3
                },
                %{
-                 "unique_conversions" => 1,
+                 "visitors" => 1,
                  "name" => "A",
-                 "total_conversions" => 1,
+                 "events" => 1,
                  "conversion_rate" => 16.7
                }
              ]
@@ -62,15 +62,15 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "unique_conversions" => 2,
+                 "visitors" => 2,
                  "name" => "(none)",
-                 "total_conversions" => 2,
+                 "events" => 2,
                  "conversion_rate" => 33.3
                },
                %{
-                 "unique_conversions" => 1,
+                 "visitors" => 1,
                  "name" => "A",
-                 "total_conversions" => 1,
+                 "events" => 1,
                  "conversion_rate" => 16.7
                }
              ]
@@ -106,8 +106,8 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "0",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "conversion_rate" => 50.0
                }
              ]
@@ -143,8 +143,8 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "(none)",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "conversion_rate" => 50.0
                }
              ]
@@ -190,14 +190,14 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "20",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "conversion_rate" => 50.0
                },
                %{
                  "name" => "(none)",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "conversion_rate" => 25.0
                }
              ]
@@ -233,8 +233,8 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "0",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "conversion_rate" => 50.0
                }
              ]
@@ -280,14 +280,14 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "1",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "conversion_rate" => 50.0
                },
                %{
                  "name" => "0",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "conversion_rate" => 25.0
                }
              ]
@@ -331,14 +331,14 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "1",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "conversion_rate" => 50.0
                },
                %{
                  "name" => "(none)",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "conversion_rate" => 25.0
                }
              ]
@@ -389,14 +389,14 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "20",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "conversion_rate" => 40.0
                },
                %{
                  "name" => "(none)",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "conversion_rate" => 20.0
                }
              ]
@@ -440,8 +440,8 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "20",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "conversion_rate" => 50.0
                }
              ]
@@ -466,15 +466,15 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "unique_conversions" => 2,
+                 "visitors" => 2,
                  "name" => "A",
-                 "total_conversions" => 2,
+                 "pageviews" => 2,
                  "conversion_rate" => 50.0
                },
                %{
-                 "unique_conversions" => 1,
+                 "visitors" => 1,
                  "name" => "(none)",
-                 "total_conversions" => 1,
+                 "pageviews" => 1,
                  "conversion_rate" => 25.0
                }
              ]
@@ -500,9 +500,9 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
       assert json_response(conn, 200) == [
                %{
-                 "unique_conversions" => 1,
+                 "visitors" => 1,
                  "name" => "B",
-                 "total_conversions" => 1,
+                 "events" => 1,
                  "conversion_rate" => 50.0
                }
              ]
@@ -546,8 +546,8 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "A",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "conversion_rate" => 50.0
                }
              ]
@@ -591,8 +591,8 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "A",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "conversion_rate" => 50.0
                }
              ]
