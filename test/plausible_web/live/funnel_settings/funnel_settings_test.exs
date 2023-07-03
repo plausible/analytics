@@ -196,6 +196,33 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       refute element_exists?(doc, save_inactive)
     end
 
+    test "funnel gets evaluated on every select, assuming a second has passed between selections",
+         %{
+           conn: conn,
+           site: site
+         } do
+      setup_goals(site)
+      lv = get_liveview(conn, site)
+      lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
+
+      assert lv = find_live_child(lv, "funnels-form")
+
+      lv |> element("li#dropdown-step-1-option-0 a") |> render_click()
+
+      :timer.sleep(1001)
+
+      lv |> element("li#dropdown-step-2-option-0 a") |> render_click()
+
+      doc = lv |> element("#step-eval-0") |> render()
+      assert text_of_element(doc, ~s/#step-eval-0/) =~ "Entering Visitors: 0"
+
+      doc = lv |> element("#step-eval-1") |> render()
+      assert text_of_element(doc, ~s/#step-eval-1/) =~ "Dropoff: 0.00%"
+
+      doc = lv |> element("#funnel-eval") |> render()
+      assert text_of_element(doc, ~s/#funnel-eval/) =~ "Last month conversion rate: 0.00%"
+    end
+
     test "cancel buttons renders the funnel list", %{
       conn: conn,
       site: site

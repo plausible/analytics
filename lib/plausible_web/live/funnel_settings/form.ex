@@ -32,7 +32,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
        goals: goals,
        site: site,
        selections_made: Map.new(),
-       evaluation_result: nil
+       evaluation_result: nil,
+       evaluation_at: System.monotonic_time()
      )}
   end
 
@@ -215,7 +216,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def evaluation(assigns) do
     ~H"""
-    <span class="text-xs">
+    <span class="text-xs" id={"step-eval-#{@at}"}>
       <% step = Enum.at(@result.steps, @at) %>
       <span :if={step && @at == 0}>
         <span
@@ -295,44 +296,61 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   def handle_info(:evaluate_funnel, socket) do
-    {:noreply, assign(socket, evaluation_result: evaluate_funnel(socket))}
+    {:noreply, evaluate_funnel(socket)}
   end
 
-  defp evaluate_funnel(socket) do
-    if map_size(socket.assigns.selections_made) >= Funnel.min_steps() do
-      site = socket.assigns.site
+  defp evaluate_funnel(%{assigns: %{selections_made: selections_made}} = socket)
+       when map_size(selections_made) < Funnel.min_steps() do
+    socket
+  end
 
-      steps =
-        socket.assigns.selections_made
-        |> Enum.sort_by(&elem(&1, 0))
-        |> Enum.map(fn {_, goal} ->
-          %{
-            "goal_id" => goal.id,
-            "goal" => %{
-              "id" => goal.id,
-              "event_name" => goal.event_name,
-              "page_path" => goal.page_path
-            }
-          }
-        end)
-
-      definition =
-        Plausible.Funnels.ephemeral_definition(
-          site,
-          "Test funnel",
-          steps
-        )
-
-      query = Plausible.Stats.Query.from(site, %{"period" => "all"})
-
-      case Plausible.Stats.funnel(site, query, definition) do
-        {:ok, funnel} ->
-          funnel
-
-        _ ->
-          nil
-      end
+  defp evaluate_funnel(
+         %{
+           assigns: %{
+             site: site,
+             selections_made: selections_made,
+             evaluation_at: evaluation_at
+           }
+         } = socket
+       ) do
+    with true <- seconds_since_evaluation(evaluation_at) >= 1,
+         {:ok, {definition, query}} <- build_ephemeral_funnel(site, selections_made),
+         {:ok, funnel} <- Plausible.Stats.funnel(site, query, definition) do
+      assign(socket, evaluation_result: funnel, evaluation_at: System.monotonic_time())
+    else
+      _ ->
+        socket
     end
+  end
+
+  defp seconds_since_evaluation(evaluation_at) do
+    System.convert_time_unit(System.monotonic_time() - evaluation_at, :native, :second)
+  end
+
+  defp build_ephemeral_funnel(site, selections_made) do
+    steps =
+      selections_made
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.map(fn {_, goal} ->
+        %{
+          "goal_id" => goal.id,
+          "goal" => %{
+            "id" => goal.id,
+            "event_name" => goal.event_name,
+            "page_path" => goal.page_path
+          }
+        }
+      end)
+
+    definition =
+      Plausible.Funnels.ephemeral_definition(
+        site,
+        "Test funnel",
+        steps
+      )
+
+    query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+    {:ok, {definition, query}}
   end
 
   defp find_sequence_break(input) do
