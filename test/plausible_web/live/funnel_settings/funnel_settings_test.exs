@@ -164,10 +164,14 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
       assert lv = find_live_child(lv, "funnels-form")
 
+      lv
+      |> element("li#dropdown-step-1-option-0 a")
+      |> render_click()
+
       doc =
         lv
-        |> element("form")
-        |> render_change(%{funnel: %{name: "My test funnel"}})
+        |> element("li#dropdown-step-2-option-0 a")
+        |> render_click()
 
       save_inactive = ~s/form button#save.cursor-not-allowed/
       save_active = ~s/form button#save[type="submit"]/
