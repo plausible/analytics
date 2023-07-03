@@ -15,7 +15,13 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         socket
       ) do
     true = Plausible.Funnels.enabled_for?("user:#{user_id}")
-    site = Sites.get_for_user!(user_id, domain, [:owner, :admin])
+
+    site =
+      if Plausible.Auth.is_super_admin?(user_id) do
+        Sites.get_by_domain(domain)
+      else
+        Sites.get_for_user!(user_id, domain, [:owner, :admin])
+      end
 
     funnels = Funnels.list(site)
     goal_count = Goals.count(site)
