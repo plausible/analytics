@@ -56,7 +56,7 @@ export default function FunnelTooltip(palette, funnel) {
               </td>
               <td class="text-right text-sm">
                 <span>
-                  ${dataIndex == 0 ? formatPercentage(funnel.entering_visitors_percentage) : formatPercentage(currentStep.conversion_rate_step)}%
+                  ${dataIndex == 0 ? funnel.entering_visitors_percentage : currentStep.conversion_rate_step}%
                 </span>
               </td>
             </tr>
@@ -73,7 +73,7 @@ export default function FunnelTooltip(palette, funnel) {
                 <span>${dataIndex == 0 ? funnel.never_entering_visitors.toLocaleString() : currentStep.dropoff.toLocaleString()}</span>
               </td >
               <td class="text-right text-sm">
-                <span>${dataIndex == 0 ? formatPercentage(funnel.never_entering_visitors_percentage) : formatPercentage(currentStep.dropoff_percentage)}%</span>
+                <span>${dataIndex == 0 ? funnel.never_entering_visitors_percentage : currentStep.dropoff_percentage}%</span>
               </td>
             </tr >
           </table >
@@ -82,9 +82,4 @@ export default function FunnelTooltip(palette, funnel) {
     }
     tooltipEl.style.display = null
   }
-}
-
-const formatPercentage = (value) => {
-  const decimalNumber = parseFloat(value);
-  return decimalNumber % 1 === 0 ? decimalNumber.toFixed(0) : value;
 }

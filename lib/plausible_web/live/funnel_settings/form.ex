@@ -36,14 +36,16 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
        form: to_form(Plausible.Funnels.create_changeset(site, "", [])),
        goals: goals,
        site: site,
-       selections_made: Map.new()
+       selections_made: Map.new(),
+       evaluation_result: nil,
+       evaluation_at: System.monotonic_time()
      )}
   end
 
   def render(assigns) do
     ~H"""
-    <div id="funnel-form" class="grid grid-cols-4 gap-6 mt-6">
-      <div class="col-span-4 sm:col-span-2">
+    <div id="funnel-form" class="grid grid-cols-2 gap-6 mt-6">
+      <div class="col-span-2 sm:col-span-2">
         <.form
           :let={f}
           for={@form}
@@ -63,7 +65,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             ) %>
 
             <div :for={step_idx <- @step_ids} class="flex">
-              <div class="w-full flex-1">
+              <div class="w-2/5 flex-1">
                 <.live_component
                   submit_name="funnel[steps][][goal_id]"
                   module={PlausibleWeb.Live.FunnelSettings.ComboBox}
@@ -72,7 +74,17 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 />
               </div>
 
-              <.remove_step_button :if={length(@step_ids) > Funnel.min_steps()} step_idx={step_idx} />
+              <div class="w-min inline-flex items-center align-middle">
+                <.remove_step_button :if={length(@step_ids) > Funnel.min_steps()} step_idx={step_idx} />
+              </div>
+
+              <div class="w-2/5 inline-flex items-center ml-2 mb-3 text-gray-500 dark:text-gray-400">
+                <.evaluation
+                  :if={@evaluation_result}
+                  result={@evaluation_result}
+                  at={Enum.find_index(@step_ids, &(&1 == step_idx))}
+                />
+              </div>
             </div>
 
             <.add_step_button :if={
@@ -81,7 +93,19 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
             } />
 
             <div class="mt-6">
-              <%= if has_steps_errors?(f) do %>
+              <p id="funnel-eval" class="text-gray-500 dark:text-gray-400 text-sm mt-2 mb-2">
+                <%= if @evaluation_result do %>
+                  Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
+                <% else %>
+                  <span class="text-red-600 text-sm">
+                    Choose minimum <%= Funnel.min_steps() %> steps to evaluate funnel.
+                  </span>
+                <% end %>
+              </p>
+            </div>
+
+            <div class="mt-6">
+              <%= if has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or length(@step_ids) > map_size(@selections_made) do %>
                 <.submit_button_inactive />
               <% else %>
                 <.submit_button />
@@ -108,7 +132,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         name={@field.name}
         value={@field.value}
         phx-debounce="300"
-        class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-full rounded-md sm:text-sm border-gray-300 dark:border-gray-500"
+        class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500"
       />
 
       <.error :for={{msg, _} <- @field.errors}>Funnel name <%= msg %></.error>
@@ -128,7 +152,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def remove_step_button(assigns) do
     ~H"""
-    <div class="inline-flex items-center ml-2 mb-2 text-red-600">
+    <div class="inline-flex items-center ml-2 mb-4 text-red-600">
       <svg
         id={"remove-step-#{@step_idx}"}
         class="feather feather-sm cursor-pointer"
@@ -192,6 +216,28 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     """
   end
 
+  attr(:at, :integer, required: true)
+  attr(:result, :map, required: true)
+
+  def evaluation(assigns) do
+    ~H"""
+    <span class="text-xs" id={"step-eval-#{@at}"}>
+      <% step = Enum.at(@result.steps, @at) %>
+      <span :if={step && @at == 0}>
+        <span
+          class="border-dotted border-b border-gray-400 "
+          tooltip="Sample calculation for last month"
+        >
+          Entering Visitors: <strong><%= @result.entering_visitors %></strong>
+        </span>
+      </span>
+      <span :if={step && @at > 0}>
+        Dropoff: <strong><%= Map.get(step, :dropoff_percentage) %>%</strong>
+      </span>
+    </span>
+    """
+  end
+
   def handle_event("add-step", _value, socket) do
     step_ids = socket.assigns.step_ids
 
@@ -208,6 +254,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     idx = String.to_integer(idx)
     step_ids = List.delete(socket.assigns.step_ids, idx)
     selections_made = drop_selection(socket.assigns.selections_made, idx)
+    send(self(), :evaluate_funnel)
 
     {:noreply, assign(socket, step_ids: step_ids, selections_made: selections_made)}
   end
@@ -245,10 +292,70 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   def handle_info({:selection_made, %{submit_value: goal_id, by: combo_box}}, socket) do
     selections_made = store_selection(socket.assigns, combo_box, goal_id)
 
+    send(self(), :evaluate_funnel)
+
     {:noreply,
      assign(socket,
        selections_made: selections_made
      )}
+  end
+
+  def handle_info(:evaluate_funnel, socket) do
+    {:noreply, evaluate_funnel(socket)}
+  end
+
+  defp evaluate_funnel(%{assigns: %{selections_made: selections_made}} = socket)
+       when map_size(selections_made) < Funnel.min_steps() do
+    socket
+  end
+
+  defp evaluate_funnel(
+         %{
+           assigns: %{
+             site: site,
+             selections_made: selections_made,
+             evaluation_at: evaluation_at
+           }
+         } = socket
+       ) do
+    with true <- seconds_since_evaluation(evaluation_at) >= 1,
+         {:ok, {definition, query}} <- build_ephemeral_funnel(site, selections_made),
+         {:ok, funnel} <- Plausible.Stats.funnel(site, query, definition) do
+      assign(socket, evaluation_result: funnel, evaluation_at: System.monotonic_time())
+    else
+      _ ->
+        socket
+    end
+  end
+
+  defp seconds_since_evaluation(evaluation_at) do
+    System.convert_time_unit(System.monotonic_time() - evaluation_at, :native, :second)
+  end
+
+  defp build_ephemeral_funnel(site, selections_made) do
+    steps =
+      selections_made
+      |> Enum.sort_by(&elem(&1, 0))
+      |> Enum.map(fn {_, goal} ->
+        %{
+          "goal_id" => goal.id,
+          "goal" => %{
+            "id" => goal.id,
+            "event_name" => goal.event_name,
+            "page_path" => goal.page_path
+          }
+        }
+      end)
+
+    definition =
+      Plausible.Funnels.ephemeral_definition(
+        site,
+        "Test funnel",
+        steps
+      )
+
+    query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+    {:ok, {definition, query}}
   end
 
   defp find_sequence_break(input) do
