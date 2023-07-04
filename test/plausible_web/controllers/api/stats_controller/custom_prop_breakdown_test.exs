@@ -1,6 +1,49 @@
 defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   use PlausibleWeb.ConnCase
 
+  describe "GET /api/stats/:domain/custom-prop-values/:prop_key" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "returns breakdown by a custom property", %{conn: conn, site: site} do
+      prop_key = "parim_s6ber"
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, user_id: 123, "meta.key": [prop_key], "meta.value": ["Lotte"]),
+        build(:pageview, user_id: 123, "meta.key": [prop_key], "meta.value": ["Lotte"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["Sipsik"])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 2,
+                 "name" => "K2sna Kalle",
+                 "pageviews" => 2,
+                 "percentage" => 50.0
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "Lotte",
+                 "pageviews" => 2,
+                 "percentage" => 25.0
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "Sipsik",
+                 "pageviews" => 1,
+                 "percentage" => 25.0
+               }
+             ]
+    end
+  end
+
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - with goal filter" do
     setup [:create_user, :log_in, :create_new_site]
 

@@ -1169,19 +1169,22 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{:visitors => %{value: total_unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
-    prop_key = "event:props:" <> params["prop_key"]
+    prefixed_prop = "event:props:" <> params["prop_key"]
+
     metrics =
       case query.filters["event:goal"] do
         {:is, {:event, _}} ->
           [:visitors, :events]
+
         _ ->
           [:visitors, :pageviews]
       end
 
     props =
-      Stats.breakdown(site, query, prop_key, metrics, pagination)
+      Stats.breakdown(site, query, prefixed_prop, metrics, pagination)
       |> transform_keys(%{params["prop_key"] => :name})
       |> maybe_add_cr_a(total_unique_visitors, query)
+      |> maybe_add_percentages(query)
 
     json(conn, props)
   end
@@ -1291,11 +1294,14 @@ defmodule PlausibleWeb.Api.StatsController do
       stat_list
     else
       total = Enum.reduce(stat_list, 0, fn %{visitors: count}, total -> total + count end)
-
-      Enum.map(stat_list, fn stat ->
-        Map.put(stat, :percentage, round(stat[:visitors] / total * 100))
-      end)
+      do_add_percentages(stat_list, total)
     end
+  end
+
+  defp do_add_percentages(stat_list, total) do
+    Enum.map(stat_list, fn stat ->
+      Map.put(stat, :percentage, round(stat[:visitors] / total * 100))
+    end)
   end
 
   # maybe_add_cr_a will add a CR metric with definition A.
