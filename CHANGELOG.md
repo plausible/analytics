@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 - Fix broken favicons when domain includes a slash
 - Fix bug when using multiple [wildcard goal filters](https://github.com/plausible/analytics/pull/3015)
 - Fix a bug where realtime would fail with imported data
+- Fix a bug where the country name was not shown when [filtering through the map](https://github.com/plausible/analytics/issues/3086)
 
 ### Changed
 - Treat page filter as entry page filter for `bounce_rate`
