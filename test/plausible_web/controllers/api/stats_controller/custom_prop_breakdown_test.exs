@@ -42,6 +42,37 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                }
              ]
     end
+
+    test "returns (none) values in the breakdown", %{conn: conn, site: site} do
+      prop_key = "parim_s6ber"
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 2,
+                 "name" => "K2sna Kalle",
+                 "pageviews" => 2,
+                 "percentage" => 66.7
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "(none)",
+                 "pageviews" => 1,
+                 "percentage" => 33.3
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - with goal filter" do
@@ -637,6 +668,126 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "visitors" => 1,
                  "events" => 1,
                  "conversion_rate" => 50.0
+               }
+             ]
+    end
+  end
+
+  describe "GET /api/stats/:domain/custom-prop-values/:prop_key - other filters" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "returns prop-breakdown with a page filter", %{conn: conn, site: site} do
+      prop_key = "parim_s6ber"
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, pathname: "/sipsik", "meta.key": [prop_key], "meta.value": ["Sipsik"])
+      ])
+
+      filters = Jason.encode!(%{page: "/sipsik"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 1,
+                 "name" => "Sipsik",
+                 "pageviews" => 1,
+                 "percentage" => 100.0
+               }
+             ]
+    end
+
+    test "returns prop-breakdown with a session-level filter", %{conn: conn, site: site} do
+      prop_key = "parim_s6ber"
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, browser: "Chrome", "meta.key": [prop_key], "meta.value": ["Sipsik"])
+      ])
+
+      filters = Jason.encode!(%{browser: "Chrome"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 1,
+                 "name" => "Sipsik",
+                 "pageviews" => 1,
+                 "percentage" => 100.0
+               }
+             ]
+    end
+
+    test "returns prop-breakdown with a prop_value filter", %{conn: conn, site: site} do
+      prop_key = "parim_s6ber"
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["Sipsik"])
+      ])
+
+      filters = Jason.encode!(%{props: %{parim_s6ber: "Sipsik"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 1,
+                 "name" => "Sipsik",
+                 "pageviews" => 1,
+                 "percentage" => 100.0
+               }
+             ]
+    end
+
+    test "returns prop-breakdown with a prop_value is_not (none) filter", %{
+      conn: conn,
+      site: site
+    } do
+      prop_key = "parim_s6ber"
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["Sipsik"]),
+        build(:pageview)
+      ])
+
+      filters = Jason.encode!(%{props: %{parim_s6ber: "!(none)"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 2,
+                 "name" => "K2sna Kalle",
+                 "pageviews" => 2,
+                 "percentage" => 66.7
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "Sipsik",
+                 "pageviews" => 1,
+                 "percentage" => 33.3
                }
              ]
     end
