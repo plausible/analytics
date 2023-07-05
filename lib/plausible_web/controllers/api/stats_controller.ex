@@ -1300,7 +1300,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp do_add_percentages(stat_list, total) do
     Enum.map(stat_list, fn stat ->
-      Map.put(stat, :percentage, round(stat[:visitors] / total * 100))
+      Map.put(stat, :percentage, Float.round(stat[:visitors] / total * 100, 1))
     end)
   end
 
