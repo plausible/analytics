@@ -20,6 +20,7 @@ if (container) {
     funnelsEnabled: container.dataset.funnelsEnabled === 'true',
     propsEnabled: container.dataset.propsEnabled === 'true',
     funnels: JSON.parse(container.dataset.funnels),
+    allowedEventProps: JSON.parse(container.dataset.allowedEventProps),
     statsBegin: container.dataset.statsBegin,
     nativeStatsBegin: container.dataset.nativeStatsBegin,
     embedded: container.dataset.embedded,

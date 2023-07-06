@@ -65,6 +65,7 @@ defmodule PlausibleWeb.StatsController do
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
           funnels: Plausible.Funnels.list(site),
+          allowed_event_props: site.allowed_event_props,
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),

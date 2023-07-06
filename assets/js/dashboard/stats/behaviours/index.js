@@ -5,6 +5,7 @@ import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
 import Conversions from './conversions'
+import Properties from './props'
 import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
 
@@ -158,7 +159,9 @@ export default function Behaviours(props) {
   }
 
   function renderProps() {
-    if (adminAccess) {
+    if (site.allowedEventProps && site.allowedEventProps.length > 0) {
+      return <Properties site={site} query={props.query} allowedEventProps={site.allowedEventProps}/>
+    } else if (adminAccess) {
       return (
         <FeatureSetupNotice
           site={site}
@@ -216,7 +219,7 @@ export default function Behaviours(props) {
     if (site.funnelsEnabled && !isRealtime() && site.flags.funnels) {
       enabledModes.push(FUNNELS)
     }
-    if (site.propsEnabled && !isRealtime() && site.flags.props) {
+    if (site.propsEnabled && site.flags.props) {
       enabledModes.push(PROPS)
     }
     return enabledModes
