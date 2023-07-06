@@ -95,7 +95,7 @@ export default function ListReport(props) {
       }
       props.fetchData()
         .then((res) => setState({loading: false, list: res}))
-    }, [props.query])
+    }, [props.keyLabel, props.query])
 
   const onVisible = () => { setVisible(true) }
 
@@ -115,7 +115,7 @@ export default function ListReport(props) {
     }
 
     return () => { document.removeEventListener('tick', fetchData) }
-  }, [props.query, visible]);
+  }, [props.keyLabel, props.query, visible]);
 
   function renderReport() {
     if (state.list && state.list.length > 0) {
