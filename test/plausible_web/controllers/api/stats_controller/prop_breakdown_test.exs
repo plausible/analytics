@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Api.StatsController.PropBreakdownTest do
   use PlausibleWeb.ConnCase
 
+  # credo:disable-for-next-line
   # TODO: Remove this file once the new Properties feature is live.
 
   # All tests in this file were copied into `custom_prop_breakdown_test.exs`
