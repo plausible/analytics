@@ -148,7 +148,7 @@ defmodule PlausibleWeb.Api.StatsController do
     Enum.map(timeseries, fn row ->
       case row[metric] do
         nil -> 0
-        %Money{} = money -> format_money(money)
+        %Money{} = money -> Decimal.to_float(money.amount)
         value -> value
       end
     end)
@@ -1158,8 +1158,7 @@ defmodule PlausibleWeb.Api.StatsController do
       %Money{} ->
         %{
           short: Money.to_string!(value, format: :short, fractional_digits: 1),
-          long: Money.to_string!(value),
-          amount: Decimal.to_float(value.amount)
+          long: Money.to_string!(value)
         }
 
       _any ->

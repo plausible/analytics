@@ -85,7 +85,7 @@ const buildMainPlotDataset = function(plot, presentIndex) {
   }]
 }
 
-export const buildDataSet = (plot, comparisonPlot, present_index, ctx, metric) => {
+export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) => {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   var prev_gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
@@ -93,21 +93,12 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, metric) =
   prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.075)');
   prev_gradient.addColorStop(1, 'rgba(101,116,205, 0)');
 
-  const label = METRIC_LABELS[metric]
   const defaultOptions = { label, borderWidth: 3, pointBorderColor: "transparent", pointHoverRadius: 4, backgroundColor: gradient, fill: true }
 
-  let mappedPlot = [...plot]
-  let mappedComparisonPlot = comparisonPlot && [...comparisonPlot]
-
-  if (['average_revenue', 'total_revenue'].includes(metric)) {
-    mappedPlot = mappedPlot.map(({ amount }) => amount)
-    mappedComparisonPlot = mappedComparisonPlot && mappedComparisonPlot.map(({ amount }) => amount)
-  }
-
   const dataset = [
-    ...buildMainPlotDataset(mappedPlot, present_index),
-    ...buildDashedDataset(mappedPlot, present_index),
-    ...buildComparisonDataset(mappedComparisonPlot)
+    ...buildMainPlotDataset(plot, present_index),
+    ...buildDashedDataset(plot, present_index),
+    ...buildComparisonDataset(comparisonPlot)
   ]
 
   return dataset.map((item) => Object.assign(item, defaultOptions))

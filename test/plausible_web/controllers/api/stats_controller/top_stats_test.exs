@@ -724,12 +724,12 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$1,659.50", "short" => "$1.7K", "amount" => 1659.5}
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"}
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$3,319.00", "short" => "$3.3K", "amount" => 3319.0}
+               "value" => %{"long" => "$3,319.00", "short" => "$3.3K"}
              } in top_stats
     end
 
@@ -780,12 +780,12 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{
                "name" => "Average revenue",
-               "value" => %{"long" => "$1,659.50", "short" => "$1.7K", "amount" => 1659.5}
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"}
              } in top_stats
 
       assert %{
                "name" => "Total revenue",
-               "value" => %{"long" => "$6,638.00", "short" => "$6.6K", "amount" => 6638.0}
+               "value" => %{"long" => "$6,638.00", "short" => "$6.6K"}
              } in top_stats
     end
 
