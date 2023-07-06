@@ -119,7 +119,7 @@ export default class SearchTerms extends React.Component {
         <React.Fragment>
           <h3 className="font-bold dark:text-gray-100">Search Terms</h3>
           { this.renderList() }
-          <MoreLink site={this.props.site} list={this.state.searchTerms} endpoint="referrers/Google" />
+          <MoreLink site={this.props.site} list={this.state.searchTerms} endpoint="referrers/Google" className="w-full pb-4 absolute bottom-0 left-0"/>
         </React.Fragment>
       )
     }
@@ -127,9 +127,7 @@ export default class SearchTerms extends React.Component {
 
   render() {
     return (
-      <div
-        className="stats-item flex flex-col relative bg-white dark:bg-gray-825 shadow-xl rounded p-4 mt-6 w-full"
-      >
+      <div>
         { this.state.loading && <div className="loading mt-44 mx-auto"><div></div></div> }
         <FadeIn show={!this.state.loading} className="flex-grow">
           <LazyLoader onVisible={this.onVisible}>

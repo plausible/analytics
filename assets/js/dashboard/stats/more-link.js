@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom'
 
-export default function MoreLink({url, site, list, endpoint}) {
+export default function MoreLink({url, site, list, endpoint, className}) {
   if (list.length > 0) {
     return (
-      <div className="text-center w-full py-3 md:pb-3 md:pt-0 md:absolute md:bottom-0 md:left-0">
+      <div className={`w-full text-center ${className ? className : ''}`}>
         <Link
           to={url || `/${encodeURIComponent(site.domain)}/${endpoint}${window.location.search}`}
           // eslint-disable-next-line max-len
