@@ -10,6 +10,8 @@ export const METRIC_MAPPING = {
   'Total visits': 'visits',
   'Bounce rate': 'bounce_rate',
   'Unique conversions': 'conversions',
+  'Average revenue': 'average_revenue',
+  'Total revenue': 'total_revenue',
 }
 
 export const METRIC_LABELS = {
@@ -20,6 +22,8 @@ export const METRIC_LABELS = {
   'bounce_rate': 'Bounce Rate',
   'visit_duration': 'Visit Duration',
   'conversions': 'Converted Visitors',
+  'average_revenue': 'Average Revenue',
+  'total_revenue': 'Total Revenue',
 }
 
 export const METRIC_FORMATTER = {
@@ -30,6 +34,8 @@ export const METRIC_FORMATTER = {
   'bounce_rate': (number) => (`${number}%`),
   'visit_duration': durationFormatter,
   'conversions': numberFormatter,
+  'total_revenue': numberFormatter,
+  'average_revenue': numberFormatter,
 }
 
 export const LoadingState = {
@@ -79,7 +85,7 @@ const buildMainPlotDataset = function(plot, presentIndex) {
   }]
 }
 
-export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) => {
+export const buildDataSet = (plot, comparisonPlot, present_index, ctx, metric) => {
   var gradient = ctx.createLinearGradient(0, 0, 0, 300);
   var prev_gradient = ctx.createLinearGradient(0, 0, 0, 300);
   gradient.addColorStop(0, 'rgba(101,116,205, 0.2)');
@@ -87,12 +93,21 @@ export const buildDataSet = (plot, comparisonPlot, present_index, ctx, label) =>
   prev_gradient.addColorStop(0, 'rgba(101,116,205, 0.075)');
   prev_gradient.addColorStop(1, 'rgba(101,116,205, 0)');
 
+  const label = METRIC_LABELS[metric]
   const defaultOptions = { label, borderWidth: 3, pointBorderColor: "transparent", pointHoverRadius: 4, backgroundColor: gradient, fill: true }
 
+  let mappedPlot = [...plot]
+  let mappedComparisonPlot = comparisonPlot && [...comparisonPlot]
+
+  if (['average_revenue', 'total_revenue'].includes(metric)) {
+    mappedPlot = mappedPlot.map(({ amount }) => amount)
+    mappedComparisonPlot = mappedComparisonPlot && mappedComparisonPlot.map(({ amount }) => amount)
+  }
+
   const dataset = [
-    ...buildMainPlotDataset(plot, present_index),
-    ...buildDashedDataset(plot, present_index),
-    ...buildComparisonDataset(comparisonPlot)
+    ...buildMainPlotDataset(mappedPlot, present_index),
+    ...buildDashedDataset(mappedPlot, present_index),
+    ...buildComparisonDataset(mappedComparisonPlot)
   ]
 
   return dataset.map((item) => Object.assign(item, defaultOptions))
