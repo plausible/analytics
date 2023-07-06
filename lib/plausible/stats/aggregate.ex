@@ -13,14 +13,9 @@ defmodule Plausible.Stats.Aggregate do
     :total_revenue
   ]
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
-  @revenue_metrics [:average_revenue, :total_revenue]
 
   def aggregate(site, query, metrics) do
-    # Aggregating revenue data works only for same currency goals. If the query
-    # is filtered by goals with different currencies, for example, one USD and
-    # other EUR, revenue metrics are dropped.
-    currency = get_revenue_tracking_currency(site, query, metrics)
-    metrics = if currency, do: metrics, else: metrics -- @revenue_metrics
+    {currency, metrics} = get_revenue_tracking_currency(site, query, metrics)
 
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     event_task = fn -> aggregate_events(site, query, event_metrics) end
@@ -36,8 +31,8 @@ defmodule Plausible.Stats.Aggregate do
 
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
+    |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
-    |> Enum.map(&cast_revenue_metric_to_money(&1, currency))
     |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
     |> Enum.into(%{})
   end
@@ -150,37 +145,4 @@ defmodule Plausible.Stats.Aggregate do
   end
 
   defp maybe_round_value(entry), do: entry
-
-  defp get_revenue_tracking_currency(site, query, metrics) do
-    goal_filters =
-      case query.filters do
-        %{"event:goal" => {:is, {_, goal_name}}} -> [goal_name]
-        %{"event:goal" => {:member, list}} -> Enum.map(list, fn {_, goal_name} -> goal_name end)
-        _any -> []
-      end
-
-    if Enum.any?(metrics, &(&1 in @revenue_metrics)) && Enum.any?(goal_filters) do
-      revenue_goals_currencies =
-        Plausible.Repo.all(
-          from rg in assoc(site, :revenue_goals),
-            where: rg.event_name in ^goal_filters,
-            select: rg.currency,
-            distinct: true
-        )
-
-      if length(revenue_goals_currencies) == 1,
-        do: List.first(revenue_goals_currencies),
-        else: nil
-    else
-      nil
-    end
-  end
-
-  defp cast_revenue_metric_to_money({metric, value}, currency) do
-    if metric in @revenue_metrics and is_atom(currency) do
-      {metric, Money.new!(value, currency)}
-    else
-      {metric, value}
-    end
-  end
 end
