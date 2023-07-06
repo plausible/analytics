@@ -25,7 +25,7 @@ defmodule Plausible.Stats.Util do
 
   @revenue_metrics [:average_revenue, :total_revenue]
 
-  @spec get_revenue_tracking_currency(%Plausible.Site{}, %Plausible.Stats.Query{}, [atom()]) ::
+  @spec get_revenue_tracking_currency(Plausible.Site.t(), Plausible.Stats.Query.t(), [atom()]) ::
           {atom() | nil, [atom()]}
   @doc """
   Returns the common currency for the goal filters in a query. If there are no
