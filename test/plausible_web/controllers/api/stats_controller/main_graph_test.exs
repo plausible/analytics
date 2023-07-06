@@ -929,4 +929,168 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert 0 == Enum.sum(comparison_plot)
     end
   end
+
+  describe "GET /api/stats/main-graph - total_revenue plot" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "plots total_revenue for a month", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("19.90"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-05 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.31"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("20.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=total_revenue&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert plot == [
+               %{"amount" => 13.29, "long" => "$13.29", "short" => "$13.3"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 19.9, "long" => "$19.90", "short" => "$19.9"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 30.31, "long" => "$30.31", "short" => "$30.3"}
+             ]
+    end
+  end
+
+  describe "GET /api/stats/main-graph - average_revenue plot" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "plots total_revenue for a month", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("50.50"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("19.90"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-05 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.31"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("20.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=average_revenue&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert plot == [
+               %{"amount" => 31.895, "long" => "$31.90", "short" => "$31.9"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 19.9, "long" => "$19.90", "short" => "$19.9"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 0.0, "long" => "$0.00", "short" => "$0.0"},
+               %{"amount" => 15.155, "long" => "$15.16", "short" => "$15.2"}
+             ]
+    end
+  end
 end
