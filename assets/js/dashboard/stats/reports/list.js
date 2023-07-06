@@ -85,6 +85,7 @@ export default function ListReport(props) {
   const [state, setState] = useState({loading: true, list: null})
   const [visible, setVisible] = useState(false)
   const metrics = props.metrics
+  const colMinWidth = props.colMinWidth || COL_MIN_WIDTH
 
   const isRealtime = props.query.period === 'realtime'
   const goalFilterApplied = !!props.query.filters.goal
@@ -138,7 +139,7 @@ export default function ListReport(props) {
 
   function renderReportHeader() {
     const metricLabels = metrics.map((metric) => {
-      return (<span key={metric.name} className="text-right" style={{minWidth: COL_MIN_WIDTH}}>{ metricLabelFor(metric, props.query) }</span>)
+      return (<span key={metric.name} className="text-right" style={{minWidth: colMinWidth}}>{ metricLabelFor(metric, props.query) }</span>)
     })
     
     return (
@@ -216,7 +217,7 @@ export default function ListReport(props) {
   function renderMetricValuesFor(listItem) {
     return metrics.map((metric) => {
       return (
-        <div key={`${listItem.name}__${metric.name}`} style={{width: COL_MIN_WIDTH, minWidth: COL_MIN_WIDTH}} className="text-right">
+        <div key={`${listItem.name}__${metric.name}`} style={{width: colMinWidth, minWidth: colMinWidth}} className="text-right">
           <span className="font-medium text-sm dark:text-gray-200 text-right">
             { displayMetricValue(listItem[metric.name], metric) }
           </span>

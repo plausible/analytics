@@ -57,6 +57,7 @@ export default function Properties(props) {
         metrics={metrics()}
         query={query}
         color="bg-gray-200"
+        colMinWidth={90}
       />
     )
   }
