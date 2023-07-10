@@ -163,8 +163,8 @@ export default class Referrers extends React.Component {
 
   render() {
     return (
-      <div>
-        <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
+      <div className="flex flex-col flex-grow">
+        <LazyLoader onVisible={this.onVisible}>
           <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
           {this.state.loading && <div className="mx-auto loading mt-44"><div></div></div>}
           <FadeIn show={!this.state.loading}>

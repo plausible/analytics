@@ -46,6 +46,7 @@
     "react-dom": "^16.13.1",
     "react-flatpickr": "3.10.5",
     "react-flip-move": "^3.0.4",
+    "react-intersection-observer": "^9.5.2",
     "react-popper": "^2.3.0",
     "react-router-dom": "^5.2.0",
     "react-transition-group": "^4.4.2",

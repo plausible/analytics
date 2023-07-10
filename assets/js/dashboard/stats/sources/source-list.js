@@ -116,8 +116,8 @@ class AllSources extends React.Component {
 
   render() {
     return (
-      <div>
-        <LazyLoader className="flex flex-col flex-grow" onVisible={this.onVisible}>
+      <div className="flex flex-col flex-grow">
+        <LazyLoader onVisible={this.onVisible}>
           <div id="sources" className="flex justify-between w-full">
             <h3 className="font-bold dark:text-gray-100">Top Sources</h3>
             {this.props.renderTabs()}

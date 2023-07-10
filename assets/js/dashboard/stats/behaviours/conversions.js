@@ -40,7 +40,7 @@ export default class Conversions extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.query !== prevProps.query) {
-      const height = this.htmlNode.current.element.offsetHeight
+      const height = this.htmlNode.current.offsetHeight
       this.setState({ loading: true, goals: null, prevHeight: height })
       this.fetchConversions()
     }
@@ -108,9 +108,11 @@ export default class Conversions extends React.Component {
 
   renderConversions() {
     return (
-      <LazyLoader ref={this.htmlNode} style={{ minHeight: '132px', height: this.state.prevHeight ?? 'auto' }} onVisible={this.onVisible}>
-        {this.renderInner()}
-      </LazyLoader>
+      <div ref={this.htmlNode} style={{ minHeight: '132px', height: this.state.prevHeight ?? 'auto' }} >
+        <LazyLoader onVisible={this.onVisible}>
+          {this.renderInner()}
+        </LazyLoader>
+      </div>
     )
   }
 
