@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Plugs.NoRobotsTest do
     conn = conn(:get, "/") |> NoRobots.call()
     assert get_resp_header(conn, "x-robots-tag") == ["noindex, nofollow"]
     assert get_resp_header(conn, "x-plausible-forbidden-reason") == []
+    assert conn.private.robots == "noindex, nofollow"
 
     refute conn.halted
     refute conn.status
@@ -20,6 +21,7 @@ defmodule PlausibleWeb.Plugs.NoRobotsTest do
     conn = conn(:get, "/") |> put_req_header("user-agent", @sample_non_robot) |> NoRobots.call()
     assert get_resp_header(conn, "x-robots-tag") == ["noindex, nofollow"]
     assert get_resp_header(conn, "x-plausible-forbidden-reason") == []
+    assert conn.private.robots == "noindex, nofollow"
 
     refute conn.halted
     refute conn.status
@@ -31,9 +33,36 @@ defmodule PlausibleWeb.Plugs.NoRobotsTest do
     for _ <- [:cache_commit, :cache_ok] do
       assert get_resp_header(conn, "x-robots-tag") == ["noindex, nofollow"]
       assert get_resp_header(conn, "x-plausible-forbidden-reason") == ["robot"]
+      assert conn.private.robots == "noindex, nofollow"
 
       assert conn.halted
       assert conn.status == 403
     end
+  end
+
+  test "writes index, nofollow for plausible.io live demo" do
+    conn =
+      conn(:get, "/plausible.io")
+      |> put_req_header("user-agent", @sample_non_robot)
+      |> NoRobots.call()
+
+    assert get_resp_header(conn, "x-robots-tag") == ["index, nofollow"]
+    assert get_resp_header(conn, "x-plausible-forbidden-reason") == []
+
+    refute conn.halted
+    refute conn.status
+  end
+
+  test "writes index, nofollow for plausible.io live demo - even when accessed by bots" do
+    conn =
+      conn(:get, "/plausible.io")
+      |> put_req_header("user-agent", @sample_bot)
+      |> NoRobots.call()
+
+    assert get_resp_header(conn, "x-robots-tag") == ["index, nofollow"]
+    assert get_resp_header(conn, "x-plausible-forbidden-reason") == []
+
+    refute conn.halted
+    refute conn.status
   end
 end
