@@ -270,7 +270,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
 
       refute Repo.exists?(
-               from(i in Plausible.Auth.Invitation, where: i.email == "jane@example.com")
+               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
              )
     end
 
@@ -291,7 +291,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
 
       assert Repo.exists?(
-               from(i in Plausible.Auth.Invitation, where: i.email == "jane@example.com")
+               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
              )
     end
 
@@ -322,7 +322,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       delete(my_conn, remove_invitation_path)
 
       assert Repo.exists?(
-               from(i in Plausible.Auth.Invitation, where: i.email == "jane@example.com")
+               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
              )
     end
   end
