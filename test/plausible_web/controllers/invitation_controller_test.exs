@@ -17,12 +17,41 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
           role: :admin
         )
 
-      post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+      conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
+               "You now have access to #{site.domain}"
+
+      assert redirected_to(conn) == "/#{site.domain}"
 
       refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
 
       membership = Repo.get_by(Plausible.Site.Membership, user_id: user.id, site_id: site.id)
       assert membership.role == :admin
+    end
+
+    test "does not crash if clicked for the 2nd time in another tab", %{conn: conn, user: user} do
+      site = insert(:site)
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: user.email,
+          role: :admin
+        )
+
+      c1 = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+      assert redirected_to(c1) == "/#{site.domain}"
+
+      assert Phoenix.Flash.get(c1.assigns.flash, :success) ==
+               "You now have access to #{site.domain}"
+
+      c2 = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+      assert redirected_to(c2) == "/sites"
+
+      assert Phoenix.Flash.get(c2.assigns.flash, :error) ==
+               "Invitation missing or already accepted"
     end
 
     test "notifies the original inviter", %{conn: conn, user: user} do
@@ -241,7 +270,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
 
       refute Repo.exists?(
-               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
+               from(i in Plausible.Auth.Invitation, where: i.email == "jane@example.com")
              )
     end
 
@@ -262,7 +291,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
 
       assert Repo.exists?(
-               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
+               from(i in Plausible.Auth.Invitation, where: i.email == "jane@example.com")
              )
     end
 
@@ -293,7 +322,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       delete(my_conn, remove_invitation_path)
 
       assert Repo.exists?(
-               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
+               from(i in Plausible.Auth.Invitation, where: i.email == "jane@example.com")
              )
     end
   end
