@@ -20,6 +20,21 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
 
       assert json_response(conn, 200) == "READY"
     end
+
+    test "is WAITING when unauthenticated", %{user: user} do
+      site = insert(:site, members: [user])
+      Plausible.TestUtils.create_pageviews([%{site: site}])
+
+      conn = get(build_conn(), "/api/#{site.domain}/status")
+
+      assert json_response(conn, 200) == "WAITING"
+    end
+
+    test "is WAITING when non-existing site", %{conn: conn} do
+      conn = get(conn, "/api/example.com/status")
+
+      assert json_response(conn, 200) == "WAITING"
+    end
   end
 
   describe "GET /api/sites" do
