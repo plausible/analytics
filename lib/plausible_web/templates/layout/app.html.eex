@@ -8,6 +8,7 @@
     <%= if Plausible.Funnels.enabled_for?(@conn.assigns[:current_user]) do %>
     <meta name="csrf-token" content="<%= Plug.CSRFProtection.get_csrf_token() %>" />
     <meta name="websocket-url" content="<%= websocket_url() %>" />
+    <meta name="robots" content="<%= @conn.private.robots %>" />
     <% end %>
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">
     <link rel="apple-touch-icon" href="/images/icon/apple-touch-icon.png">
