@@ -1,4 +1,4 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useState } from 'react';
 
 import * as storage from '../../util/storage'
 import * as url from '../../util/url'
@@ -76,37 +76,33 @@ function UTMSources(props) {
   )
 }
 
-export default class SourceList extends React.Component {
-  constructor(props) {
-    super(props)
-    this.tabKey = 'sourceTab__' + props.site.domain
-    const storedTab = storage.getItem(this.tabKey)
-    this.state = {
-      tab: storedTab || 'all'
-    }
-  }
+export default function SourceList(props) {
+  const {site, query} = props
+  const tabKey = 'sourceTab__' + props.site.domain
+  const storedTab = storage.getItem(tabKey)
+  const [currentTab, setCurrentTab] = useState(storedTab || 'all')
 
-  setTab(tab) {
+  function setTab(tab) {
     return () => {
-      storage.setItem(this.tabKey, tab)
-      this.setState({tab})
+      storage.setItem(tabKey, tab)
+      setCurrentTab(tab)
     }
   }
 
-  renderTabs() {
+  function renderTabs() {
     const activeClass = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
     const defaultClass = 'hover:text-indigo-600 cursor-pointer truncate text-left'
     const dropdownOptions = Object.keys(UTM_TAGS)
-    let buttonText = UTM_TAGS[this.state.tab] ? UTM_TAGS[this.state.tab].label : 'Campaigns'
+    let buttonText = UTM_TAGS[currentTab] ? UTM_TAGS[currentTab].label : 'Campaigns'
 
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-        <div className={this.state.tab === 'all' ? activeClass : defaultClass} onClick={this.setTab('all')}>All</div>
+        <div className={currentTab === 'all' ? activeClass : defaultClass} onClick={setTab('all')}>All</div>
 
         <Menu as="div" className="relative inline-block text-left">
           <div>
             <Menu.Button className="inline-flex justify-between focus:outline-none">
-              <span className={this.state.tab.startsWith('utm_') ? activeClass : defaultClass}>{buttonText}</span>
+              <span className={currentTab.startsWith('utm_') ? activeClass : defaultClass}>{buttonText}</span>
               <ChevronDownIcon className="-mr-1 ml-1 h-4 w-4" aria-hidden="true" />
             </Menu.Button>
           </div>
@@ -127,11 +123,11 @@ export default class SourceList extends React.Component {
                     <Menu.Item key={option}>
                       {({ active }) => (
                         <span
-                          onClick={this.setTab(option)}
+                          onClick={setTab(option)}
                           className={classNames(
                             active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
                             'block px-4 py-2 text-sm',
-                            this.state.tab === option ? 'font-bold' : ''
+                            currentTab === option ? 'font-bold' : ''
                           )}
                         >
                           {UTM_TAGS[option].label}
@@ -148,27 +144,25 @@ export default class SourceList extends React.Component {
     )
   }
 
-  renderContent() {
-    if (this.state.tab === 'all') {
-      return <AllSources site={this.props.site} query={this.props.query} />
+  function renderContent() {
+    if (currentTab === 'all') {
+      return <AllSources site={site} query={query} />
     } else {
-      return <UTMSources tab={this.state.tab} site={this.props.site} query={this.props.query} />
+      return <UTMSources tab={currentTab} site={site} query={query} />
     }
   }
 
-  render() {
-    return (
-      <div>
-        {/* Header Container */}
-        <div className="w-full flex justify-between">
-          <h3 className="font-bold dark:text-gray-100">
-            Top Sources
-          </h3>
-          { this.renderTabs() }
-        </div>
-        {/* Main Contents */}
-        { this.renderContent() }
+  return (
+    <div>
+      {/* Header Container */}
+      <div className="w-full flex justify-between">
+        <h3 className="font-bold dark:text-gray-100">
+          Top Sources
+        </h3>
+        { renderTabs() }
       </div>
-    )
-  }
+      {/* Main Contents */}
+      { renderContent() }
+    </div>
+  )
 }
