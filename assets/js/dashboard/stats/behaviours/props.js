@@ -70,7 +70,7 @@ export default function Properties(props) {
     }
   }
 
-  const getFilterFor = (listItem) => { return {'props': JSON.stringify({propKey: listItem['name']})} }
+  const getFilterFor = (listItem) => { return {'props': JSON.stringify({[propKey]: listItem['name']})} }
   const comboboxValues = propKey ? [{value: propKey, label: propKey}] : []
 
   return (
