@@ -76,8 +76,8 @@ function ExternalLink({item, externalLinkDest}) {
 //     to navigate to. If this prop is given, an additional icon is rendered upon hovering
 //     the entry.
 
-//   * `renderIconFor` - a function that takes a list item and returns the
-//     HTML of an icon (such as a flag or screen size icon) for a listItem.
+//   * `renderIcon` - a function that takes a list item and returns the
+//     HTML of an icon (such as a flag, favicon, or a screen size icon) for a listItem.
 
 //   * `color` - color of the comparison bars in light-mode
 
