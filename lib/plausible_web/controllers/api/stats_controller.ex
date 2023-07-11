@@ -1171,17 +1171,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     prefixed_prop = "event:props:" <> params["prop_key"]
 
-    metrics =
-      case query.filters["event:goal"] do
-        {:is, {:event, _}} ->
-          [:visitors, :events]
-
-        _ ->
-          [:visitors, :pageviews]
-      end
-
     props =
-      Stats.breakdown(site, query, prefixed_prop, metrics, pagination)
+      Stats.breakdown(site, query, prefixed_prop, [:visitors, :events], pagination)
       |> transform_keys(%{params["prop_key"] => :name})
       |> maybe_add_cr_a(total_unique_visitors, query)
       |> maybe_add_percentages(query)

@@ -25,19 +25,19 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                %{
                  "visitors" => 2,
                  "name" => "K2sna Kalle",
-                 "pageviews" => 2,
+                 "events" => 2,
                  "percentage" => 50.0
                },
                %{
                  "visitors" => 1,
                  "name" => "Lotte",
-                 "pageviews" => 2,
+                 "events" => 2,
                  "percentage" => 25.0
                },
                %{
                  "visitors" => 1,
                  "name" => "Sipsik",
-                 "pageviews" => 1,
+                 "events" => 1,
                  "percentage" => 25.0
                }
              ]
@@ -62,13 +62,13 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                %{
                  "visitors" => 2,
                  "name" => "K2sna Kalle",
-                 "pageviews" => 2,
+                 "events" => 2,
                  "percentage" => 66.7
                },
                %{
                  "visitors" => 1,
                  "name" => "(none)",
-                 "pageviews" => 1,
+                 "events" => 1,
                  "percentage" => 33.3
                }
              ]
@@ -542,13 +542,13 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                %{
                  "visitors" => 2,
                  "name" => "A",
-                 "pageviews" => 2,
+                 "events" => 2,
                  "conversion_rate" => 50.0
                },
                %{
                  "visitors" => 1,
                  "name" => "(none)",
-                 "pageviews" => 1,
+                 "events" => 1,
                  "conversion_rate" => 25.0
                }
              ]
@@ -696,7 +696,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                %{
                  "visitors" => 1,
                  "name" => "Sipsik",
-                 "pageviews" => 1,
+                 "events" => 1,
                  "percentage" => 100.0
                }
              ]
@@ -722,7 +722,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                %{
                  "visitors" => 1,
                  "name" => "Sipsik",
-                 "pageviews" => 1,
+                 "events" => 1,
                  "percentage" => 100.0
                }
              ]
@@ -749,7 +749,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                %{
                  "visitors" => 1,
                  "name" => "Sipsik",
-                 "pageviews" => 1,
+                 "events" => 1,
                  "percentage" => 100.0
                }
              ]
@@ -780,13 +780,13 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                %{
                  "visitors" => 2,
                  "name" => "K2sna Kalle",
-                 "pageviews" => 2,
+                 "events" => 2,
                  "percentage" => 66.7
                },
                %{
                  "visitors" => 1,
                  "name" => "Sipsik",
-                 "pageviews" => 1,
+                 "events" => 1,
                  "percentage" => 33.3
                }
              ]
