@@ -133,7 +133,7 @@ defmodule Plausible.Stats.Base do
           else
             from(
               e in q,
-              inner_lateral_join: meta in "meta",
+              array_join: meta in "meta",
               as: :meta,
               where: meta.key == ^prop_name and meta.value == ^value
             )
@@ -148,7 +148,7 @@ defmodule Plausible.Stats.Base do
           else
             from(
               e in q,
-              left_lateral_join: meta in "meta",
+              left_array_join: meta in "meta",
               as: :meta,
               where:
                 (meta.key == ^prop_name and meta.value != ^value) or
@@ -161,7 +161,7 @@ defmodule Plausible.Stats.Base do
 
           from(
             e in q,
-            left_lateral_join: meta in "meta",
+            left_array_join: meta in "meta",
             as: :meta,
             where:
               (meta.key == ^prop_name and meta.value in ^values) or
@@ -174,7 +174,7 @@ defmodule Plausible.Stats.Base do
 
           from(
             e in q,
-            left_lateral_join: meta in "meta",
+            left_array_join: meta in "meta",
             as: :meta,
             where:
               (meta.key == ^prop_name and meta.value not in ^values) or
@@ -247,7 +247,7 @@ defmodule Plausible.Stats.Base do
   def apply_entry_prop_filter(sessions_q, prop_name, {:is, value}) do
     from(
       s in sessions_q,
-      inner_lateral_join: meta in "entry_meta",
+      array_join: meta in "entry_meta",
       as: :meta,
       where: meta.key == ^prop_name and meta.value == ^value
     )
@@ -263,7 +263,7 @@ defmodule Plausible.Stats.Base do
   def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, value}) do
     from(
       s in sessions_q,
-      left_lateral_join: meta in "entry_meta",
+      left_array_join: meta in "entry_meta",
       as: :meta,
       where:
         (meta.key == ^prop_name and meta.value != ^value) or
