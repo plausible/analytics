@@ -250,9 +250,9 @@ export default function ListReport(props) {
     <LazyLoader onVisible={onVisible} >
       <div className="w-full" style={{minHeight: `${MIN_HEIGHT}px`}}>
         { state.loading && renderLoading() }  
-        <FadeIn show={!state.loading} className="h-full">
+        { !state.loading && <FadeIn show={!state.loading} className="h-full">
           { renderReport() }
-        </FadeIn>
+        </FadeIn> }
       </div>
     </LazyLoader>
   )
