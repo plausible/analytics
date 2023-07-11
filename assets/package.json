@@ -52,7 +52,7 @@
     "tailwindcss": "^2.1.2",
     "terser-webpack-plugin": "^5.1.2",
     "url-search-params-polyfill": "^8.1.1",
-    "webpack": "5.38.1",
+    "webpack": "5.88.1",
     "webpack-cli": "^4.7.0"
   },
   "devDependencies": {
