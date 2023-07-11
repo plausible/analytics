@@ -90,15 +90,10 @@ export default class TopStats extends React.Component {
   }
 
   canMetricBeGraphed(stat) {
-    if (METRIC_MAPPING[stat.name] === undefined) {
-      return false
-    } else if (this.props.query.filters.goal && stat.name === 'Unique visitors') {
-      return false
-    } else if (['Average revenue', 'Total revenue'].includes(stat.name)) {
-      return Boolean(this.props.query.filters.goal)
-    } else {
-      return true
-    }
+    const isTotalUniqueVisitors = this.props.query.filters.goal && stat.name === 'Unique visitors'
+    const isKnownMetric = Object.keys(METRIC_MAPPING).includes(stat.name)
+
+    return isKnownMetric && !isTotalUniqueVisitors
   }
 
   maybeUpdateMetric(stat) {
