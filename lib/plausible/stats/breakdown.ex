@@ -337,7 +337,7 @@ defmodule Plausible.Stats.Breakdown do
       else
         from(
           e in q,
-          inner_lateral_join: meta in fragment("meta"),
+          array_join: meta in fragment("meta"),
           as: :meta
         )
       end
