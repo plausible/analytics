@@ -23,6 +23,11 @@ defmodule Plausible.Workers.SendEmailReportTest do
       )
     end
 
+    test "does not crash for deleted sites" do
+      assert :discard =
+               perform_job(SendEmailReport, %{"site_id" => 28_378_237, "interval" => "weekly"})
+    end
+
     test "calculates timezone correctly" do
       site =
         insert(:site,

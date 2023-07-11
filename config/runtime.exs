@@ -305,9 +305,14 @@ config :plausible, :google,
   reporting_api_url: "https://analyticsreporting.googleapis.com",
   max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
 
+maybe_ch_ipv6 =
+  get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
+  |> String.to_existing_atom()
+
 ch_transport_opts = [
   keepalive: true,
-  show_econnreset: true
+  show_econnreset: true,
+  inet6: maybe_ch_ipv6
 ]
 
 config :plausible, Plausible.ClickhouseRepo,

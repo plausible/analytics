@@ -21,7 +21,7 @@ clickhouse: ## Start a container with a recent version of clickhouse
 	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol:/var/lib/clickhouse clickhouse/clickhouse-server:22.9-alpine
 
 clickhouse-prod: ## Start a container with the same version of clickhouse as the one in prod
-	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:22.8.13.20-alpine
+	docker run $(CH_FLAGS) --volume=$$PWD/.clickhouse_db_vol_prod:/var/lib/clickhouse clickhouse/clickhouse-server:23.3.7.5-alpine
 
 clickhouse-stop: ## Stop and remove the clickhouse container
 	docker stop plausible_clickhouse && docker rm plausible_clickhouse

@@ -114,6 +114,7 @@ defmodule Plausible.Stats.Imported do
         group_by: field(i, ^dim),
         where: i.site_id == ^site.id,
         where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+        where: i.visitors > 0,
         select: %{}
       )
       |> select_imported_metrics(metrics)

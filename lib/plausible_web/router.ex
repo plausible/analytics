@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Router do
     plug :fetch_session
     plug :fetch_live_flash
     plug :put_secure_browser_headers
+    plug PlausibleWeb.Plugs.NoRobots
     plug PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
@@ -17,6 +18,7 @@ defmodule PlausibleWeb.Router do
   pipeline :shared_link do
     plug :accepts, ["html"]
     plug :put_secure_browser_headers
+    plug PlausibleWeb.Plugs.NoRobots
   end
 
   pipeline :csrf do
@@ -33,6 +35,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
     plug :fetch_session
     plug PlausibleWeb.AuthorizeSiteAccess
+    plug PlausibleWeb.Plugs.NoRobots
   end
 
   pipeline :public_api do
@@ -42,6 +45,7 @@ defmodule PlausibleWeb.Router do
   pipeline :flags do
     plug :accepts, ["html"]
     plug :put_secure_browser_headers
+    plug PlausibleWeb.Plugs.NoRobots
     plug :fetch_session
     plug PlausibleWeb.CRMAuthPlug
   end
@@ -50,7 +54,9 @@ defmodule PlausibleWeb.Router do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
-  use Kaffy.Routes, scope: "/crm", pipe_through: [PlausibleWeb.CRMAuthPlug]
+  use Kaffy.Routes,
+    scope: "/crm",
+    pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
 
   scope path: "/flags" do
     pipe_through :flags
@@ -59,7 +65,7 @@ defmodule PlausibleWeb.Router do
 
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
-    get "/:domain//funnels/:id", StatsController, :funnel
+    get "/:domain/funnels/:id", StatsController, :funnel
     get "/:domain/current-visitors", StatsController, :current_visitors
     get "/:domain/main-graph", StatsController, :main_graph
     get "/:domain/top-stats", StatsController, :top_stats

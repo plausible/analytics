@@ -169,14 +169,22 @@ defmodule Plausible.Stats.Funnel do
   end
 
   defp percentage(x, y) when x in [0, nil] or y in [0, nil] do
-    "0.00"
+    "0"
   end
 
   defp percentage(x, y) do
-    x
-    |> Decimal.div(y)
-    |> Decimal.mult(100)
-    |> Decimal.round(2)
-    |> Decimal.to_string()
+    result =
+      x
+      |> Decimal.div(y)
+      |> Decimal.mult(100)
+      |> Decimal.round(2)
+      |> Decimal.to_string()
+
+    case result do
+      <<compact::binary-size(1), ".00">> -> compact
+      <<compact::binary-size(2), ".00">> -> compact
+      <<compact::binary-size(3), ".00">> -> compact
+      decimal -> decimal
+    end
   end
 end

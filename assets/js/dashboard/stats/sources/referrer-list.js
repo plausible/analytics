@@ -155,7 +155,7 @@ export default class Referrers extends React.Component {
       return (
         <React.Fragment>
           {this.renderList()}
-          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={`referrers/${this.props.query.filters.source}`} />
+          <MoreLink site={this.props.site} list={this.state.referrers} endpoint={`referrers/${this.props.query.filters.source}`} className="w-full pb-4 absolute bottom-0 left-0"/>
         </React.Fragment>
       )
     }
@@ -163,9 +163,7 @@ export default class Referrers extends React.Component {
 
   render() {
     return (
-      <div
-        className="relative p-4 bg-white rounded shadow-xl stats-item flex flex-col dark:bg-gray-825 mt-6 w-full"
-      >
+      <div>
         <LazyLoader onVisible={this.onVisible} className="flex flex-col flex-grow">
           <h3 className="font-bold dark:text-gray-100">Top Referrers</h3>
           {this.state.loading && <div className="mx-auto loading mt-44"><div></div></div>}

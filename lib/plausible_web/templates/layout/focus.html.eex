@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content="A lightweight, non-intrusive alternative to Google Analytics."/>
+    <meta name="robots" content="<%= @conn.private.robots %>" />
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
@@ -26,7 +27,7 @@
 
 
     <p class="text-center text-gray-500 text-xs py-8">
-      ©<%= DateTime.utc_now().year() %> Plausible Analytics. All rights reserved.
+      © <%= DateTime.utc_now().year() %> Plausible Analytics. All rights reserved.
     </p>
 
     <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
