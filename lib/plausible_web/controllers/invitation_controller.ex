@@ -50,7 +50,7 @@ defmodule PlausibleWeb.InvitationController do
           |> put_flash(:success, "You now have access to #{invitation.site.domain}")
           |> redirect(to: "/#{URI.encode_www_form(invitation.site.domain)}")
 
-        {:error, _, _} ->
+        {:error, _operation, _value, _changes} ->
           conn
           |> put_flash(:error, "Something went wrong, please try again")
           |> redirect(to: "/sites")
