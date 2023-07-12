@@ -305,7 +305,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 0px 0px 20px;font-family:helvetica,sans-serif;" align="left">
 
   <div style="font-family: helvetica, sans-serif; font-size: 20px; font-weight: 700; color: rgb(42, 42, 42); line-height: 100%; text-align: left; overflow-wrap: break-word;">
-    <p style="line-height: 100%;"><%= PlausibleWeb.StatsView.large_number_format(@unique_visitors) %></p>
+    <p id="visitors" style="line-height: 100%;"><%= PlausibleWeb.StatsView.large_number_format(@unique_visitors) %></p>
   </div>
 
       </td>
@@ -367,7 +367,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 0px 0px 20px;font-family:helvetica,sans-serif;" align="left">
 
   <div style="font-family: helvetica, sans-serif; font-size: 20px; font-weight: 700; color: rgb(42, 42, 42); line-height: 100%; text-align: left; overflow-wrap: break-word;">
-    <p style="line-height: 100%;"><%= PlausibleWeb.StatsView.large_number_format(@pageviews) %></p>
+    <p id="pageviews" style="line-height: 100%;"><%= PlausibleWeb.StatsView.large_number_format(@pageviews) %></p>
   </div>
 
       </td>
@@ -529,7 +529,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
 </table>
 
 <%= for source <- @sources do %>
-<table style="font-family:helvetica,sans-serif;" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+<table class="referrer-name" style="font-family:helvetica,sans-serif;" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
   <tbody>
     <tr>
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 20px 0px;font-family:helvetica,sans-serif;" align="left">
@@ -569,7 +569,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
 </table>
 
 <%= for source <- @sources do %>
-<table style="font-family:helvetica,sans-serif;" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+<table class="referrer-count" style="font-family:helvetica,sans-serif;" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
   <tbody>
     <tr>
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 20px 0px;font-family:helvetica,sans-serif;" align="left">
@@ -661,7 +661,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
 </table>
 
 <%= for page <- @pages do %>
-<table style="font-family:helvetica,sans-serif;" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+<table class="page-name" style="font-family:helvetica,sans-serif;" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
   <tbody>
     <tr>
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 20px 0px;font-family:helvetica,sans-serif;" align="left">
@@ -701,7 +701,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
 </table>
 
 <%= for page <- @pages do %>
-<table style="font-family:helvetica,sans-serif;" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+<table class="page-count" style="font-family:helvetica,sans-serif;" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
   <tbody>
     <tr>
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 20px 0px;font-family:helvetica,sans-serif;" align="left">
