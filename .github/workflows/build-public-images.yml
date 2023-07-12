@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: buildjet-16vcpu-ubuntu-2204
 
     steps:
       - name: Docker meta
