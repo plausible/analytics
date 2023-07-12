@@ -25,10 +25,10 @@ function Option({isHighlighted, isDisabled, onClick, onMouseEnter, text, id}) {
 }
 function scrollTo(wrapper, id) {
   if (wrapper) {
-    const el = wrapper.querySelector('#' + id);
+    const el = wrapper.querySelector('#' + id)
 
     if (el) {
-      el.scrollIntoView({block: 'center'});
+      el.scrollIntoView({block: 'center'})
     }
   }
 }
@@ -40,12 +40,12 @@ function optionId(index) {
 export default function PlausibleCombobox(props) {
   const [options, setOptions] = useState([])
   const [loading, setLoading] = useState(false)
-  const [isOpen, setOpen] = useState(false);
-  const [input, setInput] = useState('');
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const searchRef = useRef(null);
-  const containerRef = useRef(null);
-  const listRef = useRef(null);
+  const [isOpen, setOpen] = useState(false)
+  const [input, setInput] = useState('')
+  const [highlightedIndex, setHighlightedIndex] = useState(0)
+  const searchRef = useRef(null)
+  const containerRef = useRef(null)
+  const listRef = useRef(null)
 
   const visibleOptions = [...options]
   if (props.freeChoice && input.length > 0 && options.every(option => option.value !== input)) {
@@ -144,22 +144,20 @@ export default function PlausibleCombobox(props) {
     e.stopPropagation()
     const newValues = props.values.filter((val) => val.value !== option.value)
     props.onSelect(newValues)
-    if (!searchBoxHidden) {
-      searchRef.current.focus()
-    }
+    searchRef.current.focus()
     setOpen(false)
   }
 
   const handleClick = useCallback((e) => {
-    if (containerRef.current && containerRef.current.contains(e.target)) return;
+    if (containerRef.current && containerRef.current.contains(e.target)) { return }
 
     setInput('')
     setOpen(false)
   })
 
   useEffect(() => {
-    document.addEventListener("mousedown", handleClick, false);
-    return () => { document.removeEventListener("mousedown", handleClick, false); }
+    document.addEventListener("mousedown", handleClick, false)
+    return () => { document.removeEventListener("mousedown", handleClick, false) }
   }, [])
 
   useEffect(() => {
@@ -171,19 +169,46 @@ export default function PlausibleCombobox(props) {
   const matchesFound = !loading && visibleOptions.length > 0
   const noMatchesFound = !loading && visibleOptions.length === 0
   
-  const searchBoxHidden = !!props.singleOption && props.values.length === 1
-  const searchBoxClass = classNames('border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm', {
-    'hidden': searchBoxHidden
-  })
+  const searchBoxClass = 'border-none py-1 px-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm'
 
   const containerClass = classNames('relative w-full', {
     [props.className]: !!props.className,
     'opacity-20 cursor-default pointer-events-none': props.isDisabled
   })
 
-  return (
-    <div onKeyDown={onKeyDown} ref={containerRef} className={containerClass}>
-      <div onClick={toggleOpen} className={classNames('pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500', {'border-indigo-500 ring-1 ring-indigo-500': isOpen, '': !isOpen})}>
+  function renderSingleOptionContent() {
+    const itemSelected = props.values.length === 1
+    const placeholder = itemSelected ? '' : props.placeholder
+
+    return (
+      <div className='flex items-center truncate'>
+        { itemSelected && renderSingleSelectedItem() }
+        <input
+          className={searchBoxClass}
+          ref={searchRef}
+          value={input}
+          style={{backgroundColor: "inherit"}}
+          placeholder={placeholder}
+          type="text"
+          onChange={onInput}>
+        </input>
+      </div>
+    )
+  }
+
+  function renderSingleSelectedItem() {
+    if (input === '') {
+      return (
+        <span className="dark:text-gray-300 text-sm w-0">
+          {props.values[0].label}
+        </span>
+      )
+    }
+  }
+
+  function renderMultiOptionContent() {
+    return (
+      <>
         { props.values.map((value) => {
             return (
               <div key={value.value} className="bg-indigo-100 dark:bg-indigo-600 flex justify-between w-full rounded-sm px-2 py-0.5 m-0.5 text-sm">
@@ -194,6 +219,15 @@ export default function PlausibleCombobox(props) {
           })
         }
         <input className={searchBoxClass} ref={searchRef} value={input} style={{backgroundColor: "inherit"}} placeholder={props.placeholder} type="text" onChange={onInput}></input>
+      </>
+    )
+  }
+
+  return (
+    <div onKeyDown={onKeyDown} ref={containerRef} className={containerClass}>
+      <div onClick={toggleOpen} className={classNames('pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500', {'border-indigo-500 ring-1 ring-indigo-500': isOpen, '': !isOpen})}>
+        {props.singleOption && renderSingleOptionContent()}
+        {!props.singleOption && renderMultiOptionContent()}
         <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
           {!loading && <ChevronDownIcon className="h-4 w-4 text-gray-500" />}
           {loading && <Spinner />}
@@ -242,7 +276,7 @@ export default function PlausibleCombobox(props) {
         </ul>
       </Transition>
     </div>
-  );
+  )
 }
 
 function Spinner() {
