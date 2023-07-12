@@ -66,7 +66,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       # Should find 2 visiors
       assert html_body =~
-               ~s(<span id="visitors" style="line-height: 24px; font-size: 20px;">2</span>)
+               ~s(<p id="visitors" style="line-height: 100%;">2</p>)
     end
 
     test "includes the correct stats" do
