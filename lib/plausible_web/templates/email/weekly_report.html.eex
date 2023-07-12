@@ -331,7 +331,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
           <div style="font-family: helvetica, sans-serif; font-size: 14px; font-weight: 700; color: #ff4457; line-height: 100%; text-align: left; overflow-wrap: break-word;">
             <p style="line-height: 100%;"><%= @change_visitors %></p>
           </div>
-        <% end >
+        <% end %>
 
       </td>
     </tr>
