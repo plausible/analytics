@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.4">
+    <meta name="project" content="Plausible v0.0.1">
+
+    <title>Plausible.Cldr.Number.Symbol — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-HHVY3JYD.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
+    <script src="dist/sidebar_items-3D6C76A3.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-JDI3AVDD.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+      <a href="readme.html">
+        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
+      </a>
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+      </a>
+      <div class="sidebar-projectVersion" translate="no">
+        v0.0.1
+      </div>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="icon-action display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" title="View Source" class="icon-action" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">Plausible.Cldr.Number.Symbol</span> 
+  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+
+</h1>
+
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#all_decimal_symbols/0" translate="no">all_decimal_symbols()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of all decimal symbols defined
+by the locales configured in this backend as
+a list.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#all_decimal_symbols_class/0" translate="no">all_decimal_symbols_class()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of all decimal symbols defined
+by the locales configured in this backend as
+a string.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#all_grouping_symbols/0" translate="no">all_grouping_symbols()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of all grouping symbols defined
+by the locales configured in this backend as
+a list.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#all_grouping_symbols_class/0" translate="no">all_grouping_symbols_class()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of all grouping symbols defined
+by the locales configured in this backend as
+a string.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#number_symbols_for/1" translate="no">number_symbols_for(locale \\ Plausible.Cldr.get_locale())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a map of <code class="inline">Cldr.Number.Symbol.t</code> structs of the number symbols for each
+of the number systems of a locale.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#number_symbols_for/2" translate="no">number_symbols_for(locale, number_system)</a>
+
+      </div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="all_decimal_symbols/0">
+
+  <div class="detail-header">
+    <a href="#all_decimal_symbols/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">all_decimal_symbols()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a list of all decimal symbols defined
+by the locales configured in this backend as
+a list.</p>
+  </section>
+</section>
+<section class="detail" id="all_decimal_symbols_class/0">
+
+  <div class="detail-header">
+    <a href="#all_decimal_symbols_class/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">all_decimal_symbols_class()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a list of all decimal symbols defined
+by the locales configured in this backend as
+a string.</p><p>This string can be used as a character class
+when builing a regular expression.</p>
+  </section>
+</section>
+<section class="detail" id="all_grouping_symbols/0">
+
+  <div class="detail-header">
+    <a href="#all_grouping_symbols/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">all_grouping_symbols()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a list of all grouping symbols defined
+by the locales configured in this backend as
+a list.</p>
+  </section>
+</section>
+<section class="detail" id="all_grouping_symbols_class/0">
+
+  <div class="detail-header">
+    <a href="#all_grouping_symbols_class/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">all_grouping_symbols_class()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a list of all grouping symbols defined
+by the locales configured in this backend as
+a string.</p><p>This string can be used as a character class
+when builing a regular expression.</p>
+  </section>
+</section>
+<section class="detail" id="number_symbols_for/1">
+
+    <span id="number_symbols_for/0"></span>
+
+  <div class="detail-header">
+    <a href="#number_symbols_for/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">number_symbols_for(locale \\ Plausible.Cldr.get_locale())</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> number_symbols_for(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+
+      </div>
+
+<p>Returns a map of <code class="inline">Cldr.Number.Symbol.t</code> structs of the number symbols for each
+of the number systems of a locale.</p><h2 id="number_symbols_for/1-options" class="section-heading">
+  <a href="#number_symbols_for/1-options" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">options</p>
+  </a>
+  Options
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by
+<a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
+or a <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+<a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
+is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><h2 id="number_symbols_for/1-example" class="section-heading">
+  <a href="#number_symbols_for/1-example" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">example</p>
+  </a>
+  Example:
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Symbol</span><span class="o">.</span><span class="n">number_symbols_for</span><span class="p" data-group-id="6098094292-1">(</span><span class="ss">:th</span><span class="p" data-group-id="6098094292-1">)</span><span class="w">
+</span><span class="p" data-group-id="6098094292-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6098094292-3">%{</span><span class="w">
+   </span><span class="ss">latn</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6098094292-4">%</span><span class="nc" data-group-id="6098094292-4">Cldr.Number.Symbol</span><span class="p" data-group-id="6098094292-4">{</span><span class="w">
+     </span><span class="ss">decimal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">exponential</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;E&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">group</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">infinity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;∞&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">list</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;;&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">minus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;-&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">nan</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NaN&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">per_mille</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;‰&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">percent_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">plus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;+&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">superscripting_exponent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;×&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">time_separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span><span class="w">
+   </span><span class="p" data-group-id="6098094292-4">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">thai</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6098094292-5">%</span><span class="nc" data-group-id="6098094292-5">Cldr.Number.Symbol</span><span class="p" data-group-id="6098094292-5">{</span><span class="w">
+     </span><span class="ss">decimal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">exponential</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;E&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">group</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">infinity</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;∞&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">list</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;;&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">minus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;-&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">nan</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;NaN&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">per_mille</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;‰&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">percent_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;%&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">plus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;+&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">superscripting_exponent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;×&quot;</span><span class="p">,</span><span class="w">
+     </span><span class="ss">time_separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span><span class="w">
+   </span><span class="p" data-group-id="6098094292-5">}</span><span class="w">
+ </span><span class="p" data-group-id="6098094292-3">}</span><span class="p" data-group-id="6098094292-2">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="number_symbols_for/2">
+
+  <div class="detail-header">
+    <a href="#number_symbols_for/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">number_symbols_for(locale, number_system)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Plausible.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.4) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true})</script>
+
+  </body>
+</html>

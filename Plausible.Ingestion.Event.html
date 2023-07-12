@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.4">
+    <meta name="project" content="Plausible v0.0.1">
+
+    <title>Plausible.Ingestion.Event — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-HHVY3JYD.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
+    <script src="dist/sidebar_items-3D6C76A3.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-JDI3AVDD.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+      <a href="readme.html">
+        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
+      </a>
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+      </a>
+      <div class="sidebar-projectVersion" translate="no">
+        v0.0.1
+      </div>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="icon-action display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L1" title="View Source" class="icon-action" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">Plausible.Ingestion.Event</span> 
+  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>This module exposes the <a href="#build_and_buffer/1"><code class="inline">build_and_buffer/1</code></a> function capable of
+turning %Plausible.Ingestion.Request{} into a series of events that in turn
+are uniformly either buffered in batches (to Clickhouse) or dropped
+(e.g. due to spam blocklist) from the processing pipeline.</p>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:drop_reason/0" translate="no">drop_reason()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:t/0" translate="no">t()</a>
+
+      </div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#build_and_buffer/1" translate="no">build_and_buffer(request)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#emit_telemetry_buffered/1" translate="no">emit_telemetry_buffered(event)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#emit_telemetry_dropped/2" translate="no">emit_telemetry_dropped(event, reason)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#telemetry_event_buffered/0" translate="no">telemetry_event_buffered()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#telemetry_event_dropped/0" translate="no">telemetry_event_dropped()</a>
+
+      </div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Types
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:drop_reason/0">
+
+  <div class="detail-header">
+    <a href="#t:drop_reason/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">drop_reason()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L22" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> drop_reason() ::
+  :bot | :spam_referrer | <a href="Plausible.Site.GateKeeper.html#t:policy/0">Plausible.Site.GateKeeper.policy</a>() | :invalid</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:t/0">
+
+  <div class="detail-header">
+    <a href="#t:t/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">t()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L28" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Ingestion.Event{
+  changeset: %Ecto.Changeset{
+    action: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    changes: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    constraints: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    data: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    empty_values: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    errors: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    filters: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    params: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    prepare: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    repo: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    repo_opts: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    required: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    types: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    valid?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+    validations: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+  },
+  clickhouse_event:
+    %Plausible.ClickhouseEventV2{
+      __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      browser: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      browser_version: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      city_geoname_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      country_code: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      hostname: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      &quot;meta.key&quot;: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      &quot;meta.value&quot;: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      name: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      operating_system: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      operating_system_version: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      pathname: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      referrer: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      referrer_source: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      revenue_reporting_amount: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      revenue_reporting_currency: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      revenue_source_amount: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      revenue_source_currency: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      screen_size: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      session_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      subdivision1_code: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      subdivision2_code: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      timestamp: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      transferred_from: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      user_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      utm_campaign: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      utm_content: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      utm_medium: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      utm_source: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      utm_term: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+    }
+    | nil,
+  clickhouse_event_attrs: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(),
+  domain: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil,
+  drop_reason: <a href="#t:drop_reason/0">drop_reason</a>(),
+  dropped?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
+  request: <a href="Plausible.Ingestion.Request.html#t:t/0">Plausible.Ingestion.Request.t</a>(),
+  salts: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(),
+  site:
+    %Plausible.Site{
+      __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      allowed_event_props: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      conversions_enabled: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      custom_domain: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      domain: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      domain_changed_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      domain_changed_from: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      from_cache?: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      funnels_enabled: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      goals: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      google_auth: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      imported_data: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      ingest_rate_limit_scale_seconds: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      ingest_rate_limit_threshold: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      invitations: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      locked: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      members: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      memberships: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      monthly_report: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      native_stats_start_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      props_enabled: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      public: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      revenue_goals: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      spike_notification: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      stats_start_date: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      timezone: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      updated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+      weekly_report: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+    }
+    | nil
+}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="build_and_buffer/1">
+
+  <div class="detail-header">
+    <a href="#build_and_buffer/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">build_and_buffer(request)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L41" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> build_and_buffer(<a href="Plausible.Ingestion.Request.html#t:t/0">Plausible.Ingestion.Request.t</a>()) ::
+  {:ok, %{buffered: [<a href="#t:t/0">t</a>()], dropped: [<a href="#t:t/0">t</a>()]}}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="emit_telemetry_buffered/1">
+
+  <div class="detail-header">
+    <a href="#emit_telemetry_buffered/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">emit_telemetry_buffered(event)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L77" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> emit_telemetry_buffered(<a href="#t:t/0">t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="emit_telemetry_dropped/2">
+
+  <div class="detail-header">
+    <a href="#emit_telemetry_dropped/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">emit_telemetry_dropped(event, reason)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L85" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> emit_telemetry_dropped(<a href="#t:t/0">t</a>(), <a href="#t:drop_reason/0">drop_reason</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="telemetry_event_buffered/0">
+
+  <div class="detail-header">
+    <a href="#telemetry_event_buffered/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">telemetry_event_buffered()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L67" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> telemetry_event_buffered() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="telemetry_event_dropped/0">
+
+  <div class="detail-header">
+    <a href="#telemetry_event_dropped/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">telemetry_event_dropped()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L72" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> telemetry_event_dropped() :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Plausible.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.4) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true})</script>
+
+  </body>
+</html>

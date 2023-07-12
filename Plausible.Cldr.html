@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.29.4">
+    <meta name="project" content="Plausible v0.0.1">
+
+    <title>Plausible.Cldr — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-HHVY3JYD.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
+    <script src="dist/sidebar_items-3D6C76A3.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-JDI3AVDD.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+      <a href="readme.html">
+        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
+      </a>
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+      </a>
+      <div class="sidebar-projectVersion" translate="no">
+        v0.0.1
+      </div>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="icon-action display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" title="View Source" class="icon-action" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">Plausible.Cldr</span> 
+  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>Provides the core functions to retrieve and manage
+the CLDR data that supports formatting and localisation.</p><p>It provides the core functions to access formatted
+CLDR data, set and retrieve a current locale and validate
+certain core data types such as locales, currencies and
+territories.</p>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#available_locale_name?/1" translate="no">available_locale_name?(locale_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#available_locale_name?/1"><code class="inline">Cldr.available_locale_name?/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#default_locale/0" translate="no">default_locale()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the default <code class="inline">locale</code>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#default_territory/0" translate="no">default_territory()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the default territory when a locale
+does not specify one and none can be inferred.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#ellipsis/2" translate="no">ellipsis(string, options \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Add locale-specific ellipsis to a string.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_locale/0" translate="no">get_locale()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Return the current locale to be used for <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a> functions that
+take an optional locale parameter for which a locale is not supplied.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_calendars/0" translate="no">known_calendars()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_calendars/0"><code class="inline">Cldr.known_calendars/0</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_currencies/0" translate="no">known_currencies()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_currencies/0"><code class="inline">Cldr.known_currencies/0</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_gettext_locale_name/1" translate="no">known_gettext_locale_name(locale_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns either the Gettext <code class="inline">locale_name</code> in Cldr format or
+<code class="inline">false</code> based upon whether the locale name is configured in
+<a href="https://hexdocs.pm/gettext/0.19.1/Gettext.html"><code class="inline">Gettext</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_gettext_locale_name?/1" translate="no">known_gettext_locale_name?(locale_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a boolean indicating if the specified locale
+name is configured and available in Gettext.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_gettext_locale_names/0" translate="no">known_gettext_locale_names()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of Gettext locale names but in CLDR format with
+underscore replaced by hyphen in order to facilitate comparisons
+with <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a> locale names.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_locale_name/1" translate="no">known_locale_name(locale_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns either the <code class="inline">locale_name</code> or <code class="inline">false</code> based upon
+whether the locale name is configured in <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_locale_name?/1" translate="no">known_locale_name?(locale_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a boolean indicating if the specified locale
+name is configured and available in Cldr.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_locale_names/0" translate="no">known_locale_names()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of the known locale names.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_number_system_types/0" translate="no">known_number_system_types()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of atoms representing the number systems types known to <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_number_systems/0" translate="no">known_number_systems()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_number_systems/0"><code class="inline">Cldr.known_number_systems/0</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_rbnf_locale_name/1" translate="no">known_rbnf_locale_name(locale_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns either the RBNF <code class="inline">locale_name</code> or <code class="inline">false</code> based upon
+whether the locale name is configured in <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a>
+and has RBNF rules defined.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_rbnf_locale_name?/1" translate="no">known_rbnf_locale_name?(locale_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a boolean indicating if the specified locale
+name is configured and available in Cldr and supports
+rules based number formats (RBNF).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_rbnf_locale_names/0" translate="no">known_rbnf_locale_names()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of locale names which have rules-based number
+formats (RBNF).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#known_territories/0" translate="no">known_territories()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_territories/0"><code class="inline">Cldr.known_territories/0</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#normalize_lenient_parse/3" translate="no">normalize_lenient_parse(string, scope, locale \\ get_locale())</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Normalizes a string by applying transliteration
+of common symbols in numbers, currencies and dates</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#put_locale/1" translate="no">put_locale(locale_name)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Set the current locale to be used for <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a> functions that
+take an optional locale parameter for which a locale is not supplied.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#quote/2" translate="no">quote(string, options \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Add locale-specific quotation marks around a string.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#unknown_locale_names/0" translate="no">unknown_locale_names()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of the locales names that are configured,
+but not known in CLDR.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#validate_calendar/1" translate="no">validate_calendar(calendar)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#validate_calendar/1"><code class="inline">Cldr.validate_calendar/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#validate_currency/1" translate="no">validate_currency(currency)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#validate_currency/1"><code class="inline">Cldr.validate_currency/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#validate_locale/1" translate="no">validate_locale(locale)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Normalise and validate a locale name.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#validate_number_system/1" translate="no">validate_number_system(number_system)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#validate_number_system/1"><code class="inline">Cldr.validate_number_system/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#validate_number_system_type/1" translate="no">validate_number_system_type(number_system_type)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Normalise and validate a number system type.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#validate_territory/1" translate="no">validate_territory(territory)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#validate_territory/1"><code class="inline">Cldr.validate_territory/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#with_locale/2" translate="no">with_locale(locale, fun)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Execute a function with a locale ensuring that the
+current locale is restored after the function.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="available_locale_name?/1">
+
+  <div class="detail-header">
+    <a href="#available_locale_name?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">available_locale_name?(locale_name)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#available_locale_name?/1"><code class="inline">Cldr.available_locale_name?/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="default_locale/0">
+
+  <div class="detail-header">
+    <a href="#default_locale/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">default_locale()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> default_locale() :: <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
+
+      </div>
+
+<p>Returns the default <code class="inline">locale</code>.</p><h2 id="default_locale/0-example" class="section-heading">
+  <a href="#default_locale/0-example" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">example</p>
+  </a>
+  Example
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">default_locale</span><span class="p" data-group-id="0548402962-1">(</span><span class="p" data-group-id="0548402962-1">)</span><span class="w">
+</span><span class="p" data-group-id="0548402962-2">%</span><span class="nc" data-group-id="0548402962-2">Cldr.LanguageTag</span><span class="p" data-group-id="0548402962-2">{</span><span class="w">
+  </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="p">,</span><span class="w">
+  </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en-001&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:&quot;en-001&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language_subtags</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0548402962-3">[</span><span class="p" data-group-id="0548402962-3">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0548402962-4">%{</span><span class="p" data-group-id="0548402962-4">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">gettext_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0548402962-5">%{</span><span class="p" data-group-id="0548402962-5">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0548402962-6">[</span><span class="p" data-group-id="0548402962-6">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
+  </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en-001&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
+  </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:&quot;001&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0548402962-7">%{</span><span class="p" data-group-id="0548402962-7">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0548402962-8">[</span><span class="p" data-group-id="0548402962-8">]</span><span class="w">
+</span><span class="p" data-group-id="0548402962-2">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="default_territory/0">
+
+  <div class="detail-header">
+    <a href="#default_territory/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">default_territory()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> default_territory() :: <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:territory_code/0">Cldr.Locale.territory_code</a>()</pre>
+
+      </div>
+
+<p>Returns the default territory when a locale
+does not specify one and none can be inferred.</p><h2 id="default_territory/0-example" class="section-heading">
+  <a href="#default_territory/0-example" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">example</p>
+  </a>
+  Example
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">default_territory</span><span class="p" data-group-id="0603372244-1">(</span><span class="p" data-group-id="0603372244-1">)</span><span class="w">
+</span><span class="ss">:&quot;001&quot;</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="ellipsis/2">
+
+    <span id="ellipsis/1"></span>
+
+  <div class="detail-header">
+    <a href="#ellipsis/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">ellipsis(string, options \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> ellipsis(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()], <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+<p>Add locale-specific ellipsis to a string.</p><h2 id="ellipsis/2-arguments" class="section-heading">
+  <a href="#ellipsis/2-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><p><code class="inline">string</code> is any <code class="inline">String.t</code> or a 2-element list
+of <code class="inline">String.t</code> between which the ellipsis is inserted.</p></li><li><p><code class="inline">backend</code> is any module that includes <code class="inline">use Cldr</code> and therefore
+is a <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a> backend module.  The default is <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#default_backend!/0"><code class="inline">Cldr.default_backend!/0</code></a>.
+Note that <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#default_backend!/0"><code class="inline">Cldr.default_backend!/0</code></a> will raise an exception if
+no <code class="inline">:default_backend</code> is configured under the <code class="inline">:ex_cldr</code> key in
+<code class="inline">config.exs</code>.</p></li><li><p><code class="inline">options</code> is a keyword list of options</p></li></ul><h2 id="ellipsis/2-options" class="section-heading">
+  <a href="#ellipsis/2-options" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">options</p>
+  </a>
+  Options
+</h2>
+<ul><li><p><code class="inline">:locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>.
+The default is <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#get_locale/0"><code class="inline">Cldr.get_locale/0</code></a>.</p></li><li><p><code class="inline">:location</code> determines where to place the ellipsis. The options are
+<code class="inline">:after</code> (the default for a single string argument), <code class="inline">:between</code>
+(the default and only valid location for an argument that is a list
+of two strings) and <code class="inline">:before</code>.</p></li><li><p><code class="inline">:format</code> formats based upon whether the ellipsis
+is inserted between words or sentences. The valid options are
+<code class="inline">:word</code> or <code class="inline">:sentence</code>. The default is <code class="inline">:sentence</code>.</p></li></ul><h2 id="ellipsis/2-examples" class="section-heading">
+  <a href="#ellipsis/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="w"> </span><span class="s">&quot;And furthermore&quot;</span><span class="w">
+</span><span class="s">&quot;And furthermore…&quot;</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="w"> </span><span class="p" data-group-id="4045716573-1">[</span><span class="s">&quot;And furthermore&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;there is much to be done&quot;</span><span class="p" data-group-id="4045716573-1">]</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="ss">:ja</span><span class="w">
+</span><span class="s">&quot;And furthermore…there is much to be done&quot;</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="w"> </span><span class="s">&quot;And furthermore&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:word</span><span class="w">
+</span><span class="s">&quot;And furthermore …&quot;</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">ellipsis</span><span class="w"> </span><span class="p" data-group-id="4045716573-2">[</span><span class="s">&quot;And furthermore&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;there is much to be done&quot;</span><span class="p" data-group-id="4045716573-2">]</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="ss">:ja</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:word</span><span class="w">
+</span><span class="s">&quot;And furthermore … there is much to be done&quot;</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="get_locale/0">
+
+  <div class="detail-header">
+    <a href="#get_locale/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_locale()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_locale() :: <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()</pre>
+
+      </div>
+
+<p>Return the current locale to be used for <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a> functions that
+take an optional locale parameter for which a locale is not supplied.</p><h2 id="get_locale/0-example" class="section-heading">
+  <a href="#get_locale/0-example" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">example</p>
+  </a>
+  Example
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_locale</span><span class="p" data-group-id="0323349215-1">(</span><span class="s">&quot;pl&quot;</span><span class="p" data-group-id="0323349215-1">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">get_locale</span><span class="w">
+</span><span class="p" data-group-id="0323349215-2">%</span><span class="nc" data-group-id="0323349215-2">Cldr.LanguageTag</span><span class="p" data-group-id="0323349215-2">{</span><span class="w">
+   </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Elixir.Plausible.Cldr</span><span class="p">,</span><span class="w">
+   </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;pl&quot;</span><span class="p">,</span><span class="w">
+   </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:pl</span><span class="p">,</span><span class="w">
+   </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0323349215-3">%{</span><span class="p" data-group-id="0323349215-3">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;pl&quot;</span><span class="p">,</span><span class="w">
+   </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0323349215-4">%{</span><span class="p" data-group-id="0323349215-4">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0323349215-5">[</span><span class="p" data-group-id="0323349215-5">]</span><span class="p">,</span><span class="w">
+   </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:pl</span><span class="p">,</span><span class="w">
+   </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:PL</span><span class="p">,</span><span class="w">
+   </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;pl&quot;</span><span class="p">,</span><span class="w">
+   </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
+   </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0323349215-6">%{</span><span class="p" data-group-id="0323349215-6">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0323349215-7">[</span><span class="p" data-group-id="0323349215-7">]</span><span class="w">
+ </span><span class="p" data-group-id="0323349215-2">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="known_calendars/0">
+
+  <div class="detail-header">
+    <a href="#known_calendars/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_calendars()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_calendars/0"><code class="inline">Cldr.known_calendars/0</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="known_currencies/0">
+
+  <div class="detail-header">
+    <a href="#known_currencies/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_currencies()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_currencies/0"><code class="inline">Cldr.known_currencies/0</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="known_gettext_locale_name/1">
+
+  <div class="detail-header">
+    <a href="#known_gettext_locale_name/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_gettext_locale_name(locale_name)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> known_gettext_locale_name(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | false</pre>
+
+      </div>
+
+<p>Returns either the Gettext <code class="inline">locale_name</code> in Cldr format or
+<code class="inline">false</code> based upon whether the locale name is configured in
+<a href="https://hexdocs.pm/gettext/0.19.1/Gettext.html"><code class="inline">Gettext</code></a>.</p><h2 id="known_gettext_locale_name/1-arguments" class="section-heading">
+  <a href="#known_gettext_locale_name/1-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by
+<a href="#known_gettext_locale_names/0"><code class="inline">Plausible.Cldr.known_gettext_locale_names/0</code></a></li></ul><h2 id="known_gettext_locale_name/1-examples" class="section-heading">
+  <a href="#known_gettext_locale_name/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="w">
+</span><span class="s">&quot;en&quot;</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name</span><span class="w"> </span><span class="s">&quot;en-SA&quot;</span><span class="w">
+</span><span class="no">false</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="known_gettext_locale_name?/1">
+
+  <div class="detail-header">
+    <a href="#known_gettext_locale_name?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_gettext_locale_name?(locale_name)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> known_gettext_locale_name?(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Returns a boolean indicating if the specified locale
+name is configured and available in Gettext.</p><h2 id="known_gettext_locale_name?/1-arguments" class="section-heading">
+  <a href="#known_gettext_locale_name?/1-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by
+<a href="#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a></li></ul><h2 id="known_gettext_locale_name?/1-examples" class="section-heading">
+  <a href="#known_gettext_locale_name?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name?</span><span class="p" data-group-id="4077442806-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="4077442806-1">)</span><span class="w">
+</span><span class="no">true</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_gettext_locale_name?</span><span class="p" data-group-id="4077442806-2">(</span><span class="s">&quot;!!&quot;</span><span class="p" data-group-id="4077442806-2">)</span><span class="w">
+</span><span class="no">false</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="known_gettext_locale_names/0">
+
+  <div class="detail-header">
+    <a href="#known_gettext_locale_names/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_gettext_locale_names()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> known_gettext_locale_names() :: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]</pre>
+
+      </div>
+
+<p>Returns a list of Gettext locale names but in CLDR format with
+underscore replaced by hyphen in order to facilitate comparisons
+with <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a> locale names.</p>
+  </section>
+</section>
+<section class="detail" id="known_locale_name/1">
+
+  <div class="detail-header">
+    <a href="#known_locale_name/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_locale_name(locale_name)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> known_locale_name(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | false</pre>
+
+      </div>
+
+<p>Returns either the <code class="inline">locale_name</code> or <code class="inline">false</code> based upon
+whether the locale name is configured in <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a>.</p><p>This is helpful when building a list of <code class="inline">or</code> expressions
+to return the first known locale name from a list.</p><h2 id="known_locale_name/1-arguments" class="section-heading">
+  <a href="#known_locale_name/1-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by
+<a href="#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a></li></ul><h2 id="known_locale_name/1-examples" class="section-heading">
+  <a href="#known_locale_name/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name</span><span class="w"> </span><span class="ss">:&quot;en-AU&quot;</span><span class="w">
+</span><span class="ss">:&quot;en-AU&quot;</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name</span><span class="w"> </span><span class="ss">:&quot;en-SA&quot;</span><span class="w">
+</span><span class="no">false</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="known_locale_name?/1">
+
+  <div class="detail-header">
+    <a href="#known_locale_name?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_locale_name?(locale_name)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> known_locale_name?(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Returns a boolean indicating if the specified locale
+name is configured and available in Cldr.</p><h2 id="known_locale_name?/1-arguments" class="section-heading">
+  <a href="#known_locale_name?/1-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by <a href="#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a></li></ul><h2 id="known_locale_name?/1-examples" class="section-heading">
+  <a href="#known_locale_name?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name?</span><span class="p" data-group-id="4713832625-1">(</span><span class="ss">:en</span><span class="p" data-group-id="4713832625-1">)</span><span class="w">
+</span><span class="no">true</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_locale_name?</span><span class="p" data-group-id="4713832625-2">(</span><span class="ss">:&quot;!!&quot;</span><span class="p" data-group-id="4713832625-2">)</span><span class="w">
+</span><span class="no">false</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="known_locale_names/0">
+
+  <div class="detail-header">
+    <a href="#known_locale_names/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_locale_names()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a list of the known locale names.</p><p>Known locales are those locales which
+are the subset of all CLDR locales that
+have been configured for use either
+in this module or in <a href="https://hexdocs.pm/gettext/0.19.1/Gettext.html"><code class="inline">Gettext</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="known_number_system_types/0">
+
+  <div class="detail-header">
+    <a href="#known_number_system_types/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_number_system_types()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns a list of atoms representing the number systems types known to <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a>.</p><h2 id="known_number_system_types/0-example" class="section-heading">
+  <a href="#known_number_system_types/0-example" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">example</p>
+  </a>
+  Example
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_number_system_types</span><span class="w">
+</span><span class="p" data-group-id="1340695406-1">[</span><span class="ss">:default</span><span class="p">,</span><span class="w"> </span><span class="ss">:finance</span><span class="p">,</span><span class="w"> </span><span class="ss">:native</span><span class="p">,</span><span class="w"> </span><span class="ss">:traditional</span><span class="p" data-group-id="1340695406-1">]</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="known_number_systems/0">
+
+  <div class="detail-header">
+    <a href="#known_number_systems/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_number_systems()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_number_systems/0"><code class="inline">Cldr.known_number_systems/0</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="known_rbnf_locale_name/1">
+
+  <div class="detail-header">
+    <a href="#known_rbnf_locale_name/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_rbnf_locale_name(locale_name)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> known_rbnf_locale_name(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | false</pre>
+
+      </div>
+
+<p>Returns either the RBNF <code class="inline">locale_name</code> or <code class="inline">false</code> based upon
+whether the locale name is configured in <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a>
+and has RBNF rules defined.</p><h2 id="known_rbnf_locale_name/1-arguments" class="section-heading">
+  <a href="#known_rbnf_locale_name/1-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by
+<a href="#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a></li></ul><h2 id="known_rbnf_locale_name/1-examples" class="section-heading">
+  <a href="#known_rbnf_locale_name/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name</span><span class="w"> </span><span class="ss">:en</span><span class="w">
+</span><span class="ss">:en</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name</span><span class="w"> </span><span class="ss">:&quot;en-SA&quot;</span><span class="w">
+</span><span class="no">false</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="known_rbnf_locale_name?/1">
+
+  <div class="detail-header">
+    <a href="#known_rbnf_locale_name?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_rbnf_locale_name?(locale_name)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> known_rbnf_locale_name?(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Returns a boolean indicating if the specified locale
+name is configured and available in Cldr and supports
+rules based number formats (RBNF).</p><h2 id="known_rbnf_locale_name?/1-arguments" class="section-heading">
+  <a href="#known_rbnf_locale_name?/1-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by <a href="#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a></li></ul><h2 id="known_rbnf_locale_name?/1-examples" class="section-heading">
+  <a href="#known_rbnf_locale_name?/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name?</span><span class="p" data-group-id="9180209198-1">(</span><span class="ss">:en</span><span class="p" data-group-id="9180209198-1">)</span><span class="w">
+</span><span class="no">true</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">known_rbnf_locale_name?</span><span class="p" data-group-id="9180209198-2">(</span><span class="ss">:&quot;!!&quot;</span><span class="p" data-group-id="9180209198-2">)</span><span class="w">
+</span><span class="no">false</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="known_rbnf_locale_names/0">
+
+  <div class="detail-header">
+    <a href="#known_rbnf_locale_names/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_rbnf_locale_names()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> known_rbnf_locale_names() :: [<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()]</pre>
+
+      </div>
+
+<p>Returns a list of locale names which have rules-based number
+formats (RBNF).</p>
+  </section>
+</section>
+<section class="detail" id="known_territories/0">
+
+  <div class="detail-header">
+    <a href="#known_territories/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">known_territories()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_territories/0"><code class="inline">Cldr.known_territories/0</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="normalize_lenient_parse/3">
+
+    <span id="normalize_lenient_parse/2"></span>
+
+  <div class="detail-header">
+    <a href="#normalize_lenient_parse/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">normalize_lenient_parse(string, scope, locale \\ get_locale())</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Normalizes a string by applying transliteration
+of common symbols in numbers, currencies and dates</p>
+  </section>
+</section>
+<section class="detail" id="put_locale/1">
+
+  <div class="detail-header">
+    <a href="#put_locale/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">put_locale(locale_name)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> put_locale(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+
+      </div>
+
+<p>Set the current locale to be used for <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a> functions that
+take an optional locale parameter for which a locale is not supplied.</p><h2 id="put_locale/1-arguments" class="section-heading">
+  <a href="#put_locale/1-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by <a href="#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
+or a <code class="inline">t:Cldr.LanguageTag</code> struct returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a></li></ul><p>See <a href="https://tools.ietf.org/html/rfc5646">rfc5646</a> for the specification
+of a language tag.</p><h2 id="put_locale/1-examples" class="section-heading">
+  <a href="#put_locale/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_locale</span><span class="p" data-group-id="6304659301-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="6304659301-1">)</span><span class="w">
+</span><span class="p" data-group-id="6304659301-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="6304659301-3">%</span><span class="nc" data-group-id="6304659301-3">Cldr.LanguageTag</span><span class="p" data-group-id="6304659301-3">{</span><span class="w">
+   </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="p">,</span><span class="w">
+   </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+   </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
+   </span><span class="ss">language_subtags</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6304659301-4">[</span><span class="p" data-group-id="6304659301-4">]</span><span class="p">,</span><span class="w">
+   </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6304659301-5">%{</span><span class="p" data-group-id="6304659301-5">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">gettext_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+   </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+   </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6304659301-6">%{</span><span class="p" data-group-id="6304659301-6">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6304659301-7">[</span><span class="p" data-group-id="6304659301-7">]</span><span class="p">,</span><span class="w">
+   </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
+   </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+   </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
+   </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:US</span><span class="p">,</span><span class="w">
+   </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6304659301-8">%{</span><span class="p" data-group-id="6304659301-8">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6304659301-9">[</span><span class="p" data-group-id="6304659301-9">]</span><span class="w">
+ </span><span class="p" data-group-id="6304659301-3">}</span><span class="p" data-group-id="6304659301-2">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">put_locale</span><span class="p" data-group-id="6304659301-10">(</span><span class="s">&quot;invalid-locale!&quot;</span><span class="p" data-group-id="6304659301-10">)</span><span class="w">
+</span><span class="p" data-group-id="6304659301-11">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6304659301-12">{</span><span class="nc">Cldr.LanguageTag.ParseError</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;Expected a BCP47 language tag. Could not parse the remaining </span><span class="se">\&quot;</span><span class="s">!</span><span class="se">\&quot;</span><span class="s"> starting at position 15&quot;</span><span class="p" data-group-id="6304659301-12">}</span><span class="p" data-group-id="6304659301-11">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="quote/2">
+
+    <span id="quote/1"></span>
+
+  <div class="detail-header">
+    <a href="#quote/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">quote(string, options \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> quote(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+<p>Add locale-specific quotation marks around a string.</p><h2 id="quote/2-arguments" class="section-heading">
+  <a href="#quote/2-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><p><code class="inline">string</code> is any valid Elixir string</p></li><li><p><code class="inline">options</code> is a keyword list of options</p></li></ul><h2 id="quote/2-options" class="section-heading">
+  <a href="#quote/2-options" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">options</p>
+  </a>
+  Options
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>.
+The default is <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#get_locale/0"><code class="inline">Cldr.get_locale/0</code></a></li></ul><h2 id="quote/2-examples" class="section-heading">
+  <a href="#quote/2-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="k">quote</span><span class="w"> </span><span class="s">&quot;Quoted String&quot;</span><span class="w">
+</span><span class="s">&quot;“Quoted String”&quot;</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="k">quote</span><span class="w"> </span><span class="s">&quot;Quoted String&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="ss">:ja</span><span class="w">
+</span><span class="s">&quot;「Quoted String」&quot;</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="unknown_locale_names/0">
+
+  <div class="detail-header">
+    <a href="#unknown_locale_names/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">unknown_locale_names()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> unknown_locale_names() :: [<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()]</pre>
+
+      </div>
+
+<p>Returns a list of the locales names that are configured,
+but not known in CLDR.</p><p>Since there is a compile-time exception raised if there are
+any unknown locales this function should always
+return an empty list.</p>
+  </section>
+</section>
+<section class="detail" id="validate_calendar/1">
+
+  <div class="detail-header">
+    <a href="#validate_calendar/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">validate_calendar(calendar)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#validate_calendar/1"><code class="inline">Cldr.validate_calendar/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="validate_currency/1">
+
+  <div class="detail-header">
+    <a href="#validate_currency/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">validate_currency(currency)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#validate_currency/1"><code class="inline">Cldr.validate_currency/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="validate_locale/1">
+
+  <div class="detail-header">
+    <a href="#validate_locale/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">validate_locale(locale)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> validate_locale(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+
+      </div>
+
+<p>Normalise and validate a locale name.</p><h2 id="validate_locale/1-arguments" class="section-heading">
+  <a href="#validate_locale/1-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><code class="inline">locale</code> is any valid locale name returned by <a href="#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
+or a <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a></li></ul><h2 id="validate_locale/1-returns" class="section-heading">
+  <a href="#validate_locale/1-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">returns</p>
+  </a>
+  Returns
+</h2>
+<ul><li><p><code class="inline">{:ok, language_tag}</code></p></li><li><p><code class="inline">{:error, reason}</code></p></li></ul><h2 id="validate_locale/1-notes" class="section-heading">
+  <a href="#validate_locale/1-notes" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">notes</p>
+  </a>
+  Notes
+</h2>
+<p>See <a href="https://tools.ietf.org/html/rfc5646">rfc5646</a> for the specification
+of a language tag.</p><h2 id="validate_locale/1-examples" class="section-heading">
+  <a href="#validate_locale/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="2343092589-1">(</span><span class="ss">:en</span><span class="p" data-group-id="2343092589-1">)</span><span class="w">
+</span><span class="p" data-group-id="2343092589-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+</span><span class="p" data-group-id="2343092589-3">%</span><span class="nc" data-group-id="2343092589-3">Cldr.LanguageTag</span><span class="p" data-group-id="2343092589-3">{</span><span class="w">
+  </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="p">,</span><span class="w">
+  </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
+  </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-4">%{</span><span class="p" data-group-id="2343092589-4">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">gettext_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-5">%{</span><span class="p" data-group-id="2343092589-5">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-6">[</span><span class="p" data-group-id="2343092589-6">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
+  </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
+  </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:US</span><span class="p">,</span><span class="w">
+  </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-7">%{</span><span class="p" data-group-id="2343092589-7">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-8">[</span><span class="p" data-group-id="2343092589-8">]</span><span class="w">
+</span><span class="p" data-group-id="2343092589-3">}</span><span class="p" data-group-id="2343092589-2">}</span><span class="w">
+
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">default_locale</span><span class="p" data-group-id="2343092589-9">(</span><span class="p" data-group-id="2343092589-9">)</span><span class="w">
+</span><span class="p" data-group-id="2343092589-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+</span><span class="p" data-group-id="2343092589-11">%</span><span class="nc" data-group-id="2343092589-11">Cldr.LanguageTag</span><span class="p" data-group-id="2343092589-11">{</span><span class="w">
+  </span><span class="ss">backend</span><span class="p">:</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="p">,</span><span class="w">
+  </span><span class="ss">canonical_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en-001&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">cldr_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:&quot;en-001&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">extensions</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-12">%{</span><span class="p" data-group-id="2343092589-12">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">gettext_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-13">%{</span><span class="p" data-group-id="2343092589-13">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">private_use</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-14">[</span><span class="p" data-group-id="2343092589-14">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">rbnf_locale_name</span><span class="p">:</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w">
+  </span><span class="ss">requested_locale_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en-001&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">script</span><span class="p">:</span><span class="w"> </span><span class="ss">:Latn</span><span class="p">,</span><span class="w">
+  </span><span class="ss">territory</span><span class="p">:</span><span class="w"> </span><span class="ss">:&quot;001&quot;</span><span class="p">,</span><span class="w">
+  </span><span class="ss">transform</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-15">%{</span><span class="p" data-group-id="2343092589-15">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">language_variants</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2343092589-16">[</span><span class="p" data-group-id="2343092589-16">]</span><span class="w">
+</span><span class="p" data-group-id="2343092589-11">}</span><span class="p" data-group-id="2343092589-10">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="2343092589-17">(</span><span class="s">&quot;zzz&quot;</span><span class="p" data-group-id="2343092589-17">)</span><span class="w">
+</span><span class="p" data-group-id="2343092589-18">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2343092589-19">{</span><span class="nc">Cldr.InvalidLanguageError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The language </span><span class="se">\&quot;</span><span class="s">zzz</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="2343092589-19">}</span><span class="p" data-group-id="2343092589-18">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="validate_number_system/1">
+
+  <div class="detail-header">
+    <a href="#validate_number_system/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">validate_number_system(number_system)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#validate_number_system/1"><code class="inline">Cldr.validate_number_system/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="validate_number_system_type/1">
+
+  <div class="detail-header">
+    <a href="#validate_number_system_type/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">validate_number_system_type(number_system_type)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> validate_number_system_type(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+
+      </div>
+
+<p>Normalise and validate a number system type.</p><h2 id="validate_number_system_type/1-arguments" class="section-heading">
+  <a href="#validate_number_system_type/1-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><code class="inline">number_system_type</code> is any number system type returned by
+<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_number_system_types/1"><code class="inline">Cldr.known_number_system_types/1</code></a></li></ul><h2 id="validate_number_system_type/1-returns" class="section-heading">
+  <a href="#validate_number_system_type/1-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">returns</p>
+  </a>
+  Returns
+</h2>
+<ul><li><p><code class="inline">{:ok, normalized_number_system_type}</code> or</p></li><li><p><code class="inline">{:error, {exception, message}}</code></p></li></ul><h2 id="validate_number_system_type/1-examples" class="section-heading">
+  <a href="#validate_number_system_type/1-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">examples</p>
+  </a>
+  Examples
+</h2>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="w"> </span><span class="ss">:default</span><span class="w">
+</span><span class="p" data-group-id="6572334406-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="p" data-group-id="6572334406-1">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="w"> </span><span class="ss">:traditional</span><span class="w">
+</span><span class="p" data-group-id="6572334406-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:traditional</span><span class="p" data-group-id="6572334406-2">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="w"> </span><span class="ss">:latn</span><span class="w">
+</span><span class="p" data-group-id="6572334406-3">{</span><span class="w">
+  </span><span class="ss">:error</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="6572334406-4">{</span><span class="nc">Cldr.UnknownNumberSystemTypeError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system type :latn is unknown&quot;</span><span class="p" data-group-id="6572334406-4">}</span><span class="w">
+</span><span class="p" data-group-id="6572334406-3">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_number_system_type</span><span class="w"> </span><span class="s">&quot;bork&quot;</span><span class="w">
+</span><span class="p" data-group-id="6572334406-5">{</span><span class="w">
+  </span><span class="ss">:error</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="6572334406-6">{</span><span class="nc">Cldr.UnknownNumberSystemTypeError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The number system type </span><span class="se">\&quot;</span><span class="s">bork</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="6572334406-6">}</span><span class="w">
+</span><span class="p" data-group-id="6572334406-5">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="validate_territory/1">
+
+  <div class="detail-header">
+    <a href="#validate_territory/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">validate_territory(territory)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#validate_territory/1"><code class="inline">Cldr.validate_territory/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="with_locale/2">
+
+  <div class="detail-header">
+    <a href="#with_locale/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">with_locale(locale, fun)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+      <span class="note">(since 2.32.0)</span>
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> with_locale(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(), (... -&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>())) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+          <pre translate="no"><span class="attribute">@spec</span> with_locale(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(), (... -&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>())) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
+
+      </div>
+
+<p>Execute a function with a locale ensuring that the
+current locale is restored after the function.</p><h2 id="with_locale/2-arguments" class="section-heading">
+  <a href="#with_locale/2-arguments" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">arguments</p>
+  </a>
+  Arguments
+</h2>
+<ul><li><p><code class="inline">locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>.</p></li><li><p><code class="inline">fun</code> is any 0-arity function or function capture.</p></li></ul><h2 id="with_locale/2-returns" class="section-heading">
+  <a href="#with_locale/2-returns" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
+  <p class="sr-only">returns</p>
+  </a>
+  Returns
+</h2>
+<ul><li><p>The value returned by the function <code class="inline">fun/0</code> or</p></li><li><p><code class="inline">{:error, {exception, reason}}</code> if the locale is invalid or</p></li><li><p>raises an exception if the current locale cannot be
+identified.</p></li></ul>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Plausible.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.4) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true})</script>
+
+  </body>
+</html>
