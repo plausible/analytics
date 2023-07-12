@@ -9,15 +9,18 @@ on:
 jobs:
   build:
     name: Build and test
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: buildjet-16vcpu-ubuntu-2204
 
     strategy:
       matrix:
-        postgres_version: [12, 13, 14]
+        postgres_version: [13, 14, 15]
 
     services:
       postgres:
         image: postgres:${{ matrix.postgres_version }}
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
         ports:
           - 5432:5432
         env:
@@ -29,7 +32,10 @@ jobs:
             --health-retries 5
 
       clickhouse:
-        image: clickhouse/clickhouse-server:22.8.13.20-alpine
+        image: clickhouse/clickhouse-server:23.3.7.5-alpine
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
         ports:
           - 8123:8123
         env:
@@ -52,14 +58,14 @@ jobs:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
       - name: Restore dependencies cache
-        uses: actions/cache@v2
+        uses: buildjet/cache@v3
         with:
           path: |
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-mix-v3-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-v3-
+          key: ${{ runner.os }}-mix-v5-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-v5-
       - name: Install dependencies
         run: mix deps.get && npm install --prefix ./tracker
       - name: Check Formatting
@@ -70,12 +76,8 @@ jobs:
         run: npm run deploy --prefix ./tracker
       - name: Check Credo Warnings
         run: mix credo diff --from-git-merge-base origin/master
-      - name: Run tests (against v1 schema)
+      - name: Run tests
         run: mix test --include slow --max-failures 1 --warnings-as-errors
-      - name: Run tests (against v2 schema)
-        run: mix test --include slow --max-failures 1 --warnings-as-errors
-        env:
-          V2_MIGRATION_DONE: 1
       - name: Check Dialyzer
         run: mix dialyzer
 env:

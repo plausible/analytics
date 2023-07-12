@@ -7,7 +7,6 @@ import {
   shiftDays,
   shiftMonths,
   formatDay,
-  formatDayShort,
   formatMonthYYYY,
   formatYear,
   formatISO,
@@ -18,12 +17,15 @@ import {
   isThisMonth,
   isThisYear,
   parseUTCDate,
+  parseNaiveDate,
   isBefore,
-  isAfter
+  isAfter,
+  formatDateRange
 } from "./util/date";
 import { navigateToQuery, QueryLink, QueryButton } from "./query";
 import { shouldIgnoreKeypress } from "./keybinding.js"
 import { COMPARISON_DISABLED_PERIODS, toggleComparisons, isComparisonEnabled } from "../dashboard/comparison-input.js"
+import classNames from "classnames"
 
 function renderArrow(query, site, period, prevDate, nextDate) {
   const insertionDate = parseUTCDate(site.statsBegin);
@@ -38,19 +40,29 @@ function renderArrow(query, site, period, prevDate, nextDate) {
     period
   );
 
-  const leftClasses = `flex items-center px-1 sm:px-2 border-r border-gray-300 rounded-l
-      dark:border-gray-500 dark:text-gray-100 ${
-  disabledLeft ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-}`;
-  const rightClasses = `flex items-center px-1 sm:px-2 rounded-r dark:text-gray-100 ${
-    disabledRight ? "bg-gray-300 dark:bg-gray-950" : "hover:bg-gray-100 dark:hover:bg-gray-900"
-  }`;
+  const isComparing = isComparisonEnabled(query.comparison)
+
+  const leftClass = classNames("flex items-center px-1 sm:px-2 border-r border-gray-300 rounded-l dark:border-gray-500 dark:text-gray-100", {
+    "bg-gray-300 dark:bg-gray-950": disabledLeft,
+    "hover:bg-gray-100 dark:hover:bg-gray-900": !disabledLeft,
+  })
+
+  const rightClass = classNames("flex items-center px-1 sm:px-2 rounded-r dark:text-gray-100", {
+    "bg-gray-300 dark:bg-gray-950": disabledRight,
+    "hover:bg-gray-100 dark:hover:bg-gray-900": !disabledRight,
+  })
+
+  const containerClass = classNames("rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer dark:bg-gray-800", {
+    "hidden md:flex": isComparing,
+    "flex": !isComparing,
+  })
+
   return (
-    <div className="flex rounded shadow bg-white mr-2 sm:mr-4 cursor-pointer dark:bg-gray-800">
+    <div className={containerClass}>
       <QueryButton
         to={{ date: prevDate }}
         query={query}
-        className={leftClasses}
+        className={leftClass}
         disabled={disabledLeft}
       >
         <svg
@@ -69,7 +81,7 @@ function renderArrow(query, site, period, prevDate, nextDate) {
       <QueryButton
         to={{ date: nextDate }}
         query={query}
-        className={rightClasses}
+        className={rightClass}
         disabled={disabledRight}
       >
         <svg
@@ -137,7 +149,7 @@ function DisplayPeriod({query, site}) {
   } if (query.period === 'all') {
     return 'All time'
   } if (query.period === 'custom') {
-    return `${formatDayShort(query.from)} - ${formatDayShort(query.to)}`
+    return formatDateRange(site, query.from, query.to)
   }
   return 'Realtime'
 }
@@ -243,34 +255,18 @@ function DatePicker({query, site, history}) {
     return () => { document.removeEventListener("mousedown", handleClick, false); }
   }, [])
 
-  function setCustomDate(dates) {
-    if (dates.length === 2) {
-      const [from, to] = dates.map(parseUTCDate)
-      if (formatISO(from) === formatISO(to)) {
-        navigateToQuery(
-          history,
-          query,
-          {
-            period: 'day',
-            date: formatISO(from),
-            from: false,
-            to: false
-          }
-        )
+  function setCustomDate([from, to], _dateStr, _instance) {
+    if (from && to) {
+      [from, to] = [parseNaiveDate(from), parseNaiveDate(to)]
+
+      if (from.isSame(to)) {
+        navigateToQuery( history, query, { period: 'day', date: formatISO(from), from: false, to: false })
       } else {
-        navigateToQuery(
-          history,
-          query,
-          {
-            period: 'custom',
-            date: false,
-            from: formatISO(from),
-            to: formatISO(to),
-          }
-        )
+        navigateToQuery( history, query, { period: 'custom', date: false, from: formatISO(from), to: formatISO(to) })
       }
-      setOpen(false)
     }
+
+    setOpen(false)
   }
 
   function toggle() {
@@ -366,7 +362,7 @@ function DatePicker({query, site, history}) {
                 <span className='font-normal'>C</span>
               </span>
             </div>
-            { !COMPARISON_DISABLED_PERIODS.includes(query.period) && site.flags.comparisons &&
+            { !COMPARISON_DISABLED_PERIODS.includes(query.period) &&
               <div className="py-1 date-option-group border-t border-gray-200 dark:border-gray-500">
                 <span
                   onClick={() => {
@@ -389,13 +385,13 @@ function DatePicker({query, site, history}) {
             options={{
               mode: 'range',
               maxDate: 'today',
-              minDate: parseUTCDate(site.statsBegin),
+              minDate: site.statsBegin,
               showMonths: 1,
               static: true,
               animate: true}}
             ref={calendar}
             className="invisible"
-            onChange={setCustomDate}
+            onClose={setCustomDate}
           />
         </div>
       )

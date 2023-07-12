@@ -14,45 +14,51 @@ defmodule PlausibleWeb.InvitationController do
 
   def accept_invitation(conn, %{"invitation_id" => invitation_id}) do
     invitation =
-      Repo.get_by!(Invitation, invitation_id: invitation_id)
+      Repo.get_by(Invitation, invitation_id: invitation_id)
       |> Repo.preload([:site, :inviter])
 
-    user = conn.assigns[:current_user]
-    existing_membership = Repo.get_by(Membership, user_id: user.id, site_id: invitation.site.id)
+    if invitation do
+      user = conn.assigns[:current_user]
+      existing_membership = Repo.get_by(Membership, user_id: user.id, site_id: invitation.site.id)
 
-    multi =
-      if invitation.role == :owner do
-        Multi.new()
-        |> downgrade_previous_owner(invitation.site)
-        |> maybe_end_trial_of_new_owner(user)
-      else
-        Multi.new()
+      multi =
+        if invitation.role == :owner do
+          Multi.new()
+          |> downgrade_previous_owner(invitation.site)
+          |> maybe_end_trial_of_new_owner(user)
+        else
+          Multi.new()
+        end
+
+      membership_changeset =
+        (existing_membership ||
+           %Membership{user_id: user.id, site_id: invitation.site.id})
+        |> Membership.changeset(%{role: invitation.role})
+
+      multi =
+        multi
+        |> Multi.insert_or_update(:membership, membership_changeset)
+        |> Multi.delete(:invitation, invitation)
+
+      case Repo.transaction(multi) do
+        {:ok, changes} ->
+          updated_user = Map.get(changes, :user, user)
+          notify_invitation_accepted(invitation)
+          Plausible.Billing.SiteLocker.check_sites_for(updated_user)
+
+          conn
+          |> put_flash(:success, "You now have access to #{invitation.site.domain}")
+          |> redirect(to: "/#{URI.encode_www_form(invitation.site.domain)}")
+
+        {:error, _operation, _value, _changes} ->
+          conn
+          |> put_flash(:error, "Something went wrong, please try again")
+          |> redirect(to: "/sites")
       end
-
-    membership_changeset =
-      (existing_membership ||
-         %Membership{user_id: user.id, site_id: invitation.site.id})
-      |> Membership.changeset(%{role: invitation.role})
-
-    multi =
-      multi
-      |> Multi.insert_or_update(:membership, membership_changeset)
-      |> Multi.delete(:invitation, invitation)
-
-    case Repo.transaction(multi) do
-      {:ok, changes} ->
-        updated_user = Map.get(changes, :user, user)
-        notify_invitation_accepted(invitation)
-        Plausible.Billing.SiteLocker.check_sites_for(updated_user)
-
-        conn
-        |> put_flash(:success, "You now have access to #{invitation.site.domain}")
-        |> redirect(to: "/#{URI.encode_www_form(invitation.site.domain)}")
-
-      {:error, _, _} ->
-        conn
-        |> put_flash(:error, "Something went wrong, please try again")
-        |> redirect(to: "/sites")
+    else
+      conn
+      |> put_flash(:error, "Invitation missing or already accepted")
+      |> redirect(to: "/sites")
     end
   end
 

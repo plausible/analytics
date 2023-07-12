@@ -1,1 +1,0 @@
-DROP DICTIONARY IF EXISTS domains_lookup SYNC

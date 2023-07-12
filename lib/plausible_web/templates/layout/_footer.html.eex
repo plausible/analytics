@@ -10,7 +10,6 @@
         <%= if !Application.get_env(:plausible, :is_selfhost) do %>
           Made and hosted in the EU <span class="text-lg">🇪🇺</span><br />
         <% end %>
-        We <a class="text-gray-300 hover:text-white" rel="noreferrer" href="https://plausible.io/giving-back">give back</a> 5% of our revenue.<br />
         Solely funded by our subscribers.<br />
         </p>
         <%= if Application.get_env(:plausible, :is_selfhost) do %>
@@ -62,6 +61,11 @@
               <li class="mt-4">
                 <a rel="noreferrer" href="https://plausible.io/for-ecommerce-saas" class="text-base leading-6 text-gray-300 hover:text-white">
                   For ecommerce
+                </a>
+              </li>
+            <li class="mt-4">
+                <a rel="noreferrer" href="https://plausible.io/white-label-web-analytics" class="text-base leading-6 text-gray-300 hover:text-white">
+                  White label
                 </a>
               </li>
             </ul>

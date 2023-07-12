@@ -25,7 +25,8 @@
     "react/jsx-props-no-spreading": [0],
     "jsx-a11y/click-events-have-key-events": [0],
     "jsx-a11y/no-static-element-interactions": [0],
-    "react/no-did-update-set-state": [0]
+    "react/no-did-update-set-state": [0],
+    "react/no-unknown-property": [2, {"ignore": ["tooltip"]}]
   },
   "settings": {
     "react": {

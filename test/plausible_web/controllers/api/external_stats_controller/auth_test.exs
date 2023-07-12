@@ -123,7 +123,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     )
   end
 
-  @tag :v2_only
   test "can access with either site_id after domain change", %{
     conn: conn,
     user: user,

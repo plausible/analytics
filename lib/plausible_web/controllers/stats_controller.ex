@@ -60,12 +60,14 @@ defmodule PlausibleWeb.StatsController do
         conn
         |> assign(:skip_plausible_tracking, !demo)
         |> remove_email_report_banner(site)
-        |> put_resp_header("x-robots-tag", "noindex")
+        |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
+          funnels: Plausible.Funnels.list(site),
           stats_start_date: stats_start_date,
-          title: "Plausible · " <> site.domain,
+          native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
+          title: title(conn, site),
           offer_email_report: offer_email_report,
           demo: demo,
           flags: get_flags(conn.assigns[:current_user]),
@@ -96,15 +98,10 @@ defmodule PlausibleWeb.StatsController do
     query = Query.from(site, params) |> Filters.add_prefix()
 
     metrics =
-      cond do
-        query.filters["event:goal"] ->
-          [:visitors]
-
-        FunWithFlags.enabled?(:visits_metric, for: conn.assigns[:current_user]) ->
-          [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
-
-        true ->
-          [:visitors, :pageviews, :bounce_rate, :visit_duration]
+      if query.filters["event:goal"] do
+        [:visitors]
+      else
+        [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
       end
 
     graph = Plausible.Stats.timeseries(site, query, metrics)
@@ -290,13 +287,15 @@ defmodule PlausibleWeb.StatsController do
       !shared_link.site.locked ->
         conn
         |> assign(:skip_plausible_tracking, true)
-        |> put_resp_header("x-robots-tag", "noindex")
+        |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Sites.has_goals?(shared_link.site),
+          funnels: Plausible.Funnels.list(shared_link.site),
           stats_start_date: shared_link.site.stats_start_date,
-          title: "Plausible · " <> shared_link.site.domain,
+          native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
+          title: title(conn, shared_link.site),
           offer_email_report: false,
           demo: false,
           skip_plausible_tracking: true,
@@ -329,10 +328,8 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user) do
     %{
-      custom_dimension_filter: FunWithFlags.enabled?(:custom_dimension_filter, for: user),
-      visits_metric: FunWithFlags.enabled?(:visits_metric, for: user),
-      views_per_visit_metric: FunWithFlags.enabled?(:views_per_visit_metric, for: user),
-      comparisons: FunWithFlags.enabled?(:comparisons, for: user)
+      funnels: Plausible.Funnels.enabled_for?(user),
+      props: FunWithFlags.enabled?(:props, for: user)
     }
   end
 
@@ -345,5 +342,13 @@ defmodule PlausibleWeb.StatsController do
       end
 
     !!is_or_nil
+  end
+
+  defp title(%{path_info: ["plausible.io"]}, _) do
+    "Plausible Analytics: Live Demo"
+  end
+
+  defp title(_conn, site) do
+    "Plausible · " <> site.domain
   end
 end

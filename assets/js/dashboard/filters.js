@@ -43,7 +43,7 @@ function filterText(key, _rawValue, query) {
 
   if (key === "props") {
     const [[propKey, _propValue]] = Object.entries(query.filters['props'])
-    return <>props.{propKey} {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    return <>Property <b>{propKey}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   } else if (formattedFilter) {
     return <>{formattedFilter} {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
@@ -95,7 +95,6 @@ function DropdownContent({ history, site, query, wrapped }) {
 
   if (wrapped === 0 || addingFilter) {
     return Object.keys(FILTER_GROUPS)
-      .filter((option) => option === 'props' ? site.flags.custom_dimension_filter : true)
       .map((option) => filterDropdownOption(site, option))
   }
 

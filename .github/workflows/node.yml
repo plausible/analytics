@@ -12,12 +12,12 @@ jobs:
     runs-on: buildjet-4vcpu-ubuntu-2004
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Read .tool-versions
       uses: marocchino/tool-versions-action@v1
       id: versions
     - name: Set up Node
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: ${{steps.versions.outputs.nodejs}}
     - run: npm install --prefix ./assets

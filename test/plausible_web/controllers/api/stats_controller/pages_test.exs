@@ -307,6 +307,94 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns top pages with :not_member filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/safari",
+          "meta.key": ["browser"],
+          "meta.value": ["Safari"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/firefox",
+          "meta.key": ["browser"],
+          "meta.value": ["Firefox"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/firefox",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"browser" => "!Chrome|Safari"}})
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/firefox",
+                 "visitors" => 2
+               }
+             ]
+    end
+
+    test "returns top pages with :not_member filter on custom pageview props including (none) value",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/chrome",
+          "meta.key": ["browser"],
+          "meta.value": ["Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/safari",
+          "meta.key": ["browser"],
+          "meta.value": ["Safari"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/no-browser-prop",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"browser" => "!Chrome|(none)"}})
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "/safari",
+                 "visitors" => 1
+               }
+             ]
+    end
+
     test "calculates bounce_rate and time_on_page for pages filtered by page path",
          %{conn: conn, site: site} do
       populate_stats(site, [

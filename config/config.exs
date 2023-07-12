@@ -4,10 +4,12 @@ config :plausible,
   ecto_repos: [Plausible.Repo, Plausible.IngestRepo]
 
 config :plausible, PlausibleWeb.Endpoint,
+  # Does not to have to be secret, as per: https://github.com/phoenixframework/phoenix/issues/2146
+  live_view: [signing_salt: "f+bZg/crMtgjZJJY7X6OwIWc3XJR2C5Y"],
   pubsub_server: Plausible.PubSub,
   render_errors: [
     view: PlausibleWeb.ErrorView,
-    layout: {PlausibleWeb.LayoutView, "focus.html"},
+    layout: {PlausibleWeb.LayoutView, "base_error.html"},
     accepts: ~w(html json)
   ]
 
@@ -53,5 +55,9 @@ config :plausible,
   sites_by_domain_cache_refresh_interval: :timer.minutes(15)
 
 config :plausible, Plausible.Ingestion.Counters, enabled: true
+
+config :ex_cldr,
+  default_locale: "en",
+  default_backend: Plausible.Cldr
 
 import_config "#{config_env()}.exs"

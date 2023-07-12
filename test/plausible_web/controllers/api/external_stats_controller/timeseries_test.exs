@@ -697,7 +697,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
           "period" => "month",
           "date" => "2021-01-01",
           "filters" => "event:page==/hello",
-          "metrics" => "visitors,visits,pageviews,views_per_visit,bounce_rate,visit_duration"
+          "metrics" => "visitors,visits,pageviews,bounce_rate,visit_duration"
         })
 
       res = json_response(conn, 200)["results"]
@@ -707,8 +707,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
                "visitors" => 2,
                "visits" => 2,
                "pageviews" => 2,
-               "views_per_visit" => 1.5,
-               "bounce_rate" => 50,
+               "bounce_rate" => 100,
                "visit_duration" => 150
              }
     end

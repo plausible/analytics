@@ -9,17 +9,12 @@ defmodule PlausibleWeb.ErrorView do
   end
 
   def render("404.html", assigns) do
-    render(
-      "error.html",
-      Map.merge(
-        %{
-          layout: false,
-          status: 404,
-          message: "Oops! There's nothing here"
-        },
-        assigns
-      )
-    )
+    assigns =
+      assigns
+      |> Map.put(:status, 404)
+      |> Map.put_new(:message, "Oops! There's nothing here")
+
+    render("generic_error.html", assigns)
   end
 
   def render(<<"5", _error_5xx::binary-size(2), ".html">>, assigns) do
@@ -45,18 +40,11 @@ defmodule PlausibleWeb.ErrorView do
   end
 
   def template_not_found(template, assigns) do
-    status = String.trim_trailing(template, ".html")
+    assigns =
+      assigns
+      |> Map.put_new(:message, Phoenix.Controller.status_message_from_template(template))
+      |> Map.put(:status, String.trim_trailing(template, ".html"))
 
-    render(
-      "error.html",
-      Map.merge(
-        %{
-          layout: false,
-          status: status,
-          message: Phoenix.Controller.status_message_from_template(template)
-        },
-        assigns
-      )
-    )
+    render("generic_error.html", assigns)
   end
 end

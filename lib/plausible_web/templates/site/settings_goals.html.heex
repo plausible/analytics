@@ -1,0 +1,96 @@
+<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+  <header class="relative">
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Goals</h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
+      Define actions that you want your users to take like visiting a certain page, submitting a form, etc.
+    </p>
+
+    <%= link(to: "https://plausible.io/docs/goal-conversions", target: "_blank", rel: "noreferrer") do %>
+      <svg
+        class="w-6 h-6 absolute top-0 right-0 text-gray-400"
+        fill="currentColor"
+        viewBox="0 0 20 20"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          fill-rule="evenodd"
+          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+          clip-rule="evenodd"
+        >
+        </path>
+      </svg>
+    <% end %>
+  </header>
+
+  <PlausibleWeb.Components.Site.Feature.toggle
+    site={@site}
+    setting={:conversions_enabled}
+    label="Show goals in the dashboard"
+    conn={@conn}
+  >
+    <%= if Enum.count(@goals) > 0 do %>
+      <div class="mt-4">
+        <%= for goal <- @goals do %>
+          <div class="border-b border-gray-300 dark:border-gray-500 py-3 flex justify-between">
+            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
+              <%= goal %>
+            </span>
+
+            <%= if not Enum.empty?(goal.funnels) do %>
+              <%= button(to: "/#{URI.encode_www_form(@site.domain)}/goals/#{goal.id}", method: :delete, class: "text-sm text-red-600", data: [confirm: "The goal '#{goal}' is part of some funnel(s). If you are going to delete it, the associated funnels will be either reduced or deleted completely. Are you sure you want to remove goal '#{goal}'?"]) do %>
+                <svg
+                  class="feather feather-sm"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                  </path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              <% end %>
+            <% else %>
+              <%= button(to: "/#{URI.encode_www_form(@site.domain)}/goals/#{goal.id}", method: :delete, class: "text-sm text-red-600", data: [confirm: "Are you sure you want to remove goal '#{goal}'? This will just affect the UI, all of your analytics data will stay intact."]) do %>
+                <svg
+                  class="feather feather-sm"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                  </path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="mt-4 dark:text-gray-100">No goals configured for this site yet</div>
+    <% end %>
+
+    <%= link("+ Add goal",
+      to: "/#{URI.encode_www_form(@site.domain)}/goals/new",
+      class: "button mt-6"
+    ) %>
+    <%= if Enum.count(@goals) >= Funnel.min_steps() and Plausible.Funnels.enabled_for?(@current_user) do %>
+      <%= link("Set up funnels",
+        to: Routes.site_path(@conn, :settings_funnels, @site.domain),
+        class: "mt-6 ml-2 text-indigo-500 underline text-sm"
+      ) %>
+    <% end %>
+  </PlausibleWeb.Components.Site.Feature.toggle>
+</div>

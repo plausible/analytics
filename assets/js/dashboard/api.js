@@ -50,6 +50,7 @@ export function serializeQuery(query, extraQuery=[]) {
     queryObj.comparison = query.comparison
     queryObj.compare_from = query.compare_from ? formatISO(query.compare_from) : undefined
     queryObj.compare_to = query.compare_to ? formatISO(query.compare_to) : undefined
+    queryObj.match_day_of_week = query.match_day_of_week
   }
 
   Object.assign(queryObj, ...extraQuery)
@@ -69,4 +70,12 @@ export function get(url, query={}, ...extraQuery) {
       }
       return response.json()
     })
+}
+
+export function put(url, body) {
+  return fetch(url, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  })
 }

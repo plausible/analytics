@@ -1,4 +1,4 @@
-CREATE TABLE events_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+CREATE TABLE IF NOT EXISTS events_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
 (
     `timestamp` DateTime CODEC(Delta(4), LZ4),
     `name` LowCardinality(String),

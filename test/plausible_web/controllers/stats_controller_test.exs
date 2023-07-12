@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.StatsControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
+  import Plausible.Test.Support.HTML
 
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
@@ -8,7 +9,31 @@ defmodule PlausibleWeb.StatsControllerTest do
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/#{site.domain}")
-      assert html_response(conn, 200) =~ "stats-react-container"
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, "div#stats-react-container")
+
+      assert ["noindex, nofollow"] ==
+               resp
+               |> find("meta[name=robots]")
+               |> Floki.attribute("content")
+
+      assert text_of_element(resp, "title") == "Plausible · #{site.domain}"
+    end
+
+    test "plausible.io live demo - shows site stats", %{conn: conn} do
+      site = insert(:site, domain: "plausible.io", public: true)
+      populate_stats(site, [build(:pageview)])
+
+      conn = get(conn, "/#{site.domain}")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, "div#stats-react-container")
+
+      assert ["index, nofollow"] ==
+               resp
+               |> find("meta[name=robots]")
+               |> Floki.attribute("content")
+
+      assert text_of_element(resp, "title") == "Plausible Analytics: Live Demo"
     end
 
     test "public site - shows waiting for first pageview", %{conn: conn} do

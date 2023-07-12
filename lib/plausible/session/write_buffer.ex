@@ -69,11 +69,7 @@ defmodule Plausible.Session.WriteBuffer do
           |> Enum.map(&(Map.from_struct(&1) |> Map.delete(:__meta__)))
           |> Enum.reverse()
 
-        if Plausible.v2?() do
-          IngestRepo.insert_all(Plausible.ClickhouseSessionV2, sessions)
-        else
-          IngestRepo.insert_all(Plausible.ClickhouseSession, sessions)
-        end
+        IngestRepo.insert_all(Plausible.ClickhouseSessionV2, sessions)
     end
   end
 

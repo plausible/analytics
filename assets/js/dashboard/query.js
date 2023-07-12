@@ -2,7 +2,7 @@ import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
 import {nowForSite} from './util/date'
 import * as storage from './util/storage'
-import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled } from './comparison-input'
+import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled,getStoredMatchDayOfWeek } from './comparison-input'
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -27,6 +27,8 @@ export function parseQuery(querystring, site) {
   let comparison = q.get('comparison') || getStoredComparisonMode(site.domain)
   if (COMPARISON_DISABLED_PERIODS.includes(period) || !isComparisonEnabled(comparison)) comparison = null
 
+  let matchDayOfWeek = q.get('match_day_of_week') || getStoredMatchDayOfWeek(site.domain)
+
   return {
     period,
     comparison,
@@ -35,6 +37,7 @@ export function parseQuery(querystring, site) {
     date: q.get('date') ? dayjs.utc(q.get('date')) : nowForSite(site),
     from: q.get('from') ? dayjs.utc(q.get('from')) : undefined,
     to: q.get('to') ? dayjs.utc(q.get('to')) : undefined,
+    match_day_of_week: matchDayOfWeek == 'true',
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
     filters: {
       'goal': q.get('goal'),

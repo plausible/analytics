@@ -7,12 +7,12 @@ defmodule Plausible.ClickhouseEventV2 do
 
   @primary_key false
   schema "events_v2" do
-    field :name, :string
-    field :site_id, Ch.Types.UInt64
+    field :name, Ch, type: "LowCardinality(String)"
+    field :site_id, Ch, type: "UInt64"
     field :hostname, :string
     field :pathname, :string
-    field :user_id, Ch.Types.UInt64
-    field :session_id, Ch.Types.UInt64
+    field :user_id, Ch, type: "UInt64"
+    field :session_id, Ch, type: "UInt64"
     field :timestamp, :naive_datetime
 
     field :referrer, :string
@@ -23,19 +23,25 @@ defmodule Plausible.ClickhouseEventV2 do
     field :utm_content, :string
     field :utm_term, :string
 
-    field :country_code, Ch.Types.FixedString, size: 2
-    field :subdivision1_code, :string
-    field :subdivision2_code, :string
-    field :city_geoname_id, Ch.Types.UInt32
+    field :country_code, Ch, type: "FixedString(2)"
+    field :subdivision1_code, Ch, type: "LowCardinality(String)"
+    field :subdivision2_code, Ch, type: "LowCardinality(String)"
+    field :city_geoname_id, Ch, type: "UInt32"
 
-    field :screen_size, :string
-    field :operating_system, :string
-    field :operating_system_version, :string
-    field :browser, :string
-    field :browser_version, :string
+    field :screen_size, Ch, type: "LowCardinality(String)"
+    field :operating_system, Ch, type: "LowCardinality(String)"
+    field :operating_system_version, Ch, type: "LowCardinality(String)"
+    field :browser, Ch, type: "LowCardinality(String)"
+    field :browser_version, Ch, type: "LowCardinality(String)"
 
     field :"meta.key", {:array, :string}
     field :"meta.value", {:array, :string}
+
+    field :revenue_source_amount, Ch, type: "Nullable(Decimal64(3))"
+    field :revenue_source_currency, Ch, type: "FixedString(3)"
+    field :revenue_reporting_amount, Ch, type: "Nullable(Decimal64(3))"
+    field :revenue_reporting_currency, Ch, type: "FixedString(3)"
+
     field :transferred_from, :string
   end
 
@@ -67,7 +73,11 @@ defmodule Plausible.ClickhouseEventV2 do
         :city_geoname_id,
         :screen_size,
         :"meta.key",
-        :"meta.value"
+        :"meta.value",
+        :revenue_source_amount,
+        :revenue_source_currency,
+        :revenue_reporting_amount,
+        :revenue_reporting_currency
       ],
       empty_values: [nil, ""]
     )

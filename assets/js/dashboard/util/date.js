@@ -44,8 +44,27 @@ export function formatDayShort(date, includeYear = false) {
   }
 }
 
+export function formatDateRange(site, from, to) {
+  if (!from || !to) return
+  if (typeof from === 'string') from = parseUTCDate(from)
+  if (typeof to === 'string') to = parseUTCDate(to)
+
+  if (from.isSame(to)) {
+    return formatDay(from)
+  } else if (from.isSame(to, 'year')) {
+    const includeYear = !isThisYear(site, from)
+    return `${formatDayShort(from, false)} - ${formatDayShort(to, includeYear)}`
+  } else {
+    return `${formatDayShort(from, true)} - ${formatDayShort(to, true)}`
+  }
+}
+
 export function parseUTCDate(dateString) {
   return dayjs.utc(dateString)
+}
+
+export function parseNaiveDate(dateString) {
+  return dayjs(dateString)
 }
 
 export function nowForSite(site) {

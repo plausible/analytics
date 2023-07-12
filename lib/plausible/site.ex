@@ -17,8 +17,13 @@ defmodule Plausible.Site do
     field :locked, :boolean
     field :stats_start_date, :date
     field :native_stats_start_at, :naive_datetime
+    field :allowed_event_props, {:array, :string}
+    field :conversions_enabled, :boolean, default: true
+    field :props_enabled, :boolean, default: true
+    field :funnels_enabled, :boolean, default: true
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
+    # default is set via changeset/2
     field :ingest_rate_limit_threshold, :integer
 
     field :domain_changed_from, :string
@@ -29,6 +34,8 @@ defmodule Plausible.Site do
     many_to_many :members, User, join_through: Plausible.Site.Membership
     has_many :memberships, Plausible.Site.Membership
     has_many :invitations, Plausible.Auth.Invitation
+    has_many :goals, Plausible.Goal, preload_order: [desc: :id]
+    has_many :revenue_goals, Plausible.Goal, where: [currency: {:not, nil}]
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
@@ -61,6 +68,10 @@ defmodule Plausible.Site do
       name: "domain_change_disallowed",
       message: @domain_unique_error
     )
+    |> put_change(
+      :ingest_rate_limit_threshold,
+      Application.get_env(:plausible, __MODULE__)[:default_ingest_threshold]
+    )
   end
 
   def update_changeset(site, attrs \\ %{}, opts \\ []) do
@@ -68,13 +79,6 @@ defmodule Plausible.Site do
       opts
       |> Keyword.get(:at, NaiveDateTime.utc_now())
       |> NaiveDateTime.truncate(:second)
-
-    attrs =
-      if Plausible.v2?() do
-        attrs
-      else
-        Map.delete(attrs, :domain)
-      end
 
     site
     |> changeset(attrs)
@@ -160,6 +164,25 @@ defmodule Plausible.Site do
         source: imported_source
       }
     )
+  end
+
+  def set_allowed_event_props(site, list) do
+    change(site, allowed_event_props: list)
+  end
+
+  @togglable_features ~w[conversions_enabled funnels_enabled props_enabled]a
+  def feature_toggle_change(site, property, opts \\ [])
+      when property in @togglable_features do
+    override = Keyword.get(opts, :override)
+
+    attrs =
+      if is_boolean(override) do
+        %{property => override}
+      else
+        %{property => !Map.fetch!(site, property)}
+      end
+
+    cast(site, attrs, @togglable_features)
   end
 
   def remove_imported_data(site) do

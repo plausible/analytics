@@ -47,7 +47,7 @@ defmodule Plausible.Site.Domain do
     changeset = Site.update_changeset(site, %{domain: new_domain}, opts)
 
     changeset =
-      if Enum.empty?(changeset.changes) and is_nil(changeset.errors[:domain]) do
+      if is_nil(changeset.errors[:domain]) and is_nil(changeset.changes[:domain]) do
         Ecto.Changeset.add_error(
           changeset,
           :domain,

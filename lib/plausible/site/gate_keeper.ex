@@ -1,9 +1,8 @@
 defmodule Plausible.Site.GateKeeper do
   @type policy() :: :allow | :not_found | :block | :throttle
-  @type site_id() :: pos_integer()
   @policy_for_non_existing_sites :not_found
 
-  @type t() :: {:allow, site_id()} | {:deny, policy()}
+  @type t() :: {:allow, Plausible.Site.t()} | {:deny, policy()}
 
   @moduledoc """
   Thin wrapper around Hammer for gate keeping domain-specific events
@@ -33,7 +32,7 @@ defmodule Plausible.Site.GateKeeper do
   @spec check(String.t(), Keyword.t()) :: t()
   def check(domain, opts \\ []) when is_binary(domain) do
     case policy(domain, opts) do
-      {:allow, site_id} -> {:allow, site_id}
+      {:allow, site} -> {:allow, site}
       other -> {:deny, other}
     end
   end
@@ -56,15 +55,15 @@ defmodule Plausible.Site.GateKeeper do
     result
   end
 
-  defp check_rate_limit(%Site{id: site_id, ingest_rate_limit_threshold: nil}, _opts) do
-    {:allow, site_id}
+  defp check_rate_limit(%Site{ingest_rate_limit_threshold: nil} = site, _opts) do
+    {:allow, site}
   end
 
   defp check_rate_limit(%Site{ingest_rate_limit_threshold: 0}, _opts) do
     :block
   end
 
-  defp check_rate_limit(%Site{id: site_id, ingest_rate_limit_threshold: threshold} = site, opts)
+  defp check_rate_limit(%Site{ingest_rate_limit_threshold: threshold} = site, opts)
        when is_integer(threshold) do
     key = Keyword.get(opts, :key, key(site.domain))
     scale_ms = site.ingest_rate_limit_scale_seconds * 1_000
@@ -74,14 +73,14 @@ defmodule Plausible.Site.GateKeeper do
         :throttle
 
       {:allow, _} ->
-        {:allow, site_id}
+        {:allow, site}
 
       {:error, reason} ->
         Logger.error(
           "Error checking rate limit for '#{key}': #{inspect(reason)}. Falling back to: :allow"
         )
 
-        {:allow, site_id}
+        {:allow, site}
     end
   end
 end

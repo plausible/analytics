@@ -33,10 +33,27 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert %{"plot" => plot} = json_response(conn, 200)
 
-      zeroes = Stream.repeatedly(fn -> 0 end) |> Stream.take(22) |> Enum.into([])
+      zeroes = List.duplicate(0, 22)
 
       assert Enum.count(plot) == 24
       assert plot == [1] ++ zeroes ++ [1]
+    end
+
+    test "returns empty plot with no native data and recently imported from ga in realtime graph",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, date: Date.utc_today()),
+        build(:imported_visitors, date: Date.utc_today())
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=realtime&with_imported=true"
+        )
+
+      zeroes = List.duplicate(0, 30)
+      assert %{"plot" => ^zeroes, "with_imported" => false} = json_response(conn, 200)
     end
 
     test "displays visitors for a day with imported data", %{conn: conn, site: site} do
@@ -53,7 +70,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics"} = json_response(conn, 200)
+      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+               json_response(conn, 200)
 
       assert plot == [2] ++ List.duplicate(0, 23)
     end
@@ -119,7 +137,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics"} = json_response(conn, 200)
+      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+               json_response(conn, 200)
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 2
@@ -139,7 +158,8 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
           "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&with_imported=true"
         )
 
-      assert %{"plot" => plot, "imported_source" => "Google Analytics"} = json_response(conn, 200)
+      assert %{"plot" => plot, "imported_source" => "Google Analytics", "with_imported" => true} =
+               json_response(conn, 200)
 
       assert Enum.count(plot) == 31
       assert List.first(plot) == 1
@@ -828,6 +848,249 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert length(labels) == length(comparison_labels)
       assert "__blank__" == List.last(labels)
+    end
+
+    test "compares imported data and native data together", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      site
+      |> Ecto.Changeset.change(
+        imported_data: %{
+          start_date: ~D[2005-01-01],
+          end_date: ~D[2020-01-31],
+          source: "Google Analytics",
+          status: "ok"
+        }
+      )
+      |> Plausible.Repo.update!()
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=year&date=2021-01-01&with_imported=true&comparison=year_over_year&interval=month"
+        )
+
+      assert %{
+               "plot" => plot,
+               "comparison_plot" => comparison_plot,
+               "imported_source" => "Google Analytics",
+               "with_imported" => true
+             } = json_response(conn, 200)
+
+      assert 4 == Enum.sum(plot)
+      assert 2 == Enum.sum(comparison_plot)
+    end
+
+    test "does not return imported data when with_imported is set to false when comparing", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:imported_visitors, date: ~D[2020-01-02]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      site
+      |> Ecto.Changeset.change(
+        imported_data: %{
+          start_date: ~D[2005-01-01],
+          end_date: ~D[2020-01-31],
+          source: "Google Analytics",
+          status: "ok"
+        }
+      )
+      |> Plausible.Repo.update!()
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=year&date=2021-01-01&with_imported=false&comparison=year_over_year&interval=month"
+        )
+
+      assert %{
+               "plot" => plot,
+               "comparison_plot" => comparison_plot,
+               "imported_source" => "Google Analytics",
+               "with_imported" => false
+             } = json_response(conn, 200)
+
+      assert 4 == Enum.sum(plot)
+      assert 0 == Enum.sum(comparison_plot)
+    end
+  end
+
+  describe "GET /api/stats/main-graph - total_revenue plot" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "plots total_revenue for a month", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("19.90"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-05 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.31"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("20.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=total_revenue&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert plot == [
+               13.29,
+               0.0,
+               0.0,
+               0.0,
+               19.9,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               30.31
+             ]
+    end
+  end
+
+  describe "GET /api/stats/main-graph - average_revenue plot" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "plots total_revenue for a month", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("50.50"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("19.90"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-05 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.31"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("20.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=average_revenue&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert plot == [
+               31.895,
+               0.0,
+               0.0,
+               0.0,
+               19.9,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               15.155
+             ]
     end
   end
 end

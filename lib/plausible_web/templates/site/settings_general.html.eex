@@ -1,4 +1,3 @@
-<%= if Plausible.v2?() do %>
 <div class="shadow sm:rounded-md sm:overflow-hidden">
   <div class="bg-white dark:bg-gray-800 py-6 px-4 space-y-6 sm:p-6">
     <header class="relative">
@@ -19,7 +18,6 @@
     </span>
   </div>
 </div>
-<% end %>
 
 <%= form_for @changeset, "/#{URI.encode_www_form(@site.domain)}/settings", fn f -> %>
   <div class="shadow sm:rounded-md sm:overflow-hidden">
@@ -56,7 +54,7 @@
 
   <div class="my-4">
     <div class="relative">
-      <code><%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:bg-white focus:border-gray-300 dark:focus:border-gray-500 text-xs mt-2 resize-none", value: snippet(@site), rows: 2 %></code>
+      <code><%= textarea f, :domain, id: "snippet_code", class: "transition overflow-hidden bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 pr-6 text-gray-700 dark:text-gray-300 leading-normal focus:outline-none focus:bg-white focus:border-gray-300 dark:focus:border-gray-500 text-xs mt-2 resize-none", value: render_snippet(@site), rows: 2 %></code>
       <a onclick="var textarea = document.getElementById('snippet_code'); textarea.focus(); textarea.select(); document.execCommand('copy');" href="javascript:void(0)" class="no-underline text-indigo-500 text-sm hover:underline">
         <svg class="absolute text-indigo-500" style="top: 24px; right: 12px;" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
       </a>

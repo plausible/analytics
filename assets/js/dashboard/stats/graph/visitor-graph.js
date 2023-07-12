@@ -13,6 +13,8 @@ import { IntervalPicker, getStoredInterval, storeInterval } from './interval-pic
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import classNames from 'classnames';
+import { parseNaiveDate, isBefore } from '../../util/date'
+import { isComparisonEnabled } from '../../comparison-input'
 
 const calculateMaximumY = function(dataset) {
   const yAxisValues = dataset
@@ -66,13 +68,15 @@ class LineGraph extends React.Component {
         onResize: this.updateWindowDimensions,
         elements: { line: { tension: 0 }, point: { radius: 0 } },
         onClick: this.onClick.bind(this),
+        scale: {
+          ticks: { precision: 0, maxTicksLimit: 8 }
+        },
         scales: {
           y: {
             min: 0,
             suggestedMax: calculateMaximumY(dataSet),
             ticks: {
               callback: METRIC_FORMATTER[metric],
-              maxTicksLimit: 8,
               color: this.props.darkTheme ? 'rgb(243, 244, 246)' : undefined
             },
             grid: {
@@ -89,7 +93,6 @@ class LineGraph extends React.Component {
           x: {
             grid: { display: false },
             ticks: {
-              maxTicksLimit: 8,
               callback: function (val, _index, _ticks) {
                 if (this.getLabelForValue(val) == "__blank__") return ""
 
@@ -215,7 +218,6 @@ class LineGraph extends React.Component {
    */
   updateWindowDimensions(chart, dimensions) {
     chart.options.scales.x.ticks.maxTicksLimit = dimensions.width < 720 ? 5 : 8
-    chart.options.scales.y.ticks.maxTicksLimit = dimensions.height < 233 ? 3 : 8
   }
 
   onClick(e) {
@@ -284,9 +286,22 @@ class LineGraph extends React.Component {
   }
 
   importedNotice() {
-    const source = this.props.topStatData && this.props.topStatData.imported_source;
+    if (!this.props.topStatData?.imported_source) return
 
-    if (source) {
+    const isBeforeNativeStats = (date) => {
+      if (!date) return false
+
+      const nativeStatsBegin = parseNaiveDate(this.props.site.nativeStatsBegin)
+      const parsedDate = parseNaiveDate(date)
+
+      return isBefore(parsedDate, nativeStatsBegin, "day")
+    }
+
+    const isQueryingImportedPeriod = isBeforeNativeStats(this.props.topStatData.from)
+    const isComparingImportedPeriod = isBeforeNativeStats(this.props.topStatData.comparing_from)
+
+    if (isQueryingImportedPeriod || isComparingImportedPeriod) {
+      const source = this.props.topStatData.imported_source
       const withImported = this.props.topStatData.with_imported;
       const strike = withImported ? "" : " line-through"
       const target =  url.setQuery('with_imported', !withImported)
@@ -323,11 +338,11 @@ class LineGraph extends React.Component {
     return (
       <div>
         <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{height: this.getTopStatsHeight()}}>
-          <TopStats query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={lastLoadTimestamp} />
+          <TopStats site={site} query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
           {mainGraphRefreshing && renderLoader()}
-          <div className="absolute right-4 -top-10 py-2 md:py-0 flex items-center">
+          <div className="absolute right-4 -top-8 py-1 flex items-center">
             { this.downloadLink() }
             { this.samplingNotice() }
             { this.importedNotice() }
@@ -460,23 +475,17 @@ export default class VisitorGraph extends React.Component {
   }
 
   fetchTopStatData() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, this.props.query)
+    const query = { ...this.props.query }
+    if (!isComparisonEnabled(query.comparison)) query.comparison = 'previous_period'
+
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, query)
       .then((res) => {
-        res.top_stats = this.maybeRemoveFeatureFlaggedMetrics(res.top_stats)
         this.setState({ topStatsLoadingState: LoadingState.loaded, topStatData: res }, () => {
           this.storeTopStatsContainerHeight()
           this.resetMetric()
         })
         return res
       })
-  }
-
-  maybeRemoveFeatureFlaggedMetrics(top_stats) {
-    if (this.props.site.flags.visits_metric) {
-      return top_stats
-    } else {
-      return top_stats.filter((stat) => {return !(["Total visits", "Views per visit"].includes(stat.name))})
-    }
   }
 
   renderInner() {

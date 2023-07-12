@@ -6,9 +6,7 @@ operating_system_version, subdivision1_code, subdivision2_code, city_geoname_id,
 utm_term, transferred_from, entry_meta.key, entry_meta.value
 )
 SELECT
-  dictGet(
-    'domains_lookup', 'site_id', domain
-  ),
+  site_id,
   session_id, sign, user_id, hostname, timestamp, start, is_bounce, entry_page, 
   exit_page, pageviews, events, duration, referrer, referrer_source, country_code, 
   screen_size, operating_system, browser, utm_medium, utm_source, utm_campaign, browser_version, 
@@ -16,15 +14,5 @@ SELECT
   utm_term, transferred_from, entry_meta.key, entry_meta.value
 FROM
   sessions
-WHERE
-  (
-    domain IN (
-      SELECT
-        domain
-      FROM
-        dictionary('domains_lookup')
-      WHERE
-    partition <= '<%= @partition %>'
-    )
-  )
-AND (_partition_id = '<%= @partition %>')
+INNER JOIN domains_lookup ON domains_lookup.domain = sessions.domain
+WHERE (_partition_id = '<%= @partition %>')
