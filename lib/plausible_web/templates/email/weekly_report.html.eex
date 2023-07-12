@@ -11,20 +11,10 @@
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="x-apple-disable-message-reformatting">
-  <meta name="color-scheme" content="light dark">
-  <meta name="supported-color-schemes" content="light dark">
   <!--[if !mso]><!--><meta http-equiv="X-UA-Compatible" content="IE=edge"><!--<![endif]-->
   <title></title>
 
     <style type="text/css">
-    :root {
-      color-scheme: light dark;
-      supported-color-schemes: light dark;
-    }
-    @media (prefers-color-scheme: dark) {
-      .lightimage { display: none !important; }
-      .darkimageWrapper, .darkimage { display: inline-block !important; }
-    }
       @media only screen and (min-width: 620px) {
   .u-row {
     width: 600px !important;
@@ -198,11 +188,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
   <tbody><tr>
     <td style="padding-right: 0px;padding-left: 0px;" align="center">
 
-      <img src="https://plausible.io/images/icon/plausible_logo-973ea42fac38d21a0a8cda9cfb9231c9.png" alt="Plausible Analytics Logo" title="plausible.io" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 100%;max-width: 148.02px;" class="v-src-width v-src-max-width lightimage" width="148.02" border="0" align="middle">
-
-      <div class="darkimageWrapper" style="mso-hide: all; display: none">
-        <img src="https://plausible.io/images/icon/plausible_logo-973ea42fac38d21a0a8cda9cfb9231c9.png" alt="Plausible Analytics Logo" title="plausible.io" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;border: none;height: auto;float: none;width: 100%;max-width: 148.02px;" class="v-src-width v-src-max-width darkimage" width="148.02" border="0" align="middle">
-      </div>
+      <img src="https://plausible.io/images/icon/plausible_logo-973ea42fac38d21a0a8cda9cfb9231c9.png" alt="Plausible Analytics Logo" title="plausible.io" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 100%;max-width: 148.02px;" class="v-src-width v-src-max-width" width="148.02" border="0" align="middle">
 
     </td>
   </tr>
@@ -721,7 +707,7 @@ table, td { color: #000000; } #u_body a { color: #0000ee; text-decoration: under
       <td style="overflow-wrap:break-word;word-break:break-word;padding:10px 20px 0px;font-family:helvetica,sans-serif;" align="left">
 
   <div style="font-family: helvetica, sans-serif; font-size: 14px; font-weight: 400; color: rgb(52, 73, 94); line-height: 140%; text-align: right; overflow-wrap: break-word;">
-    <p class="visitors-count" style="line-height: 140%;"><%= PlausibleWeb.StatsView.large_number_format(page[:visitors]) %></p>
+    <p style="line-height: 140%;"><%= PlausibleWeb.StatsView.large_number_format(page[:visitors]) %></p>
   </div>
 
       </td>
