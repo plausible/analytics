@@ -145,7 +145,13 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp plot_timeseries(timeseries, metric) do
-    Enum.map(timeseries, fn row -> row[metric] || 0 end)
+    Enum.map(timeseries, fn row ->
+      case row[metric] do
+        nil -> 0
+        %Money{} = money -> Decimal.to_float(money.amount)
+        value -> value
+      end
+    end)
   end
 
   defp label_timeseries(main_result, nil) do
