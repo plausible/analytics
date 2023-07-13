@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import ListReport from "../reports/list";
 import Combobox from '../../components/combobox'
 import * as api from '../../api'
@@ -30,14 +30,14 @@ export default function Properties(props) {
   }
 
   function fetchProps() {    
-    return api.get(url.apiPath(site, `/custom-prop-values/${encodeURIComponent(propKey)}`), props.query)
+    return api.get(url.apiPath(site, `/custom-prop-values/${encodeURIComponent(propKey)}`), query)
   }
 
-  function fetchPropKeyOptions() {
+  const fetchPropKeyOptions = useCallback(() => {
     return (input) => {
       return api.get(url.apiPath(site, "/suggestions/prop_key"), query, { q: input.trim() })
     }
-  }
+  }, [query])
 
   function onPropKeySelect() {
     return (selectedOptions) => {
