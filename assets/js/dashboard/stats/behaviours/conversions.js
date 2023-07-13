@@ -68,7 +68,7 @@ export default class Conversions extends React.Component {
             {renderRevenueColumn && <span className="hidden md:inline-block md:w-20 font-medium text-right"><Money formatted={goal.average_revenue} /></span>}
           </div>
         </div>
-        { renderProps && !goal.total_revenue && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} /> }
+        { renderProps && <PropBreakdown site={this.props.site} query={this.props.query} goal={goal} renderRevenueColumn={renderRevenueColumn } /> }
       </div>
     )
   }
