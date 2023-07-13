@@ -5,6 +5,7 @@ import * as storage from '../../util/storage'
 import Bar from '../bar'
 import numberFormatter from '../../util/number-formatter'
 import * as api from '../../api'
+import Money from './money'
 
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080
