@@ -72,14 +72,13 @@ export default function Properties(props) {
 
   const getFilterFor = (listItem) => { return {'props': JSON.stringify({[propKey]: listItem['name']})} }
   const comboboxValues = propKey ? [{value: propKey, label: propKey}] : []
+  const boxClass = 'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500'
 
   return (
     <div className="w-full mt-4">
-      <div className="flex-col sm:flex-row flex items-center pb-1">
-        <span className="text-xs font-bold text-gray-600 dark:text-gray-300 self-start sm:self-auto mb-1 sm:mb-0">
-          <Combobox className="mr-2" fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
-        </span>
-      </div>
+        <div className="w-56">
+          <Combobox boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
+        </div>
       { propKey && renderBreakdown() }
     </div>
   )

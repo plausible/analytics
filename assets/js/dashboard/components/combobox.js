@@ -223,9 +223,14 @@ export default function PlausibleCombobox(props) {
     )
   }
 
+  const defaultBoxClass = 'pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500'
+  const boxClass = classNames(props.boxClass || defaultBoxClass, {
+    'border-indigo-500 ring-1 ring-indigo-500': isOpen,
+  })
+
   return (
     <div onKeyDown={onKeyDown} ref={containerRef} className={containerClass}>
-      <div onClick={toggleOpen} className={classNames('pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500', {'border-indigo-500 ring-1 ring-indigo-500': isOpen, '': !isOpen})}>
+      <div onClick={toggleOpen} className={boxClass }>
         {props.singleOption && renderSingleOptionContent()}
         {!props.singleOption && renderMultiOptionContent()}
         <div className="cursor-pointer absolute inset-y-0 right-0 flex items-center pr-2">
