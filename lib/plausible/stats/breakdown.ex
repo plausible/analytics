@@ -69,6 +69,7 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination) do
     {limit, _} = pagination
+    {currency, metrics} = get_revenue_tracking_currency(site, query, metrics)
 
     none_result =
       if include_none_result?(query.filters[property]) do
@@ -90,6 +91,7 @@ defmodule Plausible.Stats.Breakdown do
     results =
       breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
       |> Kernel.++(none_result)
+      |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
       |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
 
     if Enum.find_index(results, fn value -> value[custom_prop] == "(none)" end) == limit do

@@ -852,6 +852,64 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    test "returns property breakdown for revenue goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/register"),
+        build(:event,
+          name: "Purchase",
+          revenue_reporting_amount: Decimal.new("132.21"),
+          revenue_reporting_currency: "EUR",
+          "meta.key": ["method"],
+          "meta.value": ["card"]
+        ),
+        build(:event,
+          name: "Purchase",
+          revenue_reporting_amount: Decimal.new("412.30"),
+          revenue_reporting_currency: "EUR",
+          "meta.key": ["method"],
+          "meta.value": ["cash"]
+        ),
+        build(:event,
+          name: "Purchase",
+          revenue_reporting_amount: Decimal.new("30.23"),
+          revenue_reporting_currency: "EUR",
+          "meta.key": ["method"],
+          "meta.value": ["cash"]
+        )
+      ])
+
+      insert(:goal, site: site, event_name: "Purchase", currency: "EUR")
+      filters = Jason.encode!(%{goal: "Purchase"})
+      prop_key = "method"
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/property/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "average_revenue" => %{"long" => "€221.26", "short" => "€221.3"},
+                 "conversion_rate" => 33.3,
+                 "name" => "cash",
+                 "total_conversions" => 2,
+                 "total_revenue" => %{"long" => "€442.53", "short" => "€442.5"},
+                 "unique_conversions" => 2
+               },
+               %{
+                 "average_revenue" => %{"long" => "€132.21", "short" => "€132.2"},
+                 "conversion_rate" => 16.7,
+                 "name" => "card",
+                 "total_conversions" => 1,
+                 "total_revenue" => %{"long" => "€132.21", "short" => "€132.2"},
+                 "unique_conversions" => 1
+               }
+             ]
+    end
+
     test "returns (none) values in property breakdown for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
