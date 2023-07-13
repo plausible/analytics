@@ -108,7 +108,7 @@ export default function PlausibleCombobox(props) {
     })
   }
 
-  const debouncedFetchOptions = useCallback(debounce(fetchOptions, 200), [])
+  const debouncedFetchOptions = useCallback(debounce(fetchOptions, 200), [fetchOptions])
 
   function onInput(e) {
     const newInput = e.target.value
