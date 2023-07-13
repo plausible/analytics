@@ -76,7 +76,7 @@ defmodule Plausible.MixProject do
       {:excoveralls, "~> 0.10", only: :test},
       {:exvcr, "~> 0.11", only: :test},
       {:finch, "~> 0.14.0", override: true},
-      {:floki, "~> 0.32.0", only: [:dev, :test]},
+      {:floki, "~> 0.34.3", only: [:dev, :test]},
       {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
       {:locus, "~> 2.3"},
