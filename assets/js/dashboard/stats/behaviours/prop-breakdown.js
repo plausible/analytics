@@ -5,6 +5,7 @@ import * as storage from '../../util/storage'
 import Bar from '../bar'
 import numberFormatter from '../../util/number-formatter'
 import * as api from '../../api'
+import Money from './money'
 
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080
@@ -71,11 +72,6 @@ export default class PropertyBreakdown extends React.Component {
     this.setState({ viewport: window.innerWidth });
   }
 
-  getBarMaxWidth() {
-    const { viewport } = this.state;
-    return viewport > MOBILE_UPPER_WIDTH ? "16rem" : "10rem";
-  }
-
   fetch({concat}) {
     if (!this.props.query.filters['goal']) return
 
@@ -135,15 +131,16 @@ export default class PropertyBreakdown extends React.Component {
 
     return (
       <div className="flex items-center justify-between my-2" key={value.name}>
-        <Bar
-          count={value.unique_conversions}
-          plot="unique_conversions"
-          all={this.state.breakdown}
-          bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction={this.getBarMaxWidth()}
-        >
-          {this.renderPropContent(value, query)}
-        </Bar>
+        <div className="flex-1">
+          <Bar
+            count={value.unique_conversions}
+            plot="unique_conversions"
+            all={this.state.breakdown}
+            bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
+          >
+            {this.renderPropContent(value, query)}
+          </Bar>
+        </div>
         <div className="dark:text-gray-200">
           <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.unique_conversions)}</span>
           {
@@ -157,6 +154,8 @@ export default class PropertyBreakdown extends React.Component {
             : null
           }
           <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.conversion_rate)}%</span>
+          {this.props.renderRevenueColumn && <span className="hidden md:inline-block md:w-20 font-medium text-right"><Money formatted={value.total_revenue} /></span>}
+          {this.props.renderRevenueColumn && <span className="hidden md:inline-block md:w-20 font-medium text-right"><Money formatted={value.average_revenue} /></span>}
         </div>
       </div>
     )

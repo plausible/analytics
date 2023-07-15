@@ -1178,18 +1178,23 @@ defmodule PlausibleWeb.Api.StatsController do
     prop_name = "event:props:" <> params["prop_name"]
 
     props =
-      Stats.breakdown(site, query, prop_name, [:visitors, :events], pagination)
+      Stats.breakdown(
+        site,
+        query,
+        prop_name,
+        [:visitors, :events, :average_revenue, :total_revenue],
+        pagination
+      )
       |> transform_keys(%{
         params["prop_name"] => :name,
         :events => :total_conversions,
         :visitors => :unique_conversions
       })
       |> Enum.map(fn prop ->
-        Map.put(
-          prop,
-          :conversion_rate,
-          calculate_cr(unique_visitors, prop[:unique_conversions])
-        )
+        prop
+        |> Map.put(:conversion_rate, calculate_cr(unique_visitors, prop[:unique_conversions]))
+        |> Enum.map(&format_revenue_metric/1)
+        |> Map.new()
       end)
 
     if params["csv"] do
