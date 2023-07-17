@@ -130,6 +130,15 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert_zip(conn, "30d")
     end
 
+    test "fails to export with interval=undefined, looking at you, spiders", %{
+      conn: conn,
+      site: site
+    } do
+      assert conn
+             |> get("/" <> site.domain <> "/export?date=2021-10-20&interval=undefined")
+             |> response(400)
+    end
+
     test "exports data grouped by interval", %{conn: conn, site: site} do
       populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20&period=30d&interval=week")

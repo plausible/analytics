@@ -94,75 +94,81 @@ defmodule PlausibleWeb.StatsController do
   using the IN filter, it causes the requests to balloon in payload size.
   """
   def csv_export(conn, params) do
-    site = conn.assigns[:site]
-    query = Query.from(site, params) |> Filters.add_prefix()
+    if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
+      site = conn.assigns[:site]
+      query = Query.from(site, params) |> Filters.add_prefix()
 
-    metrics =
-      if query.filters["event:goal"] do
-        [:visitors]
-      else
-        [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
-      end
+      metrics =
+        if query.filters["event:goal"] do
+          [:visitors]
+        else
+          [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
+        end
 
-    graph = Plausible.Stats.timeseries(site, query, metrics)
-    columns = [:date | metrics]
+      graph = Plausible.Stats.timeseries(site, query, metrics)
+      columns = [:date | metrics]
 
-    column_headers =
-      if query.filters["event:goal"] do
-        [:date, :unique_conversions]
-      else
-        columns
-      end
+      column_headers =
+        if query.filters["event:goal"] do
+          [:date, :unique_conversions]
+        else
+          columns
+        end
 
-    visitors =
-      Enum.map(graph, fn row -> Enum.map(columns, &row[&1]) end)
-      |> (fn data -> [column_headers | data] end).()
-      |> CSV.encode()
-      |> Enum.join()
+      visitors =
+        Enum.map(graph, fn row -> Enum.map(columns, &row[&1]) end)
+        |> (fn data -> [column_headers | data] end).()
+        |> CSV.encode()
+        |> Enum.join()
 
-    filename =
-      'Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip'
+      filename =
+        'Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip'
 
-    params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
-    limited_params = Map.merge(params, %{"limit" => "100"})
+      params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
+      limited_params = Map.merge(params, %{"limit" => "100"})
 
-    csvs = %{
-      'sources.csv' => fn -> Api.StatsController.sources(conn, params) end,
-      'utm_mediums.csv' => fn -> Api.StatsController.utm_mediums(conn, params) end,
-      'utm_sources.csv' => fn -> Api.StatsController.utm_sources(conn, params) end,
-      'utm_campaigns.csv' => fn -> Api.StatsController.utm_campaigns(conn, params) end,
-      'utm_contents.csv' => fn -> Api.StatsController.utm_contents(conn, params) end,
-      'utm_terms.csv' => fn -> Api.StatsController.utm_terms(conn, params) end,
-      'pages.csv' => fn -> Api.StatsController.pages(conn, limited_params) end,
-      'entry_pages.csv' => fn -> Api.StatsController.entry_pages(conn, params) end,
-      'exit_pages.csv' => fn -> Api.StatsController.exit_pages(conn, limited_params) end,
-      'countries.csv' => fn -> Api.StatsController.countries(conn, params) end,
-      'regions.csv' => fn -> Api.StatsController.regions(conn, params) end,
-      'cities.csv' => fn -> Api.StatsController.cities(conn, params) end,
-      'browsers.csv' => fn -> Api.StatsController.browsers(conn, params) end,
-      'operating_systems.csv' => fn -> Api.StatsController.operating_systems(conn, params) end,
-      'devices.csv' => fn -> Api.StatsController.screen_sizes(conn, params) end,
-      'conversions.csv' => fn -> Api.StatsController.conversions(conn, params) end,
-      'prop_breakdown.csv' => fn -> Api.StatsController.all_props_breakdown(conn, params) end
-    }
+      csvs = %{
+        'sources.csv' => fn -> Api.StatsController.sources(conn, params) end,
+        'utm_mediums.csv' => fn -> Api.StatsController.utm_mediums(conn, params) end,
+        'utm_sources.csv' => fn -> Api.StatsController.utm_sources(conn, params) end,
+        'utm_campaigns.csv' => fn -> Api.StatsController.utm_campaigns(conn, params) end,
+        'utm_contents.csv' => fn -> Api.StatsController.utm_contents(conn, params) end,
+        'utm_terms.csv' => fn -> Api.StatsController.utm_terms(conn, params) end,
+        'pages.csv' => fn -> Api.StatsController.pages(conn, limited_params) end,
+        'entry_pages.csv' => fn -> Api.StatsController.entry_pages(conn, params) end,
+        'exit_pages.csv' => fn -> Api.StatsController.exit_pages(conn, limited_params) end,
+        'countries.csv' => fn -> Api.StatsController.countries(conn, params) end,
+        'regions.csv' => fn -> Api.StatsController.regions(conn, params) end,
+        'cities.csv' => fn -> Api.StatsController.cities(conn, params) end,
+        'browsers.csv' => fn -> Api.StatsController.browsers(conn, params) end,
+        'operating_systems.csv' => fn -> Api.StatsController.operating_systems(conn, params) end,
+        'devices.csv' => fn -> Api.StatsController.screen_sizes(conn, params) end,
+        'conversions.csv' => fn -> Api.StatsController.conversions(conn, params) end,
+        'prop_breakdown.csv' => fn -> Api.StatsController.all_props_breakdown(conn, params) end
+      }
 
-    csv_values =
-      Map.values(csvs)
-      |> Plausible.ClickhouseRepo.parallel_tasks()
+      csv_values =
+        Map.values(csvs)
+        |> Plausible.ClickhouseRepo.parallel_tasks()
 
-    csvs =
-      Map.keys(csvs)
-      |> Enum.zip(csv_values)
+      csvs =
+        Map.keys(csvs)
+        |> Enum.zip(csv_values)
 
-    csvs = [{'visitors.csv', visitors} | csvs]
+      csvs = [{'visitors.csv', visitors} | csvs]
 
-    {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
+      {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
 
-    conn
-    |> put_resp_content_type("application/zip")
-    |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
-    |> delete_resp_cookie("exporting")
-    |> send_resp(200, zip_content)
+      conn
+      |> put_resp_content_type("application/zip")
+      |> put_resp_header("content-disposition", "attachment; filename=\"#{filename}\"")
+      |> delete_resp_cookie("exporting")
+      |> send_resp(200, zip_content)
+    else
+      conn
+      |> send_resp(400, "")
+      |> halt()
+    end
   end
 
   @doc """
