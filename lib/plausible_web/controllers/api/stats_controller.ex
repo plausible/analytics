@@ -145,7 +145,13 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp plot_timeseries(timeseries, metric) do
-    Enum.map(timeseries, fn row -> row[metric] || 0 end)
+    Enum.map(timeseries, fn row ->
+      case row[metric] do
+        nil -> 0
+        %Money{} = money -> Decimal.to_float(money.amount)
+        value -> value
+      end
+    end)
   end
 
   defp label_timeseries(main_result, nil) do
@@ -1192,18 +1198,23 @@ defmodule PlausibleWeb.Api.StatsController do
     prop_name = "event:props:" <> params["prop_name"]
 
     props =
-      Stats.breakdown(site, query, prop_name, [:visitors, :events], pagination)
+      Stats.breakdown(
+        site,
+        query,
+        prop_name,
+        [:visitors, :events, :average_revenue, :total_revenue],
+        pagination
+      )
       |> transform_keys(%{
         params["prop_name"] => :name,
         :events => :total_conversions,
         :visitors => :unique_conversions
       })
       |> Enum.map(fn prop ->
-        Map.put(
-          prop,
-          :conversion_rate,
-          calculate_cr(unique_visitors, prop[:unique_conversions])
-        )
+        prop
+        |> Map.put(:conversion_rate, calculate_cr(unique_visitors, prop[:unique_conversions]))
+        |> Enum.map(&format_revenue_metric/1)
+        |> Map.new()
       end)
 
     if params["csv"] do

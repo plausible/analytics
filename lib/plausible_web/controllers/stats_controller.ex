@@ -67,7 +67,7 @@ defmodule PlausibleWeb.StatsController do
           funnels: Plausible.Funnels.list(site),
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
-          title: "Plausible · " <> site.domain,
+          title: title(conn, site),
           offer_email_report: offer_email_report,
           demo: demo,
           flags: get_flags(conn.assigns[:current_user]),
@@ -295,7 +295,7 @@ defmodule PlausibleWeb.StatsController do
           funnels: Plausible.Funnels.list(shared_link.site),
           stats_start_date: shared_link.site.stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
-          title: "Plausible · " <> shared_link.site.domain,
+          title: title(conn, shared_link.site),
           offer_email_report: false,
           demo: false,
           skip_plausible_tracking: true,
@@ -342,5 +342,13 @@ defmodule PlausibleWeb.StatsController do
       end
 
     !!is_or_nil
+  end
+
+  defp title(%{path_info: ["plausible.io"]}, _) do
+    "Plausible Analytics: Live Demo"
+  end
+
+  defp title(_conn, site) do
+    "Plausible · " <> site.domain
   end
 end

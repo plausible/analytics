@@ -23,10 +23,12 @@ defmodule Plausible.Stats.Breakdown do
 
     event_results =
       if Enum.any?(event_goals) do
+        revenue_goals = Enum.filter(event_goals, &Plausible.Goal.revenue?/1)
+
         site
         |> breakdown(event_query, "event:name", metrics, pagination)
         |> transform_keys(%{name: :goal})
-        |> cast_revenue_metrics_to_money(event_goals)
+        |> cast_revenue_metrics_to_money(revenue_goals)
       else
         []
       end
@@ -67,6 +69,7 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination) do
     {limit, _} = pagination
+    {currency, metrics} = get_revenue_tracking_currency(site, query, metrics)
 
     none_result =
       if include_none_result?(query.filters[property]) do
@@ -88,6 +91,7 @@ defmodule Plausible.Stats.Breakdown do
     results =
       breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
       |> Kernel.++(none_result)
+      |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
       |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
 
     if Enum.find_index(results, fn value -> value[custom_prop] == "(none)" end) == limit do
@@ -155,26 +159,6 @@ defmodule Plausible.Stats.Breakdown do
   def breakdown(site, query, property, metrics, pagination) do
     trace(query, property, metrics)
     breakdown_sessions(site, query, property, metrics, pagination)
-  end
-
-  defp cast_revenue_metrics_to_money(event_results, goals) do
-    cast_and_put = fn map, key, currency ->
-      if decimal = Map.get(map, key),
-        do: Map.put(map, key, Money.new!(currency, decimal)),
-        else: map
-    end
-
-    revenue_goals = Enum.filter(goals, &Plausible.Goal.revenue?/1)
-
-    Enum.map(event_results, fn result ->
-      if matching_goal = Enum.find(revenue_goals, &(&1.event_name == result.goal)) do
-        result
-        |> cast_and_put.(:total_revenue, matching_goal.currency)
-        |> cast_and_put.(:average_revenue, matching_goal.currency)
-      else
-        result
-      end
-    end)
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
@@ -337,7 +321,7 @@ defmodule Plausible.Stats.Breakdown do
       else
         from(
           e in q,
-          inner_lateral_join: meta in fragment("meta"),
+          array_join: meta in fragment("meta"),
           as: :meta
         )
       end

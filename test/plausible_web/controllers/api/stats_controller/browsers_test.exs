@@ -130,6 +130,27 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
     end
 
+    test "skips breakdown when visitors=0 (possibly due to 'Enable Users Metric' in GA)", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:imported_browsers, browser: "Chrome", visitors: 0, visits: 14),
+        build(:imported_browsers, browser: "Firefox", visitors: 0, visits: 14),
+        build(:imported_browsers,
+          browser: "''",
+          visitors: 0,
+          visits: 14,
+          visit_duration: 0,
+          bounces: 14
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
+
+      assert json_response(conn, 200) == []
+    end
+
     test "returns (not set) when appropriate", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
