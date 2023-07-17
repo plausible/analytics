@@ -4,12 +4,10 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import debounce from 'debounce-promise'
 import classNames from 'classnames'
 
-function Option({isHighlighted, isDisabled, onClick, onMouseEnter, text, id}) {
-  const className = classNames('relative select-none py-2 px-3', {
-    'cursor-pointer': !isDisabled,
-    'text-gray-300 dark:text-gray-600': isDisabled,
-    'text-gray-900 dark:text-gray-300': !isDisabled && !isHighlighted,
-    'bg-indigo-600 text-white': !isDisabled && isHighlighted,
+function Option({isHighlighted, onClick, onMouseEnter, text, id}) {
+  const className = classNames('relative cursor-pointer select-none py-2 px-3', {
+    'text-gray-900 dark:text-gray-300': !isHighlighted,
+    'bg-indigo-600 text-white': isHighlighted,
   })
 
   return (
@@ -127,8 +125,6 @@ export default function PlausibleCombobox(props) {
   }
 
   function selectOption(option) {
-    if (isDisabled(option)) return
-
     if (props.singleOption) {
       props.onSelect([option])
     } else {
@@ -165,9 +161,6 @@ export default function PlausibleCombobox(props) {
       searchRef.current.focus()
     }
   }, [props.values.length === 0])
-
-  const matchesFound = !loading && visibleOptions.length > 0
-  const noMatchesFound = !loading && visibleOptions.length === 0
   
   const searchBoxClass = 'border-none py-1 px-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm'
 
@@ -223,6 +216,43 @@ export default function PlausibleCombobox(props) {
     )
   }
 
+  function renderDropDownContent() {
+    const matchesFound = visibleOptions.length > 0 && visibleOptions.some(option => !isDisabled(option))
+
+    if (loading) {
+      return <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">Loading options...</div>
+    }
+    
+    if (matchesFound) {
+      return visibleOptions
+        .filter(option => !isDisabled(option))
+        .map((option, i) => {
+          const text = option.freeChoice ? `Filter by '${option.label}'` : option.label
+
+          return (
+            <Option
+              key={option.value}
+              id={optionId(i)}
+              isHighlighted={highlightedIndex === i}
+              onClick={() => selectOption(option)}
+              onMouseEnter={() => setHighlightedIndex(i)}
+              text={text}
+            />
+          )
+        })
+    }
+
+    if (props.freeChoice) {
+      return <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">Start typing to apply filter</div>
+    }
+
+    return (
+      <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
+        No matches found in the current dashboard. Try selecting a different time range or searching for something different
+      </div>
+    )
+  }
+
   const defaultBoxClass = 'pl-2 pr-8 py-1 w-full dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500'
   const boxClass = classNames(props.boxClass || defaultBoxClass, {
     'border-indigo-500 ring-1 ring-indigo-500': isOpen,
@@ -238,7 +268,7 @@ export default function PlausibleCombobox(props) {
           {loading && <Spinner />}
         </div>
       </div>
-      <Transition
+      {isOpen && <Transition
         as={Fragment}
         leave="transition ease-in duration-100"
         leaveFrom="opacity-100"
@@ -246,40 +276,9 @@ export default function PlausibleCombobox(props) {
         show={isOpen}
       >
         <ul ref={listRef} className="z-50 absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900">
-          { loading && (
-            <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
-              Loading options...
-            </div>
-          )}
-          { noMatchesFound && !props.freeChoice && (
-            <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
-              No matches found in the current dashboard. Try selecting a different time range or searching for something different
-            </div>
-          )}
-          { noMatchesFound && props.freeChoice && (
-            <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">
-              Start typing to apply filter
-            </div>
-          )}
-          { matchesFound && (
-            visibleOptions.map((option, i) => {
-              const text = option.freeChoice ? `Filter by '${option.label}'` : option.label
-
-              return (
-                <Option
-                  key={option.value}
-                  id={optionId(i)}
-                  isHighlighted={highlightedIndex === i}
-                  isDisabled={isDisabled(option)}
-                  onClick={() => selectOption(option)}
-                  onMouseEnter={() => setHighlightedIndex(i)}
-                  text={text}
-                />
-              )
-            })
-          )}
+          { renderDropDownContent() }
         </ul>
-      </Transition>
+      </Transition>}
     </div>
   )
 }
