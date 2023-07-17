@@ -754,10 +754,8 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
       |> add_cr(site, query, pagination, :referrer, "visit:referrer")
       |> transform_keys(%{referrer: :name})
-      |> Enum.map(&Map.drop(&1, [:visits]))
 
-    %{:visitors => %{value: total_visitors}} = Stats.aggregate(site, query, [:visitors])
-    json(conn, %{referrers: referrers, total_visitors: total_visitors})
+    json(conn, referrers)
   end
 
   def pages(conn, params) do
