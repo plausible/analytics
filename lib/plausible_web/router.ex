@@ -88,6 +88,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/operating-system-versions", StatsController, :operating_system_versions
     get "/:domain/screen-sizes", StatsController, :screen_sizes
     get "/:domain/conversions", StatsController, :conversions
+    get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
     get "/:domain/property/:prop_name", StatsController, :prop_breakdown
     get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
   end

@@ -496,7 +496,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:source", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :source, "visit:source")
+      |> add_cr(site, query, pagination, :source, "visit:source")
       |> transform_keys(%{source: :name})
 
     if params["csv"] do
@@ -571,7 +571,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_medium", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :utm_medium, "visit:utm_medium")
+      |> add_cr(site, query, pagination, :utm_medium, "visit:utm_medium")
       |> transform_keys(%{utm_medium: :name})
 
     if params["csv"] do
@@ -600,7 +600,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_campaign", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :utm_campaign, "visit:utm_campaign")
+      |> add_cr(site, query, pagination, :utm_campaign, "visit:utm_campaign")
       |> transform_keys(%{utm_campaign: :name})
 
     if params["csv"] do
@@ -628,7 +628,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_content", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :utm_content, "visit:utm_content")
+      |> add_cr(site, query, pagination, :utm_content, "visit:utm_content")
       |> transform_keys(%{utm_content: :name})
 
     if params["csv"] do
@@ -656,7 +656,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_term", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :utm_term, "visit:utm_term")
+      |> add_cr(site, query, pagination, :utm_term, "visit:utm_term")
       |> transform_keys(%{utm_term: :name})
 
     if params["csv"] do
@@ -685,7 +685,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :utm_source, "visit:utm_source")
+      |> add_cr(site, query, pagination, :utm_source, "visit:utm_source")
       |> transform_keys(%{utm_source: :name})
 
     if params["csv"] do
@@ -752,7 +752,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     referrers =
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :referrer, "visit:referrer")
+      |> add_cr(site, query, pagination, :referrer, "visit:referrer")
       |> transform_keys(%{referrer: :name})
       |> Enum.map(&Map.drop(&1, [:visits]))
 
@@ -773,7 +773,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     pages =
       Stats.breakdown(site, query, "event:page", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :page, "event:page")
+      |> add_cr(site, query, pagination, :page, "event:page")
       |> transform_keys(%{page: :name})
 
     if params["csv"] do
@@ -797,7 +797,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     entry_pages =
       Stats.breakdown(site, query, "visit:entry_page", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :entry_page, "visit:entry_page")
+      |> add_cr(site, query, pagination, :entry_page, "visit:entry_page")
       |> transform_keys(%{
         entry_page: :name,
         visitors: :unique_entrances,
@@ -825,7 +825,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     exit_pages =
       Stats.breakdown(site, query, "visit:exit_page", metrics, {limit, page})
-      |> maybe_add_cr(site, query, {limit, page}, :exit_page, "visit:exit_page")
+      |> add_cr(site, query, {limit, page}, :exit_page, "visit:exit_page")
       |> transform_keys(%{
         exit_page: :name,
         visitors: :unique_exits,
@@ -879,9 +879,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     countries =
       Stats.breakdown(site, query, "visit:country", [:visitors], pagination)
-      |> maybe_add_cr(site, query, {300, 1}, :country, "visit:country")
+      |> add_cr(site, query, {300, 1}, :country, "visit:country")
       |> transform_keys(%{country: :code})
-      |> maybe_add_percentages(query)
+      |> add_percentages(query)
 
     if params["csv"] do
       countries =
@@ -1002,9 +1002,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     browsers =
       Stats.breakdown(site, query, "visit:browser", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, :browser, "visit:browser")
+      |> add_cr(site, query, pagination, :browser, "visit:browser")
       |> transform_keys(%{browser: :name})
-      |> maybe_add_percentages(query)
+      |> add_percentages(query)
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
@@ -1026,9 +1026,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     versions =
       Stats.breakdown(site, query, "visit:browser_version", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, :browser_version, "visit:browser_version")
+      |> add_cr(site, query, pagination, :browser_version, "visit:browser_version")
       |> transform_keys(%{browser_version: :name})
-      |> maybe_add_percentages(query)
+      |> add_percentages(query)
 
     json(conn, versions)
   end
@@ -1040,9 +1040,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     systems =
       Stats.breakdown(site, query, "visit:os", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, :os, "visit:os")
+      |> add_cr(site, query, pagination, :os, "visit:os")
       |> transform_keys(%{os: :name})
-      |> maybe_add_percentages(query)
+      |> add_percentages(query)
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
@@ -1064,9 +1064,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     versions =
       Stats.breakdown(site, query, "visit:os_version", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, :os_version, "visit:os_version")
+      |> add_cr(site, query, pagination, :os_version, "visit:os_version")
       |> transform_keys(%{os_version: :name})
-      |> maybe_add_percentages(query)
+      |> add_percentages(query)
 
     json(conn, versions)
   end
@@ -1078,9 +1078,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     sizes =
       Stats.breakdown(site, query, "visit:device", [:visitors], pagination)
-      |> maybe_add_cr(site, query, pagination, :device, "visit:device")
+      |> add_cr(site, query, pagination, :device, "visit:device")
       |> transform_keys(%{device: :name})
-      |> maybe_add_percentages(query)
+      |> add_percentages(query)
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
@@ -1164,6 +1164,34 @@ defmodule PlausibleWeb.Api.StatsController do
       _any ->
         value
     end
+  end
+
+  def custom_prop_values(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site, params) |> Filters.add_prefix()
+    pagination = parse_pagination(params)
+
+    total_q = Query.remove_event_filters(query, [:goal, :props])
+
+    %{:visitors => %{value: total_unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
+
+    prefixed_prop = "event:props:" <> params["prop_key"]
+
+    props =
+      Stats.breakdown(site, query, prefixed_prop, [:visitors, :events], pagination)
+      |> transform_keys(%{params["prop_key"] => :name})
+      |> add_percentages(query)
+
+    props =
+      if Map.has_key?(query.filters, "event:goal") do
+        Enum.map(props, fn prop ->
+          Map.put(prop, :conversion_rate, calculate_cr(total_unique_visitors, prop.visitors))
+        end)
+      else
+        props
+      end
+
+    json(conn, props)
   end
 
   def prop_breakdown(conn, params) do
@@ -1271,48 +1299,45 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp to_int(_, default), do: default
 
-  defp maybe_add_percentages(stat_list, query) do
-    if Map.has_key?(query.filters, "event:goal") do
-      stat_list
-    else
-      total = Enum.reduce(stat_list, 0, fn %{visitors: count}, total -> total + count end)
-
-      Enum.map(stat_list, fn stat ->
-        Map.put(stat, :percentage, round(stat[:visitors] / total * 100))
-      end)
-    end
+  defp add_percentages([_ | _] = breakdown_result, query)
+       when not is_map_key(query.filters, "event:goal") do
+    total = Enum.reduce(breakdown_result, 0, fn %{visitors: count}, total -> total + count end)
+    do_add_percentages(breakdown_result, total)
   end
 
-  defp add_cr(list, list_without_goals, key_name) do
-    Enum.map(list, fn item ->
-      without_goal = Enum.find(list_without_goals, fn s -> s[key_name] === item[key_name] end)
+  defp add_percentages(breakdown_result, _), do: breakdown_result
 
-      item
-      |> Map.put(:total_visitors, without_goal[:visitors])
-      |> Map.put(:conversion_rate, calculate_cr(without_goal[:visitors], item[:visitors]))
+  defp do_add_percentages(stat_list, total) do
+    Enum.map(stat_list, fn stat ->
+      Map.put(stat, :percentage, Float.round(stat.visitors / total * 100, 1))
     end)
   end
 
-  defp maybe_add_cr([], _site, _query, _pagination, _key_name, _filter_name), do: []
+  defp add_cr([_ | _] = breakdown_results, site, query, pagination, key_name, filter_name)
+       when is_map_key(query.filters, "event:goal") do
+    items = Enum.map(breakdown_results, fn item -> Map.fetch!(item, key_name) end)
 
-  defp maybe_add_cr(list, site, query, pagination, key_name, filter_name) do
-    if Map.has_key?(query.filters, "event:goal") do
-      items = Enum.map(list, fn item -> item[key_name] end)
+    query_without_goal =
+      query
+      |> Query.put_filter(filter_name, {:member, items})
+      |> Query.remove_event_filters([:goal, :props])
 
-      query_without_goal =
-        query
-        |> Query.put_filter(filter_name, {:member, items})
-        |> Query.remove_event_filters([:goal, :props])
+    res_without_goal =
+      Stats.breakdown(site, query_without_goal, filter_name, [:visitors], pagination)
 
-      res_without_goal =
-        Stats.breakdown(site, query_without_goal, filter_name, [:visitors], pagination)
+    Enum.map(breakdown_results, fn item ->
+      without_goal =
+        Enum.find(res_without_goal, fn s ->
+          Map.fetch!(s, key_name) == Map.fetch!(item, key_name)
+        end)
 
-      list
-      |> add_cr(res_without_goal, key_name)
-    else
-      list
-    end
+      item
+      |> Map.put(:total_visitors, without_goal.visitors)
+      |> Map.put(:conversion_rate, calculate_cr(without_goal.visitors, item.visitors))
+    end)
   end
+
+  defp add_cr(breakdown_results, _, _, _, _, _), do: breakdown_results
 
   defp to_csv(list, headers) do
     list
