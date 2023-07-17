@@ -94,7 +94,7 @@ defmodule PlausibleWeb.StatsController do
   using the IN filter, it causes the requests to balloon in payload size.
   """
   def csv_export(conn, params) do
-    with true <- is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
+    if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
       site = conn.assigns[:site]
       query = Query.from(site, params) |> Filters.add_prefix()
 
@@ -165,10 +165,9 @@ defmodule PlausibleWeb.StatsController do
       |> delete_resp_cookie("exporting")
       |> send_resp(200, zip_content)
     else
-      _ ->
-        conn
-        |> send_resp(400, "")
-        |> halt()
+      conn
+      |> send_resp(400, "")
+      |> halt()
     end
   end
 
