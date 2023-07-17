@@ -65,8 +65,9 @@ defmodule Plausible.Workers.SendEmailReportTest do
       })
 
       # Should find 2 visiors
-      assert html_body =~
-               ~s(<span id="visitors" style="line-height: 24px; font-size: 20px;">2</span>)
+
+      page_count = html_body |> Floki.find(".page-count") |> Floki.text() |> String.trim()
+      assert page_count == "2"
     end
 
     test "includes the correct stats" do
@@ -93,22 +94,28 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       {:ok, document} = Floki.parse_document(html_body)
 
-      visitors = Floki.find(document, "#visitors") |> Floki.text()
+      visitors =
+        Floki.find(document, ".visitors")
+        |> List.first()
+        |> Floki.text()
+        |> String.trim()
+
       assert visitors == "2"
 
-      pageviews = Floki.find(document, "#pageviews") |> Floki.text()
+      pageviews = Floki.find(document, ".pageviews") |> Floki.text() |> String.trim()
       assert pageviews == "3"
 
-      referrer = Floki.find(document, ".referrer") |> List.first()
-      referrer_name = referrer |> Floki.find("#referrer-name") |> Floki.text()
-      referrer_count = referrer |> Floki.find("#referrer-count") |> Floki.text()
+      referrer_name =
+        document |> Floki.find(".referrer-name") |> List.first() |> Floki.text() |> String.trim()
+
+      referrer_count =
+        document |> Floki.find(".referrer-count") |> List.first() |> Floki.text() |> String.trim()
 
       assert referrer_name == "Google"
       assert referrer_count == "1"
 
-      page = Floki.find(document, ".page") |> List.first()
-      page_name = page |> Floki.find("#page-name") |> Floki.text()
-      page_count = page |> Floki.find("#page-count") |> Floki.text()
+      page_name = document |> Floki.find(".page-name") |> Floki.text() |> String.trim()
+      page_count = document |> Floki.find(".page-count") |> Floki.text() |> String.trim()
 
       assert page_name == "/"
       assert page_count == "2"
