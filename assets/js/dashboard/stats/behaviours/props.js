@@ -56,7 +56,7 @@ export default function Properties(props) {
         keyLabel={propKey}
         metrics={metrics()}
         query={query}
-        color="bg-gray-200"
+        color="bg-red-50"
         colMinWidth={90}
       />
     )
