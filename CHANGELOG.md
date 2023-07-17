@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Fixed
+- Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
+
 ## v2.0.0 - 2023-07-12
 
 ### Added
