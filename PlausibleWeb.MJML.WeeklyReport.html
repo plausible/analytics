@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.29.4">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>PlausibleWeb.Plugs.RuntimeSessionAdapter — Plausible v0.0.1</title>
+    <title>PlausibleWeb.MJML.WeeklyReport — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-HHVY3JYD.css" />
 
 
@@ -102,25 +102,116 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugs/runtime_session_adapter.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/mjml/weekly_report.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">PlausibleWeb.Plugs.RuntimeSessionAdapter</span> 
+  <span translate="no">PlausibleWeb.MJML.WeeklyReport</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>A <a href="https://hexdocs.pm/plug/1.14.2/Plug.Session.html"><code class="inline">Plug.Session</code></a> adapter that allows configuration at runtime.
-Sadly, the plug being wrapped has no MFA option for dynamic
-configuration.</p><p>This is currently used so we can dynamically pass the :domain
-and have cookies planted across one root domain.</p>
+<p>MJML rendered for the weekly report e-mail</p>
   </section>
 
 
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+      Summary
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#debug_mjml_template/0" translate="no">debug_mjml_template()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the raw MJML template. Useful for debugging rendering issues.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#render/1" translate="no">render(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Safely render the MJML template using Phoenix.HTML</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        <span class="sr-only">Link to this section</span>
+      </a>
+Functions
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="debug_mjml_template/0">
+
+  <div class="detail-header">
+    <a href="#debug_mjml_template/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">debug_mjml_template()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/mjml/weekly_report.ex#L6" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns the raw MJML template. Useful for debugging rendering issues.</p>
+  </section>
+</section>
+<section class="detail" id="render/1">
+
+  <div class="detail-header">
+    <a href="#render/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">render(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/mjml/weekly_report.ex#L6" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Safely render the MJML template using Phoenix.HTML</p>
+  </section>
+</section>
+
+    </div>
+  </section>
 
       <footer class="footer">
         <p>

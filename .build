@@ -183,6 +183,7 @@ PlausibleWeb.Live.FunnelSettings.ComboBox.html
 PlausibleWeb.Live.FunnelSettings.Form.html
 PlausibleWeb.Live.FunnelSettings.List.html
 PlausibleWeb.Live.FunnelSettings.html
+PlausibleWeb.MJML.WeeklyReport.html
 PlausibleWeb.PageController.html
 PlausibleWeb.PageView.html
 PlausibleWeb.Plugs.NoRobots.html
@@ -234,8 +235,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_items-8CCE4AAB.js
-dist/sidebar_items-F60CD41D.js
+dist/search_items-208E5AEB.js
+dist/sidebar_items-93FEB2C3.js
 index.html
 readme.html
 search.html
