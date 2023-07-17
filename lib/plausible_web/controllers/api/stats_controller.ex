@@ -496,7 +496,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:source", metrics, pagination)
-      |> add_cr_b(site, query, pagination, :source, "visit:source")
+      |> add_cr(site, query, pagination, :source, "visit:source")
       |> transform_keys(%{source: :name})
 
     if params["csv"] do
@@ -571,7 +571,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_medium", metrics, pagination)
-      |> add_cr_b(site, query, pagination, :utm_medium, "visit:utm_medium")
+      |> add_cr(site, query, pagination, :utm_medium, "visit:utm_medium")
       |> transform_keys(%{utm_medium: :name})
 
     if params["csv"] do
@@ -600,7 +600,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_campaign", metrics, pagination)
-      |> add_cr_b(site, query, pagination, :utm_campaign, "visit:utm_campaign")
+      |> add_cr(site, query, pagination, :utm_campaign, "visit:utm_campaign")
       |> transform_keys(%{utm_campaign: :name})
 
     if params["csv"] do
@@ -628,7 +628,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_content", metrics, pagination)
-      |> add_cr_b(site, query, pagination, :utm_content, "visit:utm_content")
+      |> add_cr(site, query, pagination, :utm_content, "visit:utm_content")
       |> transform_keys(%{utm_content: :name})
 
     if params["csv"] do
@@ -656,7 +656,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_term", metrics, pagination)
-      |> add_cr_b(site, query, pagination, :utm_term, "visit:utm_term")
+      |> add_cr(site, query, pagination, :utm_term, "visit:utm_term")
       |> transform_keys(%{utm_term: :name})
 
     if params["csv"] do
@@ -685,7 +685,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
-      |> add_cr_b(site, query, pagination, :utm_source, "visit:utm_source")
+      |> add_cr(site, query, pagination, :utm_source, "visit:utm_source")
       |> transform_keys(%{utm_source: :name})
 
     if params["csv"] do
@@ -752,7 +752,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     referrers =
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
-      |> add_cr_b(site, query, pagination, :referrer, "visit:referrer")
+      |> add_cr(site, query, pagination, :referrer, "visit:referrer")
       |> transform_keys(%{referrer: :name})
       |> Enum.map(&Map.drop(&1, [:visits]))
 
@@ -773,7 +773,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     pages =
       Stats.breakdown(site, query, "event:page", metrics, pagination)
-      |> add_cr_b(site, query, pagination, :page, "event:page")
+      |> add_cr(site, query, pagination, :page, "event:page")
       |> transform_keys(%{page: :name})
 
     if params["csv"] do
@@ -797,7 +797,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     entry_pages =
       Stats.breakdown(site, query, "visit:entry_page", metrics, pagination)
-      |> add_cr_b(site, query, pagination, :entry_page, "visit:entry_page")
+      |> add_cr(site, query, pagination, :entry_page, "visit:entry_page")
       |> transform_keys(%{
         entry_page: :name,
         visitors: :unique_entrances,
@@ -825,7 +825,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     exit_pages =
       Stats.breakdown(site, query, "visit:exit_page", metrics, {limit, page})
-      |> add_cr_b(site, query, {limit, page}, :exit_page, "visit:exit_page")
+      |> add_cr(site, query, {limit, page}, :exit_page, "visit:exit_page")
       |> transform_keys(%{
         exit_page: :name,
         visitors: :unique_exits,
@@ -879,7 +879,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     countries =
       Stats.breakdown(site, query, "visit:country", [:visitors], pagination)
-      |> add_cr_b(site, query, {300, 1}, :country, "visit:country")
+      |> add_cr(site, query, {300, 1}, :country, "visit:country")
       |> transform_keys(%{country: :code})
       |> add_percentages(query)
 
@@ -1002,7 +1002,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     browsers =
       Stats.breakdown(site, query, "visit:browser", [:visitors], pagination)
-      |> add_cr_b(site, query, pagination, :browser, "visit:browser")
+      |> add_cr(site, query, pagination, :browser, "visit:browser")
       |> transform_keys(%{browser: :name})
       |> add_percentages(query)
 
@@ -1026,7 +1026,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     versions =
       Stats.breakdown(site, query, "visit:browser_version", [:visitors], pagination)
-      |> add_cr_b(site, query, pagination, :browser_version, "visit:browser_version")
+      |> add_cr(site, query, pagination, :browser_version, "visit:browser_version")
       |> transform_keys(%{browser_version: :name})
       |> add_percentages(query)
 
@@ -1040,7 +1040,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     systems =
       Stats.breakdown(site, query, "visit:os", [:visitors], pagination)
-      |> add_cr_b(site, query, pagination, :os, "visit:os")
+      |> add_cr(site, query, pagination, :os, "visit:os")
       |> transform_keys(%{os: :name})
       |> add_percentages(query)
 
@@ -1064,7 +1064,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     versions =
       Stats.breakdown(site, query, "visit:os_version", [:visitors], pagination)
-      |> add_cr_b(site, query, pagination, :os_version, "visit:os_version")
+      |> add_cr(site, query, pagination, :os_version, "visit:os_version")
       |> transform_keys(%{os_version: :name})
       |> add_percentages(query)
 
@@ -1078,7 +1078,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     sizes =
       Stats.breakdown(site, query, "visit:device", [:visitors], pagination)
-      |> add_cr_b(site, query, pagination, :device, "visit:device")
+      |> add_cr(site, query, pagination, :device, "visit:device")
       |> transform_keys(%{device: :name})
       |> add_percentages(query)
 
@@ -1180,8 +1180,16 @@ defmodule PlausibleWeb.Api.StatsController do
     props =
       Stats.breakdown(site, query, prefixed_prop, [:visitors, :events], pagination)
       |> transform_keys(%{params["prop_key"] => :name})
-      |> add_cr_a(total_unique_visitors, query)
       |> add_percentages(query)
+
+    props =
+      if Map.has_key?(query.filters, "event:goal") do
+        Enum.map(props, fn prop ->
+          Map.put(prop, :conversion_rate, calculate_cr(total_unique_visitors, prop.visitors))
+        end)
+      else
+        props
+      end
 
     json(conn, props)
   end
@@ -1305,30 +1313,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end)
   end
 
-  # add_cr_a will add a CR metric with definition A.
-  #  A: unique_conversions with P / total_unique_visitors
-  # where P is an arbitrary property with an arbitrary value
-  # e.g.:
-  # number of `Signup` events with `event:props:author==john-doe`
-  # DIVIDED BY
-  # total_unique_visitors
-  defp add_cr_a([_ | _] = breakdown_results, total_unique_visitors, query)
-       when is_map_key(query.filters, "event:goal") do
-    Enum.map(breakdown_results, fn prop ->
-      Map.put(prop, :conversion_rate, calculate_cr(total_unique_visitors, prop.visitors))
-    end)
-  end
-
-  defp add_cr_a(breakdown_results, _, _), do: breakdown_results
-
-  # add_cr_b will add a CR metric with definition B.
-  #   B: unique_conversions with P / total_unique_visitors with P,
-  # where P is an arbitrary property with an arbitrary value
-  # e.g.:
-  # number of `Signup` events with `event:page==/checkout`
-  # DIVIDED BY
-  # total unique visitors with event:page==/checkout
-  defp add_cr_b([_ | _] = breakdown_results, site, query, pagination, key_name, filter_name)
+  defp add_cr([_ | _] = breakdown_results, site, query, pagination, key_name, filter_name)
        when is_map_key(query.filters, "event:goal") do
     items = Enum.map(breakdown_results, fn item -> Map.fetch!(item, key_name) end)
 
@@ -1352,7 +1337,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end)
   end
 
-  defp add_cr_b(breakdown_results, _, _, _, _, _), do: breakdown_results
+  defp add_cr(breakdown_results, _, _, _, _, _), do: breakdown_results
 
   defp to_csv(list, headers) do
     list
