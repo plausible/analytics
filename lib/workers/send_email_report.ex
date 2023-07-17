@@ -31,26 +31,30 @@ defmodule Plausible.Workers.SendEmailReport do
   def perform(%Oban.Job{args: %{"interval" => "monthly", "site_id" => site_id}}) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:monthly_report)
 
-    last_month =
-      Timex.now(site.timezone)
-      |> Timex.shift(months: -1)
-      |> Timex.beginning_of_month()
+    if site do
+      last_month =
+        Timex.now(site.timezone)
+        |> Timex.shift(months: -1)
+        |> Timex.beginning_of_month()
 
-    query =
-      Query.from(site, %{
-        "period" => "month",
-        "date" => Timex.format!(last_month, "{ISOdate}")
-      })
+      query =
+        Query.from(site, %{
+          "period" => "month",
+          "date" => Timex.format!(last_month, "{ISOdate}")
+        })
 
-    for email <- site.monthly_report.recipients do
-      unsubscribe_link =
-        PlausibleWeb.Endpoint.url() <>
-          "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
+      for email <- site.monthly_report.recipients do
+        unsubscribe_link =
+          PlausibleWeb.Endpoint.url() <>
+            "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
 
-      send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
+        send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
+      end
+
+      :ok
+    else
+      :discard
     end
-
-    :ok
   end
 
   defp send_report(email, site, name, unsubscribe_link, query) do
