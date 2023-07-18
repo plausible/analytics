@@ -1,0 +1,28 @@
+defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearch do
+  @moduledoc """
+  Default suggestion engine for the `ComboBox` component.
+  """
+
+  def suggest(input, options) do
+    input_len = String.length(input)
+
+    options
+    |> Enum.reject(fn {_, value} ->
+      input_len > String.length(to_string(value))
+    end)
+    |> Enum.sort_by(
+      fn {_, value} ->
+        if to_string(value) == input do
+          3
+        else
+          value = to_string(value)
+          input = String.downcase(input)
+          value = String.downcase(value)
+          weight = if String.contains?(value, input), do: 1, else: 0
+          weight + String.jaro_distance(value, input)
+        end
+      end,
+      :desc
+    )
+  end
+end

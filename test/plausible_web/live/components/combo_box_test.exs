@@ -7,10 +7,6 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
 
   @ul "ul#dropdown-test-component[x-show=isOpen][x-ref=suggestions]"
 
-  defp suggestion_li(idx) do
-    ~s/#{@ul} li#dropdown-test-component-option-#{idx - 1}/
-  end
-
   describe "static rendering" do
     test "renders suggestions" do
       assert doc = render_sample_component(new_options(10))
@@ -98,43 +94,6 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
 
       assert text_of_element(doc, "#dropdown-test-component") ==
                "No matches found. Try searching for something different."
-    end
-  end
-
-  describe "autosuggest algorithm" do
-    test "favours exact match" do
-      options = fake_options(["yellow", "hello", "cruel hello world"])
-
-      assert [{_, "hello"}, {_, "cruel hello world"}, {_, "yellow"}] =
-               ComboBox.suggest("hello", options)
-    end
-
-    test "skips entries shorter than input" do
-      options = fake_options(["yellow", "hello", "cruel hello world"])
-
-      assert [{_, "cruel hello world"}] = ComboBox.suggest("cruel hello", options)
-    end
-
-    test "favours similiarity" do
-      options = fake_options(["melon", "hello", "yellow"])
-      assert [{_, "hello"}, {_, "yellow"}, {_, "melon"}] = ComboBox.suggest("hell", options)
-    end
-
-    test "allows fuzzy matching" do
-      options = fake_options(["/url/0xC0FFEE", "/url/0xDEADBEEF", "/url/other"])
-
-      assert [{_, "/url/0xC0FFEE"}, {_, "/url/0xDEADBEEF"}, {_, "/url/other"}] =
-               ComboBox.suggest("0x FF", options)
-    end
-
-    test "suggests up to 15 entries" do
-      options =
-        1..20
-        |> Enum.map(&"Option #{&1}")
-        |> fake_options()
-
-      suggestions = ComboBox.suggest("Option", options)
-      assert Enum.count(suggestions) == 15
     end
   end
 
@@ -226,7 +185,8 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
     render_component(ComboBox,
       options: options,
       submit_name: "test-submit-name",
-      id: "test-component"
+      id: "test-component",
+      suggest_mod: ComboBox.StaticSearch
     )
   end
 
@@ -253,12 +213,6 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
     {:ok, goals}
   end
 
-  defp fake_options(option_names) do
-    option_names
-    |> Enum.shuffle()
-    |> Enum.with_index(fn element, index -> {index, element} end)
-  end
-
   defp type_into_combo(lv, idx, text) do
     lv
     |> element("input#step-#{idx}")
@@ -266,5 +220,9 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       "_target" => ["display-step-#{idx}"],
       "display-step-#{idx}" => "#{text}"
     })
+  end
+
+  defp suggestion_li(idx) do
+    ~s/#{@ul} li#dropdown-test-component-option-#{idx - 1}/
   end
 end

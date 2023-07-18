@@ -36,6 +36,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:submit_name, :string, required: true)
   attr(:display_value, :string, default: "")
   attr(:submit_value, :string, default: "")
+  attr(:suggest_mod, :atom, required: true)
 
   def render(assigns) do
     ~H"""
@@ -79,7 +80,13 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         </div>
       </div>
 
-      <.dropdown ref={@id} options={@options} suggestions={@suggestions} target={@myself} />
+      <.dropdown
+        ref={@id}
+        options={@options}
+        suggest_mod={@suggest_mod}
+        suggestions={@suggestions}
+        target={@myself}
+      />
     </div>
     """
   end
@@ -110,6 +117,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:ref, :string, required: true)
   attr(:options, :list, default: [])
   attr(:suggestions, :list, default: [])
+  attr(:suggest_mod, :atom, required: true)
   attr(:target, :any)
 
   def dropdown(assigns) do
@@ -197,40 +205,20 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     {:noreply, socket}
   end
 
-  def handle_event("search", %{"_target" => [target]} = params, socket) do
+  def handle_event(
+        "search",
+        %{"_target" => [target]} = params,
+        %{assigns: %{suggest_mod: suggest_mod, options: options}} = socket
+      ) do
     input = params[target]
     input_len = input |> String.trim() |> String.length()
 
     if input_len > 0 do
-      suggestions = suggest(input, socket.assigns.options)
+      suggestions = suggest_mod.suggest(input, options)
       {:noreply, assign(socket, %{suggestions: suggestions})}
     else
       {:noreply, socket}
     end
-  end
-
-  def suggest(input, options) do
-    input_len = String.length(input)
-
-    options
-    |> Enum.reject(fn {_, value} ->
-      input_len > String.length(to_string(value))
-    end)
-    |> Enum.sort_by(
-      fn {_, value} ->
-        if to_string(value) == input do
-          3
-        else
-          value = to_string(value)
-          input = String.downcase(input)
-          value = String.downcase(value)
-          weight = if String.contains?(value, input), do: 1, else: 0
-          weight + String.jaro_distance(value, input)
-        end
-      end,
-      :desc
-    )
-    |> Enum.take(@max_options_displayed)
   end
 
   defp do_select(socket, submit_value, display_value) do
