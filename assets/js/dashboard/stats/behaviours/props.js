@@ -6,18 +6,6 @@ import * as url from '../../util/url'
 import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
 
-const DEFAULT_METRICS = [
-  {name: 'visitors', label: 'Visitors'},
-  {name: 'events', label: 'Events'},
-  PERCENTAGE_METRIC
-]
-
-const GOAL_FILTER_METRICS = [
-  {name: 'visitors', label: 'Uniques'},
-  {name: 'events', label: 'Total'},
-  CR_METRIC
-]
-
 export default function Properties(props) {
   const { site, query } = props
   const propKeyStorageName = `prop_key__${site.domain}`
@@ -54,20 +42,16 @@ export default function Properties(props) {
         fetchData={fetchProps}
         getFilterFor={getFilterFor}
         keyLabel={propKey}
-        metrics={metrics()}
+        metrics={[
+          {name: 'visitors', label: 'Visitors'},
+          {name: 'events', label: 'Events'},
+          query.filters.goal ? CR_METRIC : PERCENTAGE_METRIC
+        ]}
         query={query}
         color="bg-red-50"
         colMinWidth={90}
       />
     )
-  }
-
-  function metrics() {
-    if (query.filters.goal) {
-      return GOAL_FILTER_METRICS
-    } else {
-      return DEFAULT_METRICS
-    }
   }
 
   const getFilterFor = (listItem) => { return {'props': JSON.stringify({[propKey]: listItem['name']})} }
