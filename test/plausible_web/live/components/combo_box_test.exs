@@ -35,6 +35,16 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       assert Floki.text(doc) =~ "Max results reached"
     end
 
+    test "renders up to n suggestions if provided" do
+      assert doc = render_sample_component(new_options(20), suggestions_limit: 10)
+
+      assert element_exists?(doc, suggestion_li(9))
+      assert element_exists?(doc, suggestion_li(10))
+
+      refute element_exists?(doc, suggestion_li(11))
+      refute element_exists?(doc, suggestion_li(12))
+    end
+
     test "Alpine.js: renders attrs focusing suggestion elements" do
       assert doc = render_sample_component(new_options(10))
       li1 = doc |> find(suggestion_li(1)) |> List.first()
@@ -101,9 +111,13 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
     defmodule SampleView do
       use Phoenix.LiveView
 
-      defmodule Echo do
-        def suggest(input, options) do
-          [{length(options), input}]
+      defmodule SampleSuggest do
+        def suggest("Echo me", options) do
+          [{length(options), "Echo me"}]
+        end
+
+        def suggest("all", options) do
+          options
         end
       end
 
@@ -112,9 +126,10 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
         <.live_component
           submit_name="some_submit_name"
           module={PlausibleWeb.Live.Components.ComboBox}
-          suggest_mod={__MODULE__.Echo}
-          id="test"
-          options={[{1, "First"}, {2, "Second"}]}
+          suggest_mod={__MODULE__.SampleSuggest}
+          id="test-component"
+          options={for i <- 1..20, do: {i, "Option #{i}"}}
+          suggestions_limit={7}
         />
         """
       end
@@ -122,29 +137,46 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
 
     test "uses the suggestions module", %{conn: conn} do
       {:ok, lv, _html} = live_isolated(conn, SampleView, session: %{})
-      doc = type_into_combo(lv, "test", "Echo me")
-      assert text_of_element(doc, "#dropdown-test-option-0") == "Echo me"
+      doc = type_into_combo(lv, "test-component", "Echo me")
+      assert text_of_element(doc, "#dropdown-test-component-option-0") == "Echo me"
     end
 
     test "stores selected value", %{conn: conn} do
       {:ok, lv, _html} = live_isolated(conn, SampleView, session: %{})
-      type_into_combo(lv, "test", "Echo me")
+      type_into_combo(lv, "test-component", "Echo me")
 
       doc =
         lv
-        |> element("li#dropdown-test-option-0 a")
+        |> element("li#dropdown-test-component-option-0 a")
         |> render_click()
 
-      assert element_exists?(doc, "input[type=hidden][name=some_submit_name][value=2]")
+      assert element_exists?(doc, "input[type=hidden][name=some_submit_name][value=20]")
+    end
+
+    test "limits the suggestions", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, SampleView, session: %{})
+      doc = type_into_combo(lv, "test-component", "all")
+
+      assert element_exists?(doc, suggestion_li(6))
+      assert element_exists?(doc, suggestion_li(7))
+
+      refute element_exists?(doc, suggestion_li(8))
+      refute element_exists?(doc, suggestion_li(9))
     end
   end
 
-  defp render_sample_component(options) do
-    render_component(ComboBox,
-      options: options,
-      submit_name: "test-submit-name",
-      id: "test-component",
-      suggest_mod: ComboBox.StaticSearch
+  defp render_sample_component(options, extra_opts \\ []) do
+    render_component(
+      ComboBox,
+      Keyword.merge(
+        [
+          options: options,
+          submit_name: "test-submit-name",
+          id: "test-component",
+          suggest_mod: ComboBox.StaticSearch
+        ],
+        extra_opts
+      )
     )
   end
 

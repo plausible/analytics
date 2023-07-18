@@ -28,17 +28,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearchTest do
       assert [{_, "/url/0xC0FFEE"}, {_, "/url/0xDEADBEEF"}, {_, "/url/other"}] =
                StaticSearch.suggest("0x FF", options)
     end
-
-    # FIXME
-    test "suggests up to 15 entries" do
-      options =
-        1..20
-        |> Enum.map(&"Option #{&1}")
-        |> fake_options()
-
-      suggestions = StaticSearch.suggest("Option", options)
-      assert Enum.count(suggestions) == 15
-    end
   end
 
   defp fake_options(option_names) do

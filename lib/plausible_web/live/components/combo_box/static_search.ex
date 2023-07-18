@@ -1,6 +1,12 @@
 defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearch do
   @moduledoc """
   Default suggestion engine for the `ComboBox` component.
+
+  Assumes, the user have already queried the database and the data set is
+  small enough to be kept in state and filtered based on external input.
+
+  Favours exact matches. Skips entries shorter than input.
+  Allows fuzzy matching based on Jaro Distance.
   """
 
   def suggest(input, options) do

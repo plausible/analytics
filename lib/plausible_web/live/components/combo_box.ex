@@ -17,14 +17,14 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
 
-  @max_options_displayed 15
+  @default_suggestions_limit 15
 
   def update(assigns, socket) do
     socket =
       socket
       |> assign(assigns)
       |> assign_new(:suggestions, fn ->
-        Enum.take(assigns.options, @max_options_displayed)
+        Enum.take(assigns.options, suggestions_limit(assigns))
       end)
 
     {:ok, socket}
@@ -37,6 +37,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:display_value, :string, default: "")
   attr(:submit_value, :string, default: "")
   attr(:suggest_mod, :atom, required: true)
+  attr(:suggestions_limit, :integer)
 
   def render(assigns) do
     ~H"""
@@ -162,7 +163,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:idx, :integer, required: true)
 
   def option(assigns) do
-    assigns = assign(assigns, :max_options_displayed, @max_options_displayed)
+    assigns = assign(assigns, :suggestions_limit, suggestions_limit(assigns))
 
     ~H"""
     <li
@@ -183,7 +184,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         </span>
       </a>
     </li>
-    <li :if={@idx == @max_options_displayed - 1} class="text-xs text-gray-500 relative py-2 px-3">
+    <li :if={@idx == @suggestions_limit - 1} class="text-xs text-gray-500 relative py-2 px-3">
       Max results reached. Refine your search by typing in goal name.
     </li>
     """
@@ -214,7 +215,11 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     input_len = input |> String.trim() |> String.length()
 
     if input_len > 0 do
-      suggestions = suggest_mod.suggest(input, options)
+      suggestions =
+        input
+        |> suggest_mod.suggest(options)
+        |> Enum.take(suggestions_limit(socket.assigns))
+
       {:noreply, assign(socket, %{suggestions: suggestions})}
     else
       {:noreply, socket}
@@ -241,5 +246,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     )
 
     socket
+  end
+
+  defp suggestions_limit(assigns) do
+    Map.get(assigns, :suggestions_limit, @default_suggestions_limit)
   end
 end
