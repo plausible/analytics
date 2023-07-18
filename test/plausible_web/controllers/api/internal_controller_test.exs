@@ -47,8 +47,6 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
 
       %{"data" => sites} = json_response(conn, 200)
 
-      IO.inspect(sites)
-
       assert %{"domain" => site.domain} in sites
       assert %{"domain" => site2.domain} in sites
     end
