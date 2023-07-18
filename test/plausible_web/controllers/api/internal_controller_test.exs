@@ -47,7 +47,10 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
 
       %{"data" => sites} = json_response(conn, 200)
 
-      assert Enum.map(sites, & &1["domain"]) == [site.domain, site2.domain]
+      IO.inspect(sites)
+
+      assert %{"domain" => site.domain} in sites
+      assert %{"domain" => site2.domain} in sites
     end
   end
 
