@@ -97,6 +97,48 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
     end
   end
 
+  describe "integration" do
+    defmodule SampleView do
+      use Phoenix.LiveView
+
+      defmodule Echo do
+        def suggest(input, options) do
+          [{length(options), input}]
+        end
+      end
+
+      def render(assigns) do
+        ~H"""
+        <.live_component
+          submit_name="some_submit_name"
+          module={PlausibleWeb.Live.Components.ComboBox}
+          suggest_mod={__MODULE__.Echo}
+          id="test"
+          options={[{1, "First"}, {2, "Second"}]}
+        />
+        """
+      end
+    end
+
+    test "uses the suggestions module", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, SampleView, session: %{})
+      doc = type_into_combo(lv, "test", "Echo me")
+      assert text_of_element(doc, "#dropdown-test-option-0") == "Echo me"
+    end
+
+    test "stores selected value", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, SampleView, session: %{})
+      type_into_combo(lv, "test", "Echo me")
+
+      doc =
+        lv
+        |> element("li#dropdown-test-option-0 a")
+        |> render_click()
+
+      assert element_exists?(doc, "input[type=hidden][name=some_submit_name][value=2]")
+    end
+  end
+
   defp render_sample_component(options) do
     render_component(ComboBox,
       options: options,
@@ -112,5 +154,14 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
 
   defp suggestion_li(idx) do
     ~s/#{@ul} li#dropdown-test-component-option-#{idx - 1}/
+  end
+
+  defp type_into_combo(lv, id, text) do
+    lv
+    |> element("input##{id}")
+    |> render_change(%{
+      "_target" => ["display-#{id}"],
+      "display-#{id}" => "#{text}"
+    })
   end
 end
