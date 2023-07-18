@@ -32,7 +32,7 @@ function FilterLink({filterQuery, onClick, children}) {
       </Link>
     )
   } else {
-    return <span class={className}>{ children }</span>
+    return <span className={className}>{ children }</span>
   }
 }
 
