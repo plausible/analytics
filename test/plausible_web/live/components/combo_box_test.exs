@@ -1,9 +1,9 @@
-defmodule PlausibleWeb.Live.FunnelSettings.ComboBoxTest do
+defmodule PlausibleWeb.Live.Components.ComboBoxTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
-  alias PlausibleWeb.Live.FunnelSettings.ComboBox
+  alias PlausibleWeb.Live.Components.ComboBox
 
   @ul "ul#dropdown-test-component[x-show=isOpen][x-ref=suggestions]"
 

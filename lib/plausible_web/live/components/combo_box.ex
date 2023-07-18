@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
+defmodule PlausibleWeb.Live.Components.ComboBox do
   @moduledoc """
   Phoenix LiveComponent for a combobox UI element with search and selection
   functionality.
