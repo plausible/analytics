@@ -20,6 +20,13 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   @default_suggestions_limit 15
 
   def update(assigns, socket) do
+    assigns =
+      if assigns[:suggestions] do
+        Map.put(assigns, :suggestions, Enum.take(assigns.suggestions, suggestions_limit(assigns)))
+      else
+        assigns
+      end
+
     socket =
       socket
       |> assign(assigns)
@@ -81,13 +88,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         </div>
       </div>
 
-      <.dropdown
-        ref={@id}
-        options={@options}
-        suggest_mod={@suggest_mod}
-        suggestions={@suggestions}
-        target={@myself}
-      />
+      <.dropdown ref={@id} suggest_mod={@suggest_mod} suggestions={@suggestions} target={@myself} />
     </div>
     """
   end
@@ -116,7 +117,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   end
 
   attr(:ref, :string, required: true)
-  attr(:options, :list, default: [])
   attr(:suggestions, :list, default: [])
   attr(:suggest_mod, :atom, required: true)
   attr(:target, :any)

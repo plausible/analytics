@@ -62,6 +62,19 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
       refute text_of_element(doc, "ul#dropdown-step-2 li") =~ "Another World"
     end
 
+    test "suggestions are limited on change", %{conn: conn, site: site} do
+      setup_goals(site, for(i <- 1..20, do: "Goal #{i}"))
+      lv = get_liveview(conn, site)
+
+      doc =
+        lv
+        |> element("li#dropdown-step-1-option-0 a")
+        |> render_click()
+
+      assert element_exists?(doc, ~s/#li#dropdown-step-1-option-14/)
+      refute element_exists?(doc, ~s/#li#dropdown-step-1-option-15/)
+    end
+
     test "removing one option alters suggestions for other", %{conn: conn, site: site} do
       setup_goals(site, ["Hello World", "Plausible", "Another World"])
 
