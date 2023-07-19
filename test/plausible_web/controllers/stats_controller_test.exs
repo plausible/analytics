@@ -149,12 +149,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       {_filename, visitors} =
         Enum.find(zip, fn {filename, _data} -> filename == 'visitors.csv' end)
 
-      parsed_csv =
-        visitors
-        |> String.split("\r\n")
-        |> Enum.map(&String.split(&1, ","))
-
-      assert parsed_csv == [
+      assert parse_csv(visitors) == [
                [
                  "date",
                  "visitors",
@@ -172,6 +167,12 @@ defmodule PlausibleWeb.StatsControllerTest do
                [""]
              ]
     end
+  end
+
+  defp parse_csv(file_content) when is_binary(file_content) do
+    file_content
+    |> String.split("\r\n")
+    |> Enum.map(&String.split(&1, ","))
   end
 
   describe "GET /:website/export - via shared link" do
