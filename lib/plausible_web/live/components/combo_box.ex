@@ -13,6 +13,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   by default but can be customized. When a user types into the input
   field, the component searches the available options and provides
   suggestions based on the input.
+
+  Any module exposing suggest/2 function can be supplied via `suggest_mod`
+  attribute - see the provided `ComboBox.StaticSearch`.
   """
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS

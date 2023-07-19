@@ -9,6 +9,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearch do
   Allows fuzzy matching based on Jaro Distance.
   """
 
+  @spec suggest(String.t(), [{any(), any()}]) :: [{any(), any()}]
   def suggest(input, options) do
     input_len = String.length(input)
 
