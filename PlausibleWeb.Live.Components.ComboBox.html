@@ -7,13 +7,13 @@
     <meta name="generator" content="ExDoc v0.29.4">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>PlausibleWeb.Live.FunnelSettings.ComboBox — Plausible v0.0.1</title>
+    <title>PlausibleWeb.Live.Components.ComboBox — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-HHVY3JYD.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
-    <script src="dist/sidebar_items-C589B8A8.js"></script>
+    <script src="dist/sidebar_items-625D214B.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -102,12 +102,12 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/funnel_settings/combo_box.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">PlausibleWeb.Live.FunnelSettings.ComboBox</span> 
+  <span translate="no">PlausibleWeb.Live.Components.ComboBox</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
@@ -120,7 +120,8 @@ which can be searched by typing in the input field.</p><p>The component renders 
 hidden input field for submitting the selected value.</p><p>The number of options displayed in the dropdown is limited to 15
 by default but can be customized. When a user types into the input
 field, the component searches the available options and provides
-suggestions based on the input.</p>
+suggestions based on the input.</p><p>Any module exposing suggest/2 function can be supplied via <code class="inline">suggest_mod</code>
+attribute - see the provided <code class="inline">ComboBox.StaticSearch</code>.</p>
   </section>
 
 
@@ -143,7 +144,7 @@ suggestions based on the input.</p>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">ref</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">options</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">suggestions</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">target</code> (<code class="inline">:any</code>)</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">ref</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">suggestions</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">suggest_mod</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">target</code> (<code class="inline">:any</code>)</li></ul></div>
 
     </div>
 
@@ -183,21 +184,13 @@ suggestions based on the input.</p>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">placeholder</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;Select option or search by typing&quot;</code>.</li><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">options</code> (<code class="inline">:list</code>) (required)</li><li><code class="inline">submit_name</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">display_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">submit_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">placeholder</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;Select option or search by typing&quot;</code>.</li><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">options</code> (<code class="inline">:list</code>) (required)</li><li><code class="inline">submit_name</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">display_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">submit_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">suggest_mod</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">suggestions_limit</code> (<code class="inline">:integer</code>)</li></ul></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#select_option/4" translate="no">select_option(js \\ %JS{}, id, submit_value, display_value)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#suggest/2" translate="no">suggest(input, options)</a>
 
       </div>
 
@@ -236,7 +229,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">dropdown(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/funnel_settings/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -252,7 +245,7 @@ Functions
   </a>
   Attributes
 </h2>
-<ul><li><code class="inline">ref</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">options</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">suggestions</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">target</code> (<code class="inline">:any</code>)</li></ul>
+<ul><li><code class="inline">ref</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">suggestions</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">suggest_mod</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">target</code> (<code class="inline">:any</code>)</li></ul>
   </section>
 </section>
 <section class="detail" id="dropdown_anchor/1">
@@ -264,7 +257,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">dropdown_anchor(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/funnel_settings/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -292,7 +285,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">handle_event(binary, params, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/funnel_settings/combo_box.ex#L191" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L203" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -314,7 +307,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">option(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/funnel_settings/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -342,7 +335,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/funnel_settings/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -358,7 +351,7 @@ Functions
   </a>
   Attributes
 </h2>
-<ul><li><code class="inline">placeholder</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;Select option or search by typing&quot;</code>.</li><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">options</code> (<code class="inline">:list</code>) (required)</li><li><code class="inline">submit_name</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">display_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">submit_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li></ul>
+<ul><li><code class="inline">placeholder</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;Select option or search by typing&quot;</code>.</li><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">options</code> (<code class="inline">:list</code>) (required)</li><li><code class="inline">submit_name</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">display_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">submit_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">suggest_mod</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">suggestions_limit</code> (<code class="inline">:integer</code>)</li></ul>
   </section>
 </section>
 <section class="detail" id="select_option/4">
@@ -372,29 +365,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">select_option(js \\ %JS{}, id, submit_value, display_value)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/funnel_settings/combo_box.ex#L184" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="suggest/2">
-
-  <div class="detail-header">
-    <a href="#suggest/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">suggest(input, options)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/funnel_settings/combo_box.ex#L212" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L196" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -416,7 +387,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">update(assigns, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/funnel_settings/combo_box.ex#L22" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L25" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
