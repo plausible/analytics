@@ -82,7 +82,7 @@ export default function Behaviours(props) {
                       className={classNames(
                         active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
                         'block px-4 py-2 text-sm',
-                        selectedFunnel === funnelName ? 'font-bold text-gray-500' : ''
+                        (mode === FUNNELS && selectedFunnel === funnelName) ? 'font-bold text-gray-500' : ''
                       )}
                     >
                       {funnelName}
