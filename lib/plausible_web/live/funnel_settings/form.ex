@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               class: "mt-6 block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             ) %>
 
-            <div :for={step_idx <- @step_ids} class="flex">
+            <div :for={step_idx <- @step_ids} class="flex mb-3">
               <div class="w-2/5 flex-1">
                 <.live_component
                   submit_name="funnel[steps][][goal_id]"
