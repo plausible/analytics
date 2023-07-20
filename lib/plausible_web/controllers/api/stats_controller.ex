@@ -1211,9 +1211,10 @@ defmodule PlausibleWeb.Api.StatsController do
       end)
       |> Enum.concat()
 
-    percent_or_cr = if query.filters["event:goal"],
-      do: :conversion_rate,
-      else: :percentage
+    percent_or_cr =
+      if query.filters["event:goal"],
+        do: :conversion_rate,
+        else: :percentage
 
     to_csv(values, [:property, :value, :visitors, :events, percent_or_cr])
   end

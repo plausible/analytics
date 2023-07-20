@@ -160,14 +160,14 @@ defmodule PlausibleWeb.StatsControllerTest do
         Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
 
       assert parse_csv(result) == [
-        ["property", "value", "visitors", "events", "percentage"],
-        ["author", "(none)", "3", "4", "50.0"],
-        ["author", "uku", "2", "2", "33.3"],
-        ["author", "marko", "1", "1", "16.7"],
-        ["logged_in", "(none)", "5", "5", "83.3"],
-        ["logged_in", "true", "1", "2", "16.7"],
-        [""]
-      ]
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "(none)", "3", "4", "50.0"],
+               ["author", "uku", "2", "2", "33.3"],
+               ["author", "marko", "1", "1", "16.7"],
+               ["logged_in", "(none)", "5", "5", "83.3"],
+               ["logged_in", "true", "1", "2", "16.7"],
+               [""]
+             ]
     end
 
     test "exports data grouped by interval", %{conn: conn, site: site} do
@@ -242,14 +242,18 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "GET /:website/export - with a custom prop filter" do
     setup [:create_user, :create_new_site, :log_in]
 
-    test "custom-props.csv only returns the prop and its value in filter", %{conn: conn, site: site} do
+    test "custom-props.csv only returns the prop and its value in filter", %{
+      conn: conn,
+      site: site
+    } do
       site = Plausible.Sites.set_allowed_event_props(site, ["author", "logged_in"])
 
       populate_stats(site, [
         build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
         build(:pageview, "meta.key": ["author"], "meta.value": ["marko"]),
-        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"]),
+        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
       ])
+
       filters = Jason.encode!(%{props: %{author: "marko"}})
       conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
 
@@ -259,10 +263,10 @@ defmodule PlausibleWeb.StatsControllerTest do
         Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
 
       assert parse_csv(result) == [
-        ["property", "value", "visitors", "events", "percentage"],
-        ["author", "marko", "1", "1", "100.0"],
-        [""]
-      ]
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "marko", "1", "1", "100.0"],
+               [""]
+             ]
     end
   end
 
@@ -356,15 +360,19 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert_zip(conn, "30d-filter-goal")
     end
 
-    test "custom-props.csv only returns the prop names for the goal in filter", %{conn: conn, site: site} do
+    test "custom-props.csv only returns the prop names for the goal in filter", %{
+      conn: conn,
+      site: site
+    } do
       site = Plausible.Sites.set_allowed_event_props(site, ["author", "logged_in"])
 
       populate_stats(site, [
         build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["uku"]),
         build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
         build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
-        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"]),
+        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
       ])
+
       filters = Jason.encode!(%{goal: "Newsletter Signup"})
       conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
 
@@ -374,11 +382,11 @@ defmodule PlausibleWeb.StatsControllerTest do
         Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
 
       assert parse_csv(result) == [
-        ["property", "value", "visitors", "events", "conversion_rate"],
-        ["author", "marko", "2", "2", "50.0"],
-        ["author", "uku", "1", "1", "25.0"],
-        [""]
-      ]
+               ["property", "value", "visitors", "events", "conversion_rate"],
+               ["author", "marko", "2", "2", "50.0"],
+               ["author", "uku", "1", "1", "25.0"],
+               [""]
+             ]
     end
   end
 
