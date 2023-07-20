@@ -1189,7 +1189,33 @@ defmodule PlausibleWeb.Api.StatsController do
         props
       end
 
-    json(conn, props)
+    if params["csv"] do
+      props
+    else
+      json(conn, props)
+    end
+  end
+
+  def all_custom_prop_values(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site, params) |> Filters.add_prefix()
+
+    prop_names = Plausible.Stats.CustomProps.fetch_prop_names(site, query)
+
+    values =
+      prop_names
+      |> Enum.map(fn prop_key ->
+        custom_prop_values(conn, Map.put(params, "prop_key", prop_key))
+        |> Enum.map(&Map.put(&1, :property, prop_key))
+        |> transform_keys(%{:name => :value})
+      end)
+      |> Enum.concat()
+
+    percent_or_cr = if query.filters["event:goal"],
+      do: :conversion_rate,
+      else: :percentage
+
+    to_csv(values, [:property, :value, :visitors, :events, percent_or_cr])
   end
 
   def prop_breakdown(conn, params) do

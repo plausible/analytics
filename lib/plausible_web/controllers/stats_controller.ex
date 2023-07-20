@@ -148,6 +148,15 @@ defmodule PlausibleWeb.StatsController do
         'prop_breakdown.csv' => fn -> Api.StatsController.all_props_breakdown(conn, params) end
       }
 
+      csvs =
+        if FunWithFlags.enabled?(:props) do
+          Map.put(csvs, 'custom_props.csv', fn ->
+            Api.StatsController.all_custom_prop_values(conn, params)
+          end)
+        else
+          csvs
+        end
+
       csv_values =
         Map.values(csvs)
         |> Plausible.ClickhouseRepo.parallel_tasks()

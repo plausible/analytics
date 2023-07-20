@@ -139,6 +139,37 @@ defmodule PlausibleWeb.StatsControllerTest do
              |> response(400)
     end
 
+    test "exports allowed event props", %{conn: conn, site: site} do
+      site = Plausible.Sites.set_allowed_event_props(site, ["author", "logged_in"])
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:event, "meta.key": ["author"], "meta.value": ["marko"], name: "Newsletter Signup"),
+        build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
+        build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
+        build(:pageview, "meta.key": ["disallowed"], "meta.value": ["whatever"]),
+        build(:pageview)
+      ])
+
+      conn = get(conn, "/" <> site.domain <> "/export?period=day")
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      {_filename, result} =
+        Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
+
+      assert parse_csv(result) == [
+        ["property", "value", "visitors", "events", "percentage"],
+        ["author", "(none)", "3", "4", "50.0"],
+        ["author", "uku", "2", "2", "33.3"],
+        ["author", "marko", "1", "1", "16.7"],
+        ["logged_in", "(none)", "5", "5", "83.3"],
+        ["logged_in", "true", "1", "2", "16.7"],
+        [""]
+      ]
+    end
+
     test "exports data grouped by interval", %{conn: conn, site: site} do
       populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20&period=30d&interval=week")
