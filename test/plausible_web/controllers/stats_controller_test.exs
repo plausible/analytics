@@ -239,6 +239,33 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
   end
 
+  describe "GET /:website/export - with a custom prop filter" do
+    setup [:create_user, :create_new_site, :log_in]
+
+    test "custom-props.csv only returns the prop and its value in filter", %{conn: conn, site: site} do
+      site = Plausible.Sites.set_allowed_event_props(site, ["author", "logged_in"])
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:pageview, "meta.key": ["author"], "meta.value": ["marko"]),
+        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"]),
+      ])
+      filters = Jason.encode!(%{props: %{author: "marko"}})
+      conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
+
+      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+      {_filename, result} =
+        Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
+
+      assert parse_csv(result) == [
+        ["property", "value", "visitors", "events", "percentage"],
+        ["author", "marko", "1", "1", "100.0"],
+        [""]
+      ]
+    end
+  end
+
   defp assert_zip(conn, folder) do
     assert conn.status == 200
 
