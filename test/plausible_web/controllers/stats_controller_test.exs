@@ -355,6 +355,31 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
       assert_zip(conn, "30d-filter-goal")
     end
+
+    test "custom-props.csv only returns the prop names for the goal in filter", %{conn: conn, site: site} do
+      site = Plausible.Sites.set_allowed_event_props(site, ["author", "logged_in"])
+
+      populate_stats(site, [
+        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
+        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
+        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"]),
+      ])
+      filters = Jason.encode!(%{goal: "Newsletter Signup"})
+      conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
+
+      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+      {_filename, result} =
+        Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
+
+      assert parse_csv(result) == [
+        ["property", "value", "visitors", "events", "conversion_rate"],
+        ["author", "marko", "2", "2", "50.0"],
+        ["author", "uku", "1", "1", "25.0"],
+        [""]
+      ]
+    end
   end
 
   describe "GET /share/:domain?auth=:auth" do
