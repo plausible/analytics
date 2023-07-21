@@ -128,6 +128,11 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       assert render_sample_component([], required: true) |> element_exists?(input_query)
       refute render_sample_component([]) |> element_exists?(input_query)
     end
+
+    test "adds class to html element when class option is passed" do
+      assert render_sample_component([], class: "animate-spin")
+             |> element_exists?("#input-picker-main-test-component.animate-spin")
+    end
   end
 
   describe "integration" do
