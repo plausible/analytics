@@ -1166,34 +1166,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def custom_prop_values(conn, params) do
     site = conn.assigns[:site]
-    query = Query.from(site, params) |> Filters.add_prefix()
-    pagination = parse_pagination(params)
-
-    total_q = Query.remove_event_filters(query, [:goal, :props])
-
-    %{:visitors => %{value: total_unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
-
-    prefixed_prop = "event:props:" <> params["prop_key"]
-
-    props =
-      Stats.breakdown(site, query, prefixed_prop, [:visitors, :events], pagination)
-      |> transform_keys(%{params["prop_key"] => :name})
-      |> add_percentages(query)
-
-    props =
-      if Map.has_key?(query.filters, "event:goal") do
-        Enum.map(props, fn prop ->
-          Map.put(prop, :conversion_rate, calculate_cr(total_unique_visitors, prop.visitors))
-        end)
-      else
-        props
-      end
-
-    if params["csv"] do
-      props
-    else
-      json(conn, props)
-    end
+    props = breakdown_custom_prop_values(site, params)
+    json(conn, props)
   end
 
   def all_custom_prop_values(conn, params) do
@@ -1205,7 +1179,7 @@ defmodule PlausibleWeb.Api.StatsController do
     values =
       prop_names
       |> Enum.map(fn prop_key ->
-        custom_prop_values(conn, Map.put(params, "prop_key", prop_key))
+        breakdown_custom_prop_values(site, Map.put(params, "prop_key", prop_key))
         |> Enum.map(&Map.put(&1, :property, prop_key))
         |> transform_keys(%{:name => :value})
       end)
@@ -1217,6 +1191,30 @@ defmodule PlausibleWeb.Api.StatsController do
         else: :percentage
 
     to_csv(values, [:property, :value, :visitors, :events, percent_or_cr])
+  end
+
+  defp breakdown_custom_prop_values(site, %{"prop_key" => prop_key} = params) do
+    query = Query.from(site, params) |> Filters.add_prefix()
+    pagination = parse_pagination(params)
+
+    total_q = Query.remove_event_filters(query, [:goal, :props])
+
+    %{:visitors => %{value: total_unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
+
+    prefixed_prop = "event:props:" <> prop_key
+
+    props =
+      Stats.breakdown(site, query, prefixed_prop, [:visitors, :events], pagination)
+      |> transform_keys(%{prop_key => :name})
+      |> add_percentages(query)
+
+    if Map.has_key?(query.filters, "event:goal") do
+      Enum.map(props, fn prop ->
+        Map.put(prop, :conversion_rate, calculate_cr(total_unique_visitors, prop.visitors))
+      end)
+    else
+      props
+    end
   end
 
   def prop_breakdown(conn, params) do
