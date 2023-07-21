@@ -100,16 +100,6 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       assert %{conversions_enabled: false} = Plausible.Sites.get_by_domain(site.domain)
     end
 
-    test "when the logged-in user is an super-admin", %{conn: conn, user: user} do
-      site = insert(:site)
-      patch_env(:super_admin_user_ids, [user.id])
-
-      conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
-
-      assert json_response(conn, 200) == "ok"
-      assert %{conversions_enabled: false} = Plausible.Sites.get_by_domain(site.domain)
-    end
-
     test "returns 401 when the logged-in user is a viewer of the site", %{conn: conn, user: user} do
       site = insert(:site)
       insert(:site_membership, user: user, site: site, role: :viewer)
@@ -147,6 +137,27 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
              }
 
       assert %{conversions_enabled: true} = Plausible.Sites.get_by_domain(site.domain)
+    end
+  end
+end
+
+# We need to be separate tests calling `patch_env` in an `async: false` test
+# module, because `Application.env` is a shared state.
+defmodule PlausibleWeb.Api.InternalControllerSyncTest do
+  use PlausibleWeb.ConnCase, async: false
+  use Plausible.Repo
+
+  describe "PUT /api/:domain/disable-feature" do
+    setup [:create_user, :log_in]
+
+    test "when the logged-in user is an super-admin", %{conn: conn, user: user} do
+      site = insert(:site)
+      patch_env(:super_admin_user_ids, [user.id])
+
+      conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
+
+      assert json_response(conn, 200) == "ok"
+      assert %{conversions_enabled: false} = Plausible.Sites.get_by_domain(site.domain)
     end
   end
 end
