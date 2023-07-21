@@ -260,7 +260,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
       {:noreply, assign(socket, %{suggestions: suggestions})}
     else
-      {:noreply, socket}
+      {:noreply, assign(socket, %{suggestions: options})}
     end
   end
 
