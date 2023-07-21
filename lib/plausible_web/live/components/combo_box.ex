@@ -51,7 +51,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:class, :string, default: "")
   attr(:required, :boolean, default: false)
   attr(:creatable, :boolean, default: false)
-  attr(:input, :string, default: "")
 
   def render(assigns) do
     ~H"""
@@ -102,7 +101,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         suggestions={@suggestions}
         target={@myself}
         creatable={@creatable}
-        input={@input}
+        display_value={@display_value}
       />
     </div>
     """
@@ -136,7 +135,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:suggest_mod, :atom, required: true)
   attr(:target, :any)
   attr(:creatable, :boolean, required: true)
-  attr(:input, :string, required: true)
+  attr(:display_value, :string, required: true)
 
   def dropdown(assigns) do
     ~H"""
@@ -164,10 +163,10 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       />
 
       <.option
-        :if={@creatable && String.length(@input) > 0}
+        :if={@creatable && String.length(@display_value) > 0}
         idx={length(@suggestions)}
-        submit_value={@input}
-        display_value={@input}
+        submit_value={@display_value}
+        display_value={@display_value}
         target={@target}
         ref={@ref}
         creatable
@@ -248,7 +247,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
     socket =
       if socket.assigns[:creatable] do
-        assign(socket, display_value: input, submit_value: input, input: input)
+        assign(socket, display_value: input, submit_value: input)
       else
         socket
       end

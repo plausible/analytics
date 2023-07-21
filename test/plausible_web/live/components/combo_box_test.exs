@@ -110,7 +110,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       doc =
         render_sample_component([{"USD", "US Dollar"}, {"EUR", "Euro"}],
           creatable: true,
-          input: "Brazilian Real"
+          display_value: "Brazilian Real"
         )
 
       assert text_of_element(doc, "#dropdown-test-component-option-0") == "US Dollar"
