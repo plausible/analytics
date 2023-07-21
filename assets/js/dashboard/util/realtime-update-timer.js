@@ -1,4 +1,4 @@
-const THIRTY_SECONDS = 5000
+const THIRTY_SECONDS = 30000
 const tickEvent = new Event('tick')
 
 export function start() {
