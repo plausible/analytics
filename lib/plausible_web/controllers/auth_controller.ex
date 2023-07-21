@@ -300,7 +300,11 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def login_form(conn, _params) do
-    render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    if Application.get_env(:plausible, :use_oidc) do
+      redirect(conn, external: OpenIDConnect.authorization_uri(:default)) 
+    else
+      render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    end
   end
 
   def user_settings(conn, _params) do
@@ -519,6 +523,37 @@ defmodule PlausibleWeb.AuthController do
         site = Repo.get(Plausible.Site, site_id)
 
         redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/integrations")
+    end
+  end
+
+  def oidc_callback(conn, %{"code" => code}) do
+    if !Application.get_env(:plausible, :use_oidc) do
+      render_error(
+          conn,
+          400,
+          "OIDC is not active"
+        )
+    else
+      with {:ok, tokens} <- OpenIDConnect.fetch_tokens(:default, %{code: code}),
+          {:ok, claims} <- OpenIDConnect.verify(:default, tokens["id_token"]),
+          {:ok, user} <- find_user(claims["email"]) do
+            login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+
+            conn
+            |> put_session(:current_user_id, user.id)
+            |> put_resp_cookie("logged_in", "true",
+              http_only: false,
+              max_age: 60 * 60 * 24
+            )
+            |> put_session(:login_dest, nil)
+            |> redirect(to: login_dest)
+      else
+        e -> render_error(
+            conn,
+            400,
+            "OIDC login failed: #{inspect(e)}"
+          )
+      end
     end
   end
 end

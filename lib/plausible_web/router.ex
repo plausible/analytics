@@ -175,6 +175,7 @@ defmodule PlausibleWeb.Router do
     post "/password/request-reset", AuthController, :password_reset_request
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
+    get "/oidc/callback", AuthController, :oidc_callback
     get "/avatar/:hash", AvatarController, :avatar
     post "/error_report", ErrorReportController, :submit_error_report
   end
