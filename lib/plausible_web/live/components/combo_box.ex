@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
+defmodule PlausibleWeb.Live.Components.ComboBox do
   @moduledoc """
   Phoenix LiveComponent for a combobox UI element with search and selection
   functionality.
@@ -13,18 +13,28 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
   by default but can be customized. When a user types into the input
   field, the component searches the available options and provides
   suggestions based on the input.
+
+  Any module exposing suggest/2 function can be supplied via `suggest_mod`
+  attribute - see the provided `ComboBox.StaticSearch`.
   """
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
 
-  @max_options_displayed 15
+  @default_suggestions_limit 15
 
   def update(assigns, socket) do
+    assigns =
+      if assigns[:suggestions] do
+        Map.put(assigns, :suggestions, Enum.take(assigns.suggestions, suggestions_limit(assigns)))
+      else
+        assigns
+      end
+
     socket =
       socket
       |> assign(assigns)
       |> assign_new(:suggestions, fn ->
-        Enum.take(assigns.options, @max_options_displayed)
+        Enum.take(assigns.options, suggestions_limit(assigns))
       end)
 
     {:ok, socket}
@@ -36,6 +46,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
   attr(:submit_name, :string, required: true)
   attr(:display_value, :string, default: "")
   attr(:submit_value, :string, default: "")
+  attr(:suggest_mod, :atom, required: true)
+  attr(:suggestions_limit, :integer)
 
   def render(assigns) do
     ~H"""
@@ -79,7 +91,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
         </div>
       </div>
 
-      <.dropdown ref={@id} options={@options} suggestions={@suggestions} target={@myself} />
+      <.dropdown ref={@id} suggest_mod={@suggest_mod} suggestions={@suggestions} target={@myself} />
     </div>
     """
   end
@@ -108,8 +120,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
   end
 
   attr(:ref, :string, required: true)
-  attr(:options, :list, default: [])
   attr(:suggestions, :list, default: [])
+  attr(:suggest_mod, :atom, required: true)
   attr(:target, :any)
 
   def dropdown(assigns) do
@@ -154,7 +166,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
   attr(:idx, :integer, required: true)
 
   def option(assigns) do
-    assigns = assign(assigns, :max_options_displayed, @max_options_displayed)
+    assigns = assign(assigns, :suggestions_limit, suggestions_limit(assigns))
 
     ~H"""
     <li
@@ -175,7 +187,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
         </span>
       </a>
     </li>
-    <li :if={@idx == @max_options_displayed - 1} class="text-xs text-gray-500 relative py-2 px-3">
+    <li :if={@idx == @suggestions_limit - 1} class="text-xs text-gray-500 relative py-2 px-3">
       Max results reached. Refine your search by typing in goal name.
     </li>
     """
@@ -197,40 +209,24 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
     {:noreply, socket}
   end
 
-  def handle_event("search", %{"_target" => [target]} = params, socket) do
+  def handle_event(
+        "search",
+        %{"_target" => [target]} = params,
+        %{assigns: %{suggest_mod: suggest_mod, options: options}} = socket
+      ) do
     input = params[target]
     input_len = input |> String.trim() |> String.length()
 
     if input_len > 0 do
-      suggestions = suggest(input, socket.assigns.options)
+      suggestions =
+        input
+        |> suggest_mod.suggest(options)
+        |> Enum.take(suggestions_limit(socket.assigns))
+
       {:noreply, assign(socket, %{suggestions: suggestions})}
     else
       {:noreply, socket}
     end
-  end
-
-  def suggest(input, options) do
-    input_len = String.length(input)
-
-    options
-    |> Enum.reject(fn {_, value} ->
-      input_len > String.length(to_string(value))
-    end)
-    |> Enum.sort_by(
-      fn {_, value} ->
-        if to_string(value) == input do
-          3
-        else
-          value = to_string(value)
-          input = String.downcase(input)
-          value = String.downcase(value)
-          weight = if String.contains?(value, input), do: 1, else: 0
-          weight + String.jaro_distance(value, input)
-        end
-      end,
-      :desc
-    )
-    |> Enum.take(@max_options_displayed)
   end
 
   defp do_select(socket, submit_value, display_value) do
@@ -253,5 +249,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.ComboBox do
     )
 
     socket
+  end
+
+  defp suggestions_limit(assigns) do
+    Map.get(assigns, :suggestions_limit, @default_suggestions_limit)
   end
 end

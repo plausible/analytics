@@ -68,7 +68,8 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               <div class="w-2/5 flex-1">
                 <.live_component
                   submit_name="funnel[steps][][goal_id]"
-                  module={PlausibleWeb.Live.FunnelSettings.ComboBox}
+                  module={PlausibleWeb.Live.Components.ComboBox}
+                  suggest_mod={PlausibleWeb.Live.Components.ComboBox.StaticSearch}
                   id={"step-#{step_idx}"}
                   options={reject_alrady_selected("step-#{step_idx}", @goals, @selections_made)}
                 />
@@ -401,7 +402,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
     result = Enum.reject(goals, fn {goal_id, _} -> goal_id in selection_ids end)
 
-    send_update(PlausibleWeb.Live.FunnelSettings.ComboBox, id: combo_box, suggestions: result)
+    send_update(PlausibleWeb.Live.Components.ComboBox, id: combo_box, suggestions: result)
     result
   end
 end
