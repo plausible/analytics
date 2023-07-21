@@ -22,6 +22,7 @@
     data-funnels-enabled="<%= @site.funnels_enabled %>"
     data-props-enabled="<%= @site.props_enabled %>"
     data-funnels="<%= Jason.encode!(@funnels) %>"
+    data-allowed-event-props="<%= Jason.encode!(@allowed_event_props) %>"
     data-logged-in="<%= !!@conn.assigns[:current_user] %>"
     data-stats-begin="<%= @stats_start_date %>"
     data-native-stats-begin="<%= @native_stats_start_date %>"

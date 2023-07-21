@@ -5,6 +5,7 @@ import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
 import Conversions from './conversions'
+import Properties from './props'
 import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
 
@@ -12,13 +13,13 @@ const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font
 const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
 
 export const CONVERSIONS = 'conversions'
-export const FUNNELS = 'funnels'
 export const PROPS = 'props'
+export const FUNNELS = 'funnels'
 
 export const sectionTitles = {
   [CONVERSIONS]: 'Goal Conversions',
-  [FUNNELS]: 'Funnels',
-  [PROPS]: 'Custom Properties'
+  [PROPS]: 'Custom Properties',
+  [FUNNELS]: 'Funnels'
 }
 
 export default function Behaviours(props) {
@@ -115,8 +116,8 @@ export default function Behaviours(props) {
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
         {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS, 'Goals')}
-        {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
         {isEnabled(PROPS) && tabSwitcher(PROPS, 'Properties')}
+        {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
       </div>
     )
   }
@@ -158,7 +159,9 @@ export default function Behaviours(props) {
   }
 
   function renderProps() {
-    if (adminAccess) {
+    if (site.allowedEventProps && site.allowedEventProps.length > 0) {
+      return <Properties site={site} query={props.query} allowedEventProps={site.allowedEventProps}/>
+    } else if (adminAccess) {
       return (
         <FeatureSetupNotice
           site={site}
@@ -189,10 +192,10 @@ export default function Behaviours(props) {
     switch (mode) {
       case CONVERSIONS:
         return renderConversions()
-      case FUNNELS:
-        return renderFunnels()
       case PROPS:
         return renderProps()
+      case FUNNELS:
+        return renderFunnels()
     }
   }
 
@@ -203,8 +206,8 @@ export default function Behaviours(props) {
     if (storedMode && enabledModes.includes(storedMode)) { return storedMode }
 
     if (enabledModes.includes(CONVERSIONS)) { return CONVERSIONS }
-    if (enabledModes.includes(FUNNELS)) { return FUNNELS }
-    return PROPS
+    if (enabledModes.includes(PROPS)) { return PROPS }
+    return FUNNELS
   }
 
   function getEnabledModes() {
@@ -213,11 +216,11 @@ export default function Behaviours(props) {
     if (site.conversionsEnabled) {
       enabledModes.push(CONVERSIONS)
     }
+    if (site.propsEnabled && site.flags.props) {
+      enabledModes.push(PROPS)
+    }
     if (site.funnelsEnabled && !isRealtime() && site.flags.funnels) {
       enabledModes.push(FUNNELS)
-    }
-    if (site.propsEnabled && !isRealtime() && site.flags.props) {
-      enabledModes.push(PROPS)
     }
     return enabledModes
   }

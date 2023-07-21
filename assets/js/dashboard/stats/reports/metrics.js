@@ -33,7 +33,9 @@ export function maybeWithCR(metrics, query) {
 }
 
 export function displayMetricValue(value, metric) {
-  if ([PERCENTAGE_METRIC, CR_METRIC].includes(metric)) {
+  if (metric === PERCENTAGE_METRIC) {
+    return value
+  } else if (metric === CR_METRIC) {
     return `${value}%`
   } else {
     return <span tooltip={value}>{ numberFormatter(value) }</span>
