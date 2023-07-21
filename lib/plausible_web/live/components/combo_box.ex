@@ -48,12 +48,15 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:submit_value, :string, default: "")
   attr(:suggest_mod, :atom, required: true)
   attr(:suggestions_limit, :integer)
+  attr(:class, :string, default: "")
+  attr(:required, :boolean, default: false)
+  attr(:creatable, :boolean, default: false)
 
   def render(assigns) do
     ~H"""
     <div
       id={"input-picker-main-#{@id}"}
-      class="mb-3"
+      class={@class}
       x-data={"window.suggestionsDropdown('#{@id}')"}
       x-on:keydown.arrow-up="focusPrev"
       x-on:keydown.arrow-down="focusNext"
@@ -77,6 +80,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             value={@display_value}
             class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
             style="background-color: inherit;"
+            required={@required}
           />
 
           <.dropdown_anchor id={@id} />
@@ -91,7 +95,14 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         </div>
       </div>
 
-      <.dropdown ref={@id} suggest_mod={@suggest_mod} suggestions={@suggestions} target={@myself} />
+      <.dropdown
+        ref={@id}
+        suggest_mod={@suggest_mod}
+        suggestions={@suggestions}
+        target={@myself}
+        creatable={@creatable}
+        display_value={@display_value}
+      />
     </div>
     """
   end
@@ -123,6 +134,8 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:suggestions, :list, default: [])
   attr(:suggest_mod, :atom, required: true)
   attr(:target, :any)
+  attr(:creatable, :boolean, required: true)
+  attr(:display_value, :string, required: true)
 
   def dropdown(assigns) do
     ~H"""
@@ -149,8 +162,18 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         ref={@ref}
       />
 
+      <.option
+        :if={@creatable && String.length(@display_value) > 0}
+        idx={length(@suggestions)}
+        submit_value={@display_value}
+        display_value={@display_value}
+        target={@target}
+        ref={@ref}
+        creatable
+      />
+
       <div
-        :if={@suggestions == []}
+        :if={@suggestions == [] && !@creatable}
         class="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300"
       >
         No matches found. Try searching for something different.
@@ -160,10 +183,11 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   end
 
   attr(:display_value, :string, required: true)
-  attr(:submit_value, :integer, required: true)
+  attr(:submit_value, :string, required: true)
   attr(:ref, :string, required: true)
   attr(:target, :any)
   attr(:idx, :integer, required: true)
+  attr(:creatable, :boolean, default: false)
 
   def option(assigns) do
     assigns = assign(assigns, :suggestions_limit, suggestions_limit(assigns))
@@ -183,7 +207,11 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         class="block py-2 px-3"
       >
         <span class="block truncate">
-          <%= @display_value %>
+          <%= if @creatable do %>
+            Create "<%= @display_value %>"
+          <% else %>
+            <%= @display_value %>
+          <% end %>
         </span>
       </a>
     </li>
@@ -216,6 +244,13 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       ) do
     input = params[target]
     input_len = input |> String.trim() |> String.length()
+
+    socket =
+      if socket.assigns[:creatable] do
+        assign(socket, display_value: input, submit_value: input)
+      else
+        socket
+      end
 
     if input_len > 0 do
       suggestions =

@@ -105,6 +105,34 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       assert text_of_element(doc, "#dropdown-test-component") ==
                "No matches found. Try searching for something different."
     end
+
+    test "dropdown suggests user input when creatable" do
+      doc =
+        render_sample_component([{"USD", "US Dollar"}, {"EUR", "Euro"}],
+          creatable: true,
+          display_value: "Brazilian Real"
+        )
+
+      assert text_of_element(doc, "#dropdown-test-component-option-0") == "US Dollar"
+      assert text_of_element(doc, "#dropdown-test-component-option-1") == "Euro"
+
+      assert text_of_element(doc, "#dropdown-test-component-option-2") ==
+               ~s(Create "Brazilian Real")
+
+      refute text_of_element(doc, "#dropdown-test-component") ==
+               "No matches found. Try searching for something different."
+    end
+
+    test "makes the html input required when required option is passed" do
+      input_query = "input[type=text][required]"
+      assert render_sample_component([], required: true) |> element_exists?(input_query)
+      refute render_sample_component([]) |> element_exists?(input_query)
+    end
+
+    test "adds class to html element when class option is passed" do
+      assert render_sample_component([], class: "animate-spin")
+             |> element_exists?("#input-picker-main-test-component.animate-spin")
+    end
   end
 
   describe "integration" do
@@ -162,6 +190,71 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
 
       refute element_exists?(doc, suggestion_li(8))
       refute element_exists?(doc, suggestion_li(9))
+    end
+  end
+
+  describe "creatable integration" do
+    defmodule CreatableView do
+      use Phoenix.LiveView
+
+      def render(assigns) do
+        ~H"""
+        <.live_component
+          submit_name="some_submit_name"
+          module={PlausibleWeb.Live.Components.ComboBox}
+          suggest_mod={ComboBox.StaticSearch}
+          id="test-creatable-component"
+          options={for i <- 1..20, do: {i, "Option #{i}"}}
+          creatable
+        />
+        """
+      end
+    end
+
+    test "stores selected value from suggestion", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, CreatableView, session: %{})
+      type_into_combo(lv, "test-creatable-component", "option 20")
+
+      doc =
+        lv
+        |> element("li#dropdown-test-creatable-component-option-0 a")
+        |> render_click()
+
+      assert element_exists?(doc, "input[type=hidden][name=some_submit_name][value=20]")
+    end
+
+    test "suggests creating custom value", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, CreatableView, session: %{})
+
+      assert lv
+             |> type_into_combo("test-creatable-component", "my new option")
+             |> text_of_element("li#dropdown-test-creatable-component-option-0 a") ==
+               ~s(Create "my new option")
+    end
+
+    test "stores new value by clicking on the dropdown custom option", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, CreatableView, session: %{})
+      type_into_combo(lv, "test-creatable-component", "my new option")
+
+      doc =
+        lv
+        |> element("li#dropdown-test-creatable-component-option-0 a")
+        |> render_click()
+
+      assert element_exists?(
+               doc,
+               "input[type=hidden][name=some_submit_name][value=\"my new option\"]"
+             )
+    end
+
+    test "stores new value while typing", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, CreatableView, session: %{})
+
+      assert lv
+             |> type_into_combo("test-creatable-component", "my new option")
+             |> element_exists?(
+               "input[type=hidden][name=some_submit_name][value=\"my new option\"]"
+             )
     end
   end
 
