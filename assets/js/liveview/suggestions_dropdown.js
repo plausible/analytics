@@ -16,7 +16,7 @@ let suggestionsDropdown = function(id) {
     },
     scrollTo(idx) {
       this.$refs[`dropdown-${this.id}-option-${idx}`]?.scrollIntoView(
-        { block: 'center', behavior: 'smooth', inline: 'start' }
+        { block: 'nearest', behavior: 'smooth', inline: 'start' }
       )
     },
     focusNext() {
