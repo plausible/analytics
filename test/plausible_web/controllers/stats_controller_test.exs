@@ -140,7 +140,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "exports allowed event props", %{conn: conn, site: site} do
-      site = Plausible.Sites.set_allowed_event_props(site, ["author", "logged_in"])
+      site = Plausible.Sites.set_allowed_event_props!(site, ["author", "logged_in"])
 
       populate_stats(site, [
         build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
@@ -246,7 +246,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn: conn,
       site: site
     } do
-      site = Plausible.Sites.set_allowed_event_props(site, ["author", "logged_in"])
+      site = Plausible.Sites.set_allowed_event_props!(site, ["author", "logged_in"])
 
       populate_stats(site, [
         build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
@@ -364,7 +364,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       conn: conn,
       site: site
     } do
-      site = Plausible.Sites.set_allowed_event_props(site, ["author", "logged_in"])
+      site = Plausible.Sites.set_allowed_event_props!(site, ["author", "logged_in"])
 
       populate_stats(site, [
         build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["uku"]),

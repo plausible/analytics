@@ -85,7 +85,7 @@ defmodule Plausible.SiteAdmin do
         props -> String.split(props, ~r/\s*,\s*/)
       end
 
-    Plausible.Sites.set_allowed_event_props(site, props_list)
+    Plausible.Sites.set_allowed_event_props!(site, props_list)
 
     :ok
   end

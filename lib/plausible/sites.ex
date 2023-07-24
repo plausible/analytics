@@ -178,7 +178,7 @@ defmodule Plausible.Sites do
     )
   end
 
-  def set_allowed_event_props(site, props) do
+  def set_allowed_event_props!(site, props) do
     Ecto.Changeset.change(site, allowed_event_props: props)
     |> Repo.update!()
   end

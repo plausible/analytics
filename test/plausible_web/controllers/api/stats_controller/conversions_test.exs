@@ -455,7 +455,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
          } do
       site =
         site
-        |> Plausible.Sites.set_allowed_event_props(["author"])
+        |> Plausible.Sites.set_allowed_event_props!(["author"])
 
       populate_stats(site, [
         build(:event,
@@ -490,7 +490,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
          } do
       site =
         site
-        |> Plausible.Sites.set_allowed_event_props(["author", "logged_in"])
+        |> Plausible.Sites.set_allowed_event_props!(["author", "logged_in"])
 
       populate_stats(site, [
         build(:event,
