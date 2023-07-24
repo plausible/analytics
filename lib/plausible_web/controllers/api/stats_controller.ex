@@ -1166,6 +1166,34 @@ defmodule PlausibleWeb.Api.StatsController do
 
   def custom_prop_values(conn, params) do
     site = conn.assigns[:site]
+    props = breakdown_custom_prop_values(site, params)
+    json(conn, props)
+  end
+
+  def all_custom_prop_values(conn, params) do
+    site = conn.assigns[:site]
+    query = Query.from(site, params) |> Filters.add_prefix()
+
+    prop_names = Plausible.Stats.CustomProps.fetch_prop_names(site, query)
+
+    values =
+      prop_names
+      |> Enum.map(fn prop_key ->
+        breakdown_custom_prop_values(site, Map.put(params, "prop_key", prop_key))
+        |> Enum.map(&Map.put(&1, :property, prop_key))
+        |> transform_keys(%{:name => :value})
+      end)
+      |> Enum.concat()
+
+    percent_or_cr =
+      if query.filters["event:goal"],
+        do: :conversion_rate,
+        else: :percentage
+
+    to_csv(values, [:property, :value, :visitors, :events, percent_or_cr])
+  end
+
+  defp breakdown_custom_prop_values(site, %{"prop_key" => prop_key} = params) do
     query = Query.from(site, params) |> Filters.add_prefix()
     pagination = parse_pagination(params)
 
@@ -1173,23 +1201,20 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{:visitors => %{value: total_unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
-    prefixed_prop = "event:props:" <> params["prop_key"]
+    prefixed_prop = "event:props:" <> prop_key
 
     props =
       Stats.breakdown(site, query, prefixed_prop, [:visitors, :events], pagination)
-      |> transform_keys(%{params["prop_key"] => :name})
+      |> transform_keys(%{prop_key => :name})
       |> add_percentages(query)
 
-    props =
-      if Map.has_key?(query.filters, "event:goal") do
-        Enum.map(props, fn prop ->
-          Map.put(prop, :conversion_rate, calculate_cr(total_unique_visitors, prop.visitors))
-        end)
-      else
-        props
-      end
-
-    json(conn, props)
+    if Map.has_key?(query.filters, "event:goal") do
+      Enum.map(props, fn prop ->
+        Map.put(prop, :conversion_rate, calculate_cr(total_unique_visitors, prop.visitors))
+      end)
+    else
+      props
+    end
   end
 
   def prop_breakdown(conn, params) do
