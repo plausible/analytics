@@ -19,15 +19,16 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearch do
   end
 
   defp weight(value, input) do
-    cond do
-      value == input ->
+    value = to_string(value)
+
+    case {value, input} do
+      {value, input} when value == input ->
         3
 
-      String.length(input) > String.length(value) ->
+      {value, input} when byte_size(input) > byte_size(value) ->
         0
 
-      true ->
-        value = to_string(value)
+      {value, input} ->
         input = String.downcase(input)
         value = String.downcase(value)
         weight = if String.contains?(value, input), do: 1, else: 0
