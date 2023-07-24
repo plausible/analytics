@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
 - Fixed [long URLs display](https://github.com/plausible/analytics/issues/3158) in Outbound Link breakdown view
+- Fixed [Sentry reports](https://github.com/plausible/analytics/discussions/3166) for ingestion requests plausible/analytics#3182
 
 ## v2.0.0 - 2023-07-12
 

@@ -36,6 +36,10 @@ defmodule Plausible.SentryFilter do
     %{event | fingerprint: ["db_connection", reason]}
   end
 
+  def before_send(%{extra: %{request: %Plausible.Ingestion.Request{}}} = event) do
+    %{event | fingerprint: ["ingestion_request"]}
+  end
+
   def before_send(event) do
     event
   end
