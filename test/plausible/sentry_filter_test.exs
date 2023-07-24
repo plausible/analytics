@@ -6,7 +6,7 @@ defmodule Plausible.SentryFilterTest do
       Sentry.Event.create_event(
         message: "oof",
         fingerprint: ["to be", " replaced"],
-        extra: %Plausible.Ingestion.Request{}
+        extra: %{request: %Plausible.Ingestion.Request{}}
       )
 
     assert %Sentry.Event{fingerprint: ["ingestion_request"]} =
