@@ -124,6 +124,37 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "GET /:website/export" do
     setup [:create_user, :create_new_site, :log_in]
 
+    test "exports all the necessary CSV files", %{conn: conn, site: site} do
+      conn = get(conn, "/" <> site.domain <> "/export")
+
+      assert {"content-type", "application/zip; charset=utf-8"} =
+               List.keyfind(conn.resp_headers, "content-type", 0)
+
+      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+      zip = Enum.map(zip, fn {filename, _} -> filename end)
+
+      assert 'visitors.csv' in zip
+      assert 'browsers.csv' in zip
+      assert 'cities.csv' in zip
+      assert 'conversions.csv' in zip
+      assert 'countries.csv' in zip
+      assert 'custom_props.csv' in zip
+      assert 'devices.csv' in zip
+      assert 'entry_pages.csv' in zip
+      assert 'exit_pages.csv' in zip
+      assert 'operating_systems.csv' in zip
+      assert 'pages.csv' in zip
+      assert 'prop_breakdown.csv' in zip
+      assert 'regions.csv' in zip
+      assert 'sources.csv' in zip
+      assert 'utm_campaigns.csv' in zip
+      assert 'utm_contents.csv' in zip
+      assert 'utm_mediums.csv' in zip
+      assert 'utm_sources.csv' in zip
+      assert 'utm_terms.csv' in zip
+    end
+
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
