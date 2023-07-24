@@ -56,9 +56,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
       doc = type_into_combo(lv, 2, "another")
 
       refute text_of_element(doc, "ul#dropdown-step-1 li") =~ "Another World"
-
-      assert text_of_element(doc, "ul#dropdown-step-2 li") =~ "Hello World"
-      assert text_of_element(doc, "ul#dropdown-step-2 li") =~ "Plausible"
       refute text_of_element(doc, "ul#dropdown-step-2 li") =~ "Another World"
     end
 

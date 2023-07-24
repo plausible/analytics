@@ -24,9 +24,12 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearchTest do
 
     test "allows fuzzy matching" do
       options = fake_options(["/url/0xC0FFEE", "/url/0xDEADBEEF", "/url/other"])
+      assert [{_, "/url/0xC0FFEE"}] = StaticSearch.suggest("0x FF", options)
+    end
 
-      assert [{_, "/url/0xC0FFEE"}, {_, "/url/0xDEADBEEF"}, {_, "/url/other"}] =
-               StaticSearch.suggest("0x FF", options)
+    test "filters out bad matches" do
+      options = fake_options(["OS", "Version", "Logged In"])
+      assert [] = StaticSearch.suggest("cow", options)
     end
   end
 

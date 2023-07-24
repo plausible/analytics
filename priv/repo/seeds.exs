@@ -37,6 +37,7 @@ site =
 {:ok, goal2} = Plausible.Goals.create(site, %{"page_path" => "/register"})
 {:ok, goal3} = Plausible.Goals.create(site, %{"page_path" => "/login"})
 {:ok, goal4} = Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
+{:ok, outbound} = Plausible.Goals.create(site, %{"event_name" => "Outbound Link: Click"})
 
 {:ok, _funnel} =
   Plausible.Funnels.create(site, "From homepage to login", [
@@ -153,6 +154,38 @@ native_stats_range
       user_id: Enum.random(1..1200),
       revenue_reporting_amount: Decimal.new(Enum.random(100..10000)),
       revenue_reporting_currency: "USD"
+    ]
+    |> Keyword.merge(geolocation)
+    |> then(&Plausible.Factory.build(:event, &1))
+  end)
+end)
+|> Plausible.TestUtils.populate_stats()
+
+native_stats_range
+|> Enum.with_index()
+|> Enum.flat_map(fn {date, index} ->
+  Enum.map(0..Enum.random(1..50), fn _ ->
+    geolocation = Enum.random(geolocations)
+
+    [
+      name: outbound.event_name,
+      site_id: site.id,
+      hostname: site.domain,
+      timestamp: put_random_time.(date, index),
+      referrer_source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+      browser: Enum.random(["Edge", "Chrome", "Safari", "Firefox", "Vivaldi"]),
+      browser_version: to_string(Enum.random(0..50)),
+      screen_size: Enum.random(["Mobile", "Tablet", "Desktop", "Laptop"]),
+      operating_system: Enum.random(["Windows", "macOS", "Linux"]),
+      operating_system_version: to_string(Enum.random(0..15)),
+      user_id: Enum.random(1..1200),
+      "meta.key": ["url"],
+      "meta.value": [
+        Enum.random([
+          "http://dummy.site/long/1/#{String.duplicate("0x", 200)}",
+          "http://dummy.site/random/long/1/#{String.duplicate("0x", Enum.random(1..300))}"
+        ])
+      ]
     ]
     |> Keyword.merge(geolocation)
     |> then(&Plausible.Factory.build(:event, &1))

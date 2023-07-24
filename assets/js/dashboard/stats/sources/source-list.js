@@ -18,14 +18,14 @@ const UTM_TAGS = {
 }
 
 function AllSources(props) {
-  const {site, query} = props
+  const { site, query } = props
 
   function fetchData() {
-    return api.get(url.apiPath(site, '/sources'), query, {limit: 9})
+    return api.get(url.apiPath(site, '/sources'), query, { limit: 9 })
   }
 
   function getFilterFor(listItem) {
-    return { source: listItem['name']}
+    return { source: listItem['name'] }
   }
 
   function renderIcon(listItem) {
@@ -52,15 +52,15 @@ function AllSources(props) {
 }
 
 function UTMSources(props) {
-  const {site, query} = props
+  const { site, query } = props
   const utmTag = UTM_TAGS[props.tab]
 
   function fetchData() {
-    return api.get(url.apiPath(site, utmTag.endpoint), query, {limit: 9})
+    return api.get(url.apiPath(site, utmTag.endpoint), query, { limit: 9 })
   }
 
   function getFilterFor(listItem) {
-    return { exit_page: listItem['name']}
+    return { [props.tab]: listItem['name'] }
   }
 
   return (
@@ -77,7 +77,7 @@ function UTMSources(props) {
 }
 
 export default function SourceList(props) {
-  const {site, query} = props
+  const { site, query } = props
   const tabKey = 'sourceTab__' + props.site.domain
   const storedTab = storage.getItem(tabKey)
   const [currentTab, setCurrentTab] = useState(storedTab || 'all')
@@ -159,10 +159,10 @@ export default function SourceList(props) {
         <h3 className="font-bold dark:text-gray-100">
           Top Sources
         </h3>
-        { renderTabs() }
+        {renderTabs()}
       </div>
       {/* Main Contents */}
-      { renderContent() }
+      {renderContent()}
     </div>
   )
 }
