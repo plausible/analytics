@@ -149,7 +149,7 @@ defmodule PlausibleWeb.StatsController do
       }
 
       csvs =
-        if FunWithFlags.enabled?(:props) do
+        if FunWithFlags.enabled?(:props, for: conn.assigns[:current_user]) do
           Map.put(csvs, 'custom_props.csv', fn ->
             Api.StatsController.all_custom_prop_values(conn, params)
           end)
