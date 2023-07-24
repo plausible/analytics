@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Api.ExternalController do
 
   def event(conn, _params) do
     with {:ok, request} <- Ingestion.Request.build(conn),
-         _ <- Sentry.Context.set_extra_context(%{request: request}) do
+         _ <- Sentry.Context.set_extra_context(%{request: inspect(request)}) do
       case Ingestion.Event.build_and_buffer(request) do
         {:ok, %{dropped: [], buffered: _buffered}} ->
           conn
