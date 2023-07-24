@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
-    <script src="dist/sidebar_items-625D214B.js"></script>
+    <script src="dist/sidebar_items-D1A5539C.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -115,13 +115,20 @@ Plausible
 
   <section id="moduledoc">
 <p>Functions to implement the spellout rule-based-number-format rules of CLDR.</p><p>As CLDR notes, the data is incomplete or non-existent for many languages.  It
-is considered complete for English however.</p><p>The standard public API for RBNF is via the <a href="https://hexdocs.pm/ex_cldr_numbers/2.30.1/Cldr.Number.html#to_string/2"><code class="inline">Cldr.Number.to_string/2</code></a> function.</p><p>The functions on this module are defined at compile time based upon the RBNF rules
-defined in the Unicode CLDR data repository.  Available rules are identified by:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Spellout</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="9657479954-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="9657479954-1">)</span><span class="w">
-</span><span class="p" data-group-id="9657479954-2">[</span><span class="ss">:spellout_ordinal_verbose</span><span class="p">,</span><span class="w"> </span><span class="ss">:spellout_ordinal</span><span class="p">,</span><span class="w"> </span><span class="ss">:spellout_numbering_year</span><span class="p">,</span><span class="w">
-  </span><span class="ss">:spellout_numbering_verbose</span><span class="p">,</span><span class="w"> </span><span class="ss">:spellout_numbering</span><span class="p">,</span><span class="w"> </span><span class="ss">:spellout_cardinal_verbose</span><span class="p">,</span><span class="w">
-  </span><span class="ss">:spellout_cardinal</span><span class="p" data-group-id="9657479954-2">]</span></code></pre><p>A rule can then be invoked on an available rule_set. For example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Spellout</span><span class="o">.</span><span class="n">spellout_ordinal</span><span class="p" data-group-id="5651087231-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="5651087231-1">)</span><span class="w">
-</span><span class="s">&quot;one hundred twenty-third&quot;</span></code></pre><p>This call is equivalent to the call through the public API of:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="3620060348-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:spellout</span><span class="p" data-group-id="3620060348-1">)</span><span class="w">
-</span><span class="p" data-group-id="3620060348-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;one hundred twenty-three&quot;</span><span class="p" data-group-id="3620060348-2">}</span></code></pre>
+is considered complete for English however.</p><p>The standard public API for RBNF is via the <a href="https://hexdocs.pm/ex_cldr_numbers/2.31.3/Cldr.Number.html#to_string/2"><code class="inline">Cldr.Number.to_string/2</code></a> function.</p><p>The functions on this module are defined at compile time based upon the RBNF rules
+defined in the Unicode CLDR data repository.  Available rules are identified by:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Spellout</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="3779024382-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="3779024382-1">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">sort</span><span class="p" data-group-id="3779024382-2">(</span><span class="p" data-group-id="3779024382-2">)</span><span class="w">
+</span><span class="p" data-group-id="3779024382-3">[</span><span class="w">
+  </span><span class="ss">:spellout_cardinal</span><span class="p">,</span><span class="w">
+  </span><span class="ss">:spellout_cardinal_verbose</span><span class="p">,</span><span class="w">
+  </span><span class="ss">:spellout_numbering</span><span class="p">,</span><span class="w">
+  </span><span class="ss">:spellout_numbering_verbose</span><span class="p">,</span><span class="w">
+  </span><span class="ss">:spellout_numbering_year</span><span class="p">,</span><span class="w">
+  </span><span class="ss">:spellout_ordinal</span><span class="p">,</span><span class="w">
+  </span><span class="ss">:spellout_ordinal_verbose</span><span class="w">
+</span><span class="p" data-group-id="3779024382-3">]</span></code></pre><p>A rule can then be invoked on an available rule_set. For example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Spellout</span><span class="o">.</span><span class="n">spellout_ordinal</span><span class="p" data-group-id="9142501103-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="9142501103-1">)</span><span class="w">
+</span><span class="s">&quot;one hundred twenty-third&quot;</span></code></pre><p>This call is equivalent to the call through the public API of:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="3279602466-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:spellout</span><span class="p" data-group-id="3279602466-1">)</span><span class="w">
+</span><span class="p" data-group-id="3279602466-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;one hundred twenty-three&quot;</span><span class="p" data-group-id="3279602466-2">}</span></code></pre>
   </section>
 
 
@@ -137,14 +144,6 @@ defined in the Unicode CLDR data repository.  Available rules are identified by:
   <h2>
     <a href="#functions">Functions</a>
   </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#2d_year/2" translate="no">2d_year(number, language_tag)</a>
-
-      </div>
-
-    </div>
 
     <div class="summary-row">
       <div class="summary-signature">
@@ -181,6 +180,14 @@ defined in the Unicode CLDR data repository.  Available rules are identified by:
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#commas_o/2" translate="no">commas_o(number, language_tag)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#r2d_year/2" translate="no">r2d_year(number, language_tag)</a>
 
       </div>
 
@@ -288,28 +295,6 @@ defined in the Unicode CLDR data repository.  Available rules are identified by:
 Functions
     </h1>
     <div class="functions-list">
-<section class="detail" id="2d_year/2">
-
-  <div class="detail-header">
-    <a href="#2d_year/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">2d_year(number, language_tag)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="all_rule_sets/0">
 
   <div class="detail-header">
@@ -406,6 +391,28 @@ Functions
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">commas_o(number, language_tag)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="r2d_year/2">
+
+  <div class="detail-header">
+    <a href="#r2d_year/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">r2d_year(number, language_tag)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>

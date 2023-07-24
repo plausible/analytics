@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
-    <script src="dist/sidebar_items-625D214B.js"></script>
+    <script src="dist/sidebar_items-D1A5539C.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -249,13 +249,13 @@ Functions
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> known_locale_names() :: [<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(), ...]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> known_locale_names() :: [<a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(), ...]</pre>
 
       </div>
 
 <p>The configured locales for which plural rules are defined.</p><p>Returns the intersection of <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a> and
-the locales for which Ordinal plural rules are defined.</p><p>There are many <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a> locales which don't have their own plural
-rules so this list is the intersection of <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.html"><code class="inline">Cldr</code></a>'s configured
+the locales for which Ordinal plural rules are defined.</p><p>There are many <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.html"><code class="inline">Cldr</code></a> locales which don't have their own plural
+rules so this list is the intersection of <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.html"><code class="inline">Cldr</code></a>'s configured
 locales and those that have rules.</p>
   </section>
 </section>
@@ -283,10 +283,10 @@ locales and those that have rules.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> plural_rule(
-  <a href="https://hexdocs.pm/cldr_utils/2.22.0/Cldr.Math.html#t:number_or_decimal/0">Cldr.Math.number_or_decimal</a>(),
-  <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
+  <a href="https://hexdocs.pm/cldr_utils/2.24.1/Cldr.Math.html#t:number_or_decimal/0">Cldr.Math.number_or_decimal</a>(),
+  <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()
-) :: <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Number.PluralRule.html#t:plural_type/0">Cldr.Number.PluralRule.plural_type</a>()</pre>
+) :: <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Number.PluralRule.html#t:plural_type/0">Cldr.Number.PluralRule.plural_type</a>()</pre>
 
       </div>
 
@@ -302,7 +302,7 @@ list or other content in a plural-sensitive way.</p><h2 id="plural_rule/3-argume
   </a>
   Arguments
 </h2>
-<ul><li><p><code class="inline">number</code> is any <code class="inline">integer</code>, <code class="inline">float</code> or <a href="https://hexdocs.pm/decimal/2.1.1/Decimal.html"><code class="inline">Decimal</code></a></p></li><li><p><code class="inline">locale</code> is any locale returned by <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a> or any
+<ul><li><p><code class="inline">number</code> is any <code class="inline">integer</code>, <code class="inline">float</code> or <a href="https://hexdocs.pm/decimal/2.1.1/Decimal.html"><code class="inline">Decimal</code></a></p></li><li><p><code class="inline">locale</code> is any locale returned by <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a> or any
 <code class="inline">locale_name</code> returned by <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a></p></li><li><p><code class="inline">rounding</code> is one of <code class="inline">[:down, :up, :ceiling, :floor, :half_even, :half_up, :half_down]</code>.  The
 default is <code class="inline">:half_even</code>.</p></li></ul><h2 id="plural_rule/3-examples" class="section-heading">
   <a href="#plural_rule/3-examples" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
@@ -366,7 +366,7 @@ default is <code class="inline">:half_even</code>.</p></li></ul><h2 id="plural_r
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> plural_rules_for(<a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()) :: [
+          <pre translate="no"><span class="attribute">@spec</span> plural_rules_for(<a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()) :: [
   {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()},
   ...
 ]</pre>
@@ -405,8 +405,8 @@ default is <code class="inline">:half_even</code>.</p></li></ul><h2 id="plural_r
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> pluralize(
-  <a href="https://hexdocs.pm/cldr_utils/2.22.0/Cldr.Math.html#t:number_or_decimal/0">Cldr.Math.number_or_decimal</a>() | <a href="https://hexdocs.pm/elixir/Range.html#t:t/0">Range.t</a>(),
-  <a href="https://hexdocs.pm/ex_cldr/2.36.0/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>(),
+  <a href="https://hexdocs.pm/cldr_utils/2.24.1/Cldr.Math.html#t:number_or_decimal/0">Cldr.Math.number_or_decimal</a>() | <a href="https://hexdocs.pm/elixir/Range.html#t:t/0">Range.t</a>(),
+  <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>(),
   %{}
 ) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
 
@@ -431,31 +431,31 @@ The valid substitution keys are <code class="inline">:zero</code>, <code class="
   </a>
   Examples
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4124837482-1">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="4124837482-1">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4873824359-1">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="4873824359-1">}</span><span class="w">
 </span><span class="s">&quot;one&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4124837482-2">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="4124837482-2">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4873824359-2">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="4873824359-2">}</span><span class="w">
 </span><span class="no">nil</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4124837482-3">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p" data-group-id="4124837482-3">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4873824359-3">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p" data-group-id="4873824359-3">}</span><span class="w">
 </span><span class="s">&quot;two&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4124837482-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="4124837482-4">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4873824359-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="4873824359-4">}</span><span class="w">
 </span><span class="s">&quot;two&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="4124837482-5">(</span><span class="mi">1</span><span class="p" data-group-id="4124837482-5">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4124837482-6">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="4124837482-6">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="4873824359-5">(</span><span class="mi">1</span><span class="p" data-group-id="4873824359-5">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4873824359-6">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="4873824359-6">}</span><span class="w">
 </span><span class="s">&quot;one&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="4124837482-7">(</span><span class="mi">2</span><span class="p" data-group-id="4124837482-7">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4124837482-8">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="4124837482-8">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="4873824359-7">(</span><span class="mi">2</span><span class="p" data-group-id="4873824359-7">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4873824359-8">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="4873824359-8">}</span><span class="w">
 </span><span class="no">nil</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="4124837482-9">(</span><span class="mi">2</span><span class="p" data-group-id="4124837482-9">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4124837482-10">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p" data-group-id="4124837482-10">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="4873824359-9">(</span><span class="mi">2</span><span class="p" data-group-id="4873824359-9">)</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4873824359-10">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p" data-group-id="4873824359-10">}</span><span class="w">
 </span><span class="s">&quot;two&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ar&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4124837482-11">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">few</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;few&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="4124837482-11">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ar&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4873824359-11">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">few</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;few&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="4873824359-11">}</span><span class="w">
 </span><span class="s">&quot;other&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4124837482-12">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">few</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;few&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="4124837482-12">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Ordinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="4873824359-12">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">few</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;few&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="4873824359-12">}</span><span class="w">
 </span><span class="s">&quot;other&quot;</span></code></pre>
   </section>
 </section>
