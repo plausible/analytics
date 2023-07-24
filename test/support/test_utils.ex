@@ -11,6 +11,10 @@ defmodule Plausible.TestUtils do
 
   defmacro patch_env(env_key, value) do
     quote do
+      if __MODULE__.__info__(:attributes)[:ex_unit_async] == [true] do
+        raise "Patching env is unsafe in asynchronous tests. maybe extract the case elsewhere?"
+      end
+
       original_env = Application.get_env(:plausible, unquote(env_key))
       Application.put_env(:plausible, unquote(env_key), unquote(value))
 
