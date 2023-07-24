@@ -923,13 +923,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           "/api/stats/#{site.domain}/referrers/10words?period=day"
         )
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 3,
-               "referrers" => [
-                 %{"name" => "10words.com", "visitors" => 2},
-                 %{"name" => "10words.com/page1", "visitors" => 1}
-               ]
-             }
+      assert json_response(conn, 200) == [
+               %{"name" => "10words.com", "visitors" => 2},
+               %{"name" => "10words.com/page1", "visitors" => 1}
+             ]
     end
 
     test "calculates bounce rate and visit duration for referrer urls", %{conn: conn, site: site} do
@@ -964,17 +961,14 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           "/api/stats/#{site.domain}/referrers/10words?period=day&date=2021-01-01&detailed=true"
         )
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 2,
-               "referrers" => [
-                 %{
-                   "name" => "10words.com",
-                   "visitors" => 2,
-                   "bounce_rate" => 50.0,
-                   "visit_duration" => 450
-                 }
-               ]
-             }
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "10words.com",
+                 "visitors" => 2,
+                 "bounce_rate" => 50.0,
+                 "visit_duration" => 450
+               }
+             ]
     end
 
     test "gets keywords from Google", %{conn: conn, user: user, site: site} do
@@ -1032,17 +1026,14 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           "/api/stats/#{site.domain}/referrers/10words?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 1,
-               "referrers" => [
-                 %{
-                   "name" => "10words.com",
-                   "total_visitors" => 2,
-                   "conversion_rate" => 50.0,
-                   "visitors" => 1
-                 }
-               ]
-             }
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "10words.com",
+                 "total_visitors" => 2,
+                 "conversion_rate" => 50.0,
+                 "visitors" => 1
+               }
+             ]
     end
 
     test "returns top referring urls for a pageview goal", %{conn: conn, site: site} do
@@ -1073,17 +1064,14 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           "/api/stats/#{site.domain}/referrers/10words?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 1,
-               "referrers" => [
-                 %{
-                   "name" => "10words.com",
-                   "total_visitors" => 2,
-                   "conversion_rate" => 50.0,
-                   "visitors" => 1
-                 }
-               ]
-             }
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "10words.com",
+                 "total_visitors" => 2,
+                 "conversion_rate" => 50.0,
+                 "visitors" => 1
+               }
+             ]
     end
   end
 
