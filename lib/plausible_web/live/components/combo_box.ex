@@ -252,16 +252,15 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         socket
       end
 
-    if input_len > 0 do
-      suggestions =
-        input
-        |> suggest_mod.suggest(options)
-        |> Enum.take(suggestions_limit(socket.assigns))
+    suggestions =
+      if input_len > 0 do
+        suggest_mod.suggest(input, options)
+      else
+        options
+      end
+      |> Enum.take(suggestions_limit(socket.assigns))
 
-      {:noreply, assign(socket, %{suggestions: suggestions})}
-    else
-      {:noreply, socket}
-    end
+    {:noreply, assign(socket, %{suggestions: suggestions})}
   end
 
   defp do_select(socket, submit_value, display_value) do

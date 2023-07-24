@@ -191,6 +191,14 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       refute element_exists?(doc, suggestion_li(8))
       refute element_exists?(doc, suggestion_li(9))
     end
+
+    test "clearing search input resets to all options", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, SampleView, session: %{})
+      type_into_combo(lv, "test-component", "Echo me")
+      doc = type_into_combo(lv, "test-component", "")
+
+      for i <- 1..7, do: assert(element_exists?(doc, suggestion_li(i)))
+    end
   end
 
   describe "creatable integration" do
