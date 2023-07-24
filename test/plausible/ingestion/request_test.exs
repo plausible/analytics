@@ -422,4 +422,43 @@ defmodule Plausible.Ingestion.RequestTest do
     assert {:error, changeset} = Request.build(conn)
     assert changeset.errors[:request]
   end
+
+  test "encodable" do
+    params = %{
+      name: "pageview",
+      domain: "dummy.site",
+      url: "https://dummy.site/pictures/index.html?foo=bar&baz=bam",
+      referrer: "https://example.com",
+      props: %{"abc" => "qwerty", "hello" => "world"},
+      hashMode: 1,
+      revenue: %{
+        "amount" => "12.3",
+        "currency" => "USD"
+      }
+    }
+
+    assert {:ok, request} =
+             build_conn(:post, "/api/events", params)
+             |> put_req_header("user-agent", "Mozilla")
+             |> Request.build()
+
+    request = request |> Jason.encode!() |> Jason.decode!()
+
+    assert Map.drop(request, ["timestamp"]) == %{
+             "domains" => ["dummy.site"],
+             "event_name" => "pageview",
+             "hash_mode" => 1,
+             "hostname" => "dummy.site",
+             "pathname" => "/pictures/index.html",
+             "props" => %{"abc" => "qwerty", "hello" => "world"},
+             "query_params" => %{"baz" => "bam", "foo" => "bar"},
+             "referrer" => "https://example.com",
+             "remote_ip" => "127.0.0.1",
+             "revenue_source" => %{"amount" => "12.3", "currency" => "USD"},
+             "uri" => "https://dummy.site/pictures/index.html?foo=bar&baz=bam",
+             "user_agent" => "Mozilla"
+           }
+
+    assert %NaiveDateTime{} = NaiveDateTime.from_iso8601!(request["timestamp"])
+  end
 end
