@@ -72,7 +72,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
 
       assert text_of_attr(main, "x-on:keydown.arrow-up.prevent") == "focusPrev"
       assert text_of_attr(main, "x-on:keydown.arrow-down.prevent") == "focusNext"
-      assert text_of_attr(main, "x-on:keydown.enter.prevent") == "select()"
+      assert text_of_attr(main, "x-on:keydown.enter.prevent") == "select"
     end
 
     test "Alpine.js: component sets up close on click-away" do
