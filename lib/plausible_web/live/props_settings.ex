@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Live.PropsSettings do
+  @moduledoc """
+  LiveView allowing listing, allowing and disallowing custom event properties.
+  """
+
   use Phoenix.LiveView
   use Phoenix.HTML
   alias PlausibleWeb.Live.Components.ComboBox
