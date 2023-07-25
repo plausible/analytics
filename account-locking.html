@@ -4,20 +4,20 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.29.4">
+    <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
     <title>Account locking — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-HHVY3JYD.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
-    <script src="dist/sidebar_items-CDCE2E48.js"></script>
+    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
+    <script src="dist/sidebar_items-731A8722.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-JDI3AVDD.js"></script>
+    <script async src="dist/html-CGDDOCMI.js"></script>
 
 
   </head>
@@ -112,10 +112,10 @@ Plausible
 </h1>
 
 <p>This document explains the account locking feature from a technical perspective. Account locking happens when users have outgrown their accounts, and despite e-mail and dashboard alerts, don't upgrade after a grace period.</p><h2 id="usage-alert-and-grace-period" class="section-heading">
-  <a href="#usage-alert-and-grace-period" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">usage-alert-and-grace-period</p>
+  <a href="#usage-alert-and-grace-period">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Usage alert and grace period
   </a>
-  Usage alert and grace period
 </h2>
 <p>The <a href="Plausible.Workers.CheckUsage.html"><code class="inline">Plausible.Workers.CheckUsage</code></a> daily background job alerts users they have reached their subscription limits. This runs for outgrown users one day after their last billing date.</p><p>When users reach the number of sites limit, or use &gt;110% of their pageview limit for 2 consecutive billing cycles, the background job sends them an e-mail alert. The e-mail suggests a suitable subscription plan based on usage. For enterprise users, only an internal e-mail is sent to <code class="inline">enterprise@plausible.io</code>.</p><p>The user is given 7 days to upgrade their account after the alert, and this is called grace period. The background starts this grace period by adding a <code class="inline">users.grace_period</code> JSON to the user record:</p><pre><code class="json">// SELECT grace_period FROM users LIMIT 1
 
@@ -126,10 +126,10 @@ Plausible
   &quot;allowance_required&quot;: 100,
   &quot;manual_lock&quot;: false
 }</code></pre><p>During this period, the following alert pops up on the dashboard for both standard and enterprise users:</p><p><img src="https://files.gitbook.com/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FN4GLWMwCrTuTcf31kYE9%2Fuploads%2FmsLk4CdSHKzU8TbfvaPq%2FPasted%20image%2020220909120933.png?alt=media&token=76f247a1-28cf-4d88-a0fa-06547268aee9" alt=""/></p><p>If the user upgrades to a suitable plan, the grace period is removed (check <a href="Plausible.Billing.html#subscription_updated/1"><code class="inline">Plausible.Billing.subscription_updated/1</code></a>), otherwise <a href="#Account locking">Account locking</a>) follows. For enterprise users, the grace period has a manual lock flag set to true, meaning enterprise accounts can only be locked/unlocked through the internal CRM.</p><h2 id="account-locking" class="section-heading">
-  <a href="#account-locking" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">account-locking</p>
+  <a href="#account-locking">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Account locking
   </a>
-  Account locking
 </h2>
 <p>The grace period is checked daily by the <a href="Plausible.Workers.LockSites.html"><code class="inline">Plausible.Workers.LockSites</code></a> background job.</p><p>For users that expired their grace period, <code class="inline">sites.locked</code> is is set to <code class="inline">true</code>, restricting access to dashboards. This does not stop event ingestion, so users can have their stats up to date when they finally upgrade.</p><p><img src="https://files.gitbook.com/v0/b/gitbook-x-prod.appspot.com/o/spaces%2FN4GLWMwCrTuTcf31kYE9%2Fuploads%2FAplurtG7UsGXMskZOlUO%2FPasted%20image%2020220909122622.png?alt=media&token=5c8156d7-d4a7-4c99-8bac-2f1e9b7d4cae" alt=""/></p>
 <div class="bottom-actions">
@@ -166,7 +166,7 @@ Contributing
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.4) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

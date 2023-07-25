@@ -4,20 +4,20 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.29.4">
+    <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
     <title>Plausible.Cldr.Number.Symbol — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-HHVY3JYD.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
-    <script src="dist/sidebar_items-CDCE2E48.js"></script>
+    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
+    <script src="dist/sidebar_items-731A8722.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-JDI3AVDD.js"></script>
+    <script async src="dist/html-CGDDOCMI.js"></script>
 
 
   </head>
@@ -118,9 +118,8 @@ Plausible
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        <span class="sr-only">Link to this section</span>
+        Summary
       </a>
-      Summary
     </h1>
 <div class="summary-functions summary">
   <h2>
@@ -203,9 +202,8 @@ of the number systems of a locale.</p></div>
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-        <span class="sr-only">Link to this section</span>
-      </a>
 Functions
+      </a>
     </h1>
     <div class="functions-list">
 <section class="detail" id="all_decimal_symbols/0">
@@ -336,24 +334,24 @@ when builing a regular expression.</p>
 
 <p>Returns a map of <code class="inline">Cldr.Number.Symbol.t</code> structs of the number symbols for each
 of the number systems of a locale.</p><h2 id="number_symbols_for/1-options" class="section-heading">
-  <a href="#number_symbols_for/1-options" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">options</p>
+  <a href="#number_symbols_for/1-options">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Options
   </a>
-  Options
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by
 <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a>
 or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
 <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a>. The default
 is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</li></ul><h2 id="number_symbols_for/1-example" class="section-heading">
-  <a href="#number_symbols_for/1-example" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">example</p>
+  <a href="#number_symbols_for/1-example">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Example:
   </a>
-  Example:
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Symbol</span><span class="o">.</span><span class="n">number_symbols_for</span><span class="p" data-group-id="6144475146-1">(</span><span class="ss">:th</span><span class="p" data-group-id="6144475146-1">)</span><span class="w">
-</span><span class="p" data-group-id="6144475146-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6144475146-3">%{</span><span class="w">
-   </span><span class="ss">latn</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6144475146-4">%</span><span class="nc" data-group-id="6144475146-4">Cldr.Number.Symbol</span><span class="p" data-group-id="6144475146-4">{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Symbol</span><span class="o">.</span><span class="n">number_symbols_for</span><span class="p" data-group-id="9864159530-1">(</span><span class="ss">:th</span><span class="p" data-group-id="9864159530-1">)</span><span class="w">
+</span><span class="p" data-group-id="9864159530-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9864159530-3">%{</span><span class="w">
+   </span><span class="ss">latn</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9864159530-4">%</span><span class="nc" data-group-id="9864159530-4">Cldr.Number.Symbol</span><span class="p" data-group-id="9864159530-4">{</span><span class="w">
      </span><span class="ss">decimal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w">
      </span><span class="ss">exponential</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;E&quot;</span><span class="p">,</span><span class="w">
      </span><span class="ss">group</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w">
@@ -366,8 +364,8 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
      </span><span class="ss">plus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;+&quot;</span><span class="p">,</span><span class="w">
      </span><span class="ss">superscripting_exponent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;×&quot;</span><span class="p">,</span><span class="w">
      </span><span class="ss">time_separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span><span class="w">
-   </span><span class="p" data-group-id="6144475146-4">}</span><span class="p">,</span><span class="w">
-   </span><span class="ss">thai</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6144475146-5">%</span><span class="nc" data-group-id="6144475146-5">Cldr.Number.Symbol</span><span class="p" data-group-id="6144475146-5">{</span><span class="w">
+   </span><span class="p" data-group-id="9864159530-4">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">thai</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9864159530-5">%</span><span class="nc" data-group-id="9864159530-5">Cldr.Number.Symbol</span><span class="p" data-group-id="9864159530-5">{</span><span class="w">
      </span><span class="ss">decimal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="p">,</span><span class="w">
      </span><span class="ss">exponential</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;E&quot;</span><span class="p">,</span><span class="w">
      </span><span class="ss">group</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">,</span><span class="w">
@@ -380,8 +378,8 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
      </span><span class="ss">plus_sign</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;+&quot;</span><span class="p">,</span><span class="w">
      </span><span class="ss">superscripting_exponent</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;×&quot;</span><span class="p">,</span><span class="w">
      </span><span class="ss">time_separator</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;:&quot;</span><span class="w">
-   </span><span class="p" data-group-id="6144475146-5">}</span><span class="w">
- </span><span class="p" data-group-id="6144475146-3">}</span><span class="p" data-group-id="6144475146-2">}</span></code></pre>
+   </span><span class="p" data-group-id="9864159530-5">}</span><span class="w">
+ </span><span class="p" data-group-id="9864159530-3">}</span><span class="p" data-group-id="9864159530-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="number_symbols_for/2">
@@ -427,7 +425,7 @@ is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cld
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.4) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

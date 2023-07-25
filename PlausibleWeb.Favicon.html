@@ -4,20 +4,20 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.29.4">
+    <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
     <title>PlausibleWeb.Favicon — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-HHVY3JYD.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
-    <script src="dist/sidebar_items-CDCE2E48.js"></script>
+    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
+    <script src="dist/sidebar_items-731A8722.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-JDI3AVDD.js"></script>
+    <script async src="dist/html-CGDDOCMI.js"></script>
 
 
   </head>
@@ -133,9 +133,8 @@ managed by <a href="Mix.Tasks.GenerateReferrerFavicons.html#run/1"><code class="
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        <span class="sr-only">Link to this section</span>
+        Summary
       </a>
-      Summary
     </h1>
 <div class="summary-functions summary">
   <h2>
@@ -170,9 +169,8 @@ headers that should not be forwarded as defined in <a href="https://www.rfc-edit
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-        <span class="sr-only">Link to this section</span>
-      </a>
 Functions
+      </a>
     </h1>
     <div class="functions-list">
 <section class="detail" id="call/2">
@@ -196,10 +194,10 @@ Functions
 
 <p>Proxies HTTP request to DuckDuckGo favicon service. Swallows hop-by-hop HTTP
 headers that should not be forwarded as defined in <a href="https://www.rfc-editor.org/rfc/rfc2616#section-13.5.1">RFC 2616</a></p><h2 id="call/2-placeholder" class="section-heading">
-  <a href="#call/2-placeholder" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">placeholder</p>
+  <a href="#call/2-placeholder">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Placeholder
   </a>
-  Placeholder
 </h2>
 <p>Cases where we show a placeholder icon instead:</p><ol><li>In case of network error to DuckDuckGo</li><li>In case of non-2xx status code from DuckDuckGo</li><li>In case of broken image response body from DuckDuckGo</li></ol><p>I'm not sure why DDG sometimes returns a broken PNG image in their response
 but we filter that out.  When the icon request fails, we show a placeholder
@@ -209,10 +207,10 @@ For some reason, they return them with <code class="inline">content-type=image/x
 icons should be returned with <code class="inline">content-type=image/svg+xml</code>. This Plug detects
 when the response body starts with <code class="inline">&lt;svg</code> and will override the <code class="inline">Content-Type</code>
 to correct it.</p><h2 id="call/2-preventing-xss-vulnerabilities" class="section-heading">
-  <a href="#call/2-preventing-xss-vulnerabilities" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">preventing-xss-vulnerabilities</p>
+  <a href="#call/2-preventing-xss-vulnerabilities">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Preventing XSS vulnerabilities
   </a>
-  Preventing XSS vulnerabilities
 </h2>
 <p>SVGs may contain <code class="inline">&lt;script&gt;</code> tags, and as these SVGs come from external
 sources, we need to prevent untrusted code from running on the browser.</p><ul><li><p>This Plug sets a strict <code class="inline">Content-Security-Policy</code> header telling the browser
@@ -264,7 +262,7 @@ use <code class="inline">&lt;img src=&quot;https://plausible.io/favicon/sources/
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.4) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

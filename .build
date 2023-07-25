@@ -210,9 +210,9 @@ api-reference.html
 assets/logo.png
 contributing.html
 dist/handlebars.runtime-NWIB6V2M.js
-dist/handlebars.templates-XWGFFSCD.js
-dist/html-JDI3AVDD.js
-dist/html-elixir-HHVY3JYD.css
+dist/handlebars.templates-NBND3S2D.js
+dist/html-CGDDOCMI.js
+dist/html-elixir-P5GXSCHE.css
 dist/inconsolata-latin-400-normal-RGKDDNDD.woff2
 dist/inconsolata-latin-700-normal-DTS2D7TO.woff2
 dist/inconsolata-latin-ext-400-normal-K7HVGTP7.woff2
@@ -236,8 +236,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_items-A1B8A707.js
-dist/sidebar_items-CDCE2E48.js
+dist/search_data-1A79964A.js
+dist/sidebar_items-731A8722.js
 index.html
 readme.html
 search.html

@@ -4,20 +4,20 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.29.4">
+    <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
     <title>Contributing — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-HHVY3JYD.css" />
+    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-XWGFFSCD.js"></script>
-    <script src="dist/sidebar_items-CDCE2E48.js"></script>
+    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
+    <script src="dist/sidebar_items-731A8722.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-JDI3AVDD.js"></script>
+    <script async src="dist/html-CGDDOCMI.js"></script>
 
 
   </head>
@@ -112,40 +112,40 @@ Plausible
 </h1>
 
 <p>We welcome everyone to contribute to Plausible. This document is to help you on setting up your environment, finding a task, and opening pull requests.</p><h2 id="development-setup" class="section-heading">
-  <a href="#development-setup" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">development-setup</p>
+  <a href="#development-setup">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Development setup
   </a>
-  Development setup
 </h2>
 <p>The easiest way to get up and running is to <a href="https://docs.docker.com/get-docker/">install</a> and use Docker for running both Postgres and Clickhouse.</p><p>Make sure Docker, Elixir, Erlang and Node.js are all installed on your development machine. The <a href="https://github.com/plausible/analytics/blob/master/.tool-versions"><code class="inline">.tool-versions</code></a> file is available to use with <a href="https://github.com/asdf-vm/asdf">asdf</a> or similar tools.</p><h3 id="start-the-environment" class="section-heading">
-  <a href="#start-the-environment" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">start-the-environment</p>
+  <a href="#start-the-environment">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Start the environment
   </a>
-  Start the environment
 </h3>
 <ol><li>Run both <code class="inline">make postgres</code> and <code class="inline">make clickhouse</code>.</li><li>You can set up everything with <code class="inline">make install</code>, alternatively run each command separately:<ol><li>Run <a href="https://hexdocs.pm/mix/Mix.Tasks.Deps.Get.html"><code class="inline">mix deps.get</code></a>. This will download the required Elixir dependencies.</li><li>Run <a href="https://hexdocs.pm/ecto/3.10.2/Mix.Tasks.Ecto.Create.html"><code class="inline">mix ecto.create</code></a>. This will create the required databases in both Postgres and Clickhouse.</li><li>Run <a href="https://hexdocs.pm/ecto_sql/3.10.1/Mix.Tasks.Ecto.Migrate.html"><code class="inline">mix ecto.migrate</code></a> to build the database schema.</li><li>Run <code class="inline">mix run priv/repo/seeds.exs</code> to seed the database. Check the <a href="#Seeds">Seeds</a> section for more.</li><li>Run <code class="inline">npm ci --prefix assets</code> to install the required client-side dependencies.</li><li>Run <code class="inline">npm ci --prefix tracker</code> to install the required tracker dependencies.</li><li>Run <code class="inline">npm run deploy --prefix tracker</code> to generate tracker files in <code class="inline">priv/tracker/js</code></li><li>Run <code class="inline">mix download_country_database</code> to fetch geolocation database</li></ol></li><li>Run <code class="inline">make server</code> or <a href="https://hexdocs.pm/phoenix/1.7.7/Mix.Tasks.Phx.Server.html"><code class="inline">mix phx.server</code></a> to start the Phoenix server.</li><li>The system is now available on <code class="inline">localhost:8000</code>.</li></ol><h3 id="seeds" class="section-heading">
-  <a href="#seeds" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">seeds</p>
+  <a href="#seeds">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Seeds
   </a>
-  Seeds
 </h3>
 <p>You can optionally seed your database to automatically create an account and a site with stats:</p><ol><li>Run <code class="inline">mix run priv/repo/seeds.exs</code> to seed the database.</li><li>Start the server with <code class="inline">make server</code> and navigate to <code class="inline">http://localhost:8000/login</code>.</li><li>Log in with the following e-mail and password combination: <code class="inline">user@plausible.test</code> and <code class="inline">plausible</code>.</li><li>You should now have a <code class="inline">dummy.site</code> site with generated stats.</li></ol><p>Alternatively, you can manually create a new account:</p><ol><li>Navigate to <code class="inline">http://localhost:8000/register</code> and fill in the form.</li><li>Fill in the rest of the forms and for the domain use <code class="inline">dummy.site</code></li><li>Skip the JS snippet and click start collecting data.</li><li>Run <code class="inline">mix send_pageview</code> from the terminal to generate a fake pageview event for the dummy site.</li><li>You should now be all set!</li></ol><h3 id="stopping-docker-containers" class="section-heading">
-  <a href="#stopping-docker-containers" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">stopping-docker-containers</p>
+  <a href="#stopping-docker-containers">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Stopping Docker containers
   </a>
-  Stopping Docker containers
 </h3>
 <ol><li>Stop and remove the Postgres container with <code class="inline">make postgres-stop</code>.</li><li>Stop and remove the Clickhouse container with <code class="inline">make clickhouse-stop</code>.</li></ol><p>Volumes are preserved. You'll find that the Postgres and Clickhouse state are retained when you bring them up again the next time: no need to re-register and so on.</p><p>Note: Since we are deleting the containers, be careful when deleting volumes with <code class="inline">docker volume prune</code>. You might accidentally delete the database and would have to go through re-registration process.</p><h3 id="pre-commit-hooks" class="section-heading">
-  <a href="#pre-commit-hooks" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">pre-commit-hooks</p>
+  <a href="#pre-commit-hooks">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Pre-commit hooks
   </a>
-  Pre-commit hooks
 </h3>
 <p><code class="inline">pre-commit</code> requires Python to be available locally and covers Elixir, JavaScript, and CSS. Set up with <code class="inline">pip install --user pre-commit</code> followed by <code class="inline">pre-commit install</code>. Conversely, if the prompts are far too bothersome, remove with <code class="inline">pre-commit uninstall</code>.</p><h2 id="finding-a-task" class="section-heading">
-  <a href="#finding-a-task" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i>
-  <p class="sr-only">finding-a-task</p>
+  <a href="#finding-a-task">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Finding a task
   </a>
-  Finding a task
 </h2>
 <p>Bugs can be found in our <a href="https://github.com/plausible/analytics/issues">issue tracker</a>. Issues are usually up for grabs.</p><p>New features need to be discussed with the core team and the community first. If you're tackling a feature, please make sure it has been already discussed in the <a href="https://github.com/plausible/analytics/discussions">Discussions tab</a>. We kindly ask contributors to use the discussion comment section to propose a solution before opening a pull request.</p><p>Pull requests without an associated issue or discussion may still be merged, but we will focus on changes that have already been talked through.</p>
 <div class="bottom-actions">
@@ -191,7 +191,7 @@ Account locking
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.29.4) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
