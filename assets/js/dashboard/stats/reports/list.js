@@ -139,6 +139,15 @@ export default function ListReport(props) {
     return () => { document.removeEventListener('tick', fetchData) }
   }, [props.keyLabel, props.query, visible]);
 
+  // returns a filtered `metrics` list. Since currently, the backend can return different
+  // metrics based on filters and existing data, this function validates that the metrics
+  // we want to display are actually there in the API response.
+  function validatedMetrics() {
+    return metrics.filter((metric) => {
+      return state.list.some((listItem) => listItem[metric.name] != null)
+    })
+  }
+
   function renderReport() {
     if (state.list && state.list.length > 0) {
       return (
@@ -159,7 +168,7 @@ export default function ListReport(props) {
   }
 
   function renderReportHeader() {
-    const metricLabels = metrics.map((metric) => {
+    const metricLabels = validatedMetrics().map((metric) => {
       return (<span key={metric.name} className="text-right" style={{minWidth: colMinWidth}}>{ metricLabelFor(metric, props.query) }</span>)
     })
     
@@ -241,7 +250,7 @@ export default function ListReport(props) {
   }
 
   function renderMetricValuesFor(listItem) {
-    return metrics.map((metric) => {
+    return validatedMetrics().map((metric) => {
       return (
         <div key={`${listItem.name}__${metric.name}`} style={{width: colMinWidth, minWidth: colMinWidth}} className="text-right">
           <span className="font-medium text-sm dark:text-gray-200 text-right">
