@@ -124,6 +124,37 @@ defmodule PlausibleWeb.StatsControllerTest do
   describe "GET /:website/export" do
     setup [:create_user, :create_new_site, :log_in]
 
+    test "exports all the necessary CSV files", %{conn: conn, site: site} do
+      conn = get(conn, "/" <> site.domain <> "/export")
+
+      assert {"content-type", "application/zip; charset=utf-8"} =
+               List.keyfind(conn.resp_headers, "content-type", 0)
+
+      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+      zip = Enum.map(zip, fn {filename, _} -> filename end)
+
+      assert 'visitors.csv' in zip
+      assert 'browsers.csv' in zip
+      assert 'cities.csv' in zip
+      assert 'conversions.csv' in zip
+      assert 'countries.csv' in zip
+      assert 'custom_props.csv' in zip
+      assert 'devices.csv' in zip
+      assert 'entry_pages.csv' in zip
+      assert 'exit_pages.csv' in zip
+      assert 'operating_systems.csv' in zip
+      assert 'pages.csv' in zip
+      assert 'prop_breakdown.csv' in zip
+      assert 'regions.csv' in zip
+      assert 'sources.csv' in zip
+      assert 'utm_campaigns.csv' in zip
+      assert 'utm_contents.csv' in zip
+      assert 'utm_mediums.csv' in zip
+      assert 'utm_sources.csv' in zip
+      assert 'utm_terms.csv' in zip
+    end
+
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")
@@ -139,6 +170,37 @@ defmodule PlausibleWeb.StatsControllerTest do
              |> response(400)
     end
 
+    test "exports allowed event props", %{conn: conn, site: site} do
+      site = Plausible.Sites.set_allowed_event_props!(site, ["author", "logged_in"])
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:event, "meta.key": ["author"], "meta.value": ["marko"], name: "Newsletter Signup"),
+        build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
+        build(:pageview, user_id: 999, "meta.key": ["logged_in"], "meta.value": ["true"]),
+        build(:pageview, "meta.key": ["disallowed"], "meta.value": ["whatever"]),
+        build(:pageview)
+      ])
+
+      conn = get(conn, "/" <> site.domain <> "/export?period=day")
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      {_filename, result} =
+        Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
+
+      assert parse_csv(result) == [
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "(none)", "3", "4", "50.0"],
+               ["author", "uku", "2", "2", "33.3"],
+               ["author", "marko", "1", "1", "16.7"],
+               ["logged_in", "(none)", "5", "5", "83.3"],
+               ["logged_in", "true", "1", "2", "16.7"],
+               [""]
+             ]
+    end
+
     test "exports data grouped by interval", %{conn: conn, site: site} do
       populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20&period=30d&interval=week")
@@ -149,12 +211,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       {_filename, visitors} =
         Enum.find(zip, fn {filename, _data} -> filename == 'visitors.csv' end)
 
-      parsed_csv =
-        visitors
-        |> String.split("\r\n")
-        |> Enum.map(&String.split(&1, ","))
-
-      assert parsed_csv == [
+      assert parse_csv(visitors) == [
                [
                  "date",
                  "visitors",
@@ -172,6 +229,12 @@ defmodule PlausibleWeb.StatsControllerTest do
                [""]
              ]
     end
+  end
+
+  defp parse_csv(file_content) when is_binary(file_content) do
+    file_content
+    |> String.split("\r\n")
+    |> Enum.map(&String.split(&1, ","))
   end
 
   describe "GET /:website/export - via shared link" do
@@ -204,6 +267,37 @@ defmodule PlausibleWeb.StatsControllerTest do
       filters = Jason.encode!(%{page: "/some-other-page"})
       conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
       assert_zip(conn, "30d-filter-path")
+    end
+  end
+
+  describe "GET /:website/export - with a custom prop filter" do
+    setup [:create_user, :create_new_site, :log_in]
+
+    test "custom-props.csv only returns the prop and its value in filter", %{
+      conn: conn,
+      site: site
+    } do
+      site = Plausible.Sites.set_allowed_event_props!(site, ["author", "logged_in"])
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:pageview, "meta.key": ["author"], "meta.value": ["marko"]),
+        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
+      ])
+
+      filters = Jason.encode!(%{props: %{author: "marko"}})
+      conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
+
+      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+      {_filename, result} =
+        Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
+
+      assert parse_csv(result) == [
+               ["property", "value", "visitors", "events", "percentage"],
+               ["author", "marko", "1", "1", "100.0"],
+               [""]
+             ]
     end
   end
 
@@ -295,6 +389,35 @@ defmodule PlausibleWeb.StatsControllerTest do
       filters = Jason.encode!(%{goal: "Signup"})
       conn = get(conn, "/#{site.domain}/export?date=2021-10-20&filters=#{filters}")
       assert_zip(conn, "30d-filter-goal")
+    end
+
+    test "custom-props.csv only returns the prop names for the goal in filter", %{
+      conn: conn,
+      site: site
+    } do
+      site = Plausible.Sites.set_allowed_event_props!(site, ["author", "logged_in"])
+
+      populate_stats(site, [
+        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["uku"]),
+        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
+        build(:event, name: "Newsletter Signup", "meta.key": ["author"], "meta.value": ["marko"]),
+        build(:pageview, "meta.key": ["logged_in"], "meta.value": ["true"])
+      ])
+
+      filters = Jason.encode!(%{goal: "Newsletter Signup"})
+      conn = get(conn, "/" <> site.domain <> "/export?period=day&filters=#{filters}")
+
+      {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
+
+      {_filename, result} =
+        Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
+
+      assert parse_csv(result) == [
+               ["property", "value", "visitors", "events", "conversion_rate"],
+               ["author", "marko", "2", "2", "50.0"],
+               ["author", "uku", "1", "1", "25.0"],
+               [""]
+             ]
     end
   end
 

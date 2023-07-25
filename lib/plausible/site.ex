@@ -166,10 +166,6 @@ defmodule Plausible.Site do
     )
   end
 
-  def set_allowed_event_props(site, list) do
-    change(site, allowed_event_props: list)
-  end
-
   @togglable_features ~w[conversions_enabled funnels_enabled props_enabled]a
   def feature_toggle_change(site, property, opts \\ [])
       when property in @togglable_features do

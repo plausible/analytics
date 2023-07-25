@@ -34,7 +34,7 @@ defmodule Plausible.Stats.CustomProps do
     end
   end
 
-  defp fetch_prop_names(site, query) do
+  def fetch_prop_names(site, query) do
     case Query.get_filter_by_prefix(query, "event:props:") do
       {"event:props:" <> key, _} ->
         [key]
