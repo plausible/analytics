@@ -205,7 +205,7 @@ export default function ListReport(props) {
   function renderBarFor(listItem) {    
     const lightBackground = props.color || 'bg-green-50'
     const noop = () => {}
-    const metricToPlot = metrics[0].name
+    const metricToPlot = metrics.find(m => m.plot).name
 
     return (
       <div className="flex-grow w-full overflow-hidden">

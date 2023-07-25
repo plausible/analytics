@@ -43,7 +43,7 @@ export default function Properties(props) {
         getFilterFor={getFilterFor}
         keyLabel={propKey}
         metrics={[
-          {name: 'visitors', label: 'Visitors'},
+          {name: 'visitors', label: 'Visitors', plot: true},
           {name: 'events', label: 'Events'},
           query.filters.goal ? CR_METRIC : PERCENTAGE_METRIC
         ]}

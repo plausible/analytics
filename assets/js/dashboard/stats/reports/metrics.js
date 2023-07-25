@@ -5,7 +5,8 @@ export const VISITORS_METRIC = {
   name: 'visitors',
   label: 'Visitors',
   realtimeLabel: 'Current visitors',
-  goalFilterLabel: 'Conversions'
+  goalFilterLabel: 'Conversions',
+  plot: true
 }
 export const PERCENTAGE_METRIC = { name: 'percentage', label: '%' }
 export const CR_METRIC = { name: 'conversion_rate', label: 'CR' }
