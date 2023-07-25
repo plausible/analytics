@@ -169,7 +169,7 @@ export default function Behaviours(props) {
           shortFeatureName={'props'}
           title={'No custom properties found'}
           info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
-          settingsLink={`/${encodeURIComponent(site.domain)}/settings/props`}
+          settingsLink={`/${encodeURIComponent(site.domain)}/settings/properties`}
           onHideAction={onHideAction(PROPS)}
         />
       )

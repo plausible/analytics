@@ -292,6 +292,19 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
+  def settings_props(conn, _params) do
+    if Plausible.Props.enabled_for?(conn.assigns.current_user) do
+      conn
+      |> assign(:skip_plausible_tracking, true)
+      |> render("settings_props.html",
+        site: conn.assigns.site,
+        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+      )
+    else
+      conn |> Plug.Conn.put_status(401) |> Plug.Conn.halt()
+    end
+  end
+
   def settings_search_console(conn, _params) do
     site =
       conn.assigns[:site]
