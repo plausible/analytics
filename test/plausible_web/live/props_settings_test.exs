@@ -1,0 +1,139 @@
+defmodule PlausibleWeb.Live.PropsSettings.FormTest do
+  use PlausibleWeb.ConnCase, async: true
+  import Phoenix.LiveViewTest
+  import Plausible.Test.Support.HTML
+
+  defp seed(%{site: site}) do
+    populate_stats(site, [
+      build(:event,
+        name: "Payment",
+        "meta.key": ["amount"],
+        "meta.value": ["500"]
+      ),
+      build(:event,
+        name: "Payment",
+        "meta.key": ["amount", "logged_in"],
+        "meta.value": ["100", "false"]
+      ),
+      build(:event,
+        name: "Payment",
+        "meta.key": ["amount", "is_customer"],
+        "meta.value": ["100", "false"]
+      )
+    ])
+
+    :ok
+  end
+
+  setup [:create_user, :log_in, :create_site, :seed]
+
+  test "shows message when site has no allowed properties", %{conn: conn, site: site} do
+    {:ok, _lv, doc} = get_liveview(conn, site)
+    assert doc =~ "No properties configured for this site yet"
+  end
+
+  test "renders dropdown with suggestions", %{conn: conn, site: site} do
+    {:ok, _lv, doc} = get_liveview(conn, site)
+
+    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-0/) ==
+             "amount"
+
+    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-1/) ==
+             "logged_in"
+
+    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-2/) ==
+             "is_customer"
+  end
+
+  test "input is a required field", %{conn: conn, site: site} do
+    {:ok, _lv, doc} = get_liveview(conn, site)
+    assert element_exists?(doc, ~s/input#prop_input[required]/)
+  end
+
+  test "clicking suggestion fills out input", %{conn: conn, site: site} do
+    {:ok, lv, _doc} = get_liveview(conn, site)
+
+    doc =
+      lv
+      |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-0 a/)
+      |> render_click()
+
+    assert element_exists?(doc, ~s/input[type="hidden"][value="amount"]/)
+  end
+
+  test "saving from suggestion adds to the list", %{conn: conn, site: site} do
+    {:ok, lv, _doc} = get_liveview(conn, site)
+
+    lv
+    |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-0 a/)
+    |> render_click()
+
+    doc =
+      lv
+      |> form("#props-form")
+      |> render_submit()
+
+    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "amount"
+    refute doc =~ "No properties configured for this site yet"
+  end
+
+  test "saving from manual input adds to the list", %{conn: conn, site: site} do
+    {:ok, lv, _doc} = get_liveview(conn, site)
+
+    lv
+    |> element("input#prop_input")
+    |> render_change(%{
+      "_target" => ["display-prop_input"],
+      "display-prop_input" => "Operating System"
+    })
+
+    doc =
+      lv
+      |> form("#props-form")
+      |> render_submit()
+
+    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "Operating System"
+    refute doc =~ "No properties configured for this site yet"
+  end
+
+  test "clicking remove button removes from the list", %{conn: conn, site: site} do
+    {:ok, site} = Plausible.Props.allow(site, "my-prop")
+    {:ok, lv, doc} = get_liveview(conn, site)
+
+    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "my-prop"
+
+    doc =
+      lv
+      |> element(~s/ul#allowed-props li#prop-0 button[phx-click="disallow"]/)
+      |> render_click()
+
+    refute element_exists?(doc, ~s/ul#allowed-props li#prop-0 span/)
+    assert doc =~ "No properties configured for this site yet"
+  end
+
+  test "clicking auto-import imports from events", %{conn: conn, site: site} do
+    {:ok, lv, _doc} = get_liveview(conn, site)
+
+    doc =
+      lv
+      |> element(~s/button[phx-click="auto-import"]/)
+      |> render_click()
+
+    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "amount"
+    assert text_of_element(doc, ~s/ul#allowed-props li#prop-1 span/) == "logged_in"
+    assert text_of_element(doc, ~s/ul#allowed-props li#prop-2 span/) == "is_customer"
+  end
+
+  test "does not show auto-import button when there are no events with props", %{
+    conn: conn,
+    user: user
+  } do
+    {:ok, _lv, doc} = get_liveview(conn, insert(:site, members: [user]))
+    refute element_exists?(doc, ~s/button[phx-click="auto-import"]/)
+  end
+
+  defp get_liveview(conn, site) do
+    conn = assign(conn, :live_module, PlausibleWeb.Live.PropsSettings)
+    {:ok, _lv, _doc} = live(conn, "/#{site.domain}/settings/properties")
+  end
+end
