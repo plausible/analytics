@@ -32,4 +32,17 @@ defmodule Plausible.DebugReplayInfoTest do
     assert apply(function, [input[:site], input[:query], input[:report_to]])
     assert_receive {:task_done, ^context}
   end
+
+  test "won't add replay info, if serialized input too large" do
+    {:ok, _} =
+      SampleModule.task(
+        :crypto.strong_rand_bytes(10_000),
+        :crypto.strong_rand_bytes(10_000),
+        self()
+      )
+
+    assert_receive {:task_done, context}
+    assert context.extra.debug_replay_info == :too_large
+    assert context.extra.debug_replay_info_size > 10_000
+  end
 end
