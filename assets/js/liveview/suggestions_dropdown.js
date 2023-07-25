@@ -22,7 +22,10 @@ let suggestionsDropdown = function(id) {
     focusNext() {
       const nextIndex = this.focus + 1
       const total = this.$refs.suggestions?.childElementCount ?? 0
-      if (this.isOpen && nextIndex < total) {
+
+      if (!this.isOpen) this.open()
+
+      if (nextIndex < total) {
         this.setFocus(nextIndex)
         this.scrollTo(nextIndex);
       }
