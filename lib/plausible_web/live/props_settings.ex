@@ -15,7 +15,11 @@ defmodule PlausibleWeb.Live.PropsSettings do
     true = Plausible.Props.enabled_for?(%Plausible.Auth.User{id: user_id})
     site = get_site(user_id, domain)
     allowed_event_props = site.allowed_event_props || []
-    suggestions = Plausible.Props.suggest_keys_to_allow(site)
+
+    suggestions =
+      site
+      |> Plausible.Props.suggest_keys_to_allow()
+      |> Enum.map(&{&1, &1})
 
     {:ok,
      assign(socket,
@@ -39,7 +43,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
           class="flex-1"
           module={ComboBox}
           suggest_mod={ComboBox.StaticSearch}
-          options={build_options(@suggestions, @allowed_event_props)}
+          options={@suggestions}
           required
           creatable
         />
@@ -111,7 +115,12 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
     send_update(ComboBox, id: :prop_input, display_value: "", submit_value: "")
 
-    {:noreply, assign(socket, allowed_event_props: site.allowed_event_props)}
+    socket =
+      socket
+      |> assign(allowed_event_props: site.allowed_event_props)
+      |> rebuild_suggestions()
+
+    {:noreply, socket}
   end
 
   def handle_event("disallow", %{"prop" => prop}, socket) do
@@ -129,7 +138,12 @@ defmodule PlausibleWeb.Live.PropsSettings do
       |> get_site(socket.assigns.domain)
       |> Plausible.Props.auto_import()
 
-    {:noreply, assign(socket, allowed_event_props: site.allowed_event_props)}
+    socket =
+      socket
+      |> assign(allowed_event_props: site.allowed_event_props)
+      |> rebuild_suggestions()
+
+    {:noreply, socket}
   end
 
   defp get_site(user_id, domain) do
@@ -140,14 +154,13 @@ defmodule PlausibleWeb.Live.PropsSettings do
     end
   end
 
-  defp build_options(suggestions, allowed_event_props) do
-    options =
-      for suggestion <- suggestions,
-          suggestion not in allowed_event_props,
+  defp rebuild_suggestions(socket) do
+    suggestions =
+      for {suggestion, _} <- socket.assigns.suggestions,
+          suggestion not in socket.assigns.allowed_event_props,
           do: {suggestion, suggestion}
 
-    send_update(ComboBox, id: :prop_input, suggestions: options)
-
-    options
+    send_update(ComboBox, id: :prop_input, suggestions: suggestions)
+    assign(socket, suggestions: suggestions)
   end
 end

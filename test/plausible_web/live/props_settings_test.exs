@@ -64,14 +64,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   test "saving from suggestion adds to the list", %{conn: conn, site: site} do
     {:ok, lv, _doc} = get_liveview(conn, site)
 
-    lv
-    |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-0 a/)
-    |> render_click()
-
-    doc =
-      lv
-      |> form("#props-form")
-      |> render_submit()
+    doc = select_and_submit(lv, 0)
 
     assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "amount"
     refute doc =~ "No properties configured for this site yet"
@@ -132,8 +125,31 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
     refute element_exists?(doc, ~s/button[phx-click="auto-import"]/)
   end
 
+  test "does not show auto-import button after adding all suggestions", %{
+    conn: conn,
+    site: site
+  } do
+    {:ok, lv, _doc} = get_liveview(conn, site)
+
+    _doc = select_and_submit(lv, 0)
+    _doc = select_and_submit(lv, 0)
+    doc = select_and_submit(lv, 0)
+
+    refute element_exists?(doc, ~s/button[phx-click="auto-import"]/)
+  end
+
   defp get_liveview(conn, site) do
     conn = assign(conn, :live_module, PlausibleWeb.Live.PropsSettings)
     {:ok, _lv, _doc} = live(conn, "/#{site.domain}/settings/properties")
+  end
+
+  defp select_and_submit(lv, suggestion_index) do
+    lv
+    |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-#{suggestion_index} a/)
+    |> render_click()
+
+    lv
+    |> form("#props-form")
+    |> render_submit()
   end
 end
