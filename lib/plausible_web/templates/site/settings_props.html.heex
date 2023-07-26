@@ -46,8 +46,7 @@
 
     <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,
       id: "props-form",
-      session: %{"site_id" => @site.id, "domain" => @site.domain},
-      router: PlausibleWeb.Router
+      session: %{"site_id" => @site.id, "domain" => @site.domain}
     ) %>
   </PlausibleWeb.Components.Site.Feature.toggle>
 </section>
