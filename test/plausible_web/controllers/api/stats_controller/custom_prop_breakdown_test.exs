@@ -104,6 +104,55 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                }
              ]
     end
+
+    test "(none) value is only included on the first page of results", %{conn: conn, site: site} do
+      prop_key = "kaksik"
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["Teet"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["Teet"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["Tiit"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["Tiit"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["Tiit"]),
+        build(:pageview)
+      ])
+
+      conn1 =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=1&page=1"
+        )
+
+      conn2 =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=1&page=2"
+        )
+
+      assert json_response(conn1, 200) == [
+               %{
+                 "visitors" => 3,
+                 "name" => "Tiit",
+                 "events" => 3,
+                 "percentage" => 75.0
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "(none)",
+                 "events" => 1,
+                 "percentage" => 25.0
+               }
+             ]
+
+      assert json_response(conn2, 200) == [
+               %{
+                 "visitors" => 2,
+                 "name" => "Teet",
+                 "events" => 2,
+                 "percentage" => 100.0
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - with goal filter" do

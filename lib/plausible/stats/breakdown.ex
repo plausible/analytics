@@ -69,9 +69,10 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination) do
     {currency, metrics} = get_revenue_tracking_currency(site, query, metrics)
+    {_limit, page} = pagination
 
     none_result =
-      if include_none_result?(query.filters[property]) do
+      if page == 1 && include_none_result?(query.filters[property]) do
         none_query = Query.put_filter(query, property, {:is, "(none)"})
 
         from(e in base_event_query(site, none_query),
