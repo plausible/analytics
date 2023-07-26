@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     ~H"""
     <div
       id={"input-picker-main-#{@id}"}
-      class={@class}
+      class={["relative", @class]}
       x-data={"window.suggestionsDropdown('#{@id}')"}
       x-on:keydown.arrow-up.prevent="focusPrev"
       x-on:keydown.arrow-down.prevent="focusNext"
@@ -145,7 +145,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       id={"dropdown-#{@ref}"}
       x-show="isOpen"
       x-ref="suggestions"
-      class="dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
+      class="max-w-full max-h-60 z-50 absolute mt-1 rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
     >
       <.option
         :for={
@@ -205,15 +205,13 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         phx-click={select_option(@ref, @submit_value, @display_value)}
         phx-value-display-value={@display_value}
         phx-target={@target}
-        class="block py-2 px-3"
+        class="block truncate py-2 px-3"
       >
-        <span class="block truncate">
-          <%= if @creatable do %>
-            Create "<%= @display_value %>"
-          <% else %>
-            <%= @display_value %>
-          <% end %>
-        </span>
+        <%= if @creatable do %>
+          Create "<%= @display_value %>"
+        <% else %>
+          <%= @display_value %>
+        <% end %>
       </a>
     </li>
     <li :if={@idx == @suggestions_limit - 1} class="text-xs text-gray-500 relative py-2 px-3">
