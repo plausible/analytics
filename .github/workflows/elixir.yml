@@ -18,9 +18,6 @@ jobs:
     services:
       postgres:
         image: postgres:${{ matrix.postgres_version }}
-        credentials:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
         ports:
           - 5432:5432
         env:
@@ -33,9 +30,6 @@ jobs:
 
       clickhouse:
         image: clickhouse/clickhouse-server:23.3.7.5-alpine
-        credentials:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
         ports:
           - 8123:8123
         env:
