@@ -21,8 +21,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
         Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin])
       end
 
-    allowed_event_props = site.allowed_event_props || []
-
     suggestions =
       site
       |> Plausible.Props.suggest_keys_to_allow()
@@ -32,7 +30,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
      assign(socket,
        site: site,
        current_user_id: user_id,
-       allowed_event_props: allowed_event_props,
        suggestions: suggestions
      )}
   end
@@ -67,10 +64,10 @@ defmodule PlausibleWeb.Live.PropsSettings do
       </button>
 
       <div class="mt-3">
-        <%= if is_list(@allowed_event_props) && length(@allowed_event_props) > 0 do %>
+        <%= if is_list(@site.allowed_event_props) && length(@site.allowed_event_props) > 0 do %>
           <ul id="allowed-props" class="divide-gray-200 divide-y dark:divide-gray-600">
             <li
-              :for={{prop, index} <- Enum.with_index(@allowed_event_props)}
+              :for={{prop, index} <- Enum.with_index(@site.allowed_event_props)}
               id={"prop-#{index}"}
               class="flex py-4"
             >
@@ -120,7 +117,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
     socket =
       socket
-      |> assign(allowed_event_props: site.allowed_event_props)
+      |> assign(site: site)
       |> rebuild_suggestions()
 
     {:noreply, socket}
@@ -128,7 +125,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   def handle_event("disallow", %{"prop" => prop}, socket) do
     {:ok, site} = Plausible.Props.disallow(socket.assigns.site, prop)
-    {:noreply, assign(socket, allowed_event_props: site.allowed_event_props)}
+    {:noreply, assign(socket, site: site)}
   end
 
   def handle_event("auto-import", _params, socket) do
@@ -136,16 +133,18 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
     socket =
       socket
-      |> assign(allowed_event_props: site.allowed_event_props)
+      |> assign(site: site)
       |> rebuild_suggestions()
 
     {:noreply, socket}
   end
 
   defp rebuild_suggestions(socket) do
+    allowed_event_props = socket.assigns.site.allowed_event_props || []
+
     suggestions =
       for {suggestion, _} <- socket.assigns.suggestions,
-          suggestion not in socket.assigns.allowed_event_props,
+          suggestion not in allowed_event_props,
           do: {suggestion, suggestion}
 
     send_update(ComboBox, id: :prop_input, suggestions: suggestions)
