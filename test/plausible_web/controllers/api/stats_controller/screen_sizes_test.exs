@@ -124,7 +124,8 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
 
       populate_stats(site, [
         build(:imported_devices, device: "Mobile"),
-        build(:imported_devices, device: "Laptop")
+        build(:imported_devices, device: "Laptop"),
+        build(:imported_visitors, visitors: 2)
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")

@@ -6,21 +6,12 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
 
     test "returns top countries by new visitors", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview,
-          country_code: "EE"
-        ),
-        build(:pageview,
-          country_code: "EE"
-        ),
-        build(:pageview,
-          country_code: "GB"
-        ),
-        build(:imported_locations,
-          country: "EE"
-        ),
-        build(:imported_locations,
-          country: "GB"
-        )
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "EE"),
+        build(:pageview, country_code: "GB"),
+        build(:imported_locations, country: "EE"),
+        build(:imported_locations, country: "GB"),
+        build(:imported_visitors, visitors: 2)
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/countries?period=day")
