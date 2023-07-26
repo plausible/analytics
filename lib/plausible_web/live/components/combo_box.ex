@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     ~H"""
     <div
       id={"input-picker-main-#{@id}"}
-      class={["relative", @class]}
+      class={@class}
       x-data={"window.suggestionsDropdown('#{@id}')"}
       x-on:keydown.arrow-up.prevent="focusPrev"
       x-on:keydown.arrow-down.prevent="focusNext"
@@ -145,7 +145,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       id={"dropdown-#{@ref}"}
       x-show="isOpen"
       x-ref="suggestions"
-      class="max-w-full max-h-60 z-50 absolute mt-1 rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
+      class="max-w-xs md:max-w-md lg:max-w-lg dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
     >
       <.option
         :for={
