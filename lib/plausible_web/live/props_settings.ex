@@ -13,7 +13,14 @@ defmodule PlausibleWeb.Live.PropsSettings do
         socket
       ) do
     true = Plausible.Props.enabled_for?(%Plausible.Auth.User{id: user_id})
-    site = get_site(user_id, domain)
+
+    site =
+      if Plausible.Auth.is_super_admin?(user_id) do
+        Plausible.Sites.get_by_domain(domain)
+      else
+        Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin])
+      end
+
     allowed_event_props = site.allowed_event_props || []
 
     suggestions =
@@ -23,8 +30,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
     {:ok,
      assign(socket,
-       site_id: site.id,
-       domain: site.domain,
+       site: site,
        current_user_id: user_id,
        allowed_event_props: allowed_event_props,
        suggestions: suggestions
@@ -108,10 +114,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
   end
 
   def handle_event("allow", %{"prop" => prop}, socket) do
-    {:ok, site} =
-      socket.assigns.current_user_id
-      |> get_site(socket.assigns.domain)
-      |> Plausible.Props.allow(prop)
+    {:ok, site} = Plausible.Props.allow(socket.assigns.site, prop)
 
     send_update(ComboBox, id: :prop_input, display_value: "", submit_value: "")
 
@@ -124,19 +127,12 @@ defmodule PlausibleWeb.Live.PropsSettings do
   end
 
   def handle_event("disallow", %{"prop" => prop}, socket) do
-    {:ok, site} =
-      socket.assigns.current_user_id
-      |> get_site(socket.assigns.domain)
-      |> Plausible.Props.disallow(prop)
-
+    {:ok, site} = Plausible.Props.disallow(socket.assigns.site, prop)
     {:noreply, assign(socket, allowed_event_props: site.allowed_event_props)}
   end
 
   def handle_event("auto-import", _params, socket) do
-    {:ok, site} =
-      socket.assigns.current_user_id
-      |> get_site(socket.assigns.domain)
-      |> Plausible.Props.auto_import()
+    {:ok, site} = Plausible.Props.auto_import(socket.assigns.site)
 
     socket =
       socket
@@ -144,14 +140,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
       |> rebuild_suggestions()
 
     {:noreply, socket}
-  end
-
-  defp get_site(user_id, domain) do
-    if Plausible.Auth.is_super_admin?(user_id) do
-      Plausible.Sites.get_by_domain(domain)
-    else
-      Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin])
-    end
   end
 
   defp rebuild_suggestions(socket) do
