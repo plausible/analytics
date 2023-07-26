@@ -21,6 +21,13 @@ defmodule Plausible.PropsTest do
              Plausible.Repo.reload!(site)
   end
 
+  test "allow/2 trims trailing whitespaces" do
+    site = insert(:site)
+
+    assert {:ok, site} = Plausible.Props.allow(site, "   my-prop-1 ")
+    assert %Plausible.Site{allowed_event_props: ["my-prop"]} = Plausible.Repo.reload!(site)
+  end
+
   test "allow/2 fails when prop list is too long" do
     site = insert(:site)
     props = for i <- 1..300, do: "my-prop-#{i}"
@@ -41,10 +48,13 @@ defmodule Plausible.PropsTest do
     assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
   end
 
-  test "allow/2 fails when prop key empty" do
+  test "allow/2 fails when prop key is empty" do
     site = insert(:site)
 
     assert {:error, changeset} = Plausible.Props.allow(site, "")
+    assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
+
+    assert {:error, changeset} = Plausible.Props.allow(site, " ")
     assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
   end
 

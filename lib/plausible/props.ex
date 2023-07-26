@@ -38,8 +38,13 @@ defmodule Plausible.Props do
   end
 
   defp changeset(site, props) do
+    props =
+      props
+      |> Enum.map(&String.trim/1)
+      |> Enum.uniq()
+
     site
-    |> Ecto.Changeset.change(allowed_event_props: Enum.uniq(props))
+    |> Ecto.Changeset.change(allowed_event_props: props)
     |> Ecto.Changeset.validate_length(:allowed_event_props, max: @max_props)
     |> Ecto.Changeset.validate_change(:allowed_event_props, fn field, allowed_props ->
       if Enum.all?(allowed_props, &valid?/1),
