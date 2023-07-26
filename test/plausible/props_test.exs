@@ -25,7 +25,7 @@ defmodule Plausible.PropsTest do
     site = insert(:site)
 
     assert {:ok, site} = Plausible.Props.allow(site, "   my-prop-1 ")
-    assert %Plausible.Site{allowed_event_props: ["my-prop"]} = Plausible.Repo.reload!(site)
+    assert %Plausible.Site{allowed_event_props: ["my-prop-1"]} = Plausible.Repo.reload!(site)
   end
 
   test "allow/2 fails when prop list is too long" do
