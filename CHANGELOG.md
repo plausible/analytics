@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Fixed
+- Only return `(none)` values in custom property breakdown for the first page (pagination) of results
 - Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
 - Fixed [IPv6 problems](https://github.com/plausible/analytics/issues/3173) in data migration plausible/analytics#3179
 - Fixed [long URLs display](https://github.com/plausible/analytics/issues/3158) in Outbound Link breakdown view
