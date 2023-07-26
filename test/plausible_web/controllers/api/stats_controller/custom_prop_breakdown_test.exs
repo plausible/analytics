@@ -73,6 +73,37 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                }
              ]
     end
+
+    test "(none) value is added as +1 to pagination limit", %{conn: conn, site: site} do
+      prop_key = "parim_s6ber"
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:pageview)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=1"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 2,
+                 "name" => "K2sna Kalle",
+                 "events" => 2,
+                 "percentage" => 66.7
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "(none)",
+                 "events" => 1,
+                 "percentage" => 33.3
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - with goal filter" do
