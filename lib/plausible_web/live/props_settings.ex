@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   def render(assigns) do
     ~H"""
-    <div id="funnel-settings-main">
+    <div id="props-settings-main">
       <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
 
       <form id="props-form" phx-submit="allow" class="flex space-x-2">
