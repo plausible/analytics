@@ -174,7 +174,7 @@ export default function ListReport(props) {
   function renderReportBody() {
     return (
       <FlipMove className="flex-grow">
-        {state.list.map(renderRow)}
+        {state.list.slice(0, MAX_ITEMS).map(renderRow)}
       </FlipMove>
     )
   }

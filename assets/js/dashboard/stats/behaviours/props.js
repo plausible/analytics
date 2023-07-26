@@ -17,7 +17,7 @@ export default function Properties(props) {
     return null
   }
 
-  function fetchProps() {    
+  function fetchProps() {
     return api.get(url.apiPath(site, `/custom-prop-values/${encodeURIComponent(propKey)}`), query)
   }
 
@@ -47,6 +47,7 @@ export default function Properties(props) {
           {name: 'events', label: 'Events'},
           query.filters.goal ? CR_METRIC : PERCENTAGE_METRIC
         ]}
+        detailsLink={url.sitePath(site, `/custom-prop-values/${propKey}`)}
         query={query}
         color="bg-red-50"
         colMinWidth={90}
