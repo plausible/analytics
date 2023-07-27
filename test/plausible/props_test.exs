@@ -83,7 +83,7 @@ defmodule Plausible.PropsTest do
     assert %Plausible.Site{allowed_event_props: ["my-prop-1"]} = Plausible.Repo.reload!(site)
   end
 
-  test "allow_existing_properties/1 saves the most frequent prop keys" do
+  test "allow_existing_props/1 saves the most frequent prop keys" do
     site = insert(:site)
 
     populate_stats(site, [
@@ -104,13 +104,13 @@ defmodule Plausible.PropsTest do
       )
     ])
 
-    {:ok, site} = Plausible.Props.allow_existing_properties(site)
+    {:ok, site} = Plausible.Props.allow_existing_props(site)
 
     assert %Plausible.Site{allowed_event_props: ["amount", "logged_in", "is_customer"]} =
              Plausible.Repo.reload!(site)
   end
 
-  test "allow_existing_properties/1 skips invalid keys" do
+  test "allow_existing_props/1 skips invalid keys" do
     site = insert(:site)
 
     populate_stats(site, [
@@ -131,13 +131,13 @@ defmodule Plausible.PropsTest do
       )
     ])
 
-    {:ok, site} = Plausible.Props.allow_existing_properties(site)
+    {:ok, site} = Plausible.Props.allow_existing_props(site)
 
     assert %Plausible.Site{allowed_event_props: ["amount", "logged_in", "is_customer"]} =
              Plausible.Repo.reload!(site)
   end
 
-  test "allow_existing_properties/1 can be run multiple times" do
+  test "allow_existing_props/1 can be run multiple times" do
     site = insert(:site)
 
     populate_stats(site, [
@@ -159,7 +159,7 @@ defmodule Plausible.PropsTest do
     ])
 
     {:ok, %Plausible.Site{allowed_event_props: ["amount", "logged_in", "is_customer"]}} =
-      Plausible.Props.allow_existing_properties(site)
+      Plausible.Props.allow_existing_props(site)
 
     populate_stats(site, [
       build(:event,
@@ -189,6 +189,6 @@ defmodule Plausible.PropsTest do
          "with_error",
          "first_time_customer"
        ]
-     }} = Plausible.Props.allow_existing_properties(site)
+     }} = Plausible.Props.allow_existing_props(site)
   end
 end
