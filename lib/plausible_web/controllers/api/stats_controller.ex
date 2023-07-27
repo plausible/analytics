@@ -1167,7 +1167,6 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{goal: :name})
       |> Enum.map(fn goal ->
         goal
-        |> Map.put(:prop_names, CustomProps.props_for_goal(site, query))
         |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal[:visitors]))
         |> Enum.map(&format_revenue_metric/1)
         |> Map.new()
