@@ -91,6 +91,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
                 <%= prop %>
               </span>
               <button
+                data-confirm={"Are you sure you want to remove property '#{prop}'? This will just affect the UI, all of your analytics data will stay intact."}
                 phx-click="disallow"
                 phx-value-prop={prop}
                 class="w-4 h-4 text-red-600 hover:text-red-700"

@@ -132,6 +132,16 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
     assert doc =~ "No properties configured for this site yet"
   end
 
+  test "remove button shows a confirmation popup", %{conn: conn, site: site} do
+    {:ok, site} = Plausible.Props.allow(site, "my-prop")
+    {:ok, _lv, doc} = get_liveview(conn, site)
+
+    assert "Are you sure you want to remove property 'my-prop'? This will just affect the UI, all of your analytics data will stay intact." ==
+             doc
+             |> Floki.find(~s/ul#allowed-props li#prop-0 button[phx-click="disallow"]/)
+             |> text_of_attr("data-confirm")
+  end
+
   test "clicking allow existing props button saves props from events", %{conn: conn, site: site} do
     {:ok, lv, _doc} = get_liveview(conn, site)
 
