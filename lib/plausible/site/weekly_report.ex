@@ -3,8 +3,8 @@ defmodule Plausible.Site.WeeklyReport do
   import Ecto.Changeset
 
   schema "weekly_reports" do
-    field :recipients, {:array, :string}
-    belongs_to :site, Plausible.Site
+    field(:recipients, {:array, :string})
+    belongs_to(:site, Plausible.Site)
 
     timestamps()
   end
@@ -13,7 +13,7 @@ defmodule Plausible.Site.WeeklyReport do
     settings
     |> cast(attrs, [:site_id, :recipients])
     |> validate_required([:site_id, :recipients])
-    |> unique_constraint(:site)
+    |> unique_constraint(:site_id)
   end
 
   def add_recipient(report, recipient) do
