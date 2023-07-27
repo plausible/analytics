@@ -81,6 +81,7 @@ Plausible.OpenTelemetry.Sampler.html
 Plausible.PaddleApi.Mock.html
 Plausible.PromEx.Plugins.PlausibleMetrics.html
 Plausible.PromEx.html
+Plausible.Props.html
 Plausible.Purge.html
 Plausible.Release.html
 Plausible.Repo.html
@@ -185,6 +186,7 @@ PlausibleWeb.Live.Flash.html
 PlausibleWeb.Live.FunnelSettings.Form.html
 PlausibleWeb.Live.FunnelSettings.List.html
 PlausibleWeb.Live.FunnelSettings.html
+PlausibleWeb.Live.PropsSettings.html
 PlausibleWeb.MJML.WeeklyReport.html
 PlausibleWeb.PageController.html
 PlausibleWeb.PageView.html
@@ -237,8 +239,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-0BB669C5.js
-dist/sidebar_items-209D200C.js
+dist/search_data-72DBBE94.js
+dist/sidebar_items-18EF995D.js
 index.html
 readme.html
 search.html

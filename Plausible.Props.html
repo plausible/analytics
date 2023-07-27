@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Auth.GracePeriod — Plausible v0.0.1</title>
+    <title>Plausible.Props — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,24 +102,19 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Auth.GracePeriod</span> 
+  <span translate="no">Plausible.Props</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>This embedded schema stores information about the account locking grace
-period.</p><p>Users are given this 7-day grace period to upgrade their account after
-outgrowing their subscriptions. The actual account locking happens in
-background with <a href="Plausible.Workers.LockSites.html"><code class="inline">Plausible.Workers.LockSites</code></a>.</p><p>The grace period can also be manual, without an end date, being controlled
-manually from the CRM, and not by the background site locker job. This is 
-useful for enterprise subscriptions.</p>
+<p>Context module for handling custom event props.</p>
   </section>
 
 
@@ -137,7 +132,7 @@ useful for enterprise subscriptions.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:prop/0" translate="no">prop()</a>
 
       </div>
 
@@ -151,66 +146,80 @@ useful for enterprise subscriptions.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#active?/1" translate="no">active?(user)</a>
+        <a href="#allow/2" translate="no">allow(site, prop_or_props)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Returns whether the grace period is still active for a User. Defaults to
-false if the user is nil or there is no grace period.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#end_changeset/1" translate="no">end_changeset(user)</a>
+        <a href="#allow_changeset/2" translate="no">allow_changeset(site, prop_or_props)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Ends an existing grace period by <code class="inline">setting users.grace_period.is_over</code> to true.
-This means the grace period has expired.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#expired?/1" translate="no">expired?(user)</a>
+        <a href="#allow_existing_props/1" translate="no">allow_existing_props(site)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns whether the grace period has already expired for a User. Defaults to
-false if the user is nil or there is no grace period.</p></div>
+        <div class="summary-synopsis"><p>Allows the 300 most frequent props keys for a specific site over
+the past 6 months.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove_changeset/1" translate="no">remove_changeset(user)</a>
+        <a href="#disallow/2" translate="no">disallow(site, prop)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Removes the grace period from the User completely.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_changeset/2" translate="no">start_changeset(user, allowance_required)</a>
+        <a href="#enabled_for?/1" translate="no">enabled_for?(user)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Starts a account locking grace period of 7 days by changing the User struct.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_manual_lock_changeset/2" translate="no">start_manual_lock_changeset(user, allowance_required)</a>
+        <a href="#max_prop_key_length/0" translate="no">max_prop_key_length()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Starts a manual account locking grace period by changing the User struct. 
-Manual locking means the grace period can only be removed manually from the
-CRM.</p></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#max_prop_value_length/0" translate="no">max_prop_value_length()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#max_props/0" translate="no">max_props()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#suggest_keys_to_allow/2" translate="no">suggest_keys_to_allow(site, limit \\ 300)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Queries the events table to fetch the 300 most frequent prop keys
+for a specific site over the past 6 months, excluding keys that are already
+allowed.</p></div>
 
     </div>
 
@@ -227,16 +236,16 @@ Types
       </a>
     </h1>
     <div class="types-list">
-<section class="detail" id="t:t/0">
+<section class="detail" id="t:prop/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:prop/0" class="detail-link" title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
-    <h1 class="signature" translate="no">t()</h1>
+    <h1 class="signature" translate="no">prop()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L18" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L8" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -248,13 +257,7 @@ Types
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Auth.GracePeriod{
-  allowance_required: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
-  end_date: <a href="https://hexdocs.pm/elixir/Date.html#t:t/0">Date.t</a>() | nil,
-  id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  is_over: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
-  manual_lock: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()
-}</pre>
+          <pre translate="no"><span class="attribute">@type</span> prop() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
 
       </div>
 
@@ -273,16 +276,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="active?/1">
+<section class="detail" id="allow/2">
 
   <div class="detail-header">
-    <a href="#active?/1" class="detail-link" title="Link to this function">
+    <a href="#allow/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">active?(user)</h1>
+    <h1 class="signature" translate="no">allow(site, prop_or_props)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L86" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L21" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -294,24 +297,24 @@ Functions
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> active?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> allow(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), [<a href="#t:prop/0">prop</a>()] | <a href="#t:prop/0">prop</a>()) ::
+  {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
-<p>Returns whether the grace period is still active for a User. Defaults to
-false if the user is nil or there is no grace period.</p>
+
   </section>
 </section>
-<section class="detail" id="end_changeset/1">
+<section class="detail" id="allow_changeset/2">
 
   <div class="detail-header">
-    <a href="#end_changeset/1" class="detail-link" title="Link to this function">
+    <a href="#allow_changeset/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">end_changeset(user)</h1>
+    <h1 class="signature" translate="no">allow_changeset(site, prop_or_props)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L69" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L27" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -321,26 +324,19 @@ false if the user is nil or there is no grace period.</p>
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> end_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
-
-      </div>
-
-<p>Ends an existing grace period by <code class="inline">setting users.grace_period.is_over</code> to true.
-This means the grace period has expired.</p>
   </section>
 </section>
-<section class="detail" id="expired?/1">
+<section class="detail" id="allow_existing_props/1">
 
   <div class="detail-header">
-    <a href="#expired?/1" class="detail-link" title="Link to this function">
+    <a href="#allow_existing_props/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">expired?(user)</h1>
+    <h1 class="signature" translate="no">allow_existing_props(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L103" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L65" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -352,24 +348,24 @@ This means the grace period has expired.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> expired?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> allow_existing_props(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()}</pre>
 
       </div>
 
-<p>Returns whether the grace period has already expired for a User. Defaults to
-false if the user is nil or there is no grace period.</p>
+<p>Allows the 300 most frequent props keys for a specific site over
+the past 6 months.</p>
   </section>
 </section>
-<section class="detail" id="remove_changeset/1">
+<section class="detail" id="disallow/2">
 
   <div class="detail-header">
-    <a href="#remove_changeset/1" class="detail-link" title="Link to this function">
+    <a href="#disallow/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">remove_changeset(user)</h1>
+    <h1 class="signature" translate="no">disallow(site, prop)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L77" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L36" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -381,23 +377,24 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> remove_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> disallow(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="#t:prop/0">prop</a>()) ::
+  {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
-<p>Removes the grace period from the User completely.</p>
+
   </section>
 </section>
-<section class="detail" id="start_changeset/2">
+<section class="detail" id="enabled_for?/1">
 
   <div class="detail-header">
-    <a href="#start_changeset/2" class="detail-link" title="Link to this function">
+    <a href="#enabled_for?/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_changeset(user, allowance_required)</h1>
+    <h1 class="signature" translate="no">enabled_for?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L36" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L99" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -407,26 +404,87 @@ false if the user is nil or there is no grace period.</p>
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
-  <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
-
-      </div>
-
-<p>Starts a account locking grace period of 7 days by changing the User struct.</p>
   </section>
 </section>
-<section class="detail" id="start_manual_lock_changeset/2">
+<section class="detail" id="max_prop_key_length/0">
 
   <div class="detail-header">
-    <a href="#start_manual_lock_changeset/2" class="detail-link" title="Link to this function">
+    <a href="#max_prop_key_length/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_manual_lock_changeset(user, allowance_required)</h1>
+    <h1 class="signature" translate="no">max_prop_key_length()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L53" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L14" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="max_prop_value_length/0">
+
+  <div class="detail-header">
+    <a href="#max_prop_value_length/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">max_prop_value_length()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L17" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="max_props/0">
+
+  <div class="detail-header">
+    <a href="#max_props/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">max_props()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L11" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="suggest_keys_to_allow/2">
+
+    <span id="suggest_keys_to_allow/1"></span>
+
+  <div class="detail-header">
+    <a href="#suggest_keys_to_allow/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">suggest_keys_to_allow(site, limit \\ 300)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -438,14 +496,13 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_manual_lock_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
-  <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> suggest_keys_to_allow(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]</pre>
 
       </div>
 
-<p>Starts a manual account locking grace period by changing the User struct. 
-Manual locking means the grace period can only be removed manually from the
-CRM.</p>
+<p>Queries the events table to fetch the 300 most frequent prop keys
+for a specific site over the past 6 months, excluding keys that are already
+allowed.</p>
   </section>
 </section>
 
