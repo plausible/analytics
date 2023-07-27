@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
         :if={length(@suggestions) > 0}
         title="Use this to add any existing properties from your past events into your settings. This allows you to set up properties without having to manually enter each item."
         class="mt-1 text-sm hover:underline text-indigo-600 dark:text-indigo-400"
-        phx-click="auto-import"
+        phx-click="allow-existing-props"
       >
         Already sending custom properties? Click to add all existing properties
       </button>
@@ -151,8 +151,8 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:noreply, assign(socket, site: site)}
   end
 
-  def handle_event("auto-import", _params, socket) do
-    {:ok, site} = Plausible.Props.auto_import(socket.assigns.site)
+  def handle_event("allow-existing-props", _params, socket) do
+    {:ok, site} = Plausible.Props.allow_existing_props(socket.assigns.site)
 
     {:noreply,
      assign(socket,

@@ -132,12 +132,12 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
     assert doc =~ "No properties configured for this site yet"
   end
 
-  test "clicking auto-import imports from events", %{conn: conn, site: site} do
+  test "clicking allow existing props button saves props from events", %{conn: conn, site: site} do
     {:ok, lv, _doc} = get_liveview(conn, site)
 
     doc =
       lv
-      |> element(~s/button[phx-click="auto-import"]/)
+      |> element(~s/button[phx-click="allow-existing-props"]/)
       |> render_click()
 
     assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "amount"
@@ -145,15 +145,15 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
     assert text_of_element(doc, ~s/ul#allowed-props li#prop-2 span/) == "is_customer"
   end
 
-  test "does not show auto-import button when there are no events with props", %{
+  test "does not show allow existing props button when there are no events with props", %{
     conn: conn,
     user: user
   } do
     {:ok, _lv, doc} = get_liveview(conn, insert(:site, members: [user]))
-    refute element_exists?(doc, ~s/button[phx-click="auto-import"]/)
+    refute element_exists?(doc, ~s/button[phx-click="allow-existing-props"]/)
   end
 
-  test "does not show auto-import button after adding all suggestions", %{
+  test "does not show allow existing props button after adding all suggestions", %{
     conn: conn,
     site: site
   } do
@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
     _doc = select_and_submit(lv, 0)
     doc = select_and_submit(lv, 0)
 
-    refute element_exists?(doc, ~s/button[phx-click="auto-import"]/)
+    refute element_exists?(doc, ~s/button[phx-click="allow-existing-props"]/)
   end
 
   defp get_liveview(conn, site) do

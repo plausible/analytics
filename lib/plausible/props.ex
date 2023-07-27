@@ -1,6 +1,6 @@
 defmodule Plausible.Props do
   @moduledoc """
-  Context module for handling custom event properties.
+  Context module for handling custom event props.
   """
 
   import Ecto.Query
@@ -57,12 +57,12 @@ defmodule Plausible.Props do
     end)
   end
 
-  @spec auto_import(Plausible.Site.t()) :: {:ok, Plausible.Site.t()}
+  @spec allow_existing_props(Plausible.Site.t()) :: {:ok, Plausible.Site.t()}
   @doc """
   Allows the #{@max_props} most frequent props keys for a specific site over
   the past 6 months.
   """
-  def auto_import(%Plausible.Site{} = site) do
+  def allow_existing_props(%Plausible.Site{} = site) do
     props_to_allow =
       site
       |> suggest_keys_to_allow()
