@@ -43,6 +43,7 @@ All notable changes to this project will be documented in this file.
 - Fix bug when using multiple [wildcard goal filters](https://github.com/plausible/analytics/pull/3015)
 - Fix a bug where realtime would fail with imported data
 - Fix a bug where the country name was not shown when [filtering through the map](https://github.com/plausible/analytics/issues/3086)
+- Fix [broken interval selection](https://github.com/plausible/analytics/issues/3086) in the all time view
 
 ### Changed
 - Treat page filter as entry page filter for `bounce_rate`

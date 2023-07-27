@@ -130,6 +130,16 @@ defmodule Plausible.Stats.QueryTest do
     assert q.interval == "month"
   end
 
+  test "all time uses passed interval different from the default interval" do
+    site = Map.put(@site, :stats_start_date, Timex.now() |> Timex.shift(months: -1))
+    q = Query.from(site, %{"period" => "all", "interval" => "week"})
+
+    assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)
+    assert q.date_range.last == Timex.today()
+    assert q.period == "all"
+    assert q.interval == "week"
+  end
+
   test "defaults to 30 days format" do
     assert Query.from(@site, %{}) == Query.from(@site, %{"period" => "30d"})
   end
