@@ -853,7 +853,21 @@ defmodule PlausibleWeb.SiteControllerTest do
       site: site,
       user: user
     } do
+      conn = post(conn, "/sites/#{site.domain}/weekly-report/enable")
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You will receive an email report"
+
+      report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+      assert report.recipients == [user.email]
+    end
+
+    test "creates a weekly report record twice (e.g. from a second tab)", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
       post(conn, "/sites/#{site.domain}/weekly-report/enable")
+      conn = post(conn, "/sites/#{site.domain}/weekly-report/enable")
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You will receive an email report"
 
       report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
       assert report.recipients == [user.email]
@@ -929,8 +943,22 @@ defmodule PlausibleWeb.SiteControllerTest do
       site: site,
       user: user
     } do
-      post(conn, "/sites/#{site.domain}/monthly-report/enable")
+      conn = post(conn, "/sites/#{site.domain}/monthly-report/enable")
 
+      report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+      assert report.recipients == [user.email]
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You will receive an email report"
+    end
+
+    test "enable monthly report twice (e.g. from a second tab)", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      post(conn, "/sites/#{site.domain}/monthly-report/enable")
+      conn = post(conn, "/sites/#{site.domain}/monthly-report/enable")
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You will receive an email report"
       report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
       assert report.recipients == [user.email]
     end

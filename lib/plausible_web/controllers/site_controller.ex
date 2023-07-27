@@ -452,11 +452,14 @@ defmodule PlausibleWeb.SiteController do
   def enable_weekly_report(conn, _params) do
     site = conn.assigns[:site]
 
-    Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
-      site_id: site.id,
-      recipients: [conn.assigns[:current_user].email]
-    })
-    |> Repo.insert!()
+    result =
+      Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
+        site_id: site.id,
+        recipients: [conn.assigns[:current_user].email]
+      })
+      |> Repo.insert()
+
+    :ok = tolerate_unique_contraint_violation(result, "weekly_reports_site_id_index")
 
     conn
     |> put_flash(:success, "You will receive an email report every Monday going forward")
@@ -502,11 +505,15 @@ defmodule PlausibleWeb.SiteController do
   def enable_monthly_report(conn, _params) do
     site = conn.assigns[:site]
 
-    Plausible.Site.MonthlyReport.changeset(%Plausible.Site.MonthlyReport{}, %{
-      site_id: site.id,
-      recipients: [conn.assigns[:current_user].email]
-    })
-    |> Repo.insert!()
+    result =
+      %Plausible.Site.MonthlyReport{}
+      |> Plausible.Site.MonthlyReport.changeset(%{
+        site_id: site.id,
+        recipients: [conn.assigns[:current_user].email]
+      })
+      |> Repo.insert()
+
+    :ok = tolerate_unique_contraint_violation(result, "monthly_reports_site_id_index")
 
     conn
     |> put_flash(:success, "You will receive an email report every month going forward")
@@ -965,5 +972,23 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
+  end
+
+  defp tolerate_unique_contraint_violation(result, name) do
+    case result do
+      {:ok, _} ->
+        :ok
+
+      {:error,
+       %{
+         errors: [
+           site_id: {_, [constraint: :unique, constraint_name: ^name]}
+         ]
+       }} ->
+        :ok
+
+      other ->
+        other
+    end
   end
 end
