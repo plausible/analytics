@@ -122,12 +122,12 @@ defmodule PlausibleWeb.Live.PropsSettings do
       {:ok, site} ->
         send_update(ComboBox, id: :prop_input, display_value: "", submit_value: "")
 
-        socket =
-          socket
-          |> assign(site: site, form: new_form(site))
-          |> rebuild_suggestions()
-
-        {:noreply, socket}
+        {:noreply,
+         assign(socket,
+           site: site,
+           form: new_form(site),
+           suggestions: rebuild_suggestions(socket.assigns.suggestions, site.allowed_event_props)
+         )}
 
       {:error, changeset} ->
         {:noreply,
@@ -145,24 +145,23 @@ defmodule PlausibleWeb.Live.PropsSettings do
   def handle_event("auto-import", _params, socket) do
     {:ok, site} = Plausible.Props.auto_import(socket.assigns.site)
 
-    socket =
-      socket
-      |> assign(site: site)
-      |> rebuild_suggestions()
-
-    {:noreply, socket}
+    {:noreply,
+     assign(socket,
+       site: site,
+       suggestions: rebuild_suggestions(socket.assigns.suggestions, site.allowed_event_props)
+     )}
   end
 
-  defp rebuild_suggestions(socket) do
-    allowed_event_props = socket.assigns.site.allowed_event_props || []
+  defp rebuild_suggestions(suggestions, allowed_event_props) do
+    allowed_event_props = allowed_event_props || []
 
     suggestions =
-      for {suggestion, _} <- socket.assigns.suggestions,
+      for {suggestion, _} <- suggestions,
           suggestion not in allowed_event_props,
           do: {suggestion, suggestion}
 
     send_update(ComboBox, id: :prop_input, suggestions: suggestions)
-    assign(socket, suggestions: suggestions)
+    suggestions
   end
 
   defp new_form(site) do
