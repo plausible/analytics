@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
         Configured properties
       </h1>
 
-      <h2 class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
+      <h2 class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-400">
         In order for the properties to show up on your dashboard, you need to
         explicitly add them below first
       </h2>
