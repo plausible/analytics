@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Components.Generic do
   def notice(assigns) do
     ~H"""
     <div class={[
-      "rounded-md bg-yellow-50 p-4 dark:bg-transparent dark:border border-yellow-200",
+      "rounded-md bg-yellow-50 dark:bg-yellow-100 p-4",
       @class
     ]}>
       <div class="flex">
@@ -30,8 +30,8 @@ defmodule PlausibleWeb.Components.Generic do
           </svg>
         </div>
         <div class="ml-3">
-          <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-400"><%= @title %></h3>
-          <div class="mt-2 text-sm text-yellow-700 dark:text-gray-400">
+          <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-900"><%= @title %></h3>
+          <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-800">
             <p>
               <%= render_slot(@inner_block) %>
             </p>

@@ -259,6 +259,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/people", SiteController, :settings_people
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
+    get "/:website/settings/properties", SiteController, :settings_props
 
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports

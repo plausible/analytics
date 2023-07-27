@@ -200,8 +200,8 @@ defmodule Plausible.Ingestion.Request do
     |> validate_props()
   end
 
-  @max_prop_key_length 300
-  @max_prop_value_length 2000
+  @max_prop_key_length Plausible.Props.max_prop_key_length()
+  @max_prop_value_length Plausible.Props.max_prop_value_length()
   defp validate_props(changeset) do
     case Changeset.get_field(changeset, :props) do
       props ->
