@@ -73,12 +73,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   test "saving from manual input adds to the list", %{conn: conn, site: site} do
     {:ok, lv, _doc} = get_liveview(conn, site)
 
-    lv
-    |> element("input#prop_input")
-    |> render_change(%{
-      "_target" => ["display-prop_input"],
-      "display-prop_input" => "Operating System"
-    })
+    type_into_combo(lv, "Operating System")
 
     doc =
       lv
@@ -87,6 +82,39 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
 
     assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "Operating System"
     refute doc =~ "No properties configured for this site yet"
+  end
+
+  test "shows error when input is invalid", %{conn: conn, site: site} do
+    {:ok, lv, _doc} = get_liveview(conn, site)
+
+    type_into_combo(lv, "   ")
+    doc = lv |> form("#props-form") |> render_submit()
+
+    assert text_of_element(doc, ~s/div#prop-errors div/) == "must be between 1 and 300 characters"
+    assert doc =~ "No properties configured for this site yet"
+  end
+
+  test "shows error when reached prop limit", %{conn: conn, site: site} do
+    props = for i <- 1..300, do: "my-prop-#{i}"
+    {:ok, site} = Plausible.Props.allow(site, props)
+    {:ok, lv, _doc} = get_liveview(conn, site)
+
+    type_into_combo(lv, "my-prop-301")
+    doc = lv |> form("#props-form") |> render_submit()
+
+    assert text_of_element(doc, ~s/div#prop-errors div/) == "should have at most 300 item(s)"
+  end
+
+  test "clears error message when user fixes input", %{conn: conn, site: site} do
+    {:ok, lv, _doc} = get_liveview(conn, site)
+
+    type_into_combo(lv, "   ")
+    doc = lv |> form("#props-form") |> render_submit()
+    assert text_of_element(doc, ~s/div#prop-errors div/) == "must be between 1 and 300 characters"
+
+    type_into_combo(lv, "my-prop")
+    doc = lv |> form("#props-form") |> render_submit()
+    refute element_exists?(doc, ~s/div#prop-errors/)
   end
 
   test "clicking remove button removes from the list", %{conn: conn, site: site} do
@@ -151,5 +179,14 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
     lv
     |> form("#props-form")
     |> render_submit()
+  end
+
+  defp type_into_combo(lv, input) do
+    lv
+    |> element("input#prop_input")
+    |> render_change(%{
+      "_target" => ["display-prop_input"],
+      "display-prop_input" => input
+    })
   end
 end

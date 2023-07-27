@@ -19,12 +19,16 @@ defmodule Plausible.Props do
   @spec allow(Plausible.Site.t(), [prop()] | prop()) ::
           {:ok, Plausible.Site.t()} | {:error, Ecto.Changeset.t()}
   def allow(site, prop_or_props) do
+    site
+    |> allow_changeset(prop_or_props)
+    |> Plausible.Repo.update()
+  end
+
+  def allow_changeset(site, prop_or_props) do
     old_props = site.allowed_event_props || []
     new_props = List.wrap(prop_or_props) ++ old_props
 
-    site
-    |> changeset(new_props)
-    |> Plausible.Repo.update()
+    changeset(site, new_props)
   end
 
   @spec disallow(Plausible.Site.t(), prop()) ::

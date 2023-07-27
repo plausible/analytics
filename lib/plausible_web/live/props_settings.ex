@@ -30,6 +30,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
      assign(socket,
        site: site,
        current_user_id: user_id,
+       form: new_form(site),
        suggestions: suggestions
      )}
   end
@@ -39,20 +40,26 @@ defmodule PlausibleWeb.Live.PropsSettings do
     <div id="props-settings-main">
       <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
 
-      <form id="props-form" phx-submit="allow" class="flex space-x-2">
-        <.live_component
-          id={:prop_input}
-          submit_name="prop"
-          class="flex-1"
-          module={ComboBox}
-          suggest_mod={ComboBox.StaticSearch}
-          options={@suggestions}
-          required
-          creatable
-        />
+      <.form :let={f} for={@form} id="props-form" phx-submit="allow">
+        <div class="flex space-x-2">
+          <.live_component
+            id={:prop_input}
+            submit_name="prop"
+            class="flex-1"
+            module={ComboBox}
+            suggest_mod={ComboBox.StaticSearch}
+            options={@suggestions}
+            required
+            creatable
+          />
 
-        <button id="allow" type="submit" class="button">+ Add</button>
-      </form>
+          <button id="allow" type="submit" class="button">+ Add</button>
+        </div>
+
+        <div :if={length(f[:allowed_event_props].errors) > 0} id="prop-errors" role="alert">
+          <%= PlausibleWeb.ErrorHelpers.error_tag(f, :allowed_event_props) %>
+        </div>
+      </.form>
 
       <button
         :if={length(@suggestions) > 0}
@@ -63,7 +70,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
         Or auto-import properties from your events
       </button>
 
-      <div class="mt-3">
+      <div class="mt-5">
         <%= if is_list(@site.allowed_event_props) && length(@site.allowed_event_props) > 0 do %>
           <ul id="allowed-props" class="divide-gray-200 divide-y dark:divide-gray-600">
             <li
@@ -111,16 +118,23 @@ defmodule PlausibleWeb.Live.PropsSettings do
   end
 
   def handle_event("allow", %{"prop" => prop}, socket) do
-    {:ok, site} = Plausible.Props.allow(socket.assigns.site, prop)
+    case Plausible.Props.allow(socket.assigns.site, prop) do
+      {:ok, site} ->
+        send_update(ComboBox, id: :prop_input, display_value: "", submit_value: "")
 
-    send_update(ComboBox, id: :prop_input, display_value: "", submit_value: "")
+        socket =
+          socket
+          |> assign(site: site, form: new_form(site))
+          |> rebuild_suggestions()
 
-    socket =
-      socket
-      |> assign(site: site)
-      |> rebuild_suggestions()
+        {:noreply, socket}
 
-    {:noreply, socket}
+      {:error, changeset} ->
+        {:noreply,
+         assign(socket,
+           form: to_form(Map.put(changeset, :action, :validate))
+         )}
+    end
   end
 
   def handle_event("disallow", %{"prop" => prop}, socket) do
@@ -149,5 +163,9 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
     send_update(ComboBox, id: :prop_input, suggestions: suggestions)
     assign(socket, suggestions: suggestions)
+  end
+
+  defp new_form(site) do
+    to_form(Plausible.Props.allow_changeset(site, []))
   end
 end
