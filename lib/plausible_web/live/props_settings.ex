@@ -37,10 +37,19 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   def render(assigns) do
     ~H"""
-    <div id="props-settings-main">
+    <section id="props-settings-main">
       <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
 
-      <.form :let={f} for={@form} id="props-form" phx-submit="allow">
+      <h1 class="text-normal leading-6 font-medium text-gray-900 dark:text-gray-100">
+        Configured properties
+      </h1>
+
+      <h2 class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
+        In order for the properties to show up on your dashboard, you need to
+        explicitly add them below first
+      </h2>
+
+      <.form :let={f} for={@form} id="props-form" phx-submit="allow" class="mt-5">
         <div class="flex space-x-2">
           <.live_component
             id={:prop_input}
@@ -63,11 +72,11 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
       <button
         :if={length(@suggestions) > 0}
-        title="Use this to import any existing properties from your past events into your settings. This allows you to set up properties without having to manually enter each item."
+        title="Use this to add any existing properties from your past events into your settings. This allows you to set up properties without having to manually enter each item."
         class="mt-1 text-sm hover:underline text-indigo-600 dark:text-indigo-400"
         phx-click="auto-import"
       >
-        Or auto-import properties from your events
+        Already sending custom properties? Click to add all existing properties
       </button>
 
       <div class="mt-5">
@@ -113,7 +122,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
           </p>
         <% end %>
       </div>
-    </div>
+    </section>
     """
   end
 
