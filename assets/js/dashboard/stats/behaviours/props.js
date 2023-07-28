@@ -45,7 +45,9 @@ export default function Properties(props) {
         metrics={[
           {name: 'visitors', label: 'Visitors', plot: true},
           {name: 'events', label: 'Events'},
-          query.filters.goal ? CR_METRIC : PERCENTAGE_METRIC
+          query.filters.goal ? CR_METRIC : PERCENTAGE_METRIC,
+          {name: 'total_revenue', label: 'Revenue'},
+          {name: 'average_revenue', label: 'Average'}
         ]}
         detailsLink={url.sitePath(site, `/custom-prop-values/${propKey}`)}
         query={query}

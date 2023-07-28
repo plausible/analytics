@@ -1,5 +1,6 @@
 import numberFormatter from "../../util/number-formatter"
 import React from "react"
+import Money from "../behaviours/money"
 
 export const VISITORS_METRIC = {
   name: 'visitors',
@@ -24,7 +25,9 @@ export function maybeWithCR(metrics, query) {
 }
 
 export function displayMetricValue(value, metric) {
-  if (metric === PERCENTAGE_METRIC) {
+  if (['total_revenue', 'average_revenue'].includes(metric.name)) {
+    return <Money formatted={value} />
+  } else if (metric === PERCENTAGE_METRIC) {
     return value
   } else if (metric === CR_METRIC) {
     return `${value}%`
