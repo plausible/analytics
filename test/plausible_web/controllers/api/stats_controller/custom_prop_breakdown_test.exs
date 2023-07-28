@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   use PlausibleWeb.ConnCase
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns breakdown by a custom property", %{conn: conn, site: site} do
       prop_key = "parim_s6ber"
@@ -39,6 +39,30 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "name" => "Sipsik",
                  "events" => 1,
                  "percentage" => 25.0
+               }
+             ]
+    end
+
+    test "ignores imported data when calculating percentage", %{conn: conn, site: site} do
+      prop_key = "parim_s6ber"
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
+        build(:imported_visitors, visitors: 2)
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 1,
+                 "name" => "K2sna Kalle",
+                 "events" => 1,
+                 "percentage" => 100.0
                }
              ]
     end
