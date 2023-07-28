@@ -150,7 +150,8 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
         build(:pageview, operating_system: "Mac"),
         build(:pageview, operating_system: "Android"),
         build(:imported_operating_systems, operating_system: "Mac"),
-        build(:imported_operating_systems, operating_system: "Android")
+        build(:imported_operating_systems, operating_system: "Android"),
+        build(:imported_visitors, visitors: 2)
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day")

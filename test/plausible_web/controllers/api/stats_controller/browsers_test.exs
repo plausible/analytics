@@ -113,7 +113,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       populate_stats(site, [
         build(:pageview, browser: "Chrome"),
         build(:imported_browsers, browser: "Chrome"),
-        build(:imported_browsers, browser: "Firefox")
+        build(:imported_browsers, browser: "Firefox"),
+        build(:imported_visitors, visitors: 2)
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")

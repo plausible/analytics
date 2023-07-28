@@ -9,7 +9,9 @@ import PagesModal from './stats/modals/pages'
 import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
 import ModalTable from './stats/modals/table'
+import PropsModal from './stats/modals/props'
 import FilterModal from './stats/modals/filter-modal'
+import * as url from './util/url';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -49,13 +51,16 @@ export default function Router({site, loggedIn, currentUserRole}) {
             <ExitPagesModal site={site} />
           </Route>
           <Route path="/:domain/countries">
-            <ModalTable title="Top countries" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/countries`} filter={{country: 'code', country_name: 'name'}} keyLabel="Country" renderIcon={renderCountryIcon} />
+            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filter={{country: 'code', country_name: 'name'}} keyLabel="Country" renderIcon={renderCountryIcon} />
           </Route>
           <Route path="/:domain/regions">
-            <ModalTable title="Top regions" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/regions`} filter={{region: 'code', region_name: 'name'}} keyLabel="Region" renderIcon={renderRegionIcon} />
+            <ModalTable title="Top regions" site={site} endpoint={url.apiPath(site, '/regions')} filter={{region: 'code', region_name: 'name'}} keyLabel="Region" renderIcon={renderRegionIcon} />
           </Route>
           <Route path="/:domain/cities">
-            <ModalTable title="Top cities" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/cities`} filter={{city: 'code', city_name: 'name'}} keyLabel="City" renderIcon={renderCityIcon} />
+            <ModalTable title="Top cities" site={site} endpoint={url.apiPath(site, '/cities')} filter={{city: 'code', city_name: 'name'}} keyLabel="City" renderIcon={renderCityIcon} />
+          </Route>
+          <Route path="/:domain/custom-prop-values/:prop_key">
+            <PropsModal site={site}/>
           </Route>
           <Route path={["/:domain/filter/:field"]}>
             <FilterModal site={site} />
