@@ -929,4 +929,168 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
       assert 0 == Enum.sum(comparison_plot)
     end
   end
+
+  describe "GET /api/stats/main-graph - total_revenue plot" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "plots total_revenue for a month", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("19.90"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-05 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.31"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("20.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=total_revenue&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert plot == [
+               13.29,
+               0.0,
+               0.0,
+               0.0,
+               19.9,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               30.31
+             ]
+    end
+  end
+
+  describe "GET /api/stats/main-graph - average_revenue plot" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "plots total_revenue for a month", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("13.29"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("50.50"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("19.90"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-05 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("10.31"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("20.0"),
+          revenue_reporting_currency: "USD",
+          timestamp: ~N[2021-01-31 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=average_revenue&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+
+      assert plot == [
+               31.895,
+               0.0,
+               0.0,
+               0.0,
+               19.9,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               0.0,
+               15.155
+             ]
+    end
+  end
 end

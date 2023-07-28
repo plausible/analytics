@@ -69,14 +69,14 @@ defmodule Plausible.MixProject do
       {:csv, "~> 2.3"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:double, "~> 0.8.0", only: :test},
-      {:ecto, "~> 3.9.0"},
-      {:ecto_sql, "~> 3.9.0"},
+      {:ecto, "~> 3.10.0"},
+      {:ecto_sql, "~> 3.10.0"},
       {:envy, "~> 1.1.1"},
       {:ex_machina, "~> 2.3", only: [:dev, :test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:exvcr, "~> 0.11", only: :test},
       {:finch, "~> 0.14.0", override: true},
-      {:floki, "~> 0.32.0", only: [:dev, :test]},
+      {:floki, "~> 0.34.3", only: [:dev, :test]},
       {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
       {:locus, "~> 2.3"},
@@ -118,7 +118,9 @@ defmodule Plausible.MixProject do
       {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.0"},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
-      {:ex_money, "~> 5.12"}
+      {:ex_money, "~> 5.12"},
+      {:mjml_eex, "~> 0.9.0"},
+      {:mjml, "~> 1.5.0"}
     ]
   end
 

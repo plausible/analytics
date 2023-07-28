@@ -2,8 +2,10 @@ import "../css/app.css"
 import "flatpickr/dist/flatpickr.min.css"
 import "./polyfills/closest"
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
-import "phoenix_html"
 import 'alpinejs'
+import "./liveview/live_socket"
+import "./liveview/suggestions_dropdown"
+import "./liveview/phx_events"
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 
@@ -49,7 +51,7 @@ if (registerForm) {
       }
     }
     /* eslint-disable-next-line no-undef */
-    plausible('Signup', {callback: submitForm});
+    plausible('Signup', { callback: submitForm });
   })
 }
 
@@ -58,12 +60,12 @@ const changelogNotification = document.getElementById('changelog-notification')
 if (changelogNotification) {
   showChangelogNotification(changelogNotification)
 
-  fetch('https://plausible.io/changes.txt', {headers: {'Content-Type': 'text/plain'}})
+  fetch('https://plausible.io/changes.txt', { headers: { 'Content-Type': 'text/plain' } })
     .then((res) => res.text())
     .then((res) => {
       localStorage.lastChangelogUpdate = new Date(res).getTime()
       showChangelogNotification(changelogNotification)
-  })
+    })
 }
 
 function showChangelogNotification(el) {
@@ -71,7 +73,7 @@ function showChangelogNotification(el) {
   const lastChecked = Number(localStorage.lastChangelogClick)
 
   const hasNewUpdateSinceLastClicked = lastUpdated > lastChecked
-  const notOlderThanThreeDays = Date.now() - lastUpdated <  1000 * 60 * 60 * 72
+  const notOlderThanThreeDays = Date.now() - lastUpdated < 1000 * 60 * 60 * 72
   if ((!lastChecked || hasNewUpdateSinceLastClicked) && notOlderThanThreeDays) {
     el.innerHTML = `
       <a href="https://plausible.io/changelog" target="_blank">

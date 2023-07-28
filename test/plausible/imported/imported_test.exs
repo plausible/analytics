@@ -988,9 +988,9 @@ defmodule Plausible.ImportedTest do
 
       assert stats = json_response(conn, 200)
       assert length(stats) == 3
-      assert %{"name" => "Firefox", "visitors" => 2, "percentage" => 50} in stats
-      assert %{"name" => "Mobile App", "visitors" => 1, "percentage" => 25} in stats
-      assert %{"name" => "Chrome", "visitors" => 1, "percentage" => 25} in stats
+      assert %{"name" => "Firefox", "visitors" => 2, "percentage" => 50.0} in stats
+      assert %{"name" => "Mobile App", "visitors" => 1, "percentage" => 25.0} in stats
+      assert %{"name" => "Chrome", "visitors" => 1, "percentage" => 25.0} in stats
     end
 
     test "OS data imported from Google Analytics", %{conn: conn, site: site} do

@@ -225,6 +225,18 @@ log_failed_login_attempts =
   |> get_var_from_path_or_env("LOG_FAILED_LOGIN_ATTEMPTS", "false")
   |> String.to_existing_atom()
 
+websocket_url = get_var_from_path_or_env(config_dir, "WEBSOCKET_URL", "")
+
+if byte_size(websocket_url) > 0 and
+     not String.ends_with?(URI.new!(websocket_url).host, base_url.host) do
+  raise """
+  Cross-domain websocket authentication is not supported for this server.
+
+  WEBSOCKET_URL=#{websocket_url} - host must be: '#{base_url.host}',
+  because BASE_URL=#{base_url}.
+  """
+end
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -247,7 +259,8 @@ config :plausible, PlausibleWeb.Endpoint,
     transport_options: [max_connections: :infinity],
     protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
   ],
-  secret_key_base: secret_key_base
+  secret_key_base: secret_key_base,
+  websocket_url: websocket_url
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
@@ -292,9 +305,14 @@ config :plausible, :google,
   reporting_api_url: "https://analyticsreporting.googleapis.com",
   max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
 
+maybe_ch_ipv6 =
+  get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
+  |> String.to_existing_atom()
+
 ch_transport_opts = [
   keepalive: true,
-  show_econnreset: true
+  show_econnreset: true,
+  inet6: maybe_ch_ipv6
 ]
 
 config :plausible, Plausible.ClickhouseRepo,

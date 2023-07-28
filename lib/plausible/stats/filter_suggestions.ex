@@ -134,7 +134,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
     from(e in base_event_query(site, Query.remove_event_filters(query, [:props])),
-      inner_lateral_join: meta in "meta",
+      array_join: meta in "meta",
       as: :meta,
       select: meta.key,
       where: fragment("? ilike ?", meta.key, ^filter_query),
@@ -154,7 +154,7 @@ defmodule Plausible.Stats.FilterSuggestions do
 
     none_q =
       from(e in base_event_query(site, Query.remove_event_filters(query, [:props])),
-        left_lateral_join: meta in "meta",
+        left_array_join: meta in "meta",
         as: :meta,
         select: "(none)",
         where: fragment("not has(?, ?)", field(e, :"meta.key"), ^key),
@@ -163,7 +163,7 @@ defmodule Plausible.Stats.FilterSuggestions do
 
     search_q =
       from(e in base_event_query(site, query),
-        inner_lateral_join: meta in "meta",
+        array_join: meta in "meta",
         as: :meta,
         select: meta.value,
         where: meta.key == ^key and fragment("? ilike ?", meta.value, ^filter_query),

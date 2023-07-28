@@ -1,0 +1,59 @@
+<section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
+  <PlausibleWeb.Components.Generic.notice class="rounded-t-md rounded-b-none">
+    Properties is an upcoming premium feature that's free-to-use during the
+    private preview. Pricing will be announced soon. See examples and learn
+    more in <.link
+      class="font-medium text-yellow underline hover:text-yellow-600"
+      href="https://plausible.io/docs/custom-pageview-props"
+      target="_blank"
+      rel="noreferrer"
+    >our docs</.link>.
+  </PlausibleWeb.Components.Generic.notice>
+
+  <div class="py-6 px-4 sm:p-6">
+    <header class="w-full flex">
+      <span class="flex-1">
+        <h1 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+          Properties
+        </h1>
+
+        <h2 class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-400">
+          Attach custom properties when sending a pageview or an event to
+          create custom metrics
+        </h2>
+      </span>
+
+      <.link
+        href="https://plausible.io/docs/custom-pageview-props"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <svg
+          class="w-6 h-6 text-gray-400"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+            clip-rule="evenodd"
+          >
+          </path>
+        </svg>
+      </.link>
+    </header>
+
+    <PlausibleWeb.Components.Site.Feature.toggle
+      site={@site}
+      setting={:props_enabled}
+      label="Show properties in the dashboard"
+      conn={@conn}
+    >
+      <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,
+        id: "props-form",
+        session: %{"site_id" => @site.id, "domain" => @site.domain}
+      ) %>
+    </PlausibleWeb.Components.Site.Feature.toggle>
+  </div>
+</section>

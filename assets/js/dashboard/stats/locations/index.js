@@ -6,6 +6,7 @@ import CountriesMap from './map'
 import * as api from '../../api'
 import {apiPath, sitePath} from '../../util/url'
 import ListReport from '../reports/list'
+import { VISITORS_METRIC, maybeWithCR } from '../reports/metrics';
 
 function Countries({query, site, onClick}) {
   function fetchData() {
@@ -18,12 +19,17 @@ function Countries({query, site, onClick}) {
     return <span className="mr-1">{country.flag}</span>
   }
 
+  function getFilterFor(listItem) {
+    return { country: listItem['code'], country_labels: listItem['name'] }
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{country: 'code', country_labels: 'name'}}
+      getFilterFor={getFilterFor}
       onClick={onClick}
       keyLabel="Country"
+      metrics={maybeWithCR([VISITORS_METRIC], query)}
       detailsLink={sitePath(site, '/countries')}
       query={query}
       renderIcon={renderIcon}
@@ -41,12 +47,17 @@ function Regions({query, site, onClick}) {
     return <span className="mr-1">{region.country_flag}</span>
   }
 
+  function getFilterFor(listItem) {
+    return {region: listItem['code'], region_labels: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{region: 'code', region_labels: 'name'}}
+      getFilterFor={getFilterFor}
       onClick={onClick}
       keyLabel="Region"
+      metrics={[VISITORS_METRIC]}
       detailsLink={sitePath(site, '/regions')}
       query={query}
       renderIcon={renderIcon}
@@ -64,11 +75,16 @@ function Cities({query, site}) {
     return <span className="mr-1">{city.country_flag}</span>
   }
 
+  function getFilterFor(listItem) {
+    return {city: listItem['code'], city_labels: listItem['name']}
+  }
+
   return (
     <ListReport
       fetchData={fetchData}
-      filter={{city: 'code', city_labels: 'name'}}
+      getFilterFor={getFilterFor}
       keyLabel="City"
+      metrics={[VISITORS_METRIC]}
       detailsLink={sitePath(site, '/cities')}
       query={query}
       renderIcon={renderIcon}
@@ -167,25 +183,19 @@ export default class Locations extends React.Component {
 
 	render() {
     return (
-      <div
-        className="stats-item flex flex-col w-full mt-6 stats-item--has-header"
-      >
-        <div
-          className="stats-item-header flex flex-col flex-grow bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative"
-        >
-          <div className="w-full flex justify-between">
-            <h3 className="font-bold dark:text-gray-100">
-              {labelFor[this.state.mode] || 'Locations'}
-            </h3>
-            <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-              { this.renderPill('Map', 'map') }
-              { this.renderPill('Countries', 'countries') }
-              { this.renderPill('Regions', 'regions') }
-              { this.renderPill('Cities', 'cities') }
-            </div>
+      <div>
+        <div className="w-full flex justify-between">
+          <h3 className="font-bold dark:text-gray-100">
+            {labelFor[this.state.mode] || 'Locations'}
+          </h3>
+          <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
+            { this.renderPill('Map', 'map') }
+            { this.renderPill('Countries', 'countries') }
+            { this.renderPill('Regions', 'regions') }
+            { this.renderPill('Cities', 'cities') }
           </div>
-          { this.renderContent() }
         </div>
+        {this.renderContent()}
       </div>
     )
   }

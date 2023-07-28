@@ -690,6 +690,141 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{"name" => "Conversion rate", "value" => 33.3} in res["top_stats"]
     end
+
+    test "returns average and total when filtering by a revenue goal", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+      insert(:goal, site: site, event_name: "AddToCart", currency: "EUR")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new(13_29),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new(19_90),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "AddToCart",
+          revenue_reporting_amount: Decimal.new(10_31),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "AddToCart",
+          revenue_reporting_amount: Decimal.new(20_00),
+          revenue_reporting_currency: "EUR"
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment"})
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
+      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+
+      assert %{
+               "name" => "Average revenue",
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"}
+             } in top_stats
+
+      assert %{
+               "name" => "Total revenue",
+               "value" => %{"long" => "$3,319.00", "short" => "$3.3K"}
+             } in top_stats
+    end
+
+    test "returns average and total when filtering by many revenue goals with same currency", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+      insert(:goal, site: site, event_name: "Payment2", currency: "USD")
+      insert(:goal, site: site, event_name: "AddToCart", currency: "EUR")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new(13_29),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new(19_90),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment2",
+          revenue_reporting_amount: Decimal.new(13_29),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment2",
+          revenue_reporting_amount: Decimal.new(19_90),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "AddToCart",
+          revenue_reporting_amount: Decimal.new(10_31),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "AddToCart",
+          revenue_reporting_amount: Decimal.new(20_00),
+          revenue_reporting_currency: "EUR"
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment|Payment2"})
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
+      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+
+      assert %{
+               "name" => "Average revenue",
+               "value" => %{"long" => "$1,659.50", "short" => "$1.7K"}
+             } in top_stats
+
+      assert %{
+               "name" => "Total revenue",
+               "value" => %{"long" => "$6,638.00", "short" => "$6.6K"}
+             } in top_stats
+    end
+
+    test "does not return average and total when filtering by many revenue goals with different currencies",
+         %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+      insert(:goal, site: site, event_name: "AddToCart", currency: "EUR")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new(13_29),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new(19_90),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "AddToCart",
+          revenue_reporting_amount: Decimal.new(10_31),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "AddToCart",
+          revenue_reporting_amount: Decimal.new(20_00),
+          revenue_reporting_currency: "EUR"
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment|AddToCart"})
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
+      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+
+      metrics = Enum.map(top_stats, & &1["name"])
+      refute "Average revenue" in metrics
+      refute "Total revenue" in metrics
+    end
   end
 
   describe "GET /api/stats/top-stats - with comparisons" do

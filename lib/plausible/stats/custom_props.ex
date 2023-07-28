@@ -13,7 +13,7 @@ defmodule Plausible.Stats.CustomProps do
   """
   def props_for_all_event_names(site, query) do
     from(e in base_event_query(site, query),
-      inner_lateral_join: meta in fragment("meta"),
+      array_join: meta in fragment("meta"),
       group_by: e.name,
       select: {e.name, fragment("groupArray(?)", meta.key)},
       distinct: true
@@ -34,14 +34,14 @@ defmodule Plausible.Stats.CustomProps do
     end
   end
 
-  defp fetch_prop_names(site, query) do
+  def fetch_prop_names(site, query) do
     case Query.get_filter_by_prefix(query, "event:props:") do
       {"event:props:" <> key, _} ->
         [key]
 
       _ ->
         from(e in base_event_query(site, query),
-          inner_lateral_join: meta in fragment("meta"),
+          array_join: meta in fragment("meta"),
           select: meta.key,
           distinct: true
         )

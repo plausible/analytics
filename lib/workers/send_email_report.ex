@@ -7,45 +7,54 @@ defmodule Plausible.Workers.SendEmailReport do
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"interval" => "weekly", "site_id" => site_id}}) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:weekly_report)
-    today = Timex.now(site.timezone) |> DateTime.to_date()
-    date = Timex.shift(today, weeks: -1) |> Timex.end_of_week() |> Date.to_iso8601()
-    query = Query.from(site, %{"period" => "7d", "date" => date})
 
-    for email <- site.weekly_report.recipients do
-      unsubscribe_link =
-        PlausibleWeb.Endpoint.url() <>
-          "/sites/#{URI.encode_www_form(site.domain)}/weekly-report/unsubscribe?email=#{email}"
+    if site do
+      today = Timex.now(site.timezone) |> DateTime.to_date()
+      date = Timex.shift(today, weeks: -1) |> Timex.end_of_week() |> Date.to_iso8601()
+      query = Query.from(site, %{"period" => "7d", "date" => date})
 
-      send_report(email, site, "Weekly", unsubscribe_link, query)
+      for email <- site.weekly_report.recipients do
+        unsubscribe_link =
+          PlausibleWeb.Endpoint.url() <>
+            "/sites/#{URI.encode_www_form(site.domain)}/weekly-report/unsubscribe?email=#{email}"
+
+        send_report(email, site, "Weekly", unsubscribe_link, query)
+      end
+
+      :ok
+    else
+      :discard
     end
-
-    :ok
   end
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"interval" => "monthly", "site_id" => site_id}}) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:monthly_report)
 
-    last_month =
-      Timex.now(site.timezone)
-      |> Timex.shift(months: -1)
-      |> Timex.beginning_of_month()
+    if site do
+      last_month =
+        Timex.now(site.timezone)
+        |> Timex.shift(months: -1)
+        |> Timex.beginning_of_month()
 
-    query =
-      Query.from(site, %{
-        "period" => "month",
-        "date" => Timex.format!(last_month, "{ISOdate}")
-      })
+      query =
+        Query.from(site, %{
+          "period" => "month",
+          "date" => Timex.format!(last_month, "{ISOdate}")
+        })
 
-    for email <- site.monthly_report.recipients do
-      unsubscribe_link =
-        PlausibleWeb.Endpoint.url() <>
-          "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
+      for email <- site.monthly_report.recipients do
+        unsubscribe_link =
+          PlausibleWeb.Endpoint.url() <>
+            "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
 
-      send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
+        send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
+      end
+
+      :ok
+    else
+      :discard
     end
-
-    :ok
   end
 
   defp send_report(email, site, name, unsubscribe_link, query) do

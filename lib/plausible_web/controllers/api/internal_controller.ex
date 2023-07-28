@@ -6,12 +6,14 @@ defmodule PlausibleWeb.Api.InternalController do
   alias Plausible.Auth.User
 
   def domain_status(conn, %{"domain" => domain}) do
-    site = Sites.get_by_domain(domain)
-
-    if Stats.has_pageviews?(site) do
+    with %User{id: user_id} <- conn.assigns[:current_user],
+         %Site{} = site <- Sites.get_by_domain(domain),
+         true <- Sites.has_admin_access?(user_id, site) || Auth.is_super_admin?(user_id),
+         true <- Stats.has_pageviews?(site) do
       json(conn, "READY")
     else
-      json(conn, "WAITING")
+      _ ->
+        json(conn, "WAITING")
     end
   end
 
@@ -36,8 +38,15 @@ defmodule PlausibleWeb.Api.InternalController do
     with %User{id: user_id} <- conn.assigns[:current_user],
          site <- Sites.get_by_domain(domain),
          true <- Sites.has_admin_access?(user_id, site) || Auth.is_super_admin?(user_id) do
-      Site.disable_feature(site, feature)
-      |> Repo.update()
+      property =
+        case feature do
+          "funnels" -> :funnels_enabled
+          "props" -> :props_enabled
+          "conversions" -> :conversions_enabled
+        end
+
+      change = Plausible.Site.feature_toggle_change(site, property, override: false)
+      Repo.update!(change)
 
       json(conn, "ok")
     else
