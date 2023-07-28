@@ -7,16 +7,6 @@ export const VISITORS_METRIC = {
   realtimeLabel: 'Current visitors',
   goalFilterLabel: 'Conversions'
 }
-export const UNIQUE_ENTRANCES_METRIC = {
-  ...VISITORS_METRIC,
-  name: 'unique_entrances',
-  label: 'Unique Entrances'
-}
-export const UNIQUE_EXITS_METRIC = {
-  ...VISITORS_METRIC,
-  name: 'unique_exits',
-  label: 'Unique Exits'
-}
 export const PERCENTAGE_METRIC = { name: 'percentage', label: '%' }
 export const CR_METRIC = { name: 'conversion_rate', label: 'CR' }
 

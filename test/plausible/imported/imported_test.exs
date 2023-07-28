@@ -748,11 +748,11 @@ defmodule Plausible.ImportedTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "/page2",
-                 "unique_exits" => 3,
-                 "total_exits" => 4,
+                 "visitors" => 3,
+                 "visits" => 4,
                  "exit_rate" => 80.0
                },
-               %{"name" => "/page1", "unique_exits" => 2, "total_exits" => 2, "exit_rate" => 66}
+               %{"name" => "/page1", "visitors" => 2, "visits" => 2, "exit_rate" => 66}
              ]
     end
 
