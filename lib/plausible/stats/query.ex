@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Query do
 
   def from(site, params) do
     query_by_period(site, params)
-    |> put_interval(params)
+    |> maybe_put_interval(params)
     |> put_parsed_filters(params)
     |> put_imported_opts(site, params)
     |> put_sample_threshold(params)
@@ -118,9 +118,12 @@ defmodule Plausible.Stats.Query do
     now = today(site.timezone)
     start_date = Plausible.Site.local_start_date(site) || now
 
+    date_range = Date.range(start_date, now)
+
     %__MODULE__{
       period: "all",
-      date_range: Date.range(start_date, now)
+      date_range: date_range,
+      interval: Interval.default_for_date_range(date_range)
     }
   end
 
@@ -148,15 +151,12 @@ defmodule Plausible.Stats.Query do
     query_by_period(site, Map.merge(params, %{"period" => "30d"}))
   end
 
-  defp put_interval(%{:period => "all"} = query, params) do
-    interval = Map.get(params, "interval", Interval.default_for_date_range(query.date_range))
-    Map.put(query, :interval, interval)
-  end
-
-  defp put_interval(query, params) do
+  defp maybe_put_interval(%{interval: nil} = query, params) do
     interval = Map.get(params, "interval", Interval.default_for_period(query.period))
     Map.put(query, :interval, interval)
   end
+
+  defp maybe_put_interval(query, _), do: query
 
   defp put_parsed_filters(query, params) do
     Map.put(query, :filters, FilterParser.parse_filters(params["filters"]))

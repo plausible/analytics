@@ -4,23 +4,17 @@ import * as storage from '../../util/storage'
 import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
-import { VISITORS_METRIC, PERCENTAGE_METRIC, maybeWithCR } from '../reports/metrics';
 
 function Browsers({ query, site }) {
   function fetchData() {
     return api.get(url.apiPath(site, '/browsers'), query)
   }
 
-  function getFilterFor(listItem) {
-    return { browser: listItem['name']}
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
-      getFilterFor={getFilterFor}
+      filter={{ browser: 'name' }}
       keyLabel="Browser"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
     />
   )
@@ -31,19 +25,14 @@ function BrowserVersions({ query, site }) {
     return api.get(url.apiPath(site, '/browser-versions'), query)
   }
 
-  function getFilterFor(listItem) {
-    if (query.filters.browser === '(not set)') {
-      return {}
-    }
-    return { browser_version: listItem['name']}
-  }
+  const isNotSet = query.filters.browser === '(not set)'
+  const filter = isNotSet ? {} : { browser_version: 'name' }
 
   return (
     <ListReport
       fetchData={fetchData}
-      getFilterFor={getFilterFor}
+      filter={filter}
       keyLabel="Browser version"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
     />
   )
@@ -55,16 +44,11 @@ function OperatingSystems({ query, site }) {
     return api.get(url.apiPath(site, '/operating-systems'), query)
   }
 
-  function getFilterFor(listItem) {
-    return { os: listItem['name']}
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
-      getFilterFor={getFilterFor}
+      filter={{ os: 'name' }}
       keyLabel="Operating system"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
     />
   )
@@ -75,19 +59,14 @@ function OperatingSystemVersions({ query, site }) {
     return api.get(url.apiPath(site, '/operating-system-versions'), query)
   }
 
-  function getFilterFor(listItem) {
-    if (query.filters.os === '(not set)') {
-      return {}
-    }
-    return { os_version: listItem['name']}
-  }
+  const isNotSet = query.filters.os === '(not set)'
+  const filter = isNotSet ? {} : { os_version: 'name' }
 
   return (
     <ListReport
       fetchData={fetchData}
-      getFilterFor={getFilterFor}
+      filter={filter}
       keyLabel="Operating System Version"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
     />
   )
@@ -103,16 +82,11 @@ function ScreenSizes({ query, site }) {
     return iconFor(screenSize.name)
   }
 
-  function getFilterFor(listItem) {
-    return { screen: listItem['name']}
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
-      getFilterFor={getFilterFor}
+      filter={{ screen: 'name' }}
       keyLabel="Screen size"
-      metrics={maybeWithCR([VISITORS_METRIC, PERCENTAGE_METRIC], query)}
       query={query}
       renderIcon={renderIcon}
     />
@@ -203,16 +177,22 @@ export default class Devices extends React.Component {
 
   render() {
     return (
-      <div>
-        <div className="flex justify-between w-full">
-          <h3 className="font-bold dark:text-gray-100">Devices</h3>
-          <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
-            {this.renderPill('Browser', 'browser')}
-            {this.renderPill('OS', 'os')}
-            {this.renderPill('Size', 'size')}
+      <div
+        className="stats-item flex flex-col mt-6 stats-item--has-header w-full"
+      >
+        <div
+          className="stats-item-header flex flex-col flex-grow relative p-4 bg-white rounded shadow-xl dark:bg-gray-825"
+        >
+          <div className="flex justify-between w-full">
+            <h3 className="font-bold dark:text-gray-100">Devices</h3>
+            <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
+              {this.renderPill('Browser', 'browser')}
+              {this.renderPill('OS', 'os')}
+              {this.renderPill('Size', 'size')}
+            </div>
           </div>
+          {this.renderContent()}
         </div>
-        {this.renderContent()}
       </div>
     )
   }

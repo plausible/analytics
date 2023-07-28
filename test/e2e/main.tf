@@ -26,10 +26,6 @@ variable "checkly_alert_channel_pagerduty_service_key" {
   sensitive = true
 }
 
-variable "checkly_alert_channel_instatus_webhook_url" {
-  sensitive = true
-}
-
 provider "checkly" {
   api_key    = var.checkly_api_key
   account_id = var.checkly_account_id
@@ -43,11 +39,6 @@ resource "checkly_check" "plausible-io-api-health" {
   double_check = true
 
   group_id = checkly_check_group.reachability.id
-
-  alert_channel_subscription {
-    channel_id = checkly_alert_channel.instatus.id
-    activated  = true
-  }
 
   request {
     url              = "https://plausible.io/api/health"
@@ -237,16 +228,5 @@ resource "checkly_alert_channel" "pagerduty" {
     account      = "plausible"
     service_key  = var.checkly_alert_channel_pagerduty_service_key
     service_name = "Plausible application"
-  }
-}
-
-resource "checkly_alert_channel" "instatus" {
-  webhook {
-    name     = "Instatus integration"
-    method   = "POST"
-    template = <<EOT
-  {"alert": "{{ALERT_TYPE}}"}
-EOT
-    url      = var.checkly_alert_channel_instatus_webhook_url
   }
 }

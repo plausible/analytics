@@ -453,7 +453,7 @@ defmodule Plausible.Stats.Clickhouse do
       else
         from(
           e in q,
-          array_join: meta in fragment("meta"),
+          inner_lateral_join: meta in fragment("meta"),
           where: meta.key == ^key and meta.value == ^val
         )
       end

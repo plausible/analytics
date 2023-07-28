@@ -30,7 +30,7 @@ defmodule Plausible.Goal do
         {"#{code} - #{Cldr.Currency.display_name!(code)}", code}
       end
 
-    [{"Select reporting currency", nil}] ++ options
+    [{"", nil}] ++ options
   end
 
   def changeset(goal, attrs \\ %{}) do

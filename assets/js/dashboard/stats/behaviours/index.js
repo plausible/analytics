@@ -5,7 +5,6 @@ import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
 import Conversions from './conversions'
-import Properties from './props'
 import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
 
@@ -13,13 +12,13 @@ const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font
 const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
 
 export const CONVERSIONS = 'conversions'
-export const PROPS = 'props'
 export const FUNNELS = 'funnels'
+export const PROPS = 'props'
 
 export const sectionTitles = {
   [CONVERSIONS]: 'Goal Conversions',
-  [PROPS]: 'Custom Properties',
-  [FUNNELS]: 'Funnels'
+  [FUNNELS]: 'Funnels',
+  [PROPS]: 'Custom Properties'
 }
 
 export default function Behaviours(props) {
@@ -83,7 +82,7 @@ export default function Behaviours(props) {
                       className={classNames(
                         active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
                         'block px-4 py-2 text-sm',
-                        (mode === FUNNELS && selectedFunnel === funnelName) ? 'font-bold text-gray-500' : ''
+                        mode === funnelName ? 'font-bold' : ''
                       )}
                     >
                       {funnelName}
@@ -116,8 +115,8 @@ export default function Behaviours(props) {
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
         {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS, 'Goals')}
-        {isEnabled(PROPS) && tabSwitcher(PROPS, 'Properties')}
         {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
+        {isEnabled(PROPS) && tabSwitcher(PROPS, 'Properties')}
       </div>
     )
   }
@@ -159,9 +158,7 @@ export default function Behaviours(props) {
   }
 
   function renderProps() {
-    if (site.allowedEventProps && site.allowedEventProps.length > 0) {
-      return <Properties site={site} query={props.query} allowedEventProps={site.allowedEventProps}/>
-    } else if (adminAccess) {
+    if (adminAccess) {
       return (
         <FeatureSetupNotice
           site={site}
@@ -169,7 +166,7 @@ export default function Behaviours(props) {
           shortFeatureName={'props'}
           title={'No custom properties found'}
           info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
-          settingsLink={`/${encodeURIComponent(site.domain)}/settings/properties`}
+          settingsLink={`/${encodeURIComponent(site.domain)}/settings/props`}
           onHideAction={onHideAction(PROPS)}
         />
       )
@@ -192,10 +189,10 @@ export default function Behaviours(props) {
     switch (mode) {
       case CONVERSIONS:
         return renderConversions()
-      case PROPS:
-        return renderProps()
       case FUNNELS:
         return renderFunnels()
+      case PROPS:
+        return renderProps()
     }
   }
 
@@ -206,8 +203,8 @@ export default function Behaviours(props) {
     if (storedMode && enabledModes.includes(storedMode)) { return storedMode }
 
     if (enabledModes.includes(CONVERSIONS)) { return CONVERSIONS }
-    if (enabledModes.includes(PROPS)) { return PROPS }
-    return FUNNELS
+    if (enabledModes.includes(FUNNELS)) { return FUNNELS }
+    return PROPS
   }
 
   function getEnabledModes() {
@@ -216,11 +213,11 @@ export default function Behaviours(props) {
     if (site.conversionsEnabled) {
       enabledModes.push(CONVERSIONS)
     }
-    if (site.propsEnabled && site.flags.props) {
-      enabledModes.push(PROPS)
-    }
     if (site.funnelsEnabled && !isRealtime() && site.flags.funnels) {
       enabledModes.push(FUNNELS)
+    }
+    if (site.propsEnabled && !isRealtime() && site.flags.props) {
+      enabledModes.push(PROPS)
     }
     return enabledModes
   }

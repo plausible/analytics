@@ -4,7 +4,6 @@ import * as storage from '../../util/storage'
 import * as url from '../../util/url'
 import * as api from '../../api'
 import ListReport from './../reports/list'
-import { VISITORS_METRIC, UNIQUE_ENTRANCES_METRIC, UNIQUE_EXITS_METRIC, maybeWithCR } from './../reports/metrics';
 
 function EntryPages({query, site}) {
   function fetchData() {
@@ -15,16 +14,13 @@ function EntryPages({query, site}) {
     return url.externalLinkForPage(site.domain, page.name)
   }
 
-  function getFilterFor(listItem) {
-    return { entry_page: listItem['name']}
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
-      getFilterFor={getFilterFor}
+      filter={{entry_page: 'name'}}
       keyLabel="Entry page"
-      metrics={maybeWithCR([UNIQUE_ENTRANCES_METRIC], query)}
+      valueLabel="Unique Entrances"
+      valueKey="unique_entrances"
       detailsLink={url.sitePath(site, '/entry-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
@@ -42,16 +38,13 @@ function ExitPages({query, site}) {
     return url.externalLinkForPage(site.domain, page.name)
   }
 
-  function getFilterFor(listItem) {
-    return { exit_page: listItem['name']}
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
-      getFilterFor={getFilterFor}
+      filter={{exit_page: 'name'}}
       keyLabel="Exit page"
-      metrics={maybeWithCR([UNIQUE_EXITS_METRIC], query)}
+      valueLabel="Unique Exits"
+      valueKey="unique_exits"
       detailsLink={url.sitePath(site, '/exit-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
@@ -69,16 +62,11 @@ function TopPages({query, site}) {
     return url.externalLinkForPage(site.domain, page.name)
   }
 
-  function getFilterFor(listItem) {
-    return { page: listItem['name'] }
-  }
-
   return (
     <ListReport
       fetchData={fetchData}
-      getFilterFor={getFilterFor}
+      filter={{page: 'name'}}
       keyLabel="Page"
-      metrics={maybeWithCR([VISITORS_METRIC], query)}
       detailsLink={url.sitePath(site, '/pages')}
       query={query}
       externalLinkDest={externalLinkDest}
@@ -148,20 +136,26 @@ export default class Pages extends React.Component {
 
   render() {
     return (
-      <div>
-        {/* Header Container */}
-        <div className="w-full flex justify-between">
-          <h3 className="font-bold dark:text-gray-100">
-            {labelFor[this.state.mode] || 'Page Visits'}
-          </h3>
-          <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-            { this.renderPill('Top Pages', 'pages') }
-            { this.renderPill('Entry Pages', 'entry-pages') }
-            { this.renderPill('Exit Pages', 'exit-pages') }
+      <div
+        className="stats-item flex flex-col w-full mt-6 stats-item--has-header"
+      >
+        <div
+          className="stats-item-header flex flex-col flex-grow bg-white dark:bg-gray-825 shadow-xl rounded p-4 relative"
+        >
+          {/* Header Container */}
+          <div className="w-full flex justify-between">
+            <h3 className="font-bold dark:text-gray-100">
+              {labelFor[this.state.mode] || 'Page Visits'}
+            </h3>
+            <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
+              { this.renderPill('Top Pages', 'pages') }
+              { this.renderPill('Entry Pages', 'entry-pages') }
+              { this.renderPill('Exit Pages', 'exit-pages') }
+            </div>
           </div>
+          {/* Main Contents */}
+          { this.renderContent() }
         </div>
-        {/* Main Contents */}
-        { this.renderContent() }
       </div>
     )
   }

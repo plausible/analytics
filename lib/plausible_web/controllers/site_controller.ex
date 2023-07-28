@@ -171,45 +171,32 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  @feature_titles %{
-    funnels_enabled: "Funnels",
-    conversions_enabled: "Goals",
-    props_enabled: "Properties"
-  }
-  def update_feature_visibility(conn, %{
-        "setting" => setting,
-        "r" => "/" <> _ = redirect_path,
-        "set" => value
-      })
-      when setting in ~w[conversions_enabled funnels_enabled props_enabled] and
-             value in ["true", "false"] do
+  def set_feature_status(conn, %{"action" => action, "feature" => feature}) do
     site = conn.assigns[:site]
 
-    setting = String.to_existing_atom(setting)
-    change = Plausible.Site.feature_toggle_change(site, setting, override: value == "true")
-    result = Repo.update(change)
+    report_title =
+      case feature do
+        "conversions" -> "Goals"
+        "funnels" -> "Funnels"
+        "props" -> "Properties"
+      end
 
-    case result do
-      {:ok, updated_site} ->
-        message =
-          if Map.fetch!(updated_site, setting) do
-            "#{@feature_titles[setting]} are now visible again on your dashboard"
-          else
-            "#{@feature_titles[setting]} are now hidden from your dashboard"
-          end
+    {change, flash_msg} =
+      case action do
+        "enable" ->
+          {Plausible.Site.enable_feature(site, feature),
+           "#{report_title} are now visible again on your dashboard"}
 
-        conn
-        |> put_flash(:success, message)
-        |> redirect(to: redirect_path)
+        "disable" ->
+          {Plausible.Site.disable_feature(site, feature),
+           "#{report_title} are now hidden from your dashboard"}
+      end
 
-      {:error, _} ->
-        conn
-        |> put_flash(
-          :error,
-          "Something went wrong. Failed to toggle #{@feature_titles[setting]} on your dashboard."
-        )
-        |> redirect(to: redirect_path)
-    end
+    Repo.update(change)
+
+    conn
+    |> put_flash(:success, flash_msg)
+    |> redirect(to: Routes.site_path(conn, :settings_goals, conn.assigns[:site].domain))
   end
 
   def settings(conn, %{"website" => website}) do
@@ -266,7 +253,7 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_goals(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    goals = Goals.for_site(site, preload_funnels?: true)
+    goals = Goals.for_site(site)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -275,34 +262,6 @@ defmodule PlausibleWeb.SiteController do
       goals: goals,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
-  end
-
-  def settings_funnels(conn, _params) do
-    if Plausible.Funnels.enabled_for?(conn.assigns[:current_user]) do
-      site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-
-      conn
-      |> assign(:skip_plausible_tracking, true)
-      |> render("settings_funnels.html",
-        site: site,
-        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-      )
-    else
-      conn |> Plug.Conn.put_status(401) |> Plug.Conn.halt()
-    end
-  end
-
-  def settings_props(conn, _params) do
-    if Plausible.Props.enabled_for?(conn.assigns.current_user) do
-      conn
-      |> assign(:skip_plausible_tracking, true)
-      |> render("settings_props.html",
-        site: conn.assigns.site,
-        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-      )
-    else
-      conn |> Plug.Conn.put_status(401) |> Plug.Conn.halt()
-    end
   end
 
   def settings_search_console(conn, _params) do
@@ -465,14 +424,11 @@ defmodule PlausibleWeb.SiteController do
   def enable_weekly_report(conn, _params) do
     site = conn.assigns[:site]
 
-    result =
-      Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
-        site_id: site.id,
-        recipients: [conn.assigns[:current_user].email]
-      })
-      |> Repo.insert()
-
-    :ok = tolerate_unique_contraint_violation(result, "weekly_reports_site_id_index")
+    Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
+      site_id: site.id,
+      recipients: [conn.assigns[:current_user].email]
+    })
+    |> Repo.insert!()
 
     conn
     |> put_flash(:success, "You will receive an email report every Monday going forward")
@@ -518,15 +474,11 @@ defmodule PlausibleWeb.SiteController do
   def enable_monthly_report(conn, _params) do
     site = conn.assigns[:site]
 
-    result =
-      %Plausible.Site.MonthlyReport{}
-      |> Plausible.Site.MonthlyReport.changeset(%{
-        site_id: site.id,
-        recipients: [conn.assigns[:current_user].email]
-      })
-      |> Repo.insert()
-
-    :ok = tolerate_unique_contraint_violation(result, "monthly_reports_site_id_index")
+    Plausible.Site.MonthlyReport.changeset(%Plausible.Site.MonthlyReport{}, %{
+      site_id: site.id,
+      recipients: [conn.assigns[:current_user].email]
+    })
+    |> Repo.insert!()
 
     conn
     |> put_flash(:success, "You will receive an email report every month going forward")
@@ -925,10 +877,11 @@ defmodule PlausibleWeb.SiteController do
     cond do
       site.imported_data ->
         Oban.cancel_all_jobs(
-          from j in Oban.Job,
+          from(j in Oban.Job,
             where:
               j.queue == "google_analytics_imports" and
                 fragment("(? ->> 'site_id')::int", j.args) == ^site.id
+          )
         )
 
         Plausible.Imported.forget(site)
@@ -985,23 +938,5 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
-  end
-
-  defp tolerate_unique_contraint_violation(result, name) do
-    case result do
-      {:ok, _} ->
-        :ok
-
-      {:error,
-       %{
-         errors: [
-           site_id: {_, [constraint: :unique, constraint_name: ^name]}
-         ]
-       }} ->
-        :ok
-
-      other ->
-        other
-    end
   end
 end

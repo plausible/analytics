@@ -27,7 +27,6 @@ defmodule Plausible.Ingestion.Request do
 
   @max_url_size 2_000
 
-  @primary_key false
   embedded_schema do
     field :remote_ip, :string
     field :user_agent, :string
@@ -200,8 +199,8 @@ defmodule Plausible.Ingestion.Request do
     |> validate_props()
   end
 
-  @max_prop_key_length Plausible.Props.max_prop_key_length()
-  @max_prop_value_length Plausible.Props.max_prop_value_length()
+  @max_prop_key_length 300
+  @max_prop_value_length 2000
   defp validate_props(changeset) do
     case Changeset.get_field(changeset, :props) do
       props ->
@@ -311,18 +310,5 @@ defmodule Plausible.Ingestion.Request do
 
   def sanitize_hostname(nil) do
     nil
-  end
-end
-
-defimpl Jason.Encoder, for: URI do
-  def encode(uri, _opts), do: [?", URI.to_string(uri), ?"]
-end
-
-defimpl Jason.Encoder, for: Plausible.Ingestion.Request do
-  @fields Plausible.Ingestion.Request.__schema__(:fields)
-  def encode(request, opts) do
-    request
-    |> Map.take(@fields)
-    |> Jason.Encode.map(opts)
   end
 end

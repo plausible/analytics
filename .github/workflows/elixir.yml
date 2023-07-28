@@ -9,11 +9,11 @@ on:
 jobs:
   build:
     name: Build and test
-    runs-on: buildjet-16vcpu-ubuntu-2204
+    runs-on: buildjet-4vcpu-ubuntu-2004
 
     strategy:
       matrix:
-        postgres_version: [13, 14, 15]
+        postgres_version: [12, 13, 14]
 
     services:
       postgres:
@@ -29,7 +29,7 @@ jobs:
             --health-retries 5
 
       clickhouse:
-        image: clickhouse/clickhouse-server:23.3.7.5-alpine
+        image: clickhouse/clickhouse-server:22.8.13.20-alpine
         ports:
           - 8123:8123
         env:
@@ -52,14 +52,14 @@ jobs:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
       - name: Restore dependencies cache
-        uses: buildjet/cache@v3
+        uses: actions/cache@v3
         with:
           path: |
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-mix-v5-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-v5-
+          key: ${{ runner.os }}-mix-v4-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-v4-
       - name: Install dependencies
         run: mix deps.get && npm install --prefix ./tracker
       - name: Check Formatting

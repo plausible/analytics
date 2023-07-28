@@ -1,22 +1,40 @@
-import React, { useEffect, useState } from 'react'
-import { useInView } from 'react-intersection-observer'
+import React from 'react';
 
-export default function LazyLoader(props) {
-  const [hasBecomeVisibleYet, setHasBecomeVisibleYet] = useState(false)
-  const { ref, inView } = useInView({
-    threshold: 0,
-  })
-
-  useEffect(() => {
-    if (inView && !hasBecomeVisibleYet) {
-      setHasBecomeVisibleYet(true)
-      props.onVisible && props.onVisible()
+export default class extends React.Component {
+  componentDidMount() {
+    if ('IntersectionObserver' in window) {
+      this.attachObserver()
+    } else {
+      this.props.onVisible && this.props.onVisible()
     }
-  }, [inView])
+  }
 
-  return (
-    <div ref={ref}>
-      {props.children}
-    </div>
-  )
+  attachObserver() {
+    this.observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        this.props.onVisible && this.props.onVisible()
+        this.observer.unobserve(this.element);
+      }
+    }, {
+      threshold: 0
+    });
+
+    this.observer.observe(this.element);
+  }
+
+  componentWillUnmount() {
+    this.observer && this.observer.unobserve(this.element);
+  }
+
+  render() {
+    return (
+      <div
+        ref={(el) => { this.element = el }}
+        className={this.props.className}
+        style={this.props.style}
+      >
+        {this.props.children}
+      </div>
+    );
+  }
 }

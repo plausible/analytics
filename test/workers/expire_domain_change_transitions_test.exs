@@ -12,7 +12,7 @@ defmodule Plausible.Workers.ExpireDomainChangeTransitionsTest do
         assert :ok = ExpireDomainChangeTransitions.perform(nil)
       end)
 
-    refute log =~ "Expired"
+    assert log == ""
   end
 
   test "expires domains selectively after change and logs the result" do

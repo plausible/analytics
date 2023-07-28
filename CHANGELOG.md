@@ -3,14 +3,6 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-### Fixed
-- Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
-- Fixed [IPv6 problems](https://github.com/plausible/analytics/issues/3173) in data migration plausible/analytics#3179
-- Fixed [long URLs display](https://github.com/plausible/analytics/issues/3158) in Outbound Link breakdown view
-- Fixed [Sentry reports](https://github.com/plausible/analytics/discussions/3166) for ingestion requests plausible/analytics#3182
-
-## v2.0.0 - 2023-07-12
-
 ### Added
 - Call to action for tracking Goal Conversions and an option to hide the section from the dashboard
 - Add support for `with_imported=true` in Stats API aggregate endpoint
@@ -22,7 +14,6 @@ All notable changes to this project will be documented in this file.
 - Add `MAILER_NAME` environment variable support plausible/analytics#2937
 - Add `MAILGUN_BASE_URI` support for `Bamboo.MailgunAdapter` plausible/analytics#2935
 - Add a landing page for self-hosters plausible/analytics#2989
-- Allow optional IPv6 for clickhouse repo plausible/analytics#2970
 
 ### Fixed
 - Fix tracker bug - call callback function even when event is ignored
@@ -42,8 +33,6 @@ All notable changes to this project will be documented in this file.
 - Fix broken favicons when domain includes a slash
 - Fix bug when using multiple [wildcard goal filters](https://github.com/plausible/analytics/pull/3015)
 - Fix a bug where realtime would fail with imported data
-- Fix a bug where the country name was not shown when [filtering through the map](https://github.com/plausible/analytics/issues/3086)
-- Fix [broken interval selection](https://github.com/plausible/analytics/issues/3086) in the all time view
 
 ### Changed
 - Treat page filter as entry page filter for `bounce_rate`

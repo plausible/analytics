@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
   import Phoenix.Pagination.HTML
-  use Plausible.Funnel
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()

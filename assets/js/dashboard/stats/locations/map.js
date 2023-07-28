@@ -121,7 +121,7 @@ class Countries extends React.Component {
               this.props.query,
               {
                 country: country.code,
-                country_labels: country.name
+                country_name: country.name
               }
             )
           }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { withRouter } from "react-router-dom";
 
 import Combobox from '../../components/combobox'
@@ -38,13 +38,13 @@ function PropFilterModal(props) {
     }
   }
 
-  const fetchPropValueOptions = useCallback(() => {
+  function fetchPropValueOptions() {
     return (input) => {
       const propKey = formState.prop_key?.value
       const updatedQuery = { ...query, filters: { ...query.filters, props: {[propKey]: '!(none)'} } }
       return api.get(apiPath(props.site, "/suggestions/prop_value"), updatedQuery, { q: input.trim() })
     }
-  }, [formState.prop_key])
+  }
 
   function onPropKeySelect() {
     return (selectedOptions) => {

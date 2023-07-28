@@ -12,7 +12,6 @@ import Devices from './stats/devices'
 import Behaviours from './stats/behaviours'
 import ComparisonInput from './comparison-input'
 import { withPinnedHeader } from './pinned-header-hoc';
-import { statsBoxClass } from '.';
 
 function Historical(props) {
   const tooltipBoundary = React.useRef(null)
@@ -32,25 +31,14 @@ function Historical(props) {
         </div>
       </div>
       <VisitorGraph site={props.site} query={props.query} />
-
-      <div className="w-full md:flex">
-        <div className={ statsBoxClass }>
-          <Sources site={props.site} query={props.query} />
-        </div>
-        <div className={ statsBoxClass }>
-          <Pages site={props.site} query={props.query} />
-        </div>
+      <div className="items-start justify-between block w-full md:flex">
+        <Sources site={props.site} query={props.query} />
+        <Pages site={props.site} query={props.query} />
       </div>
-
-      <div className="w-full md:flex">
-        <div className={ statsBoxClass }>
-          <Locations site={props.site} query={props.query} />
-        </div>
-        <div className={ statsBoxClass }>
-          <Devices site={props.site} query={props.query} />
-        </div>
+      <div className="items-start justify-between block w-full md:flex">
+        <Locations site={props.site} query={props.query} />
+        <Devices site={props.site} query={props.query} />
       </div>
-
       <Behaviours site={props.site} query={props.query} currentUserRole={props.currentUserRole} />
     </div>
   )
