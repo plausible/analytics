@@ -35,15 +35,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Signup",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 3,
+                 "visitors" => 2,
+                 "events" => 3,
                  "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "Visit /register",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "prop_names" => [],
                  "conversion_rate" => 33.3
                }
@@ -84,8 +84,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Payment",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 2,
+                 "visitors" => 1,
+                 "events" => 2,
                  "prop_names" => [],
                  "conversion_rate" => 33.3
                }
@@ -125,8 +125,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Payment",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "prop_names" => [],
                  "conversion_rate" => 66.7
                }
@@ -164,8 +164,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Payment",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 3,
+                 "visitors" => 2,
+                 "events" => 3,
                  "prop_names" => [],
                  "conversion_rate" => 66.7
                }
@@ -205,8 +205,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Payment",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 3,
+                 "visitors" => 2,
+                 "events" => 3,
                  "prop_names" => [],
                  "conversion_rate" => 66.7
                }
@@ -256,8 +256,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Payment",
-                 "unique_conversions" => 5,
-                 "total_conversions" => 5,
+                 "visitors" => 5,
+                 "events" => 5,
                  "prop_names" => [],
                  "conversion_rate" => 100.0,
                  "average_revenue" => %{"short" => "€166.7M", "long" => "€166,733,566.75"},
@@ -294,27 +294,27 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "conversion_rate" => 33.3,
                  "name" => "Payment",
                  "prop_names" => [],
-                 "total_conversions" => 1,
+                 "events" => 1,
                  "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
-                 "unique_conversions" => 1
+                 "visitors" => 1
                },
                %{
                  "average_revenue" => nil,
                  "conversion_rate" => 66.7,
                  "name" => "Signup",
                  "prop_names" => [],
-                 "total_conversions" => 2,
+                 "events" => 2,
                  "total_revenue" => nil,
-                 "unique_conversions" => 2
+                 "visitors" => 2
                },
                %{
                  "average_revenue" => nil,
                  "conversion_rate" => 33.3,
                  "name" => "Visit /checkout",
                  "prop_names" => [],
-                 "total_conversions" => 1,
+                 "events" => 1,
                  "total_revenue" => nil,
-                 "unique_conversions" => 1
+                 "visitors" => 1
                }
              ] == Enum.sort_by(response, & &1["name"])
     end
@@ -334,8 +334,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Signup",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 100.0
                }
@@ -370,8 +370,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Signup",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "prop_names" => ["variant"],
                  "conversion_rate" => 33.3
                }
@@ -408,8 +408,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Payment",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "prop_names" => ["logged_in"],
                  "conversion_rate" => 66.7
                }
@@ -573,15 +573,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Signup",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "Visit /register",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 16.7
                }
@@ -614,15 +614,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "CTA",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 16.7
                },
                %{
                  "name" => "Visit /register",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 16.7
                }
@@ -650,15 +650,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Visit /blog/**",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "prop_names" => [],
                  "conversion_rate" => 66.7
                },
                %{
                  "name" => "Visit /billing/upgrade",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 33.3
                }
@@ -690,15 +690,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Visit /blog**",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "Signup",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 16.7
                }
@@ -731,15 +731,15 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Visit /ano**",
-                 "unique_conversions" => 2,
-                 "total_conversions" => 2,
+                 "visitors" => 2,
+                 "events" => 2,
                  "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "CTA",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 16.7
                }
@@ -769,8 +769,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Visit /register",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "prop_names" => [],
                  "conversion_rate" => 25
                }
@@ -802,8 +802,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "Signup",
-                 "unique_conversions" => 1,
-                 "total_conversions" => 1,
+                 "visitors" => 1,
+                 "events" => 1,
                  "prop_names" => ["variant"],
                  "conversion_rate" => 50
                }
@@ -870,58 +870,58 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "conversion_rate" => 100.0,
-                 "unique_conversions" => 8,
+                 "visitors" => 8,
                  "name" => "Visit /**",
-                 "total_conversions" => 8,
+                 "events" => 8,
                  "prop_names" => []
                },
                %{
                  "conversion_rate" => 37.5,
-                 "unique_conversions" => 3,
+                 "visitors" => 3,
                  "name" => "Visit /signup/**",
-                 "total_conversions" => 3,
+                 "events" => 3,
                  "prop_names" => []
                },
                %{
                  "conversion_rate" => 37.5,
-                 "unique_conversions" => 3,
+                 "visitors" => 3,
                  "name" => "Visit /*",
-                 "total_conversions" => 3,
+                 "events" => 3,
                  "prop_names" => []
                },
                %{
                  "conversion_rate" => 25.0,
-                 "unique_conversions" => 2,
+                 "visitors" => 2,
                  "name" => "Visit /billing**/success",
-                 "total_conversions" => 2,
+                 "events" => 2,
                  "prop_names" => []
                },
                %{
                  "conversion_rate" => 25.0,
-                 "unique_conversions" => 2,
+                 "visitors" => 2,
                  "name" => "Visit /reg*",
-                 "total_conversions" => 2,
+                 "events" => 2,
                  "prop_names" => []
                },
                %{
                  "conversion_rate" => 12.5,
-                 "unique_conversions" => 1,
+                 "visitors" => 1,
                  "name" => "Visit /signup/*",
-                 "total_conversions" => 1,
+                 "events" => 1,
                  "prop_names" => []
                },
                %{
                  "conversion_rate" => 12.5,
-                 "unique_conversions" => 1,
+                 "visitors" => 1,
                  "name" => "Visit /billing*/success",
-                 "total_conversions" => 1,
+                 "events" => 1,
                  "prop_names" => []
                },
                %{
                  "conversion_rate" => 12.5,
-                 "unique_conversions" => 1,
+                 "visitors" => 1,
                  "name" => "Visit /register",
-                 "total_conversions" => 1,
+                 "events" => 1,
                  "prop_names" => []
                }
              ]
@@ -956,9 +956,9 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert json_response(conn, 200) == [
                %{
                  "conversion_rate" => 100.0,
-                 "unique_conversions" => 2,
+                 "visitors" => 2,
                  "name" => "Visit /register**",
-                 "total_conversions" => 2,
+                 "events" => 2,
                  "prop_names" => ["logged_in", "author"]
                }
              ]

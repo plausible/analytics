@@ -52,17 +52,17 @@ export default class Conversions extends React.Component {
         <div className="flex items-center justify-between my-2">
           <span className="flex-1">
             <Bar
-              count={goal.unique_conversions}
+              count={goal.visitors}
               all={this.state.goals}
               bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
-              plot="unique_conversions"
+              plot="visitors"
             >
               <Link to={url.setQuery('goal', escapeFilterValue(goal.name))} className="block px-2 py-1.5 hover:underline relative z-9 break-all lg:truncate dark:text-gray-200">{goal.name}</Link>
             </Bar>
           </span>
           <div className="dark:text-gray-200">
-            <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.unique_conversions)}</span>
-            <span className="hidden md:inline-block md:w-20 font-medium text-right">{numberFormatter(goal.total_conversions)}</span>
+            <span className="inline-block w-20 font-medium text-right">{numberFormatter(goal.visitors)}</span>
+            <span className="hidden md:inline-block md:w-20 font-medium text-right">{numberFormatter(goal.events)}</span>
             <span className="inline-block w-20 font-medium text-right">{goal.conversion_rate}%</span>
             {renderRevenueColumn && <span className="hidden md:inline-block md:w-20 font-medium text-right"><Money formatted={goal.total_revenue} /></span>}
             {renderRevenueColumn && <span className="hidden md:inline-block md:w-20 font-medium text-right"><Money formatted={goal.average_revenue} /></span>}
