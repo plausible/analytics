@@ -15,6 +15,7 @@ const ROW_HEIGHT = 32
 const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
+const MOBILE_MAX_METRIC_COLS = 3
 
 function FilterLink({filterQuery, onClick, children}) {
   const className = classNames('max-w-max w-full flex md:overflow-hidden', {
@@ -148,6 +149,11 @@ export default function ListReport(props) {
     })
   }
 
+  function hiddenOnMobileClass(i) {
+    if (i > MOBILE_MAX_METRIC_COLS) { return 'hidden md:block'}
+    return ''
+  }
+
   function renderReport() {
     if (state.list && state.list.length > 0) {
       return (
@@ -168,8 +174,19 @@ export default function ListReport(props) {
   }
 
   function renderReportHeader() {
+    let i = 0
+
     const metricLabels = validatedMetrics().map((metric) => {
-      return (<span key={metric.name} className="text-right" style={{minWidth: colMinWidth}}>{ metricLabelFor(metric, props.query) }</span>)
+      i++
+      return (
+        <div
+          key={metric.name}
+          className={`text-right ${hiddenOnMobileClass(i)}`}
+          style={{minWidth: colMinWidth}}
+        >
+            { metricLabelFor(metric, props.query) }
+        </div>
+      )
     })
     
     return (
@@ -250,9 +267,15 @@ export default function ListReport(props) {
   }
 
   function renderMetricValuesFor(listItem) {
+    let i = 0
     return validatedMetrics().map((metric) => {
+      i++
       return (
-        <div key={`${listItem.name}__${metric.name}`} style={{width: colMinWidth, minWidth: colMinWidth}} className="text-right">
+        <div
+          key={`${listItem.name}__${metric.name}`}
+          className={`text-right ${hiddenOnMobileClass(i)}`}
+          style={{width: colMinWidth, minWidth: colMinWidth}}
+        >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
             { displayMetricValue(listItem[metric.name], metric) }
           </span>
