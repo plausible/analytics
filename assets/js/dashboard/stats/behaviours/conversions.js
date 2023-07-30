@@ -29,6 +29,7 @@ export default function Conversions(props) {
         {name: 'total_revenue', label: 'Revenue'},
         {name: 'average_revenue', label: 'Average'}
       ]}
+      detailsLink={url.sitePath(site, '/conversions')}
       query={query}
       color="bg-red-50"
     />
