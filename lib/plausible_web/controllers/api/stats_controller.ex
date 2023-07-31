@@ -1110,6 +1110,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def conversions(conn, params) do
+    pagination = parse_pagination(params)
     site = Plausible.Repo.preload(conn.assigns.site, :goals)
     query = Query.from(site, params) |> Filters.add_prefix()
 
@@ -1133,7 +1134,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     conversions =
       site
-      |> Stats.breakdown(query, "event:goal", metrics, {100, 1})
+      |> Stats.breakdown(query, "event:goal", metrics, pagination)
       |> transform_keys(%{goal: :name})
       |> Enum.map(fn goal ->
         goal

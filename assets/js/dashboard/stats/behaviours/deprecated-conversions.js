@@ -40,7 +40,7 @@ export default class DeprecatedConversions extends React.Component {
   }
 
   fetchConversions() {
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/conversions`, this.props.query)
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/conversions`, this.props.query, {limit: 100})
       .then((res) => this.setState({ loading: false, goals: res, prevHeight: null }))
   }
 
