@@ -240,6 +240,14 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
                ~s(Create "my new option")
     end
 
+    test "does not suggest creating value when input exact matches a suggestion", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, CreatableView, session: %{})
+
+      assert lv
+             |> type_into_combo("test-creatable-component", "Option 1")
+             |> text_of_element("li#dropdown-test-creatable-component-option-0 a") == ~s(Option 1)
+    end
+
     test "stores new value by clicking on the dropdown custom option", %{conn: conn} do
       {:ok, lv, _html} = live_isolated(conn, CreatableView, session: %{})
       type_into_combo(lv, "test-creatable-component", "my new option")
