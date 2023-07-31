@@ -5,6 +5,7 @@ import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
 import Conversions from './conversions'
+import DeprecatedConversions from './deprecated-conversions'
 import Properties from './props'
 import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
@@ -123,7 +124,13 @@ export default function Behaviours(props) {
   }
 
   function renderConversions() {
-    if (site.hasGoals) { return <Conversions site={site} query={props.query} /> }
+    if (site.hasGoals) {
+      if (site.flags.props) {
+        return <Conversions site={site} query={props.query} />
+      } else {
+        return <DeprecatedConversions site={site} query={props.query} />
+      }
+    }
     else if (adminAccess) {
       return (
         <FeatureSetupNotice

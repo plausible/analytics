@@ -11,7 +11,7 @@ import { escapeFilterValue } from '../../util/filters'
 import LazyLoader from '../../components/lazy-loader'
 import Money from './money'
 
-export default class Conversions extends React.Component {
+export default class DeprecatedConversions extends React.Component {
   constructor(props) {
     super(props)
     this.htmlNode = React.createRef()
