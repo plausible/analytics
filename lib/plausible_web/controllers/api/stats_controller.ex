@@ -796,19 +796,22 @@ defmodule PlausibleWeb.Api.StatsController do
     entry_pages =
       Stats.breakdown(site, query, "visit:entry_page", metrics, pagination)
       |> add_cr(site, query, pagination, :entry_page, "visit:entry_page")
-      |> transform_keys(%{
-        entry_page: :name,
-        visitors: :unique_entrances,
-        visits: :total_entrances
-      })
+      |> transform_keys(%{entry_page: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
-        entry_pages
-        |> transform_keys(%{unique_entrances: :conversions})
-        |> to_csv([:name, :conversions, :conversion_rate])
+        to_csv(entry_pages, [:name, :visitors, :conversion_rate], [
+          :name,
+          :conversions,
+          :conversion_rate
+        ])
       else
-        entry_pages |> to_csv([:name, :unique_entrances, :total_entrances, :visit_duration])
+        to_csv(entry_pages, [:name, :visitors, :visits, :visit_duration], [
+          :name,
+          :unique_entrances,
+          :total_entrances,
+          :visit_duration
+        ])
       end
     else
       json(conn, entry_pages)
@@ -824,49 +827,54 @@ defmodule PlausibleWeb.Api.StatsController do
     exit_pages =
       Stats.breakdown(site, query, "visit:exit_page", metrics, {limit, page})
       |> add_cr(site, query, {limit, page}, :exit_page, "visit:exit_page")
-      |> transform_keys(%{
-        exit_page: :name,
-        visitors: :unique_exits,
-        visits: :total_exits
-      })
-
-    pages = Enum.map(exit_pages, & &1[:name])
-
-    total_visits_query =
-      Query.put_filter(query, "event:page", {:member, pages})
-      |> Query.put_filter("event:name", {:is, "pageview"})
-
-    exit_pages =
-      if !Query.has_event_filters?(query) do
-        total_pageviews =
-          Stats.breakdown(site, total_visits_query, "event:page", [:pageviews], {limit, 1})
-
-        Enum.map(exit_pages, fn exit_page ->
-          exit_rate =
-            case Enum.find(total_pageviews, &(&1[:page] == exit_page[:name])) do
-              %{pageviews: pageviews} ->
-                Float.floor(exit_page[:total_exits] / pageviews * 100)
-
-              nil ->
-                nil
-            end
-
-          Map.put(exit_page, :exit_rate, exit_rate)
-        end)
-      else
-        exit_pages
-      end
+      |> add_exit_rate(site, query, limit)
+      |> transform_keys(%{exit_page: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
-        exit_pages
-        |> transform_keys(%{unique_exits: :conversions})
-        |> to_csv([:name, :conversions, :conversion_rate])
+        to_csv(exit_pages, [:name, :visitors, :conversion_rate], [
+          :name,
+          :conversions,
+          :conversion_rate
+        ])
       else
-        exit_pages |> to_csv([:name, :unique_exits, :total_exits, :exit_rate])
+        to_csv(exit_pages, [:name, :visitors, :visits, :exit_rate], [
+          :name,
+          :unique_exits,
+          :total_exits,
+          :exit_rate
+        ])
       end
     else
       json(conn, exit_pages)
+    end
+  end
+
+  defp add_exit_rate(breakdown_results, site, query, limit) do
+    if Query.has_event_filters?(query) do
+      breakdown_results
+    else
+      pages = Enum.map(breakdown_results, & &1[:exit_page])
+
+      total_visits_query =
+        Query.put_filter(query, "event:page", {:member, pages})
+        |> Query.put_filter("event:name", {:is, "pageview"})
+
+      total_pageviews =
+        Stats.breakdown(site, total_visits_query, "event:page", [:pageviews], {limit, 1})
+
+      Enum.map(breakdown_results, fn result ->
+        exit_rate =
+          case Enum.find(total_pageviews, &(&1[:page] == result[:exit_page])) do
+            %{pageviews: pageviews} ->
+              Float.floor(result[:visits] / pageviews * 100)
+
+            nil ->
+              nil
+          end
+
+        Map.put(result, :exit_rate, exit_rate)
+      end)
     end
   end
 
@@ -1126,17 +1134,21 @@ defmodule PlausibleWeb.Api.StatsController do
     conversions =
       site
       |> Stats.breakdown(query, "event:goal", metrics, {100, 1})
-      |> transform_keys(%{goal: :name, visitors: :unique_conversions, events: :total_conversions})
+      |> transform_keys(%{goal: :name})
       |> Enum.map(fn goal ->
         goal
         |> Map.put(:prop_names, CustomProps.props_for_goal(site, query))
-        |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal[:unique_conversions]))
+        |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal[:visitors]))
         |> Enum.map(&format_revenue_metric/1)
         |> Map.new()
       end)
 
     if params["csv"] do
-      to_csv(conversions, [:name, :unique_conversions, :total_conversions])
+      to_csv(conversions, [:name, :visitors, :events], [
+        :name,
+        :unique_conversions,
+        :total_conversions
+      ])
     else
       json(conn, conversions)
     end
@@ -1364,10 +1376,12 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp add_cr(breakdown_results, _, _, _, _, _), do: breakdown_results
 
-  defp to_csv(list, headers) do
+  defp to_csv(list, columns), do: to_csv(list, columns, columns)
+
+  defp to_csv(list, columns, column_names) do
     list
-    |> Enum.map(fn row -> Enum.map(headers, &row[&1]) end)
-    |> (fn res -> [headers | res] end).()
+    |> Enum.map(fn row -> Enum.map(columns, &row[&1]) end)
+    |> (fn res -> [column_names | res] end).()
     |> CSV.encode()
     |> Enum.join()
   end
