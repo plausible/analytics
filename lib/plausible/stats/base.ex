@@ -366,12 +366,20 @@ defmodule Plausible.Stats.Base do
   end
 
   def select_session_metrics(q, [:pageviews | rest], query) do
-    from(s in q,
-      select_merge: %{
-        pageviews:
-          fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
-      }
-    )
+    if Ecto.Query.has_named_binding?(q, :converted_sessions_with_events) do
+      from([s, e] in q,
+        select_merge: %{
+          pageviews: fragment("sum(?)", e.__events_pageviews)
+        }
+      )
+    else
+      from(s in q,
+        select_merge: %{
+          pageviews:
+            fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
+        }
+      )
+    end
     |> select_session_metrics(rest, query)
   end
 
@@ -464,20 +472,42 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  def filter_converted_sessions(db_query, site, query) do
+  def filter_converted_sessions(db_query, site, query, count_event_pageviews \\ false) do
     if Query.has_event_filters?(query) do
-      converted_sessions =
-        from(e in query_events(site, query),
-          select: %{
-            session_id: fragment("DISTINCT ?", e.session_id),
-            _sample_factor: fragment("_sample_factor")
+      if count_event_pageviews do
+        converted_sessions =
+          from(e in query_events(site, query),
+            # FIXME: _sample_factor is probably redundant here
+            group_by: fragment("?, _sample_factor", e.session_id),
+            select: %{
+              session_id: fragment("DISTINCT ?", e.session_id),
+              _sample_factor: fragment("_sample_factor"),
+              __events_pageviews: fragment("countIf(? = 'pageview')", e.name)
+            }
+          )
+
+        from(s in db_query,
+          join: cs in subquery(converted_sessions),
+          as: :converted_sessions_with_events,
+          on: s.session_id == cs.session_id,
+          select_merge: %{
+            __events_pageviews: fragment("toUInt64(round(?))", cs.__events_pageviews)
           }
         )
+      else
+        converted_sessions =
+          from(e in query_events(site, query),
+            select: %{
+              session_id: fragment("DISTINCT ?", e.session_id),
+              _sample_factor: fragment("_sample_factor")
+            }
+          )
 
-      from(s in db_query,
-        join: cs in subquery(converted_sessions),
-        on: s.session_id == cs.session_id
-      )
+        from(s in db_query,
+          join: cs in subquery(converted_sessions),
+          on: s.session_id == cs.session_id
+        )
+      end
     else
       db_query
     end

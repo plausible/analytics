@@ -1943,4 +1943,89 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
   end
+
+  describe "session props breakdown with page filter" do
+    @blueprint %{
+      "source" => %{set: [referrer_source: "Google"], expect: "Google"},
+      "country" => %{set: [country_code: "PL"], expect: "PL"},
+      "region" => %{set: [subdivision1_code: "EE-12"], expect: "EE-12"},
+      "city" => %{set: [city_geoname_id: 588_409], expect: 588_409},
+      "entry_page" => %{set: [], expect: "/page1"},
+      "exit_page" => %{set: [], expect: "/page1"},
+      "referrer" => %{set: [referrer: "https://ref.com"], expect: "https://ref.com"},
+      "utm_medium" => %{set: [utm_medium: "Search"], expect: "Search"},
+      "utm_source" => %{set: [utm_source: "Google"], expect: "Google"},
+      "utm_campaign" => %{set: [utm_campaign: "ads"], expect: "ads"},
+      "utm_content" => %{set: [utm_content: "Content1"], expect: "Content1"},
+      "utm_term" => %{set: [utm_term: "Term1"], expect: "Term1"},
+      "device" => %{set: [screen_size: "Tablet"], expect: "Tablet"},
+      "os" => %{set: [operating_system: "Mac"], expect: "Mac"},
+      "os_version" => %{set: [operating_system_version: "999"], expect: "999"},
+      "browser" => %{set: [browser: "Firefox"], expect: "Firefox"},
+      "browser_version" => %{set: [browser_version: "888"], expect: "888"}
+    }
+
+    for {property, config} <- @blueprint do
+      test "page filter, breakdown by visit:#{property}, metric=pageviews", %{
+        conn: conn,
+        site: site
+      } do
+        populate_stats(site, [
+          build(
+            :pageview,
+            Keyword.merge(
+              [
+                user_id: 1,
+                pathname: "/page1",
+                timestamp: ~N[2021-01-01 00:00:00]
+              ],
+              unquote(config.set)
+            )
+          ),
+          build(
+            :pageview,
+            Keyword.merge(
+              [
+                user_id: 1,
+                pathname: "/page2",
+                timestamp: ~N[2021-01-01 00:10:00]
+              ],
+              unquote(config.set)
+            )
+          ),
+          build(
+            :pageview,
+            Keyword.merge(
+              [
+                user_id: 1,
+                pathname: "/page1",
+                timestamp: ~N[2021-01-01 00:20:00]
+              ],
+              unquote(config.set)
+            )
+          )
+        ])
+
+        conn =
+          get(conn, "/api/v1/stats/breakdown", %{
+            "site_id" => site.domain,
+            "period" => "day",
+            "date" => "2021-01-01",
+            "property" => "visit:#{unquote(property)}",
+            "metrics" => "pageviews",
+            # need to filter by page
+            "filters" => "event:page==/page1"
+          })
+
+        assert json_response(conn, 200) == %{
+                 "results" => [
+                   %{
+                     unquote(property) => unquote(config.expect),
+                     "pageviews" => 2
+                   }
+                 ]
+               }
+      end
+    end
+  end
 end

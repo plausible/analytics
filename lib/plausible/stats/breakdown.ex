@@ -11,6 +11,7 @@ defmodule Plausible.Stats.Breakdown do
   @session_metrics [:visits, :bounce_rate, :visit_duration]
   @revenue_metrics [:average_revenue, :total_revenue]
   @event_props Plausible.Stats.Props.event_props()
+  @session_props Plausible.Stats.Props.session_props()
 
   def breakdown(site, query, "event:goal" = property, metrics, pagination) do
     site = Plausible.Repo.preload(site, :goals)
@@ -149,7 +150,7 @@ defmodule Plausible.Stats.Breakdown do
     breakdown_events(site, query, property, metrics, pagination)
   end
 
-  def breakdown(site, query, property, metrics, pagination) do
+  def breakdown(site, query, property, metrics, pagination) when property in @session_props do
     trace(query, property, metrics)
     breakdown_sessions(site, query, property, metrics, pagination)
   end
@@ -185,14 +186,14 @@ defmodule Plausible.Stats.Breakdown do
       order_by: [desc: fragment("uniq(?)", s.user_id), asc: fragment("min(?)", s.start)],
       select: %{}
     )
-    |> filter_converted_sessions(site, query)
+    |> filter_converted_sessions(site, query, :pageviews in metrics)
     |> do_group_by(property)
     |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, property, metrics)
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
     |> transform_keys(%{operating_system: :os})
-    |> remove_internal_visits_metric(metrics)
+    |> drop_internal_keys()
   end
 
   defp breakdown_events(_, _, _, [], _), do: []
@@ -304,6 +305,10 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
+  defp queries_converted_sessions_with_events?(ecto_q) do
+    Ecto.Query.has_named_binding?(ecto_q, :converted_sessions_with_events)
+  end
+
   defp do_group_by(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
          "event:props:" <> prop
@@ -370,7 +375,21 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  defp do_group_by(q, "visit:source") do
+  defp do_group_by(q, "visit:" <> visit_property) do
+    q = do_group_by_visit(q, visit_property)
+
+    if queries_converted_sessions_with_events?(q) do
+      from([s, e] in q,
+        select_merge: %{
+          __events_pageviews: fragment("sum(?)", e.__events_pageviews)
+        }
+      )
+    else
+      q
+    end
+  end
+
+  defp do_group_by_visit(q, "source") do
     from(
       s in q,
       group_by: s.referrer_source,
@@ -381,7 +400,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:country") do
+  defp do_group_by_visit(q, "country") do
     from(
       s in q,
       where: s.country_code != "\0\0" and s.country_code != "ZZ",
@@ -391,7 +410,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:region") do
+  defp do_group_by_visit(q, "region") do
     from(
       s in q,
       where: s.subdivision1_code != "",
@@ -401,7 +420,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:city") do
+  defp do_group_by_visit(q, "city") do
     from(
       s in q,
       where: s.city_geoname_id != 0,
@@ -411,7 +430,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:entry_page") do
+  defp do_group_by_visit(q, "entry_page") do
     from(
       s in q,
       group_by: s.entry_page,
@@ -420,7 +439,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:exit_page") do
+  defp do_group_by_visit(q, "exit_page") do
     from(
       s in q,
       group_by: s.exit_page,
@@ -429,7 +448,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:referrer") do
+  defp do_group_by_visit(q, "referrer") do
     from(
       s in q,
       group_by: s.referrer,
@@ -440,7 +459,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:utm_medium") do
+  defp do_group_by_visit(q, "utm_medium") do
     from(
       s in q,
       group_by: s.utm_medium,
@@ -450,7 +469,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:utm_source") do
+  defp do_group_by_visit(q, "utm_source") do
     from(
       s in q,
       group_by: s.utm_source,
@@ -460,7 +479,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:utm_campaign") do
+  defp do_group_by_visit(q, "utm_campaign") do
     from(
       s in q,
       group_by: s.utm_campaign,
@@ -470,7 +489,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:utm_content") do
+  defp do_group_by_visit(q, "utm_content") do
     from(
       s in q,
       group_by: s.utm_content,
@@ -480,7 +499,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:utm_term") do
+  defp do_group_by_visit(q, "utm_term") do
     from(
       s in q,
       group_by: s.utm_term,
@@ -490,7 +509,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:device") do
+  defp do_group_by_visit(q, "device") do
     from(
       s in q,
       group_by: s.screen_size,
@@ -501,7 +520,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:os") do
+  defp do_group_by_visit(q, "os") do
     from(
       s in q,
       group_by: s.operating_system,
@@ -513,7 +532,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:os_version") do
+  defp do_group_by_visit(q, "os_version") do
     from(
       s in q,
       group_by: s.operating_system_version,
@@ -530,7 +549,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:browser") do
+  defp do_group_by_visit(q, "browser") do
     from(
       s in q,
       group_by: s.browser,
@@ -541,7 +560,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(q, "visit:browser_version") do
+  defp do_group_by_visit(q, "browser_version") do
     from(
       s in q,
       group_by: s.browser_version,

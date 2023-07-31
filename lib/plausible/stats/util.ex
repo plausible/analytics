@@ -6,21 +6,26 @@ defmodule Plausible.Stats.Util do
   import Ecto.Query
 
   @doc """
-  `__internal_visits` is fetched when querying bounce rate and visit duration, as it
-  is needed to calculate these from imported data. This function removes that metric
-  from all entries in the results list.
+  Drops all the atom keys starting with two underscores.
+
+  Currently private fields are:
+    * `__internal_visits` is fetched when querying bounce rate and visit duration, as it
+       is needed to calculate these from imported data. This function removes that metric
+       from all entries in the results list.
+    * `__event_pageviews` is calculated for sessions when it's the event pageviews
+      (and not session pageviews) that need to be summed in breakdowns.
   """
-  def remove_internal_visits_metric(results, metrics) when is_list(results) do
-    if :bounce_rate in metrics or :visit_duration in metrics do
-      results
-      |> Enum.map(&remove_internal_visits_metric/1)
-    else
-      results
-    end
+  def drop_internal_keys(results) when is_list(results) do
+    Enum.map(results, &drop_internal_keys/1)
   end
 
-  def remove_internal_visits_metric(result) when is_map(result) do
-    Map.delete(result, :__internal_visits)
+  def drop_internal_keys(result) when is_map(result) do
+    Enum.reject(result, fn {key, _value} when is_atom(key) ->
+      key
+      |> Atom.to_string()
+      |> String.starts_with?("__")
+    end)
+    |> Enum.into(%{})
   end
 
   @revenue_metrics [:average_revenue, :total_revenue]
@@ -47,10 +52,11 @@ defmodule Plausible.Stats.Util do
     if Enum.any?(metrics, &(&1 in @revenue_metrics)) && Enum.any?(goal_filters) do
       revenue_goals_currencies =
         Plausible.Repo.all(
-          from rg in Ecto.assoc(site, :revenue_goals),
+          from(rg in Ecto.assoc(site, :revenue_goals),
             where: rg.event_name in ^goal_filters,
             select: rg.currency,
             distinct: true
+          )
         )
 
       if length(revenue_goals_currencies) == 1,

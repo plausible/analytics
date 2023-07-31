@@ -21,6 +21,7 @@ defmodule Plausible.Stats.Props do
   ]
 
   def event_props(), do: @event_props
+  def session_props(), do: @session_props
 
   def valid_prop?(prop) when prop in @event_props, do: true
   def valid_prop?(prop) when prop in @session_props, do: true
