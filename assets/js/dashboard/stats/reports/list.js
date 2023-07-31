@@ -149,8 +149,11 @@ export default function ListReport(props) {
   }
 
   function hiddenOnMobileClass(metric) {
-    if (metric.hiddenOnMobile) { return 'hidden md:block'}
-    return ''
+    if (metric.hiddenOnMobile) {
+      return 'hidden md:block'
+    } else {
+      return ''
+    }
   }
 
   function renderReport() {
