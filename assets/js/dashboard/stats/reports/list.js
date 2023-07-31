@@ -143,7 +143,7 @@ export default function ListReport(props) {
   // returns a filtered `metrics` list. Since currently, the backend can return different
   // metrics based on filters and existing data, this function validates that the metrics
   // we want to display are actually there in the API response.
-  function validatedMetrics() {
+  function getAvailableMetrics() {
     return metrics.filter((metric) => {
       return state.list.some((listItem) => listItem[metric.name] != null)
     })
@@ -176,7 +176,7 @@ export default function ListReport(props) {
   function renderReportHeader() {
     let i = 0
 
-    const metricLabels = validatedMetrics().map((metric) => {
+    const metricLabels = getAvailableMetrics().map((metric) => {
       i++
       return (
         <div
@@ -268,7 +268,7 @@ export default function ListReport(props) {
 
   function renderMetricValuesFor(listItem) {
     let i = 0
-    return validatedMetrics().map((metric) => {
+    return getAvailableMetrics().map((metric) => {
       i++
       return (
         <div

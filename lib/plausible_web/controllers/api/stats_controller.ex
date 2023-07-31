@@ -1206,7 +1206,6 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp breakdown_custom_prop_values(site, %{"prop_key" => prop_key} = params) do
-    site = Plausible.Repo.preload(site, :goals)
     pagination = parse_pagination(params)
     prefixed_prop = "event:props:" <> prop_key
 
