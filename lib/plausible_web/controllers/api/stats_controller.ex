@@ -1206,18 +1206,28 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp breakdown_custom_prop_values(site, %{"prop_key" => prop_key} = params) do
+    pagination = parse_pagination(params)
+    prefixed_prop = "event:props:" <> prop_key
+
     query =
       Query.from(site, params)
       |> Filters.add_prefix()
       |> Map.put(:include_imported, false)
 
-    pagination = parse_pagination(params)
-
-    prefixed_prop = "event:props:" <> prop_key
+    metrics =
+      if Map.has_key?(query.filters, "event:goal") do
+        [:visitors, :events, :average_revenue, :total_revenue]
+      else
+        [:visitors, :events]
+      end
 
     props =
-      Stats.breakdown(site, query, prefixed_prop, [:visitors, :events], pagination)
+      Stats.breakdown(site, query, prefixed_prop, metrics, pagination)
       |> transform_keys(%{prop_key => :name})
+      |> Enum.map(fn entry ->
+        Enum.map(entry, &format_revenue_metric/1)
+        |> Map.new()
+      end)
       |> add_percentages(site, query)
 
     if Map.has_key?(query.filters, "event:goal") do

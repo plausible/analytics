@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from 'react-router-dom'
 import { withRouter } from 'react-router-dom'
+import Money from "../behaviours/money";
 
 import Modal from './modal'
 import * as api from '../../api'
@@ -53,7 +54,7 @@ function PropsModal(props) {
     return searchParams.toString()
   }
 
-  function renderListItem(listItem) {
+  function renderListItem(listItem, hasRevenue) {
     return (
       <tr className="text-sm dark:text-gray-200" key={listItem.name}>
         <td className="p-2">
@@ -63,10 +64,12 @@ function PropsModal(props) {
               {listItem.name}
           </Link>
         </td>
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(listItem.visitors)}</td>
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(listItem.events)}</td>
-        { query.filters.goal && <td className="p-2 w-32 font-medium" align="right">{listItem.conversion_rate}%</td> }
-        { !query.filters.goal && <td className="p-2 w-32 font-medium" align="right">{listItem.percentage}</td> }
+        <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.visitors)}</td>
+        <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.events)}</td>
+        { query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.conversion_rate}%</td> }
+        { !query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.percentage}</td> }
+        { hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.total_revenue}/></td> }
+        { hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.average_revenue}/></td> }
       </tr>
     )
   }
@@ -76,6 +79,8 @@ function PropsModal(props) {
   }
 
   function renderBody() {
+    const hasRevenue = list.some((prop) => prop.total_revenue)
+
     return (
       <>
         <h1 className="text-xl font-bold dark:text-gray-100">Custom Property breakdown</h1>
@@ -86,13 +91,15 @@ function PropsModal(props) {
             <thead>
               <tr>
                 <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400 truncate" align="left">{propKey}</th>
-                <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
-                <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Events</th>
-                <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{query.filters.goal ? 'CR' : '%'}</th>
+                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
+                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Events</th>
+                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{query.filters.goal ? 'CR' : '%'}</th>
+                {hasRevenue && <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Revenue</th>}
+                {hasRevenue && <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Average</th>}
               </tr>
             </thead>
             <tbody>
-              { list.map(renderListItem) }
+              { list.map((item) => renderListItem(item, hasRevenue)) }
             </tbody>
           </table>
         </main>

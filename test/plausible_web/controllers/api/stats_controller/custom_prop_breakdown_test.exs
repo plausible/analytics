@@ -775,6 +775,155 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                }
              ]
     end
+
+    test "returns revenue metrics when filtering by a revenue goal", %{conn: conn, site: site} do
+      prop_key = "logged_in"
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          "meta.key": [prop_key],
+          "meta.value": ["true"],
+          revenue_reporting_amount: Decimal.new("12"),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": [prop_key],
+          "meta.value": ["true"],
+          revenue_reporting_amount: Decimal.new("100"),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": [prop_key],
+          "meta.value": ["false"],
+          revenue_reporting_amount: Decimal.new("8"),
+          revenue_reporting_currency: "EUR"
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
+
+      filters = Jason.encode!(%{goal: "Payment"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 2,
+                 "name" => "true",
+                 "events" => 2,
+                 "conversion_rate" => 66.7,
+                 "total_revenue" => %{"long" => "€112.00", "short" => "€112.0"},
+                 "average_revenue" => %{"long" => "€56.00", "short" => "€56.0"}
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "false",
+                 "events" => 1,
+                 "conversion_rate" => 33.3,
+                 "total_revenue" => %{"long" => "€8.00", "short" => "€8.0"},
+                 "average_revenue" => %{"long" => "€8.00", "short" => "€8.0"}
+               }
+             ]
+    end
+
+    test "returns revenue metrics when filtering by many revenue goals with same currency", %{
+      conn: conn,
+      site: site
+    } do
+      prop_key = "logged_in"
+      insert(:goal, site: site, event_name: "Payment", currency: "EUR")
+      insert(:goal, site: site, event_name: "Payment2", currency: "EUR")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          "meta.key": [prop_key],
+          "meta.value": ["false"],
+          revenue_reporting_amount: Decimal.new("10"),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "Payment",
+          "meta.key": [prop_key],
+          "meta.value": ["true"],
+          revenue_reporting_amount: Decimal.new("30"),
+          revenue_reporting_currency: "EUR"
+        ),
+        build(:event,
+          name: "Payment2",
+          "meta.key": [prop_key],
+          "meta.value": ["true"],
+          revenue_reporting_amount: Decimal.new("50"),
+          revenue_reporting_currency: "EUR"
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment|Payment2"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 2,
+                 "name" => "true",
+                 "events" => 2,
+                 "conversion_rate" => 66.7,
+                 "total_revenue" => %{"long" => "€80.00", "short" => "€80.0"},
+                 "average_revenue" => %{"long" => "€40.00", "short" => "€40.0"}
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "false",
+                 "events" => 1,
+                 "conversion_rate" => 33.3,
+                 "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
+                 "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"}
+               }
+             ]
+    end
+
+    test "does not return revenue metrics when filtering by many revenue goals with different currencies",
+         %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+      insert(:goal, site: site, event_name: "AddToCart", currency: "EUR")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
+          revenue_reporting_amount: Decimal.new("10"),
+          revenue_reporting_currency: "EUR"
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment|AddToCart"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/whatever-prop?period=day&filters=#{filters}"
+        )
+
+      returned_metrics =
+        json_response(conn, 200)
+        |> List.first()
+        |> Map.keys()
+
+      refute "Average revenue" in returned_metrics
+      refute "Total revenue" in returned_metrics
+    end
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - other filters" do

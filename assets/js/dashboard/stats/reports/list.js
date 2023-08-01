@@ -139,6 +139,23 @@ export default function ListReport(props) {
     return () => { document.removeEventListener('tick', fetchData) }
   }, [props.keyLabel, props.query, visible]);
 
+  // returns a filtered `metrics` list. Since currently, the backend can return different
+  // metrics based on filters and existing data, this function validates that the metrics
+  // we want to display are actually there in the API response.
+  function getAvailableMetrics() {
+    return metrics.filter((metric) => {
+      return state.list.some((listItem) => listItem[metric.name] != null)
+    })
+  }
+
+  function hiddenOnMobileClass(metric) {
+    if (metric.hiddenOnMobile) {
+      return 'hidden md:block'
+    } else {
+      return ''
+    }
+  }
+
   function renderReport() {
     if (state.list && state.list.length > 0) {
       return (
@@ -159,8 +176,16 @@ export default function ListReport(props) {
   }
 
   function renderReportHeader() {
-    const metricLabels = metrics.map((metric) => {
-      return (<span key={metric.name} className="text-right" style={{minWidth: colMinWidth}}>{ metricLabelFor(metric, props.query) }</span>)
+    const metricLabels = getAvailableMetrics().map((metric) => {
+      return (
+        <div
+          key={metric.name}
+          className={`text-right ${hiddenOnMobileClass(metric)}`}
+          style={{minWidth: colMinWidth}}
+        >
+            { metricLabelFor(metric, props.query) }
+        </div>
+      )
     })
     
     return (
@@ -205,7 +230,7 @@ export default function ListReport(props) {
   function renderBarFor(listItem) {    
     const lightBackground = props.color || 'bg-green-50'
     const noop = () => {}
-    const metricToPlot = metrics[0].name
+    const metricToPlot = metrics.find(m => m.plot).name
 
     return (
       <div className="flex-grow w-full overflow-hidden">
@@ -241,9 +266,13 @@ export default function ListReport(props) {
   }
 
   function renderMetricValuesFor(listItem) {
-    return metrics.map((metric) => {
+    return getAvailableMetrics().map((metric) => {
       return (
-        <div key={`${listItem.name}__${metric.name}`} style={{width: colMinWidth, minWidth: colMinWidth}} className="text-right">
+        <div
+          key={`${listItem.name}__${metric.name}`}
+          className={`text-right ${hiddenOnMobileClass(metric)}`}
+          style={{width: colMinWidth, minWidth: colMinWidth}}
+        >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
             { displayMetricValue(listItem[metric.name], metric) }
           </span>
