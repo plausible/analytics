@@ -24,10 +24,10 @@ export default function Conversions(props) {
       keyLabel="Goal"
       metrics={[
         {name: 'visitors', label: "Uniques", plot: true},
-        {name: 'events', label: "Total"},
+        {name: 'events', label: "Total", hiddenOnMobile: true},
         CR_METRIC,
-        {name: 'total_revenue', label: 'Revenue'},
-        {name: 'average_revenue', label: 'Average'}
+        {name: 'total_revenue', label: 'Revenue', hiddenOnMobile: true},
+        {name: 'average_revenue', label: 'Average', hiddenOnMobile: true}
       ]}
       detailsLink={url.sitePath(site, '/conversions')}
       query={query}
