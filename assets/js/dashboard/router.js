@@ -10,6 +10,7 @@ import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
 import ModalTable from './stats/modals/table'
 import PropsModal from './stats/modals/props'
+import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
 import * as url from './util/url';
 
@@ -61,6 +62,9 @@ export default function Router({site, loggedIn, currentUserRole}) {
           </Route>
           <Route path="/:domain/custom-prop-values/:prop_key">
             <PropsModal site={site}/>
+          </Route>
+          <Route path="/:domain/conversions">
+            <ConversionsModal site={site}/>
           </Route>
           <Route path={["/:domain/filter/:field"]}>
             <FilterModal site={site} />
