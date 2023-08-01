@@ -190,7 +190,7 @@ export default function ListReport(props) {
     
     return (
       <div className="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
-        <span className="flex-grow">{ props.keyLabel }</span>
+        <span className="flex-grow truncate">{ props.keyLabel }</span>
         { metricLabels }
       </div>
     )
