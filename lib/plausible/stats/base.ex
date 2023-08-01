@@ -367,9 +367,9 @@ defmodule Plausible.Stats.Base do
 
   def select_session_metrics(q, [:pageviews | rest], query) do
     if Ecto.Query.has_named_binding?(q, :converted_sessions_with_events) do
-      from([s, e] in q,
+      from(s in q,
         select_merge: %{
-          pageviews: fragment("sum(?)", e.__events_pageviews)
+          pageviews: fragment("sum(?)", as(:converted_sessions_with_events).__events_pageviews)
         }
       )
     else

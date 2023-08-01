@@ -305,10 +305,6 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp queries_converted_sessions_with_events?(ecto_q) do
-    Ecto.Query.has_named_binding?(ecto_q, :converted_sessions_with_events)
-  end
-
   defp do_group_by(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
          "event:props:" <> prop
@@ -378,10 +374,11 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:" <> visit_property) do
     q = do_group_by_visit(q, visit_property)
 
-    if queries_converted_sessions_with_events?(q) do
-      from([s, e] in q,
+    if Ecto.Query.has_named_binding?(q, :converted_sessions_with_events) do
+      from(s in q,
         select_merge: %{
-          __events_pageviews: fragment("sum(?)", e.__events_pageviews)
+          __events_pageviews:
+            fragment("sum(?)", as(:converted_sessions_with_events).__events_pageviews)
         }
       )
     else
