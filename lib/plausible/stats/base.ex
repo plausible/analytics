@@ -477,12 +477,12 @@ defmodule Plausible.Stats.Base do
       if count_event_pageviews do
         converted_sessions =
           from(e in query_events(site, query),
-            # FIXME: _sample_factor is probably redundant here
             group_by: fragment("?, _sample_factor", e.session_id),
             select: %{
               session_id: fragment("DISTINCT ?", e.session_id),
               _sample_factor: fragment("_sample_factor"),
-              __events_pageviews: fragment("countIf(? = 'pageview')", e.name)
+              __events_pageviews:
+                fragment("countIf(? = 'pageview') * any(_sample_factor)", e.name)
             }
           )
 
