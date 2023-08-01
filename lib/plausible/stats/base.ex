@@ -472,9 +472,9 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  def filter_converted_sessions(db_query, site, query, count_event_pageviews \\ false) do
+  def filter_converted_sessions(db_query, site, query, opts \\ []) do
     if Query.has_event_filters?(query) do
-      if count_event_pageviews do
+      if Keyword.get(opts, :count_event_pageviews) do
         converted_sessions =
           from(e in query_events(site, query),
             group_by: fragment("?, _sample_factor", e.session_id),

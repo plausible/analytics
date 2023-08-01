@@ -2006,8 +2006,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
           )
         ])
 
-        Logger.configure(level: :debug)
-
         conn =
           get(conn, "/api/v1/stats/breakdown", %{
             "site_id" => site.domain,
