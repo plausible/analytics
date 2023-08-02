@@ -27,6 +27,17 @@ imported_stats_range =
     Date.add(native_stats_range.first, -1)
   )
 
+long_random_paths =
+  for _ <- 1..100 do
+    l = Enum.random(40..300)
+    "/long/#{l}/path/#{String.duplicate("0x", l)}/end"
+  end
+
+long_random_urls =
+  for path <- long_random_paths do
+    "https://dummy.site#{path}"
+  end
+
 site =
   Plausible.Factory.insert(:site,
     domain: "dummy.site",
@@ -38,6 +49,7 @@ site =
 {:ok, goal2} = Plausible.Goals.create(site, %{"page_path" => "/register"})
 {:ok, goal3} = Plausible.Goals.create(site, %{"page_path" => "/login"})
 {:ok, goal4} = Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
+{:ok, goal5} = Plausible.Goals.create(site, %{"page_path" => Enum.random(long_random_paths)})
 {:ok, outbound} = Plausible.Goals.create(site, %{"event_name" => "Outbound Link: Click"})
 
 {:ok, _funnel} =
@@ -124,7 +136,15 @@ native_stats_range
       operating_system: Enum.random(["Windows", "macOS", "Linux"]),
       operating_system_version: to_string(Enum.random(0..15)),
       pathname:
-        Enum.random(["/", "/login", "/settings", "/register", "/docs", "/docs/1", "/docs/2"]),
+        Enum.random([
+          "/",
+          "/login",
+          "/settings",
+          "/register",
+          "/docs",
+          "/docs/1",
+          "/docs/2" | long_random_paths
+        ]),
       user_id: Enum.random(1..1200)
     ]
     |> Keyword.merge(geolocation)
@@ -151,7 +171,15 @@ native_stats_range
       operating_system: Enum.random(["Windows", "macOS", "Linux"]),
       operating_system_version: to_string(Enum.random(0..15)),
       pathname:
-        Enum.random(["/", "/login", "/settings", "/register", "/docs", "/docs/1", "/docs/2"]),
+        Enum.random([
+          "/",
+          "/login",
+          "/settings",
+          "/register",
+          "/docs",
+          "/docs/1",
+          "/docs/2" | long_random_paths
+        ]),
       user_id: Enum.random(1..1200),
       revenue_reporting_amount: Decimal.new(Enum.random(100..10000)),
       revenue_reporting_currency: "USD"
@@ -182,10 +210,7 @@ native_stats_range
       user_id: Enum.random(1..1200),
       "meta.key": ["url"],
       "meta.value": [
-        Enum.random([
-          "http://dummy.site/long/1/#{String.duplicate("0x", 200)}",
-          "http://dummy.site/random/long/1/#{String.duplicate("0x", Enum.random(1..300))}"
-        ])
+        Enum.random(long_random_urls)
       ]
     ]
     |> Keyword.merge(geolocation)
