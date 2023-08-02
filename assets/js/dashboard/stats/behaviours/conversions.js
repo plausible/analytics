@@ -32,6 +32,7 @@ export default function Conversions(props) {
       detailsLink={url.sitePath(site, '/conversions')}
       query={query}
       color="bg-red-50"
+      colMinWidth={90}
     />
   )
 }
