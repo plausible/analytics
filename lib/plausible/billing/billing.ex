@@ -76,6 +76,7 @@ defmodule Plausible.Billing do
   def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: {true, :no_trial}
 
   def needs_to_upgrade?(user) do
+    user = Plausible.Users.with_subscription(user)
     trial_is_over = Timex.before?(user.trial_expiry_date, Timex.today())
     subscription_active = subscription_is_active?(user.subscription)
 
@@ -99,6 +100,7 @@ defmodule Plausible.Billing do
   def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
 
   def on_trial?(user) do
+    user = Plausible.Users.with_subscription(user)
     !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
   end
 

@@ -43,7 +43,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
     for site <- Repo.all(q) do
       owner =
         Plausible.Sites.owner_for(site)
-        |> Repo.preload(:subscription)
+        |> Plausible.Users.with_subscription()
 
       setup_completed = Plausible.Sites.has_stats?(site)
       hours_passed = Timex.diff(Timex.now(), site.inserted_at, :hours)
@@ -66,7 +66,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
     for site <- Repo.all(q) do
       owner =
         Plausible.Sites.owner_for(site)
-        |> Repo.preload(:subscription)
+        |> Plausible.Users.with_subscription()
 
       if Plausible.Sites.has_stats?(site) do
         send_setup_success_email(owner, site)
