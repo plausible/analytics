@@ -8,6 +8,7 @@ import * as api from '../../api'
 import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
 import { parseQuery } from '../../query'
+import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
 
 function PropsModal(props) {
   const site = props.site
@@ -83,7 +84,7 @@ function PropsModal(props) {
 
     return (
       <>
-        <h1 className="text-xl font-bold dark:text-gray-100">Custom Property breakdown</h1>
+        <h1 className="text-xl font-bold dark:text-gray-100">{ specialTitleWhenGoalFilter(query, 'Custom Property Breakdown') }</h1>
 
         <div className="my-4 border-b border-gray-300"></div>
         <main className="modal__content">
