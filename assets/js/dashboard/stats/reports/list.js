@@ -298,7 +298,7 @@ export default function ListReport(props) {
   }
 
   function maybeRenderMoreLink() {
-    return props.detailsLink && !state.loading && <MoreLink url={props.detailsLink} list={state.list} />
+    return props.detailsLink && !state.loading && <MoreLink className={'mt-2'} url={props.detailsLink} list={state.list} />
   }
 
   return (
