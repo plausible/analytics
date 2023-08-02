@@ -8,7 +8,7 @@ import MoreLink from '../more-link'
 import Bar from '../bar'
 import LazyLoader from '../../components/lazy-loader'
 import classNames from 'classnames'
-
+import { trimURL } from '../../util/url'
 const MAX_ITEMS = 9
 const MIN_HEIGHT = 380
 const ROW_HEIGHT = 32
@@ -16,27 +16,27 @@ const ROW_GAP_HEIGHT = 4
 const DATA_CONTAINER_HEIGHT = (ROW_HEIGHT + ROW_GAP_HEIGHT) * (MAX_ITEMS - 1) + ROW_HEIGHT
 const COL_MIN_WIDTH = 70
 
-function FilterLink({filterQuery, onClick, children}) {
+function FilterLink({ filterQuery, onClick, children }) {
   const className = classNames('max-w-max w-full flex md:overflow-hidden', {
     'hover:underline': !!filterQuery
   })
-  
+
   if (filterQuery) {
     return (
       <Link
-        to={{search: filterQuery.toString()}}
+        to={{ search: filterQuery.toString() }}
         onClick={onClick}
         className={className}
-        >
-        { children }
+      >
+        {children}
       </Link>
     )
   } else {
-    return <span className={className}>{ children }</span>
+    return <span className={className}>{children}</span>
   }
 }
 
-function ExternalLink({item, externalLinkDest}) {
+function ExternalLink({ item, externalLinkDest }) {
   const dest = externalLinkDest && externalLinkDest(item)
   if (dest) {
     return (
@@ -103,7 +103,7 @@ function ExternalLink({item, externalLinkDest}) {
 //   * `color` - color of the comparison bars in light-mode
 
 export default function ListReport(props) {
-  const [state, setState] = useState({loading: true, list: null})
+  const [state, setState] = useState({ loading: true, list: null })
   const [visible, setVisible] = useState(false)
   const metrics = props.metrics
   const colMinWidth = props.colMinWidth || COL_MIN_WIDTH
@@ -112,12 +112,12 @@ export default function ListReport(props) {
   const goalFilterApplied = !!props.query.filters.goal
 
   const fetchData = useCallback(() => {
-      if (!isRealtime) {
-        setState({loading: true, list: null})
-      }
-      props.fetchData()
-        .then((res) => setState({loading: false, list: res}))
-    }, [props.keyLabel, props.query])
+    if (!isRealtime) {
+      setState({ loading: true, list: null })
+    }
+    props.fetchData()
+      .then((res) => setState({ loading: false, list: res }))
+  }, [props.keyLabel, props.query])
 
   const onVisible = () => { setVisible(true) }
 
@@ -126,7 +126,7 @@ export default function ListReport(props) {
       // When a goal filter is applied or removed, we always want the component to go into a
       // loading state, even in realtime mode, because the metrics list will change. We can
       // only read the new metrics once the new list is loaded.
-      setState({loading: true, list: null})
+      setState({ loading: true, list: null })
     }
   }, [goalFilterApplied]);
 
@@ -160,15 +160,15 @@ export default function ListReport(props) {
     if (state.list && state.list.length > 0) {
       return (
         <div className="h-full flex flex-col">
-          <div style={{height: ROW_HEIGHT}}>
-            { renderReportHeader() }
+          <div style={{ height: ROW_HEIGHT }}>
+            {renderReportHeader()}
           </div>
 
-          <div style={{minHeight: DATA_CONTAINER_HEIGHT}}>
-            { renderReportBody() }
+          <div style={{ minHeight: DATA_CONTAINER_HEIGHT }}>
+            {renderReportBody()}
           </div>
 
-          { maybeRenderMoreLink() }
+          {maybeRenderMoreLink()}
         </div>
       )
     }
@@ -181,17 +181,17 @@ export default function ListReport(props) {
         <div
           key={metric.name}
           className={`text-right ${hiddenOnMobileClass(metric)}`}
-          style={{minWidth: colMinWidth}}
+          style={{ minWidth: colMinWidth }}
         >
-            { metricLabelFor(metric, props.query) }
+          {metricLabelFor(metric, props.query)}
         </div>
       )
     })
-    
+
     return (
       <div className="pt-3 w-full text-xs font-bold tracking-wide text-gray-500 flex items-center dark:text-gray-400">
-        <span className="flex-grow truncate">{ props.keyLabel }</span>
-        { metricLabels }
+        <span className="flex-grow truncate">{props.keyLabel}</span>
+        {metricLabels}
       </div>
     )
   }
@@ -206,10 +206,10 @@ export default function ListReport(props) {
 
   function renderRow(listItem) {
     return (
-      <div key={listItem.name} style={{minHeight: ROW_HEIGHT}}>
-        <div className="flex w-full" style={{marginTop: ROW_GAP_HEIGHT}}>
-          { renderBarFor(listItem) }
-          { renderMetricValuesFor(listItem) }
+      <div key={listItem.name} style={{ minHeight: ROW_HEIGHT }}>
+        <div className="flex w-full" style={{ marginTop: ROW_GAP_HEIGHT }}>
+          {renderBarFor(listItem)}
+          {renderMetricValuesFor(listItem)}
         </div>
       </div>
     )
@@ -218,7 +218,7 @@ export default function ListReport(props) {
   function getFilterQuery(listItem) {
     const filter = props.getFilterFor(listItem)
     if (!filter) { return null }
-    
+
     const query = new URLSearchParams(window.location.search)
     Object.entries(filter).forEach((([key, value]) => {
       query.set(key, value)
@@ -227,9 +227,9 @@ export default function ListReport(props) {
     return query
   }
 
-  function renderBarFor(listItem) {    
+  function renderBarFor(listItem) {
     const lightBackground = props.color || 'bg-green-50'
-    const noop = () => {}
+    const noop = () => { }
     const metricToPlot = metrics.find(m => m.plot).name
 
     return (
@@ -245,7 +245,7 @@ export default function ListReport(props) {
               {maybeRenderIconFor(listItem)}
 
               <span className="w-full md:truncate">
-                {listItem.name}
+                {trimURL(listItem.name, colMinWidth)}
               </span>
             </FilterLink>
             <ExternalLink item={listItem} externalLinkDest={props.externalLinkDest} />
@@ -271,10 +271,10 @@ export default function ListReport(props) {
         <div
           key={`${listItem.name}__${metric.name}`}
           className={`text-right ${hiddenOnMobileClass(metric)}`}
-          style={{width: colMinWidth, minWidth: colMinWidth}}
+          style={{ width: colMinWidth, minWidth: colMinWidth }}
         >
           <span className="font-medium text-sm dark:text-gray-200 text-right">
-            { displayMetricValue(listItem[metric.name], metric) }
+            {displayMetricValue(listItem[metric.name], metric)}
           </span>
         </div>
       )
@@ -283,7 +283,7 @@ export default function ListReport(props) {
 
   function renderLoading() {
     return (
-      <div className="w-full flex flex-col justify-center" style={{minHeight: `${MIN_HEIGHT}px`}}>
+      <div className="w-full flex flex-col justify-center" style={{ minHeight: `${MIN_HEIGHT}px` }}>
         <div className="mx-auto loading"><div></div></div>
       </div>
     )
@@ -291,23 +291,23 @@ export default function ListReport(props) {
 
   function renderNoDataYet() {
     return (
-      <div className="w-full h-full flex flex-col justify-center" style={{minHeight: `${MIN_HEIGHT}px`}}>
+      <div className="w-full h-full flex flex-col justify-center" style={{ minHeight: `${MIN_HEIGHT}px` }}>
         <div className="mx-auto font-medium text-gray-500 dark:text-gray-400">No data yet</div>
       </div>
     )
   }
 
   function maybeRenderMoreLink() {
-    return props.detailsLink && !state.loading && <MoreLink url={props.detailsLink} list={state.list}/>
+    return props.detailsLink && !state.loading && <MoreLink url={props.detailsLink} list={state.list} />
   }
 
   return (
     <LazyLoader onVisible={onVisible} >
-      <div className="w-full" style={{minHeight: `${MIN_HEIGHT}px`}}>
-        { state.loading && renderLoading() }  
-        { !state.loading && <FadeIn show={!state.loading} className="h-full">
-          { renderReport() }
-        </FadeIn> }
+      <div className="w-full" style={{ minHeight: `${MIN_HEIGHT}px` }}>
+        {state.loading && renderLoading()}
+        {!state.loading && <FadeIn show={!state.loading} className="h-full">
+          {renderReport()}
+        </FadeIn>}
       </div>
     </LazyLoader>
   )

@@ -4,8 +4,9 @@ import { withRouter } from 'react-router-dom'
 
 import Modal from './modal'
 import * as api from '../../api'
-import numberFormatter, {durationFormatter} from '../../util/number-formatter'
-import {parseQuery} from '../../query'
+import numberFormatter, { durationFormatter } from '../../util/number-formatter'
+import { parseQuery } from '../../query'
+import { trimURL } from '../../util/url'
 
 class PagesModal extends React.Component {
   constructor(props) {
@@ -25,14 +26,14 @@ class PagesModal extends React.Component {
 
   loadPages() {
     const detailed = this.showExtra()
-    const {query, page} = this.state;
+    const { query, page } = this.state;
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, {limit: 100, page, detailed})
-      .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, { limit: 100, page, detailed })
+      .then((res) => this.setState((state) => ({ loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100 })))
   }
 
   loadMore() {
-    this.setState({loading: true, page: this.state.page + 1}, this.loadPages.bind(this))
+    this.setState({ loading: true, page: this.state.page + 1 }, this.loadPages.bind(this))
   }
 
   showExtra() {
@@ -48,7 +49,7 @@ class PagesModal extends React.Component {
   }
 
   formatBounceRate(page) {
-    if (typeof(page.bounce_rate) === 'number') {
+    if (typeof (page.bounce_rate) === 'number') {
       return page.bounce_rate + '%'
     } else {
       return '-'
@@ -63,14 +64,14 @@ class PagesModal extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2">
-          <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline block truncate">{page.name}</Link>
+          <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString() }} className="hover:underline block truncate">{trimURL(page.name, 50)}</Link>
         </td>
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{page.total_visitors}</td> }
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{page.total_visitors}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visitors)}</td>
-        {this.showPageviews() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.pageviews)}</td> }
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td> }
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{timeOnPage}</td> }
-        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{page.conversion_rate}%</td> }
+        {this.showPageviews() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.pageviews)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatBounceRate(page)}</td>}
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{timeOnPage}</td>}
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{page.conversion_rate}%</td>}
       </tr>
     )
   }
@@ -114,7 +115,7 @@ class PagesModal extends React.Component {
                 <tr>
                   <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">Page url</th>
                   {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total visitors</th>}
-                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{ this.label() }</th>
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{this.label()}</th>
                   {this.showPageviews() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Pageviews</th>}
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Bounce rate</th>}
                   {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Time on Page</th>}
@@ -122,7 +123,7 @@ class PagesModal extends React.Component {
                 </tr>
               </thead>
               <tbody>
-                { this.state.pages.map(this.renderPage.bind(this)) }
+                {this.state.pages.map(this.renderPage.bind(this))}
               </tbody>
             </table>
           </main>
@@ -134,8 +135,8 @@ class PagesModal extends React.Component {
   render() {
     return (
       <Modal site={this.props.site}>
-        { this.renderBody() }
-        { this.renderLoading() }
+        {this.renderBody()}
+        {this.renderLoading()}
       </Modal>
     )
   }
