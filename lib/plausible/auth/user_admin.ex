@@ -14,6 +14,10 @@ defmodule Plausible.Auth.UserAdmin do
     ]
   end
 
+  def delete(_conn, %{data: user}) do
+    Plausible.Auth.delete_user(user)
+  end
+
   def index(_) do
     [
       name: nil,

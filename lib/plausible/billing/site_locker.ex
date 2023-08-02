@@ -2,6 +2,8 @@ defmodule Plausible.Billing.SiteLocker do
   use Plausible.Repo
 
   def check_sites_for(user) do
+    user = Plausible.Users.with_subscription(user)
+
     case Plausible.Billing.needs_to_upgrade?(user) do
       {true, :grace_period_ended} ->
         set_lock_status_for(user, true)

@@ -37,7 +37,7 @@ defmodule Plausible.Billing.Plans do
           | :enterprise
 
   def plans_for(user) do
-    user = Repo.preload(user, :subscription)
+    user = Plausible.Users.with_subscription(user)
     sandbox_plans = plans_sandbox()
     v1_plans = plans_v1()
     v2_plans = plans_v2()

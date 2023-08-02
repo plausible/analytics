@@ -5,9 +5,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
   describe "check_sites_for/1" do
     test "does not lock sites if user is on trial" do
-      user =
-        insert(:user, trial_expiry_date: Timex.today())
-        |> Repo.preload(:subscription)
+      user = insert(:user, trial_expiry_date: Timex.today())
 
       site = insert(:site, locked: true, members: [user])
 
@@ -19,7 +17,6 @@ defmodule Plausible.Billing.SiteLockerTest do
     test "does not lock if user has an active subscription" do
       user = insert(:user)
       insert(:subscription, status: "active", user: user)
-      user = Repo.preload(user, :subscription)
       site = insert(:site, locked: true, members: [user])
 
       SiteLocker.check_sites_for(user)
@@ -30,7 +27,6 @@ defmodule Plausible.Billing.SiteLockerTest do
     test "does not lock user who is past due" do
       user = insert(:user)
       insert(:subscription, status: "past_due", user: user)
-      user = Repo.preload(user, :subscription)
       site = insert(:site, members: [user])
 
       SiteLocker.check_sites_for(user)
@@ -41,7 +37,6 @@ defmodule Plausible.Billing.SiteLockerTest do
     test "does not lock user who cancelled subscription but it hasn't expired yet" do
       user = insert(:user)
       insert(:subscription, status: "deleted", user: user)
-      user = Repo.preload(user, :subscription)
       site = insert(:site, members: [user])
 
       SiteLocker.check_sites_for(user)
@@ -59,7 +54,6 @@ defmodule Plausible.Billing.SiteLockerTest do
         )
 
       insert(:subscription, status: "active", user: user)
-      user = Repo.preload(user, :subscription)
       site = insert(:site, members: [user])
 
       SiteLocker.check_sites_for(user)
@@ -78,8 +72,6 @@ defmodule Plausible.Billing.SiteLockerTest do
 
       site = insert(:site, members: [user])
 
-      user = Repo.preload(user, :subscription)
-
       SiteLocker.check_sites_for(user)
 
       refute Repo.reload!(site).locked
@@ -95,7 +87,6 @@ defmodule Plausible.Billing.SiteLockerTest do
         )
 
       insert(:subscription, status: "active", user: user)
-      user = Repo.preload(user, :subscription)
       site = insert(:site, members: [user])
 
       SiteLocker.check_sites_for(user)
@@ -113,7 +104,6 @@ defmodule Plausible.Billing.SiteLockerTest do
         )
 
       insert(:subscription, status: "active", user: user)
-      user = Repo.preload(user, :subscription)
       insert(:site, members: [user])
 
       SiteLocker.check_sites_for(user)
@@ -135,7 +125,6 @@ defmodule Plausible.Billing.SiteLockerTest do
         )
 
       insert(:subscription, status: "active", user: user)
-      user = Repo.preload(user, :subscription)
       insert(:site, members: [user])
 
       SiteLocker.check_sites_for(user)
@@ -145,16 +134,14 @@ defmodule Plausible.Billing.SiteLockerTest do
         subject: "[Action required] Your Plausible dashboard is now locked"
       )
 
-      user = Repo.reload!(user) |> Repo.preload(:subscription)
+      user = Repo.reload!(user)
       SiteLocker.check_sites_for(user)
 
       assert_no_emails_delivered()
     end
 
     test "locks all sites if user has no trial or active subscription" do
-      user =
-        insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
-        |> Repo.preload(:subscription)
+      user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
 
       site = insert(:site, locked: true, members: [user])
 
@@ -164,9 +151,7 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "only locks sites that the user owns" do
-      user =
-        insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
-        |> Repo.preload(:subscription)
+      user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
 
       owner_site =
         insert(:site,
