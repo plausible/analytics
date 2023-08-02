@@ -7,7 +7,7 @@ import Modal from './modal'
 import * as api from '../../api'
 import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
-import {parseQuery} from '../../query'
+import { parseQuery } from '../../query'
 
 function PropsModal(props) {
   const site = props.site
@@ -24,7 +24,7 @@ function PropsModal(props) {
   }, [])
 
   function fetchData() {
-    api.get(url.apiPath(site, `/custom-prop-values/${propKey}`), query, {limit: 100, page})
+    api.get(url.apiPath(site, `/custom-prop-values/${propKey}`), query, { limit: 100, page })
       .then((res) => {
         setLoading(false)
         setList(list.concat(res))
@@ -50,7 +50,7 @@ function PropsModal(props) {
 
   function filterSearchLink(listItem) {
     const searchParams = new URLSearchParams(window.location.search)
-    searchParams.set('props', JSON.stringify({[propKey]: listItem['name']}))
+    searchParams.set('props', JSON.stringify({ [propKey]: listItem['name'] }))
     return searchParams.toString()
   }
 
@@ -59,17 +59,17 @@ function PropsModal(props) {
       <tr className="text-sm dark:text-gray-200" key={listItem.name}>
         <td className="p-2">
           <Link
-            to={{pathname: url.siteBasePath(site), search: filterSearchLink(listItem)}}
+            to={{ pathname: url.siteBasePath(site), search: filterSearchLink(listItem) }}
             className="hover:underline block truncate">
-              {listItem.name}
+            {url.trimURL(listItem.name, 30)}
           </Link>
         </td>
         <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.visitors)}</td>
         <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.events)}</td>
-        { query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.conversion_rate}%</td> }
-        { !query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.percentage}</td> }
-        { hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.total_revenue}/></td> }
-        { hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.average_revenue}/></td> }
+        {query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.conversion_rate}%</td>}
+        {!query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.percentage}</td>}
+        {hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.total_revenue} /></td>}
+        {hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.average_revenue} /></td>}
       </tr>
     )
   }
@@ -99,7 +99,7 @@ function PropsModal(props) {
               </tr>
             </thead>
             <tbody>
-              { list.map((item) => renderListItem(item, hasRevenue)) }
+              {list.map((item) => renderListItem(item, hasRevenue))}
             </tbody>
           </table>
         </main>
@@ -109,9 +109,9 @@ function PropsModal(props) {
 
   return (
     <Modal site={site}>
-      { renderBody() }
-      { loading && renderLoading() }
-      { !loading && moreResultsAvailable && renderLoadMore() }
+      {renderBody()}
+      {loading && renderLoading()}
+      {!loading && moreResultsAvailable && renderLoadMore()}
     </Modal>
   )
 }

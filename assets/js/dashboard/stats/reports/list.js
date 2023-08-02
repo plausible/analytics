@@ -245,7 +245,7 @@ export default function ListReport(props) {
               {maybeRenderIconFor(listItem)}
 
               <span className="w-full md:truncate">
-                {trimURL(listItem.name, 60)}
+                {trimURL(listItem.name, colMinWidth)}
               </span>
             </FilterLink>
             <ExternalLink item={listItem} externalLinkDest={props.externalLinkDest} />
