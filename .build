@@ -132,6 +132,7 @@ Plausible.Test.Support.HTML.html
 Plausible.TestUtils.html
 Plausible.Themes.html
 Plausible.Timezones.html
+Plausible.Users.html
 Plausible.Workers.CheckUsage.html
 Plausible.Workers.CleanEmailVerificationCodes.html
 Plausible.Workers.CleanInvitations.html
@@ -239,8 +240,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-72DBBE94.js
-dist/sidebar_items-18EF995D.js
+dist/search_data-9EB2CAB9.js
+dist/sidebar_items-14EB7A87.js
 index.html
 readme.html
 search.html
