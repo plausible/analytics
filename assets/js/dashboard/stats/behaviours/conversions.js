@@ -10,7 +10,7 @@ export default function Conversions(props) {
   const {site, query} = props
 
   function fetchConversions() {
-    return api.get(url.apiPath(site, '/conversions'), query, {limit: 20})
+    return api.get(url.apiPath(site, '/conversions'), query, {limit: 9})
   }
 
   function getFilterFor(listItem) {
