@@ -689,11 +689,13 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       insert(:google_auth, site: site, user: user)
       insert(:subscription, user: user, status: "deleted")
+      insert(:subscription, user: user, status: "active")
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
       assert Repo.reload(site) == nil
       assert Repo.reload(user) == nil
+      assert Repo.all(Plausible.Billing.Subscription) == []
     end
 
     test "deletes sites that the user owns", %{conn: conn, user: user, site: owner_site} do
