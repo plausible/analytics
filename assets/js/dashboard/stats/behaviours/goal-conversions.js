@@ -18,26 +18,26 @@ export function specialTitleWhenGoalFilter(query, defaultTitle) {
   }
 }
 
-function UrlBreakdown(props) {
-  const { site, query } = props
+function SpecialPropBreakdown(props) {
+  const { site, query, prop } = props
 
   function fetchData() {
-    return api.get(url.apiPath(site, '/custom-prop-values/url'), query)
+    return api.get(url.apiPath(site, `/custom-prop-values/${prop}`), query)
   }
 
-  const getFilterFor = (listItem) => { return {'props': JSON.stringify({url: listItem['name']})} }
+  const getFilterFor = (listItem) => { return {'props': JSON.stringify({[prop]: listItem['name']})} }
 
   return (
     <ListReport
       fetchData={fetchData}
       getFilterFor={getFilterFor}
-      keyLabel={'url'}
+      keyLabel={prop}
       metrics={[
         {name: 'visitors', label: 'Visitors', plot: true},
         {name: 'events', label: 'Events', hiddenOnMobile: true},
         CR_METRIC
       ]}
-      moreLink={url.sitePath(site, `/custom-prop-values/url`)}
+      moreLink={url.sitePath(site, `/custom-prop-values/${prop}`)}
       query={query}
       color="bg-red-50"
       colMinWidth={90}
@@ -48,8 +48,10 @@ function UrlBreakdown(props) {
 export default function GoalConversions(props) {
   const {site, query} = props
 
-  if (['404', 'Outbound Link: Click', 'File Download'].includes(query.filters.goal)) {
-    return <UrlBreakdown site={site} query={props.query}/>
+  if (query.filters.goal === '404') {
+    return <SpecialPropBreakdown site={site} query={props.query} prop="path"/>
+  } else if (['Outbound Link: Click', 'File Download'].includes(query.filters.goal)) {
+    return <SpecialPropBreakdown site={site} query={props.query} prop="url"/>
   } else {
     return <Conversions site={site} query={props.query} />
   }
