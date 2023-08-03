@@ -217,7 +217,7 @@ defmodule Plausible.PropsTest do
              site |> Plausible.Props.suggest_keys_to_allow() |> Enum.sort()
   end
 
-  test "suggest_keys_to_allow/2 does not return url prop key from special events" do
+  test "suggest_keys_to_allow/2 does not return internal prop keys from special event types" do
     site = insert(:site)
 
     populate_stats(site, [
@@ -230,10 +230,15 @@ defmodule Plausible.PropsTest do
         name: "Outbound Link: Click",
         "meta.key": ["url", "first_time_customer"],
         "meta.value": ["http://link.test", "true"]
+      ),
+      build(:event,
+        name: "404",
+        "meta.key": ["path", "with_error"],
+        "meta.value": ["/i-dont-exist", "true"]
       )
     ])
 
-    assert ["first_time_customer", "logged_in"] ==
+    assert ["first_time_customer", "logged_in", "with_error"] ==
              site |> Plausible.Props.suggest_keys_to_allow() |> Enum.sort()
   end
 end

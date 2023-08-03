@@ -18,6 +18,11 @@ defmodule Plausible.Props do
 
   @spec allow(Plausible.Site.t(), [prop()] | prop()) ::
           {:ok, Plausible.Site.t()} | {:error, Ecto.Changeset.t()}
+  @doc """
+  Allows a prop key or a list of props keys to be included in ClickHouse
+  queries. Allowing prop keys does not affect ingestion, as we don't want any
+  data to be dropped or lost.
+  """
   def allow(site, prop_or_props) do
     site
     |> allow_changeset(prop_or_props)
@@ -33,6 +38,11 @@ defmodule Plausible.Props do
 
   @spec disallow(Plausible.Site.t(), prop()) ::
           {:ok, Plausible.Site.t()} | {:error, Ecto.Changeset.t()}
+  @doc """
+  Removes a previously allowed prop key from the allow list. This means this
+  prop key won't be included in ClickHouse queries. This doesn't drop any
+  ClickHouse data, nor affects ingestion.
+  """
   def disallow(site, prop) do
     allowed_event_props = site.allowed_event_props || []
 
@@ -74,7 +84,7 @@ defmodule Plausible.Props do
   # List of props to be ignored from suggestions. For example, `url` is used both
   # for file downloads and outbound links, and it doesn't make sense to suggest
   # users to allow this prop key.
-  @internal_props ["url"]
+  @internal_props ~w(url path)
 
   @spec suggest_keys_to_allow(Plausible.Site.t(), non_neg_integer()) :: [String.t()]
   @doc """
@@ -91,17 +101,15 @@ defmodule Plausible.Props do
         where: fragment("? > (NOW() - INTERVAL 6 MONTH)", e.timestamp),
         select: %{key: fragment("arrayJoin(?)", field(e, :"meta.key"))}
 
-    suggestions =
-      Plausible.ClickhouseRepo.all(
-        from uk in subquery(unnested_keys),
-          where: uk.key not in ^allowed_event_props,
-          group_by: uk.key,
-          select: uk.key,
-          order_by: {:desc, count(uk.key)},
-          limit: ^limit
-      )
-
-    suggestions -- @internal_props
+    Plausible.ClickhouseRepo.all(
+      from uk in subquery(unnested_keys),
+        where: uk.key not in ^allowed_event_props,
+        where: uk.key not in ^@internal_props,
+        group_by: uk.key,
+        select: uk.key,
+        order_by: {:desc, count(uk.key)},
+        limit: ^limit
+    )
   end
 
   def enabled_for?(%Plausible.Auth.User{} = user) do
