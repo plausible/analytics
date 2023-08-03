@@ -8,6 +8,7 @@ import * as api from "../../api"
 const SPECIAL_GOALS = {
   '404': {title: '404 Pages', prop: 'path'},
   'Outbound Link: Click': {title: 'Outbound Links', prop: 'url'},
+  'Cloaked Link: Click': {title: 'Cloaked Links', prop: 'url'},
   'File Download': {title: 'File Downloads', prop: 'url'}
 }
 
