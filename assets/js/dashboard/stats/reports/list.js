@@ -91,7 +91,12 @@ function ExternalLink({ item, externalLinkDest }) {
 //   * `onClick` - function with additional action to be taken when a list entry is clicked.
 
 //   * `detailsLink` - the pathname to the detailed view of this report. E.g.:
-//     `/dummy.site/pages`
+//     `/dummy.site/pages`. If this is given as input to the ListReport, the Details button
+//     will always be rendered.
+
+//   * `maybeHideDetails` - set this to `true` if the details button should be hidden on
+//     the condition that there are less than MAX_ITEMS entries in the list. (i.e . nothing
+//     more to show)
 
 //   * `externalLinkDest` - a function that takes a list item and returns an external url
 //     to navigate to. If this prop is given, an additional icon is rendered upon hovering
@@ -168,7 +173,7 @@ export default function ListReport(props) {
             {renderReportBody()}
           </div>
 
-          {maybeRenderMoreLink()}
+          {maybeRenderDetailsLink()}
         </div>
       )
     }
@@ -297,8 +302,12 @@ export default function ListReport(props) {
     )
   }
 
-  function maybeRenderMoreLink() {
-    return props.detailsLink && !state.loading && <MoreLink url={props.detailsLink} list={state.list} />
+  function maybeRenderDetailsLink() {
+    const moreResultsAvailable = state.list.length >= MAX_ITEMS
+    const hideDetails = props.maybeHideDetails && !moreResultsAvailable
+
+    const showDetails = props.detailsLink && !state.loading && !hideDetails 
+    return showDetails && <MoreLink className={'mt-2'} url={props.detailsLink} list={state.list} />
   }
 
   return (

@@ -10,7 +10,7 @@ export default function Conversions(props) {
   const {site, query} = props
 
   function fetchConversions() {
-    return api.get(url.apiPath(site, '/conversions'), query, {limit: 20})
+    return api.get(url.apiPath(site, '/conversions'), query, {limit: 9})
   }
 
   function getFilterFor(listItem) {
@@ -30,8 +30,10 @@ export default function Conversions(props) {
         {name: 'average_revenue', label: 'Average', hiddenOnMobile: true}
       ]}
       detailsLink={url.sitePath(site, '/conversions')}
+      maybeHideDetails={true}
       query={query}
       color="bg-red-50"
+      colMinWidth={90}
     />
   )
 }

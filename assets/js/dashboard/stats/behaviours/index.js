@@ -4,7 +4,7 @@ import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
-import Conversions from './conversions'
+import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
 import DeprecatedConversions from './deprecated-conversions'
 import Properties from './props'
 import Funnel from './funnel'
@@ -24,8 +24,8 @@ export const sectionTitles = {
 }
 
 export default function Behaviours(props) {
-  const site = props.site
-  const adminAccess = ['owner', 'admin', 'super_admin'].includes(props.currentUserRole)
+  const {site, query, currentUserRole} = props
+  const adminAccess = ['owner', 'admin', 'super_admin'].includes(currentUserRole)
   const tabKey = `behavioursTab__${site.domain}`
   const funnelKey = `behavioursTabFunnel__${site.domain}`
   const [enabledModes, setEnabledModes] = useState(getEnabledModes())
@@ -126,9 +126,9 @@ export default function Behaviours(props) {
   function renderConversions() {
     if (site.hasGoals) {
       if (site.flags.props) {
-        return <Conversions site={site} query={props.query} />
+        return <GoalConversions site={site} query={query} />
       } else {
-        return <DeprecatedConversions site={site} query={props.query} />
+        return <DeprecatedConversions site={site} query={query} />
       }
     }
     else if (adminAccess) {
@@ -148,7 +148,7 @@ export default function Behaviours(props) {
   }
 
   function renderFunnels() {
-    if (selectedFunnel) { return <Funnel site={site} query={props.query} funnelName={selectedFunnel} /> }
+    if (selectedFunnel) { return <Funnel site={site} query={query} funnelName={selectedFunnel} /> }
     else if (adminAccess) {
       return (
         <FeatureSetupNotice
@@ -167,7 +167,7 @@ export default function Behaviours(props) {
 
   function renderProps() {
     if (site.allowedEventProps && site.allowedEventProps.length > 0) {
-      return <Properties site={site} query={props.query} allowedEventProps={site.allowedEventProps}/>
+      return <Properties site={site} query={query} allowedEventProps={site.allowedEventProps}/>
     } else if (adminAccess) {
       return (
         <FeatureSetupNotice
@@ -237,7 +237,15 @@ export default function Behaviours(props) {
   }
 
   function isRealtime() {
-    return props.query.period === 'realtime'
+    return query.period === 'realtime'
+  }
+
+  function sectionTitle() {
+    if (mode === CONVERSIONS) {
+      return specialTitleWhenGoalFilter(query, sectionTitles[mode])
+    } else {
+      return sectionTitles[mode]
+    }
   }
 
   if (mode) {
@@ -246,7 +254,7 @@ export default function Behaviours(props) {
         <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
           <div className="flex justify-between w-full">
             <h3 className="font-bold dark:text-gray-100">
-              {sectionTitles[mode] + (isRealtime() ? ' (last 30min)' : '')}
+              {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
             </h3>
             {tabs()}
           </div>

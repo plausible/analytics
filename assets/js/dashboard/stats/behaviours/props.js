@@ -50,6 +50,7 @@ export default function Properties(props) {
           {name: 'average_revenue', label: 'Average', hiddenOnMobile: true}
         ]}
         detailsLink={url.sitePath(site, `/custom-prop-values/${propKey}`)}
+        maybeHideDetails={true}
         query={query}
         color="bg-red-50"
         colMinWidth={90}
