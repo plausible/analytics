@@ -448,14 +448,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert [%{"prop_names" => []}] = json_response(conn, 200)
     end
 
-    test "filters out garbage prop_names",
-         %{
-           conn: conn,
-           site: site
-         } do
-      site =
-        site
-        |> Plausible.Sites.set_allowed_event_props!(["author"])
+    test "filters out garbage prop_names", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
 
       populate_stats(site, [
         build(:event,
@@ -488,9 +482,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
            conn: conn,
            site: site
          } do
-      site =
-        site
-        |> Plausible.Sites.set_allowed_event_props!(["author", "logged_in"])
+      {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
 
       populate_stats(site, [
         build(:event,
