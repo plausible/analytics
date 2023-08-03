@@ -191,4 +191,54 @@ defmodule Plausible.PropsTest do
        ]
      }} = Plausible.Props.allow_existing_props(site)
   end
+
+  test "suggest_keys_to_allow/2 returns prop keys from events" do
+    site = insert(:site)
+
+    populate_stats(site, [
+      build(:event,
+        name: "Payment",
+        "meta.key": ["amount", "os"],
+        "meta.value": ["500", "Windows"]
+      ),
+      build(:event,
+        name: "Payment",
+        "meta.key": ["amount", "logged_in", "with_error"],
+        "meta.value": ["100", "false", "true"]
+      ),
+      build(:event,
+        name: "Payment",
+        "meta.key": ["amount", "is_customer", "first_time_customer"],
+        "meta.value": ["100", "false", "true"]
+      )
+    ])
+
+    assert ["amount", "first_time_customer", "is_customer", "logged_in", "os", "with_error"] ==
+             site |> Plausible.Props.suggest_keys_to_allow() |> Enum.sort()
+  end
+
+  test "suggest_keys_to_allow/2 does not return internal prop keys from special event types" do
+    site = insert(:site)
+
+    populate_stats(site, [
+      build(:event,
+        name: "File Download",
+        "meta.key": ["url", "logged_in"],
+        "meta.value": ["http://file.test", "false"]
+      ),
+      build(:event,
+        name: "Outbound Link: Click",
+        "meta.key": ["url", "first_time_customer"],
+        "meta.value": ["http://link.test", "true"]
+      ),
+      build(:event,
+        name: "404",
+        "meta.key": ["path", "with_error"],
+        "meta.value": ["/i-dont-exist", "true"]
+      )
+    ])
+
+    assert ["first_time_customer", "logged_in", "with_error"] ==
+             site |> Plausible.Props.suggest_keys_to_allow() |> Enum.sort()
+  end
 end
