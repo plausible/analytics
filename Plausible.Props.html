@@ -150,6 +150,10 @@ Plausible
 
       </div>
 
+        <div class="summary-synopsis"><p>Allows a prop key or a list of props keys to be included in ClickHouse
+queries. Allowing prop keys does not affect ingestion, as we don't want any
+data to be dropped or lost.</p></div>
+
     </div>
 
     <div class="summary-row">
@@ -176,6 +180,10 @@ the past 6 months.</p></div>
         <a href="#disallow/2" translate="no">disallow(site, prop)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Removes a previously allowed prop key from the allow list. This means this
+prop key won't be included in ClickHouse queries. This doesn't drop any
+ClickHouse data, nor affects ingestion.</p></div>
 
     </div>
 
@@ -285,7 +293,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">allow(site, prop_or_props)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L21" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L26" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -302,7 +310,9 @@ Functions
 
       </div>
 
-
+<p>Allows a prop key or a list of props keys to be included in ClickHouse
+queries. Allowing prop keys does not affect ingestion, as we don't want any
+data to be dropped or lost.</p>
   </section>
 </section>
 <section class="detail" id="allow_changeset/2">
@@ -314,7 +324,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">allow_changeset(site, prop_or_props)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L27" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L32" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -336,7 +346,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">allow_existing_props(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L65" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L75" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -365,7 +375,7 @@ the past 6 months.</p>
     </a>
     <h1 class="signature" translate="no">disallow(site, prop)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L36" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L46" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -382,7 +392,9 @@ the past 6 months.</p>
 
       </div>
 
-
+<p>Removes a previously allowed prop key from the allow list. This means this
+prop key won't be included in ClickHouse queries. This doesn't drop any
+ClickHouse data, nor affects ingestion.</p>
   </section>
 </section>
 <section class="detail" id="enabled_for?/1">
@@ -394,7 +406,7 @@ the past 6 months.</p>
     </a>
     <h1 class="signature" translate="no">enabled_for?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L99" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L115" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -484,7 +496,7 @@ the past 6 months.</p>
     </a>
     <h1 class="signature" translate="no">suggest_keys_to_allow(site, limit \\ 300)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L80" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L95" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
