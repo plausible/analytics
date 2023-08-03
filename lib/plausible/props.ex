@@ -71,6 +71,11 @@ defmodule Plausible.Props do
     allow(site, props_to_allow)
   end
 
+  # List of props to be ignored from suggestions. For example, `url` is used both
+  # for file downloads and outbound links, and it doesn't make sense to suggest
+  # users to allow this prop key.
+  @internal_props ["url"]
+
   @spec suggest_keys_to_allow(Plausible.Site.t(), non_neg_integer()) :: [String.t()]
   @doc """
   Queries the events table to fetch the #{@max_props} most frequent prop keys
@@ -86,14 +91,17 @@ defmodule Plausible.Props do
         where: fragment("? > (NOW() - INTERVAL 6 MONTH)", e.timestamp),
         select: %{key: fragment("arrayJoin(?)", field(e, :"meta.key"))}
 
-    Plausible.ClickhouseRepo.all(
-      from uk in subquery(unnested_keys),
-        where: uk.key not in ^allowed_event_props,
-        group_by: uk.key,
-        select: uk.key,
-        order_by: {:desc, count(uk.key)},
-        limit: ^limit
-    )
+    suggestions =
+      Plausible.ClickhouseRepo.all(
+        from uk in subquery(unnested_keys),
+          where: uk.key not in ^allowed_event_props,
+          group_by: uk.key,
+          select: uk.key,
+          order_by: {:desc, count(uk.key)},
+          limit: ^limit
+      )
+
+    suggestions -- @internal_props
   end
 
   def enabled_for?(%Plausible.Auth.User{} = user) do
