@@ -119,7 +119,7 @@ export default class SearchTerms extends React.Component {
         <React.Fragment>
           <h3 className="font-bold dark:text-gray-100">Search Terms</h3>
           { this.renderList() }
-          <MoreLink buttonText="DETAILS" site={this.props.site} list={this.state.searchTerms} endpoint="referrers/Google" className="w-full pb-4 absolute bottom-0 left-0"/>
+          <MoreLink site={this.props.site} list={this.state.searchTerms} endpoint="referrers/Google" className="w-full pb-4 absolute bottom-0 left-0"/>
         </React.Fragment>
       )
     }

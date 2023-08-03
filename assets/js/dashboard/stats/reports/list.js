@@ -94,9 +94,9 @@ function ExternalLink({ item, externalLinkDest }) {
 //     `/dummy.site/pages`. If this is given as input to the ListReport, the Details button
 //     will always be rendered.
 
-//   * `moreLink` - the pathname to the modal view of this report. E.g.:
-//     `/dummy.site/conversions`. It basically does the same thing as `detailsLink`, but
-//     the button UI is different and it will only be rendered if there are >= 9 results.
+//   * `maybeHideDetails` - set this to `true` if the details button should be hidden on
+//     the condition that there are less than MAX_ITEMS entries in the list. (i.e . nothing
+//     more to show)
 
 //   * `externalLinkDest` - a function that takes a list item and returns an external url
 //     to navigate to. If this prop is given, an additional icon is rendered upon hovering
@@ -174,7 +174,6 @@ export default function ListReport(props) {
           </div>
 
           {maybeRenderDetailsLink()}
-          {maybeRenderMoreLink()}
         </div>
       )
     }
@@ -304,12 +303,11 @@ export default function ListReport(props) {
   }
 
   function maybeRenderDetailsLink() {
-    return props.detailsLink && !state.loading && <MoreLink buttonText="DETAILS" className={'mt-2'} url={props.detailsLink} list={state.list} />
-  }
-
-  function maybeRenderMoreLink() {
     const moreResultsAvailable = state.list.length >= MAX_ITEMS
-    return props.moreLink && !state.loading && moreResultsAvailable && <MoreLink buttonText="MORE" className={'mt-2'} url={props.moreLink} list={state.list} />
+    const hideDetails = props.maybeHideDetails && !moreResultsAvailable
+
+    const showDetails = props.detailsLink && !state.loading && !hideDetails 
+    return showDetails && <MoreLink className={'mt-2'} url={props.detailsLink} list={state.list} />
   }
 
   return (

@@ -20,23 +20,7 @@ function detailsIcon() {
   )
 }
 
-function moreIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      strokeWidth="1.5"
-      stroke="currentColor"
-      className="w-6 h-6 feather mr-1"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21L21 17.25" />
-    </svg>
-  )
-}
-
-export default function MoreLink({url, site, list, endpoint, buttonText, className}) {
-
+export default function MoreLink({url, site, list, endpoint, className}) {
   if (list.length > 0) {
     return (
       <div className={`w-full text-center ${className ? className : ''}`}>
@@ -45,9 +29,8 @@ export default function MoreLink({url, site, list, endpoint, buttonText, classNa
           // eslint-disable-next-line max-len
           className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition tracking-wide"
         >
-          { buttonText === 'DETAILS' && detailsIcon() }
-          { buttonText === 'MORE' && moreIcon() }
-          { buttonText }
+          { detailsIcon() }
+          DETAILS
         </Link>
       </div>
     )

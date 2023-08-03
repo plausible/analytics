@@ -146,7 +146,7 @@ class Countries extends React.Component {
       return (
         <>
           <div className="mx-auto mt-4" style={{width: '100%', maxWidth: '475px', height: '335px'}} id="map-container"></div>
-          <MoreLink buttonText="DETAILS" site={this.props.site} list={this.state.countries} endpoint="countries" />
+          <MoreLink site={this.props.site} list={this.state.countries} endpoint="countries" />
           { this.geolocationDbNotice() }
         </>
       )
