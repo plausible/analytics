@@ -91,7 +91,12 @@ function ExternalLink({ item, externalLinkDest }) {
 //   * `onClick` - function with additional action to be taken when a list entry is clicked.
 
 //   * `detailsLink` - the pathname to the detailed view of this report. E.g.:
-//     `/dummy.site/pages`
+//     `/dummy.site/pages`. If this is given as input to the ListReport, the Details button
+//     will always be rendered.
+
+//   * `moreLink` - the pathname to the modal view of this report. E.g.:
+//     `/dummy.site/conversions`. It basically does the same thing as `detailsLink`, but
+//     the button UI is different and it will only be rendered if there are >= 9 results.
 
 //   * `externalLinkDest` - a function that takes a list item and returns an external url
 //     to navigate to. If this prop is given, an additional icon is rendered upon hovering
@@ -168,6 +173,7 @@ export default function ListReport(props) {
             {renderReportBody()}
           </div>
 
+          {maybeRenderDetailsLink()}
           {maybeRenderMoreLink()}
         </div>
       )
@@ -297,8 +303,13 @@ export default function ListReport(props) {
     )
   }
 
+  function maybeRenderDetailsLink() {
+    return props.detailsLink && !state.loading && <MoreLink buttonText="DETAILS" className={'mt-2'} url={props.detailsLink} list={state.list} />
+  }
+
   function maybeRenderMoreLink() {
-    return props.detailsLink && !state.loading && <MoreLink className={'mt-2'} url={props.detailsLink} list={state.list} />
+    const moreResultsAvailable = state.list.length >= MAX_ITEMS
+    return props.moreLink && !state.loading && moreResultsAvailable && <MoreLink buttonText="MORE" className={'mt-2'} url={props.moreLink} list={state.list} />
   }
 
   return (

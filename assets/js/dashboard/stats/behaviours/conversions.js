@@ -29,7 +29,7 @@ export default function Conversions(props) {
         {name: 'total_revenue', label: 'Revenue', hiddenOnMobile: true},
         {name: 'average_revenue', label: 'Average', hiddenOnMobile: true}
       ]}
-      detailsLink={url.sitePath(site, '/conversions')}
+      moreLink={url.sitePath(site, '/conversions')}
       query={query}
       color="bg-red-50"
       colMinWidth={90}

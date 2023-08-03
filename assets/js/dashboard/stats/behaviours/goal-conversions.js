@@ -37,7 +37,7 @@ function UrlBreakdown(props) {
         {name: 'events', label: 'Events', hiddenOnMobile: true},
         CR_METRIC
       ]}
-      detailsLink={url.sitePath(site, `/custom-prop-values/url`)}
+      moreLink={url.sitePath(site, `/custom-prop-values/url`)}
       query={query}
       color="bg-red-50"
       colMinWidth={90}
