@@ -33,6 +33,8 @@ defmodule Plausible.Goal do
     [{"Select reporting currency", nil}] ++ options
   end
 
+  @reserved_event_names ["404", "Outbound Link: Click", "File Download"]
+
   def changeset(goal, attrs \\ %{}) do
     goal
     |> cast(attrs, [:id, :site_id, :event_name, :page_path, :currency])
@@ -41,6 +43,7 @@ defmodule Plausible.Goal do
     |> validate_event_name_and_page_path()
     |> update_change(:event_name, &String.trim/1)
     |> update_change(:page_path, &String.trim/1)
+    |> validate_exclusion(:event_name, @reserved_event_names)
     |> validate_length(:event_name, max: 120)
     |> maybe_drop_currency()
   end

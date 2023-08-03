@@ -32,6 +32,19 @@ defmodule Plausible.GoalsTest do
              :eq
   end
 
+  test "create/2 rejects event goals with reserved names" do
+    site = insert(:site)
+    {:error, %Ecto.Changeset{errors: errors}} = Goals.create(site, %{"event_name" => "404"})
+
+    {:error, %Ecto.Changeset{errors: ^errors}} =
+      Goals.create(site, %{"event_name" => "  File Download "})
+
+    {:error, %Ecto.Changeset{errors: ^errors}} =
+      Goals.create(site, %{"event_name" => "Outbound Link: Click"})
+
+    assert {"is reserved", _} = errors[:event_name]
+  end
+
   test "for_site2 returns trimmed input even if it was saved with trailing whitespace" do
     site = insert(:site)
     insert(:goal, %{site: site, event_name: " Signup "})
