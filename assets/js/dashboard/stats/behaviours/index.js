@@ -166,8 +166,8 @@ export default function Behaviours(props) {
   }
 
   function renderProps() {
-    if (site.allowedEventProps && site.allowedEventProps.length > 0) {
-      return <Properties site={site} query={query} allowedEventProps={site.allowedEventProps}/>
+    if (site.hasProps) {
+      return <Properties site={site} query={props.query} />
     } else if (adminAccess) {
       return (
         <FeatureSetupNotice

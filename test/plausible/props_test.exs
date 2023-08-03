@@ -241,4 +241,15 @@ defmodule Plausible.PropsTest do
     assert ["first_time_customer", "logged_in", "with_error"] ==
              site |> Plausible.Props.suggest_keys_to_allow() |> Enum.sort()
   end
+
+  test "configured?/1 returns whether the site has allow at least one prop" do
+    site = insert(:site)
+    refute Plausible.Props.configured?(site)
+
+    {:ok, site} = Plausible.Props.allow(site, "hello-world")
+    assert Plausible.Props.configured?(site)
+
+    {:ok, site} = Plausible.Props.disallow(site, "hello-world")
+    refute Plausible.Props.configured?(site)
+  end
 end

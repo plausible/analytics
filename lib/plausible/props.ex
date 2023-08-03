@@ -119,4 +119,11 @@ defmodule Plausible.Props do
   defp valid?(key) do
     String.length(key) in 1..@max_prop_key_length
   end
+
+  @doc """
+  Returns whether the site has configured custom props or not.
+  """
+  def configured?(%Plausible.Site{allowed_event_props: allowed_event_props}) do
+    is_list(allowed_event_props) && length(allowed_event_props) > 0
+  end
 end
