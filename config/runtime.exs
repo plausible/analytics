@@ -271,7 +271,8 @@ if is_nil(db_socket_dir) do
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
-    database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
+    database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible"),
+    ssl: false
 end
 
 included_environments = if sentry_dsn, do: ["prod", "staging", "dev"], else: []
