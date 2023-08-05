@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-8FB5B620.js"></script>
+    <script src="dist/sidebar_items-D92D4576.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -207,6 +207,16 @@ ClickHouse data, nor affects ingestion.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#internal_keys/0" translate="no">internal_keys()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Lists prop keys used internally.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#max_prop_key_length/0" translate="no">max_prop_key_length()</a>
 
       </div>
@@ -385,7 +395,7 @@ the past 6 months.</p>
     </a>
     <h1 class="signature" translate="no">configured?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L126" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L132" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -438,7 +448,7 @@ ClickHouse data, nor affects ingestion.</p>
     </a>
     <h1 class="signature" translate="no">enabled_for?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L115" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L121" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -449,6 +459,31 @@ ClickHouse data, nor affects ingestion.</p>
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="internal_keys/0">
+
+  <div class="detail-header">
+    <a href="#internal_keys/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">internal_keys()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L93" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Lists prop keys used internally.</p><p>These props should be allowed by default, and should not be displayed in the
+props settings page. For example, <code class="inline">url</code> is a special prop key used for file
+downloads and outbound links. It doesn't make sense to remove this prop key
+from the allow list, or to suggest users to add this prop key.</p>
   </section>
 </section>
 <section class="detail" id="max_prop_key_length/0">
@@ -528,7 +563,7 @@ ClickHouse data, nor affects ingestion.</p>
     </a>
     <h1 class="signature" translate="no">suggest_keys_to_allow(site, limit \\ 300)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L95" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L101" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
