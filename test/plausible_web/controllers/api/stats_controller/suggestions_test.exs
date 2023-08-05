@@ -282,9 +282,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       conn: conn,
       site: site
     } do
-      site =
-        site
-        |> Plausible.Sites.set_allowed_event_props!(["author"])
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
 
       populate_stats(site, [
         build(:pageview,

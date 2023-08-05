@@ -177,9 +177,4 @@ defmodule Plausible.Sites do
         where: sm.role == :owner
     )
   end
-
-  def set_allowed_event_props!(site, props) do
-    Ecto.Changeset.change(site, allowed_event_props: props)
-    |> Repo.update!()
-  end
 end

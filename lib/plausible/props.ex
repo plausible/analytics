@@ -81,10 +81,16 @@ defmodule Plausible.Props do
     allow(site, props_to_allow)
   end
 
-  # List of props to be ignored from suggestions. For example, `url` is used both
-  # for file downloads and outbound links, and it doesn't make sense to suggest
-  # users to allow this prop key.
-  @internal_props ~w(url path)
+  @internal_keys ~w(url path)
+  @doc """
+  Lists prop keys used internally.
+
+  These props should be allowed by default, and should not be displayed in the
+  props settings page. For example, `url` is a special prop key used for file
+  downloads and outbound links. It doesn't make sense to remove this prop key
+  from the allow list, or to suggest users to add this prop key.
+  """
+  def internal_keys, do: @internal_keys
 
   @spec suggest_keys_to_allow(Plausible.Site.t(), non_neg_integer()) :: [String.t()]
   @doc """
@@ -104,7 +110,7 @@ defmodule Plausible.Props do
     Plausible.ClickhouseRepo.all(
       from uk in subquery(unnested_keys),
         where: uk.key not in ^allowed_event_props,
-        where: uk.key not in ^@internal_props,
+        where: uk.key not in ^@internal_keys,
         group_by: uk.key,
         select: uk.key,
         order_by: {:desc, count(uk.key)},
