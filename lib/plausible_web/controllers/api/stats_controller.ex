@@ -714,7 +714,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     res =
       Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
-      |> maybe_add_cr(site, query, pagination, :referrer, "visit:referrer")
+      |> add_cr(site, query, pagination, :referrer, "visit:referrer")
       |> transform_keys(%{referrer: :name})
 
     if params["csv"] do
