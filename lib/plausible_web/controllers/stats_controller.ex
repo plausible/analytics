@@ -145,7 +145,8 @@ defmodule PlausibleWeb.StatsController do
         'operating_systems.csv' => fn -> Api.StatsController.operating_systems(conn, params) end,
         'devices.csv' => fn -> Api.StatsController.screen_sizes(conn, params) end,
         'conversions.csv' => fn -> Api.StatsController.conversions(conn, params) end,
-        'prop_breakdown.csv' => fn -> Api.StatsController.all_props_breakdown(conn, params) end
+        'prop_breakdown.csv' => fn -> Api.StatsController.all_props_breakdown(conn, params) end,
+        'referrers.csv' => fn -> Api.StatsController.referrers(conn, params) end
       }
 
       csvs =

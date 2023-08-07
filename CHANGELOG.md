@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- Add `referrers.csv` to CSV export
 ### Fixed
 - Only return `(none)` values in custom property breakdown for the first page (pagination) of results
 - Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)

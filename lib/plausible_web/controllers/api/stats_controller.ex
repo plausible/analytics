@@ -701,6 +701,35 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
+  def referrers(conn, params) do
+    site = conn.assigns[:site]
+
+    query =
+      Query.from(site, params)
+      |> Filters.add_prefix()
+
+    pagination = parse_pagination(params)
+
+    metrics = [:visitors, :bounce_rate, :visit_duration]
+
+    res =
+      Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
+      |> add_cr(site, query, pagination, :referrer, "visit:referrer")
+      |> transform_keys(%{referrer: :name})
+
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        res
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
+      else
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
+      end
+    else
+      json(conn, res)
+    end
+  end
+
   def referrer_drilldown(conn, %{"referrer" => "Google"} = params) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
