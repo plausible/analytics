@@ -24,6 +24,14 @@ function SpecialPropBreakdown(props) {
     return api.get(url.apiPath(site, `/custom-prop-values/${prop}`), query)
   }
 
+  function externalLinkDest() {
+    if (prop === 'path') {
+      return (listItem) => url.externalLinkForPage(site.domain, listItem.name)
+    } else {
+      return (listItem) => listItem.name
+    }
+  }
+
   const getFilterFor = (listItem) => { return {'props': JSON.stringify({[prop]: listItem['name']})} }
 
   return (
@@ -37,6 +45,7 @@ function SpecialPropBreakdown(props) {
         CR_METRIC
       ]}
       detailsLink={url.sitePath(site, `/custom-prop-values/${prop}`)}
+      externalLinkDest={externalLinkDest()}
       maybeHideDetails={true}
       query={query}
       color="bg-red-50"
