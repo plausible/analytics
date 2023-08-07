@@ -31,7 +31,7 @@ defmodule PlausibleWeb.LayoutView do
         [key: "Funnels", value: "funnels"]
       end,
       if Plausible.Props.enabled_for?(conn.assigns[:current_user]) do
-        [key: "Properties", value: "properties"]
+        [key: "Custom Properties", value: "properties"]
       end,
       [key: "Search Console", value: "search-console"],
       [key: "Email reports", value: "email-reports"],
