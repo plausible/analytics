@@ -1272,61 +1272,6 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  def prop_breakdown(conn, params) do
-    site = conn.assigns[:site]
-    query = Query.from(site, params) |> Filters.add_prefix()
-    pagination = parse_pagination(params)
-
-    total_q = Query.remove_event_filters(query, [:goal, :props])
-
-    %{:visitors => %{value: unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
-
-    prop_name = "event:props:" <> params["prop_name"]
-
-    props =
-      Stats.breakdown(
-        site,
-        query,
-        prop_name,
-        [:visitors, :events, :average_revenue, :total_revenue],
-        pagination
-      )
-      |> transform_keys(%{
-        params["prop_name"] => :name,
-        :events => :total_conversions,
-        :visitors => :unique_conversions
-      })
-      |> Enum.map(fn prop ->
-        prop
-        |> Map.put(:conversion_rate, calculate_cr(unique_visitors, prop[:unique_conversions]))
-        |> Enum.map(&format_revenue_metric/1)
-        |> Map.new()
-      end)
-
-    if params["csv"] do
-      props
-    else
-      json(conn, props)
-    end
-  end
-
-  def all_props_breakdown(conn, params) do
-    site = conn.assigns[:site]
-    query = Query.from(site, params) |> Filters.add_prefix()
-
-    prop_names = Plausible.Stats.CustomProps.props_for_goal(site, query)
-
-    values =
-      prop_names
-      |> Enum.map(fn prop ->
-        prop_breakdown(conn, Map.put(params, "prop_name", prop))
-        |> Enum.map(&Map.put(&1, :prop, prop))
-      end)
-      |> Enum.concat()
-
-    to_csv(values, [:prop, :name, :unique_conversions, :total_conversions])
-  end
-
   def current_visitors(conn, _) do
     site = conn.assigns[:site]
     json(conn, Stats.current_visitors(site))

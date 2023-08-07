@@ -22,18 +22,6 @@ defmodule Plausible.Stats.CustomProps do
     |> Enum.into(%{})
   end
 
-  @doc """
-  Expects a single goal filter in the query. Returns a list of custom
-  props for that goal. Works for both custom event and pageview goals.
-  """
-  def props_for_goal(site, query) do
-    case query.filters["event:goal"] do
-      {:is, _} -> fetch_prop_names(site, query)
-      {:matches, _} -> fetch_prop_names(site, query)
-      _ -> []
-    end
-  end
-
   def fetch_prop_names(site, query) do
     case Query.get_filter_by_prefix(query, "event:props:") do
       {"event:props:" <> key, _} ->

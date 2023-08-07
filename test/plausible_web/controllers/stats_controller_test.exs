@@ -145,7 +145,6 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert 'exit_pages.csv' in zip
       assert 'operating_systems.csv' in zip
       assert 'pages.csv' in zip
-      assert 'prop_breakdown.csv' in zip
       assert 'regions.csv' in zip
       assert 'sources.csv' in zip
       assert 'utm_campaigns.csv' in zip
