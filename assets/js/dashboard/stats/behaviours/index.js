@@ -240,7 +240,7 @@ export default function Behaviours(props) {
     if (site.conversionsEnabled) {
       enabledModes.push(CONVERSIONS)
     }
-    if (site.propsEnabled && site.flags.props) {
+    if (site.propsEnabled) {
       enabledModes.push(PROPS)
     }
     if (site.funnelsEnabled && !isRealtime() && site.flags.funnels) {

@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible.Repo
   use Plug.ErrorHandler
   alias Plausible.Stats
-  alias Plausible.Stats.{Query, Filters, Comparisons, CustomProps}
+  alias Plausible.Stats.{Query, Filters, Comparisons}
 
   require Logger
 
