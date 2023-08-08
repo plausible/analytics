@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def main_graph(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params) do
+    with :ok <- validate_params(site, params) do
       query = Query.from(site, params) |> Filters.add_prefix()
 
       selected_metric =
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def top_stats(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params) do
+    with :ok <- validate_params(site, params) do
       query = Query.from(site, params) |> Filters.add_prefix()
 
       comparison_opts = parse_comparison_opts(params)
@@ -515,7 +515,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def funnel(conn, %{"id" => funnel_id} = params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params),
+    with :ok <- validate_params(site, params),
          query <- Query.from(site, params) |> Filters.add_prefix(),
          :ok <- validate_funnel_query(query),
          {funnel_id, ""} <- Integer.parse(funnel_id),
@@ -1444,25 +1444,25 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp validate_common_input(conn, _opts) do
-    case validate_params(conn.params) do
+    case validate_params(conn.assigns[:site], conn.params) do
       :ok -> conn
       {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
   end
 
-  defp validate_params(params) do
-    with :ok <- validate_dates(params),
+  defp validate_params(site, params) do
+    with {:ok, dates} <- validate_dates(params),
          :ok <- validate_interval(params),
-         do: validate_interval_granularity(params)
+         do: validate_interval_granularity(site, params, dates)
   end
 
   defp validate_dates(params) do
     params
     |> Map.take(["from", "to", "date"])
-    |> Enum.reduce_while(:ok, fn {key, value}, _ ->
+    |> Enum.reduce_while({:ok, %{}}, fn {key, value}, {:ok, acc} ->
       case Date.from_iso8601(value) do
-        {:ok, _} ->
-          {:cont, :ok}
+        {:ok, date} ->
+          {:cont, {:ok, Map.put(acc, key, date)}}
 
         _ ->
           {:halt,
@@ -1486,17 +1486,30 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp validate_interval_granularity(params) do
-    with %{"interval" => interval, "period" => period} <- params,
-         true <- Plausible.Stats.Interval.valid_for_period?(period, interval) do
-      :ok
-    else
-      %{} ->
-        :ok
+  defp validate_interval_granularity(site, params, dates) do
+    case params do
+      %{"interval" => interval, "period" => "custom", "from" => _, "to" => _} ->
+        if Plausible.Stats.Interval.valid_for_period?("custom", interval,
+             site: site,
+             from: dates["from"],
+             to: dates["to"]
+           ) do
+          :ok
+        else
+          {:error,
+           "Invalid combination of interval and period. Custom ranges over 12 months must come with greater granularity, e.g. `period=custom,interval=week`"}
+        end
 
-      false ->
-        {:error,
-         "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"}
+      %{"interval" => interval, "period" => period} ->
+        if Plausible.Stats.Interval.valid_for_period?(period, interval, site: site) do
+          :ok
+        else
+          {:error,
+           "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"}
+        end
+
+      _ ->
+        :ok
     end
   end
 

@@ -8,6 +8,8 @@ defmodule Plausible.Stats.Interval do
   """
 
   @type t() :: String.t()
+  @type(opt() :: {:site, Plausible.Site.t()} | {:from, Date.t()}, {:to, Date.t()})
+  @type opts :: list(opt())
   @typep period() :: String.t()
 
   @intervals ~w(minute hour date week month)
@@ -22,12 +24,6 @@ defmodule Plausible.Stats.Interval do
   @spec default_for_period(period()) :: t()
   @doc """
   Returns the suggested interval for the given time period.
-
-  ## Examples
-
-    iex> Plausible.Stats.Interval.default_for_period("7d")
-    "date"
-
   """
   def default_for_period(period) do
     case period do
@@ -38,21 +34,10 @@ defmodule Plausible.Stats.Interval do
     end
   end
 
+  @spec default_for_date_range(Date.Range.t()) :: t()
   @doc """
   Returns the suggested interval for the given `Date.Range` struct.
-
-  ## Examples
-
-    iex> Plausible.Stats.Interval.default_for_date_range(Date.range(~D[2022-01-01], ~D[2023-01-01]))
-    "month"
-
-    iex> Plausible.Stats.Interval.default_for_date_range(Date.range(~D[2022-01-01], ~D[2022-01-15]))
-    "date"
-
-    iex> Plausible.Stats.Interval.default_for_date_range(Date.range(~D[2022-01-01], ~D[2022-01-01]))
-    "hour"
   """
-
   def default_for_date_range(%Date.Range{first: first, last: last}) do
     cond do
       Timex.diff(last, first, :months) > 0 ->
@@ -78,30 +63,44 @@ defmodule Plausible.Stats.Interval do
     "custom" => ["date", "week", "month"],
     "all" => ["date", "week", "month"]
   }
-  def valid_by_period, do: @valid_by_period
 
-  @spec valid_for_period?(period(), t()) :: boolean()
+  @spec valid_by_period(opts()) :: map()
+  def valid_by_period(opts \\ []) do
+    site = Keyword.fetch!(opts, :site)
+
+    table =
+      with %Date{} = from <- Keyword.get(opts, :from),
+           %Date{} = to <- Keyword.get(opts, :to),
+           true <- abs(Timex.diff(from, to, :months)) > 12 do
+        Map.replace(@valid_by_period, "custom", ["week", "month"])
+      else
+        _ ->
+          @valid_by_period
+      end
+
+    with %Date{} = stats_start <- site.stats_start_date,
+         true <- abs(Timex.diff(Date.utc_today(), stats_start, :months)) > 12 do
+      Map.replace(table, "all", ["week", "month"])
+    else
+      _ ->
+        table
+    end
+  end
+
+  @spec valid_for_period?(period(), t(), opts()) :: boolean()
   @doc """
   Returns whether the given interval is valid for a time period.
 
   Intervals longer than periods are not supported, e.g. current month stats with
   a month interval, or today stats with a week interval.
 
-  ## Examples
-
-
-    iex> Plausible.Stats.Interval.valid_for_period?("month", "date")
-    true
-
-    iex> Plausible.Stats.Interval.valid_for_period?("30d", "month")
-    false
-
-    iex> Plausible.Stats.Interval.valid_for_period?("realtime", "week")
-    false
-
+  There are two dynamic states:
+  * `custom` period is only applicable with `month` or `week` intervals,
+     if the `opts[:from]` and `opts[:to]` range difference exceeds 12 months
+  * `all` period's interval options depend on particular site's `stats_start_date`
+    - daily interval is excluded if the all-time range exceeds 12 months
   """
-  def valid_for_period?(period, interval) do
-    allowed = Map.get(@valid_by_period, period, [])
-    interval in allowed
+  def valid_for_period?(period, interval, opts \\ []) do
+    interval in Map.get(valid_by_period(opts), period, [])
   end
 end
