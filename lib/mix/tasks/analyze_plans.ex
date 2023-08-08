@@ -17,7 +17,7 @@ defmodule Mix.Tasks.AnalyzePlans do
 
     res =
       Enum.map(res, fn {plan_id, count} ->
-        plan = Plausible.Billing.Plans.for_product_id(plan_id)
+        plan = Plausible.Billing.Plans.find(plan_id)
 
         if plan do
           is_monthly = plan_id == plan[:monthly_product_id]

@@ -1,13 +1,18 @@
 defmodule Plausible.Billing.Plans do
   use Plausible.Repo
 
-  @unlisted_plans_v1 [
-    %{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}
-  ]
+  for f <- [:plans_v1, :plans_v2, :plans_v3] do
+    contents =
+      :plausible
+      |> Application.app_dir(["priv", "#{f}.json"])
+      |> File.read!()
+      |> Jason.decode!(keys: :atoms)
 
-  @unlisted_plans_v2 [
-    %{limit: 10_000_000, monthly_product_id: "655350", monthly_cost: "$250"}
-  ]
+    Module.put_attribute(__MODULE__, f, contents)
+  end
+
+  @unlisted_plans_v1 [%{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}]
+  @unlisted_plans_v2 [%{limit: 10_000_000, monthly_product_id: "655350", monthly_cost: "$250"}]
 
   @sandbox_plans [
     %{
@@ -36,44 +41,59 @@ defmodule Plausible.Billing.Plans do
           }
           | :enterprise
 
+  @spec plans_for(Plausible.Auth.User.t()) :: [plan()]
+  @doc """
+  Returns a list of plans available for the user to choose.
+
+  As new versions of plans are introduced, users who were on old plans can
+  still choose from old plans.
+  """
   def plans_for(user) do
     user = Plausible.Users.with_subscription(user)
-    sandbox_plans = plans_sandbox()
-    v1_plans = plans_v1()
-    v2_plans = plans_v2()
-    v3_plans = plans_v3()
 
     raw_plans =
       cond do
-        contains?(v1_plans, user.subscription) ->
-          v1_plans
-
-        contains?(v2_plans, user.subscription) ->
-          v2_plans
-
-        contains?(v3_plans, user.subscription) ->
-          v3_plans
-
-        contains?(sandbox_plans, user.subscription) ->
-          sandbox_plans
-
-        true ->
-          cond do
-            Application.get_env(:plausible, :environment) == "dev" -> sandbox_plans
-            Timex.before?(user.inserted_at, ~D[2022-01-01]) -> v2_plans
-            true -> v3_plans
-          end
+        find(user.subscription, @plans_v1) -> @plans_v1
+        find(user.subscription, @plans_v2) -> @plans_v2
+        find(user.subscription, @plans_v3) -> @plans_v3
+        find(user.subscription, plans_sandbox()) -> plans_sandbox()
+        Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
+        Timex.before?(user.inserted_at, ~D[2022-01-01]) -> @plans_v2
+        true -> @plans_v3
       end
 
-    Enum.map(raw_plans, fn plan -> Map.put(plan, :volume, number_format(plan[:limit])) end)
+    Enum.map(raw_plans, fn plan ->
+      Map.put(plan, :volume, PlausibleWeb.StatsView.large_number_format(plan[:limit]))
+    end)
   end
 
+  @spec all_yearly_plan_ids() :: [String.t()]
+  @doc """
+  List yearly plans product IDs.
+  """
   def all_yearly_plan_ids do
     Enum.map(all_plans(), fn plan -> plan[:yearly_product_id] end)
   end
 
-  def for_product_id(product_id) do
-    Enum.find(all_plans(), fn plan ->
+  @spec find(String.t() | Plausible.Billing.Subscription.t(), [plan()]) :: plan() | nil
+  @spec find(nil, [plan()]) :: nil
+  @doc """
+  Finds a plan by product ID.
+
+  Returns nil when plan can't be found.
+  """
+  def find(product_id_or_subscription, scope \\ all_plans())
+
+  def find(nil, _scope) do
+    nil
+  end
+
+  def find(%Plausible.Billing.Subscription{} = subscription, scope) do
+    find(subscription.paddle_plan_id, scope)
+  end
+
+  def find(product_id, scope) do
+    Enum.find(scope, fn plan ->
       product_id in [plan[:monthly_product_id], plan[:yearly_product_id]]
     end)
   end
@@ -82,7 +102,7 @@ defmodule Plausible.Billing.Plans do
     do: "N/A"
 
   def subscription_interval(subscription) do
-    case for_product_id(subscription.paddle_plan_id) do
+    case find(subscription.paddle_plan_id) do
       nil ->
         enterprise_plan = get_enterprise_plan(subscription)
 
@@ -100,7 +120,7 @@ defmodule Plausible.Billing.Plans do
   def allowance(%Plausible.Billing.Subscription{paddle_plan_id: "free_10k"}), do: 10_000
 
   def allowance(subscription) do
-    found = for_product_id(subscription.paddle_plan_id)
+    found = find(subscription.paddle_plan_id)
 
     if found do
       Map.fetch!(found, :limit)
@@ -128,6 +148,17 @@ defmodule Plausible.Billing.Plans do
 
   @enterprise_level_usage 10_000_000
   @spec suggested_plan(Plausible.Auth.User.t(), non_neg_integer()) :: plan()
+  @doc """
+  Returns the most appropriate plan for a user based on their usage during a 
+  given cycle.
+
+  If the usage during the cycle exceeds the enterprise-level threshold, or if 
+  the user already belongs to an enterprise plan, it suggests the :enterprise 
+  plan.
+
+  Otherwise, it recommends the plan where the cycle usage falls just under the 
+  plan's limit from the available options for the user.
+  """
   def suggested_plan(user, usage_during_cycle) do
     cond do
       usage_during_cycle > @enterprise_level_usage -> :enterprise
@@ -136,37 +167,9 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp contains?(_plans, nil), do: false
-
-  defp contains?(plans, subscription) do
-    Enum.any?(plans, fn plan ->
-      plan[:monthly_product_id] == subscription.paddle_plan_id ||
-        plan[:yearly_product_id] == subscription.paddle_plan_id
-    end)
-  end
-
-  defp number_format(num) do
-    PlausibleWeb.StatsView.large_number_format(num)
-  end
-
   defp all_plans() do
-    plans_v1() ++
-      @unlisted_plans_v1 ++ plans_v2() ++ @unlisted_plans_v2 ++ plans_v3() ++ plans_sandbox()
-  end
-
-  defp plans_v1() do
-    File.read!(Application.app_dir(:plausible) <> "/priv/plans_v1.json")
-    |> Jason.decode!(keys: :atoms)
-  end
-
-  defp plans_v2() do
-    File.read!(Application.app_dir(:plausible) <> "/priv/plans_v2.json")
-    |> Jason.decode!(keys: :atoms)
-  end
-
-  defp plans_v3() do
-    File.read!(Application.app_dir(:plausible) <> "/priv/plans_v3.json")
-    |> Jason.decode!(keys: :atoms)
+    @plans_v1 ++
+      @unlisted_plans_v1 ++ @plans_v2 ++ @unlisted_plans_v2 ++ @plans_v3 ++ plans_sandbox()
   end
 
   defp plans_sandbox() do
