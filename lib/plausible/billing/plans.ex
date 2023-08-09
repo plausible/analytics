@@ -67,7 +67,7 @@ defmodule Plausible.Billing.Plans do
   List yearly plans product IDs.
   """
   def yearly_product_ids do
-    for %{yearly_product_id: yearly_product_id} <- all_plans(),
+    for %{yearly_product_id: yearly_product_id} <- all(),
         is_binary(yearly_product_id),
         do: yearly_product_id
   end
@@ -80,7 +80,7 @@ defmodule Plausible.Billing.Plans do
 
   Returns nil when plan can't be found.
   """
-  def find(product_id_or_subscription, scope \\ all_plans())
+  def find(product_id_or_subscription, scope \\ all())
 
   def find(nil, _scope) do
     nil
@@ -145,7 +145,7 @@ defmodule Plausible.Billing.Plans do
   end
 
   @enterprise_level_usage 10_000_000
-  @spec suggested_plan(Plausible.Auth.User.t(), non_neg_integer()) :: Plausible.Billing.Plan.t()
+  @spec suggest(Plausible.Auth.User.t(), non_neg_integer()) :: Plausible.Billing.Plan.t()
   @doc """
   Returns the most appropriate plan for a user based on their usage during a 
   given cycle.
@@ -157,7 +157,7 @@ defmodule Plausible.Billing.Plans do
   Otherwise, it recommends the plan where the cycle usage falls just under the 
   plan's limit from the available options for the user.
   """
-  def suggested_plan(user, usage_during_cycle) do
+  def suggest(user, usage_during_cycle) do
     cond do
       usage_during_cycle > @enterprise_level_usage -> :enterprise
       Plausible.Auth.enterprise?(user) -> :enterprise
@@ -165,7 +165,7 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp all_plans() do
+  defp all() do
     @plans_v1 ++
       @unlisted_plans_v1 ++ @plans_v2 ++ @unlisted_plans_v2 ++ @plans_v3 ++ plans_sandbox()
   end

@@ -94,7 +94,7 @@ defmodule Plausible.Billing.PlansTest do
                volume: "100k",
                yearly_cost: "$96",
                yearly_product_id: "590752"
-             } == Plans.suggested_plan(user, 10_000)
+             } == Plans.suggest(user, 10_000)
 
       assert %Plausible.Billing.Plan{
                limit: 200_000,
@@ -103,18 +103,18 @@ defmodule Plausible.Billing.PlansTest do
                volume: "200k",
                yearly_cost: "$144",
                yearly_product_id: "597486"
-             } == Plans.suggested_plan(user, 100_000)
+             } == Plans.suggest(user, 100_000)
     end
 
     test "returns nil when user has enterprise-level usage" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
-      assert :enterprise == Plans.suggested_plan(user, 100_000_000)
+      assert :enterprise == Plans.suggest(user, 100_000_000)
     end
 
     test "returns nil when user is on an enterprise plan" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
       _enterprise_plan = insert(:enterprise_plan, user_id: user.id, billing_interval: :yearly)
-      assert :enterprise == Plans.suggested_plan(user, 10_000)
+      assert :enterprise == Plans.suggest(user, 10_000)
     end
   end
 

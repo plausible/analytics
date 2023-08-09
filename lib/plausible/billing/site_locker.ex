@@ -42,7 +42,7 @@ defmodule Plausible.Billing.SiteLocker do
   defp send_grace_period_end_email(user) do
     {_, last_cycle} = Plausible.Billing.last_two_billing_cycles(user)
     {_, last_cycle_usage} = Plausible.Billing.last_two_billing_months_usage(user)
-    suggested_plan = Plausible.Billing.Plans.suggested_plan(user, last_cycle_usage)
+    suggested_plan = Plausible.Billing.Plans.suggest(user, last_cycle_usage)
 
     template =
       PlausibleWeb.Email.dashboard_locked(

@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def trial_upgrade_email(user, day, {pageviews, custom_events}) do
-    suggested_plan = Plausible.Billing.Plans.suggested_plan(user, pageviews + custom_events)
+    suggested_plan = Plausible.Billing.Plans.suggest(user, pageviews + custom_events)
 
     base_email()
     |> to(user)
