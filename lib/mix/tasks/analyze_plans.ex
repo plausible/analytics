@@ -17,19 +17,19 @@ defmodule Mix.Tasks.AnalyzePlans do
 
     res =
       Enum.map(res, fn {plan_id, count} ->
-        plan = Plausible.Billing.Plans.for_product_id(plan_id)
+        plan = Plausible.Billing.Plans.find(plan_id)
 
         if plan do
-          is_monthly = plan_id == plan[:monthly_product_id]
+          is_monthly = plan_id == plan.monthly_product_id
 
           monthly_revenue =
             if is_monthly do
-              price(plan[:monthly_cost])
+              price(plan.monthly_cost)
             else
-              price(plan[:yearly_cost]) / 12
+              price(plan.yearly_cost) / 12
             end
 
-          {PlausibleWeb.StatsView.large_number_format(plan[:limit]), monthly_revenue, count}
+          {PlausibleWeb.StatsView.large_number_format(plan.limit), monthly_revenue, count}
         end
       end)
       |> Enum.filter(& &1)

@@ -1,0 +1,16 @@
+[
+  {
+    "limit":10000,
+    "monthly_product_id":"19878",
+    "yearly_product_id":"20127",
+    "monthly_cost":"$6",
+    "yearly_cost":"$60"
+  },
+  {
+    "limit":100000,
+    "monthly_product_id":"20657",
+    "yearly_product_id":"20658",
+    "monthly_cost":"$12.34",
+    "yearly_cost":"$120.34"
+  }
+]

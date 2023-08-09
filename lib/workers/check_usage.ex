@@ -90,7 +90,7 @@ defmodule Plausible.Workers.CheckUsage do
   defp check_regular_subscriber(subscriber, billing_mod) do
     case check_pageview_limit(subscriber, billing_mod) do
       {:over_limit, {last_cycle, last_cycle_usage}} ->
-        suggested_plan = Plausible.Billing.Plans.suggested_plan(subscriber, last_cycle_usage)
+        suggested_plan = Plausible.Billing.Plans.suggest(subscriber, last_cycle_usage)
 
         template =
           PlausibleWeb.Email.over_limit_email(
