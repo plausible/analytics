@@ -1945,7 +1945,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "session props breakdown with page filter" do
-    @blueprint %{
+    @blueprint_props %{
       "source" => %{set: [referrer_source: "Google"], expect: "Google"},
       "country" => %{set: [country_code: "PL"], expect: "PL"},
       "region" => %{set: [subdivision1_code: "EE-12"], expect: "EE-12"},
@@ -1965,8 +1965,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       "browser_version" => %{set: [browser_version: "888"], expect: "888"}
     }
 
-    for {property, config} <- @blueprint do
-      test "page filter, breakdown by visit:#{property}, metric=pageviews,events", %{
+    @blueprint_metrics %{
+      "pageviews" => Macro.escape(%{"pageviews" => 2}),
+      "events" => Macro.escape(%{"events" => 2}),
+      "pageviews,events" => Macro.escape(%{"events" => 2, "pageviews" => 2})
+    }
+
+    for {property, config} <- @blueprint_props, {metrics, expectations} <- @blueprint_metrics do
+      test "page filter, breakdown by visit:#{property}, metric=#{metrics}", %{
         conn: conn,
         site: site
       } do
@@ -2000,120 +2006,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
             "period" => "day",
             "date" => "2021-01-01",
             "property" => "visit:#{unquote(property)}",
-            "metrics" => "pageviews,events",
+            "metrics" => unquote(metrics),
             # need to filter by page
             "filters" => "event:page==/page1"
           })
 
         assert json_response(conn, 200) === %{
                  "results" => [
-                   %{
-                     unquote(property) => unquote(config.expect),
-                     "pageviews" => 2,
-                     "events" => 2
-                   }
-                 ]
-               }
-      end
-    end
-
-    for {property, config} <- @blueprint do
-      test "page filter, breakdown by visit:#{property}, metric=events", %{
-        conn: conn,
-        site: site
-      } do
-        populate_stats(site, [
-          build(
-            :pageview,
-            Keyword.merge(
-              [user_id: 1, pathname: "/page1", timestamp: ~N[2021-01-01 00:00:00]],
-              unquote(config.set)
-            )
-          ),
-          build(
-            :pageview,
-            Keyword.merge(
-              [user_id: 1, pathname: "/page2", timestamp: ~N[2021-01-01 00:10:00]],
-              unquote(config.set)
-            )
-          ),
-          build(
-            :pageview,
-            Keyword.merge(
-              [user_id: 1, pathname: "/page1", timestamp: ~N[2021-01-01 00:20:00]],
-              unquote(config.set)
-            )
-          )
-        ])
-
-        conn =
-          get(conn, "/api/v1/stats/breakdown", %{
-            "site_id" => site.domain,
-            "period" => "day",
-            "date" => "2021-01-01",
-            "property" => "visit:#{unquote(property)}",
-            "metrics" => "events",
-            # need to filter by page
-            "filters" => "event:page==/page1"
-          })
-
-        assert json_response(conn, 200) === %{
-                 "results" => [
-                   %{
-                     unquote(property) => unquote(config.expect),
-                     "events" => 2
-                   }
-                 ]
-               }
-      end
-    end
-
-    for {property, config} <- @blueprint do
-      test "page filter, breakdown by visit:#{property}, metric=pageviews", %{
-        conn: conn,
-        site: site
-      } do
-        populate_stats(site, [
-          build(
-            :pageview,
-            Keyword.merge(
-              [user_id: 1, pathname: "/page1", timestamp: ~N[2021-01-01 00:00:00]],
-              unquote(config.set)
-            )
-          ),
-          build(
-            :pageview,
-            Keyword.merge(
-              [user_id: 1, pathname: "/page2", timestamp: ~N[2021-01-01 00:10:00]],
-              unquote(config.set)
-            )
-          ),
-          build(
-            :pageview,
-            Keyword.merge(
-              [user_id: 1, pathname: "/page1", timestamp: ~N[2021-01-01 00:20:00]],
-              unquote(config.set)
-            )
-          )
-        ])
-
-        conn =
-          get(conn, "/api/v1/stats/breakdown", %{
-            "site_id" => site.domain,
-            "period" => "day",
-            "date" => "2021-01-01",
-            "property" => "visit:#{unquote(property)}",
-            "metrics" => "pageviews",
-            # need to filter by page
-            "filters" => "event:page==/page1"
-          })
-
-        assert json_response(conn, 200) === %{
-                 "results" => [
-                   %{
-                     unquote(property) => unquote(config.expect),
-                     "pageviews" => 2
-                   }
+                   Map.put(unquote(expectations), unquote(property), unquote(config.expect))
                  ]
                }
       end
