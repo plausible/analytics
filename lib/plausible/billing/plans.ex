@@ -2,13 +2,15 @@ defmodule Plausible.Billing.Plans do
   use Plausible.Repo
 
   for f <- [:plans_v1, :plans_v2, :plans_v3] do
+    path = Application.app_dir(:plausible, ["priv", "#{f}.json"])
+
     contents =
-      :plausible
-      |> Application.app_dir(["priv", "#{f}.json"])
+      path
       |> File.read!()
       |> Jason.decode!(keys: :atoms)
 
     Module.put_attribute(__MODULE__, f, contents)
+    Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
   @unlisted_plans_v1 [%{limit: 150_000_000, yearly_product_id: "648089", yearly_cost: "$4800"}]
