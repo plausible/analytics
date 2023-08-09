@@ -448,14 +448,8 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert [%{"prop_names" => []}] = json_response(conn, 200)
     end
 
-    test "filters out garbage prop_names",
-         %{
-           conn: conn,
-           site: site
-         } do
-      site =
-        site
-        |> Plausible.Sites.set_allowed_event_props!(["author"])
+    test "filters out garbage prop_names", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
 
       populate_stats(site, [
         build(:event,
@@ -488,9 +482,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
            conn: conn,
            site: site
          } do
-      site =
-        site
-        |> Plausible.Sites.set_allowed_event_props!(["author", "logged_in"])
+      {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
 
       populate_stats(site, [
         build(:event,
@@ -547,6 +539,24 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert [%{"prop_names" => prop_names}] = json_response(conn, 200)
       assert "Garbage" in prop_names
       assert "OnlyGarbage" in prop_names
+    end
+
+    test "does not filter out special prop keys", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
+
+      populate_stats(site, [
+        build(:event,
+          name: "Outbound Link: Click",
+          "meta.key": ["url", "path", "first_time_customer"],
+          "meta.value": ["http://link.test", "/abc", "true"]
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Outbound Link: Click"})
+
+      filters = Jason.encode!(%{goal: "Outbound Link: Click"})
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+      assert [%{"prop_names" => ["url", "path"]}] = json_response(conn, 200)
     end
 
     test "can filter by multiple mixed goals", %{conn: conn, site: site} do

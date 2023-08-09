@@ -164,7 +164,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       />
 
       <.option
-        :if={@creatable && String.length(@display_value) > 0}
+        :if={display_creatable_option?(assigns)}
         idx={length(@suggestions)}
         submit_value={@display_value}
         display_value={@display_value}
@@ -286,5 +286,14 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   defp suggestions_limit(assigns) do
     Map.get(assigns, :suggestions_limit, @default_suggestions_limit)
+  end
+
+  defp display_creatable_option?(assigns) do
+    empty_input? = String.length(assigns.display_value) == 0
+
+    input_matches_suggestion? =
+      Enum.any?(assigns.suggestions, fn {suggestion, _} -> assigns.display_value == suggestion end)
+
+    assigns.creatable && not empty_input? && not input_matches_suggestion?
   end
 end

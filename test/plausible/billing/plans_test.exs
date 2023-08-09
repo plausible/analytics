@@ -20,13 +20,13 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "shows v2 pricing for users who signed up in 2021" do
-      user = insert(:user, inserted_at: ~N[2021-12-31 00:00:00]) |> Repo.preload(:subscription)
+      user = insert(:user, inserted_at: ~N[2021-12-31 00:00:00])
 
       assert List.first(Plans.plans_for(user))[:monthly_product_id] == @v2_plan_id
     end
 
     test "shows v3 pricing for everyone else" do
-      user = insert(:user) |> Repo.preload(:subscription)
+      user = insert(:user)
 
       assert List.first(Plans.plans_for(user))[:monthly_product_id] == @v3_plan_id
     end

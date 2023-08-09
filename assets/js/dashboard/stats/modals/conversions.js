@@ -7,13 +7,11 @@ import Modal from './modal'
 import * as api from '../../api'
 import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
-import { parseQuery } from '../../query'
-import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
+import {parseQuery} from '../../query'
 
-function PropsModal(props) {
+function ConversionsModal(props) {
   const site = props.site
   const query = parseQuery(props.location.search, site)
-  const propKey = props.location.pathname.split('/').pop()
 
   const [loading, setLoading] = useState(true)
   const [moreResultsAvailable, setMoreResultsAvailable] = useState(false)
@@ -25,7 +23,7 @@ function PropsModal(props) {
   }, [])
 
   function fetchData() {
-    api.get(url.apiPath(site, `/custom-prop-values/${propKey}`), query, { limit: 100, page })
+    api.get(url.apiPath(site, `/conversions`), query, {limit: 100, page})
       .then((res) => {
         setLoading(false)
         setList(list.concat(res))
@@ -51,7 +49,7 @@ function PropsModal(props) {
 
   function filterSearchLink(listItem) {
     const searchParams = new URLSearchParams(window.location.search)
-    searchParams.set('props', JSON.stringify({ [propKey]: listItem['name'] }))
+    searchParams.set('goal', listItem.name)
     return searchParams.toString()
   }
 
@@ -60,17 +58,16 @@ function PropsModal(props) {
       <tr className="text-sm dark:text-gray-200" key={listItem.name}>
         <td className="p-2">
           <Link
-            to={{ pathname: url.siteBasePath(site), search: filterSearchLink(listItem) }}
+            to={{pathname: url.siteBasePath(site), search: filterSearchLink(listItem)}}
             className="hover:underline block truncate">
-            {url.trimURL(listItem.name, 30)}
+              {listItem.name}
           </Link>
         </td>
         <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.visitors)}</td>
         <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.events)}</td>
-        {query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.conversion_rate}%</td>}
-        {!query.filters.goal && <td className="p-2 w-24 font-medium" align="right">{listItem.percentage}</td>}
-        {hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.total_revenue} /></td>}
-        {hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.average_revenue} /></td>}
+        <td className="p-2 w-24 font-medium" align="right">{listItem.conversion_rate}%</td>
+        { hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.total_revenue}/></td> }
+        { hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.average_revenue}/></td> }
       </tr>
     )
   }
@@ -80,27 +77,27 @@ function PropsModal(props) {
   }
 
   function renderBody() {
-    const hasRevenue = list.some((prop) => prop.total_revenue)
+    const hasRevenue = list.some((goal) => goal.total_revenue)
 
     return (
       <>
-        <h1 className="text-xl font-bold dark:text-gray-100">{ specialTitleWhenGoalFilter(query, 'Custom Property Breakdown') }</h1>
+        <h1 className="text-xl font-bold dark:text-gray-100">Goal Conversions</h1>
 
         <div className="my-4 border-b border-gray-300"></div>
         <main className="modal__content">
           <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
             <thead>
               <tr>
-                <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400 truncate" align="left">{propKey}</th>
-                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Visitors</th>
-                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Events</th>
-                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{query.filters.goal ? 'CR' : '%'}</th>
+                <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400 truncate" align="left">Goal</th>
+                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Uniques</th>
+                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Total</th>
+                <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>
                 {hasRevenue && <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Revenue</th>}
                 {hasRevenue && <th className="p-2 w-24 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">Average</th>}
               </tr>
             </thead>
             <tbody>
-              {list.map((item) => renderListItem(item, hasRevenue))}
+              { list.map((item) => renderListItem(item, hasRevenue)) }
             </tbody>
           </table>
         </main>
@@ -110,11 +107,11 @@ function PropsModal(props) {
 
   return (
     <Modal site={site}>
-      {renderBody()}
-      {loading && renderLoading()}
-      {!loading && moreResultsAvailable && renderLoadMore()}
+      { renderBody() }
+      { loading && renderLoading() }
+      { !loading && moreResultsAvailable && renderLoadMore() }
     </Modal>
   )
 }
 
-export default withRouter(PropsModal)
+export default withRouter(ConversionsModal)

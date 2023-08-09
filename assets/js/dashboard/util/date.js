@@ -124,3 +124,8 @@ export function isAfter(date1, date2, period) {
   }
   return date1.date() > date2.date()
 }
+
+export function monthsBetweenDates(date1, date2) {
+  var diffMonths = (date2.year() - date1.year()) * 12 + date2.month() - date1.month();
+  return Math.abs(diffMonths);
+}

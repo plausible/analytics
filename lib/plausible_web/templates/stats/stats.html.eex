@@ -22,7 +22,7 @@
     data-funnels-enabled="<%= @site.funnels_enabled %>"
     data-props-enabled="<%= @site.props_enabled %>"
     data-funnels="<%= Jason.encode!(@funnels) %>"
-    data-allowed-event-props="<%= Jason.encode!(@allowed_event_props) %>"
+    data-has-props="<%= @has_props %>"
     data-logged-in="<%= !!@conn.assigns[:current_user] %>"
     data-stats-begin="<%= @stats_start_date %>"
     data-native-stats-begin="<%= @native_stats_start_date %>"
@@ -32,7 +32,7 @@
     data-is-dbip="<%= @is_dbip %>"
     data-current-user-role="<%= @conn.assigns[:current_user_role] %>"
     data-flags="<%= Jason.encode!(@flags) %>"
-    data-valid-intervals-by-period="<%= Plausible.Stats.Interval.valid_by_period() |> Jason.encode!() %>">
+    data-valid-intervals-by-period="<%= Plausible.Stats.Interval.valid_by_period(site: @site) |> Jason.encode!() %>">
   </div>
   <div id="modal_root"></div>
   <%= if !@conn.assigns[:current_user] && @conn.assigns[:demo] do %>

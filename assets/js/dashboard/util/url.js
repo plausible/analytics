@@ -39,13 +39,15 @@ export function trimURL(url, maxLength) {
     return url;
   }
 
+  const ellipsis = "...";
+
   if (isValidHttpUrl(url)) {
     const [protocol, restURL] = url.split('://');
     const parts = restURL.split('/');
 
     const host = parts.shift();
     if (host.length > maxLength - 5) {
-      return `${protocol}://${host.substr(0, maxLength - 5)}...${restURL.slice(-maxLength + 5)}`;
+      return `${protocol}://${host.substr(0, maxLength - 5)}${ellipsis}${restURL.slice(-maxLength + 5)}`;
     }
 
     let remainingLength = maxLength - host.length - 5;
@@ -64,6 +66,13 @@ export function trimURL(url, maxLength) {
     }
 
     return trimmedURL;
+  } else {
+    const leftSideLength = Math.floor(maxLength / 2);
+    const rightSideLength = maxLength - leftSideLength;
+
+    const leftSide = url.slice(0, leftSideLength);
+    const rightSide = url.slice(-rightSideLength);
+
+    return leftSide + ellipsis + rightSide;
   }
-  return url
 }

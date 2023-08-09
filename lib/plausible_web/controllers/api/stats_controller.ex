@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def main_graph(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params) do
+    with :ok <- validate_params(site, params) do
       query = Query.from(site, params) |> Filters.add_prefix()
 
       selected_metric =
@@ -199,7 +199,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def top_stats(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params) do
+    with :ok <- validate_params(site, params) do
       query = Query.from(site, params) |> Filters.add_prefix()
 
       comparison_opts = parse_comparison_opts(params)
@@ -515,7 +515,7 @@ defmodule PlausibleWeb.Api.StatsController do
   def funnel(conn, %{"id" => funnel_id} = params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(params),
+    with :ok <- validate_params(site, params),
          query <- Query.from(site, params) |> Filters.add_prefix(),
          :ok <- validate_funnel_query(query),
          {funnel_id, ""} <- Integer.parse(funnel_id),
@@ -687,6 +687,35 @@ defmodule PlausibleWeb.Api.StatsController do
       Stats.breakdown(site, query, "visit:utm_source", metrics, pagination)
       |> add_cr(site, query, pagination, :utm_source, "visit:utm_source")
       |> transform_keys(%{utm_source: :name})
+
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        res
+        |> transform_keys(%{visitors: :conversions})
+        |> to_csv([:name, :conversions, :conversion_rate])
+      else
+        res |> to_csv([:name, :visitors, :bounce_rate, :visit_duration])
+      end
+    else
+      json(conn, res)
+    end
+  end
+
+  def referrers(conn, params) do
+    site = conn.assigns[:site]
+
+    query =
+      Query.from(site, params)
+      |> Filters.add_prefix()
+
+    pagination = parse_pagination(params)
+
+    metrics = [:visitors, :bounce_rate, :visit_duration]
+
+    res =
+      Stats.breakdown(site, query, "visit:referrer", metrics, pagination)
+      |> add_cr(site, query, pagination, :referrer, "visit:referrer")
+      |> transform_keys(%{referrer: :name})
 
     if params["csv"] do
       if Map.has_key?(query.filters, "event:goal") do
@@ -1110,6 +1139,7 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def conversions(conn, params) do
+    pagination = parse_pagination(params)
     site = Plausible.Repo.preload(conn.assigns.site, :goals)
     query = Query.from(site, params) |> Filters.add_prefix()
 
@@ -1133,7 +1163,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     conversions =
       site
-      |> Stats.breakdown(query, "event:goal", metrics, {100, 1})
+      |> Stats.breakdown(query, "event:goal", metrics, pagination)
       |> transform_keys(%{goal: :name})
       |> Enum.map(fn goal ->
         goal
@@ -1206,18 +1236,28 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp breakdown_custom_prop_values(site, %{"prop_key" => prop_key} = params) do
+    pagination = parse_pagination(params)
+    prefixed_prop = "event:props:" <> prop_key
+
     query =
       Query.from(site, params)
       |> Filters.add_prefix()
       |> Map.put(:include_imported, false)
 
-    pagination = parse_pagination(params)
-
-    prefixed_prop = "event:props:" <> prop_key
+    metrics =
+      if Map.has_key?(query.filters, "event:goal") do
+        [:visitors, :events, :average_revenue, :total_revenue]
+      else
+        [:visitors, :events]
+      end
 
     props =
-      Stats.breakdown(site, query, prefixed_prop, [:visitors, :events], pagination)
+      Stats.breakdown(site, query, prefixed_prop, metrics, pagination)
       |> transform_keys(%{prop_key => :name})
+      |> Enum.map(fn entry ->
+        Enum.map(entry, &format_revenue_metric/1)
+        |> Map.new()
+      end)
       |> add_percentages(site, query)
 
     if Map.has_key?(query.filters, "event:goal") do
@@ -1404,25 +1444,25 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp validate_common_input(conn, _opts) do
-    case validate_params(conn.params) do
+    case validate_params(conn.assigns[:site], conn.params) do
       :ok -> conn
       {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
   end
 
-  defp validate_params(params) do
-    with :ok <- validate_dates(params),
+  defp validate_params(site, params) do
+    with {:ok, dates} <- validate_dates(params),
          :ok <- validate_interval(params),
-         do: validate_interval_granularity(params)
+         do: validate_interval_granularity(site, params, dates)
   end
 
   defp validate_dates(params) do
     params
     |> Map.take(["from", "to", "date"])
-    |> Enum.reduce_while(:ok, fn {key, value}, _ ->
+    |> Enum.reduce_while({:ok, %{}}, fn {key, value}, {:ok, acc} ->
       case Date.from_iso8601(value) do
-        {:ok, _} ->
-          {:cont, :ok}
+        {:ok, date} ->
+          {:cont, {:ok, Map.put(acc, key, date)}}
 
         _ ->
           {:halt,
@@ -1446,17 +1486,30 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp validate_interval_granularity(params) do
-    with %{"interval" => interval, "period" => period} <- params,
-         true <- Plausible.Stats.Interval.valid_for_period?(period, interval) do
-      :ok
-    else
-      %{} ->
-        :ok
+  defp validate_interval_granularity(site, params, dates) do
+    case params do
+      %{"interval" => interval, "period" => "custom", "from" => _, "to" => _} ->
+        if Plausible.Stats.Interval.valid_for_period?("custom", interval,
+             site: site,
+             from: dates["from"],
+             to: dates["to"]
+           ) do
+          :ok
+        else
+          {:error,
+           "Invalid combination of interval and period. Custom ranges over 12 months must come with greater granularity, e.g. `period=custom,interval=week`"}
+        end
 
-      false ->
-        {:error,
-         "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"}
+      %{"interval" => interval, "period" => period} ->
+        if Plausible.Stats.Interval.valid_for_period?(period, interval, site: site) do
+          :ok
+        else
+          {:error,
+           "Invalid combination of interval and period. Interval must be smaller than the selected period, e.g. `period=day,interval=minute`"}
+        end
+
+      _ ->
+        :ok
     end
   end
 

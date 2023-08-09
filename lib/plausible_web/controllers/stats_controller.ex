@@ -65,7 +65,7 @@ defmodule PlausibleWeb.StatsController do
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
           funnels: Plausible.Funnels.list(site),
-          allowed_event_props: site.allowed_event_props,
+          has_props: Plausible.Props.configured?(site),
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
@@ -145,7 +145,8 @@ defmodule PlausibleWeb.StatsController do
         'operating_systems.csv' => fn -> Api.StatsController.operating_systems(conn, params) end,
         'devices.csv' => fn -> Api.StatsController.screen_sizes(conn, params) end,
         'conversions.csv' => fn -> Api.StatsController.conversions(conn, params) end,
-        'prop_breakdown.csv' => fn -> Api.StatsController.all_props_breakdown(conn, params) end
+        'prop_breakdown.csv' => fn -> Api.StatsController.all_props_breakdown(conn, params) end,
+        'referrers.csv' => fn -> Api.StatsController.referrers(conn, params) end
       }
 
       csvs =
@@ -309,7 +310,7 @@ defmodule PlausibleWeb.StatsController do
           site: shared_link.site,
           has_goals: Sites.has_goals?(shared_link.site),
           funnels: Plausible.Funnels.list(shared_link.site),
-          allowed_event_props: shared_link.site.allowed_event_props,
+          has_props: Plausible.Props.configured?(shared_link.site),
           stats_start_date: shared_link.site.stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: title(conn, shared_link.site),

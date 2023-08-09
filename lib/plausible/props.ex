@@ -18,6 +18,11 @@ defmodule Plausible.Props do
 
   @spec allow(Plausible.Site.t(), [prop()] | prop()) ::
           {:ok, Plausible.Site.t()} | {:error, Ecto.Changeset.t()}
+  @doc """
+  Allows a prop key or a list of props keys to be included in ClickHouse
+  queries. Allowing prop keys does not affect ingestion, as we don't want any
+  data to be dropped or lost.
+  """
   def allow(site, prop_or_props) do
     site
     |> allow_changeset(prop_or_props)
@@ -33,6 +38,11 @@ defmodule Plausible.Props do
 
   @spec disallow(Plausible.Site.t(), prop()) ::
           {:ok, Plausible.Site.t()} | {:error, Ecto.Changeset.t()}
+  @doc """
+  Removes a previously allowed prop key from the allow list. This means this
+  prop key won't be included in ClickHouse queries. This doesn't drop any
+  ClickHouse data, nor affects ingestion.
+  """
   def disallow(site, prop) do
     allowed_event_props = site.allowed_event_props || []
 
@@ -71,6 +81,17 @@ defmodule Plausible.Props do
     allow(site, props_to_allow)
   end
 
+  @internal_keys ~w(url path)
+  @doc """
+  Lists prop keys used internally.
+
+  These props should be allowed by default, and should not be displayed in the
+  props settings page. For example, `url` is a special prop key used for file
+  downloads and outbound links. It doesn't make sense to remove this prop key
+  from the allow list, or to suggest users to add this prop key.
+  """
+  def internal_keys, do: @internal_keys
+
   @spec suggest_keys_to_allow(Plausible.Site.t(), non_neg_integer()) :: [String.t()]
   @doc """
   Queries the events table to fetch the #{@max_props} most frequent prop keys
@@ -89,6 +110,7 @@ defmodule Plausible.Props do
     Plausible.ClickhouseRepo.all(
       from uk in subquery(unnested_keys),
         where: uk.key not in ^allowed_event_props,
+        where: uk.key not in ^@internal_keys,
         group_by: uk.key,
         select: uk.key,
         order_by: {:desc, count(uk.key)},
@@ -102,5 +124,12 @@ defmodule Plausible.Props do
 
   defp valid?(key) do
     String.length(key) in 1..@max_prop_key_length
+  end
+
+  @doc """
+  Returns whether the site has configured custom props or not.
+  """
+  def configured?(%Plausible.Site{allowed_event_props: allowed_event_props}) do
+    is_list(allowed_event_props) && length(allowed_event_props) > 0
   end
 end
