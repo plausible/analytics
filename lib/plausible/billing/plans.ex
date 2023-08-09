@@ -41,14 +41,14 @@ defmodule Plausible.Billing.Plans do
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
-  @spec plans_for(Plausible.Auth.User.t()) :: [Plausible.Billing.Plan.t()]
+  @spec for_user(Plausible.Auth.User.t()) :: [Plausible.Billing.Plan.t()]
   @doc """
   Returns a list of plans available for the user to choose.
 
   As new versions of plans are introduced, users who were on old plans can
   still choose from old plans.
   """
-  def plans_for(user) do
+  def for_user(user) do
     user = Plausible.Users.with_subscription(user)
 
     cond do
@@ -161,7 +161,7 @@ defmodule Plausible.Billing.Plans do
     cond do
       usage_during_cycle > @enterprise_level_usage -> :enterprise
       Plausible.Auth.enterprise?(user) -> :enterprise
-      true -> Enum.find(plans_for(user), &(usage_during_cycle < &1.limit))
+      true -> Enum.find(for_user(user), &(usage_during_cycle < &1.limit))
     end
   end
 
