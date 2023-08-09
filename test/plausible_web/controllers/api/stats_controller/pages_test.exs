@@ -6,6 +6,75 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   describe "GET /api/stats/:domain/pages" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    test "bug", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          user_id: 1,
+          name: "Signup",
+          pathname: "/one",
+          timestamp: ~N[2021-01-01 00:01:04]
+        ),
+        build(:event,
+          user_id: 2,
+          name: "Signup",
+          pathname: "/two",
+          timestamp: ~N[2021-01-01 00:01:04]
+        ),
+        build(:event,
+          user_id: 3,
+          name: "Signup",
+          pathname: "/three",
+          timestamp: ~N[2021-01-01 00:01:04]
+        )
+      ])
+
+      filters = Jason.encode!(%{"goal" => "Signup"})
+
+      x =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?date=2021-01-01&period=day&filters=#{filters}"
+        )
+
+      json_response(x, 200) |> IO.inspect(label: :all)
+
+      r1 =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?date=2021-01-01&period=day&filters=#{filters}&limit=2&page=1"
+        )
+
+      assert json_response(r1, 200) == [
+               %{
+                 "conversion_rate" => 100.0,
+                 "name" => "/one",
+                 "total_visitors" => 1,
+                 "visitors" => 1
+               },
+               %{
+                 "conversion_rate" => 100.0,
+                 "name" => "/three",
+                 "total_visitors" => 1,
+                 "visitors" => 1
+               }
+             ]
+
+      r2 =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/pages?date=2021-01-01&period=day&filters=#{filters}&limit=2&page=2"
+        )
+
+      assert json_response(r2, 200) == [
+               %{
+                 "conversion_rate" => 100.0,
+                 "name" => "/two",
+                 "total_visitors" => 1,
+                 "visitors" => 1
+               }
+             ]
+    end
+
     test "returns top pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
