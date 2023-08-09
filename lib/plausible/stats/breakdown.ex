@@ -374,11 +374,11 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:" <> visit_property) do
     q = do_group_by_visit(q, visit_property)
 
-    if Ecto.Query.has_named_binding?(q, :converted_sessions_with_events) do
+    if Ecto.Query.has_named_binding?(q, :event_filtered_sessions) do
       from(s in q,
         select_merge: %{
-          __events_pageviews:
-            fragment("sum(?)", as(:converted_sessions_with_events).__events_pageviews)
+          __internal_pageviews:
+            fragment("sum(?)", as(:event_filtered_sessions).__internal_pageviews)
         }
       )
     else

@@ -366,10 +366,10 @@ defmodule Plausible.Stats.Base do
   end
 
   def select_session_metrics(q, [:pageviews | rest], query) do
-    if Ecto.Query.has_named_binding?(q, :converted_sessions_with_events) do
+    if Ecto.Query.has_named_binding?(q, :event_filtered_sessions) do
       from(s in q,
         select_merge: %{
-          pageviews: fragment("sum(?)", as(:converted_sessions_with_events).__events_pageviews)
+          pageviews: fragment("sum(?)", as(:event_filtered_sessions).__internal_pageviews)
         }
       )
     else
@@ -475,27 +475,27 @@ defmodule Plausible.Stats.Base do
   def filter_converted_sessions(db_query, site, query, opts \\ []) do
     if Query.has_event_filters?(query) do
       if Keyword.get(opts, :count_event_pageviews) do
-        converted_sessions =
+        events_subquery =
           from(e in query_events(site, query),
             group_by: fragment("?, _sample_factor", e.session_id),
             select: %{
               session_id: fragment("DISTINCT ?", e.session_id),
               _sample_factor: fragment("_sample_factor"),
-              __events_pageviews:
+              __internal_pageviews:
                 fragment("countIf(? = 'pageview') * any(_sample_factor)", e.name)
             }
           )
 
         from(s in db_query,
-          join: cs in subquery(converted_sessions),
-          as: :converted_sessions_with_events,
+          join: cs in subquery(events_subquery),
+          as: :event_filtered_sessions,
           on: s.session_id == cs.session_id,
           select_merge: %{
-            __events_pageviews: fragment("toUInt64(round(?))", cs.__events_pageviews)
+            __internal_pageviews: fragment("toUInt64(round(?))", cs.__internal_pageviews)
           }
         )
       else
-        converted_sessions =
+        events_subquery =
           from(e in query_events(site, query),
             select: %{
               session_id: fragment("DISTINCT ?", e.session_id),
@@ -504,7 +504,7 @@ defmodule Plausible.Stats.Base do
           )
 
         from(s in db_query,
-          join: cs in subquery(converted_sessions),
+          join: cs in subquery(events_subquery),
           on: s.session_id == cs.session_id
         )
       end
