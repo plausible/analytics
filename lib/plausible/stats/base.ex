@@ -474,7 +474,7 @@ defmodule Plausible.Stats.Base do
 
   def filter_converted_sessions(db_query, site, query, opts \\ []) do
     if Query.has_event_filters?(query) do
-      if Keyword.get(opts, :count_event_pageviews) do
+      if Keyword.get(opts, :count_event_metrics?) do
         events_subquery =
           from(e in query_events(site, query),
             group_by: fragment("?, _sample_factor", e.session_id),
