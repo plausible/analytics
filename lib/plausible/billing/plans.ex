@@ -72,7 +72,7 @@ defmodule Plausible.Billing.Plans do
   List yearly plans product IDs.
   """
   def all_yearly_plan_ids do
-    Enum.map(all_plans(), fn plan -> plan[:yearly_product_id] end)
+    Enum.map(all_plans(), & &1.yearly_product_id)
   end
 
   @spec find(String.t() | Plausible.Billing.Subscription.t(), [plan()]) :: plan() | nil
