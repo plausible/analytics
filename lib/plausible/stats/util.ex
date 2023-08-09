@@ -12,8 +12,14 @@ defmodule Plausible.Stats.Util do
     * `__internal_visits` is fetched when querying bounce rate and visit duration, as it
        is needed to calculate these from imported data. This function removes that metric
        from all entries in the results list.
-    * `__events_pageviews` is calculated for sessions when it's the event pageviews
-      (and not session pageviews) that need to be summed in breakdowns.
+    * `__internal_events` is used to count the events from the `events`
+      table in queries that are breaking down on session level properties
+      and filtering by event level properties at the same time. In this case,
+      we cannot use the denormalised `events` and `pageviews` fields
+      from the sessions table, since they cannot account for event level
+      filters.
+    * `__internal_pageviews` is used for the exact same purpose as
+      internal_events, but for `pageviews`.
   """
   def drop_internal_keys(results) when is_list(results) do
     Enum.map(results, &drop_internal_keys/1)
