@@ -63,7 +63,7 @@ defmodule Plausible.Billing.Plans do
       end
 
     Enum.map(raw_plans, fn plan ->
-      Map.put(plan, :volume, PlausibleWeb.StatsView.large_number_format(plan[:limit]))
+      Map.put(plan, :volume, PlausibleWeb.StatsView.large_number_format(plan.limit))
     end)
   end
 
