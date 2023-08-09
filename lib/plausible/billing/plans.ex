@@ -76,7 +76,7 @@ defmodule Plausible.Billing.Plans do
   end
 
   @spec find(String.t() | Plausible.Billing.Subscription.t(), [plan()]) :: plan() | nil
-  @spec find(nil, [plan()]) :: nil
+  @spec find(nil, any()) :: nil
   @doc """
   Finds a plan by product ID.
 
