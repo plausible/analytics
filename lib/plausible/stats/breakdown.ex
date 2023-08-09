@@ -186,7 +186,9 @@ defmodule Plausible.Stats.Breakdown do
       order_by: [desc: fragment("uniq(?)", s.user_id), asc: fragment("min(?)", s.start)],
       select: %{}
     )
-    |> filter_converted_sessions(site, query, count_event_metrics?: :pageviews in metrics)
+    |> filter_converted_sessions(site, query,
+      count_event_metrics?: :pageviews in metrics or :events in metrics
+    )
     |> do_group_by(property)
     |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, property, metrics)
@@ -378,7 +380,8 @@ defmodule Plausible.Stats.Breakdown do
       from(s in q,
         select_merge: %{
           __internal_pageviews:
-            fragment("sum(?)", as(:event_filtered_sessions).__internal_pageviews)
+            fragment("sum(?)", as(:event_filtered_sessions).__internal_pageviews),
+          __internal_events: fragment("sum(?)", as(:event_filtered_sessions).__internal_events)
         }
       )
     else

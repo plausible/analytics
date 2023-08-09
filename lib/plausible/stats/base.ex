@@ -369,7 +369,8 @@ defmodule Plausible.Stats.Base do
     if Ecto.Query.has_named_binding?(q, :event_filtered_sessions) do
       from(s in q,
         select_merge: %{
-          pageviews: fragment("sum(?)", as(:event_filtered_sessions).__internal_pageviews)
+          pageviews:
+            fragment("sum(toUInt64(round(?)))", as(:event_filtered_sessions).__internal_pageviews)
         }
       )
     else
@@ -384,11 +385,20 @@ defmodule Plausible.Stats.Base do
   end
 
   def select_session_metrics(q, [:events | rest], query) do
-    from(s in q,
-      select_merge: %{
-        events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
-      }
-    )
+    if Ecto.Query.has_named_binding?(q, :event_filtered_sessions) do
+      from(s in q,
+        select_merge: %{
+          events:
+            fragment("toUInt64(round(sum(?)))", as(:event_filtered_sessions).__internal_events)
+        }
+      )
+    else
+      from(s in q,
+        select_merge: %{
+          events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
+        }
+      )
+    end
     |> select_session_metrics(rest, query)
   end
 
@@ -477,12 +487,11 @@ defmodule Plausible.Stats.Base do
       if Keyword.get(opts, :count_event_metrics?) do
         events_subquery =
           from(e in query_events(site, query),
-            group_by: fragment("?, _sample_factor", e.session_id),
+            group_by: fragment("?", e.session_id),
             select: %{
               session_id: fragment("DISTINCT ?", e.session_id),
-              _sample_factor: fragment("_sample_factor"),
-              __internal_pageviews:
-                fragment("countIf(? = 'pageview') * any(_sample_factor)", e.name)
+              __internal_pageviews: fragment("countIf(? = 'pageview')", e.name),
+              __internal_events: fragment("count(*)")
             }
           )
 
@@ -491,7 +500,8 @@ defmodule Plausible.Stats.Base do
           as: :event_filtered_sessions,
           on: s.session_id == cs.session_id,
           select_merge: %{
-            __internal_pageviews: fragment("toUInt64(round(?))", cs.__internal_pageviews)
+            __internal_pageviews: fragment("?", cs.__internal_pageviews),
+            __internal_events: fragment("?", cs.__internal_events)
           }
         )
       else
