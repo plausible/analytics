@@ -6,75 +6,6 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   describe "GET /api/stats/:domain/pages" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
-    test "bug", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:event,
-          user_id: 1,
-          name: "Signup",
-          pathname: "/one",
-          timestamp: ~N[2021-01-01 00:01:04]
-        ),
-        build(:event,
-          user_id: 2,
-          name: "Signup",
-          pathname: "/two",
-          timestamp: ~N[2021-01-01 00:01:04]
-        ),
-        build(:event,
-          user_id: 3,
-          name: "Signup",
-          pathname: "/three",
-          timestamp: ~N[2021-01-01 00:01:04]
-        )
-      ])
-
-      filters = Jason.encode!(%{"goal" => "Signup"})
-
-      x =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/pages?date=2021-01-01&period=day&filters=#{filters}"
-        )
-
-      json_response(x, 200) |> IO.inspect(label: :all)
-
-      r1 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/pages?date=2021-01-01&period=day&filters=#{filters}&limit=2&page=1"
-        )
-
-      assert json_response(r1, 200) == [
-               %{
-                 "conversion_rate" => 100.0,
-                 "name" => "/one",
-                 "total_visitors" => 1,
-                 "visitors" => 1
-               },
-               %{
-                 "conversion_rate" => 100.0,
-                 "name" => "/three",
-                 "total_visitors" => 1,
-                 "visitors" => 1
-               }
-             ]
-
-      r2 =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/pages?date=2021-01-01&period=day&filters=#{filters}&limit=2&page=2"
-        )
-
-      assert json_response(r2, 200) == [
-               %{
-                 "conversion_rate" => 100.0,
-                 "name" => "/two",
-                 "total_visitors" => 1,
-                 "visitors" => 1
-               }
-             ]
-    end
-
     test "returns top pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
@@ -1116,6 +1047,46 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visit_duration" => 0
                }
              ]
+    end
+
+    test "bugfix: pagination on /pages filtered by goal", %{conn: conn, site: site} do
+      populate_stats(
+        site,
+        for i <- 1..30 do
+          build(:event,
+            user_id: i,
+            name: "Signup",
+            pathname: "/signup/#{String.pad_leading(to_string(i), 2, "0")}",
+            timestamp: ~N[2021-01-01 00:01:00]
+          )
+        end
+      )
+
+      request = fn conn, opts ->
+        page = Keyword.fetch!(opts, :page)
+        limit = Keyword.fetch!(opts, :limit)
+        filters = Jason.encode!(%{"goal" => "Signup"})
+
+        conn
+        |> get(
+          "/api/stats/#{site.domain}/pages?date=2021-01-01&period=day&filters=#{filters}&limit=#{limit}&page=#{page}"
+        )
+        |> json_response(200)
+        |> Enum.map(fn %{"name" => "/signup/" <> seq} ->
+          seq
+        end)
+      end
+
+      assert List.first(request.(conn, page: 1, limit: 100)) == "01"
+      assert List.last(request.(conn, page: 1, limit: 100)) == "30"
+      assert List.last(request.(conn, page: 1, limit: 29)) == "29"
+      assert ["01", "02"] = request.(conn, page: 1, limit: 2)
+      assert ["03", "04"] = request.(conn, page: 2, limit: 2)
+      assert ["01", "02", "03", "04", "05"] = request.(conn, page: 1, limit: 5)
+      assert ["06", "07", "08", "09", "10"] = request.(conn, page: 2, limit: 5)
+      assert ["11", "12", "13", "14", "15"] = request.(conn, page: 3, limit: 5)
+      assert ["20"] = request.(conn, page: 20, limit: 1)
+      assert [] = request.(conn, page: 31, limit: 1)
     end
 
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do

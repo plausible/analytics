@@ -1399,6 +1399,10 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Query.put_filter(filter_name, {:member, items})
       |> Query.remove_event_filters([:goal, :props])
 
+    # Because we are doing yet another query with a different filter, we should only keep
+    # the limit and keep the offset default to retrieve the first page always.
+    pagination = {elem(pagination, 0), 1}
+
     res_without_goal =
       Stats.breakdown(site, query_without_goal, filter_name, [:visitors], pagination)
 
