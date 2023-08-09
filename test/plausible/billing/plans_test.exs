@@ -118,7 +118,7 @@ defmodule Plausible.Billing.PlansTest do
     end
   end
 
-  describe "all_yearly_plan_ids/0" do
+  describe "yearly_product_ids/0" do
     test "lists yearly plan ids" do
       assert [
                "572810",
@@ -150,7 +150,7 @@ defmodule Plausible.Billing.PlansTest do
                "749355",
                "749357",
                "749359"
-             ] == Plans.all_yearly_plan_ids()
+             ] == Plans.yearly_product_ids()
     end
   end
 end

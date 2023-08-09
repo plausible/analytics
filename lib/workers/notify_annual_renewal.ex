@@ -2,7 +2,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
   use Plausible.Repo
   use Oban.Worker, queue: :notify_annual_renewal
 
-  @yearly_plans Plausible.Billing.Plans.all_yearly_plan_ids()
+  @yearly_plans Plausible.Billing.Plans.yearly_product_ids()
 
   @impl Oban.Worker
   @doc """

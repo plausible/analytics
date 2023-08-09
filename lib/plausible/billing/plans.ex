@@ -62,11 +62,11 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  @spec all_yearly_plan_ids() :: [String.t()]
+  @spec yearly_product_ids() :: [String.t()]
   @doc """
   List yearly plans product IDs.
   """
-  def all_yearly_plan_ids do
+  def yearly_product_ids do
     for %{yearly_product_id: yearly_product_id} <- all_plans(),
         is_binary(yearly_product_id),
         do: yearly_product_id
