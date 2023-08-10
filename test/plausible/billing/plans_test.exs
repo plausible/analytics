@@ -94,7 +94,7 @@ defmodule Plausible.Billing.PlansTest do
                volume: "100k",
                yearly_cost: "$96",
                yearly_product_id: "590752"
-             } == Plans.suggest(user, 10_000)
+             } = Plans.suggest(user, 10_000)
 
       assert %Plausible.Billing.Plan{
                limit: 200_000,
@@ -103,7 +103,7 @@ defmodule Plausible.Billing.PlansTest do
                volume: "200k",
                yearly_cost: "$144",
                yearly_product_id: "597486"
-             } == Plans.suggest(user, 100_000)
+             } = Plans.suggest(user, 100_000)
     end
 
     test "returns nil when user has enterprise-level usage" do
@@ -151,6 +151,44 @@ defmodule Plausible.Billing.PlansTest do
                "749357",
                "749359"
              ] == Plans.yearly_product_ids()
+    end
+  end
+
+  describe "site_limit/1" do
+    test "returns 50 when user is on an old plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+      assert 50 == Plans.site_limit(user)
+    end
+
+    test "returns 10 when user is on free_10k plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
+      assert 10 == Plans.site_limit(user)
+    end
+
+    test "returns 10 when user is on Plausible Growth plan" do
+    end
+
+    test "returns 50 when user is on Plausible Business plan" do
+    end
+
+    test "returns custom limit when user is on an enterprise plan" do
+      user = insert(:user)
+
+      enterprise_plan =
+        insert(:enterprise_plan, user_id: user.id, monthly_pageview_limit: 100_000, site_limit: 500)
+
+      _subscription =
+        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
+
+      assert 500 == Plans.site_limit(user)
+    end
+
+    test "returns 10 when user in on trial" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: 7))
+      assert 10 == Plans.site_limit(user)
+
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: -7))
+      assert 10 == Plans.site_limit(user)
     end
   end
 end

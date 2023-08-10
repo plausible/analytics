@@ -98,6 +98,26 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
+  def site_limit(user) do
+    case get_subscription_plan(user) do
+      %Plausible.Billing.EnterprisePlan{site_limit: site_limit} -> site_limit
+      %Plausible.Billing.Plan{kind: kind} when kind in [:v1, :v2, :v3] -> 50
+      %Plausible.Billing.Plan{kind: :growth} -> 10
+      %Plausible.Billing.Plan{kind: :business} -> 50
+      :free_10k -> 10
+      nil -> 10
+    end
+  end
+
+  defp get_subscription_plan(user) do
+    user = Plausible.Users.with_subscription(user)
+    if user.subscription && user.subscription.paddle_plan_id == "free_10k" do
+      :free_10k
+    else
+      find(user.subscription) || get_enterprise_plan(user.subscription)
+    end
+  end
+
   def subscription_interval(%Plausible.Billing.Subscription{paddle_plan_id: "free_10k"}),
     do: "N/A"
 
@@ -138,6 +158,8 @@ defmodule Plausible.Billing.Plans do
       end
     end
   end
+
+  defp get_enterprise_plan(nil), do: nil
 
   defp get_enterprise_plan(%Plausible.Billing.Subscription{} = subscription) do
     Repo.get_by(Plausible.Billing.EnterprisePlan,
