@@ -265,6 +265,7 @@ config :plausible, PlausibleWeb.Endpoint,
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
 db_ssl = get_var_from_path_or_env(config_dir, "DATABASE_SSL", "disabled")
+
 db_ssl_ca_certfile = get_var_from_path_or_env(config_dir, "DATABASE_SSL_CA_CERTFILE")
 
 if is_nil(db_socket_dir) do
@@ -336,6 +337,8 @@ maybe_ch_ipv6 =
   get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
   |> String.to_existing_atom()
 
+ch_db_ssl = get_var_from_path_or_env(config_dir, "CLICKHOUSE_DATABASE_SSL", "disabled")
+
 ch_db_ssl_ca_certfile =
   get_var_from_path_or_env(config_dir, "CLICKHOUSE_DATABASE_SSL_CA_CERTFILE")
 
@@ -346,14 +349,26 @@ ch_transport_opts = [
 ]
 
 ch_transport_opts =
-  if ch_db_ssl_ca_certfile do
-    ch_transport_opts ++
-      [
-        cacertfile: ch_db_ssl_ca_certfile,
-        verify: :verify_none
-      ]
-  else
-    ch_transport_opts
+  case ch_db_ssl do
+    "enabled" ->
+      ch_transport_opts ++
+        [
+          cacertfile: ch_db_ssl_ca_certfile,
+          verify: :verify_none
+        ]
+
+    "verify_peer" ->
+      ch_transport_opts ++
+        [
+          cacertfile: ch_db_ssl_ca_certfile,
+          verify: :verify_peer,
+          customize_hostname_check: [
+            match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+          ]
+        ]
+
+    "disabled" ->
+      ch_transport_opts
   end
 
 config :plausible, Plausible.ClickhouseRepo,
