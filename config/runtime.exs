@@ -264,10 +264,34 @@ config :plausible, PlausibleWeb.Endpoint,
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
+db_ssl = get_var_from_path_or_env(config_dir, "DATABASE_SSL", "disabled")
+db_ssl_ca_certfile = get_var_from_path_or_env(config_dir, "DATABASE_SSL_CA_CERTFILE")
+
 if is_nil(db_socket_dir) do
-  config :plausible, Plausible.Repo,
-    url: db_url,
-    socket_options: maybe_ipv6
+  case db_ssl do
+    "enabled" ->
+      config :plausible, Plausible.Repo,
+        url: db_url,
+        socket_options: maybe_ipv6,
+        ssl_opts: [
+          cacertfile: db_ssl_ca_certfile,
+          verify: :verify_none
+        ]
+
+    "verify_peer" ->
+      config :plausible, Plausible.Repo,
+        url: db_url,
+        socket_options: maybe_ipv6,
+        ssl_opts: [
+          cacertfile: db_ssl_ca_certfile,
+          verify: :verify_peer
+        ]
+
+    "disabled" ->
+      config :plausible, Plausible.Repo,
+        url: db_url,
+        socket_options: maybe_ipv6
+  end
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
@@ -309,11 +333,21 @@ maybe_ch_ipv6 =
   get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
   |> String.to_existing_atom()
 
+ch_db_ssl_ca_certfile =
+  get_var_from_path_or_env(config_dir, "CLICKHOUSE_DATABASE_SSL_CA_CERTFILE")
+
 ch_transport_opts = [
   keepalive: true,
   show_econnreset: true,
   inet6: maybe_ch_ipv6
 ]
+
+ch_transport_opts =
+  if ch_db_ssl_ca_certfile do
+    ch_transport_opts ++ [cacertfile: ch_db_ssl_ca_certfile]
+  else
+    ch_transport_opts
+  end
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
