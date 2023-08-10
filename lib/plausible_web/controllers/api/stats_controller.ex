@@ -1399,6 +1399,11 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Query.put_filter(filter_name, {:member, items})
       |> Query.remove_event_filters([:goal, :props])
 
+    # Here, we're always only interested in the first page of results 
+    # - the :member filter makes sure that the results always match with 
+    # the items in the given breakdown_results list
+    pagination = {elem(pagination, 0), 1}
+
     res_without_goal =
       Stats.breakdown(site, query_without_goal, filter_name, [:visitors], pagination)
 
