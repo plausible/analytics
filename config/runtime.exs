@@ -347,7 +347,11 @@ ch_transport_opts = [
 
 ch_transport_opts =
   if ch_db_ssl_ca_certfile do
-    ch_transport_opts ++ [cacertfile: ch_db_ssl_ca_certfile]
+    ch_transport_opts ++
+      [
+        cacertfile: ch_db_ssl_ca_certfile,
+        verify: :verify_none
+      ]
   else
     ch_transport_opts
   end
