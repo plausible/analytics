@@ -175,7 +175,11 @@ defmodule Plausible.Billing.PlansTest do
       user = insert(:user)
 
       enterprise_plan =
-        insert(:enterprise_plan, user_id: user.id, monthly_pageview_limit: 100_000, site_limit: 500)
+        insert(:enterprise_plan,
+          user_id: user.id,
+          monthly_pageview_limit: 100_000,
+          site_limit: 500
+        )
 
       _subscription =
         insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)

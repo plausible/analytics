@@ -109,31 +109,33 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp get_subscription_plan(user) do
+  defp get_subscription_plan(%Plausible.Auth.User{} = user) do
     user = Plausible.Users.with_subscription(user)
-    if user.subscription && user.subscription.paddle_plan_id == "free_10k" do
+    get_subscription_plan(user.subscription)
+  end
+
+  defp get_subscription_plan(subscription) do
+    if subscription && subscription.paddle_plan_id == "free_10k" do
       :free_10k
     else
-      find(user.subscription) || get_enterprise_plan(user.subscription)
+      find(subscription) || get_enterprise_plan(subscription)
     end
   end
 
-  def subscription_interval(%Plausible.Billing.Subscription{paddle_plan_id: "free_10k"}),
-    do: "N/A"
-
   def subscription_interval(subscription) do
-    case find(subscription.paddle_plan_id) do
-      nil ->
-        enterprise_plan = get_enterprise_plan(subscription)
+    case get_subscription_plan(subscription) do
+      %Plausible.Billing.EnterprisePlan{billing_interval: interval} ->
+        interval
 
-        enterprise_plan && enterprise_plan.billing_interval
-
-      plan ->
-        if subscription.paddle_plan_id == plan.monthly_product_id do
+      %Plausible.Billing.Plan{} = plan ->
+        if plan.monthly_product_id == subscription.paddle_plan_id do
           "monthly"
         else
           "yearly"
         end
+
+      _any ->
+        "N/A"
     end
   end
 
@@ -171,14 +173,14 @@ defmodule Plausible.Billing.Plans do
   @enterprise_level_usage 10_000_000
   @spec suggest(Plausible.Auth.User.t(), non_neg_integer()) :: Plausible.Billing.Plan.t()
   @doc """
-  Returns the most appropriate plan for a user based on their usage during a 
+  Returns the most appropriate plan for a user based on their usage during a
   given cycle.
 
-  If the usage during the cycle exceeds the enterprise-level threshold, or if 
-  the user already belongs to an enterprise plan, it suggests the :enterprise 
+  If the usage during the cycle exceeds the enterprise-level threshold, or if
+  the user already belongs to an enterprise plan, it suggests the :enterprise
   plan.
 
-  Otherwise, it recommends the plan where the cycle usage falls just under the 
+  Otherwise, it recommends the plan where the cycle usage falls just under the
   plan's limit from the available options for the user.
   """
   def suggest(user, usage_during_cycle) do
