@@ -284,7 +284,10 @@ if is_nil(db_socket_dir) do
         socket_options: maybe_ipv6,
         ssl_opts: [
           cacertfile: db_ssl_ca_certfile,
-          verify: :verify_peer
+          verify: :verify_peer,
+          customize_hostname_check: [
+            match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+          ]
         ]
 
     "disabled" ->
