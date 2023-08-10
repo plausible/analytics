@@ -2,11 +2,12 @@ defmodule Plausible.Billing.Plan do
   @moduledoc false
 
   @derive Jason.Encoder
-  @enforce_keys ~w(limit volume monthly_cost yearly_cost monthly_product_id yearly_product_id)a
+  @enforce_keys ~w(kind limit volume monthly_cost yearly_cost monthly_product_id yearly_product_id)a
   defstruct @enforce_keys
 
   @type t() ::
           %__MODULE__{
+            kind: String.t(),
             limit: non_neg_integer(),
             volume: String.t(),
             monthly_cost: String.t() | nil,
@@ -35,6 +36,7 @@ defmodule Plausible.Billing.Plans do
       |> File.read!()
       |> Jason.decode!(keys: :atoms!)
       |> Enum.map(&Map.put(&1, :volume, PlausibleWeb.StatsView.large_number_format(&1.limit)))
+      |> Enum.map(&Map.put(&1, :kind, String.to_existing_atom(&1.kind)))
       |> Enum.map(&struct!(Plausible.Billing.Plan, &1))
 
     Module.put_attribute(__MODULE__, f, contents)

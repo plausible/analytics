@@ -1,5 +1,6 @@
 [
   {
+    "kind":"v3",
     "limit":10000,
     "monthly_cost":"$9",
     "monthly_product_id":"749342",
@@ -7,6 +8,7 @@
     "yearly_product_id":"749343"
   },
   {
+    "kind":"v3",
     "limit":100000,
     "monthly_cost":"$19",
     "monthly_product_id":"749344",
@@ -14,6 +16,7 @@
     "yearly_product_id":"749345"
   },
   {
+    "kind":"v3",
     "limit":200000,
     "monthly_cost":"$29",
     "monthly_product_id":"749346",
@@ -21,6 +24,7 @@
     "yearly_product_id":"749347"
   },
   {
+    "kind":"v3",
     "limit":500000,
     "monthly_cost":"$49",
     "monthly_product_id":"749348",
@@ -28,14 +32,15 @@
     "yearly_product_id":"749349"
   },
   {
+    "kind":"v3",
     "limit":1000000,
     "monthly_cost":"$69",
     "monthly_product_id":"749350",
     "yearly_cost":"$690",
     "yearly_product_id":"749352"
   },
-
   {
+    "kind":"v3",
     "limit":2000000,
     "monthly_cost":"$89",
     "monthly_product_id":"749353",
@@ -43,6 +48,7 @@
     "yearly_product_id":"749355"
   },
   {
+    "kind":"v3",
     "limit":5000000,
     "monthly_cost":"$129",
     "monthly_product_id":"749356",
@@ -50,6 +56,7 @@
     "yearly_product_id":"749357"
   },
   {
+    "kind":"v3",
     "limit":10000000,
     "monthly_cost":"$169",
     "monthly_product_id":"749358",
