@@ -139,25 +139,22 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def allowance(%Plausible.Billing.Subscription{paddle_plan_id: "free_10k"}), do: 10_000
-
+  @spec allowance(Plausible.Billing.Subscription.t()) :: non_neg_integer() | nil
   def allowance(subscription) do
-    found = find(subscription.paddle_plan_id)
+    case get_subscription_plan(subscription) do
+      %Plausible.Billing.EnterprisePlan{monthly_pageview_limit: allowance} ->
+        allowance
 
-    if found do
-      Map.fetch!(found, :limit)
-    else
-      enterprise_plan = get_enterprise_plan(subscription)
+      %Plausible.Billing.Plan{limit: allowance} ->
+        allowance
 
-      if enterprise_plan do
-        enterprise_plan.monthly_pageview_limit
-      else
+      :free_10k ->
+        10_000
+
+      _any ->
         Sentry.capture_message("Unknown allowance for plan",
-          extra: %{
-            paddle_plan_id: subscription.paddle_plan_id
-          }
+          extra: %{paddle_plan_id: subscription.paddle_plan_id}
         )
-      end
     end
   end
 
