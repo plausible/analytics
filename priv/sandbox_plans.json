@@ -5,7 +5,8 @@
     "monthly_product_id":"19878",
     "yearly_product_id":"20127",
     "monthly_cost":"$6",
-    "yearly_cost":"$60"
+    "yearly_cost":"$60",
+    "site_limit":50
   },
   {
     "kind":"v3",
@@ -13,6 +14,7 @@
     "monthly_product_id":"20657",
     "yearly_product_id":"20658",
     "monthly_cost":"$12.34",
-    "yearly_cost":"$120.34"
+    "yearly_cost":"$120.34",
+    "site_limit":50
   }
 ]

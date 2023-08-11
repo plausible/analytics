@@ -204,11 +204,6 @@ custom_script_name =
   config_dir
   |> get_var_from_path_or_env("CUSTOM_SCRIPT_NAME", "script")
 
-{site_limit, ""} =
-  config_dir
-  |> get_var_from_path_or_env("SITE_LIMIT", "50")
-  |> Integer.parse()
-
 site_limit_exempt =
   config_dir
   |> get_var_from_path_or_env("SITE_LIMIT_EXEMPT", "")
@@ -241,7 +236,6 @@ config :plausible,
   environment: env,
   mailer_email: mailer_email,
   super_admin_user_ids: super_admin_user_ids,
-  site_limit: site_limit,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,

@@ -2,13 +2,14 @@ defmodule Plausible.Billing.Plan do
   @moduledoc false
 
   @derive Jason.Encoder
-  @enforce_keys ~w(kind monthly_pageview_limit volume monthly_cost yearly_cost monthly_product_id yearly_product_id)a
+  @enforce_keys ~w(kind site_limit monthly_pageview_limit volume monthly_cost yearly_cost monthly_product_id yearly_product_id)a
   defstruct @enforce_keys
 
   @type t() ::
           %__MODULE__{
             kind: String.t(),
             monthly_pageview_limit: non_neg_integer(),
+            site_limit: non_neg_integer(),
             volume: String.t(),
             monthly_cost: String.t() | nil,
             yearly_cost: String.t() | nil,
@@ -35,7 +36,13 @@ defmodule Plausible.Billing.Plans do
       path
       |> File.read!()
       |> Jason.decode!(keys: :atoms!)
-      |> Enum.map(&Map.put(&1, :volume, PlausibleWeb.StatsView.large_number_format(&1.monthly_pageview_limit)))
+      |> Enum.map(
+        &Map.put(
+          &1,
+          :volume,
+          PlausibleWeb.StatsView.large_number_format(&1.monthly_pageview_limit)
+        )
+      )
       |> Enum.map(&Map.put(&1, :kind, String.to_existing_atom(&1.kind)))
       |> Enum.map(&struct!(Plausible.Billing.Plan, &1))
 
@@ -98,14 +105,33 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
+  @limit_sites_since ~D[2021-05-05]
+  @spec site_limit(Plausible.Auth.User.t()) :: non_neg_integer() | :unlimited
+  @doc """
+  Returns the limit of sites a user can have.
+
+  For enterprise customers with active subscriptions, returns :unlimited. The
+  site limit is checked in a background job so as to avoid service disruption.
+  """
   def site_limit(user) do
-    case get_subscription_plan(user) do
-      %Plausible.Billing.EnterprisePlan{site_limit: site_limit} -> site_limit
-      %Plausible.Billing.Plan{kind: kind} when kind in [:v1, :v2, :v3] -> 50
-      %Plausible.Billing.Plan{kind: :growth} -> 10
-      %Plausible.Billing.Plan{kind: :business} -> 50
-      :free_10k -> 10
-      nil -> 10
+    cond do
+      Application.get_env(:plausible, :is_selfhost) -> :unlimited
+      user.email in Application.get_env(:plausible, :site_limit_exempt) -> :unlimited
+      Timex.before?(user.inserted_at, @limit_sites_since) -> :unlimited
+      true -> get_site_limit_from_plan(user)
+    end
+  end
+
+  @site_limit_for_trials 50
+  @site_limit_for_free_10k 50
+  defp get_site_limit_from_plan(user) do
+    user = Plausible.Users.with_subscription(user)
+
+    case get_subscription_plan(user.subscription) do
+      %Plausible.Billing.EnterprisePlan{} -> :unlimited
+      %Plausible.Billing.Plan{site_limit: site_limit} -> site_limit
+      :free_10k -> @site_limit_for_free_10k
+      nil -> @site_limit_for_trials
     end
   end
 
