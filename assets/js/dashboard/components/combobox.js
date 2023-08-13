@@ -166,7 +166,7 @@ export default function PlausibleCombobox(props) {
 
   const containerClass = classNames('relative w-full', {
     [props.className]: !!props.className,
-    'opacity-20 cursor-default pointer-events-none': props.isDisabled
+    'opacity-30 cursor-default pointer-events-none': props.isDisabled
   })
 
   function renderSingleOptionContent() {

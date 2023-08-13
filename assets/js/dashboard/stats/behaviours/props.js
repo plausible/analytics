@@ -13,11 +13,11 @@ export default function Properties(props) {
   const propKeyStorageName = `prop_key__${site.domain}`
   const propKeyStorageNameForGoal = `${query.filters.goal}__prop_key__${site.domain}`
   
-  const [propKey, setPropKey] = useState(getPropKeyFromStorage())
+  const [propKey, setPropKey] = useState(choosePropKey())
 
   useEffect(() => {
-    setPropKey(getPropKeyFromStorage())
-  }, [query.filters.goal])
+    setPropKey(choosePropKey())
+  }, [query.filters.goal, query.filters.props])
 
   function singleGoalFilterApplied() {
     const goalFilter = query.filters.goal
@@ -29,6 +29,13 @@ export default function Properties(props) {
     }
   }
 
+  function choosePropKey() {
+    if (query.filters.props) {
+      return Object.keys(query.filters.props)[0]
+    } else {
+      return getPropKeyFromStorage()
+    }
+  }
 
   function getPropKeyFromStorage() {
     if (singleGoalFilterApplied()) {
@@ -91,7 +98,7 @@ export default function Properties(props) {
   return (
     <div className="w-full mt-4">
         <div className="w-56">
-          <Combobox boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
+          <Combobox isDisabled={!!query.filters.props} boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
         </div>
       { propKey && renderBreakdown() }
     </div>
