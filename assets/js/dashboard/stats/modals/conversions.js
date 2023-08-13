@@ -8,6 +8,7 @@ import * as api from '../../api'
 import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
 import {parseQuery} from '../../query'
+import { escapeFilterValue } from '../../util/filters'
 
 function ConversionsModal(props) {
   const site = props.site
@@ -49,7 +50,7 @@ function ConversionsModal(props) {
 
   function filterSearchLink(listItem) {
     const searchParams = new URLSearchParams(window.location.search)
-    searchParams.set('goal', listItem.name)
+    searchParams.set('goal', escapeFilterValue(listItem.name))
     return searchParams.toString()
   }
 

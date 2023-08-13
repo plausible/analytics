@@ -5,7 +5,8 @@ import * as api from '../../api'
 import * as url from '../../util/url'
 import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
-import { parsePrefix } from "../../util/filters"
+import { parsePrefix, escapeFilterValue } from "../../util/filters"
+
 
 export default function Properties(props) {
   const { site, query } = props
@@ -83,7 +84,7 @@ export default function Properties(props) {
     )
   }
 
-  const getFilterFor = (listItem) => { return {'props': JSON.stringify({[propKey]: listItem['name']})} }
+  const getFilterFor = (listItem) => { return {'props': JSON.stringify({[propKey]: escapeFilterValue(listItem.name)})} }
   const comboboxValues = propKey ? [{value: propKey, label: propKey}] : []
   const boxClass = 'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500'
 
