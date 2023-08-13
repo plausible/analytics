@@ -22,6 +22,7 @@ export default function Conversions(props) {
       fetchData={fetchConversions}
       getFilterFor={getFilterFor}
       keyLabel="Goal"
+      onClick={props.onGoalFilterClick}
       metrics={[
         {name: 'visitors', label: "Uniques", plot: true},
         {name: 'events', label: "Total", hiddenOnMobile: true},
