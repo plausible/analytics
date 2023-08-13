@@ -20,7 +20,7 @@ function detailsIcon() {
   )
 }
 
-export default function MoreLink({url, site, list, endpoint, className}) {
+export default function MoreLink({url, site, list, endpoint, className, onClick}) {
   if (list.length > 0) {
     return (
       <div className={`w-full text-center ${className ? className : ''}`}>
@@ -28,6 +28,7 @@ export default function MoreLink({url, site, list, endpoint, className}) {
           to={url || `/${encodeURIComponent(site.domain)}/${endpoint}${window.location.search}`}
           // eslint-disable-next-line max-len
           className="leading-snug font-bold text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition tracking-wide"
+          onClick={onClick}
         >
           { detailsIcon() }
           DETAILS

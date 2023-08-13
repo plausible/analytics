@@ -307,7 +307,7 @@ export default function ListReport(props) {
     const hideDetails = props.maybeHideDetails && !moreResultsAvailable
 
     const showDetails = props.detailsLink && !state.loading && !hideDetails 
-    return showDetails && <MoreLink className={'mt-2'} url={props.detailsLink} list={state.list} />
+    return showDetails && <MoreLink className={'mt-2'} url={props.detailsLink} list={state.list} onClick={props.onClick}/>
   }
 
   return (
