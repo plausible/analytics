@@ -97,7 +97,7 @@ export default function Properties(props) {
 
   return (
     <div className="w-full mt-4">
-        <div className="w-56">
+        <div>
           <Combobox isDisabled={!!query.filters.props} boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
         </div>
       { propKey && renderBreakdown() }
