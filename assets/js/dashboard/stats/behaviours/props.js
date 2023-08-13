@@ -1,20 +1,41 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import ListReport from "../reports/list";
 import Combobox from '../../components/combobox'
 import * as api from '../../api'
 import * as url from '../../util/url'
 import { CR_METRIC, PERCENTAGE_METRIC } from "../reports/metrics";
 import * as storage from "../../util/storage";
+import { parsePrefix } from "../../util/filters"
 
 export default function Properties(props) {
   const { site, query } = props
   const propKeyStorageName = `prop_key__${site.domain}`
-  const [propKey, setPropKey] = useState(defaultPropKey())
+  const propKeyStorageNameForGoal = `${query.filters.goal}__prop_key__${site.domain}`
+  
+  const [propKey, setPropKey] = useState(getPropKeyFromStorage())
 
-  function defaultPropKey() {
-    const stored = storage.getItem(propKeyStorageName)
-    if (stored) { return stored }
-    return null
+  useEffect(() => {
+    setPropKey(getPropKeyFromStorage())
+  }, [query.filters.goal])
+
+  function singleGoalFilterApplied() {
+    const goalFilter = query.filters.goal
+    if (goalFilter) {
+      const { type, values } = parsePrefix(goalFilter)
+      return type === 'is' && values.length === 1
+    } else {
+      return false
+    }
+  }
+
+
+  function getPropKeyFromStorage() {
+    if (singleGoalFilterApplied()) {
+      const storedForGoal = storage.getItem(propKeyStorageNameForGoal)
+      if (storedForGoal) { return storedForGoal }
+    }
+    
+    return storage.getItem(propKeyStorageName)
   }
 
   function fetchProps() {
@@ -30,8 +51,12 @@ export default function Properties(props) {
   function onPropKeySelect() {
     return (selectedOptions) => {
       const newPropKey = selectedOptions.length === 0 ? null : selectedOptions[0].value
-      
-      if (newPropKey) { storage.setItem(propKeyStorageName, newPropKey) }
+
+      if (newPropKey) {
+        const storageName = singleGoalFilterApplied() ? propKeyStorageNameForGoal : propKeyStorageName
+        storage.setItem(storageName, newPropKey)
+      }
+
       setPropKey(newPropKey)
     }
   }

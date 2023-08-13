@@ -51,7 +51,7 @@ export function toFilterQuery(type, clauses) {
   return prefix + result;
 }
 
-function parsePrefix(rawValue) {
+export function parsePrefix(rawValue) {
   const type = Object.keys(FILTER_PREFIXES)
     .find(type => FILTER_PREFIXES[type] === rawValue[0]) || FILTER_TYPES.is;
 
