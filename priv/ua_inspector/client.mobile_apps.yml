@@ -33,6 +33,11 @@
   name: 'Apple News'
   version: '$1'
 
+# Apple TV
+- regex: 'appletv.client'
+  name: 'Apple TV'
+  version: ''
+
 - regex: 'bPod'
   name: 'bPod'
   version: ''
@@ -139,6 +144,11 @@
 # YouTube
 - regex: 'com.google.android.youtube(?:/([\d\.]+))?'
   name: 'YouTube'
+  version: '$1'
+
+# Rutube
+- regex: 'Rutube(?:TV)?BlackAndroid'
+  name: 'Rutube'
   version: '$1'
 
 # Netflix (https://play.google.com/store/apps/details?id=com.netflix.mediaclient)
@@ -551,7 +561,7 @@
   version: '$1'
 
 # https://apps.apple.com/us/app/zalo/id579523206
-- regex: 'Zalo/([\d\.]+)'
+- regex: 'Zalo/([\d\.]+)|Zalo android'
   name: 'Zalo'
   version: '$1'
 
@@ -1300,6 +1310,11 @@
   name: 'Bitcoin Core'
   version: '$1'
 
+# Dogecoin Core (https://github.com/dogecoin/dogecoin)
+- regex: '/Shibetoshi:(\d+\.[\.\d]+)/'
+  name: 'Dogecoin Core'
+  version: '$1'
+
 # Amazon Shopping (https://play.google.com/store/apps/details?id=com.amazon.mShop.android.shopping)
 - regex: 'Amazon.com/(\d+\.[\.\d]+)'
   name: 'Amazon Shopping'
@@ -1441,4 +1456,13 @@
 # jj2go https://apps.apple.com/us/app/jj2go/id1438749275
 - regex: 'RelesysApp/(\d+\.[.\d]+) \(\d{1,2}\) net.relesysapp.jj2go'
   name: 'JJ2GO'
+  version: '$1'
+
+# My Watch Party
+- regex: 'MyWatchParty/(\d+\.[.\d]+)'
+  name: 'My Watch Party'
+  version: '$1'
+
+- regex: 'LoseIt!/(\d+\.[.\d]+)'
+  name: 'LoseIt!'
   version: '$1'

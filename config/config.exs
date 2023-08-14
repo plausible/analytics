@@ -22,7 +22,8 @@ config :logger, :console,
 config :phoenix, :json_library, Jason
 
 config :ua_inspector,
-  database_path: "priv/ua_inspector"
+  database_path: "priv/ua_inspector",
+  remote_release: "66d80de32fbb265941f4d7941fadc19097375097"
 
 config :ref_inspector,
   database_path: "priv/ref_inspector"
