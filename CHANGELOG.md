@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Fixed [long URLs display](https://github.com/plausible/analytics/issues/3158) in Outbound Link breakdown view
 - Fixed [Sentry reports](https://github.com/plausible/analytics/discussions/3166) for ingestion requests plausible/analytics#3182
 - Fix breakdown pagination bug in the dashboard details view when filtering by goals
+- Update bot detection (matomo 6.1.4, ua_inspector 3.4.0)
 
 ## v2.0.0 - 2023-07-12
 
