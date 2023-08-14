@@ -264,38 +264,19 @@ config :plausible, PlausibleWeb.Endpoint,
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
-db_ssl = get_var_from_path_or_env(config_dir, "DATABASE_SSL", "disabled")
-
-db_ssl_ca_certfile = get_var_from_path_or_env(config_dir, "DATABASE_SSL_CA_CERTFILE")
+db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
 
 if is_nil(db_socket_dir) do
-  case db_ssl do
-    "enabled" ->
-      config :plausible, Plausible.Repo,
-        url: db_url,
-        socket_options: maybe_ipv6,
-        ssl_opts: [
-          cacertfile: db_ssl_ca_certfile,
-          verify: :verify_none
-        ]
-
-    "verify_peer" ->
-      config :plausible, Plausible.Repo,
-        url: db_url,
-        socket_options: maybe_ipv6,
-        ssl_opts: [
-          cacertfile: db_ssl_ca_certfile,
-          verify: :verify_peer,
-          customize_hostname_check: [
-            match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-          ]
-        ]
-
-    "disabled" ->
-      config :plausible, Plausible.Repo,
-        url: db_url,
-        socket_options: maybe_ipv6
-  end
+  config :plausible, Plausible.Repo,
+    url: db_url,
+    socket_options: maybe_ipv6,
+    ssl_opts: [
+      cacertfile: db_cacertfile,
+      verify: :verify_peer,
+      customize_hostname_check: [
+        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+      ]
+    ]
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
@@ -337,10 +318,7 @@ maybe_ch_ipv6 =
   get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
   |> String.to_existing_atom()
 
-ch_db_ssl = get_var_from_path_or_env(config_dir, "CLICKHOUSE_DATABASE_SSL", "disabled")
-
-ch_db_ssl_ca_certfile =
-  get_var_from_path_or_env(config_dir, "CLICKHOUSE_DATABASE_SSL_CA_CERTFILE")
+ch_cacertfile = get_var_from_path_or_env(config_dir, "CLICKHOUSE_CACERTFILE")
 
 ch_transport_opts = [
   keepalive: true,
@@ -349,26 +327,10 @@ ch_transport_opts = [
 ]
 
 ch_transport_opts =
-  case ch_db_ssl do
-    "enabled" ->
-      ch_transport_opts ++
-        [
-          cacertfile: ch_db_ssl_ca_certfile,
-          verify: :verify_none
-        ]
-
-    "verify_peer" ->
-      ch_transport_opts ++
-        [
-          cacertfile: ch_db_ssl_ca_certfile,
-          verify: :verify_peer,
-          customize_hostname_check: [
-            match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-          ]
-        ]
-
-    "disabled" ->
-      ch_transport_opts
+  if ch_cacertfile do
+    ch_transport_opts ++ [cacertfile: ch_cacertfile]
+  else
+    ch_transport_opts
   end
 
 config :plausible, Plausible.ClickhouseRepo,
