@@ -282,30 +282,34 @@
 ##########
 # Android SDK Level Api
 ##########
-- regex: '\d+/tclwebkit(?:\d+[\.\d]*)'
+- regex: '(?:Android API \d+|\d+/tclwebkit(?:\d+[\.\d]*))'
   name: 'Android'
   versions:
-    - regex: '33/tclwebkit'
+    - regex: '(?:Android API 34|34/tclwebkit)'
+      version: '14'
+    - regex: '(?:Android API 33|33/tclwebkit)'
       version: '13'
-    - regex: '3[12]/tclwebkit'
+    - regex: '(?:Android API 32|32/tclwebkit)'
+      version: '12.1'
+    - regex: '(?:Android API 31|31/tclwebkit)'
       version: '12'
-    - regex: '30/tclwebkit'
+    - regex: '(?:Android API 30|30/tclwebkit)'
       version: '11'
-    - regex: '29/tclwebkit'
+    - regex: '(?:Android API 29|29/tclwebkit)'
       version: '10'
-    - regex: '28/tclwebkit'
+    - regex: '(?:Android API 28|28/tclwebkit)'
       version: '9'
-    - regex: '27/tclwebkit'
+    - regex: '(?:Android API 27|27/tclwebkit)'
       version: '8.1'
-    - regex: '26/tclwebkit'
+    - regex: '(?:Android API 26|26/tclwebkit)'
       version: '8'
-    - regex: '25/tclwebkit'
+    - regex: '(?:Android API 25|25/tclwebkit)'
       version: '7.1'
-    - regex: '24/tclwebkit'
+    - regex: '(?:Android API 24|24/tclwebkit)'
       version: '7'
-    - regex: '23/tclwebkit'
+    - regex: '(?:Android API 23|23/tclwebkit)'
       version: '6'
-    - regex: '22/tclwebkit'
+    - regex: '(?:Android API 22|22/tclwebkit)'
       version: '5.1'
     - regex: '21/tclwebkit'
       version: '5'
@@ -329,7 +333,7 @@
   name: 'Android'
   version: '6'
 
-- regex: '(?:Podbean|Podimo)(?:.*)/Android'
+- regex: '(?:Podbean|Podimo)(?:.*)/Android|Rutube(?:TV)?BlackAndroid'
   name: 'Android'
   version: ''
 
@@ -715,11 +719,15 @@
 ##########
 # tvOS (https://developer.apple.com/tvos/)
 ##########
-- regex: 'Apple ?TV.*CPU (?:iPhone )?OS ((?:9|1[0-6])[_\.]\d+(?:[_.]\d+)*)'
+- regex: 'Apple ?TV.*CPU (?:iPhone )?OS ((?:9|1[0-7])[_\.]\d+(?:[_.]\d+)*)'
   name: 'tvOS'
   version: '$1'
 
-- regex: 'iOS(?:; |/)((?:9|1[0-6]).\d+(?:[_\.]\d+)*) (?:model/)?AppleTV'
+- regex: 'iOS(?:; |/)((?:9|1[0-7]).\d+(?:[_\.]\d+)*) (?:model/)?AppleTV'
+  name: 'tvOS'
+  version: '$1'
+
+- regex: 'tvOS((?:9|1[0-7]).\d+(?:[_\.]\d+)*);'
   name: 'tvOS'
   version: '$1'
 
@@ -783,9 +791,17 @@
   name: 'iOS'
   version: '$1'
 
-- regex: '^(?!com.apple.Safari.SearchHelper).*CFNetwork/.+ Darwin/(\d+[\.\d]+)(?!.*(?:x86_64|i386|PowerMac|Power%20Macintosh))'
+- regex: '^(?!com.apple.Safari.SearchHelper|Safari).*CFNetwork/.+ Darwin/(\d+[\.\d]+)(?!.*(?:x86_64|i386|PowerMac|Power%20Macintosh))'
   name: 'iOS'
   versions:
+    - regex: 'Darwin/23.0.0'
+      version: '17.0'
+    - regex: 'Darwin/22.6.0'
+      version: '16.6'
+    - regex: 'Darwin/22.5.0'
+      version: '16.5'
+    - regex: 'Darwin/22.4.0'
+      version: '16.4'
     - regex: 'Darwin/22.3.0'
       version: '16.3'
     - regex: 'Darwin/22.2.0'
@@ -998,9 +1014,17 @@
 ##########
 # Mac
 ##########
-- regex: 'CFNetwork/.+ Darwin/(?:[\d\.]+).+(?:x86_64|i386|Power%20Macintosh)|(?:x86_64-apple-)?darwin(?:[\d\.]+)|PowerMac|com.apple.Safari.SearchHelper'
+- regex: 'CFNetwork/.+ Darwin/(?:[\d\.]+).+(?:x86_64|i386|Power%20Macintosh)|(?:x86_64-apple-)?darwin(?:[\d\.]+)|PowerMac|com.apple.Safari.SearchHelper|^Safari'
   name: 'Mac'
   versions:
+    - regex: '(?:x86_64-apple-)?Darwin/?23.0.0'
+      version: '14.0'
+    - regex: '(?:x86_64-apple-)?Darwin/?22.6.0'
+      version: '13.5'
+    - regex: '(?:x86_64-apple-)?Darwin/?22.5.0'
+      version: '13.4'
+    - regex: '(?:x86_64-apple-)?Darwin/?22.4.0'
+      version: '13.3'
     - regex: '(?:x86_64-apple-)?Darwin/?22.3.0'
       version: '13.2'
     - regex: '(?:x86_64-apple-)?Darwin/?22.2.0'
@@ -1231,9 +1255,9 @@
 ##########
 # BeOS
 ##########
-- regex: 'BeOS'
+- regex: 'BeOS[ +]?(\d[.\d]*)?'
   name: 'BeOS'
-  version: ''
+  version: '$1'
 
 ##########
 # Symbian

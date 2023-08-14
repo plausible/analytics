@@ -1886,7 +1886,7 @@
     versions:
       28: 'Blink'
 
-- regex: '(?:DDG-Android-|DuckDuckGo/)(\d+[\.\d]*)'
+- regex: '(?:DDG-Android-|DuckDuckGo/|ddg_android/)(\d+[\.\d]*)'
   name: 'DuckDuckGo Privacy Browser'
   version: '$1'
   engine:
@@ -2697,7 +2697,7 @@
     default: 'WebKit'
 
 # Dorado
-- regex: 'Dorado WAP-Browser(?:[/ ](\d+[\.\d]+))?'
+- regex: '(?:\w{1,5}[_ ])?Dorado WAP-Browser(?:[/ ](\d+[\.\d]+))?'
   name: 'Dorado'
   version: '$1'
 
