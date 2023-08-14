@@ -177,6 +177,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> wrap_suggestions()
   end
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def filter_suggestions(site, query, filter_name, filter_search) do
     filter_search = if filter_search == nil, do: "", else: filter_search
 
