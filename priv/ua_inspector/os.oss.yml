@@ -128,7 +128,6 @@
   name: 'Tizen'
   version: '$1'
 
-
 ##########
 # YunOS (Android based)
 ##########
@@ -262,6 +261,13 @@
 ##########
 - regex: 'FreeBSD.+Android'
   name: 'FreeBSD'
+  version: ''
+
+##########
+# Wear OS (https://wearos.google.com/)
+##########
+- regex: 'Chrome/(\d+\.[.\d]+) Odd/|SM-R(?:8[6-9]|9)'
+  name: 'Wear OS'
   version: ''
 
 ##########
@@ -1354,7 +1360,6 @@
 - regex: 'WebTV/(\d+[\.\d]+)'
   name: 'WebTV'
   version: '$1'
-
 
 ##########
 # Unix

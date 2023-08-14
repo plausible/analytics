@@ -1310,6 +1310,11 @@
   name: 'Bitcoin Core'
   version: '$1'
 
+# Dogecoin Core (https://github.com/dogecoin/dogecoin)
+- regex: '/Shibetoshi:(\d+\.[\.\d]+)/'
+  name: 'Dogecoin Core'
+  version: '$1'
+
 # Amazon Shopping (https://play.google.com/store/apps/details?id=com.amazon.mShop.android.shopping)
 - regex: 'Amazon.com/(\d+\.[\.\d]+)'
   name: 'Amazon Shopping'

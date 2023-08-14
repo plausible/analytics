@@ -712,7 +712,15 @@
     name: 'Visual Meta'
     url: 'https://www.shopalike.cz/'
 
-- regex: 'AdsBot-Google|Adwords-(DisplayAds|Express|Instant)|Google Web Preview|Google[ -]Publisher[ -]Plugin|Google-(Ads-Conversions|Ads-Qualify|Adwords|AMPHTML|Assess|HotelAdsVerifier|Read-Aloud|Shopping-Quality|Site-Verification|speakr|Stale-Content-Probe|Test|Youtube-Links)|(APIs|DuplexWeb|Feedfetcher|Mediapartners)-Google|Googlebot|Google(?:AdSenseInfeed|AssociationService|Prober|Producer)|Google.*/\+/web/snippet'
+- regex: 'AdsBot-Google|Adwords-(DisplayAds|Express|Instant)|Google Web Preview|Google[ -]Publisher[ -]Plugin|Google-(Ads-Conversions|Ads-Qualify|Adwords|AMPHTML|Assess|HotelAdsVerifier|InspectionTool|Read-Aloud|Shopping-Quality|Site-Verification|speakr|Stale-Content-Probe|Test|Youtube-Links)|(APIs|DuplexWeb|Feedfetcher|Mediapartners)-Google|Googlebot|Google(?:AdSenseInfeed|AssociationService|Other|Prober|Producer)|Google.*/\+/web/snippet'
+  name: 'Googlebot'
+  category: 'Search bot'
+  url: 'http://www.google.com/bot.html'
+  producer:
+    name: 'Google Inc.'
+    url: 'http://www.google.com'
+
+- regex: '^Google$'
   name: 'Googlebot'
   category: 'Search bot'
   url: 'http://www.google.com/bot.html'
@@ -1762,7 +1770,15 @@
 - regex: 'Y!J-BRW'
   name: 'Yahoo! Japan BRW'
   category: 'Crawler'
-  url: 'https://www.yahoo-help.jp/app/answers/detail/p/595/a_id/42716/~/ウェブページにアクセスするシステムのユーザーエージェントについて'
+  url: 'https://support.yahoo-net.jp/PccSearch/s/article/H000007955'
+  producer:
+    name: 'Yahoo! Japan Corp.'
+    url: 'https://www.yahoo.co.jp/'
+
+- regex: 'Y!J-WSC'
+  name: 'Yahoo! Japan WSC'
+  category: 'Crawler'
+  url: 'https://support.yahoo-net.jp/PccSearch/s/article/H000007955'
   producer:
     name: 'Yahoo! Japan Corp.'
     url: 'https://www.yahoo.co.jp/'
@@ -1987,7 +2003,7 @@
 - regex: 'RSSRadio \(Push Notification Scanner;support@dorada\.co\.uk\)'
   name: 'RSSRadio Bot'
 
-- regex: '(A6-Indexer|nuhk|TsolCrawler|Yammybot|Openbot|Gulper Web Bot|grub-client|Download Demon|SearchExpress|Microsoft URL Control|borg|altavista|dataminr.com|tweetedtimes.com|TrendsmapResolver|teoma|blitzbot|oegp|furlbot|http%20client|polybot|htdig|mogimogi|larbin|scrubby|searchsight|seekbot|semanticdiscovery|snappy|vortex(?!(?: Build|Plus))|zeal(?!ot)|fast-webcrawler|converacrawler|dataparksearch|findlinks|BrowserMob|HttpMonitor|ThumbShotsBot|URL2PNG|ZooShot|GomezA|Google SketchUp|Read%20Later|RackspaceBot|robots|SeopultContentAnalyzer|7Siters|centuryb.o.t9|InterNaetBoten|EasyBib AutoCite|Bidtellect|tomnomnom/meg|My User Agent|cortex|CF-UC User Agent|Re-re Studio|adreview|AHC/|NameOfAgent|Request-Promise|ALittle Client|Hello,? world|wp_is_mobile|0xAbyssalDoesntExist|Anarchy99|daumoa,damoa,daum,daumos,duamoa,duam,duamos|^revolt|nvd0rz|xfa1|Hakai|gbrmss|fuck-your-hp|IDBTE4M CODE87|Antoine|Insomania|Hells-Net|b3astmode|Linux Gnu \(cow\)|custom_user_agent|Test Certificate Info|iplabel)'
+- regex: '(A6-Indexer|nuhk|TsolCrawler|Yammybot|Openbot|Gulper Web Bot|grub-client|Download Demon|SearchExpress|Microsoft URL Control|borg|altavista|dataminr.com|tweetedtimes.com|TrendsmapResolver|teoma|blitzbot|oegp|furlbot|http%20client|polybot|htdig|mogimogi|larbin|scrubby|searchsight|seekbot|semanticdiscovery|snappy|vortex(?!(?: Build|Plus))|zeal(?!ot)|fast-webcrawler|converacrawler|dataparksearch|findlinks|BrowserMob|HttpMonitor|ThumbShotsBot|URL2PNG|ZooShot|GomezA|Google SketchUp|Read%20Later|RackspaceBot|robots|SeopultContentAnalyzer|7Siters|centuryb.o.t9|InterNaetBoten|EasyBib AutoCite|Bidtellect|tomnomnom/meg|My User Agent|cortex|CF-UC User Agent|Re-re Studio|adreview|AHC/|NameOfAgent|Request-Promise|ALittle Client|Hello,? world|wp_is_mobile|0xAbyssalDoesntExist|Anarchy99|daumoa,damoa,daum,daumos,duamoa,duam,duamos|^revolt|nvd0rz|xfa1|Hakai|gbrmss|fuck-your-hp|IDBTE4M CODE87|Antoine|Insomania|Hells-Net|b3astmode|Linux Gnu \(cow\)|custom_user_agent|Test Certificate Info|iplabel|Magellan)'
   name: 'Generic Bot'
 
 - regex: '^sentry'
@@ -3378,6 +3394,46 @@
   producer:
     name: 'Crissy Field GmbH'
     url: 'https://www.crissyfield.de/'
+
+- regex: 'researchscan.comsys.rwth-aachen.de'
+  name: 'Research Scan'
+  category: 'Crawler'
+  url: 'http://researchscan.comsys.rwth-aachen.de/'
+  producer:
+    name: 'RWTH Aachen University'
+    url: 'https://www.comsys.rwth-aachen.de/'
+
+- regex: 'newspaper/([\d+.]+)'
+  name: 'Scraping Robot'
+  category: 'Crawler'
+  url: 'https://scrapingrobot.com/'
+  producer:
+    name: 'Sprious LLC'
+    url: 'https://sprious.com/'
+
+- regex: 'GPTBot/([\d+.]+)'
+  name: 'GPTBot'
+  category: 'Crawler'
+  url: 'https://platform.openai.com/docs/gptbot'
+  producer:
+    name: 'OpenAI OpCo, LLC'
+    url: 'https://openai.com/'
+
+- regex: 'Ant.com beta/([\d+.]+)'
+  name: 'Ant'
+  category: 'Crawler'
+  url: 'https://www.ant.com/'
+  producer:
+    name: 'Ant.com Ltd.'
+    url: 'https://www.ant.com/'
+
+- regex: 'WebwikiBot/([\d+.]+)'
+  name: 'Webwiki'
+  category: 'Crawler'
+  url: 'https://www.webwiki.com/'
+  producer:
+    name: 'webwiki GmbH'
+    url: 'https://www.webwiki.com/'
 
 # Generic detections
 - regex: '[a-z0-9\-_]*((?<!cu|power[ _]|m[ _])bot(?![ _]TAB|[ _]?5[0-9]|[ _]Senior|[ _]Junior)|crawler|crawl|checker|archiver|transcoder|spider)([^a-z]|$)'

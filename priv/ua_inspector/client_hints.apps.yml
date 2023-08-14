@@ -92,6 +92,13 @@
 'mobi.deallauncher.coupons.shopping': 'Coupons & Deals'
 'com.wukongtv.wkcast.intl': 'Quick Cast'
 'com.tt.android.dm.view': 'Download Manager'
+'com.fsecure.ms.kpn.veilig': 'KPN Veilig'
+'com.fsecure.ms.actshield': 'ACT Shield'
+'com.fsecure.ms.talktalksa': 'TalkTalk SuperSafe'
+'com.bifrostwallet.app': 'Bifrost Wallet'
+'com.anydesk.anydeskandroid': 'AnyDesk Remote Desktop'
+'com.google.android.youtube': 'YouTube'
+'io.bluewallet.bluewallet': 'BlueWallet'
 
 # Vpns
 'org.torproject.android': 'Orbot'
@@ -100,3 +107,4 @@
 'com.v2.vpn.security.free': 'V2Free'
 'com.surfshark.vpnclient.android': 'Surfshark'
 'com.omshyapps.vpn': 'Omshy VPN'
+'com.kuto.vpn': 'KUTO VPN'
