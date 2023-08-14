@@ -9,6 +9,7 @@ import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { specialTitleWhenGoalFilter } from "../behaviours/goal-conversions";
+import { escapeFilterValue } from "../../util/filters"
 
 function PropsModal(props) {
   const site = props.site
@@ -51,7 +52,7 @@ function PropsModal(props) {
 
   function filterSearchLink(listItem) {
     const searchParams = new URLSearchParams(window.location.search)
-    searchParams.set('props', JSON.stringify({ [propKey]: listItem['name'] }))
+    searchParams.set('props', JSON.stringify({ [propKey]: escapeFilterValue(listItem.name) }))
     return searchParams.toString()
   }
 

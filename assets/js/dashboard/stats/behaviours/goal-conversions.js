@@ -5,7 +5,7 @@ import { CR_METRIC } from "../reports/metrics"
 import * as url from "../../util/url"
 import * as api from "../../api"
 
-const SPECIAL_GOALS = {
+export const SPECIAL_GOALS = {
   '404': {title: '404 Pages', prop: 'path'},
   'Outbound Link: Click': {title: 'Outbound Links', prop: 'url'},
   'Cloaked Link: Click': {title: 'Cloaked Links', prop: 'url'},
@@ -60,6 +60,6 @@ export default function GoalConversions(props) {
   if (SPECIAL_GOALS[query.filters.goal]) {
     return <SpecialPropBreakdown site={site} query={props.query} />
   } else {
-    return <Conversions site={site} query={props.query} />
+    return <Conversions site={site} query={props.query} onGoalFilterClick={props.onGoalFilterClick}/>
   }
 }

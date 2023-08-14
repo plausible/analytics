@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from 'react'
+import React, { Fragment, useState, useEffect, useCallback } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
@@ -9,6 +9,7 @@ import DeprecatedConversions from './deprecated-conversions'
 import Properties from './props'
 import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
+import { SPECIAL_GOALS } from './goal-conversions'
 
 const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
 const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
@@ -33,6 +34,27 @@ export default function Behaviours(props) {
 
   const [funnelNames, _setFunnelNames] = useState(site.funnels.map(({ name }) => name))
   const [selectedFunnel, setSelectedFunnel] = useState(storage.getItem(funnelKey))
+  
+  const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] = useState(false)
+
+  const onGoalFilterClick = useCallback((e) => {
+    const goalName = e.target.innerHTML
+    const isSpecialGoal = Object.keys(SPECIAL_GOALS).includes(goalName)
+    const isPageviewGoal = goalName.startsWith('Visit ')
+
+    if (!isSpecialGoal && !isPageviewGoal && enabledModes.includes(PROPS) && site.hasProps) {
+      setShowingPropsForGoalFilter(true)
+      setMode(PROPS)
+    }
+  }, [])
+
+  useEffect(() => {
+    const justRemovedGoalFilter = !query.filters.goal
+    if (mode === PROPS && justRemovedGoalFilter && showingPropsForGoalFilter) {
+      setShowingPropsForGoalFilter(false)
+      setMode(CONVERSIONS)
+    }
+  }, [!!query.filters.goal])
 
   useEffect(() => {
     setMode(defaultMode())
@@ -126,7 +148,7 @@ export default function Behaviours(props) {
   function renderConversions() {
     if (site.hasGoals) {
       if (site.flags.props) {
-        return <GoalConversions site={site} query={query} />
+        return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
       } else {
         return <DeprecatedConversions site={site} query={query} />
       }
