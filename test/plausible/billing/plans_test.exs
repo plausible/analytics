@@ -170,9 +170,6 @@ defmodule Plausible.Billing.PlansTest do
       assert 50 == Plans.site_limit(user)
     end
 
-    test "returns 10 when user is on Plausible Growth plan"
-    test "returns 50 when user is on Plausible Business plan"
-
     test "returns unlimited when user is on an enterprise plan" do
       user = insert(:user)
 
