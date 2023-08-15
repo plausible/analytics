@@ -2,13 +2,13 @@ defmodule Plausible.Billing.Plan do
   @moduledoc false
 
   @derive Jason.Encoder
-  @enforce_keys ~w(kind limit volume monthly_cost yearly_cost monthly_product_id yearly_product_id)a
+  @enforce_keys ~w(kind monthly_pageview_limit volume monthly_cost yearly_cost monthly_product_id yearly_product_id)a
   defstruct @enforce_keys
 
   @type t() ::
           %__MODULE__{
             kind: String.t(),
-            limit: non_neg_integer(),
+            monthly_pageview_limit: non_neg_integer(),
             volume: String.t(),
             monthly_cost: String.t() | nil,
             yearly_cost: String.t() | nil,
@@ -35,7 +35,7 @@ defmodule Plausible.Billing.Plans do
       path
       |> File.read!()
       |> Jason.decode!(keys: :atoms!)
-      |> Enum.map(&Map.put(&1, :volume, PlausibleWeb.StatsView.large_number_format(&1.limit)))
+      |> Enum.map(&Map.put(&1, :volume, PlausibleWeb.StatsView.large_number_format(&1.monthly_pageview_limit)))
       |> Enum.map(&Map.put(&1, :kind, String.to_existing_atom(&1.kind)))
       |> Enum.map(&struct!(Plausible.Billing.Plan, &1))
 
@@ -142,11 +142,11 @@ defmodule Plausible.Billing.Plans do
   @spec allowance(Plausible.Billing.Subscription.t()) :: non_neg_integer() | nil
   def allowance(subscription) do
     case get_subscription_plan(subscription) do
-      %Plausible.Billing.EnterprisePlan{monthly_pageview_limit: allowance} ->
-        allowance
+      %Plausible.Billing.EnterprisePlan{monthly_pageview_limit: limit} ->
+        limit
 
-      %Plausible.Billing.Plan{limit: allowance} ->
-        allowance
+      %Plausible.Billing.Plan{monthly_pageview_limit: limit} ->
+        limit
 
       :free_10k ->
         10_000
@@ -184,7 +184,7 @@ defmodule Plausible.Billing.Plans do
     cond do
       usage_during_cycle > @enterprise_level_usage -> :enterprise
       Plausible.Auth.enterprise?(user) -> :enterprise
-      true -> Enum.find(for_user(user), &(usage_during_cycle < &1.limit))
+      true -> Enum.find(for_user(user), &(usage_during_cycle < &1.monthly_pageview_limit))
     end
   end
 

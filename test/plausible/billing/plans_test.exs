@@ -88,7 +88,7 @@ defmodule Plausible.Billing.PlansTest do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
 
       assert %Plausible.Billing.Plan{
-               limit: 100_000,
+               monthly_pageview_limit: 100_000,
                monthly_cost: "$12",
                monthly_product_id: "558745",
                volume: "100k",
@@ -97,7 +97,7 @@ defmodule Plausible.Billing.PlansTest do
              } = Plans.suggest(user, 10_000)
 
       assert %Plausible.Billing.Plan{
-               limit: 200_000,
+               monthly_pageview_limit: 200_000,
                monthly_cost: "$18",
                monthly_product_id: "597485",
                volume: "200k",

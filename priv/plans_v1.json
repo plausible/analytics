@@ -1,7 +1,7 @@
 [
   {
     "kind":"v1",
-    "limit":10000,
+    "monthly_pageview_limit":10000,
     "monthly_cost":"$6",
     "monthly_product_id":"558018",
     "yearly_cost":"$48",
@@ -9,7 +9,7 @@
   },
   {
     "kind":"v1",
-    "limit":100000,
+    "monthly_pageview_limit":100000,
     "monthly_cost":"$12",
     "monthly_product_id":"558745",
     "yearly_cost":"$96",
@@ -17,7 +17,7 @@
   },
   {
     "kind":"v1",
-    "limit":200000,
+    "monthly_pageview_limit":200000,
     "monthly_cost":"$18",
     "monthly_product_id":"597485",
     "yearly_cost":"$144",
@@ -25,7 +25,7 @@
   },
   {
     "kind":"v1",
-    "limit":500000,
+    "monthly_pageview_limit":500000,
     "monthly_cost":"$27",
     "monthly_product_id":"597487",
     "yearly_cost":"$216",
@@ -33,7 +33,7 @@
   },
   {
     "kind":"v1",
-    "limit":1000000,
+    "monthly_pageview_limit":1000000,
     "monthly_cost":"$48",
     "monthly_product_id":"597642",
     "yearly_cost":"$384",
@@ -41,7 +41,7 @@
   },
   {
     "kind":"v1",
-    "limit":2000000,
+    "monthly_pageview_limit":2000000,
     "monthly_cost":"$69",
     "monthly_product_id":"597309",
     "yearly_cost":"$552",
@@ -49,7 +49,7 @@
   },
   {
     "kind":"v1",
-    "limit":5000000,
+    "monthly_pageview_limit":5000000,
     "monthly_cost":"$99",
     "monthly_product_id":"597311",
     "yearly_cost":"$792",
@@ -57,7 +57,7 @@
   },
   {
     "kind":"v1",
-    "limit":10000000,
+    "monthly_pageview_limit":10000000,
     "monthly_cost":"$150",
     "monthly_product_id":"642352",
     "yearly_cost":"$1200",
@@ -65,7 +65,7 @@
   },
   {
     "kind":"v1",
-    "limit":20000000,
+    "monthly_pageview_limit":20000000,
     "monthly_cost":"$225",
     "monthly_product_id":"642355",
     "yearly_cost":"$1800",
@@ -73,7 +73,7 @@
   },
   {
     "kind":"v1",
-    "limit":50000000,
+    "monthly_pageview_limit":50000000,
     "monthly_cost":"$330",
     "monthly_product_id":"650652",
     "yearly_cost":"$2640",
