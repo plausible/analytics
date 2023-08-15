@@ -35,6 +35,20 @@ defmodule PlausibleWeb.BillingController do
     end
   end
 
+  def choose_plan(conn, _params) do
+    user = conn.assigns[:current_user]
+
+    if FunWithFlags.enabled?(:business_tier, for: user) do
+      render(conn, "choose_plan.html",
+        skip_plausible_tracking: true,
+        user: user,
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
+      )
+    else
+      render_error(conn, 404)
+    end
+  end
+
   def upgrade_enterprise_plan(conn, %{"plan_id" => plan_id}) do
     user = conn.assigns[:current_user]
     subscription = user.subscription
