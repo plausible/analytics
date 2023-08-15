@@ -372,6 +372,9 @@ defmodule Plausible.Ingestion.Event do
       %Device{type: t} when t in @desktop_types ->
         "Desktop"
 
+      %Device{type: "unknown"} ->
+        nil
+
       %Device{type: type} ->
         Sentry.capture_message("Could not determine device type from UAInspector",
           extra: %{type: type}
