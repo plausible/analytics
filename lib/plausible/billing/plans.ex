@@ -110,8 +110,8 @@ defmodule Plausible.Billing.Plans do
   @doc """
   Returns the limit of sites a user can have.
 
-  For enterprise customers with active subscriptions, returns :unlimited. The
-  site limit is checked in a background job so as to avoid service disruption.
+  For enterprise customers, returns :unlimited. The site limit is checked in a
+  background job so as to avoid service disruption.
   """
   def site_limit(user) do
     cond do
@@ -133,11 +133,6 @@ defmodule Plausible.Billing.Plans do
       :free_10k -> @site_limit_for_free_10k
       nil -> @site_limit_for_trials
     end
-  end
-
-  defp get_subscription_plan(%Plausible.Auth.User{} = user) do
-    user = Plausible.Users.with_subscription(user)
-    get_subscription_plan(user.subscription)
   end
 
   defp get_subscription_plan(subscription) do
