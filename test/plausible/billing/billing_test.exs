@@ -49,52 +49,6 @@ defmodule Plausible.BillingTest do
     end
   end
 
-  describe "sites_limit" do
-    test "is the globally configured site limit for regular accounts" do
-      user = insert(:user, subscription: build(:subscription))
-
-      assert Billing.sites_limit(user) == Application.get_env(:plausible, :site_limit)
-    end
-
-    test "is limited for enterprise customers who have not upgraded yet" do
-      enterprise_plan_paddle_id = "123321"
-
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: enterprise_plan_paddle_id),
-          subscription: build(:subscription, paddle_plan_id: "99999")
-        )
-
-      assert Billing.sites_limit(user) == Application.get_env(:plausible, :site_limit)
-    end
-
-    test "is unlimited for enterprise customers. Their site limit is checked in a background job so as to avoid service disruption" do
-      enterprise_plan_paddle_id = "123321"
-
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: enterprise_plan_paddle_id),
-          subscription: build(:subscription, paddle_plan_id: enterprise_plan_paddle_id)
-        )
-
-      assert Billing.sites_limit(user) == nil
-    end
-
-    test "is unlimited for enterprise customers who are due to change a plan" do
-      enterprise_plan_paddle_id = "123321"
-
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: enterprise_plan_paddle_id),
-          subscription: build(:subscription, paddle_plan_id: enterprise_plan_paddle_id)
-        )
-
-      insert(:enterprise_plan, user_id: user.id, paddle_plan_id: "new-paddle-plan-id")
-
-      assert Billing.sites_limit(user) == nil
-    end
-  end
-
   describe "last_two_billing_cycles" do
     test "billing on the 1st" do
       last_bill_date = ~D[2021-01-01]
