@@ -43,7 +43,7 @@ defmodule Plausible.Billing.Plans do
           PlausibleWeb.StatsView.large_number_format(&1.monthly_pageview_limit)
         )
       )
-      |> Enum.map(&Map.put(&1, :kind, String.to_existing_atom(&1.kind)))
+      |> Enum.map(&Map.put(&1, :kind, String.to_atom(&1.kind)))
       |> Enum.map(&struct!(Plausible.Billing.Plan, &1))
 
     Module.put_attribute(__MODULE__, f, contents)
