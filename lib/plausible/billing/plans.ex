@@ -27,6 +27,7 @@ defmodule Plausible.Billing.Plans do
         :plans_v1,
         :plans_v2,
         :plans_v3,
+        :plans_v4,
         :unlisted_plans_v1,
         :unlisted_plans_v2,
         :sandbox_plans
@@ -69,6 +70,7 @@ defmodule Plausible.Billing.Plans do
     user = Plausible.Users.with_subscription(user)
 
     cond do
+      FunWithFlags.enabled?(:business_tier, for: user) -> @plans_v4
       find(user.subscription, @plans_v1) -> @plans_v1
       find(user.subscription, @plans_v2) -> @plans_v2
       find(user.subscription, @plans_v3) -> @plans_v3
