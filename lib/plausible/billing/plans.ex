@@ -7,7 +7,7 @@ defmodule Plausible.Billing.Plan do
 
   @type t() ::
           %__MODULE__{
-            kind: String.t(),
+            kind: atom(),
             monthly_pageview_limit: non_neg_integer(),
             site_limit: non_neg_integer(),
             volume: String.t(),
@@ -57,7 +57,7 @@ defmodule Plausible.Billing.Plans do
   As new versions of plans are introduced, users who were on old plans can
   still choose from old plans.
   """
-  def for_user(user) do
+  def for_user(%Plausible.Auth.User{} = user) do
     user = Plausible.Users.with_subscription(user)
 
     cond do
