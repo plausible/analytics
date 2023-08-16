@@ -1,9 +1,11 @@
 [
   {
-    "limit":10000000, 
+    "kind":"growth",
+    "monthly_pageview_limit":10000000,
     "monthly_product_id":"655350",
     "monthly_cost":"$250",
     "yearly_product_id":null,
-    "yearly_cost":null
+    "yearly_cost":null,
+    "site_limit":50
   }
 ]

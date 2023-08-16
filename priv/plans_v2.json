@@ -1,72 +1,92 @@
 [
   {
-    "limit":10000,
+    "kind":"growth",
+    "monthly_pageview_limit":10000,
     "monthly_cost":"$6",
     "monthly_product_id":"654177",
     "yearly_cost":"$60",
-    "yearly_product_id":"653232"
+    "yearly_product_id":"653232",
+    "site_limit":50
   },
   {
-    "limit":100000,
+    "kind":"growth",
+    "monthly_pageview_limit":100000,
     "monthly_cost":"$12",
     "monthly_product_id":"654178",
     "yearly_cost":"$120",
-    "yearly_product_id":"653234"
+    "yearly_product_id":"653234",
+    "site_limit":50
   },
   {
-    "limit":200000,
+    "kind":"growth",
+    "monthly_pageview_limit":200000,
     "monthly_cost":"$20",
     "monthly_product_id":"653237",
     "yearly_cost":"$200",
-    "yearly_product_id":"653236"
+    "yearly_product_id":"653236",
+    "site_limit":50
   },
   {
-    "limit":500000,
+    "kind":"growth",
+    "monthly_pageview_limit":500000,
     "monthly_cost":"$30",
     "monthly_product_id":"653238",
     "yearly_cost":"$300",
-    "yearly_product_id":"653239"
+    "yearly_product_id":"653239",
+    "site_limit":50
   },
   {
-    "limit":1000000,
+    "kind":"growth",
+    "monthly_pageview_limit":1000000,
     "monthly_cost":"$50",
     "monthly_product_id":"653240",
     "yearly_cost":"$500",
-    "yearly_product_id":"653242"
+    "yearly_product_id":"653242",
+    "site_limit":50
   },
   {
-    "limit":2000000,
+    "kind":"growth",
+    "monthly_pageview_limit":2000000,
     "monthly_cost":"$70",
     "monthly_product_id":"653253",
     "yearly_cost":"$700",
-    "yearly_product_id":"653254"
+    "yearly_product_id":"653254",
+    "site_limit":50
   },
   {
-    "limit":5000000,
+    "kind":"growth",
+    "monthly_pageview_limit":5000000,
     "monthly_cost":"$100",
     "monthly_product_id":"653255",
     "yearly_cost":"$1000",
-    "yearly_product_id":"653256"
+    "yearly_product_id":"653256",
+    "site_limit":50
   },
   {
-    "limit":10000000,
+    "kind":"growth",
+    "monthly_pageview_limit":10000000,
     "monthly_cost":"$150",
     "monthly_product_id":"654181",
     "yearly_cost":"$1500",
-    "yearly_product_id":"653257"
+    "yearly_product_id":"653257",
+    "site_limit":50
   },
   {
-    "limit":20000000,
+    "kind":"growth",
+    "monthly_pageview_limit":20000000,
     "monthly_cost":"$225",
     "monthly_product_id":"654182",
     "yearly_cost":"$2250",
-    "yearly_product_id":"653258"
+    "yearly_product_id":"653258",
+    "site_limit":50
   },
   {
-    "limit":50000000,
+    "kind":"growth",
+    "monthly_pageview_limit":50000000,
     "monthly_cost":"$330",
     "monthly_product_id":"654183",
     "yearly_cost":"$3300",
-    "yearly_product_id":"653259"
+    "yearly_product_id":"653259",
+    "site_limit":50
   }
 ]

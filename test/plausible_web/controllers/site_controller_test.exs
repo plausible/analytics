@@ -170,10 +170,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      # default site limit defined in config/.test.env
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
+      insert_list(50, :site, members: [user])
 
       conn =
         post(conn, "/sites", %{
@@ -185,7 +182,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html = html_response(conn, 200)
       assert html =~ "Upgrade required"
-      assert html =~ "Your account is limited to 3 sites"
+      assert html =~ "Your account is limited to 50 sites"
       assert html =~ "Please contact support"
       refute Repo.get_by(Plausible.Site, domain: "over-limit.example.com")
     end

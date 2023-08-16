@@ -13,13 +13,10 @@ defmodule Plausible.Sites do
 
     Ecto.Multi.new()
     |> Ecto.Multi.run(:limit, fn _, _ ->
-      limit = Plausible.Billing.sites_limit(user)
-      count = owned_sites_count(user)
-
-      if count >= limit do
-        {:error, limit}
-      else
-        {:ok, count}
+      case {Plausible.Billing.Plans.site_limit(user), owned_sites_count(user)} do
+        {:unlimited, actual} -> {:ok, actual}
+        {limit, actual} when actual >= limit -> {:error, limit}
+        {_limit, actual} -> {:ok, actual}
       end
     end)
     |> Ecto.Multi.insert(:site, site_changeset)
