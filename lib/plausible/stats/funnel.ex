@@ -10,6 +10,7 @@ defmodule Plausible.Stats.Funnel do
   alias Plausible.Funnels
 
   import Ecto.Query
+  import Plausible.Stats.Fragments
 
   alias Plausible.ClickhouseRepo
   alias Plausible.Stats.Base
@@ -60,7 +61,7 @@ defmodule Plausible.Stats.Funnel do
   defp query_funnel(query, funnel_definition) do
     q_events =
       from(e in query,
-        select: %{user_id: e.user_id},
+        select: %{user_id: e.user_id, _sample_factor: fragment("any(_sample_factor)")},
         where: e.site_id == ^funnel_definition.site_id,
         group_by: e.user_id,
         order_by: [desc: fragment("step")]
@@ -69,7 +70,7 @@ defmodule Plausible.Stats.Funnel do
 
     query =
       from(f in subquery(q_events),
-        select: {f.step, count(1)},
+        select: {f.step, total()},
         group_by: f.step
       )
 
