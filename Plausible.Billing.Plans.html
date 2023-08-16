@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-CBF5BFFF.js"></script>
+    <script src="dist/sidebar_items-76FA772C.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -102,7 +102,7 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L20" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L22" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
@@ -156,6 +156,16 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#site_limit/1" translate="no">site_limit(user)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the limit of sites a user can have.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#subscription_interval/1" translate="no">subscription_interval(subscription)</a>
 
       </div>
@@ -168,7 +178,7 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns the most appropriate plan for a user based on their usage during a 
+        <div class="summary-synopsis"><p>Returns the most appropriate plan for a user based on their usage during a
 given cycle.</p></div>
 
     </div>
@@ -205,7 +215,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">allowance(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L118" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L164" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -214,6 +224,12 @@ Functions
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> allowance(Plausible.Billing.Subscription.t()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | nil</pre>
+
+      </div>
 
 
   </section>
@@ -229,7 +245,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">find(product_id_or_subscription, scope \\ all())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L83" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L92" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -262,7 +278,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">for_user(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L51" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L60" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -282,6 +298,35 @@ Functions
 still choose from old plans.</p>
   </section>
 </section>
+<section class="detail" id="site_limit/1">
+
+  <div class="detail-header">
+    <a href="#site_limit/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_limit(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L116" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> site_limit(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :unlimited</pre>
+
+      </div>
+
+<p>Returns the limit of sites a user can have.</p><p>For enterprise customers, returns :unlimited. The site limit is checked in a
+background job so as to avoid service disruption.</p>
+  </section>
+</section>
 <section class="detail" id="subscription_interval/1">
 
   <div class="detail-header">
@@ -291,7 +336,7 @@ still choose from old plans.</p>
     </a>
     <h1 class="signature" translate="no">subscription_interval(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L99" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L146" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -313,7 +358,7 @@ still choose from old plans.</p>
     </a>
     <h1 class="signature" translate="no">suggest(user, usage_during_cycle)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L160" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L204" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -330,10 +375,10 @@ still choose from old plans.</p>
 
       </div>
 
-<p>Returns the most appropriate plan for a user based on their usage during a 
-given cycle.</p><p>If the usage during the cycle exceeds the enterprise-level threshold, or if 
-the user already belongs to an enterprise plan, it suggests the :enterprise 
-plan.</p><p>Otherwise, it recommends the plan where the cycle usage falls just under the 
+<p>Returns the most appropriate plan for a user based on their usage during a
+given cycle.</p><p>If the usage during the cycle exceeds the enterprise-level threshold, or if
+the user already belongs to an enterprise plan, it suggests the :enterprise
+plan.</p><p>Otherwise, it recommends the plan where the cycle usage falls just under the
 plan's limit from the available options for the user.</p>
   </section>
 </section>
@@ -346,7 +391,7 @@ plan's limit from the available options for the user.</p>
     </a>
     <h1 class="signature" translate="no">yearly_product_ids()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L69" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L78" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

@@ -1,5 +1,4 @@
 404.html
-Mix.Tasks.AnalyzePlans.html
 Mix.Tasks.CleanClickhouse.html
 Mix.Tasks.CreateFreeSubscription.html
 Mix.Tasks.DownloadCountryDatabase.html
@@ -240,8 +239,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-92FB47FD.js
-dist/sidebar_items-CBF5BFFF.js
+dist/search_data-2D662DC1.js
+dist/sidebar_items-76FA772C.js
 index.html
 readme.html
 search.html
