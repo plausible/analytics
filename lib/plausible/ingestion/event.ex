@@ -372,7 +372,7 @@ defmodule Plausible.Ingestion.Event do
       %Device{type: t} when t in @desktop_types ->
         "Desktop"
 
-      %Device{type: "unknown"} ->
+      %Device{type: :unknown} ->
         nil
 
       %Device{type: type} ->
