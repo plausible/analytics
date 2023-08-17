@@ -26,6 +26,8 @@ defmodule Plausible.Users do
     )
   end
 
+  def with_subscription(nil), do: nil
+
   defp last_subscription_query(user_id) do
     from(subscription in Plausible.Billing.Subscription,
       where: subscription.user_id == ^user_id,

@@ -48,7 +48,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
       setup_completed = Plausible.Sites.has_stats?(site)
       hours_passed = Timex.diff(Timex.now(), site.inserted_at, :hours)
 
-      if !setup_completed && hours_passed > 47 do
+      if owner && !setup_completed && hours_passed > 47 do
         send_setup_help_email(owner, site)
       end
     end
@@ -68,7 +68,7 @@ defmodule Plausible.Workers.SendSiteSetupEmails do
         Plausible.Sites.owner_for(site)
         |> Plausible.Users.with_subscription()
 
-      if Plausible.Sites.has_stats?(site) do
+      if owner && Plausible.Sites.has_stats?(site) do
         send_setup_success_email(owner, site)
       end
     end
