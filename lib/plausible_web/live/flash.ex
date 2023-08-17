@@ -38,6 +38,8 @@ defmodule PlausibleWeb.Live.Flash do
           </:title>
           <:message>
             Please wait while we're trying to reconnect...
+            If the problem persists, please logout and clear your cookies.
+            We're sorry for the incovienence.
           </:message>
         </.flash>
       </div>

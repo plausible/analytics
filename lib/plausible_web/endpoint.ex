@@ -1,3 +1,17 @@
+defmodule PlausibleWeb.LiveSocket do
+  use Phoenix.LiveView.Socket
+
+  def connect(params, %Phoenix.Socket{} = socket, connect_info) do
+    case Phoenix.LiveView.Socket.connect(params, socket, connect_info) do
+      {:ok, %Phoenix.Socket{private: %{connect_info: %{session: nil}}}} ->
+        {:error, :old_cookie}
+
+      other ->
+        other
+    end
+  end
+end
+
 defmodule PlausibleWeb.Endpoint do
   use Sentry.PlugCapture
   use Phoenix.Endpoint, otp_app: :plausible
@@ -16,53 +30,57 @@ defmodule PlausibleWeb.Endpoint do
   #
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
-  plug PlausibleWeb.Tracker
-  plug PlausibleWeb.Favicon
+  plug(PlausibleWeb.Tracker)
+  plug(PlausibleWeb.Favicon)
 
-  plug Plug.Static,
+  plug(Plug.Static,
     at: "/",
     from: :plausible,
     gzip: false,
     only: ~w(css images js favicon.ico robots.txt)
+  )
 
-  plug Plug.Static,
+  plug(Plug.Static,
     at: "/kaffy",
     from: :kaffy,
     gzip: false,
     only: ~w(assets)
+  )
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
-    socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
-    plug Phoenix.LiveReloader
-    plug Phoenix.CodeReloader
+    socket("/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket)
+    plug(Phoenix.LiveReloader)
+    plug(Phoenix.CodeReloader)
   end
 
-  plug Plug.RequestId
-  plug PromEx.Plug, prom_ex_module: Plausible.PromEx
-  plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
+  plug(Plug.RequestId)
+  plug(PromEx.Plug, prom_ex_module: Plausible.PromEx)
+  plug(Plug.Telemetry, event_prefix: [:phoenix, :endpoint])
 
-  plug Plug.Parsers,
+  plug(Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
     json_decoder: Phoenix.json_library()
+  )
 
-  plug Sentry.PlugContext
+  plug(Sentry.PlugContext)
 
-  plug Plug.MethodOverride
-  plug Plug.Head
+  plug(Plug.MethodOverride)
+  plug(Plug.Head)
 
-  plug PlausibleWeb.Plugs.RuntimeSessionAdapter, @session_options
+  plug(PlausibleWeb.Plugs.RuntimeSessionAdapter, @session_options)
 
-  socket "/live", Phoenix.LiveView.Socket,
+  socket("/live", PlausibleWeb.LiveSocket,
     websocket: [
       check_origin: true,
       connect_info: [session: {__MODULE__, :patch_session_opts, []}]
     ]
+  )
 
-  plug CORSPlug
-  plug PlausibleWeb.Router
+  plug(CORSPlug)
+  plug(PlausibleWeb.Router)
 
   def websocket_url() do
     :plausible

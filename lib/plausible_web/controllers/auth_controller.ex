@@ -558,6 +558,7 @@ defmodule PlausibleWeb.AuthController do
     conn
     |> configure_session(drop: true)
     |> delete_resp_cookie("logged_in")
+    |> delete_resp_cookie("_plausible_key")
     |> redirect(to: redirect_to)
   end
 
