@@ -62,10 +62,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
     end
 
     test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
-      patch_env(:site_limit, 3)
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
+      insert_list(50, :site, members: [user])
 
       conn =
         post(conn, "/api/v1/sites", %{
@@ -75,7 +72,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
 
       assert json_response(conn, 403) == %{
                "error" =>
-                 "Your account has reached the limit of 3 sites per account. Please contact hello@plausible.io to unlock more sites."
+                 "Your account has reached the limit of 50 sites per account. Please contact hello@plausible.io to unlock more sites."
              }
     end
 

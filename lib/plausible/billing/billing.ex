@@ -156,37 +156,6 @@ defmodule Plausible.Billing do
     Plausible.Stats.Clickhouse.usage_breakdown(site_ids)
   end
 
-  @doc """
-  Returns the number of sites that an account is allowed to have. Accounts for
-  grandfathering old accounts to unlimited websites and ignores site limit on self-hosted
-  installations.
-  """
-  @limit_accounts_since ~D[2021-05-05]
-  def sites_limit(user) do
-    user = Plausible.Repo.preload(user, :enterprise_plan)
-
-    cond do
-      Timex.before?(user.inserted_at, @limit_accounts_since) ->
-        nil
-
-      Application.get_env(:plausible, :is_selfhost) ->
-        nil
-
-      user.email in Application.get_env(:plausible, :site_limit_exempt) ->
-        nil
-
-      user.enterprise_plan ->
-        if has_active_enterprise_subscription(user) do
-          nil
-        else
-          Application.get_env(:plausible, :site_limit)
-        end
-
-      true ->
-        Application.get_env(:plausible, :site_limit)
-    end
-  end
-
   defp handle_subscription_created(params) do
     params =
       if present?(params["passthrough"]) do
@@ -253,18 +222,6 @@ defmodule Plausible.Billing do
       })
       |> Repo.update!()
     end
-  end
-
-  defp has_active_enterprise_subscription(user) do
-    Plausible.Repo.exists?(
-      from(s in Plausible.Billing.Subscription,
-        join: e in Plausible.Billing.EnterprisePlan,
-        on: s.user_id == e.user_id and s.paddle_plan_id == e.paddle_plan_id,
-        where: s.user_id == ^user.id,
-        where: s.paddle_plan_id == ^user.enterprise_plan.paddle_plan_id,
-        where: s.status == "active"
-      )
-    )
   end
 
   defp format_subscription(params) do

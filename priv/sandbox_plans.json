@@ -1,16 +1,20 @@
 [
   {
-    "limit":10000,
+    "kind":"growth",
+    "monthly_pageview_limit":10000,
     "monthly_product_id":"19878",
     "yearly_product_id":"20127",
     "monthly_cost":"$6",
-    "yearly_cost":"$60"
+    "yearly_cost":"$60",
+    "site_limit":50
   },
   {
-    "limit":100000,
+    "kind":"growth",
+    "monthly_pageview_limit":100000,
     "monthly_product_id":"20657",
     "yearly_product_id":"20658",
     "monthly_cost":"$12.34",
-    "yearly_cost":"$120.34"
+    "yearly_cost":"$120.34",
+    "site_limit":50
   }
 ]

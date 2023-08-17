@@ -51,17 +51,17 @@ defmodule PlausibleWeb.SiteController do
 
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
-
     owned_site_count = Plausible.Sites.owned_sites_count(current_user)
-    site_limit = Plausible.Billing.sites_limit(current_user)
-    is_at_limit = site_limit && owned_site_count >= site_limit
-    is_first_site = owned_site_count == 0
 
-    changeset = Plausible.Site.changeset(%Plausible.Site{})
+    {site_limit, is_at_limit} =
+      case Plausible.Billing.Plans.site_limit(current_user) do
+        :unlimited -> {:unlimited, false}
+        limit when is_integer(limit) -> {limit, owned_site_count >= limit}
+      end
 
     render(conn, "new.html",
-      changeset: changeset,
-      is_first_site: is_first_site,
+      changeset: Plausible.Site.changeset(%Plausible.Site{}),
+      is_first_site: owned_site_count == 0,
       is_at_limit: is_at_limit,
       site_limit: site_limit,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
