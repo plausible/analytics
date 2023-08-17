@@ -116,7 +116,6 @@ defmodule Plausible.Billing.Plans do
   def site_limit(user) do
     cond do
       Application.get_env(:plausible, :is_selfhost) -> :unlimited
-      user.email in Application.get_env(:plausible, :site_limit_exempt) -> :unlimited
       Timex.before?(user.inserted_at, @limit_sites_since) -> :unlimited
       true -> get_site_limit_from_plan(user)
     end
