@@ -243,7 +243,7 @@ secure_cookie =
   end
 
 cookie_key =
-  if env = get_var_from_path_or_env(config_dir, "ENVIRONMENT") do
+cookie_key = "_plausible_session_#{env}"
     "_plausible_session_#{env}"
   else
     "_plausible_session"
