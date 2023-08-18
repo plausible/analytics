@@ -242,12 +242,7 @@ secure_cookie =
     true
   end
 
-cookie_key =
 cookie_key = "_plausible_session_#{env}"
-    "_plausible_session_#{env}"
-  else
-    "_plausible_session"
-  end
 
 config :plausible,
   environment: env,
