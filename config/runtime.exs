@@ -232,6 +232,23 @@ if byte_size(websocket_url) > 0 and
   """
 end
 
+secure_cookie =
+  if is_selfhost do
+    config_dir
+    |> get_var_from_path_or_env("SECURE_COOKIE", "false")
+    |> String.to_existing_atom()
+  else
+    # in Plausible Cloud we always use `secure: true` in Plug.Session cookie opts
+    true
+  end
+
+cookie_key =
+  if env = get_var_from_path_or_env(config_dir, "ENVIRONMENT") do
+    "_plausible_session_#{env}"
+  else
+    "_plausible_session"
+  end
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -254,7 +271,9 @@ config :plausible, PlausibleWeb.Endpoint,
     protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
   ],
   secret_key_base: secret_key_base,
-  websocket_url: websocket_url
+  websocket_url: websocket_url,
+  secure_cookie: secure_cookie,
+  cookie_key: cookie_key
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
