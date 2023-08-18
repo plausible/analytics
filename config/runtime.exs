@@ -232,6 +232,15 @@ if byte_size(websocket_url) > 0 and
   """
 end
 
+secure_cookie =
+  if is_selfhost do
+    config_dir
+    |> get_var_from_path_or_env("SECURE_COOKIE", "false")
+    |> String.to_existing_atom()
+  else
+    _cloud_version = true
+  end
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -239,7 +248,8 @@ config :plausible,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
-  log_failed_login_attempts: log_failed_login_attempts
+  log_failed_login_attempts: log_failed_login_attempts,
+  secure_cookie: secure_cookie
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,

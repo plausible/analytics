@@ -8,9 +8,9 @@ defmodule PlausibleWeb.Endpoint do
     signing_salt: "I45i0SKHEku2f3tJh6y4v8gztrb/eG5KGCOe/o/AwFb7VHeuvDOn7AAq6KsdmOFM",
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
     max_age: 60 * 60 * 24 * 365 * 5,
-    extra: "SameSite=Lax",
-    secure: true
-    # domain added dynamically via RuntimeSessionAdapter, see below
+    extra: "SameSite=Lax"
+
+    # domain added dynamically via `runtime_session/2`, see below
   ]
 
   # Serve at "/" the static files from "priv/static" directory.
@@ -75,13 +75,19 @@ defmodule PlausibleWeb.Endpoint do
     |> Keyword.fetch!(:websocket_url)
   end
 
+  def secure_cookie? do
+    Application.fetch_env!(:plausible, :secure_cookie)
+  end
+
   @doc false
   def patch_session_opts(opts) when is_list(opts) do
     # `host()` provided by Phoenix.Endpoint's compilation hooks
     # is used to inject the domain - this way we can authenticate
     # websocket requests within single root domain, in case websocket_url()
     # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
-    Keyword.put(opts, :domain, host())
+    opts
+    |> Keyword.put(:domain, host())
+    |> Keyword.put(:secure, secure_cookie?())
   end
 
   def patch_session_opts(%{cookie_opts: cookie_opts} = opts) do
