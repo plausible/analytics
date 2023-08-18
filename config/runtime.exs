@@ -238,7 +238,7 @@ secure_cookie =
     |> get_var_from_path_or_env("SECURE_COOKIE", "false")
     |> String.to_existing_atom()
   else
-    # in Plausible Cloud we always use `secure: true`
+    # in Plausible Cloud we always use `secure: true` in Plug.Session cookie opts
     true
   end
 
