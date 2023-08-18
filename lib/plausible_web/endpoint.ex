@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Endpoint do
   plug(Plug.MethodOverride)
   plug(Plug.Head)
 
-  plug(PlausibleWeb.Plugs.RuntimeSessionAdapter, @session_options)
+  plug(:runtime_session, Plug.Session.init(@session_options))
 
   socket("/live", Phoenix.LiveView.Socket,
     websocket: [
@@ -75,11 +75,27 @@ defmodule PlausibleWeb.Endpoint do
     |> Keyword.fetch!(:websocket_url)
   end
 
-  def patch_session_opts() do
+  @doc false
+  def patch_session_opts(opts) when is_list(opts) do
     # `host()` provided by Phoenix.Endpoint's compilation hooks
     # is used to inject the domain - this way we can authenticate
     # websocket requests within single root domain, in case websocket_url()
     # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
-    Keyword.put(@session_options, :domain, host())
+    Keyword.put(opts, :domain, host())
+  end
+
+  def patch_session_opts(%{cookie_opts: cookie_opts} = opts) do
+    %{opts | cookie_opts: patch_session_opts(cookie_opts)}
+  end
+
+  @doc false
+  def runtime_session(conn, opts) do
+    # A `Plug.Session` adapter that allows configuration at runtime.
+    # Sadly, the plug being wrapped has no MFA option for dynamic
+    # configuration.
+    #
+    # This is currently used so we can dynamically pass the :domain
+    # and have cookies planted across one root domain.
+    Plug.Session.call(conn, patch_session_opts(opts))
   end
 end
