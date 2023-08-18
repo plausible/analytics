@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Endpoint do
     max_age: 60 * 60 * 24 * 365 * 5,
     extra: "SameSite=Lax"
 
-    # domain added dynamically via `runtime_session/2`, see below
+    # `:domain`, `:secure`, and `:key` are added dynamically via `runtime_session/2`, see below
   ]
 
   # Serve at "/" the static files from "priv/static" directory.
@@ -69,14 +69,14 @@ defmodule PlausibleWeb.Endpoint do
   plug(CORSPlug)
   plug(PlausibleWeb.Router)
 
-  def websocket_url() do
+  def websocket_url, do: config!(:websocket_url)
+  def secure_cookie?, do: config!(:secure_cookie)
+  def cookie_key, do: config!(:cookie_key)
+
+  defp config!(key) do
     :plausible
     |> Application.fetch_env!(__MODULE__)
-    |> Keyword.fetch!(:websocket_url)
-  end
-
-  def secure_cookie? do
-    Application.fetch_env!(:plausible, :secure_cookie)
+    |> Keyword.fetch!(key)
   end
 
   @doc false
@@ -88,6 +88,7 @@ defmodule PlausibleWeb.Endpoint do
     opts
     |> Keyword.put(:domain, host())
     |> Keyword.put(:secure, secure_cookie?())
+    |> Keyword.put(:key, cookie_key())
   end
 
   def patch_session_opts(%{cookie_opts: cookie_opts} = opts) do
@@ -96,7 +97,7 @@ defmodule PlausibleWeb.Endpoint do
 
   @doc false
   def runtime_session(conn, opts) do
-    # A `Plug.Session` adapter that allows configuration at runtime.
+    # A `Plug.Session` wrapper that allows configuration at runtime.
     # Sadly, the plug being wrapped has no MFA option for dynamic
     # configuration.
     #

@@ -238,7 +238,15 @@ secure_cookie =
     |> get_var_from_path_or_env("SECURE_COOKIE", "false")
     |> String.to_existing_atom()
   else
-    _cloud_version = true
+    # in Plausible Cloud we always use `secure: true`
+    true
+  end
+
+cookie_key =
+  if env = get_var_from_path_or_env("ENVIRONMENT") do
+    "_plausible_session_#{env}"
+  else
+    "_plausible_session"
   end
 
 config :plausible,
@@ -248,8 +256,7 @@ config :plausible,
   site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
-  log_failed_login_attempts: log_failed_login_attempts,
-  secure_cookie: secure_cookie
+  log_failed_login_attempts: log_failed_login_attempts
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -264,7 +271,9 @@ config :plausible, PlausibleWeb.Endpoint,
     protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
   ],
   secret_key_base: secret_key_base,
-  websocket_url: websocket_url
+  websocket_url: websocket_url,
+  secure_cookie: secure_cookie,
+  cookie_key: cookie_key
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
