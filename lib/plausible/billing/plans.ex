@@ -70,13 +70,13 @@ defmodule Plausible.Billing.Plans do
     user = Plausible.Users.with_subscription(user)
 
     cond do
-      FunWithFlags.enabled?(:business_tier, for: user) -> @plans_v4
       find(user.subscription, @plans_v1) -> @plans_v1
       find(user.subscription, @plans_v2) -> @plans_v2
       find(user.subscription, @plans_v3) -> @plans_v3
       find(user.subscription, plans_sandbox()) -> plans_sandbox()
       Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
       Timex.before?(user.inserted_at, ~D[2022-01-01]) -> @plans_v2
+      FunWithFlags.enabled?(:business_tier, for: user) -> @plans_v4
       true -> @plans_v3
     end
   end

@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   describe "for a user with a v4 growth subscription plan" do
     setup [:create_user, :log_in, :subscribe]
 
-    test "displays basic page content", %{conn: conn, user: user} do
+    test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert doc =~ "Upgrade subscription plan"
