@@ -172,7 +172,7 @@ defmodule Plausible.Billing.Plans do
 
   defp all() do
     @plans_v1 ++
-      @unlisted_plans_v1 ++ @plans_v2 ++ @unlisted_plans_v2 ++ @plans_v3 ++ plans_sandbox()
+      @unlisted_plans_v1 ++ @plans_v2 ++ @unlisted_plans_v2 ++ @plans_v3 ++ @plans_v4 ++ plans_sandbox()
   end
 
   defp plans_sandbox() do
