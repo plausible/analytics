@@ -8,9 +8,9 @@ defmodule PlausibleWeb.Endpoint do
     signing_salt: "I45i0SKHEku2f3tJh6y4v8gztrb/eG5KGCOe/o/AwFb7VHeuvDOn7AAq6KsdmOFM",
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
     max_age: 60 * 60 * 24 * 365 * 5,
-    extra: "SameSite=Lax"
-
-    # `:domain`, `:secure`, and `:key` are added dynamically via `runtime_session/2`, see below
+    extra: "SameSite=Lax",
+    secure: true
+    # domain added dynamically via RuntimeSessionAdapter, see below
   ]
 
   # Serve at "/" the static files from "priv/static" directory.
@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Endpoint do
   plug(Plug.MethodOverride)
   plug(Plug.Head)
 
-  plug(:runtime_session, Plug.Session.init(@session_options))
+  plug(PlausibleWeb.Plugs.RuntimeSessionAdapter, @session_options)
 
   socket("/live", Phoenix.LiveView.Socket,
     websocket: [
@@ -69,40 +69,17 @@ defmodule PlausibleWeb.Endpoint do
   plug(CORSPlug)
   plug(PlausibleWeb.Router)
 
-  def websocket_url, do: config!(:websocket_url)
-  def secure_cookie?, do: config!(:secure_cookie)
-  def cookie_key, do: config!(:cookie_key)
-
-  defp config!(key) do
+  def websocket_url() do
     :plausible
     |> Application.fetch_env!(__MODULE__)
-    |> Keyword.fetch!(key)
+    |> Keyword.fetch!(:websocket_url)
   end
 
-  @doc false
-  def patch_session_opts(opts) when is_list(opts) do
+  def patch_session_opts() do
     # `host()` provided by Phoenix.Endpoint's compilation hooks
     # is used to inject the domain - this way we can authenticate
     # websocket requests within single root domain, in case websocket_url()
     # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
-    opts
-    |> Keyword.put(:domain, host())
-    |> Keyword.put(:secure, secure_cookie?())
-    |> Keyword.put(:key, cookie_key())
-  end
-
-  def patch_session_opts(%{cookie_opts: cookie_opts} = opts) do
-    %{opts | cookie_opts: patch_session_opts(cookie_opts)}
-  end
-
-  @doc false
-  def runtime_session(conn, opts) do
-    # A `Plug.Session` wrapper that allows configuration at runtime.
-    # Sadly, the plug being wrapped has no MFA option for dynamic
-    # configuration.
-    #
-    # This is currently used so we can dynamically pass the :domain
-    # and have cookies planted across one root domain.
-    Plug.Session.call(conn, patch_session_opts(opts))
+    Keyword.put(@session_options, :domain, host())
   end
 end
