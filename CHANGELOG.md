@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Only return `(none)` values in custom property breakdown for the first page (pagination) of results
 - Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
-- Fix [broken interval selection](https://github.com/plausible/analytics/issues/3086) in the all time view plausible/analytics#3110
+- Fix [broken interval selection](https://github.com/plausible/analytics/issues/2982) in the all time view plausible/analytics#3110
 - Fixed [IPv6 problems](https://github.com/plausible/analytics/issues/3173) in data migration plausible/analytics#3179
 - Fixed [long URLs display](https://github.com/plausible/analytics/issues/3158) in Outbound Link breakdown view
 - Fixed [Sentry reports](https://github.com/plausible/analytics/discussions/3166) for ingestion requests plausible/analytics#3182
