@@ -12,15 +12,15 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> Billing.usage_breakdown()
       |> then(fn {pageviews, custom_events} -> pageviews + custom_events end)
 
-    current_plan = Plans.get_subscription_plan(user.subscription)
+    current_user_plan = Plans.get_subscription_plan(user.subscription)
 
     {:ok,
      assign(
        socket,
        user: user,
-       current_plan: current_plan,
        usage: usage,
-       current_interval: :monthly
+       current_user_plan: current_user_plan,
+       selected_interval: :monthly
      )}
   end
 
@@ -30,20 +30,20 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="mx-auto max-w-4xl text-center">
           <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            <%= if @current_plan, do: "Upgrade subscription plan", else: "Upgrade your free trial" %>
+            <%= if @current_user_plan, do: "Upgrade subscription plan", else: "Upgrade your free trial" %>
           </p>
         </div>
         <p class="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-600">
           <.usage usage={@usage} />
         </p>
-        <.interval_picker current_interval={@current_interval} />
+        <.interval_picker selected_interval={@selected_interval} />
         <.slider />
         <div class="isolate mx-auto mt-10 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <.plan_box name="Growth" />
           <.plan_box name="Business" />
           <.enterprise_plan_box />
         </div>
-        <.pageview_limit_notice :if={!@current_plan} />
+        <.pageview_limit_notice :if={!@current_user_plan} />
         <.help_links />
       </div>
     </div>
@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <div class="mt-16 flex justify-center">
       <fieldset class="grid grid-cols-2 gap-x-1 rounded-full p-1 text-center text-xs font-semibold leading-5 ring-1 ring-inset ring-gray-300">
         <label
-          class={"cursor-pointer rounded-full px-2.5 py-1 #{if @current_interval === :monthly, do: "bg-indigo-600 text-white"}"}
+          class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval === :monthly, do: "bg-indigo-600 text-white"}"}
           phx-click="set_interval"
           phx-value-interval="monthly"
         >
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <span>Monthly billing</span>
         </label>
         <label
-          class={"cursor-pointer rounded-full px-2.5 py-1 #{if @current_interval === :yearly, do: "bg-indigo-600 text-white"}"}
+          class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval === :yearly, do: "bg-indigo-600 text-white"}"}
           phx-click="set_interval"
           phx-value-interval="yearly"
         >
@@ -274,6 +274,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         "monthly" -> :monthly
       end
 
-    {:noreply, assign(socket, current_interval: new_interval)}
+    {:noreply, assign(socket, selected_interval: new_interval)}
   end
 end
