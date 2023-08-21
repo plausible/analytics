@@ -21,16 +21,10 @@ defmodule PlausibleWeb.Plugs.RuntimeSessionAdapter do
   end
 
   defp patch_cookie_domain(%{cookie_opts: cookie_opts} = runtime_opts) do
-    Map.put(
+    Map.replace(
       runtime_opts,
       :cookie_opts,
-      cookie_opts
-      |> Keyword.put_new(:domain, PlausibleWeb.Endpoint.host())
-      |> Keyword.put(
-        :secure,
-        Application.fetch_env!(:plausible, PlausibleWeb.Endpoint)[:secure_cookie]
-      )
+      Keyword.put_new(cookie_opts, :domain, PlausibleWeb.Endpoint.host())
     )
-    |> Map.put(:key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
   end
 end
