@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Endpoint do
 
   @session_options [
     store: :cookie,
-    key: "_plausible_session",
     signing_salt: "I45i0SKHEku2f3tJh6y4v8gztrb/eG5KGCOe/o/AwFb7VHeuvDOn7AAq6KsdmOFM",
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
     max_age: 60 * 60 * 24 * 365 * 5,
@@ -69,10 +68,10 @@ defmodule PlausibleWeb.Endpoint do
   plug(CORSPlug)
   plug(PlausibleWeb.Router)
 
+  def secure_cookie?, do: config!(:secure_cookie)
+
   def websocket_url() do
-    :plausible
-    |> Application.fetch_env!(__MODULE__)
-    |> Keyword.fetch!(:websocket_url)
+    config!(:websocket_url)
   end
 
   def patch_session_opts() do
@@ -80,6 +79,15 @@ defmodule PlausibleWeb.Endpoint do
     # is used to inject the domain - this way we can authenticate
     # websocket requests within single root domain, in case websocket_url()
     # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
-    Keyword.put(@session_options, :domain, host())
+    @session_options
+    |> Keyword.put(:domain, host())
+    |> Keyword.put(:key, "_plausible_#{Application.get_env(:plausible, :environment)}")
+    |> Keyword.put(:secure, secure_cookie?())
+  end
+
+  defp config!(key) do
+    :plausible
+    |> Application.fetch_env!(__MODULE__)
+    |> Keyword.fetch!(key)
   end
 end
