@@ -337,8 +337,10 @@ defmodule PlausibleWeb.Email do
     Unlike the default 'base' emails, priority emails cannot be unsubscribed from. This is achieved
     by sending them through a dedicated 'priority' message stream in Postmark.
   """
-  def priority_email() do
-    base_email(%{layout: "priority_email.html"})
+  def priority_email(), do: priority_email(%{layout: "priority_email.html"})
+
+  def priority_email(%{layout: layout}) do
+    base_email(%{layout: layout})
     |> put_param("MessageStream", "priority")
   end
 

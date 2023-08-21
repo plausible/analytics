@@ -92,6 +92,17 @@ defmodule PlausibleWeb.EmailTest do
 
       refute email.html_body =~ "{{{ pm:unsubscribe }}}"
     end
+
+    test "can be disabled with a nil layout" do
+      email =
+        Email.priority_email(%{layout: nil})
+        |> Email.render("password_reset_email.html", %{
+          reset_link: "imaginary"
+        })
+
+      refute email.html_body =~ "Hey John,"
+      refute email.html_body =~ plausible_link()
+    end
   end
 
   def plausible_link() do
