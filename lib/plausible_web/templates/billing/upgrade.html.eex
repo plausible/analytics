@@ -2,7 +2,7 @@
 <script>
   plans = function() {
     return {
-      rawPlans: <%= raw Jason.encode!(Plausible.Billing.Plans.for_user(@user)) %>,
+      rawPlans: <%= raw Jason.encode!(Plausible.Billing.Plans.growth_plans_for(@user)) %>,
       localizedPlans: null,
       volume: '10k',
       billingCycle: 'monthly',
@@ -85,7 +85,7 @@
                 </tr>
               </thead>
               <tbody class="bg-white dark:bg-gray-800">
-                <%= for plan <- Plausible.Billing.Plans.for_user(@user) do %>
+                <%= for plan <- Plausible.Billing.Plans.growth_plans_for(@user) do %>
                   <%= render("_plan_option.html", plan: plan) %>
                 <% end %>
               </tbody>

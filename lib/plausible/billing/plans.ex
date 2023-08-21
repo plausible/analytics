@@ -22,6 +22,8 @@ end
 
 defmodule Plausible.Billing.Plans do
   use Plausible.Repo
+  alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
+  alias Plausible.Auth.User
 
   for f <- [
         :plans_v1,
@@ -52,22 +54,23 @@ defmodule Plausible.Billing.Plans do
         |> Map.put(:volume, volume)
         |> Map.put(:kind, String.to_atom(raw.kind))
         |> Map.put(:team_member_limit, team_member_limit)
-        |> then(&struct!(Plausible.Billing.Plan, &1))
+        |> then(&struct!(Plan, &1))
       end)
 
     Module.put_attribute(__MODULE__, f, contents)
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
-  @spec for_user(Plausible.Auth.User.t()) :: [Plausible.Billing.Plan.t()]
+  @spec growth_plans_for(User.t()) :: [Plan.t()]
   @doc """
-  Returns a list of plans available for the user to choose.
+  Returns a list of growth plans available for the user to choose.
 
   As new versions of plans are introduced, users who were on old plans can
   still choose from old plans.
   """
-  def for_user(%Plausible.Auth.User{} = user) do
+  def growth_plans_for(%User{} = user) do
     user = Plausible.Users.with_subscription(user)
+    v4_available = FunWithFlags.enabled?(:business_tier, for: user)
 
     cond do
       find(user.subscription, @plans_v1) -> @plans_v1
@@ -76,9 +79,13 @@ defmodule Plausible.Billing.Plans do
       find(user.subscription, plans_sandbox()) -> plans_sandbox()
       Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
       Timex.before?(user.inserted_at, ~D[2022-01-01]) -> @plans_v2
-      FunWithFlags.enabled?(:business_tier, for: user) -> @plans_v4
+      v4_available -> Enum.filter(@plans_v4, &(&1.kind == :growth))
       true -> @plans_v3
     end
+  end
+
+  def business_plans() do
+    Enum.filter(@plans_v4, &(&1.kind == :business))
   end
 
   @spec yearly_product_ids() :: [String.t()]
@@ -91,8 +98,8 @@ defmodule Plausible.Billing.Plans do
         do: yearly_product_id
   end
 
-  @spec find(String.t() | Plausible.Billing.Subscription.t(), [Plausible.Billing.Plan.t()]) ::
-          Plausible.Billing.Plan.t() | nil
+  @spec find(String.t() | Subscription.t(), [Plan.t()]) ::
+          Plan.t() | nil
   @spec find(nil, any()) :: nil
   @doc """
   Finds a plan by product ID.
@@ -105,7 +112,7 @@ defmodule Plausible.Billing.Plans do
     nil
   end
 
-  def find(%Plausible.Billing.Subscription{} = subscription, scope) do
+  def find(%Subscription{} = subscription, scope) do
     find(subscription.paddle_plan_id, scope)
   end
 
@@ -125,10 +132,10 @@ defmodule Plausible.Billing.Plans do
 
   def subscription_interval(subscription) do
     case get_subscription_plan(subscription) do
-      %Plausible.Billing.EnterprisePlan{billing_interval: interval} ->
+      %EnterprisePlan{billing_interval: interval} ->
         interval
 
-      %Plausible.Billing.Plan{} = plan ->
+      %Plan{} = plan ->
         if plan.monthly_product_id == subscription.paddle_plan_id do
           "monthly"
         else
@@ -142,15 +149,15 @@ defmodule Plausible.Billing.Plans do
 
   defp get_enterprise_plan(nil), do: nil
 
-  defp get_enterprise_plan(%Plausible.Billing.Subscription{} = subscription) do
-    Repo.get_by(Plausible.Billing.EnterprisePlan,
+  defp get_enterprise_plan(%Subscription{} = subscription) do
+    Repo.get_by(EnterprisePlan,
       user_id: subscription.user_id,
       paddle_plan_id: subscription.paddle_plan_id
     )
   end
 
   @enterprise_level_usage 10_000_000
-  @spec suggest(Plausible.Auth.User.t(), non_neg_integer()) :: Plausible.Billing.Plan.t()
+  @spec suggest(User.t(), non_neg_integer()) :: Plan.t()
   @doc """
   Returns the most appropriate plan for a user based on their usage during a
   given cycle.
@@ -166,13 +173,26 @@ defmodule Plausible.Billing.Plans do
     cond do
       usage_during_cycle > @enterprise_level_usage -> :enterprise
       Plausible.Auth.enterprise?(user) -> :enterprise
-      true -> Enum.find(for_user(user), &(usage_during_cycle < &1.monthly_pageview_limit))
+      true -> suggest_by_usage(user, usage_during_cycle)
     end
+  end
+
+  defp suggest_by_usage(user, usage_during_cycle) do
+    user = Plausible.Users.with_subscription(user)
+
+    available_plans =
+      case get_subscription_plan(user.subscription) do
+        %Plan{kind: :business} -> business_plans()
+        _ -> growth_plans_for(user)
+      end
+
+    Enum.find(available_plans, &(usage_during_cycle < &1.monthly_pageview_limit))
   end
 
   defp all() do
     @plans_v1 ++
-      @unlisted_plans_v1 ++ @plans_v2 ++ @unlisted_plans_v2 ++ @plans_v3 ++ @plans_v4 ++ plans_sandbox()
+      @unlisted_plans_v1 ++
+      @plans_v2 ++ @unlisted_plans_v2 ++ @plans_v3 ++ @plans_v4 ++ plans_sandbox()
   end
 
   defp plans_sandbox() do

@@ -6,29 +6,47 @@ defmodule Plausible.Billing.PlansTest do
   @v2_plan_id "654177"
   @v4_plan_id "change-me-749342"
 
-  describe "for_user" do
-    test "shows v1 pricing for users who are already on v1 pricing" do
+  describe "getting subscription plans for user" do
+    test "growth_plans_for/1 shows v1 pricing for users who are already on v1 pricing" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
 
-      assert List.first(Plans.for_user(user)).monthly_product_id == @v1_plan_id
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v1_plan_id
     end
 
-    test "shows v2 pricing for users who are already on v2 pricing" do
+    test "growth_plans_for/1 shows v2 pricing for users who are already on v2 pricing" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
 
-      assert List.first(Plans.for_user(user)).monthly_product_id == @v2_plan_id
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v2_plan_id
     end
 
-    test "shows v2 pricing for users who signed up in 2021" do
+    test "growth_plans_for/1 shows v2 pricing for users who signed up in 2021" do
       user = insert(:user, inserted_at: ~N[2021-12-31 00:00:00])
 
-      assert List.first(Plans.for_user(user)).monthly_product_id == @v2_plan_id
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v2_plan_id
     end
 
-    test "shows v4 pricing for everyone else" do
+    test "growth_plans_for/1 shows v4 pricing for everyone else" do
       user = insert(:user)
 
-      assert List.first(Plans.for_user(user)).monthly_product_id == @v4_plan_id
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v4_plan_id
+    end
+
+    test "growth_plans_for/1 does not return business plans" do
+      user = insert(:user)
+
+      Plans.growth_plans_for(user)
+      |> Enum.each(fn plan ->
+        assert plan.kind != :business
+      end)
+    end
+
+    test "business_plans/0 returns only v4 business plans" do
+      user = insert(:user)
+
+      Plans.business_plans()
+      |> Enum.each(fn plan ->
+        assert plan.kind == :business
+      end)
     end
   end
 
