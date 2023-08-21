@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.DataMigration.NumericIDs — Plausible v0.0.1</title>
+    <title>PlausibleWeb.LiveSocket — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,21 +102,16 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/numeric_ids.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live_socket.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.DataMigration.NumericIDs</span> 
+  <span translate="no">PlausibleWeb.LiveSocket</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
-
-  <section id="moduledoc">
-<p>Numeric IDs migration, SQL files available at:
-priv/data_migrations/NumericIDs/sql</p>
-  </section>
 
 
   <section id="summary" class="details-list">
@@ -133,33 +128,21 @@ priv/data_migrations/NumericIDs/sql</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#confirm/3" translate="no">confirm(message, func, default_choice \\ :yes)</a>
+        <a href="#connect/3" translate="no">connect(params, socket, info)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix/1.7.7/Phoenix.Socket.html#c:connect/3"><code class="inline">Phoenix.Socket.connect/3</code></a>.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#run/1" translate="no">run(opts \\ [])</a>
+        <a href="#id/1" translate="no">id(socket)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#run_sql/2" translate="no">run_sql(name, assigns \\ [])</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#run_sql_confirm/2" translate="no">run_sql_confirm(name, options \\ [])</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix/1.7.7/Phoenix.Socket.html#c:id/1"><code class="inline">Phoenix.Socket.id/1</code></a>.</p></div>
 
     </div>
 
@@ -176,18 +159,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="confirm/3">
-
-    <span id="confirm/2"></span>
+<section class="detail" id="connect/3">
 
   <div class="detail-header">
-    <a href="#confirm/3" class="detail-link" title="Link to this function">
+    <a href="#connect/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">confirm(message, func, default_choice \\ :yes)</h1>
+    <h1 class="signature" translate="no">connect(params, socket, info)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/numeric_ids.ex#L6" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live_socket.ex#L1" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -197,21 +178,19 @@ Functions
 
   <section class="docstring">
 
-
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix/1.7.7/Phoenix.Socket.html#c:connect/3"><code class="inline">Phoenix.Socket.connect/3</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="run/1">
-
-    <span id="run/0"></span>
+<section class="detail" id="id/1">
 
   <div class="detail-header">
-    <a href="#run/1" class="detail-link" title="Link to this function">
+    <a href="#id/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">run(opts \\ [])</h1>
+    <h1 class="signature" translate="no">id(socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/numeric_ids.ex#L24" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live_socket.ex#L2" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -221,55 +200,7 @@ Functions
 
   <section class="docstring">
 
-
-  </section>
-</section>
-<section class="detail" id="run_sql/2">
-
-    <span id="run_sql/1"></span>
-
-  <div class="detail-header">
-    <a href="#run_sql/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">run_sql(name, assigns \\ [])</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/numeric_ids.ex#L6" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="run_sql_confirm/2">
-
-    <span id="run_sql_confirm/1"></span>
-
-  <div class="detail-header">
-    <a href="#run_sql_confirm/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">run_sql_confirm(name, options \\ [])</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/numeric_ids.ex#L6" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix/1.7.7/Phoenix.Socket.html#c:id/1"><code class="inline">Phoenix.Socket.id/1</code></a>.</p>
   </section>
 </section>
 
