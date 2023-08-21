@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Endpoint do
     signing_salt: "I45i0SKHEku2f3tJh6y4v8gztrb/eG5KGCOe/o/AwFb7VHeuvDOn7AAq6KsdmOFM",
     # 5 years, this is super long but the SlidingSessionTimeout will log people out if they don't return for 2 weeks
     max_age: 60 * 60 * 24 * 365 * 5,
-    extra: "SameSite=Lax",
+    extra: "SameSite=Lax"
     # domain added dynamically via RuntimeSessionAdapter, see below
   ]
 
