@@ -206,5 +206,13 @@ defmodule Plausible.Workers.SendTrialNotificationsTest do
       email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {20_000_000, 0})
       assert email.html_body =~ "please reply back to this email to get a quote for your volume"
     end
+
+    test "does not suggest a plan when user is switching to an enterprise plan" do
+      user = insert(:user)
+      insert(:enterprise_plan, user: user, paddle_plan_id: "enterprise-plan-id")
+
+      email = PlausibleWeb.Email.trial_upgrade_email(user, "today", {10_000, 0})
+      assert email.html_body =~ "please reply back to this email to get a quote for your volume"
+    end
   end
 end
