@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Plugs.RuntimeSessionAdapter do
   end
 
   defp patch_cookie_domain(%{cookie_opts: cookie_opts} = runtime_opts) do
-    Map.replace(
+    Map.put(
       runtime_opts,
       :cookie_opts,
       cookie_opts
