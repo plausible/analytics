@@ -12,9 +12,7 @@ defmodule PlausibleWeb.Plugs.RuntimeSessionAdapter do
 
   @impl true
   def init(opts) do
-    Plug.Session.init(
-      Keyword.put(opts, :key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
-    )
+    Plug.Session.init(opts)
   end
 
   @impl true
@@ -28,11 +26,11 @@ defmodule PlausibleWeb.Plugs.RuntimeSessionAdapter do
       :cookie_opts,
       cookie_opts
       |> Keyword.put_new(:domain, PlausibleWeb.Endpoint.host())
-      |> Keyword.put(:key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
       |> Keyword.put(
         :secure,
         Application.fetch_env!(:plausible, PlausibleWeb.Endpoint)[:secure_cookie]
       )
     )
+    |> Map.put(:key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
   end
 end
