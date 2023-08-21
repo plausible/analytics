@@ -112,13 +112,13 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   defp check_pageview_limit(subscriber, billing_mod) do
-    allowance =
-      case Plausible.Billing.Plans.allowance(subscriber.subscription) do
-        allowance when is_number(allowance) ->
-          allowance * 1.1
+    monthly_pageview_limit =
+      case Plausible.Billing.Plans.monthly_pageview_limit(subscriber.subscription) do
+        monthly_pageview_limit when is_number(monthly_pageview_limit) ->
+          monthly_pageview_limit * 1.1
 
-        _allowance ->
-          Sentry.capture_message("Unable to calculate allowance",
+        nil ->
+          Sentry.capture_message("Unable to calculate monthly pageview limit",
             user: subscriber,
             subscription: subscriber.subscription
           )
@@ -129,7 +129,10 @@ defmodule Plausible.Workers.CheckUsage do
     {last_last_cycle_usage, last_cycle_usage} =
       billing_mod.last_two_billing_months_usage(subscriber)
 
-    if last_last_cycle_usage >= allowance && last_cycle_usage >= allowance do
+    exceeded_last_cycle? = last_cycle_usage >= monthly_pageview_limit
+    exceeded_last_last_cycle? = last_last_cycle_usage >= monthly_pageview_limit
+
+    if exceeded_last_last_cycle? && exceeded_last_cycle? do
       {:over_limit, {last_cycle, last_cycle_usage}}
     else
       {:within_limit, {last_cycle, last_cycle_usage}}
@@ -137,13 +140,13 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   defp check_site_limit(subscriber) do
-    allowance = subscriber.enterprise_plan.site_limit
+    site_limit = subscriber.enterprise_plan.site_limit
     total_sites = Plausible.Sites.owned_sites_count(subscriber)
 
-    if total_sites >= allowance do
-      {:over_limit, {total_sites, allowance}}
+    if total_sites >= site_limit do
+      {:over_limit, {total_sites, site_limit}}
     else
-      {:within_limit, {total_sites, allowance}}
+      {:within_limit, {total_sites, site_limit}}
     end
   end
 end

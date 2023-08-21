@@ -11,7 +11,9 @@ defmodule PlausibleWeb.AuthView do
   end
 
   def subscription_quota(subscription) do
-    Plans.allowance(subscription) |> PlausibleWeb.StatsView.large_number_format()
+    subscription
+    |> Plans.monthly_pageview_limit()
+    |> PlausibleWeb.StatsView.large_number_format()
   end
 
   def subscription_interval(subscription) do

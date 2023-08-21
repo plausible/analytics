@@ -32,17 +32,17 @@ defmodule Plausible.Billing.PlansTest do
     end
   end
 
-  describe "allowance" do
+  describe "monthly_pageview_limit" do
     test "is based on the plan if user is on a standard plan" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
 
-      assert Plans.allowance(user.subscription) == 10_000
+      assert Plans.monthly_pageview_limit(user.subscription) == 10_000
     end
 
-    test "free_10k has 10k allowance" do
+    test "free_10k has 10k monthly_pageview_limit" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
 
-      assert Plans.allowance(user.subscription) == 10_000
+      assert Plans.monthly_pageview_limit(user.subscription) == 10_000
     end
 
     test "is based on the enterprise plan if user is on an enterprise plan" do
@@ -54,7 +54,7 @@ defmodule Plausible.Billing.PlansTest do
       subscription =
         insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
 
-      assert Plans.allowance(subscription) == 100_000
+      assert Plans.monthly_pageview_limit(subscription) == 100_000
     end
   end
 

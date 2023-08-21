@@ -116,7 +116,6 @@ defmodule Plausible.Billing.Plans do
   def site_limit(user) do
     cond do
       Application.get_env(:plausible, :is_selfhost) -> :unlimited
-      user.email in Application.get_env(:plausible, :site_limit_exempt) -> :unlimited
       Timex.before?(user.inserted_at, @limit_sites_since) -> :unlimited
       true -> get_site_limit_from_plan(user)
     end
@@ -160,8 +159,8 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  @spec allowance(Plausible.Billing.Subscription.t()) :: non_neg_integer() | nil
-  def allowance(subscription) do
+  @spec monthly_pageview_limit(Plausible.Billing.Subscription.t()) :: non_neg_integer() | nil
+  def monthly_pageview_limit(subscription) do
     case get_subscription_plan(subscription) do
       %Plausible.Billing.EnterprisePlan{monthly_pageview_limit: limit} ->
         limit
@@ -173,7 +172,7 @@ defmodule Plausible.Billing.Plans do
         10_000
 
       _any ->
-        Sentry.capture_message("Unknown allowance for plan",
+        Sentry.capture_message("Unknown monthly pageview limit for plan",
           extra: %{paddle_plan_id: subscription.paddle_plan_id}
         )
     end
