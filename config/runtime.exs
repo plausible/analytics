@@ -226,6 +226,11 @@ if byte_size(websocket_url) > 0 and
   """
 end
 
+secure_cookie =
+  config_dir
+  |> get_var_from_path_or_env("SECURE_COOKIE", if(is_selfhost, do: "false", else: "true"))
+  |> String.to_existing_atom()
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
@@ -247,7 +252,8 @@ config :plausible, PlausibleWeb.Endpoint,
     protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
   ],
   secret_key_base: secret_key_base,
-  websocket_url: websocket_url
+  websocket_url: websocket_url,
+  secure_cookie: secure_cookie
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
