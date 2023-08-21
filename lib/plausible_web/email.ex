@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("welcome-email")
     |> subject("Welcome to Plausible")
-    |> render("welcome_email.html", user: user, unsubscribe: true)
+    |> render("welcome_email.html", user: user)
   end
 
   def create_site_email(user) do
@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("create-site-email")
     |> subject("Your Plausible setup: Add your website details")
-    |> render("create_site_email.html", user: user, unsubscribe: true)
+    |> render("create_site_email.html", user: user)
   end
 
   def site_setup_help(user, site) do
@@ -37,8 +37,7 @@ defmodule PlausibleWeb.Email do
     |> subject("Your Plausible setup: Waiting for the first page views")
     |> render("site_setup_help_email.html",
       user: user,
-      site: site,
-      unsubscribe: true
+      site: site
     )
   end
 
@@ -49,8 +48,7 @@ defmodule PlausibleWeb.Email do
     |> subject("Plausible is now tracking your website stats")
     |> render("site_setup_success_email.html",
       user: user,
-      site: site,
-      unsubscribe: true
+      site: site
     )
   end
 
@@ -59,7 +57,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("check-stats-email")
     |> subject("Check your Plausible website stats")
-    |> render("check_stats_email.html", user: user, unsubscribe: true)
+    |> render("check_stats_email.html", user: user)
   end
 
   def password_reset_email(email, reset_link) do
@@ -75,7 +73,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("trial-one-week-reminder")
     |> subject("Your Plausible trial expires next week")
-    |> render("trial_one_week_reminder.html", user: user, unsubscribe: true)
+    |> render("trial_one_week_reminder.html", user: user)
   end
 
   def trial_upgrade_email(user, day, {pageviews, custom_events}) do
@@ -90,8 +88,7 @@ defmodule PlausibleWeb.Email do
       day: day,
       custom_events: custom_events,
       usage: pageviews + custom_events,
-      suggested_plan: suggested_plan,
-      unsubscribe: true
+      suggested_plan: suggested_plan
     )
   end
 
@@ -100,7 +97,7 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("trial-over-email")
     |> subject("Your Plausible trial has ended")
-    |> render("trial_over_email.html", user: user, unsubscribe: true)
+    |> render("trial_over_email.html", user: user)
   end
 
   def weekly_report(email, site, assigns) do
@@ -135,8 +132,7 @@ defmodule PlausibleWeb.Email do
       user: user,
       usage: usage,
       last_cycle: last_cycle,
-      suggested_plan: suggested_plan,
-      unsubscribe: true
+      suggested_plan: suggested_plan
     })
   end
 
@@ -335,6 +331,15 @@ defmodule PlausibleWeb.Email do
       feedback: feedback,
       trace_id: trace_id
     })
+  end
+
+  @doc """
+    Unlike the default 'base' emails, priority emails cannot be unsubscribed from. This is achieved
+    by sending them through a dedicated 'priority' message stream in Postmark.
+  """
+  def priority_email() do
+    base_email(%{layout: "priority_email.html"})
+    |> put_param("MessageStream", "priority")
   end
 
   def base_email(), do: base_email(%{layout: "base_email.html"})
