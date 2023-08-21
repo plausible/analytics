@@ -11,5 +11,3 @@ The Plausible Team 💌
 --
 <br /><br />
 <%= link(plausible_url(), to: plausible_url()) %><br />
-
-{{{ pm:unsubscribe }}}
