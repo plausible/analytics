@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Endpoint do
     # returns a ws{s}:// scheme (in which case SameSite=Lax is not applicable).
     @session_options
     |> Keyword.put(:domain, host())
-    |> Keyword.put(:key, "_plausible_#{Application.get_env(:plausible, :environment)}")
+    |> Keyword.put(:key, "_plausible_#{Application.fetch_env!(:plausible, :environment)}")
     |> Keyword.put(:secure, secure_cookie?())
   end
 
