@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def activation_email(user, code) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("activation-email")
     |> subject("#{code} is your Plausible email verification code")
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def password_reset_email(email, reset_link) do
-    base_email(%{layout: nil})
+    priority_email(%{layout: nil})
     |> to(email)
     |> tag("password-reset-email")
     |> subject("Plausible password reset")
@@ -124,7 +124,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def over_limit_email(user, usage, last_cycle, suggested_plan) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("over-limit")
     |> subject("[Action required] You have outgrown your Plausible subscription tier")
@@ -151,7 +151,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def dashboard_locked(user, usage, last_cycle, suggested_plan) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("dashboard-locked")
     |> subject("[Action required] Your Plausible dashboard is now locked")
@@ -166,7 +166,7 @@ defmodule PlausibleWeb.Email do
   def yearly_renewal_notification(user) do
     date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
 
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("yearly-renewal")
     |> subject("Your Plausible subscription is up for renewal")
@@ -181,7 +181,7 @@ defmodule PlausibleWeb.Email do
   def yearly_expiration_notification(user) do
     date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
 
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("yearly-expiration")
     |> subject("Your Plausible subscription is about to expire")
@@ -200,7 +200,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def new_user_invitation(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.email)
     |> tag("new-user-invitation")
     |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
@@ -210,7 +210,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def existing_user_invitation(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.email)
     |> tag("existing-user-invitation")
     |> subject("[Plausible Analytics] You've been invited to #{invitation.site.domain}")
@@ -220,7 +220,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def ownership_transfer_request(invitation, new_owner_account) do
-    base_email()
+    priority_email()
     |> to(invitation.email)
     |> tag("ownership-transfer-request")
     |> subject("[Plausible Analytics] Request to transfer ownership of #{invitation.site.domain}")
@@ -231,7 +231,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def invitation_accepted(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.inviter.email)
     |> tag("invitation-accepted")
     |> subject(
@@ -244,7 +244,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def invitation_rejected(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.inviter.email)
     |> tag("invitation-rejected")
     |> subject(
@@ -257,7 +257,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def ownership_transfer_accepted(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-accepted")
     |> subject(
@@ -270,7 +270,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def ownership_transfer_rejected(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-rejected")
     |> subject(
@@ -283,7 +283,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def site_member_removed(membership) do
-    base_email()
+    priority_email()
     |> to(membership.user.email)
     |> tag("site-member-removed")
     |> subject("[Plausible Analytics] Your access to #{membership.site.domain} has been revoked")
@@ -294,7 +294,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def import_success(user, site) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("import-success-email")
     |> subject("Google Analytics data imported for #{site.domain}")
@@ -307,7 +307,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def import_failure(user, site) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("import-failure-email")
     |> subject("Google Analytics import failed for #{site.domain}")
