@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Endpoint do
 
   plug(PlausibleWeb.Plugs.RuntimeSessionAdapter, @session_options)
 
-  socket("/live", Phoenix.LiveView.Socket,
+  socket("/live", PlausibleWeb.LiveSocket,
     websocket: [
       check_origin: true,
       connect_info: [session: {__MODULE__, :patch_session_opts, []}]
