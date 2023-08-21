@@ -247,9 +247,10 @@ defmodule Plausible.Billing do
 
     case user.grace_period do
       %GracePeriod{allowance_required: allowance_required} ->
-        new_allowance = Plausible.Billing.Plans.allowance(user.subscription)
+        new_monthly_pageview_limit =
+          Plausible.Billing.Plans.monthly_pageview_limit(user.subscription)
 
-        if new_allowance > allowance_required do
+        if new_monthly_pageview_limit > allowance_required do
           user
           |> Plausible.Auth.GracePeriod.remove_changeset()
           |> Repo.update!()
