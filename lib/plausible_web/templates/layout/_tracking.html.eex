@@ -1,4 +1,14 @@
 <%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
-  <script defer data-domain="<%= base_domain() %>" event-logged_in="<%= !!@conn.assigns[:current_user] %>" src="<%= dogfood_tracker_url() %>"></script>
-  <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
+  <script defer data-domain="<%= base_domain() %>" event-logged_in="<%= !!@conn.assigns[:current_user] %>" src="<%= dogfood_script_url() %>"></script>
+  <script>
+    window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }
+
+    <%= if @conn.assigns[:dogfood_page_id] do %>
+      const pageUrl = '<%= dogfood_page_url(@conn.assigns[:dogfood_page_id]) %>'
+    <% else %>
+      const pageUrl = window.location.href
+    <% end %>
+
+    plausible('pageview', {u: pageUrl})
+  </script>
 <% end %>
