@@ -33,4 +33,20 @@ defmodule Plausible.Billing.Quota do
       nil -> @site_limit_for_trials
     end
   end
+
+  @spec site_usage(Plausible.Auth.User.t()) :: non_neg_integer()
+  @doc """
+  Returns the number of sites the given user owns.
+  """
+  def site_usage(user) do
+    Plausible.Sites.owned_sites_count(user)
+  end
+
+  @spec within_limit?(non_neg_integer(), non_neg_integer() | :unlimited) :: boolean()
+  @doc """
+  Returns whether the limit has been exceeded or not.
+  """
+  def within_limit?(usage, limit) do
+    if limit == :unlimited, do: true, else: usage < limit
+  end
 end

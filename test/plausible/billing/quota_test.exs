@@ -87,4 +87,31 @@ defmodule Plausible.Billing.QuotaTest do
       assert :unlimited == Quota.site_limit(user)
     end
   end
+
+  test "site_usage/1 returns the amount of sites the user owns" do
+    user = insert(:user)
+    insert_list(3, :site, memberships: [build(:site_membership, user: user, role: :owner)])
+    insert(:site, memberships: [build(:site_membership, user: user, role: :admin)])
+    insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
+
+    assert Quota.site_usage(user) == 3
+  end
+
+  describe "within_limit?/2" do
+    test "returns true when quota is not exceeded" do
+      assert Quota.within_limit?(3, 5)
+    end
+
+    test "returns true when limit is :unlimited" do
+      assert Quota.within_limit?(10_000, :unlimited)
+    end
+
+    test "returns false when usage is at limit" do
+      refute Quota.within_limit?(3, 3)
+    end
+
+    test "returns false when usage exceeds the limit" do
+      refute Quota.within_limit?(10, 3)
+    end
+  end
 end

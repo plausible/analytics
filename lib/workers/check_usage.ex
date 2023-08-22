@@ -140,13 +140,13 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   defp check_site_limit(subscriber) do
-    site_limit = subscriber.enterprise_plan.site_limit
-    total_sites = Plausible.Sites.owned_sites_count(subscriber)
+    limit = subscriber.enterprise_plan.site_limit
+    usage = Plausible.Billing.Quota.site_usage(subscriber)
 
-    if total_sites >= site_limit do
-      {:over_limit, {total_sites, site_limit}}
+    if Plausible.Billing.Quota.within_limit?(usage, limit) do
+      {:within_limit, {usage, limit}}
     else
-      {:within_limit, {total_sites, site_limit}}
+      {:over_limit, {usage, limit}}
     end
   end
 end
