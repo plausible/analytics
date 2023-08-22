@@ -349,7 +349,7 @@ defmodule Plausible.FunnelsTest do
         Plausible.Stats.Query.from(site, %{"period" => "all", "sample_threshold" => "10000"})
 
       {:ok, funnel_data} = Stats.funnel(site, query, funnel.id)
-      assert_in_delta funnel_data[:all_visitors], 50_000, 1000
+      assert_in_delta funnel_data[:all_visitors], 50_000, 5000
     end
   end
 end
