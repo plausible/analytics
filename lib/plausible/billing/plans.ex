@@ -130,25 +130,6 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  @spec monthly_pageview_limit(Plausible.Billing.Subscription.t()) :: non_neg_integer() | nil
-  def monthly_pageview_limit(subscription) do
-    case get_subscription_plan(subscription) do
-      %Plausible.Billing.EnterprisePlan{monthly_pageview_limit: limit} ->
-        limit
-
-      %Plausible.Billing.Plan{monthly_pageview_limit: limit} ->
-        limit
-
-      :free_10k ->
-        10_000
-
-      _any ->
-        Sentry.capture_message("Unknown monthly pageview limit for plan",
-          extra: %{paddle_plan_id: subscription.paddle_plan_id}
-        )
-    end
-  end
-
   defp get_enterprise_plan(nil), do: nil
 
   defp get_enterprise_plan(%Plausible.Billing.Subscription{} = subscription) do

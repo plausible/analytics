@@ -114,4 +114,30 @@ defmodule Plausible.Billing.QuotaTest do
       refute Quota.within_limit?(10, 3)
     end
   end
+
+  describe "monthly_pageview_limit/1" do
+    test "is based on the plan if user is on a standard plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+
+      assert Quota.monthly_pageview_limit(user.subscription) == 10_000
+    end
+
+    test "free_10k has 10k monthly_pageview_limit" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
+
+      assert Quota.monthly_pageview_limit(user.subscription) == 10_000
+    end
+
+    test "is based on the enterprise plan if user is on an enterprise plan" do
+      user = insert(:user)
+
+      enterprise_plan =
+        insert(:enterprise_plan, user_id: user.id, monthly_pageview_limit: 100_000)
+
+      subscription =
+        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
+
+      assert Quota.monthly_pageview_limit(subscription) == 100_000
+    end
+  end
 end

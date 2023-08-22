@@ -248,7 +248,7 @@ defmodule Plausible.Billing do
     case user.grace_period do
       %GracePeriod{allowance_required: allowance_required} ->
         new_monthly_pageview_limit =
-          Plausible.Billing.Plans.monthly_pageview_limit(user.subscription)
+          Plausible.Billing.Quota.monthly_pageview_limit(user.subscription)
 
         if new_monthly_pageview_limit > allowance_required do
           user

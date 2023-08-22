@@ -42,6 +42,32 @@ defmodule Plausible.Billing.Quota do
     Plausible.Sites.owned_sites_count(user)
   end
 
+  @monthly_pageview_limit_for_free_10k 10_000
+
+  @spec monthly_pageview_limit(Plausible.Billing.Subscription.t()) :: non_neg_integer() | nil
+  @doc """
+  Returns the limit of pageviews for a subscription.
+  """
+  def monthly_pageview_limit(subscription) do
+    case Plans.get_subscription_plan(subscription) do
+      %Plausible.Billing.EnterprisePlan{monthly_pageview_limit: limit} ->
+        limit
+
+      %Plausible.Billing.Plan{monthly_pageview_limit: limit} ->
+        limit
+
+      :free_10k ->
+        @monthly_pageview_limit_for_free_10k
+
+      _any ->
+        Sentry.capture_message("Unknown monthly pageview limit for plan",
+          extra: %{paddle_plan_id: subscription && subscription.paddle_plan_id}
+        )
+
+        nil
+    end
+  end
+
   @spec within_limit?(non_neg_integer(), non_neg_integer() | :unlimited) :: boolean()
   @doc """
   Returns whether the limit has been exceeded or not.

@@ -32,32 +32,6 @@ defmodule Plausible.Billing.PlansTest do
     end
   end
 
-  describe "monthly_pageview_limit" do
-    test "is based on the plan if user is on a standard plan" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
-
-      assert Plans.monthly_pageview_limit(user.subscription) == 10_000
-    end
-
-    test "free_10k has 10k monthly_pageview_limit" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
-
-      assert Plans.monthly_pageview_limit(user.subscription) == 10_000
-    end
-
-    test "is based on the enterprise plan if user is on an enterprise plan" do
-      user = insert(:user)
-
-      enterprise_plan =
-        insert(:enterprise_plan, user_id: user.id, monthly_pageview_limit: 100_000)
-
-      subscription =
-        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
-
-      assert Plans.monthly_pageview_limit(subscription) == 100_000
-    end
-  end
-
   describe "subscription_interval" do
     test "is based on the plan if user is on a standard plan" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
