@@ -14,7 +14,7 @@ defmodule PlausibleWeb.ErrorView do
       |> Map.put(:status, 404)
       |> Map.put_new(:message, "Oops! There's nothing here")
 
-    render("generic_error.html", assigns)
+    render("404_error.html", assigns)
   end
 
   def render(<<"5", _error_5xx::binary-size(2), ".html">>, assigns) do
