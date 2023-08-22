@@ -321,5 +321,35 @@ defmodule Plausible.FunnelsTest do
                 ]
               }} = funnel_data
     end
+
+    @tag :slow
+    test "sampling", %{site: site, steps: [g1, g2, g3 | _]} do
+      {:ok, funnel} =
+        Funnels.create(
+          site,
+          "From blog to signup and purchase",
+          [g1, g2, g3]
+        )
+
+      stats =
+        1..50_000
+        |> Enum.flat_map(fn _ ->
+          user_id = SipHash.hash!("0123456789ABCDEF", :crypto.strong_rand_bytes(64))
+
+          [
+            build(:pageview, pathname: "/go/to/blog/foo", user_id: user_id),
+            build(:event, name: "Signup", user_id: user_id),
+            build(:pageview, pathname: "/checkout", user_id: user_id)
+          ]
+        end)
+
+      populate_stats(site, stats)
+
+      query =
+        Plausible.Stats.Query.from(site, %{"period" => "all", "sample_threshold" => "10000"})
+
+      {:ok, funnel_data} = Stats.funnel(site, query, funnel.id)
+      assert_in_delta funnel_data[:all_visitors], 50_000, 1000
+    end
   end
 end
