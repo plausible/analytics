@@ -44,7 +44,8 @@ defmodule Plausible.Billing.Quota do
 
   @monthly_pageview_limit_for_free_10k 10_000
 
-  @spec monthly_pageview_limit(Plausible.Billing.Subscription.t()) :: non_neg_integer() | nil
+  @spec monthly_pageview_limit(Plausible.Billing.Subscription.t()) ::
+          non_neg_integer() | :unlimited
   @doc """
   Returns the limit of pageviews for a subscription.
   """
@@ -64,8 +65,18 @@ defmodule Plausible.Billing.Quota do
           extra: %{paddle_plan_id: subscription && subscription.paddle_plan_id}
         )
 
-        nil
+        :unlimited
     end
+  end
+
+  @spec monthly_pageview_usage(Plausible.Auth.User.t()) :: non_neg_integer()
+  @doc """
+  Returns the amount of pageviews sent by the sites the user owns in last 30 days.
+  """
+  def monthly_pageview_usage(user) do
+    user
+    |> Plausible.Billing.usage_breakdown()
+    |> Tuple.sum()
   end
 
   @spec within_limit?(non_neg_integer(), non_neg_integer() | :unlimited) :: boolean()

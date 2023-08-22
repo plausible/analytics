@@ -35,7 +35,7 @@ defmodule Plausible.Workers.CheckUsage do
 
     active_subscribers =
       Repo.all(
-        from u in Plausible.Auth.User,
+        from(u in Plausible.Auth.User,
           join: s in Plausible.Billing.Subscription,
           on: s.user_id == u.id,
           left_join: ep in Plausible.Billing.EnterprisePlan,
@@ -48,6 +48,7 @@ defmodule Plausible.Workers.CheckUsage do
             least(day_of_month(s.last_bill_date), day_of_month(last_day_of_month(^yesterday))) ==
               day_of_month(^yesterday),
           preload: [subscription: s, enterprise_plan: ep]
+        )
       )
 
     for subscriber <- active_subscribers do
@@ -112,25 +113,17 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   defp check_pageview_limit(subscriber, billing_mod) do
-    monthly_pageview_limit =
-      case Plausible.Billing.Quota.monthly_pageview_limit(subscriber.subscription) do
-        monthly_pageview_limit when is_number(monthly_pageview_limit) ->
-          monthly_pageview_limit * 1.1
-
-        nil ->
-          Sentry.capture_message("Unable to calculate monthly pageview limit",
-            user: subscriber,
-            subscription: subscriber.subscription
-          )
-      end
+    limit = Plausible.Billing.Quota.monthly_pageview_limit(subscriber.subscription) * 1.1
 
     {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
 
     {last_last_cycle_usage, last_cycle_usage} =
       billing_mod.last_two_billing_months_usage(subscriber)
 
-    exceeded_last_cycle? = last_cycle_usage >= monthly_pageview_limit
-    exceeded_last_last_cycle? = last_last_cycle_usage >= monthly_pageview_limit
+    exceeded_last_cycle? = not Plausible.Billing.Quota.within_limit?(last_cycle_usage, limit)
+
+    exceeded_last_last_cycle? =
+      not Plausible.Billing.Quota.within_limit?(last_last_cycle_usage, limit)
 
     if exceeded_last_last_cycle? && exceeded_last_cycle? do
       {:over_limit, {last_cycle, last_cycle_usage}}

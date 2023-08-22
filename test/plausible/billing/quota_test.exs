@@ -139,5 +139,58 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert Quota.monthly_pageview_limit(subscription) == 100_000
     end
+
+    test "does not limit pageviews when user has a pending enterprise plan" do
+      user = insert(:user)
+      subscription = insert(:subscription, user_id: user.id, paddle_plan_id: "pending-enterprise")
+
+      assert Quota.monthly_pageview_limit(subscription) == :unlimited
+    end
+  end
+
+  describe "monthly_pageview_usage/1" do
+    test "is 0 with no events" do
+      user = insert(:user)
+
+      assert Quota.monthly_pageview_usage(user) == 0
+    end
+
+    test "counts the total number of events from all sites the user owns" do
+      user = insert(:user)
+      site1 = insert(:site, members: [user])
+      site2 = insert(:site, members: [user])
+
+      populate_stats(site1, [
+        build(:pageview),
+        build(:pageview)
+      ])
+
+      populate_stats(site2, [
+        build(:pageview),
+        build(:event, name: "custom events")
+      ])
+
+      assert Quota.monthly_pageview_usage(user) == 4
+    end
+
+    test "only counts usage from sites where the user is the owner" do
+      user = insert(:user)
+
+      insert(:site,
+        domain: "site-with-no-views.com",
+        memberships: [
+          build(:site_membership, user: user, role: :owner)
+        ]
+      )
+
+      insert(:site,
+        domain: "test-site.com",
+        memberships: [
+          build(:site_membership, user: user, role: :admin)
+        ]
+      )
+
+      assert Quota.monthly_pageview_usage(user) == 0
+    end
   end
 end

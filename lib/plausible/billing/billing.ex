@@ -108,11 +108,6 @@ defmodule Plausible.Billing do
     Timex.diff(user.trial_expiry_date, Timex.today(), :days)
   end
 
-  def usage(user) do
-    {pageviews, custom_events} = usage_breakdown(user)
-    pageviews + custom_events
-  end
-
   def last_two_billing_months_usage(user, today \\ Timex.today()) do
     {first, second} = last_two_billing_cycles(user, today)
 
