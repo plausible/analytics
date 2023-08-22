@@ -79,19 +79,19 @@ defmodule Plausible.Billing.PlansTest do
 
       assert %Plausible.Billing.Plan{
                monthly_pageview_limit: 100_000,
-               monthly_cost: "$12",
+               monthly_cost: nil,
                monthly_product_id: "558745",
                volume: "100k",
-               yearly_cost: "$96",
+               yearly_cost: nil,
                yearly_product_id: "590752"
              } = Plans.suggest(user, 10_000)
 
       assert %Plausible.Billing.Plan{
                monthly_pageview_limit: 200_000,
-               monthly_cost: "$18",
+               monthly_cost: nil,
                monthly_product_id: "597485",
                volume: "200k",
-               yearly_cost: "$144",
+               yearly_cost: nil,
                yearly_product_id: "597486"
              } = Plans.suggest(user, 100_000)
     end

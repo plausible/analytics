@@ -2,8 +2,9 @@ defmodule Plausible.Billing.Plan do
   @moduledoc false
 
   @derive Jason.Encoder
-  @enforce_keys ~w(kind site_limit monthly_pageview_limit team_member_limit volume monthly_cost yearly_cost monthly_product_id yearly_product_id)a
-  defstruct @enforce_keys
+
+  @enforce_keys ~w(kind site_limit monthly_pageview_limit team_member_limit volume monthly_product_id yearly_product_id)a
+  defstruct @enforce_keys ++ [:monthly_cost, :yearly_cost]
 
   @type t() ::
           %__MODULE__{
@@ -12,8 +13,8 @@ defmodule Plausible.Billing.Plan do
             site_limit: non_neg_integer(),
             team_member_limit: non_neg_integer() | :unlimited,
             volume: String.t(),
-            monthly_cost: String.t() | nil,
-            yearly_cost: String.t() | nil,
+            monthly_cost: Money.t() | nil,
+            yearly_cost: Money.t() | nil,
             monthly_product_id: String.t() | nil,
             yearly_product_id: String.t() | nil
           }
