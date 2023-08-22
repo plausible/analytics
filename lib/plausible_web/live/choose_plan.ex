@@ -2,7 +2,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   use Phoenix.LiveView
   use Phoenix.HTML
   alias Plausible.{Billing, Users}
-  alias Plausible.Billing.Plans
+  alias Plausible.Billing.{Plans, Plan}
+
+  @volumes [10_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000]
 
   def mount(_params, %{"user_id" => user_id}, socket) do
     user = Users.with_subscription(user_id)
@@ -20,24 +22,27 @@ defmodule PlausibleWeb.Live.ChoosePlan do
        user: user,
        usage: usage,
        current_user_plan: current_user_plan,
-       selected_interval: :monthly
+       selected_interval: default_selected_interval(user.subscription),
+       selected_volume: default_selected_volume(current_user_plan)
      )}
   end
 
   def render(assigns) do
     ~H"""
-    <div class="bg-gray-100 py-12 sm:py-16">
+    <form class="bg-gray-100 py-12 sm:py-16">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="mx-auto max-w-4xl text-center">
           <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            <%= if @current_user_plan, do: "Upgrade subscription plan", else: "Upgrade your free trial" %>
+            <%= if @current_user_plan,
+              do: "Upgrade subscription plan",
+              else: "Upgrade your free trial" %>
           </p>
         </div>
         <p class="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-600">
           <.usage usage={@usage} />
         </p>
         <.interval_picker selected_interval={@selected_interval} />
-        <.slider />
+        <.slider selected_volume={@selected_volume} />
         <div class="isolate mx-auto mt-10 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <.plan_box name="Growth" />
           <.plan_box name="Business" />
@@ -46,7 +51,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <.pageview_limit_notice :if={!@current_user_plan} />
         <.help_links />
       </div>
-    </div>
+    </form>
     <.slider_styles />
     """
   end
@@ -79,10 +84,26 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp slider(assigns) do
     ~H"""
     <div class="mt-6 max-w-2xl mx-auto">
-      <p class="text-xl text-gray-600 text-center">Monthly pageviews: <b>200k</b></p>
-      <input class="shadow-lg" type="range" min="0" max="7" step="1" value="3" />
+      <p class="text-xl text-gray-600 text-center">
+        Monthly pageviews: <b><%= PlausibleWeb.StatsView.large_number_format(@selected_volume) %></b>
+      </p>
+      <input
+        phx-change="slide"
+        name="slider"
+        class="shadow-lg"
+        type="range"
+        min="0"
+        max="7"
+        step="1"
+        value={Enum.find_index(volumes(), &(&1 == @selected_volume))}
+      />
     </div>
     """
+  end
+
+  def handle_event("slide", %{"slider" => index}, socket) do
+    new_volume = Enum.at(@volumes, String.to_integer(index))
+    {:noreply, assign(socket, selected_volume: new_volume)}
   end
 
   defp plan_box(assigns) do
@@ -267,6 +288,16 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
+  defp default_selected_volume(%Plan{monthly_pageview_limit: limit}), do: limit
+  defp default_selected_volume(_), do: List.first(@volumes)
+
+  defp default_selected_interval(subscription) do
+    case Plans.subscription_interval(subscription) do
+      "yearly" -> :yearly
+      _ -> :monthly
+    end
+  end
+
   def handle_event("set_interval", %{"interval" => interval}, socket) do
     new_interval =
       case interval do
@@ -276,4 +307,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
     {:noreply, assign(socket, selected_interval: new_interval)}
   end
+
+  defp volumes(), do: @volumes
 end
