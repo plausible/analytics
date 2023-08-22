@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   alias Plausible.Billing.{Plans, Plan}
 
   @volumes [10_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000]
+  @contact_link "https://plausible.io/contact"
+  @billing_faq_link "https://plausible.io/docs/billing"
 
   def mount(_params, %{"user_id" => user_id}, socket) do
     user = Users.with_subscription(user_id)
@@ -56,6 +58,31 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
+  def handle_event("set_interval", %{"interval" => interval}, socket) do
+    new_interval =
+      case interval do
+        "yearly" -> :yearly
+        "monthly" -> :monthly
+      end
+
+    {:noreply, assign(socket, selected_interval: new_interval)}
+  end
+
+  def handle_event("slide", %{"slider" => index}, socket) do
+    new_volume = Enum.at(@volumes, String.to_integer(index))
+    {:noreply, assign(socket, selected_volume: new_volume)}
+  end
+
+  defp default_selected_volume(%Plan{monthly_pageview_limit: limit}), do: limit
+  defp default_selected_volume(_), do: List.first(@volumes)
+
+  defp default_selected_interval(subscription) do
+    case Plans.subscription_interval(subscription) do
+      "yearly" -> :yearly
+      _ -> :monthly
+    end
+  end
+
   defp interval_picker(assigns) do
     ~H"""
     <div class="mt-16 flex justify-center">
@@ -99,11 +126,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       />
     </div>
     """
-  end
-
-  def handle_event("slide", %{"slider" => index}, socket) do
-    new_volume = Enum.at(@volumes, String.to_integer(index))
-    {:noreply, assign(socket, selected_volume: new_volume)}
   end
 
   defp plan_box(assigns) do
@@ -214,10 +236,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  defp contact_link(), do: "https://plausible.io/contact"
-
-  defp billing_faq_link(), do: "https://plausible.io/docs/billing"
-
   defp help_links(assigns) do
     ~H"""
     <div class="mt-8 text-center">
@@ -288,25 +306,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  defp default_selected_volume(%Plan{monthly_pageview_limit: limit}), do: limit
-  defp default_selected_volume(_), do: List.first(@volumes)
-
-  defp default_selected_interval(subscription) do
-    case Plans.subscription_interval(subscription) do
-      "yearly" -> :yearly
-      _ -> :monthly
-    end
-  end
-
-  def handle_event("set_interval", %{"interval" => interval}, socket) do
-    new_interval =
-      case interval do
-        "yearly" -> :yearly
-        "monthly" -> :monthly
-      end
-
-    {:noreply, assign(socket, selected_interval: new_interval)}
-  end
-
   defp volumes(), do: @volumes
+
+  defp contact_link(), do: @contact_link
+
+  defp billing_faq_link(), do: @billing_faq_link
 end
