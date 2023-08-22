@@ -13,6 +13,14 @@ defmodule PlausibleWeb.LayoutView do
     PlausibleWeb.Endpoint.websocket_url()
   end
 
+  def dogfood_tracker_url() do
+    if Application.get_env(:plausible, :environment) in ["prod", "staging"] do
+      "#{plausible_url()}/js/script.pageview-props.js"
+    else
+      "#{plausible_url()}/js/script.local.pageview-props.js"
+    end
+  end
+
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"
