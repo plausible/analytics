@@ -333,7 +333,7 @@ defmodule Plausible.FunnelsTest do
 
       stats =
         1..50_000
-        |> Enum.flat_map(fn n ->
+        |> Enum.flat_map(fn _ ->
           user_id = SipHash.hash("0123456789ABCDEF", :crypto.strong_rand_bytes(64))
 
           [
