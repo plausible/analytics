@@ -54,7 +54,7 @@ defmodule PlausibleWeb.SiteController do
     owned_site_count = Plausible.Sites.owned_sites_count(current_user)
 
     {site_limit, is_at_limit} =
-      case Plausible.Billing.Plans.site_limit(current_user) do
+      case Plausible.Billing.Quota.site_limit(current_user) do
         :unlimited -> {:unlimited, false}
         limit when is_integer(limit) -> {limit, owned_site_count >= limit}
       end
