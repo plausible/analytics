@@ -41,8 +41,6 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "business_plans/0 returns only v4 business plans" do
-      user = insert(:user)
-
       Plans.business_plans()
       |> Enum.each(fn plan ->
         assert plan.kind == :business

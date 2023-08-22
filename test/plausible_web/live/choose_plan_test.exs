@@ -49,13 +49,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       |> then(fn class -> assert class =~ @interval_button_active_class end)
     end
 
-    test "default pageview limit is 10k", %{conn: conn, user: user} do
+    test "default pageview limit is 10k", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
       assert doc =~ "Monthly pageviews: <b>10k</b"
     end
 
-    test "pageview slider changes selected volume", %{conn: conn, user: user} do
-      {:ok, lv, doc} = get_liveview(conn)
+    test "pageview slider changes selected volume", %{conn: conn} do
+      {:ok, lv, _doc} = get_liveview(conn)
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
       assert doc =~ "Monthly pageviews: <b>100k</b"
@@ -103,10 +103,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "You have used <b>2</b>\nbillable pageviews in the last 30 days"
     end
 
-    test "gets default selected interval from current subscription plan", %{
-      conn: conn,
-      user: user
-    } do
+    test "gets default selected interval from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
       doc
@@ -115,13 +112,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       |> then(fn class -> assert class =~ @interval_button_active_class end)
     end
 
-    test "gets default pageview limit from current subscription plan", %{conn: conn, user: user} do
+    test "gets default pageview limit from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
       assert doc =~ "Monthly pageviews: <b>200k</b"
     end
 
-    test "pageview slider changes selected volume", %{conn: conn, user: user} do
-      {:ok, lv, doc} = get_liveview(conn)
+    test "pageview slider changes selected volume", %{conn: conn} do
+      {:ok, lv, _doc} = get_liveview(conn)
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
       assert doc =~ "Monthly pageviews: <b>100k</b"
