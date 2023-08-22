@@ -334,7 +334,7 @@ defmodule Plausible.FunnelsTest do
       stats =
         1..50_000
         |> Enum.flat_map(fn n ->
-          user_id = SipHash.hash!("0123456789ABCDEF", Integer.to_string(n))
+          user_id = SipHash.hash("0123456789ABCDEF", :crypto.strong_rand_bytes(64))
 
           [
             build(:pageview, pathname: "/go/to/blog/foo", user_id: user_id),
