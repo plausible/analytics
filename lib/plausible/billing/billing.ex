@@ -108,6 +108,8 @@ defmodule Plausible.Billing do
     Timex.diff(user.trial_expiry_date, Timex.today(), :days)
   end
 
+  @spec last_two_billing_months_usage(Plausible.Auth.User.t(), Date.t()) ::
+          {non_neg_integer(), non_neg_integer()}
   def last_two_billing_months_usage(user, today \\ Timex.today()) do
     {first, second} = last_two_billing_cycles(user, today)
 

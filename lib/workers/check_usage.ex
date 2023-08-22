@@ -113,7 +113,11 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   defp check_pageview_limit(subscriber, billing_mod) do
-    limit = Plausible.Billing.Quota.monthly_pageview_limit(subscriber.subscription) * 1.1
+    limit =
+      subscriber.subscription
+      |> Plausible.Billing.Quota.monthly_pageview_limit()
+      |> Kernel.*(1.1)
+      |> ceil()
 
     {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
 

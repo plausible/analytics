@@ -2,50 +2,52 @@
   <div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-24 bg-white border-t-2 border-orange-200 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-orange-200 ">
     <div class="flex justify-between">
       <h2 class="text-xl font-black dark:text-gray-100">Subscription Plan</h2>
-      <%= if @subscription do %>
-        <span class={[
+      <span
+        :if={@subscription}
+        class={[
           "inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-bold leading-5",
           subscription_colors(@subscription.status)
-        ]}>
-          <%= present_subscription_status(@subscription.status) %>
-        </span>
-      <% end %>
+        ]}
+      >
+        <%= present_subscription_status(@subscription.status) %>
+      </span>
     </div>
 
     <div class="my-4 border-b border-gray-400"></div>
 
-    <%= if @subscription && @subscription.status == "deleted" do %>
-      <div class="p-2 bg-red-100 rounded-lg sm:p-3">
-        <div class="flex flex-wrap items-center justify-between">
-          <div class="flex items-center flex-1 w-0">
-            <svg
-              class="w-6 h-6 text-red-800"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <p class="ml-3 font-medium text-red-800">
-              <%= if @subscription.next_bill_date && Timex.compare(@subscription.next_bill_date, Timex.today()) >= 0 do %>
-                Your subscription is cancelled but you have access to your stats until <%= Timex.format!(
-                  @subscription.next_bill_date,
-                  "{Mshort} {D}, {YYYY}"
-                ) %>. Upgrade below to make sure you don't lose access.
-              <% else %>
-                Your subscription is cancelled. Upgrade below to get access to your stats again.
-              <% end %>
-            </p>
-          </div>
+    <div
+      :if={@subscription && @subscription.status == "deleted"}
+      class="p-2 bg-red-100 rounded-lg sm:p-3"
+    >
+      <div class="flex flex-wrap items-center justify-between">
+        <div class="flex items-center flex-1 w-0">
+          <svg
+            class="w-6 h-6 text-red-800"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <p class="ml-3 font-medium text-red-800">
+            <%= if @subscription.next_bill_date && Timex.compare(@subscription.next_bill_date, Timex.today()) >= 0 do %>
+              Your subscription is cancelled but you have access to your stats until <%= Timex.format!(
+                @subscription.next_bill_date,
+                "{Mshort} {D}, {YYYY}"
+              ) %>. Upgrade below to make sure you don't lose access.
+            <% else %>
+              Your subscription is cancelled. Upgrade below to get access to your stats again.
+            <% end %>
+          </p>
         </div>
       </div>
-    <% end %>
+    </div>
 
     <div class="flex flex-col items-center justify-between mt-8 sm:flex-row sm:items-start">
       <div
@@ -57,24 +59,30 @@
           <div class="py-2 text-xl font-medium dark:text-gray-100">
             <%= subscription_quota(@subscription) %> pageviews
           </div>
-          <%= case @subscription.status do %>
-            <% "active" -> %>
-              <%= link("Change plan",
-                to: "/billing/change-plan",
-                class: "text-sm text-indigo-500 font-medium"
-              ) %>
-            <% "past_due" -> %>
-              <span
-                class="text-sm font-medium text-gray-600 dark:text-gray-400"
-                tooltip="Please update your billing details before changing plans"
-              >
-                Change plan
-              </span>
-            <% _ -> %>
-          <% end %>
+
+          <.link
+            :if={@subscription.status == "active"}
+            href={Routes.billing_path(@conn, :change_plan_form)}
+            class="text-sm text-indigo-500 font-medium"
+          >
+            Change plan
+          </.link>
+
+          <span
+            :if={@subscription.status == "past_due"}
+            class="text-sm text-gray-600 dark:text-gray-400 font-medium"
+            tooltip="Please update your billing details before changing plans"
+          >
+            Change plan
+          </span>
         <% else %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">Free trial</div>
-          <%= link("Upgrade", to: "/billing/upgrade", class: "text-sm text-indigo-500 font-medium") %>
+          <.link
+            href={Routes.billing_path(@conn, :upgrade)}
+            class="text-sm text-indigo-500 font-medium"
+          >
+            Upgrade
+          </.link>
         <% end %>
       </div>
       <div
@@ -115,48 +123,36 @@
       </div>
     </div>
 
-    <h3 class="mt-8 text-xl font-bold dark:text-gray-100">Your usage</h3>
-    <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">
-      Last 30 days total usage across all of your sites
-    </p>
-    <div class="py-2">
-      <div class="flex flex-col">
-        <div class="-my-2 sm:-mx-6 lg:-mx-8">
-          <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <div>
-              <table class="min-w-full text-gray-900 divide-y divide-gray-200 dark:text-gray-100">
-                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200">
-                  <tr>
-                    <td class="py-4 text-sm whitespace-nowrap">
-                      Pageviews
-                    </td>
-                    <td class="py-4 text-sm whitespace-nowrap">
-                      <%= delimit_integer(@usage_pageviews) %>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="py-4 text-sm whitespace-nowrap">
-                      Custom events
-                    </td>
-                    <td class="py-4 text-sm whitespace-nowrap">
-                      <%= delimit_integer(@usage_custom_events) %>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td class="py-4 text-sm font-medium whitespace-nowrap">
-                      Total billable pageviews
-                    </td>
-                    <td class="py-4 text-sm font-medium whitespace-nowrap">
-                      <%= delimit_integer(@usage_pageviews + @usage_custom_events) %>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <article class="mt-8">
+      <h1 class="text-xl font-bold dark:text-gray-100">Usage & Limits</h1>
+      <h2 class="mt-1 mb-3 text-sm text-gray-500 leading-5 dark:text-gray-200">
+        Your usage across all of your sites and the limits of your plan
+      </h2>
+      <PlausibleWeb.Components.Billing.usage_and_limits_table>
+        <PlausibleWeb.Components.Billing.usage_and_limits_row
+          title="Total billable pageviews (last 30 days)"
+          usage={@total_pageview_usage}
+          limit={@total_pageview_limit}
+        />
+        <PlausibleWeb.Components.Billing.usage_and_limits_row
+          pad
+          title="Pageviews"
+          usage={@pageview_usage}
+          class="font-normal text-gray-600 dark:text-gray-100"
+        />
+        <PlausibleWeb.Components.Billing.usage_and_limits_row
+          pad
+          title="Custom events"
+          usage={@custom_event_usage}
+          class="font-normal text-gray-600 dark:text-gray-100"
+        />
+        <PlausibleWeb.Components.Billing.usage_and_limits_row
+          title="Owned sites"
+          usage={@site_usage}
+          limit={@site_limit}
+        />
+      </PlausibleWeb.Components.Billing.usage_and_limits_table>
+    </article>
 
     <%= cond do %>
       <% @subscription && @subscription.status in ["active", "past_due", "paused"] && @subscription.cancel_url -> %>

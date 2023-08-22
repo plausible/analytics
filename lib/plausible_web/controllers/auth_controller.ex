@@ -489,8 +489,8 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp render_settings(conn, changeset) do
-    user = conn.assigns[:current_user]
-    {usage_pageviews, usage_custom_events} = Plausible.Billing.usage_breakdown(user)
+    user = Plausible.Users.with_subscription(conn.assigns[:current_user])
+    {pageview_usage, custom_event_usage} = Plausible.Billing.usage_breakdown(user)
 
     render(conn, "user_settings.html",
       user: user |> Repo.preload(:api_keys),
@@ -498,8 +498,12 @@ defmodule PlausibleWeb.AuthController do
       subscription: user.subscription,
       invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
       theme: user.theme || "system",
-      usage_pageviews: usage_pageviews,
-      usage_custom_events: usage_custom_events
+      site_limit: Plausible.Billing.Quota.site_limit(user),
+      site_usage: Plausible.Billing.Quota.site_usage(user),
+      total_pageview_limit: Plausible.Billing.Quota.monthly_pageview_limit(user.subscription),
+      total_pageview_usage: pageview_usage + custom_event_usage,
+      custom_event_usage: custom_event_usage,
+      pageview_usage: pageview_usage
     )
   end
 
