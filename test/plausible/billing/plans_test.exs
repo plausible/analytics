@@ -148,14 +148,14 @@ defmodule Plausible.Billing.PlansTest do
                "change-me-749355",
                "change-me-749357",
                "change-me-749359",
-               "change-me-749343",
-               "change-me-749345",
-               "change-me-749347",
-               "change-me-749349",
-               "change-me-749352",
-               "change-me-749355",
-               "change-me-749357",
-               "change-me-749359"
+               "change-me-b749343",
+               "change-me-b749345",
+               "change-me-b749347",
+               "change-me-b749349",
+               "change-me-b749352",
+               "change-me-b749355",
+               "change-me-b749357",
+               "change-me-b749359"
              ] == Plans.yearly_product_ids()
     end
   end
