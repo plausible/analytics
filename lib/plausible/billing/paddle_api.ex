@@ -120,6 +120,30 @@ defmodule Plausible.Billing.PaddleApi do
     end
   end
 
+  def fetch_prices([_ | _] = product_ids) do
+    case HTTPClient.impl().get(prices_url(), @headers, %{product_ids: Enum.join(product_ids, ",")}) do
+      {:ok, %{body: %{"success" => true, "response" => %{"products" => products}}}} ->
+        products =
+          products
+          |> Enum.reduce(%{}, fn %{
+                                   "currency" => currency,
+                                   "price" => %{"net" => net_price},
+                                   "product_id" => product_id
+                                 },
+                                 acc ->
+            Map.put(acc, Integer.to_string(product_id), Money.from_float!(currency, net_price))
+          end)
+
+        {:ok, products}
+
+      {:ok, %{body: body}} ->
+        {:error, "unsuccessful API response with body: #{inspect(body)}"}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
   def checkout_domain() do
     case Application.get_env(:plausible, :environment) do
       "dev" -> "https://sandbox-checkout.paddle.com"
@@ -152,5 +176,9 @@ defmodule Plausible.Billing.PaddleApi do
 
   defp get_subscription_url() do
     Path.join(vendors_domain(), "/api/2.0/subscription/users")
+  end
+
+  defp prices_url() do
+    Path.join(checkout_domain(), "/api/2.0/prices")
   end
 end
