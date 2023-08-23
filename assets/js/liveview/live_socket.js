@@ -4,7 +4,8 @@ import { LiveSocket } from "phoenix_live_view"
 
 let csrfToken = document.querySelector("meta[name='csrf-token']")
 let websocketUrl = document.querySelector("meta[name='websocket-url']")
-if (csrfToken && websocketUrl) {
+let connectLiveSocket = document.querySelector("meta[name='connect-live-socket']")
+if (connectLiveSocket && connectLiveSocket.getAttribute("content") == "true" && csrfToken && websocketUrl) {
   let token = csrfToken.getAttribute("content")
   let url = websocketUrl.getAttribute("content")
   let liveUrl = (url === "") ? "/live" : new URL("/live", url).href;

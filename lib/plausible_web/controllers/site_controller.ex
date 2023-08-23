@@ -285,6 +285,7 @@ defmodule PlausibleWeb.SiteController do
       |> assign(:skip_plausible_tracking, true)
       |> render("settings_funnels.html",
         site: site,
+        connect_live_socket: true,
         layout: {PlausibleWeb.LayoutView, "site_settings.html"}
       )
     else
@@ -298,7 +299,8 @@ defmodule PlausibleWeb.SiteController do
       |> assign(:skip_plausible_tracking, true)
       |> render("settings_props.html",
         site: conn.assigns.site,
-        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+        layout: {PlausibleWeb.LayoutView, "site_settings.html"},
+        connect_live_socket: true
       )
     else
       conn |> Plug.Conn.put_status(401) |> Plug.Conn.halt()
