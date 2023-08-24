@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           <PlausibleWeb.Components.Generic.notice class="mt-4" title="Not enough goals">
             You need to define at least two goals to create a funnel. Go ahead and <%= link(
               "add goals",
-              to: PlausibleWeb.Router.Helpers.site_path(@socket, :new_goal, @domain),
+              to: PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain),
               class: "text-indigo-500 w-full text-center"
             ) %> to proceed.
           </PlausibleWeb.Components.Generic.notice>
