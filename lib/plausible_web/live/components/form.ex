@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Live.Components.Form do
+  @moduledoc """
+  Generic components stolen from mix phx.new templates
+  """
+
   use Phoenix.Component
 
   @doc """
