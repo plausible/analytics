@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 <.live_component
                   submit_name="funnel[steps][][goal_id]"
                   module={PlausibleWeb.Live.Components.ComboBox}
-                  suggest_mod={PlausibleWeb.Live.Components.ComboBox.StaticSearch}
+                  suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
                   id={"step-#{step_idx}"}
                   options={reject_alrady_selected("step-#{step_idx}", @goals, @selections_made)}
                 />
