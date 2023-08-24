@@ -37,4 +37,8 @@ defmodule Plausible.Test.Support.HTML do
     |> Floki.text()
     |> String.trim()
   end
+
+  def name_of(element) do
+    List.first(Floki.attribute(element, "name"))
+  end
 end
