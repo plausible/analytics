@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Release — Plausible v0.0.1</title>
+    <title>Plausible.Billing.Quota — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,16 +102,20 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Release</span> 
+  <span translate="no">Plausible.Billing.Quota</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>This module provides functions to work with plans usage and limits.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -128,65 +132,51 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#configure_ref_inspector/0" translate="no">configure_ref_inspector()</a>
+        <a href="#monthly_pageview_limit/1" translate="no">monthly_pageview_limit(subscription)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Returns the limit of pageviews for a subscription.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#configure_ua_inspector/0" translate="no">configure_ua_inspector()</a>
+        <a href="#monthly_pageview_usage/1" translate="no">monthly_pageview_usage(user)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Returns the amount of pageviews sent by the sites the user owns in last 30 days.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#createdb/0" translate="no">createdb()</a>
+        <a href="#site_limit/1" translate="no">site_limit(user)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Returns the limit of sites a user can have.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#migrate/0" translate="no">migrate()</a>
+        <a href="#site_usage/1" translate="no">site_usage(user)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Returns the number of sites the given user owns.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#rollback/0" translate="no">rollback()</a>
+        <a href="#within_limit?/2" translate="no">within_limit?(usage, limit)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#seed/0" translate="no">seed()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#selfhost?/0" translate="no">selfhost?()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#should_be_first_launch?/0" translate="no">should_be_first_launch?()</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Returns whether the limit has been exceeded or not.</p></div>
 
     </div>
 
@@ -203,148 +193,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="configure_ref_inspector/0">
+<section class="detail" id="monthly_pageview_limit/1">
 
   <div class="detail-header">
-    <a href="#configure_ref_inspector/0" class="detail-link" title="Link to this function">
+    <a href="#monthly_pageview_limit/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">configure_ref_inspector()</h1>
+    <h1 class="signature" translate="no">monthly_pageview_limit(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L64" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="configure_ua_inspector/0">
-
-  <div class="detail-header">
-    <a href="#configure_ua_inspector/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">configure_ua_inspector()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L69" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="createdb/0">
-
-  <div class="detail-header">
-    <a href="#createdb/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">createdb()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L36" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="migrate/0">
-
-  <div class="detail-header">
-    <a href="#migrate/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">migrate()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L22" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="rollback/0">
-
-  <div class="detail-header">
-    <a href="#rollback/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">rollback()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L46" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="seed/0">
-
-  <div class="detail-header">
-    <a href="#seed/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">seed()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L28" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="selfhost?/0">
-
-  <div class="detail-header">
-    <a href="#selfhost?/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">selfhost?()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L14" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L52" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -356,23 +214,24 @@ Functions
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> selfhost?() :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> monthly_pageview_limit(Plausible.Billing.Subscription.t()) ::
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :unlimited</pre>
 
       </div>
 
-
+<p>Returns the limit of pageviews for a subscription.</p>
   </section>
 </section>
-<section class="detail" id="should_be_first_launch?/0">
+<section class="detail" id="monthly_pageview_usage/1">
 
   <div class="detail-header">
-    <a href="#should_be_first_launch?/0" class="detail-link" title="Link to this function">
+    <a href="#monthly_pageview_usage/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">should_be_first_launch?()</h1>
+    <h1 class="signature" translate="no">monthly_pageview_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_release.ex#L18" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L76" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -382,7 +241,98 @@ Functions
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> monthly_pageview_usage(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+<p>Returns the amount of pageviews sent by the sites the user owns in last 30 days.</p>
+  </section>
+</section>
+<section class="detail" id="site_limit/1">
+
+  <div class="detail-header">
+    <a href="#site_limit/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_limit(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L16" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> site_limit(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :unlimited</pre>
+
+      </div>
+
+<p>Returns the limit of sites a user can have.</p><p>For enterprise customers, returns :unlimited. The site limit is checked in a
+background job so as to avoid service disruption.</p>
+  </section>
+</section>
+<section class="detail" id="site_usage/1">
+
+  <div class="detail-header">
+    <a href="#site_usage/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">site_usage(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L41" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> site_usage(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
+
+      </div>
+
+<p>Returns the number of sites the given user owns.</p>
+  </section>
+</section>
+<section class="detail" id="within_limit?/2">
+
+  <div class="detail-header">
+    <a href="#within_limit?/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L86" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> within_limit?(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :unlimited) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Returns whether the limit has been exceeded or not.</p>
   </section>
 </section>
 
