@@ -60,11 +60,13 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <div class="isolate mx-auto mt-10 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <.plan_box
             name="Growth"
+            owned={@current_user_plan && Map.get(@current_user_plan, :kind) == :growth}
             selected_plan={@selected_growth_plan}
             selected_interval={@selected_interval}
           />
           <.plan_box
             name="Business"
+            owned={@current_user_plan && Map.get(@current_user_plan, :kind) == :business}
             selected_plan={@selected_business_plan}
             selected_interval={@selected_interval}
           />
@@ -162,13 +164,20 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp plan_box(assigns) do
     ~H"""
-    <div class="rounded-3xl p-8 xl:p-10 ring-1 ring-gray-300">
+    <div
+      id={"plan-box-#{String.downcase(@name)}"}
+      class={[
+        "relative rounded-3xl p-8 xl:p-10 ring-gray-300 ring-1",
+        @owned && "ring-2 ring-indigo-600"
+      ]}
+    >
+      <.current_label :if={@owned} />
       <div class="flex items-center justify-between gap-x-4">
         <h3 class="text-lg font-semibold leading-8 text-gray-900">
           <%= @name %>
         </h3>
       </div>
-      <p id={"price-#{String.downcase(@name)}"} class="mt-6 flex items-baseline gap-x-1">
+      <p class="mt-6 flex items-baseline gap-x-1">
         <.price_tag selected_interval={@selected_interval} selected_plan={@selected_plan} />
       </p>
       <a
@@ -225,6 +234,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <.check_icon class="text-white" /> Custom reporting tools
         </li>
       </ul>
+    </div>
+    """
+  end
+
+  defp current_label(assigns) do
+    ~H"""
+    <div class="text-sm font-semibold text-white bg-green-300 absolute -right-1 -top-1 w-max px-4 py-1 rounded-md rounded-md ring-2 ring-indigo-600 text-center bg-indigo-600">
+      CURRENT
     </div>
     """
   end

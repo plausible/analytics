@@ -7,10 +7,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @yearly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="yearly"]/
   @interval_button_active_class "bg-indigo-600 text-white"
   @slider_input ~s/input[name="slider"]/
-  @growth_price_tag_amount ~s"#price-growth > span:first-child"
-  @growth_price_tag_interval ~s"#price-growth > span:nth-child(2)"
-  @business_price_tag_amount ~s"#price-business > span:first-child"
-  @business_price_tag_interval ~s"#price-business > span:nth-child(2)"
+  @plan_box_growth "#plan-box-growth"
+  @plan_box_business "#plan-box-business"
+  @growth_price_tag_amount "#{@plan_box_growth} > p > span:first-child"
+  @growth_price_tag_interval "#{@plan_box_growth} > p > span:nth-child(2)"
+  @growth_current_label "#{@plan_box_growth} > div.absolute"
+  @business_price_tag_amount "#{@plan_box_business} > p > span:first-child"
+  @business_price_tag_interval "#{@plan_box_business} > p > span:nth-child(2)"
 
   describe "for a user with no subscription" do
     setup [:create_user, :log_in]
@@ -163,6 +166,19 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 0})
       assert doc =~ "Monthly pageviews: <b>10k</b"
+    end
+
+    test "makes it clear that the user is currently on a growth tier", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      class =
+        doc
+        |> find(@plan_box_growth)
+        |> text_of_attr("class")
+
+      assert class =~ "ring-2"
+      assert class =~ "ring-indigo-600"
+      assert text_of_element(doc, @growth_current_label) == "CURRENT"
     end
   end
 
