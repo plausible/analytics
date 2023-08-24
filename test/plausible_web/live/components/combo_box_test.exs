@@ -154,7 +154,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
         <.live_component
           submit_name="some_submit_name"
           module={PlausibleWeb.Live.Components.ComboBox}
-          suggest_mod={__MODULE__.SampleSuggest}
+          suggest_fun={&SampleSuggest.suggest/2}
           id="test-component"
           options={for i <- 1..20, do: {i, "Option #{i}"}}
           suggestions_limit={7}
@@ -210,7 +210,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
         <.live_component
           submit_name="some_submit_name"
           module={PlausibleWeb.Live.Components.ComboBox}
-          suggest_mod={ComboBox.StaticSearch}
+          suggest_fun={&ComboBox.StaticSearch.suggest/2}
           id="test-creatable-component"
           options={for i <- 1..20, do: {i, "Option #{i}"}}
           creatable
@@ -282,7 +282,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
           options: options,
           submit_name: "test-submit-name",
           id: "test-component",
-          suggest_mod: ComboBox.StaticSearch
+          suggest_fun: &ComboBox.StaticSearch.suggest/2
         ],
         extra_opts
       )

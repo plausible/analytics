@@ -14,8 +14,8 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   field, the component searches the available options and provides
   suggestions based on the input.
 
-  Any module exposing suggest/2 function can be supplied via `suggest_mod`
-  attribute - see the provided `ComboBox.StaticSearch`.
+  Any function can be supplied via `suggest_fun` attribute
+  - see the provided `ComboBox.StaticSearch`.
   """
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
@@ -46,11 +46,12 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:submit_name, :string, required: true)
   attr(:display_value, :string, default: "")
   attr(:submit_value, :string, default: "")
-  attr(:suggest_mod, :atom, required: true)
+  attr(:suggest_fun, :any, required: true)
   attr(:suggestions_limit, :integer)
   attr(:class, :string, default: "")
   attr(:required, :boolean, default: false)
   attr(:creatable, :boolean, default: false)
+  attr(:errors, :list, default: [])
 
   def render(assigns) do
     ~H"""
@@ -94,16 +95,16 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             id={"submit-#{@id}"}
           />
         </div>
-      </div>
 
-      <.dropdown
-        ref={@id}
-        suggest_mod={@suggest_mod}
-        suggestions={@suggestions}
-        target={@myself}
-        creatable={@creatable}
-        display_value={@display_value}
-      />
+        <.dropdown
+          ref={@id}
+          suggest_fun={@suggest_fun}
+          suggestions={@suggestions}
+          target={@myself}
+          creatable={@creatable}
+          display_value={@display_value}
+        />
+      </div>
     </div>
     """
   end
@@ -133,7 +134,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   attr(:ref, :string, required: true)
   attr(:suggestions, :list, default: [])
-  attr(:suggest_mod, :atom, required: true)
+  attr(:suggest_fun, :any, required: true)
   attr(:target, :any)
   attr(:creatable, :boolean, required: true)
   attr(:display_value, :string, required: true)
@@ -145,7 +146,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       id={"dropdown-#{@ref}"}
       x-show="isOpen"
       x-ref="suggestions"
-      class="max-w-xs md:max-w-md lg:max-w-lg dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
+      class="w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
     >
       <.option
         :for={
@@ -239,7 +240,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   def handle_event(
         "search",
         %{"_target" => [target]} = params,
-        %{assigns: %{suggest_mod: suggest_mod, options: options}} = socket
+        %{assigns: %{suggest_fun: suggest_fun, options: options}} = socket
       ) do
     input = params[target]
     input_len = input |> String.trim() |> String.length()
@@ -253,7 +254,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
     suggestions =
       if input_len > 0 do
-        suggest_mod.suggest(input, options)
+        suggest_fun.(input, options)
       else
         options
       end
