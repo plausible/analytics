@@ -27,10 +27,10 @@ defmodule Plausible.Goal do
   def currency_options do
     options =
       for code <- valid_currencies() do
-        {"#{code} - #{Cldr.Currency.display_name!(code)}", code}
+        {code, "#{code} - #{Cldr.Currency.display_name!(code)}"}
       end
 
-    [{"Select reporting currency", nil}] ++ options
+    options
   end
 
   def changeset(goal, attrs \\ %{}) do
