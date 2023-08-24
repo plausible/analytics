@@ -64,7 +64,7 @@ defmodule Plausible.Workers.CheckUsage do
 
   def check_enterprise_subscriber(subscriber, billing_mod) do
     pageview_limit = check_pageview_limit(subscriber, billing_mod)
-    site_limit = check_site_limit(subscriber)
+    site_limit = check_site_limit_for_enterprise(subscriber)
 
     case {pageview_limit, site_limit} do
       {{:within_limit, _}, {:within_limit, _}} ->
@@ -136,7 +136,7 @@ defmodule Plausible.Workers.CheckUsage do
     end
   end
 
-  defp check_site_limit(subscriber) do
+  defp check_site_limit_for_enterprise(subscriber) do
     limit = subscriber.enterprise_plan.site_limit
     usage = Plausible.Billing.Quota.site_usage(subscriber)
 
