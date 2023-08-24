@@ -51,27 +51,24 @@ defmodule PlausibleWeb.SiteController do
 
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
-    owned_site_count = Plausible.Sites.owned_sites_count(current_user)
 
-    {site_limit, is_at_limit} =
-      case Plausible.Billing.Plans.site_limit(current_user) do
-        :unlimited -> {:unlimited, false}
-        limit when is_integer(limit) -> {limit, owned_site_count >= limit}
-      end
+    limit = Plausible.Billing.Quota.site_limit(current_user)
+    usage = Plausible.Billing.Quota.site_usage(current_user)
+    within_limit? = Plausible.Billing.Quota.within_limit?(usage, limit)
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      is_first_site: owned_site_count == 0,
-      is_at_limit: is_at_limit,
-      site_limit: site_limit,
+      is_first_site: usage == 0,
+      is_at_limit: !within_limit?,
+      site_limit: limit,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    site_count = Plausible.Sites.owned_sites_count(user)
-    is_first_site = site_count == 0
+    usage = Plausible.Billing.Quota.site_usage(user)
+    is_first_site = usage == 0
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->

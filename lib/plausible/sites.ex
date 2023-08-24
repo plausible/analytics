@@ -13,11 +13,12 @@ defmodule Plausible.Sites do
 
     Ecto.Multi.new()
     |> Ecto.Multi.run(:limit, fn _, _ ->
-      case {Plausible.Billing.Plans.site_limit(user), owned_sites_count(user)} do
-        {:unlimited, actual} -> {:ok, actual}
-        {limit, actual} when actual >= limit -> {:error, limit}
-        {_limit, actual} -> {:ok, actual}
-      end
+      limit = Plausible.Billing.Quota.site_limit(user)
+      usage = Plausible.Billing.Quota.site_usage(user)
+
+      if Plausible.Billing.Quota.within_limit?(usage, limit),
+        do: {:ok, usage},
+        else: {:error, limit}
     end)
     |> Ecto.Multi.insert(:site, site_changeset)
     |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
@@ -111,8 +112,9 @@ defmodule Plausible.Sites do
 
   def has_goals?(site) do
     Repo.exists?(
-      from g in Plausible.Goal,
+      from(g in Plausible.Goal,
         where: g.site_id == ^site.id
+      )
     )
   end
 
@@ -130,9 +132,10 @@ defmodule Plausible.Sites do
 
   def role(user_id, site) do
     Repo.one(
-      from sm in Site.Membership,
+      from(sm in Site.Membership,
         where: sm.user_id == ^user_id and sm.site_id == ^site.id,
         select: sm.role
+      )
     )
   end
 
@@ -167,11 +170,12 @@ defmodule Plausible.Sites do
 
   def owner_for(site) do
     Repo.one(
-      from u in Plausible.Auth.User,
+      from(u in Plausible.Auth.User,
         join: sm in Site.Membership,
         on: sm.user_id == u.id,
         where: sm.site_id == ^site.id,
         where: sm.role == :owner
+      )
     )
   end
 end

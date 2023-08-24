@@ -108,11 +108,8 @@ defmodule Plausible.Billing do
     Timex.diff(user.trial_expiry_date, Timex.today(), :days)
   end
 
-  def usage(user) do
-    {pageviews, custom_events} = usage_breakdown(user)
-    pageviews + custom_events
-  end
-
+  @spec last_two_billing_months_usage(Plausible.Auth.User.t(), Date.t()) ::
+          {non_neg_integer(), non_neg_integer()}
   def last_two_billing_months_usage(user, today \\ Timex.today()) do
     {first, second} = last_two_billing_cycles(user, today)
 
@@ -248,7 +245,7 @@ defmodule Plausible.Billing do
     case user.grace_period do
       %GracePeriod{allowance_required: allowance_required} ->
         new_monthly_pageview_limit =
-          Plausible.Billing.Plans.monthly_pageview_limit(user.subscription)
+          Plausible.Billing.Quota.monthly_pageview_limit(user.subscription)
 
         if new_monthly_pageview_limit > allowance_required do
           user

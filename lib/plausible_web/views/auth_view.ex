@@ -12,7 +12,7 @@ defmodule PlausibleWeb.AuthView do
 
   def subscription_quota(subscription) do
     subscription
-    |> Plans.monthly_pageview_limit()
+    |> Plausible.Billing.Quota.monthly_pageview_limit()
     |> PlausibleWeb.StatsView.large_number_format()
   end
 
