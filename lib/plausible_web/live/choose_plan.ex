@@ -17,6 +17,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> then(fn {pageviews, custom_events} -> pageviews + custom_events end)
 
     current_user_plan = Plans.get_subscription_plan(user.subscription)
+    selected_volume = default_selected_volume(current_user_plan)
+
+    available_plans =
+      (Plans.growth_plans_for(user) ++ Plans.business_plans())
+      |> Plans.with_prices()
+
+    {available_growth_plans, available_business_plans} =
+      Enum.split_with(available_plans, &(&1.kind == :growth))
 
     {:ok,
      assign(
@@ -25,7 +33,11 @@ defmodule PlausibleWeb.Live.ChoosePlan do
        usage: usage,
        current_user_plan: current_user_plan,
        selected_interval: default_selected_interval(user.subscription),
-       selected_volume: default_selected_volume(current_user_plan)
+       selected_volume: selected_volume,
+       available_growth_plans: available_growth_plans,
+       available_business_plans: available_business_plans,
+       selected_growth_plan: get_plan_by_volume(available_growth_plans, selected_volume),
+       selected_business_plan: get_plan_by_volume(available_business_plans, selected_volume)
      )}
   end
 
@@ -46,8 +58,16 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <.interval_picker selected_interval={@selected_interval} />
         <.slider selected_volume={@selected_volume} />
         <div class="isolate mx-auto mt-10 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-          <.plan_box name="Growth" />
-          <.plan_box name="Business" />
+          <.plan_box
+            name="Growth"
+            selected_plan={@selected_growth_plan}
+            selected_interval={@selected_interval}
+          />
+          <.plan_box
+            name="Business"
+            selected_plan={@selected_business_plan}
+            selected_interval={@selected_interval}
+          />
           <.enterprise_plan_box />
         </div>
         <.pageview_limit_notice :if={!@current_user_plan} />
@@ -70,7 +90,15 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def handle_event("slide", %{"slider" => index}, socket) do
     new_volume = Enum.at(@volumes, String.to_integer(index))
-    {:noreply, assign(socket, selected_volume: new_volume)}
+
+    {:noreply,
+     assign(socket,
+       selected_volume: new_volume,
+       selected_growth_plan:
+         get_plan_by_volume(socket.assigns.available_growth_plans, new_volume),
+       selected_business_plan:
+         get_plan_by_volume(socket.assigns.available_business_plans, new_volume)
+     )}
   end
 
   defp default_selected_volume(%Plan{monthly_pageview_limit: limit}), do: limit
@@ -81,6 +109,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       "yearly" -> :yearly
       _ -> :monthly
     end
+  end
+
+  defp get_plan_by_volume(plans, volume) do
+    Enum.find(plans, &(&1.monthly_pageview_limit == volume))
   end
 
   defp interval_picker(assigns) do
@@ -136,9 +168,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <%= @name %>
         </h3>
       </div>
-      <p class="mt-6 flex items-baseline gap-x-1">
-        <span class="text-4xl font-bold tracking-tight text-gray-900">$15</span>
-        <span class="text-sm font-semibold leading-6 text-gray-600">/month</span>
+      <p id={"price-#{String.downcase(@name)}"} class="mt-6 flex items-baseline gap-x-1">
+        <.price_tag selected_interval={@selected_interval} selected_plan={@selected_plan} />
       </p>
       <a
         href="#"
@@ -242,6 +273,43 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       Questions? <a class="text-indigo-600" href={contact_link()}>Contact us</a>
       or see <a class="text-indigo-600" href={billing_faq_link()}>billing FAQ</a>
     </div>
+    """
+  end
+
+  defp price_tag(%{selected_plan: %Plan{monthly_cost: nil, yearly_cost: nil}} = assigns) do
+    ~H"""
+    <span class="text-4xl font-bold tracking-tight text-gray-900">
+      N/A
+    </span>
+    <span class="text-sm font-semibold leading-6 text-gray-600">
+      ❗️
+    </span>
+    """
+  end
+
+  defp price_tag(%{selected_interval: :monthly} = assigns) do
+    ~H"""
+    <span class="text-4xl font-bold tracking-tight text-gray-900">
+      <%= @selected_plan.monthly_cost
+      |> Money.to_string!(format: :short, fractional_digits: 2)
+      |> String.replace(".00", "") %>
+    </span>
+    <span class="text-sm font-semibold leading-6 text-gray-600">
+      /month
+    </span>
+    """
+  end
+
+  defp price_tag(%{selected_interval: :yearly} = assigns) do
+    ~H"""
+    <span class="text-4xl font-bold tracking-tight text-gray-900">
+      <%= @selected_plan.yearly_cost
+      |> Money.to_string!(format: :short, fractional_digits: 2)
+      |> String.replace(".00", "") %>
+    </span>
+    <span class="text-sm font-semibold leading-6 text-gray-600">
+      /year
+    </span>
     """
   end
 

@@ -148,6 +148,35 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
+  @doc """
+  This function takes a list of plans as an argument, gathers all product
+  IDs in a single list, and makes an API call to Paddle. After a successful
+  response, fills in the `monthly_cost` and `yearly_cost` fields for each
+  given plan and returns the new list of plans with completed information.
+  """
+  def with_prices([_ | _] = plans) do
+    product_ids =
+      Enum.reduce(plans, [], fn plan, acc ->
+        acc ++ [plan.monthly_product_id, plan.yearly_product_id]
+      end)
+
+    case Plausible.Billing.paddle_api().fetch_prices(product_ids) do
+      {:ok, prices} ->
+        Enum.map(plans, fn plan ->
+          plan
+          |> Map.put(:monthly_cost, prices[plan.monthly_product_id])
+          |> Map.put(:yearly_cost, prices[plan.yearly_product_id])
+        end)
+
+      {:error, reason} ->
+        Sentry.capture_message("Failed to fetch product prices and currencies from Paddle",
+          extra: %{reason: reason}
+        )
+
+        plans
+    end
+  end
+
   defp get_enterprise_plan(nil), do: nil
 
   defp get_enterprise_plan(%Subscription{} = subscription) do
