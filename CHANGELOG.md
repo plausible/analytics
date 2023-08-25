@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+- Add 'browser_versions.csv' to CSV export
 
 ### Added
 - Add `referrers.csv` to CSV export
