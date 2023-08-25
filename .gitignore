@@ -54,6 +54,7 @@ plausible-report.xml
 *.iml
 *.log
 *.code-workspace
+.vscode
 
 # Dializer
 /priv/plts/*.plt
