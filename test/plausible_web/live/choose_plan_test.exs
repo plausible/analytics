@@ -14,6 +14,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @growth_current_label "#{@plan_box_growth} > div.absolute"
   @business_price_tag_amount "#{@plan_box_business} > p > span:first-child"
   @business_price_tag_interval "#{@plan_box_business} > p > span:nth-child(2)"
+  @business_current_label "#{@plan_box_business} > div.absolute"
 
   describe "for a user with no subscription" do
     setup [:create_user, :log_in]
@@ -122,7 +123,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a v4 growth subscription plan" do
-    setup [:create_user, :log_in, :subscribe]
+    setup [:create_user, :log_in, :subscribe_growth]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -182,10 +183,39 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
+  describe "for a user with a v4 business subscription plan" do
+    setup [:create_user, :log_in, :subscribe_business]
+
+    test "gets default pageview limit from current subscription plan", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      assert doc =~ "Monthly pageviews: <b>5M</b"
+    end
+
+    test "makes it clear that the user is currently on a business tier", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      class =
+        doc
+        |> find(@plan_box_business)
+        |> text_of_attr("class")
+
+      assert class =~ "ring-2"
+      assert class =~ "ring-indigo-600"
+      assert text_of_element(doc, @business_current_label) == "CURRENT"
+    end
+  end
+
   @v4_growth_200k_yearly_plan_id "change-me-749347"
 
-  defp subscribe(%{user: user}) do
+  defp subscribe_growth(%{user: user}) do
     insert(:subscription, user: user, paddle_plan_id: @v4_growth_200k_yearly_plan_id)
+    {:ok, user: Plausible.Users.with_subscription(user)}
+  end
+
+  @v4_business_5m_monthly_plan_id "change-me-b749356"
+
+  defp subscribe_business(%{user: user}) do
+    insert(:subscription, user: user, paddle_plan_id: @v4_business_5m_monthly_plan_id)
     {:ok, user: Plausible.Users.with_subscription(user)}
   end
 
