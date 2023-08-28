@@ -208,8 +208,11 @@ native_stats_range
       operating_system: Enum.random(["Windows", "macOS", "Linux"]),
       operating_system_version: to_string(Enum.random(0..15)),
       user_id: Enum.random(1..1200),
-      "meta.key": ["url"],
+      "meta.key": ["url", "prop1", "prop2", "prop3"],
       "meta.value": [
+        Enum.random(long_random_urls),
+        Enum.random(long_random_urls),
+        Enum.random(long_random_urls),
         Enum.random(long_random_urls)
       ]
     ]
