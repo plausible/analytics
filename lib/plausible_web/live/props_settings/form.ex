@@ -60,19 +60,19 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
           :let={f}
           for={@form}
           class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
-          phx-submit="save-goal"
+          phx-submit="save-prop"
           phx-click-away="cancel-add-prop"
         >
           <h2 class="text-xl font-black dark:text-gray-100">Add property for <%= @domain %></h2>
 
           <div class="py-2">
-            <.label for="page_path_input">
+            <.label for="prop_input">
               Property
             </.label>
 
             <.live_component
-              id="page_path_input"
-              submit_name="goal[page_path]"
+              id="prop_input"
+              submit_name="prop"
               class={[
                 "py-2"
               ]}
@@ -109,15 +109,35 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     """
   end
 
-  def handle_event("save-prop", %{"goal" => goal}, socket) do
-    case Plausible.Goals.create(socket.assigns.site, goal) do
-      {:ok, goal} ->
-        send(socket.assigns.rendered_by, {:goal_added, Map.put(goal, :funnels, [])})
-        {:noreply, socket}
+  def handle_event("save-prop", %{"prop" => prop}, socket) do
+    case Plausible.Props.allow(socket.assigns.site, prop) do
+      {:ok, site} ->
+        # send_update(ComboBox, id: :prop_input, display_value: "", submit_value: "")
+        send(socket.assigns.rendered_by, {:prop_added, prop})
+
+        {:noreply,
+         assign(socket,
+           site: site,
+           form: new_form(site)
+         )}
 
       {:error, changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
+        {:noreply,
+         assign(socket,
+           form: to_form(Map.put(changeset, :action, :validate))
+         )}
     end
+  end
+
+  def handle_event("allow-existing-props", _params, socket) do
+    {:ok, site} = Plausible.Props.allow_existing_props(socket.assigns.site)
+    send(socket.assigns.rendered_by, {:props_added, site.allowed_event_props})
+
+    {:noreply,
+     assign(socket,
+       site: site,
+       form: new_form(site)
+     )}
   end
 
   def handle_event("cancel-add-prop", _value, socket) do

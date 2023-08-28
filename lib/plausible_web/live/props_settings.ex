@@ -81,55 +81,56 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:noreply, assign(socket, filter_text: "", list: socket.assigns.props)}
   end
 
-  def handle_event("allow", %{"prop" => prop}, socket) do
-    case Plausible.Props.allow(socket.assigns.site, prop) do
-      {:ok, site} ->
-        send_update(ComboBox, id: :prop_input, display_value: "", submit_value: "")
-
-        {:noreply,
-         assign(socket,
-           site: site,
-           form: new_form(site),
-           suggestions: rebuild_suggestions(socket.assigns.suggestions, site.allowed_event_props)
-         )}
-
-      {:error, changeset} ->
-        {:noreply,
-         assign(socket,
-           form: to_form(Map.put(changeset, :action, :validate))
-         )}
-    end
-  end
-
   def handle_event("disallow", %{"prop" => prop}, socket) do
     {:ok, site} = Plausible.Props.disallow(socket.assigns.site, prop)
-    {:noreply, assign(socket, site: site)}
-  end
 
-  def handle_event("allow-existing-props", _params, socket) do
-    {:ok, site} = Plausible.Props.allow_existing_props(socket.assigns.site)
+    socket =
+      socket
+      |> put_flash(:success, "Property removed successfully")
+      |> assign(
+        props: Enum.reject(socket.assigns.props, &(&1 == prop)),
+        list: Enum.reject(socket.assigns.list, &(&1 == prop)),
+        site: site
+      )
 
-    {:noreply,
-     assign(socket,
-       site: site,
-       suggestions: rebuild_suggestions(socket.assigns.suggestions, site.allowed_event_props)
-     )}
+    Process.send_after(self(), :clear_flash, 5000)
+    {:noreply, socket}
   end
 
   def handle_info(:cancel_add_prop, socket) do
     {:noreply, assign(socket, add_prop?: false)}
   end
 
-  defp rebuild_suggestions(suggestions, allowed_event_props) do
-    allowed_event_props = allowed_event_props || []
+  def handle_info({:props_added, props}, socket) when is_list(props) do
+    socket =
+      socket
+      |> assign(
+        add_prop?: false,
+        filter_text: "",
+        props: props,
+        list: props
+      )
+      |> put_flash(:success, "Properties added successfully")
 
-    suggestions =
-      for {suggestion, _} <- suggestions,
-          suggestion not in allowed_event_props,
-          do: {suggestion, suggestion}
+    {:noreply, socket}
+  end
 
-    send_update(ComboBox, id: :prop_input, suggestions: suggestions)
-    suggestions
+  def handle_info({:prop_added, prop}, socket) do
+    socket =
+      socket
+      |> assign(
+        add_prop?: false,
+        filter_text: "",
+        props: [prop | socket.assigns.props],
+        list: [prop | socket.assigns.props]
+      )
+      |> put_flash(:success, "Property added successfully")
+
+    {:noreply, socket}
+  end
+
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
   end
 
   defp new_form(site) do
