@@ -18,35 +18,33 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
         <form id="filter-form" phx-change="filter">
           <div class="text-gray-800 text-sm inline-flex items-center">
-            <Heroicons.magnifying_glass
-              class="feather mr-1 dark:text-gray-300"
-              phx-click={JS.focus(to: "#filter-text")}
-            />
-            <input
-              type="text"
-              name="filter-text"
-              id="filter-text"
-              class={[
-                "border-none rounded-md px-1 py-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:text-gray-300 dark:bg-gray-800",
-                String.trim(@filter_text) != "" &&
-                  "bg-gray-100 focus:bg-white dark:bg-gray-850 dark:focus:bg-gray-900"
-              ]}
-              placeholder="Search Goals"
-              value={@filter_text}
-            />
+            <div class="relative mt-2 rounded-md shadow-sm flex">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
+              </div>
+              <input
+                type="text"
+                name="filter-text"
+                id="filter-text"
+                class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+                placeholder="Search Goals"
+                value={@filter_text}
+              />
+            </div>
+
             <Heroicons.backspace
               :if={String.trim(@filter_text) != ""}
-              class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
+              class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500 mt-2"
               phx-click="reset-filter-text"
               id="reset-filter"
             />
           </div>
         </form>
-        <div class="mt-3 flex sm:ml-4 sm:mt-0">
+        <div class="mt-4 flex sm:ml-4 sm:mt-0">
           <button
             type="button"
             phx-click="add-goal"
-            class="ml-3 inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            class="mt-2 block items-center rounded-md bg-indigo-600 p-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             + Add Goal
           </button>
