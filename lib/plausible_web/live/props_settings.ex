@@ -29,6 +29,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
        form: new_form(site),
        add_prop?: false,
        list: site.allowed_event_props,
+       props: site.allowed_event_props,
        filter_text: ""
      )}
   end
@@ -74,6 +75,10 @@ defmodule PlausibleWeb.Live.PropsSettings do
       )
 
     {:noreply, assign(socket, list: new_list, filter_text: filter_text)}
+  end
+
+  def handle_event("reset-filter-text", _params, socket) do
+    {:noreply, assign(socket, filter_text: "", list: socket.assigns.props)}
   end
 
   def handle_event("allow", %{"prop" => prop}, socket) do
