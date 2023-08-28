@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
       <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
         <form id="filter-form" phx-change="filter">
           <div class="text-gray-800 text-sm inline-flex items-center">
-            <div class="relative mt-2 rounded-md shadow-sm flex">
+            <div class="relative rounded-md shadow-sm flex">
               <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
               </div>
@@ -40,11 +40,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </div>
         </form>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <button
-            type="button"
-            phx-click="add-goal"
-            class="mt-2 block items-center rounded-md bg-indigo-600 p-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
+          <button type="button" phx-click="add-goal" class="button">
             + Add Goal
           </button>
         </div>
