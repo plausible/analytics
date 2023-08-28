@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
 
             <Heroicons.backspace
               :if={String.trim(@filter_text) != ""}
-              class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500 mt-2"
+              class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
               phx-click="reset-filter-text"
               id="reset-filter"
             />
