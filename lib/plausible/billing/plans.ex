@@ -105,36 +105,7 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
-  @limit_sites_since ~D[2021-05-05]
-  @spec site_limit(Plausible.Auth.User.t()) :: non_neg_integer() | :unlimited
-  @doc """
-  Returns the limit of sites a user can have.
-
-  For enterprise customers, returns :unlimited. The site limit is checked in a
-  background job so as to avoid service disruption.
-  """
-  def site_limit(user) do
-    cond do
-      Application.get_env(:plausible, :is_selfhost) -> :unlimited
-      Timex.before?(user.inserted_at, @limit_sites_since) -> :unlimited
-      true -> get_site_limit_from_plan(user)
-    end
-  end
-
-  @site_limit_for_trials 50
-  @site_limit_for_free_10k 50
-  defp get_site_limit_from_plan(user) do
-    user = Plausible.Users.with_subscription(user)
-
-    case get_subscription_plan(user.subscription) do
-      %Plausible.Billing.EnterprisePlan{} -> :unlimited
-      %Plausible.Billing.Plan{site_limit: site_limit} -> site_limit
-      :free_10k -> @site_limit_for_free_10k
-      nil -> @site_limit_for_trials
-    end
-  end
-
-  defp get_subscription_plan(subscription) do
+  def get_subscription_plan(subscription) do
     if subscription && subscription.paddle_plan_id == "free_10k" do
       :free_10k
     else
@@ -156,25 +127,6 @@ defmodule Plausible.Billing.Plans do
 
       _any ->
         "N/A"
-    end
-  end
-
-  @spec monthly_pageview_limit(Plausible.Billing.Subscription.t()) :: non_neg_integer() | nil
-  def monthly_pageview_limit(subscription) do
-    case get_subscription_plan(subscription) do
-      %Plausible.Billing.EnterprisePlan{monthly_pageview_limit: limit} ->
-        limit
-
-      %Plausible.Billing.Plan{monthly_pageview_limit: limit} ->
-        limit
-
-      :free_10k ->
-        10_000
-
-      _any ->
-        Sentry.capture_message("Unknown monthly pageview limit for plan",
-          extra: %{paddle_plan_id: subscription.paddle_plan_id}
-        )
     end
   end
 

@@ -3,52 +3,6 @@ defmodule Plausible.BillingTest do
   use Bamboo.Test, shared: true
   alias Plausible.Billing
 
-  describe "usage" do
-    test "is 0 with no events" do
-      user = insert(:user)
-
-      assert Billing.usage(user) == 0
-    end
-
-    test "counts the total number of events from all sites the user owns" do
-      user = insert(:user)
-      site1 = insert(:site, members: [user])
-      site2 = insert(:site, members: [user])
-
-      populate_stats(site1, [
-        build(:pageview),
-        build(:pageview)
-      ])
-
-      populate_stats(site2, [
-        build(:pageview),
-        build(:event, name: "custom events")
-      ])
-
-      assert Billing.usage(user) == 4
-    end
-
-    test "only counts usage from sites where the user is the owner" do
-      user = insert(:user)
-
-      insert(:site,
-        domain: "site-with-no-views.com",
-        memberships: [
-          build(:site_membership, user: user, role: :owner)
-        ]
-      )
-
-      insert(:site,
-        domain: "test-site.com",
-        memberships: [
-          build(:site_membership, user: user, role: :admin)
-        ]
-      )
-
-      assert Billing.usage(user) == 0
-    end
-  end
-
   describe "last_two_billing_cycles" do
     test "billing on the 1st" do
       last_bill_date = ~D[2021-01-01]
