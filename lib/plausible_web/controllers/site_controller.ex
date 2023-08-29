@@ -226,11 +226,11 @@ defmodule PlausibleWeb.SiteController do
       end
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("settings_general.html",
       site: site,
       imported_pageviews: imported_pageviews,
       changeset: Plausible.Site.changeset(site, %{}),
+      dogfood_page_id: :settings_general,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -241,9 +241,9 @@ defmodule PlausibleWeb.SiteController do
       |> Repo.preload(memberships: :user, invitations: [], custom_domain: [])
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("settings_people.html",
       site: site,
+      dogfood_page_id: :settings_people,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -253,10 +253,10 @@ defmodule PlausibleWeb.SiteController do
     shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("settings_visibility.html",
       site: site,
       shared_links: shared_links,
+      dogfood_page_id: :settings_visibility,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -266,10 +266,10 @@ defmodule PlausibleWeb.SiteController do
     goals = Goals.for_site(site, preload_funnels?: true)
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("settings_goals.html",
       site: site,
       goals: goals,
+      dogfood_page_id: :settings_goals,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -279,10 +279,10 @@ defmodule PlausibleWeb.SiteController do
       site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
       conn
-      |> assign(:skip_plausible_tracking, true)
       |> render("settings_funnels.html",
         site: site,
         connect_live_socket: true,
+        dogfood_page_id: :settings_funnels,
         layout: {PlausibleWeb.LayoutView, "site_settings.html"}
       )
     else
@@ -293,9 +293,9 @@ defmodule PlausibleWeb.SiteController do
   def settings_props(conn, _params) do
     if Plausible.Props.enabled_for?(conn.assigns.current_user) do
       conn
-      |> assign(:skip_plausible_tracking, true)
       |> render("settings_props.html",
         site: conn.assigns.site,
+        dogfood_page_id: :settings_props,
         layout: {PlausibleWeb.LayoutView, "site_settings.html"},
         connect_live_socket: true
       )
@@ -315,10 +315,10 @@ defmodule PlausibleWeb.SiteController do
       end
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("settings_search_console.html",
       site: site,
       search_console_domains: search_console_domains,
+      dogfood_page_id: :settings_search_console,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -327,12 +327,12 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("settings_email_reports.html",
       site: site,
       weekly_report: Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id),
       monthly_report: Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id),
       spike_notification: Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id),
+      dogfood_page_id: :settings_email_reports,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -346,6 +346,7 @@ defmodule PlausibleWeb.SiteController do
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_custom_domain.html",
       site: site,
+      dogfood_page_id: :settings_email_reports,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -354,9 +355,9 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("settings_danger_zone.html",
       site: site,
+      dogfood_page_id: :settings_danger_zone,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end

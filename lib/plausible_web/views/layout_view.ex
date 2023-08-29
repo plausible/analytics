@@ -32,6 +32,33 @@ defmodule PlausibleWeb.LayoutView do
   def dogfood_page_url(:dashboard), do: PlausibleWeb.Endpoint.url() <> "/:dashboard"
   def dogfood_page_url(:shared_link), do: PlausibleWeb.Endpoint.url() <> "/share/:dashboard"
 
+  def dogfood_page_url(:settings_general),
+    do: PlausibleWeb.Endpoint.url() <> "/:dashboard/settings/general"
+
+  def dogfood_page_url(:settings_people),
+    do: PlausibleWeb.Endpoint.url() <> "/:dashboard/settings/people"
+
+  def dogfood_page_url(:settings_visibility),
+    do: PlausibleWeb.Endpoint.url() <> "/:dashboard/settings/visibility"
+
+  def dogfood_page_url(:settings_goals),
+    do: PlausibleWeb.Endpoint.url() <> "/:dashboard/settings/goals"
+
+  def dogfood_page_url(:settings_funnels),
+    do: PlausibleWeb.Endpoint.url() <> "/:dashboard/settings/funnels"
+
+  def dogfood_page_url(:settings_props),
+    do: PlausibleWeb.Endpoint.url() <> "/:dashboard/settings/properties"
+
+  def dogfood_page_url(:settings_search_console),
+    do: PlausibleWeb.Endpoint.url() <> "/:dashboard/settings/search-console"
+
+  def dogfood_page_url(:settings_email_reports),
+    do: PlausibleWeb.Endpoint.url() <> "/:dashboard/settings/email-reports"
+
+  def dogfood_page_url(:settings_danger_zone),
+    do: PlausibleWeb.Endpoint.url() <> "/:dashboard/settings/danger-zone"
+
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"
