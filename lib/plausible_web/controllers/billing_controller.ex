@@ -42,7 +42,8 @@ defmodule PlausibleWeb.BillingController do
       render(conn, "choose_plan.html",
         skip_plausible_tracking: true,
         user: user,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
+        layout: {PlausibleWeb.LayoutView, "focus.html"},
+        connect_live_socket: true
       )
     else
       render_error(conn, 404)
