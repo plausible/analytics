@@ -22,8 +22,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
      assign(socket,
        site_id: site.id,
        domain: site.domain,
-       goals: goals,
-       list: goals,
+       all_goals: goals,
+       displayed_goals: goals,
        add_goal?: false,
        current_user_id: user_id,
        filter_text: ""
@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
       <.live_component
         module={PlausibleWeb.Live.GoalSettings.List}
         id="goals-list"
-        goals={@list}
+        goals={@displayed_goals}
         domain={@domain}
         filter_text={@filter_text}
       />
@@ -61,17 +61,17 @@ defmodule PlausibleWeb.Live.GoalSettings do
   end
 
   def handle_event("reset-filter-text", _params, socket) do
-    {:noreply, assign(socket, filter_text: "", list: socket.assigns.goals)}
+    {:noreply, assign(socket, filter_text: "", displayed_goals: socket.assigns.all_goals)}
   end
 
   def handle_event("filter", %{"filter-text" => filter_text}, socket) do
     new_list =
       PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(
         filter_text,
-        socket.assigns.goals
+        socket.assigns.all_goals
       )
 
-    {:noreply, assign(socket, list: new_list, filter_text: filter_text)}
+    {:noreply, assign(socket, displayed_goals: new_list, filter_text: filter_text)}
   end
 
   def handle_event("add-goal", _value, socket) do
@@ -87,8 +87,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
           socket
           |> put_flash(:success, "Goal deleted successfully")
           |> assign(
-            goals: Enum.reject(socket.assigns.goals, &(&1.id == goal_id)),
-            list: Enum.reject(socket.assigns.list, &(&1.id == goal_id))
+            all_goals: Enum.reject(socket.assigns.all_goals, &(&1.id == goal_id)),
+            displayed_goals: Enum.reject(socket.assigns.displayed_goals, &(&1.id == goal_id))
           )
 
         Process.send_after(self(), :clear_flash, 5000)
@@ -109,8 +109,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
       |> assign(
         add_goal?: false,
         filter_text: "",
-        goals: [goal | socket.assigns.goals],
-        list: [goal | socket.assigns.goals]
+        all_goals: [goal | socket.assigns.all_goals],
+        displayed_goals: [goal | socket.assigns.all_goals]
       )
       |> put_flash(:success, "Goal saved successfully")
 
