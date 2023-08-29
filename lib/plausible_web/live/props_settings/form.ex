@@ -1,12 +1,10 @@
 defmodule PlausibleWeb.Live.PropsSettings.Form do
   @moduledoc """
-  Live view for the goal creation form
+  Live view for the custom props creation form
   """
   use Phoenix.LiveView
   import PlausibleWeb.Live.Components.Form
   alias PlausibleWeb.Live.Components.ComboBox
-
-  alias Plausible.Repo
 
   def mount(
         _params,
@@ -36,12 +34,10 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
 
     {:ok,
      assign(socket,
-       current_user: Repo.get(Plausible.Auth.User, user_id),
        form: form,
        suggestions: initial_suggestions,
        domain: domain,
        rendered_by: pid,
-       tabs: %{custom_events: true, pageviews: false},
        site: site
      )}
   end
@@ -50,7 +46,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     ~H"""
     <div
       class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"
-      phx-window-keydown="cancel-add-prop"
+      phx-window-keydown="cancel-allow-prop"
       phx-key="Escape"
     >
     </div>
@@ -60,8 +56,8 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
           :let={f}
           for={@form}
           class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
-          phx-submit="save-prop"
-          phx-click-away="cancel-add-prop"
+          phx-submit="allow-prop"
+          phx-click-away="cancel-allow-prop"
         >
           <h2 class="text-xl font-black dark:text-gray-100">Add property for <%= @domain %></h2>
 
@@ -109,10 +105,10 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     """
   end
 
-  def handle_event("save-prop", %{"prop" => prop}, socket) do
+  def handle_event("allow-prop", %{"prop" => prop}, socket) do
     case Plausible.Props.allow(socket.assigns.site, prop) do
       {:ok, site} ->
-        send(socket.assigns.rendered_by, {:prop_added, prop})
+        send(socket.assigns.rendered_by, {:prop_allowed, prop})
 
         {:noreply,
          assign(socket,
@@ -130,7 +126,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
 
   def handle_event("allow-existing-props", _params, socket) do
     {:ok, site} = Plausible.Props.allow_existing_props(socket.assigns.site)
-    send(socket.assigns.rendered_by, {:props_added, site.allowed_event_props})
+    send(socket.assigns.rendered_by, {:props_allowed, site.allowed_event_props})
 
     {:noreply,
      assign(socket,
@@ -139,7 +135,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
      )}
   end
 
-  def handle_event("cancel-add-prop", _value, socket) do
+  def handle_event("cancel-allow-prop", _value, socket) do
     send(socket.assigns.rendered_by, :cancel_add_prop)
     {:noreply, socket}
   end

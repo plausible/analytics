@@ -24,6 +24,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:ok,
      assign(socket,
        site: site,
+       site_id: site.id,
        domain: domain,
        current_user_id: user_id,
        add_prop?: false,
@@ -45,7 +46,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
           session: %{
             "current_user_id" => @current_user_id,
             "domain" => @domain,
-            "site_id" => @site.id,
+            "site_id" => @site_id,
             "rendered_by" => self()
           }
         ) %>
@@ -80,7 +81,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:noreply, assign(socket, filter_text: "", list: socket.assigns.props)}
   end
 
-  def handle_event("disallow", %{"prop" => prop}, socket) do
+  def handle_event("disallow-prop", %{"prop" => prop}, socket) do
     {:ok, site} = Plausible.Props.disallow(socket.assigns.site, prop)
 
     socket =
@@ -100,7 +101,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:noreply, assign(socket, add_prop?: false)}
   end
 
-  def handle_info({:props_added, props}, socket) when is_list(props) do
+  def handle_info({:props_allowed, props}, socket) when is_list(props) do
     socket =
       socket
       |> assign(
@@ -114,7 +115,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:noreply, socket}
   end
 
-  def handle_info({:prop_added, prop}, socket) do
+  def handle_info({:prop_allowed, prop}, socket) when is_binary(prop) do
     socket =
       socket
       |> assign(
