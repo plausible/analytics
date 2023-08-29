@@ -78,7 +78,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
               ]}
               module={ComboBox}
               options={@suggestions}
-              suggest_fun={fn input, options -> suggest(input, options, @site) end}
+              suggest_fun={&ComboBox.StaticSearch.suggest/2}
               creatable
             />
 
@@ -112,7 +112,6 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
   def handle_event("save-prop", %{"prop" => prop}, socket) do
     case Plausible.Props.allow(socket.assigns.site, prop) do
       {:ok, site} ->
-        # send_update(ComboBox, id: :prop_input, display_value: "", submit_value: "")
         send(socket.assigns.rendered_by, {:prop_added, prop})
 
         {:noreply,
@@ -143,14 +142,6 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
   def handle_event("cancel-add-prop", _value, socket) do
     send(socket.assigns.rendered_by, :cancel_add_prop)
     {:noreply, socket}
-  end
-
-  def suggest(input, _options, site) do
-    query = Plausible.Stats.Query.from(site, %{})
-
-    site
-    |> Plausible.Stats.filter_suggestions(query, "page", input)
-    |> Enum.map(fn %{label: label, value: value} -> {label, value} end)
   end
 
   defp new_form(site) do

@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             required={@required}
           />
 
-          <.dropdown_anchor id={@id} />
+            <.dropdown_anchor id={@id} />
 
           <input
             type="hidden"

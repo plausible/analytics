@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   use Phoenix.LiveView
   use Phoenix.HTML
-  alias PlausibleWeb.Live.Components.ComboBox
+  alias PlausibleWeb.Live.Components.ComboBox.StaticSearch
 
   def mount(
         _params,
@@ -26,10 +26,9 @@ defmodule PlausibleWeb.Live.PropsSettings do
        site: site,
        domain: domain,
        current_user_id: user_id,
-       form: new_form(site),
        add_prop?: false,
-       list: site.allowed_event_props,
-       props: site.allowed_event_props,
+       list: site.allowed_event_props || [],
+       props: site.allowed_event_props || [],
        filter_text: ""
      )}
   end
@@ -69,7 +68,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   def handle_event("filter", %{"filter-text" => filter_text}, socket) do
     new_list =
-      PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(
+      StaticSearch.suggest(
         filter_text,
         socket.assigns.props
       )
@@ -131,9 +130,5 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   def handle_info(:clear_flash, socket) do
     {:noreply, clear_flash(socket)}
-  end
-
-  defp new_form(site) do
-    to_form(Plausible.Props.allow_changeset(site, []))
   end
 end
