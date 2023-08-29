@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
               creatable
             />
 
-            <.error :for={{msg, opts} <- f[:page_path].errors}>
+            <.error :for={{msg, opts} <- f[:allowed_event_props].errors}>
               <%= Enum.reduce(opts, msg, fn {key, value}, acc ->
                 String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
               end) %>
