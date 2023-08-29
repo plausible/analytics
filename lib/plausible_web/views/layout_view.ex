@@ -21,6 +21,14 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def dogfood_domain(conn) do
+    if conn.assigns[:embedded] do
+      "embed." <> base_domain()
+    else
+      base_domain()
+    end
+  end
+
   def dogfood_page_url(:dashboard), do: PlausibleWeb.Endpoint.url() <> "/:dashboard"
   def dogfood_page_url(:shared_link), do: PlausibleWeb.Endpoint.url() <> "/share/:dashboard"
 

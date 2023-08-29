@@ -1,5 +1,5 @@
 <%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
-  <script defer data-domain="<%= base_domain() %>" event-logged_in="<%= !!@conn.assigns[:current_user] %>" src="<%= dogfood_script_url() %>"></script>
+  <script defer data-domain="<%= dogfood_domain(@conn) %>" event-logged_in="<%= !!@conn.assigns[:current_user] %>" src="<%= dogfood_script_url() %>"></script>
   <script>
     window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }
 
