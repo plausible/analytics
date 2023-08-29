@@ -104,8 +104,7 @@ defmodule Plausible.SitesTest do
     end
 
     test "sends invitation email for existing users" do
-      inviter = insert(:user)
-      invitee = insert(:user)
+      [inviter, invitee] = insert_list(2, :user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
       assert {:ok, %Plausible.Auth.Invitation{}} = Sites.invite(site, inviter, invitee, :viewer)
@@ -127,6 +126,19 @@ defmodule Plausible.SitesTest do
         to: [nil: "vini@plausible.test"],
         subject: "[Plausible Analytics] You've been invited to #{site.domain}"
       )
+    end
+
+    test "returns error when owner is over their team member limit" do
+      [owner, inviter, invitee] = insert_list(3, :user)
+
+      memberships =
+        [
+          build(:site_membership, user: owner, role: :owner),
+          build(:site_membership, user: inviter, role: :admin)
+        ] ++ build_list(4, :site_membership)
+
+      site = insert(:site, memberships: memberships)
+      assert {:error, {:over_limit, 5}} = Sites.invite(site, inviter, invitee, :viewer)
     end
   end
 end

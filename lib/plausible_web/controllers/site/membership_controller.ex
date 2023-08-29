@@ -59,6 +59,15 @@ defmodule PlausibleWeb.Site.MembershipController do
           skip_plausible_tracking: true
         )
 
+      {:error, {:over_limit, limit}} ->
+        render(conn, "invite_member_form.html",
+          error:
+            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit.",
+          site: site,
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          skip_plausible_tracking: true
+        )
+
       {:error, %Ecto.Changeset{} = changeset} ->
         error_msg =
           case changeset.errors[:invitation] do

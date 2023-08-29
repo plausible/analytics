@@ -32,7 +32,10 @@ defmodule Plausible.Factory do
   end
 
   def site_membership_factory do
-    %Plausible.Site.Membership{}
+    %Plausible.Site.Membership{
+      user: build(:user),
+      role: :viewer
+    }
   end
 
   def ch_session_factory do
