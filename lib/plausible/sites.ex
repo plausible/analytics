@@ -8,6 +8,10 @@ defmodule Plausible.Sites do
     Repo.get_by(Site, domain: domain)
   end
 
+  def get_by_domain!(domain) do
+    Repo.get_by!(Site, domain: domain)
+  end
+
   def create(user, params) do
     site_changeset = Site.changeset(%Site{}, params)
 
@@ -93,11 +97,25 @@ defmodule Plausible.Sites do
     base <> domain <> "?auth=" <> link.slug
   end
 
-  def get_for_user!(user_id, domain, roles \\ [:owner, :admin, :viewer]),
-    do: Repo.one!(get_for_user_q(user_id, domain, roles))
+  def get_for_user!(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
+    if :superuser in roles and Plausible.Auth.is_super_admin?(domain) do
+      get_by_domain!(domain)
+    else
+      user_id
+      |> get_for_user_q(domain, List.delete(roles, :superadmin))
+      |> Repo.one!()
+    end
+  end
 
-  def get_for_user(user_id, domain, roles \\ [:owner, :admin, :viewer]),
-    do: Repo.one(get_for_user_q(user_id, domain, roles))
+  def get_for_user(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
+    if :superuser in roles and Plausible.Auth.is_super_admin?(domain) do
+      get_by_domain(domain)
+    else
+      user_id
+      |> get_for_user_q(domain, List.delete(roles, :superadmin))
+      |> Repo.one()
+    end
+  end
 
   defp get_for_user_q(user_id, domain, roles) do
     from(s in Site,

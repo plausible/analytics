@@ -14,12 +14,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
         %{"site_id" => _site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
-    site =
-      if Plausible.Auth.is_super_admin?(user_id) do
-        Sites.get_by_domain(domain)
-      else
-        Sites.get_for_user!(user_id, domain, [:owner, :admin])
-      end
+    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
 
     goals = Goals.for_site(site, preload_funnels?: true)
 
