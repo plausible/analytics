@@ -498,6 +498,8 @@ defmodule PlausibleWeb.AuthController do
       subscription: user.subscription,
       invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
       theme: user.theme || "system",
+      team_member_limit: Plausible.Billing.Quota.team_member_limit(user),
+      team_member_usage: Plausible.Billing.Quota.team_member_usage(user),
       site_limit: Plausible.Billing.Quota.site_limit(user),
       site_usage: Plausible.Billing.Quota.site_usage(user),
       total_pageview_limit: Plausible.Billing.Quota.monthly_pageview_limit(user.subscription),
