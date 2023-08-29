@@ -6,7 +6,8 @@
     "monthly_product_id":"558018",
     "yearly_cost":"$48",
     "yearly_product_id":"572810",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   },
   {
     "kind":"growth",
@@ -15,7 +16,8 @@
     "monthly_product_id":"558745",
     "yearly_cost":"$96",
     "yearly_product_id":"590752",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   },
   {
     "kind":"growth",
@@ -24,7 +26,8 @@
     "monthly_product_id":"597485",
     "yearly_cost":"$144",
     "yearly_product_id":"597486",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   },
   {
     "kind":"growth",
@@ -33,7 +36,8 @@
     "monthly_product_id":"597487",
     "yearly_cost":"$216",
     "yearly_product_id":"597488",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   },
   {
     "kind":"growth",
@@ -42,7 +46,8 @@
     "monthly_product_id":"597642",
     "yearly_cost":"$384",
     "yearly_product_id":"597643",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   },
   {
     "kind":"growth",
@@ -51,7 +56,8 @@
     "monthly_product_id":"597309",
     "yearly_cost":"$552",
     "yearly_product_id":"597310",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   },
   {
     "kind":"growth",
@@ -60,7 +66,8 @@
     "monthly_product_id":"597311",
     "yearly_cost":"$792",
     "yearly_product_id":"597312",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   },
   {
     "kind":"growth",
@@ -69,7 +76,8 @@
     "monthly_product_id":"642352",
     "yearly_cost":"$1200",
     "yearly_product_id":"642354",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   },
   {
     "kind":"growth",
@@ -78,7 +86,8 @@
     "monthly_product_id":"642355",
     "yearly_cost":"$1800",
     "yearly_product_id":"642356",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   },
   {
     "kind":"growth",
@@ -87,6 +96,7 @@
     "monthly_product_id":"650652",
     "yearly_cost":"$2640",
     "yearly_product_id":"650653",
-    "site_limit":50
+    "site_limit":50,
+    "team_member_limit":"unlimited"
   }
 ]
