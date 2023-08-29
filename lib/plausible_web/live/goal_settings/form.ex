@@ -20,12 +20,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       ) do
     form = to_form(Plausible.Goal.changeset(%Plausible.Goal{}))
 
-    site =
-      if Plausible.Auth.is_super_admin?(user_id) do
-        Plausible.Sites.get_by_domain(domain)
-      else
-        Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin])
-      end
+    site = Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
 
     initial_suggestions = suggest("", nil, site)
 
