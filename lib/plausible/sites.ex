@@ -45,6 +45,40 @@ defmodule Plausible.Sites do
     end
   end
 
+  @spec invite(Site.t(), Plausible.Auth.User.t(), Plausible.Auth.User.t(), atom()) ::
+          {:ok, Plausible.Auth.Invitation.t()}
+          | {:error, Ecto.Changeset.t()}
+          | {:error, :already_a_member}
+  def invite(site, inviter, invitee, role) do
+    get_invitation_email = fn invitation, invitee ->
+      if invitee.id,
+        do: PlausibleWeb.Email.existing_user_invitation(invitation),
+        else: PlausibleWeb.Email.new_user_invitation(invitation)
+    end
+
+    ensure_new_membership = fn site, invitee ->
+      if invitee.id && is_member?(invitee.id, site),
+        do: {:error, :already_a_member},
+        else: :ok
+    end
+
+    attrs = %{email: invitee.email, role: role, site_id: site.id, inviter_id: inviter.id}
+
+    with :ok <- ensure_new_membership.(site, invitee),
+         %Ecto.Changeset{} = changeset <- Plausible.Auth.Invitation.new(attrs),
+         {:ok, invitation} <- Repo.insert(changeset) do
+      invitation = Repo.preload(invitation, [:site, :inviter])
+
+      invitation
+      |> get_invitation_email.(invitee)
+      |> Plausible.Mailer.send()
+
+      {:ok, invitation}
+    else
+      {:error, cause} -> {:error, cause}
+    end
+  end
+
   @spec stats_start_date(Plausible.Site.t()) :: Date.t() | nil
   @doc """
   Returns the date of the first event of the given site, or `nil` if the site

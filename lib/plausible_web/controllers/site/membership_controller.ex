@@ -39,62 +39,39 @@ defmodule PlausibleWeb.Site.MembershipController do
   def invite_member(conn, %{"email" => email, "role" => role}) do
     site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
-    user = Plausible.Auth.find_user_by(email: email)
+    invitee = Plausible.Auth.find_user_by(email: email) || %Plausible.Auth.User{email: email}
 
-    if user && Sites.is_member?(user.id, site) do
-      msg = "Cannot send invite because #{user.email} is already a member of #{site.domain}"
+    case Sites.invite(site, conn.assigns.current_user, invitee, role) do
+      {:ok, invitation} ->
+        conn
+        |> put_flash(
+          :success,
+          "#{invitee.email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article("#{invitation.role}")}"
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
 
-      render(conn, "invite_member_form.html",
-        error: msg,
-        site: site,
-        layout: {PlausibleWeb.LayoutView, "focus.html"},
-        skip_plausible_tracking: true
-      )
-    else
-      case Repo.insert(
-             Invitation.new(%{
-               email: email,
-               role: role,
-               site_id: site.id,
-               inviter_id: conn.assigns[:current_user].id
-             })
-           ) do
-        {:ok, invitation} ->
-          invitation = Repo.preload(invitation, [:site, :inviter])
+      {:error, :already_a_member} ->
+        render(conn, "invite_member_form.html",
+          error:
+            "Cannot send invite because #{invitee.email} is already a member of #{site.domain}",
+          site: site,
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          skip_plausible_tracking: true
+        )
 
-          email_template =
-            if user do
-              PlausibleWeb.Email.existing_user_invitation(invitation)
-            else
-              PlausibleWeb.Email.new_user_invitation(invitation)
-            end
+      {:error, %Ecto.Changeset{} = changeset} ->
+        error_msg =
+          case changeset.errors[:invitation] do
+            {"already sent", _} ->
+              "This invitation has been already sent. To send again, remove it from pending invitations first."
 
-          Plausible.Mailer.send(email_template)
+            _ ->
+              "Something went wrong."
+          end
 
-          conn
-          |> put_flash(
-            :success,
-            "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article(role)}"
-          )
-          |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
-
-        {:error, changeset} ->
-          error_msg =
-            case changeset.errors[:invitation] do
-              {"already sent", _} ->
-                "This invitation has been already sent. To send again, remove it from pending invitations first."
-
-              _ ->
-                "Something went wrong."
-            end
-
-          conn
-          |> put_flash(
-            :error,
-            error_msg
-          )
-          |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
-      end
+        conn
+        |> put_flash(:error, error_msg)
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
