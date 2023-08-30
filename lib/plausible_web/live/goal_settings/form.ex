@@ -22,13 +22,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
     site = Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
 
-    initial_suggestions = suggest("", nil, site)
-
     {:ok,
      assign(socket,
        current_user: Repo.get(Plausible.Auth.User, user_id),
        form: form,
-       suggestions: initial_suggestions,
        domain: domain,
        rendered_by: pid,
        tabs: %{custom_events: true, pageviews: false},
@@ -58,7 +55,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           <.tabs tabs={@tabs} />
 
           <.custom_event_fields :if={@tabs.custom_events} f={f} />
-          <.pageview_fields :if={@tabs.pageviews} f={f} suggestions={@suggestions} site={@site} />
+          <.pageview_fields :if={@tabs.pageviews} f={f} site={@site} />
 
           <div class="py-4">
             <button type="submit" class="button text-base font-bold w-full">
@@ -72,7 +69,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   attr(:f, Phoenix.HTML.Form)
-  attr(:suggestions, :list)
   attr(:site, Plausible.Site)
 
   def pageview_fields(assigns) do
@@ -89,8 +85,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           "py-2"
         ]}
         module={ComboBox}
-        options={@suggestions}
-        suggest_fun={fn input, options -> suggest(input, options, @site) end}
+        suggest_fun={fn input, options -> suggest_page_paths(input, options, @site) end}
+        async={true}
         creatable
       />
 
@@ -180,8 +176,16 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
               id="currency_input"
               submit_name={@f[:currency].name}
               module={ComboBox}
-              options={Plausible.Goal.currency_options()}
-              suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
+              suggest_fun={
+                fn
+                  "", [] ->
+                    Plausible.Goal.currency_options()
+
+                  input, options ->
+                    ComboBox.StaticSearch.suggest(input, options, weight_threshold: 0.8)
+                end
+              }
+              async={true}
             />
           </div>
         </div>
@@ -259,7 +263,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     {:noreply, socket}
   end
 
-  def suggest(input, _options, site) do
+  def suggest_page_paths(input, _options, site) do
     query = Plausible.Stats.Query.from(site, %{})
 
     site
