@@ -16,6 +16,17 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   Any function can be supplied via `suggest_fun` attribute
   - see the provided `ComboBox.StaticSearch`.
+
+  In case the `suggest_fun` runs an operation that could be deferred,
+  the `async=true` attr calls it in a background Task and updates the
+  suggestions asynchronously.
+
+  Similarly, the initial `options` don't have to be provided up-front
+  if e.g. querying the database for suggestions at initial render is
+  undesirable. In such case, lack of `options` attr value combined
+  with `async=true` will call `suggest_fun.("", [])` asynchronously
+  - that special clause can be used to provide the initial set
+  of suggestions updated right after the initial render.
   """
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
@@ -23,26 +34,23 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   @default_suggestions_limit 15
 
   def update(assigns, socket) do
-    assigns =
-      if assigns[:suggestions] do
-        Map.put(assigns, :suggestions, Enum.take(assigns.suggestions, suggestions_limit(assigns)))
-      else
-        assigns
-      end
+    socket = assign(socket, assigns)
 
     socket =
-      socket
-      |> assign(assigns)
-      |> assign_new(:suggestions, fn ->
-        Enum.take(assigns.options, suggestions_limit(assigns))
-      end)
+      if connected?(socket) do
+        socket
+        |> assign_options()
+        |> assign_suggestions()
+      else
+        socket
+      end
 
     {:ok, socket}
   end
 
   attr(:placeholder, :string, default: "Select option or search by typing")
   attr(:id, :any, required: true)
-  attr(:options, :list, required: true)
+  attr(:options, :list, default: [])
   attr(:submit_name, :string, required: true)
   attr(:display_value, :string, default: "")
   attr(:submit_value, :string, default: "")
@@ -52,8 +60,14 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:required, :boolean, default: false)
   attr(:creatable, :boolean, default: false)
   attr(:errors, :list, default: [])
+  attr(:async, :boolean, default: false)
 
   def render(assigns) do
+    assigns =
+      assign_new(assigns, :suggestions, fn ->
+        Enum.take(assigns.options, suggestions_limit(assigns))
+      end)
+
     ~H"""
     <div
       id={"input-picker-main-#{@id}"}
@@ -79,6 +93,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             x-on:focus="open"
             phx-change="search"
             phx-target={@myself}
+            phx-throttle={300}
             value={@display_value}
             class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
             style="background-color: inherit;"
@@ -240,9 +255,10 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   def handle_event(
         "search",
         %{"_target" => [target]} = params,
-        %{assigns: %{suggest_fun: suggest_fun, options: options}} = socket
+        %{assigns: %{options: options}} = socket
       ) do
     input = params[target]
+
     input_len = input |> String.trim() |> String.length()
 
     socket =
@@ -254,7 +270,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
     suggestions =
       if input_len > 0 do
-        suggest_fun.(input, options)
+        run_suggest_fun(input, options, socket.assigns, :suggestions)
       else
         options
       end
@@ -296,5 +312,47 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       Enum.any?(assigns.suggestions, fn {suggestion, _} -> assigns.display_value == suggestion end)
 
     assigns.creatable && not empty_input? && not input_matches_suggestion?
+  end
+
+  defp assign_options(socket) do
+    assign_new(socket, :options, fn ->
+      run_suggest_fun("", [], socket.assigns, :options)
+    end)
+  end
+
+  defp assign_suggestions(socket) do
+    if socket.assigns[:suggestions] do
+      assign(
+        socket,
+        suggestions: Enum.take(socket.assigns.suggestions, suggestions_limit(socket.assigns))
+      )
+    else
+      socket
+    end
+  end
+
+  defp run_suggest_fun(input, options, %{id: id, suggest_fun: fun} = assigns, key_to_update) do
+    if assigns[:async] do
+      pid = self()
+
+      Task.start(fn ->
+        result = fun.(input, options)
+
+        send_update(
+          pid,
+          __MODULE__,
+          Keyword.new([
+            {:id, id},
+            {key_to_update, result}
+          ])
+        )
+      end)
+
+      # This prevents flashing the suggestions container
+      # before the update is received on a subsequent render
+      assigns[key_to_update] || []
+    else
+      fun.(input, options)
+    end
   end
 end
