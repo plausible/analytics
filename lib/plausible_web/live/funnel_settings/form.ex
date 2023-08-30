@@ -187,9 +187,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def submit_button(assigns) do
     ~H"""
-    <button id="save" type="submit" class="button mt-6 plausible-event-name=Create+Funnel">
-      Save
-    </button>
+    <button id="save" type="submit" class="button mt-6">Save</button>
     """
   end
 
