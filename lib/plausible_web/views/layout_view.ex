@@ -15,9 +15,9 @@ defmodule PlausibleWeb.LayoutView do
 
   def dogfood_script_url() do
     if Application.get_env(:plausible, :environment) in ["prod", "staging"] do
-      "#{plausible_url()}/js/script.manual.pageview-props.js"
+      "#{plausible_url()}/js/script.manual.pageview-props.tagged-events.js"
     else
-      "#{plausible_url()}/js/script.local.manual.pageview-props.js"
+      "#{plausible_url()}/js/script.local.manual.pageview-props.tagged-events.js"
     end
   end
 

@@ -10,7 +10,7 @@
 </div>
 
 <div class="w-full max-w-3xl mt-4 mx-auto flex flex-shrink-0">
-  <%= form_for @changeset, "/register", [class: "w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8", id: "register-form"], fn f -> %>
+  <%= form_for @changeset, "/register", [class: "w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8 plausible-event-name=Signup"], fn f -> %>
     <h2 class="text-xl font-black dark:text-gray-100">Enter your details</h2>
     <div class="my-4">
       <%= label f, :name, "Full name", class: "block text-sm font-medium text-gray-700 dark:text-gray-300" %>
