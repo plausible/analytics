@@ -123,6 +123,8 @@ defmodule Plausible.Billing.Plans do
     end)
   end
 
+  def get_subscription_plan(nil), do: nil
+
   def get_subscription_plan(subscription) do
     if subscription && subscription.paddle_plan_id == "free_10k" do
       :free_10k
