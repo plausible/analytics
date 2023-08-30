@@ -9,27 +9,26 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   def mount(
         _params,
-        %{"site_id" => _site_id, "domain" => domain, "current_user_id" => user_id},
+        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
     true = Plausible.Props.enabled_for?(%Plausible.Auth.User{id: user_id})
 
     site =
-      if Plausible.Auth.is_super_admin?(user_id) do
-        Plausible.Sites.get_by_domain(domain)
-      else
-        Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin])
-      end
+      if connected?(socket),
+        do: Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
+
+    props = (site && site.allowed_event_props) || []
 
     {:ok,
      assign(socket,
        site: site,
-       site_id: site.id,
+       site_id: site_id,
        domain: domain,
        current_user_id: user_id,
        add_prop?: false,
-       list: site.allowed_event_props || [],
-       props: site.allowed_event_props || [],
+       displayed_props: props,
+       all_props: props,
        filter_text: ""
      )}
   end
@@ -55,7 +54,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
       <.live_component
         module={PlausibleWeb.Live.PropsSettings.List}
         id="props-list"
-        props={@list}
+        props={@displayed_props}
         domain={@domain}
         filter_text={@filter_text}
       />
@@ -71,14 +70,14 @@ defmodule PlausibleWeb.Live.PropsSettings do
     new_list =
       StaticSearch.suggest(
         filter_text,
-        socket.assigns.props
+        socket.assigns.all_props
       )
 
-    {:noreply, assign(socket, list: new_list, filter_text: filter_text)}
+    {:noreply, assign(socket, displayed_props: new_list, filter_text: filter_text)}
   end
 
   def handle_event("reset-filter-text", _params, socket) do
-    {:noreply, assign(socket, filter_text: "", list: socket.assigns.props)}
+    {:noreply, assign(socket, filter_text: "", displayed_props: socket.assigns.all_props)}
   end
 
   def handle_event("disallow-prop", %{"prop" => prop}, socket) do
@@ -88,8 +87,8 @@ defmodule PlausibleWeb.Live.PropsSettings do
       socket
       |> put_flash(:success, "Property removed successfully")
       |> assign(
-        props: Enum.reject(socket.assigns.props, &(&1 == prop)),
-        list: Enum.reject(socket.assigns.list, &(&1 == prop)),
+        all_props: Enum.reject(socket.assigns.all_props, &(&1 == prop)),
+        displayed_props: Enum.reject(socket.assigns.displayed_props, &(&1 == prop)),
         site: site
       )
 
@@ -107,8 +106,8 @@ defmodule PlausibleWeb.Live.PropsSettings do
       |> assign(
         add_prop?: false,
         filter_text: "",
-        props: props,
-        list: props
+        all_props: props,
+        displayed_props: props
       )
       |> put_flash(:success, "Properties added successfully")
 
@@ -121,8 +120,8 @@ defmodule PlausibleWeb.Live.PropsSettings do
       |> assign(
         add_prop?: false,
         filter_text: "",
-        props: [prop | socket.assigns.props],
-        list: [prop | socket.assigns.props]
+        all_props: [prop | socket.assigns.all_props],
+        displayed_props: [prop | socket.assigns.all_props]
       )
       |> put_flash(:success, "Property added successfully")
 
