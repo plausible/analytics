@@ -45,22 +45,25 @@ defmodule Plausible.Sites do
     end
   end
 
-  @spec invite(Site.t(), Plausible.Auth.User.t(), Plausible.Auth.User.t(), atom()) ::
+  @spec invite(Site.t(), Plausible.Auth.User.t(), String.t(), atom()) ::
           {:ok, Plausible.Auth.Invitation.t()}
           | {:error, Ecto.Changeset.t()}
           | {:error, :already_a_member}
           | {:error, {:over_limit, non_neg_integer()}}
-  def invite(site, inviter, invitee, role) do
-    get_invitation_email = fn invitation, invitee ->
-      if invitee.id,
-        do: PlausibleWeb.Email.existing_user_invitation(invitation),
-        else: PlausibleWeb.Email.new_user_invitation(invitation)
+  def invite(site, inviter, invitee_email, role) do
+    send_invitation_email = fn invitation, invitee ->
+      invitation = Repo.preload(invitation, [:site, :inviter])
+
+      email =
+        if invitee,
+          do: PlausibleWeb.Email.existing_user_invitation(invitation),
+          else: PlausibleWeb.Email.new_user_invitation(invitation)
+
+      Plausible.Mailer.send(email)
     end
 
     ensure_new_membership = fn site, invitee ->
-      if invitee.id && is_member?(invitee.id, site),
-        do: {:error, :already_a_member},
-        else: :ok
+      if invitee && is_member?(invitee.id, site), do: {:error, :already_a_member}, else: :ok
     end
 
     check_limit = fn site ->
@@ -73,17 +76,14 @@ defmodule Plausible.Sites do
         else: {:error, {:over_limit, limit}}
     end
 
-    attrs = %{email: invitee.email, role: role, site_id: site.id, inviter_id: inviter.id}
+    attrs = %{email: invitee_email, role: role, site_id: site.id, inviter_id: inviter.id}
 
     with :ok <- check_limit.(site),
+         invitee <- Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- ensure_new_membership.(site, invitee),
          %Ecto.Changeset{} = changeset <- Plausible.Auth.Invitation.new(attrs),
          {:ok, invitation} <- Repo.insert(changeset) do
-      invitation
-      |> Repo.preload([:site, :inviter])
-      |> get_invitation_email.(invitee)
-      |> Plausible.Mailer.send()
-
+      send_invitation_email.(invitation, invitee)
       {:ok, invitation}
     else
       {:error, cause} -> {:error, cause}

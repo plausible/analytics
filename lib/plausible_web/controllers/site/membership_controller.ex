@@ -39,21 +39,19 @@ defmodule PlausibleWeb.Site.MembershipController do
   def invite_member(conn, %{"email" => email, "role" => role}) do
     site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
-    invitee = Plausible.Auth.find_user_by(email: email) || %Plausible.Auth.User{email: email}
 
-    case Sites.invite(site, conn.assigns.current_user, invitee, role) do
+    case Sites.invite(site, conn.assigns.current_user, email, role) do
       {:ok, invitation} ->
         conn
         |> put_flash(
           :success,
-          "#{invitee.email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article("#{invitation.role}")}"
+          "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article("#{invitation.role}")}"
         )
         |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
 
       {:error, :already_a_member} ->
         render(conn, "invite_member_form.html",
-          error:
-            "Cannot send invite because #{invitee.email} is already a member of #{site.domain}",
+          error: "Cannot send invite because #{email} is already a member of #{site.domain}",
           site: site,
           layout: {PlausibleWeb.LayoutView, "focus.html"},
           skip_plausible_tracking: true

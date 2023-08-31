@@ -75,7 +75,8 @@ defmodule Plausible.SitesTest do
       invitee = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
-      assert {:ok, %Plausible.Auth.Invitation{}} = Sites.invite(site, inviter, invitee, :viewer)
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               Sites.invite(site, inviter, invitee.email, :viewer)
     end
 
     test "returns validation errors" do
@@ -83,7 +84,7 @@ defmodule Plausible.SitesTest do
       invitee = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
-      assert {:error, changeset} = Sites.invite(site, inviter, invitee, :invalid_role)
+      assert {:error, changeset} = Sites.invite(site, inviter, invitee.email, :invalid_role)
       assert {"is invalid", _} = changeset.errors[:role]
     end
 
@@ -99,15 +100,16 @@ defmodule Plausible.SitesTest do
           ]
         )
 
-      assert {:error, :already_a_member} = Sites.invite(site, inviter, invitee, :viewer)
-      assert {:error, :already_a_member} = Sites.invite(site, inviter, inviter, :viewer)
+      assert {:error, :already_a_member} = Sites.invite(site, inviter, invitee.email, :viewer)
+      assert {:error, :already_a_member} = Sites.invite(site, inviter, inviter.email, :viewer)
     end
 
     test "sends invitation email for existing users" do
       [inviter, invitee] = insert_list(2, :user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
-      assert {:ok, %Plausible.Auth.Invitation{}} = Sites.invite(site, inviter, invitee, :viewer)
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               Sites.invite(site, inviter, invitee.email, :viewer)
 
       assert_email_delivered_with(
         to: [nil: invitee.email],
@@ -117,10 +119,10 @@ defmodule Plausible.SitesTest do
 
     test "sends invitation email for new users" do
       inviter = insert(:user)
-      invitee = %Plausible.Auth.User{email: "vini@plausible.test"}
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
-      assert {:ok, %Plausible.Auth.Invitation{}} = Sites.invite(site, inviter, invitee, :viewer)
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               Sites.invite(site, inviter, "vini@plausible.test", :viewer)
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
@@ -138,7 +140,7 @@ defmodule Plausible.SitesTest do
         ] ++ build_list(4, :site_membership)
 
       site = insert(:site, memberships: memberships)
-      assert {:error, {:over_limit, 5}} = Sites.invite(site, inviter, invitee, :viewer)
+      assert {:error, {:over_limit, 5}} = Sites.invite(site, inviter, invitee.email, :viewer)
     end
   end
 end
