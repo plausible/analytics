@@ -37,14 +37,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Signup",
                  "visitors" => 2,
                  "events" => 3,
-                 "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "Visit /register",
                  "visitors" => 2,
                  "events" => 2,
-                 "prop_names" => [],
                  "conversion_rate" => 33.3
                }
              ]
@@ -86,7 +84,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 1,
                  "events" => 2,
-                 "prop_names" => [],
                  "conversion_rate" => 33.3
                }
              ]
@@ -127,7 +124,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 2,
                  "events" => 2,
-                 "prop_names" => [],
                  "conversion_rate" => 66.7
                }
              ]
@@ -166,7 +162,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 2,
                  "events" => 3,
-                 "prop_names" => [],
                  "conversion_rate" => 66.7
                }
              ]
@@ -207,7 +202,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 2,
                  "events" => 3,
-                 "prop_names" => [],
                  "conversion_rate" => 66.7
                }
              ]
@@ -258,7 +252,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Payment",
                  "visitors" => 5,
                  "events" => 5,
-                 "prop_names" => [],
                  "conversion_rate" => 100.0,
                  "average_revenue" => %{"short" => "€166.7M", "long" => "€166,733,566.75"},
                  "total_revenue" => %{"short" => "€500.2M", "long" => "€500,200,700.25"}
@@ -293,7 +286,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
                  "conversion_rate" => 33.3,
                  "name" => "Payment",
-                 "prop_names" => [],
                  "events" => 1,
                  "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
                  "visitors" => 1
@@ -302,7 +294,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "average_revenue" => nil,
                  "conversion_rate" => 66.7,
                  "name" => "Signup",
-                 "prop_names" => [],
                  "events" => 2,
                  "total_revenue" => nil,
                  "visitors" => 2
@@ -311,7 +302,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "average_revenue" => nil,
                  "conversion_rate" => 33.3,
                  "name" => "Visit /checkout",
-                 "prop_names" => [],
                  "events" => 1,
                  "total_revenue" => nil,
                  "visitors" => 1
@@ -336,7 +326,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Signup",
                  "visitors" => 1,
                  "events" => 1,
-                 "prop_names" => [],
                  "conversion_rate" => 100.0
                }
              ]
@@ -372,191 +361,9 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Signup",
                  "visitors" => 2,
                  "events" => 2,
-                 "prop_names" => ["variant"],
                  "conversion_rate" => 33.3
                }
              ]
-    end
-
-    test "returns only the prop name for the property in filter", %{
-      conn: conn,
-      site: site
-    } do
-      populate_stats(site, [
-        build(:event,
-          name: "Payment",
-          "meta.key": ["logged_in"],
-          "meta.value": ["true"]
-        ),
-        build(:event,
-          name: "Payment",
-          "meta.key": ["logged_in"],
-          "meta.value": ["false"]
-        ),
-        build(:event,
-          name: "Payment",
-          "meta.key": ["author"],
-          "meta.value": ["John"]
-        )
-      ])
-
-      insert(:goal, %{site: site, event_name: "Payment"})
-
-      filters = Jason.encode!(%{goal: "Payment", props: %{"logged_in" => "true|(none)"}})
-      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "Payment",
-                 "visitors" => 2,
-                 "events" => 2,
-                 "prop_names" => ["logged_in"],
-                 "conversion_rate" => 66.7
-               }
-             ]
-    end
-
-    test "returns prop_names=[] when goal :member + property filter are applied at the same time",
-         %{
-           conn: conn,
-           site: site
-         } do
-      populate_stats(site, [
-        build(:event,
-          name: "Payment",
-          "meta.key": ["logged_in"],
-          "meta.value": ["true"]
-        ),
-        build(:event,
-          name: "Payment",
-          "meta.key": ["logged_in"],
-          "meta.value": ["false"]
-        ),
-        build(:event,
-          name: "Payment",
-          "meta.key": ["author"],
-          "meta.value": ["John"]
-        )
-      ])
-
-      insert(:goal, %{site: site, event_name: "Payment"})
-      insert(:goal, %{site: site, event_name: "Signup"})
-
-      filters = Jason.encode!(%{goal: "Payment|Signup", props: %{"logged_in" => "true|(none)"}})
-      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
-
-      assert [%{"prop_names" => []}] = json_response(conn, 200)
-    end
-
-    test "filters out garbage prop_names", %{conn: conn, site: site} do
-      {:ok, site} = Plausible.Props.allow(site, ["author"])
-
-      populate_stats(site, [
-        build(:event,
-          name: "Payment",
-          "meta.key": ["author"],
-          "meta.value": ["Valdis"]
-        ),
-        build(:event,
-          name: "Payment",
-          "meta.key": ["Garbage"],
-          "meta.value": ["321"]
-        ),
-        build(:event,
-          name: "Payment",
-          "meta.key": ["OnlyGarbage"],
-          "meta.value": ["123"]
-        )
-      ])
-
-      insert(:goal, %{site: site, event_name: "Payment"})
-
-      filters = Jason.encode!(%{goal: "Payment"})
-      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
-
-      assert [%{"prop_names" => ["author"]}] = json_response(conn, 200)
-    end
-
-    test "filters out garbage prop_names when session filters are applied",
-         %{
-           conn: conn,
-           site: site
-         } do
-      {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
-
-      populate_stats(site, [
-        build(:event,
-          name: "Payment",
-          pathname: "/",
-          "meta.key": ["author"],
-          "meta.value": ["Valdis"]
-        ),
-        build(:event,
-          name: "Payment",
-          pathname: "/ignore",
-          "meta.key": ["logged_in"],
-          "meta.value": ["true"]
-        ),
-        build(:event,
-          name: "Payment",
-          pathname: "/",
-          "meta.key": ["garbage"],
-          "meta.value": ["123"]
-        )
-      ])
-
-      insert(:goal, %{site: site, event_name: "Payment"})
-
-      filters = Jason.encode!(%{goal: "Payment", entry_page: "/"})
-      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
-
-      assert [%{"prop_names" => ["author"]}] = json_response(conn, 200)
-    end
-
-    test "does not filter any prop names by default (when site.allowed_event_props is nil)",
-         %{
-           conn: conn,
-           site: site
-         } do
-      populate_stats(site, [
-        build(:event,
-          name: "Payment",
-          "meta.key": ["Garbage"],
-          "meta.value": ["321"]
-        ),
-        build(:event,
-          name: "Payment",
-          "meta.key": ["OnlyGarbage"],
-          "meta.value": ["123"]
-        )
-      ])
-
-      insert(:goal, %{site: site, event_name: "Payment"})
-
-      filters = Jason.encode!(%{goal: "Payment"})
-      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
-
-      assert [%{"prop_names" => prop_names}] = json_response(conn, 200)
-      assert "Garbage" in prop_names
-      assert "OnlyGarbage" in prop_names
-    end
-
-    test "does not filter out special prop keys", %{conn: conn, site: site} do
-      {:ok, site} = Plausible.Props.allow(site, ["author"])
-
-      populate_stats(site, [
-        build(:event,
-          name: "Outbound Link: Click",
-          "meta.key": ["url", "path", "first_time_customer"],
-          "meta.value": ["http://link.test", "/abc", "true"]
-        )
-      ])
-
-      insert(:goal, %{site: site, event_name: "Outbound Link: Click"})
-
-      filters = Jason.encode!(%{goal: "Outbound Link: Click"})
-      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
-      assert [%{"prop_names" => ["url", "path"]}] = json_response(conn, 200)
     end
 
     test "can filter by multiple mixed goals", %{conn: conn, site: site} do
@@ -585,14 +392,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Signup",
                  "visitors" => 2,
                  "events" => 2,
-                 "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "Visit /register",
                  "visitors" => 1,
                  "events" => 1,
-                 "prop_names" => [],
                  "conversion_rate" => 16.7
                }
              ]
@@ -626,14 +431,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "CTA",
                  "visitors" => 1,
                  "events" => 1,
-                 "prop_names" => [],
                  "conversion_rate" => 16.7
                },
                %{
                  "name" => "Visit /register",
                  "visitors" => 1,
                  "events" => 1,
-                 "prop_names" => [],
                  "conversion_rate" => 16.7
                }
              ]
@@ -662,14 +465,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /blog/**",
                  "visitors" => 2,
                  "events" => 2,
-                 "prop_names" => [],
                  "conversion_rate" => 66.7
                },
                %{
                  "name" => "Visit /billing/upgrade",
                  "visitors" => 1,
                  "events" => 1,
-                 "prop_names" => [],
                  "conversion_rate" => 33.3
                }
              ]
@@ -702,14 +503,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /blog**",
                  "visitors" => 2,
                  "events" => 2,
-                 "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "Signup",
                  "visitors" => 1,
                  "events" => 1,
-                 "prop_names" => [],
                  "conversion_rate" => 16.7
                }
              ]
@@ -743,14 +542,12 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /ano**",
                  "visitors" => 2,
                  "events" => 2,
-                 "prop_names" => [],
                  "conversion_rate" => 33.3
                },
                %{
                  "name" => "CTA",
                  "visitors" => 1,
                  "events" => 1,
-                 "prop_names" => [],
                  "conversion_rate" => 16.7
                }
              ]
@@ -781,7 +578,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Visit /register",
                  "visitors" => 1,
                  "events" => 1,
-                 "prop_names" => [],
                  "conversion_rate" => 25
                }
              ]
@@ -814,7 +610,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "name" => "Signup",
                  "visitors" => 1,
                  "events" => 1,
-                 "prop_names" => ["variant"],
                  "conversion_rate" => 50
                }
              ]
@@ -882,94 +677,49 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "conversion_rate" => 100.0,
                  "visitors" => 8,
                  "name" => "Visit /**",
-                 "events" => 8,
-                 "prop_names" => []
+                 "events" => 8
                },
                %{
                  "conversion_rate" => 37.5,
                  "visitors" => 3,
                  "name" => "Visit /signup/**",
-                 "events" => 3,
-                 "prop_names" => []
+                 "events" => 3
                },
                %{
                  "conversion_rate" => 37.5,
                  "visitors" => 3,
                  "name" => "Visit /*",
-                 "events" => 3,
-                 "prop_names" => []
+                 "events" => 3
                },
                %{
                  "conversion_rate" => 25.0,
                  "visitors" => 2,
                  "name" => "Visit /billing**/success",
-                 "events" => 2,
-                 "prop_names" => []
+                 "events" => 2
                },
                %{
                  "conversion_rate" => 25.0,
                  "visitors" => 2,
                  "name" => "Visit /reg*",
-                 "events" => 2,
-                 "prop_names" => []
+                 "events" => 2
                },
                %{
                  "conversion_rate" => 12.5,
                  "visitors" => 1,
                  "name" => "Visit /signup/*",
-                 "events" => 1,
-                 "prop_names" => []
+                 "events" => 1
                },
                %{
                  "conversion_rate" => 12.5,
                  "visitors" => 1,
                  "name" => "Visit /billing*/success",
-                 "events" => 1,
-                 "prop_names" => []
+                 "events" => 1
                },
                %{
                  "conversion_rate" => 12.5,
                  "visitors" => 1,
                  "name" => "Visit /register",
-                 "events" => 1,
-                 "prop_names" => []
-               }
-             ]
-    end
-
-    test "returns prop names when filtered by glob goal", %{conn: conn, site: site} do
-      insert(:goal, %{site: site, page_path: "/register**"})
-
-      populate_stats(site, [
-        build(:pageview,
-          pathname: "/register",
-          "meta.key": ["logged_in"],
-          "meta.value": ["false"],
-          timestamp: ~N[2019-07-01 23:00:00]
-        ),
-        build(:pageview,
-          pathname: "/register-success",
-          "meta.key": ["logged_in", "author"],
-          "meta.value": ["true", "John"],
-          timestamp: ~N[2019-07-01 23:00:00]
-        )
-      ])
-
-      filters = Jason.encode!(%{goal: "Visit /register**"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day&date=2019-07-01&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "conversion_rate" => 100.0,
-                 "visitors" => 2,
-                 "name" => "Visit /register**",
-                 "events" => 2,
-                 "prop_names" => ["logged_in", "author"]
+                 "events" => 1
                }
              ]
     end

@@ -5,7 +5,21 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Add `referrers.csv` to CSV export
+- Add a new Properties section in the dashboard to break down by custom properties
+- Add `custom_props.csv` to CSV export (almost the same as the old `prop_breakdown.csv`, but has different column headers, and includes props for pageviews too, not only custom events)
+- Add `referrers.csv` to CSV export
 
+### Removed
+- Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
+- Removed the `prop-breakdown.csv` file from CSV export
+
+### Changed
+- Limit the number of Goal Conversions shown on the dashboard and render a "Details" link when there are more entries to show
+- Show Outbound Links / File Downloads / 404 Pages / Cloaked Links instead of Goal Conversions when filtering by the corresponding goal
+- Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
+
+
+>>>>>>> f7ed6464 (update changelog)
 ### Fixed
 - Only return `(none)` values in custom property breakdown for the first page (pagination) of results
 - Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)

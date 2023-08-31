@@ -5,7 +5,6 @@ import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
 import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
-import DeprecatedConversions from './deprecated-conversions'
 import Properties from './props'
 import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
@@ -147,11 +146,7 @@ export default function Behaviours(props) {
 
   function renderConversions() {
     if (site.hasGoals) {
-      if (site.flags.props) {
-        return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
-      } else {
-        return <DeprecatedConversions site={site} query={query} />
-      }
+      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
     }
     else if (adminAccess) {
       return (
@@ -245,7 +240,7 @@ export default function Behaviours(props) {
     if (site.conversionsEnabled) {
       enabledModes.push(CONVERSIONS)
     }
-    if (site.propsEnabled && site.flags.props) {
+    if (site.propsEnabled) {
       enabledModes.push(PROPS)
     }
     if (site.funnelsEnabled && !isRealtime() && site.flags.funnels) {

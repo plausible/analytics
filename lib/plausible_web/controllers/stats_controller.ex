@@ -145,18 +145,9 @@ defmodule PlausibleWeb.StatsController do
         'operating_systems.csv' => fn -> Api.StatsController.operating_systems(conn, params) end,
         'devices.csv' => fn -> Api.StatsController.screen_sizes(conn, params) end,
         'conversions.csv' => fn -> Api.StatsController.conversions(conn, params) end,
-        'prop_breakdown.csv' => fn -> Api.StatsController.all_props_breakdown(conn, params) end,
-        'referrers.csv' => fn -> Api.StatsController.referrers(conn, params) end
+        'referrers.csv' => fn -> Api.StatsController.referrers(conn, params) end,
+        'custom_props.csv' => fn -> Api.StatsController.all_custom_prop_values(conn, params) end
       }
-
-      csvs =
-        if FunWithFlags.enabled?(:props, for: conn.assigns[:current_user]) do
-          Map.put(csvs, 'custom_props.csv', fn ->
-            Api.StatsController.all_custom_prop_values(conn, params)
-          end)
-        else
-          csvs
-        end
 
       csv_values =
         Map.values(csvs)
@@ -346,8 +337,7 @@ defmodule PlausibleWeb.StatsController do
 
   defp get_flags(user) do
     %{
-      funnels: Plausible.Funnels.enabled_for?(user),
-      props: FunWithFlags.enabled?(:props, for: user)
+      funnels: Plausible.Funnels.enabled_for?(user)
     }
   end
 

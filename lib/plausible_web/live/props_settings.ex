@@ -12,8 +12,6 @@ defmodule PlausibleWeb.Live.PropsSettings do
         %{"site_id" => _site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
-    true = Plausible.Props.enabled_for?(%Plausible.Auth.User{id: user_id})
-
     site =
       if Plausible.Auth.is_super_admin?(user_id) do
         Plausible.Sites.get_by_domain(domain)
