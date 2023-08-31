@@ -103,16 +103,14 @@ defmodule Plausible.Billing.Quota do
   """
   def team_member_usage(user) do
     owned_sites_query =
-      from s in Plausible.Site,
-        inner_join: sm in assoc(s, :memberships),
+      from sm in Plausible.Site.Membership,
         where: sm.role == :owner and sm.user_id == ^user.id,
-        select: %{site_id: s.id}
+        select: %{site_id: sm.site_id}
 
     team_members_query =
       from os in subquery(owned_sites_query),
-        inner_join: s in Plausible.Site,
-        on: s.id == os.site_id,
-        inner_join: sm in assoc(s, :memberships),
+        inner_join: sm in Plausible.Site.Membership,
+        on: sm.site_id == os.site_id,
         inner_join: u in assoc(sm, :user),
         select: %{email: u.email}
 
