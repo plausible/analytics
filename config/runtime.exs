@@ -257,10 +257,19 @@ config :plausible, PlausibleWeb.Endpoint,
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
 
+db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
+
 if is_nil(db_socket_dir) do
   config :plausible, Plausible.Repo,
     url: db_url,
-    socket_options: maybe_ipv6
+    socket_options: maybe_ipv6,
+    ssl_opts: [
+      cacertfile: db_cacertfile,
+      verify: :verify_peer,
+      customize_hostname_check: [
+        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+      ]
+    ]
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
@@ -302,11 +311,20 @@ maybe_ch_ipv6 =
   get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
   |> String.to_existing_atom()
 
+ch_cacertfile = get_var_from_path_or_env(config_dir, "CLICKHOUSE_CACERTFILE")
+
 ch_transport_opts = [
   keepalive: true,
   show_econnreset: true,
   inet6: maybe_ch_ipv6
 ]
+
+ch_transport_opts =
+  if ch_cacertfile do
+    ch_transport_opts ++ [cacertfile: ch_cacertfile]
+  else
+    ch_transport_opts
+  end
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],
