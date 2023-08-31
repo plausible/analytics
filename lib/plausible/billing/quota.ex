@@ -119,7 +119,7 @@ defmodule Plausible.Billing.Quota do
         inner_join: os in subquery(owned_sites_query),
         on: i.site_id == os.site_id,
         select: %{email: i.email},
-        union_all: ^team_members_query
+        union: ^team_members_query
 
     query =
       from itm in subquery(invitations_and_team_members_query),
