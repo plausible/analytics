@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Live.PropsSettingsTest do
       conn = get(conn, "/#{site.domain}/settings/properties")
 
       resp = html_response(conn, 200)
-      assert resp =~ "Attach custom properties"
+      assert resp =~ "Attach Custom Properties"
 
       assert element_exists?(
                resp,

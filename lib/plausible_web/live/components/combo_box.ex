@@ -93,14 +93,14 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             x-on:focus="open"
             phx-change="search"
             phx-target={@myself}
-            phx-throttle={300}
+            phx-throttle={100}
             value={@display_value}
             class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
             style="background-color: inherit;"
             required={@required}
           />
 
-            <.dropdown_anchor id={@id} />
+          <.dropdown_anchor id={@id} />
 
           <input
             type="hidden"
