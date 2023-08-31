@@ -169,7 +169,7 @@ export default class SiteSwitcher extends React.Component {
               role="menuitem"
             >
               <Cog8ToothIcon className="mr-2 h-4 w-4 text-gray-500 dark:text-gray-200 group-hover:text-gray-600 dark:group-hover:text-gray-400 group-focus:text-gray-500 dark:group-focus:text-gray-200" />
-              Site settings
+              Site Settings
             </a>
           </div>
           <div className="border-t border-gray-200 dark:border-gray-500"></div>
@@ -217,7 +217,7 @@ export default class SiteSwitcher extends React.Component {
             className="flex px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100"
             role="menuitem"
           >
-            View all
+            View All
           </a>
         </React.Fragment>
       )
