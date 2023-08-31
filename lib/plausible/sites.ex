@@ -51,6 +51,12 @@ defmodule Plausible.Sites do
           | {:error, :already_a_member}
           | {:error, {:over_limit, non_neg_integer()}}
   def invite(site, inviter, invitee_email, role) do
+    Repo.transaction(fn ->
+      do_invite(site, inviter, invitee_email, role)
+    end)
+  end
+
+  defp do_invite(site, inviter, invitee_email, role) do
     send_invitation_email = fn invitation, invitee ->
       invitation = Repo.preload(invitation, [:site, :inviter])
 
@@ -84,9 +90,9 @@ defmodule Plausible.Sites do
          %Ecto.Changeset{} = changeset <- Plausible.Auth.Invitation.new(attrs),
          {:ok, invitation} <- Repo.insert(changeset) do
       send_invitation_email.(invitation, invitee)
-      {:ok, invitation}
+      invitation
     else
-      {:error, cause} -> {:error, cause}
+      {:error, cause} -> Repo.rollback(cause)
     end
   end
 
