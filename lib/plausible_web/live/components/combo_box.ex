@@ -195,6 +195,12 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       >
         No matches found. Try searching for something different.
       </div>
+      <div
+        :if={@suggestions == [] && @creatable && String.trim(@display_value) == ""}
+        class="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300"
+      >
+        Create an item by typing.
+      </div>
     </ul>
     """
   end
