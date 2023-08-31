@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           phx-submit="save-goal"
           phx-click-away="cancel-add-goal"
         >
-          <h2 class="text-xl font-black dark:text-gray-100">Add goal for <%= @domain %></h2>
+          <h2 class="text-xl font-black dark:text-gray-100">Add Goal for <%= @domain %></h2>
 
           <.tabs tabs={@tabs} />
 
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
           <div class="py-4">
             <button type="submit" class="button text-base font-bold w-full">
-              Add goal →
+              Add Goal →
             </button>
           </div>
         </.form>

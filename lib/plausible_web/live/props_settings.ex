@@ -14,21 +14,24 @@ defmodule PlausibleWeb.Live.PropsSettings do
       ) do
     true = Plausible.Props.enabled_for?(%Plausible.Auth.User{id: user_id})
 
-    site =
-      if connected?(socket),
-        do: Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
-
-    props = (site && site.allowed_event_props) || []
+    socket =
+      socket
+      |> assign_new(:site, fn ->
+        Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
+      end)
+      |> assign_new(:all_props, fn %{site: site} ->
+        site.allowed_event_props || []
+      end)
+      |> assign_new(:displayed_props, fn %{all_props: props} ->
+        props
+      end)
 
     {:ok,
      assign(socket,
-       site: site,
        site_id: site_id,
        domain: domain,
        current_user_id: user_id,
        add_prop?: false,
-       displayed_props: props,
-       all_props: props,
        filter_text: ""
      )}
   end

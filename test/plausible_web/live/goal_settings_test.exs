@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       lv = get_liveview(conn, site)
       html = lv |> element(~s/button[phx-click="add-goal"]/) |> render_click()
 
-      assert html =~ "Add goal for #{site.domain}"
+      assert html =~ "Add Goal for #{site.domain}"
 
       assert element_exists?(
                html,

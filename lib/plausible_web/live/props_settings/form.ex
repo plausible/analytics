@@ -18,16 +18,11 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
       ) do
     true = Plausible.Props.enabled_for?(%Plausible.Auth.User{id: user_id})
 
-    site =
-      if Plausible.Auth.is_super_admin?(user_id) do
-        Plausible.Sites.get_by_domain(domain)
-      else
-        Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin])
-      end
+    site = Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
 
     form = new_form(site)
 
-    initial_suggestions =
+    prop_key_options =
       site
       |> Plausible.Props.suggest_keys_to_allow()
       |> Enum.map(&{&1, &1})
@@ -35,7 +30,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     {:ok,
      assign(socket,
        form: form,
-       suggestions: initial_suggestions,
+       prop_key_options: prop_key_options,
        domain: domain,
        rendered_by: pid,
        site: site
@@ -59,7 +54,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
           phx-submit="allow-prop"
           phx-click-away="cancel-allow-prop"
         >
-          <h2 class="text-xl font-black dark:text-gray-100">Add property for <%= @domain %></h2>
+          <h2 class="text-xl font-black dark:text-gray-100">Add Property for <%= @domain %></h2>
 
           <div class="py-2">
             <.label for="prop_input">
@@ -73,7 +68,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
                 "py-2"
               ]}
               module={ComboBox}
-              options={@suggestions}
+              options={@prop_key_options}
               suggest_fun={&ComboBox.StaticSearch.suggest/2}
               creatable
             />
@@ -87,12 +82,12 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
 
           <div class="py-4">
             <button type="submit" class="button text-base font-bold w-full">
-              Add property →
+              Add Property →
             </button>
           </div>
 
           <button
-            :if={length(@suggestions) > 0}
+            :if={length(@prop_key_options) > 0}
             title="Use this to add any existing properties from your past events into your settings. This allows you to set up properties without having to manually enter each item."
             class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
             phx-click="allow-existing-props"

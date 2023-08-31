@@ -56,6 +56,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
               <%= prop %>
             </span>
             <button
+              id={"disallow-prop-#{prop}"}
               data-confirm={delete_confirmation_text(prop)}
               phx-click="disallow-prop"
               phx-value-prop={prop}
@@ -69,7 +70,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
       <% else %>
         <p class="text-sm text-gray-800 dark:text-gray-200 mt-12 mb-8 text-center">
           <span :if={String.trim(@filter_text) != ""}>
-            No propetires found for this site. Please refine or
+            No properties found for this site. Please refine or
             <a
               class="text-indigo-500 cursor-pointer underline"
               phx-click="reset-filter-text"
