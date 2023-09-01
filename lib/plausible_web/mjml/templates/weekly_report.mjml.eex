@@ -173,7 +173,7 @@
     <mj-section padding="0">
       <mj-column>
         <mj-text mj-class="text-sm" padding="0 25px 25px 25px">
-          Don't want to receive these e-mails? <a href="<%= @unsubscribe_link %>">Click here</a> to unsusbscribe.
+          Don't want to receive these e-mails? <a href="<%= @unsubscribe_link %>">Click here</a> to unsubscribe.
         </mj-text>
       </mj-column>
     </mj-section>
