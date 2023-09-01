@@ -217,7 +217,7 @@ defmodule Plausible.Billing.Plans do
   def suggest(user, usage_during_cycle) do
     cond do
       usage_during_cycle > @enterprise_level_usage -> :enterprise
-      Plausible.Auth.enterprise?(user) -> :enterprise
+      Plausible.Auth.enterprise_configured?(user) -> :enterprise
       true -> suggest_by_usage(user, usage_during_cycle)
     end
   end
