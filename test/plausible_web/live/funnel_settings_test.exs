@@ -165,12 +165,12 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       assert lv = find_live_child(lv, "funnels-form")
 
       lv
-      |> element("li#dropdown-step-1-option-0 a")
+      |> element("li#dropdown-step-1-option-1 a")
       |> render_click()
 
       doc =
         lv
-        |> element("li#dropdown-step-2-option-0 a")
+        |> element("li#dropdown-step-2-option-1 a")
         |> render_click()
 
       save_inactive = ~s/form button#save.cursor-not-allowed/
@@ -207,11 +207,11 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
       assert lv = find_live_child(lv, "funnels-form")
 
-      lv |> element("li#dropdown-step-1-option-0 a") |> render_click()
+      lv |> element("li#dropdown-step-1-option-1 a") |> render_click()
 
       :timer.sleep(1001)
 
-      lv |> element("li#dropdown-step-2-option-0 a") |> render_click()
+      lv |> element("li#dropdown-step-2-option-1 a") |> render_click()
 
       doc = lv |> element("#step-eval-0") |> render()
       assert text_of_element(doc, ~s/#step-eval-0/) =~ "Entering Visitors: 0"
