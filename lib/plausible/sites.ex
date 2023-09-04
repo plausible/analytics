@@ -149,7 +149,7 @@ defmodule Plausible.Sites do
   end
 
   def get_for_user!(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
-    if :superuser in roles and Plausible.Auth.is_super_admin?(domain) do
+    if :superadmin in roles and Plausible.Auth.is_super_admin?(domain) do
       get_by_domain!(domain)
     else
       user_id
@@ -159,7 +159,7 @@ defmodule Plausible.Sites do
   end
 
   def get_for_user(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
-    if :superuser in roles and Plausible.Auth.is_super_admin?(domain) do
+    if :superadmin in roles and Plausible.Auth.is_super_admin?(domain) do
       get_by_domain(domain)
     else
       user_id
