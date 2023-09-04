@@ -12,6 +12,12 @@ defmodule Plausible.GoalsTest do
     assert goal.event_name == "some event name"
   end
 
+  test "create/2 creates pageview goal and adds a leading slash if missing" do
+    site = insert(:site)
+    {:ok, goal} = Goals.create(site, %{"page_path" => "foo bar"})
+    assert goal.page_path == "/foo bar"
+  end
+
   test "create/2 validates goal name is at most 120 chars" do
     site = insert(:site)
     assert {:error, changeset} = Goals.create(site, %{"event_name" => String.duplicate("a", 130)})
