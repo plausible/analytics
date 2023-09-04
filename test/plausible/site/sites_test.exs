@@ -81,11 +81,10 @@ defmodule Plausible.SitesTest do
 
     test "returns validation errors" do
       inviter = insert(:user)
-      invitee = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
-      assert {:error, changeset} = Sites.invite(site, inviter, invitee.email, :invalid_role)
-      assert {"is invalid", _} = changeset.errors[:role]
+      assert {:error, changeset} = Sites.invite(site, inviter, "", :viewer)
+      assert {"can't be blank", _} = changeset.errors[:email]
     end
 
     test "returns error when user is already a member" do
@@ -154,6 +153,49 @@ defmodule Plausible.SitesTest do
         to: [nil: "vini@plausible.test"],
         subject: "[Plausible Analytics] Request to transfer ownership of #{site.domain}"
       )
+    end
+
+    test "only allows owners to transfer ownership" do
+      inviter = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: build(:user), role: :owner),
+            build(:site_membership, user: inviter, role: :admin)
+          ]
+        )
+
+      assert {:error, :forbidden} = Sites.invite(site, inviter, "vini@plausible.test", :owner)
+    end
+
+    test "does not allow viewers to invite users" do
+      inviter = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: build(:user), role: :owner),
+            build(:site_membership, user: inviter, role: :viewer)
+          ]
+        )
+
+      assert {:error, :forbidden} = Sites.invite(site, inviter, "vini@plausible.test", :viewer)
+    end
+
+    test "allows admins to invite other admins" do
+      inviter = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: build(:user), role: :owner),
+            build(:site_membership, user: inviter, role: :admin)
+          ]
+        )
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               Sites.invite(site, inviter, "vini@plausible.test", :admin)
     end
   end
 

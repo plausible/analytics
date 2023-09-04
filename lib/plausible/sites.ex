@@ -53,6 +53,7 @@ defmodule Plausible.Sites do
           | {:error, Ecto.Changeset.t()}
           | {:error, :already_a_member}
           | {:error, {:over_limit, non_neg_integer()}}
+          | {:error, :forbidden}
   def invite(site, inviter, invitee_email, role) do
     Repo.transaction(fn ->
       do_invite(site, inviter, invitee_email, role)
@@ -62,7 +63,8 @@ defmodule Plausible.Sites do
   defp do_invite(site, inviter, invitee_email, role) do
     attrs = %{email: invitee_email, role: role, site_id: site.id, inviter_id: inviter.id}
 
-    with :ok <- check_team_member_limit(site, role),
+    with :ok <- check_invitation_permissions(site, inviter, role),
+         :ok <- check_team_member_limit(site, role),
          invitee <- Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- ensure_new_membership(site, invitee, role),
          %Ecto.Changeset{} = changeset <- Plausible.Auth.Invitation.new(attrs),
@@ -72,6 +74,16 @@ defmodule Plausible.Sites do
     else
       {:error, cause} -> Repo.rollback(cause)
     end
+  end
+
+  defp check_invitation_permissions(site, inviter, requested_role) do
+    required_roles = if requested_role == :owner, do: [:owner], else: [:admin, :owner]
+
+    membership_query =
+      from m in Plausible.Site.Membership,
+        where: m.user_id == ^inviter.id and m.site_id == ^site.id and m.role in ^required_roles
+
+    if Repo.exists?(membership_query), do: :ok, else: {:error, :forbidden}
   end
 
   defp send_invitation_email(invitation, invitee) do
