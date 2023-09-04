@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.30.3">
+    <meta name="project" content="Plausible v0.0.1">
+
+    <title>PlausibleWeb.Live.Components.Form — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
+    <script src="dist/sidebar_items-E06F7545.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-CGDDOCMI.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<section class="sidebar">
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button" aria-label="Submit Search">
+      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
+    </button>
+    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
+      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
+    </button>
+    <label class="search-label">
+      <p class="sr-only">Search</p>
+      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    </label>
+  </form>
+
+  <div class="autocomplete">
+    <div class="autocomplete-results">
+    </div>
+  </div>
+
+  <div class="sidebar-header">
+
+      <a href="readme.html">
+        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
+      </a>
+
+    <div class="sidebar-projectDetails">
+      <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+      </a>
+      <div class="sidebar-projectVersion" translate="no">
+        v0.0.1
+      </div>
+    </div>
+    <ul class="sidebar-listNav">
+      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+
+        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+
+
+        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+
+    </ul>
+  </div>
+
+  <div class="gradient"></div>
+  <ul id="full-list"></ul>
+</section>
+
+<section class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+<h1>
+<button class="icon-action display-settings">
+  <i class="ri-settings-3-line"></i>
+  <span class="sr-only">Settings</span>
+</button>
+
+
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L1" title="View Source" class="icon-action" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">PlausibleWeb.Live.Components.Form</span> 
+  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>Generic components stolen from mix phx.new templates</p>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+        Summary
+      </a>
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#error/1" translate="no">error(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Generates a generic error message.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#input/1" translate="no">input(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Renders an input with label and error messages.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#label/1" translate="no">label(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Renders a label.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#translate_error/1" translate="no">translate_error(arg)</a>
+
+      </div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+Functions
+      </a>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="error/1">
+
+  <div class="detail-header">
+    <a href="#error/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">error(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Generates a generic error message.</p><h2 id="error/1-slots" class="section-heading">
+  <a href="#error/1-slots">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Slots
+  </a>
+</h2>
+<ul><li><code class="inline">inner_block</code> (required)</li></ul>
+  </section>
+</section>
+<section class="detail" id="input/1">
+
+  <div class="detail-header">
+    <a href="#input/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">input(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Renders an input with label and error messages.</p><p>A <a href="https://hexdocs.pm/phoenix_html/3.3.1/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a> may be passed as argument,
+which is used to retrieve the input name, id, and values.
+Otherwise all attributes may be passed explicitly.</p><h2 id="input/1-examples" class="section-heading">
+  <a href="#input/1-examples">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Examples
+  </a>
+</h2>
+<p>&lt;.input field={@form[:email]} type=&quot;email&quot; /&gt;
+&lt;.input name=&quot;my-input&quot; errors={[&quot;oh no!&quot;]} /&gt;</p><h2 id="input/1-attributes" class="section-heading">
+  <a href="#input/1-attributes">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Attributes
+  </a>
+</h2>
+<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">name</code> (<code class="inline">:any</code>)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">value</code> (<code class="inline">:any</code>)</li><li><code class="inline">type</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;text&quot;</code>.</li><li><code class="inline">field</code> (<a href="https://hexdocs.pm/phoenix_html/3.3.1/Phoenix.HTML.FormField.html"><code class="inline">Phoenix.HTML.FormField</code></a>) - a form field struct retrieved from the form, for example: @form[:email].</li><li><code class="inline">errors</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">checked</code> (<code class="inline">:boolean</code>) - the checked flag for checkbox inputs.</li><li><code class="inline">prompt</code> (<code class="inline">:string</code>) - the prompt for select inputs. Defaults to <code class="inline">nil</code>.</li><li><code class="inline">options</code> (<code class="inline">:list</code>) - the options to pass to Phoenix.HTML.Form.options_for_select/2.</li><li><code class="inline">multiple</code> (<code class="inline">:boolean</code>) - the multiple flag for select inputs. Defaults to <code class="inline">false</code>.</li><li>Global attributes are accepted.</li></ul><h2 id="input/1-slots" class="section-heading">
+  <a href="#input/1-slots">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Slots
+  </a>
+</h2>
+<ul><li><code class="inline">inner_block</code></li></ul>
+  </section>
+</section>
+<section class="detail" id="label/1">
+
+  <div class="detail-header">
+    <a href="#label/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">label(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Renders a label.</p><h2 id="label/1-attributes" class="section-heading">
+  <a href="#label/1-attributes">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Attributes
+  </a>
+</h2>
+<ul><li><code class="inline">for</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li></ul><h2 id="label/1-slots" class="section-heading">
+  <a href="#label/1-slots">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Slots
+  </a>
+</h2>
+<ul><li><code class="inline">inner_block</code> (required)</li></ul>
+  </section>
+</section>
+<section class="detail" id="translate_error/1">
+
+  <div class="detail-header">
+    <a href="#translate_error/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">translate_error(arg)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/form.ex#L105" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Plausible.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true})</script>
+
+  </body>
+</html>
