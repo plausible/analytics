@@ -164,6 +164,16 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       class="w-full dropdown z-50 absolute mt-1 max-h-60 overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm dark:bg-gray-900"
     >
       <.option
+        :if={display_creatable_option?(assigns)}
+        idx={length(@suggestions)}
+        submit_value={@display_value}
+        display_value={@display_value}
+        target={@target}
+        ref={@ref}
+        creatable
+      />
+
+      <.option
         :for={
           {{submit_value, display_value}, idx} <-
             Enum.with_index(
@@ -177,16 +187,6 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         display_value={display_value}
         target={@target}
         ref={@ref}
-      />
-
-      <.option
-        :if={display_creatable_option?(assigns)}
-        idx={length(@suggestions)}
-        submit_value={@display_value}
-        display_value={@display_value}
-        target={@target}
-        ref={@ref}
-        creatable
       />
 
       <div
