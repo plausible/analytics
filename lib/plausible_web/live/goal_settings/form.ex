@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def render(assigns) do
     ~H"""
     <div
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"
       phx-window-keydown="cancel-add-goal"
       phx-key="Escape"
     >
