@@ -49,6 +49,57 @@ defmodule Plausible.Sites do
     end
   end
 
+  @spec invite(Site.t(), Plausible.Auth.User.t(), String.t(), atom()) ::
+          {:ok, Plausible.Auth.Invitation.t()}
+          | {:error, Ecto.Changeset.t()}
+          | {:error, :already_a_member}
+          | {:error, {:over_limit, non_neg_integer()}}
+  def invite(site, inviter, invitee_email, role) do
+    Repo.transaction(fn ->
+      do_invite(site, inviter, invitee_email, role)
+    end)
+  end
+
+  defp do_invite(site, inviter, invitee_email, role) do
+    send_invitation_email = fn invitation, invitee ->
+      invitation = Repo.preload(invitation, [:site, :inviter])
+
+      email =
+        if invitee,
+          do: PlausibleWeb.Email.existing_user_invitation(invitation),
+          else: PlausibleWeb.Email.new_user_invitation(invitation)
+
+      Plausible.Mailer.send(email)
+    end
+
+    ensure_new_membership = fn site, invitee ->
+      if invitee && is_member?(invitee.id, site), do: {:error, :already_a_member}, else: :ok
+    end
+
+    check_limit = fn site ->
+      owner = owner_for(site)
+      usage = Plausible.Billing.Quota.team_member_usage(owner)
+      limit = Plausible.Billing.Quota.team_member_limit(owner)
+
+      if Plausible.Billing.Quota.within_limit?(usage, limit),
+        do: :ok,
+        else: {:error, {:over_limit, limit}}
+    end
+
+    attrs = %{email: invitee_email, role: role, site_id: site.id, inviter_id: inviter.id}
+
+    with :ok <- check_limit.(site),
+         invitee <- Plausible.Auth.find_user_by(email: invitee_email),
+         :ok <- ensure_new_membership.(site, invitee),
+         %Ecto.Changeset{} = changeset <- Plausible.Auth.Invitation.new(attrs),
+         {:ok, invitation} <- Repo.insert(changeset) do
+      send_invitation_email.(invitation, invitee)
+      invitation
+    else
+      {:error, cause} -> Repo.rollback(cause)
+    end
+  end
+
   @spec stats_start_date(Plausible.Site.t()) :: Date.t() | nil
   @doc """
   Returns the date of the first event of the given site, or `nil` if the site
