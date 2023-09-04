@@ -64,9 +64,9 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   test "saving from suggestion adds to the list", %{conn: conn, site: site} do
     {:ok, lv, _doc} = get_liveview(conn, site)
 
-    doc = select_and_submit(lv, 0)
+    doc = select_and_submit(lv, 1)
 
-    assert text_of_element(doc, ~s/ul#allowed-props li#prop-1 span/) == "amount"
+    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "amount"
     refute doc =~ "No properties configured for this site yet"
   end
 
@@ -138,7 +138,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
 
     assert "Are you sure you want to remove property 'my-prop'? This will just affect the UI, all of your analytics data will stay intact." ==
              doc
-             |> Floki.find(~s/ul#allowed-props li#prop-1 button[phx-click="disallow"]/)
+             |> Floki.find(~s/ul#allowed-props li#prop-0 button[phx-click="disallow"]/)
              |> text_of_attr("data-confirm")
   end
 
@@ -169,9 +169,9 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   } do
     {:ok, lv, _doc} = get_liveview(conn, site)
 
-    _doc = select_and_submit(lv, 0)
-    _doc = select_and_submit(lv, 0)
-    doc = select_and_submit(lv, 0)
+    _doc = select_and_submit(lv, 1)
+    _doc = select_and_submit(lv, 1)
+    doc = select_and_submit(lv, 1)
 
     refute element_exists?(doc, ~s/button[phx-click="allow-existing-props"]/)
   end
