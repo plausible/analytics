@@ -35,13 +35,13 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   test "renders dropdown with suggestions", %{conn: conn, site: site} do
     {:ok, _lv, doc} = get_liveview(conn, site)
 
-    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-0/) ==
+    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-1/) ==
              "amount"
 
-    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-1/) ==
+    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-2/) ==
              "logged_in"
 
-    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-2/) ==
+    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-3/) ==
              "is_customer"
   end
 
@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
 
     doc =
       lv
-      |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-0 a/)
+      |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-1 a/)
       |> render_click()
 
     assert element_exists?(doc, ~s/input[type="hidden"][value="amount"]/)
@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
 
     doc = select_and_submit(lv, 0)
 
-    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "amount"
+    assert text_of_element(doc, ~s/ul#allowed-props li#prop-1 span/) == "amount"
     refute doc =~ "No properties configured for this site yet"
   end
 
@@ -138,7 +138,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
 
     assert "Are you sure you want to remove property 'my-prop'? This will just affect the UI, all of your analytics data will stay intact." ==
              doc
-             |> Floki.find(~s/ul#allowed-props li#prop-0 button[phx-click="disallow"]/)
+             |> Floki.find(~s/ul#allowed-props li#prop-1 button[phx-click="disallow"]/)
              |> text_of_attr("data-confirm")
   end
 
