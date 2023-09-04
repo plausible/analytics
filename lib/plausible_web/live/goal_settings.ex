@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
         %{"site_id" => _site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
-    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
+    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
 
     goals = Goals.for_site(site, preload_funnels?: true)
 

@@ -20,7 +20,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       ) do
     form = to_form(Plausible.Goal.changeset(%Plausible.Goal{}))
 
-    site = Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
+    site = Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
 
     {:ok,
      assign(socket,
