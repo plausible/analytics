@@ -118,14 +118,18 @@ defmodule Plausible.Goals do
   Otherwise, for associated funnel(s) consisting of minimum number steps only,
   funnel record(s) are removed completely along with the targeted goal.
   """
-  def delete(id, site) do
+  def delete(id, %Plausible.Site{id: site_id}) do
+    delete(id, site_id)
+  end
+
+  def delete(id, site_id) do
     result =
       Multi.new()
       |> Multi.one(
         :goal,
         from(g in Goal,
           where: g.id == ^id,
-          where: g.site_id == ^site.id,
+          where: g.site_id == ^site_id,
           preload: [funnels: :steps]
         )
       )
@@ -162,7 +166,7 @@ defmodule Plausible.Goals do
         fn _ ->
           from g in Goal,
             where: g.id == ^id,
-            where: g.site_id == ^site.id
+            where: g.site_id == ^site_id
         end
       )
       |> Repo.transaction()

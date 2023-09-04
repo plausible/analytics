@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
             submit_name="prop"
             class="flex-1"
             module={ComboBox}
-            suggest_mod={ComboBox.StaticSearch}
+            suggest_fun={&ComboBox.StaticSearch.suggest/2}
             options={@suggestions}
             required
             creatable

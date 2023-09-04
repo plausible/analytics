@@ -121,53 +121,6 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def new_goal(conn, _params) do
-    site = conn.assigns[:site]
-    changeset = Plausible.Goal.changeset(%Plausible.Goal{})
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("new_goal.html",
-      site: site,
-      changeset: changeset,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
-  end
-
-  def create_goal(conn, %{"goal" => goal}) do
-    site = conn.assigns[:site]
-
-    case Plausible.Goals.create(site, goal) do
-      {:ok, _} ->
-        conn
-        |> put_flash(:success, "Goal created successfully")
-        |> redirect(to: Routes.site_path(conn, :settings_goals, site.domain))
-
-      {:error, changeset} ->
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("new_goal.html",
-          site: site,
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-    end
-  end
-
-  def delete_goal(conn, %{"id" => goal_id}) do
-    case Plausible.Goals.delete(goal_id, conn.assigns[:site]) do
-      :ok ->
-        conn
-        |> put_flash(:success, "Goal deleted successfully")
-        |> redirect(to: Routes.site_path(conn, :settings_goals, conn.assigns[:site].domain))
-
-      {:error, :not_found} ->
-        conn
-        |> put_flash(:error, "Could not find goal")
-        |> redirect(to: Routes.site_path(conn, :settings_goals, conn.assigns[:site].domain))
-    end
-  end
-
   @feature_titles %{
     funnels_enabled: "Funnels",
     conversions_enabled: "Goals",
@@ -270,6 +223,7 @@ defmodule PlausibleWeb.SiteController do
     |> render("settings_goals.html",
       site: site,
       goals: goals,
+      connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end

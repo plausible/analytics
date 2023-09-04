@@ -16,12 +16,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       ) do
     true = Plausible.Funnels.enabled_for?("user:#{user_id}")
 
-    site =
-      if Plausible.Auth.is_super_admin?(user_id) do
-        Sites.get_by_domain(domain)
-      else
-        Sites.get_for_user!(user_id, domain, [:owner, :admin])
-      end
+    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
 
     funnels = Funnels.list(site)
     goal_count = Goals.count(site)
@@ -67,7 +62,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           <PlausibleWeb.Components.Generic.notice class="mt-4" title="Not enough goals">
             You need to define at least two goals to create a funnel. Go ahead and <%= link(
               "add goals",
-              to: PlausibleWeb.Router.Helpers.site_path(@socket, :new_goal, @domain),
+              to: PlausibleWeb.Router.Helpers.site_path(@socket, :settings_goals, @domain),
               class: "text-indigo-500 w-full text-center"
             ) %> to proceed.
           </PlausibleWeb.Components.Generic.notice>

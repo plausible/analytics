@@ -12,12 +12,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   alias Plausible.{Sites, Goals}
 
   def mount(_params, %{"current_user_id" => user_id, "domain" => domain}, socket) do
-    site =
-      if Plausible.Auth.is_super_admin?(user_id) do
-        Sites.get_by_domain(domain)
-      else
-        Sites.get_for_user!(user_id, domain, [:owner, :admin])
-      end
+    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
 
     # We'll have the options trimmed to only the data we care about, to keep
     # it minimal at the socket assigns, yet, we want to retain specific %Goal{}
@@ -69,7 +64,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                 <.live_component
                   submit_name="funnel[steps][][goal_id]"
                   module={PlausibleWeb.Live.Components.ComboBox}
-                  suggest_mod={PlausibleWeb.Live.Components.ComboBox.StaticSearch}
+                  suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
                   id={"step-#{step_idx}"}
                   options={reject_alrady_selected("step-#{step_idx}", @goals, @selections_made)}
                 />

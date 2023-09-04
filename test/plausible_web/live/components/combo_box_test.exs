@@ -154,7 +154,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
         <.live_component
           submit_name="some_submit_name"
           module={PlausibleWeb.Live.Components.ComboBox}
-          suggest_mod={__MODULE__.SampleSuggest}
+          suggest_fun={&SampleSuggest.suggest/2}
           id="test-component"
           options={for i <- 1..20, do: {i, "Option #{i}"}}
           suggestions_limit={7}
@@ -210,7 +210,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
         <.live_component
           submit_name="some_submit_name"
           module={PlausibleWeb.Live.Components.ComboBox}
-          suggest_mod={ComboBox.StaticSearch}
+          suggest_fun={&ComboBox.StaticSearch.suggest/2}
           id="test-creatable-component"
           options={for i <- 1..20, do: {i, "Option #{i}"}}
           creatable
@@ -274,6 +274,70 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
     end
   end
 
+  describe "async suggestions" do
+    defmodule SampleViewAsync do
+      use Phoenix.LiveView
+
+      defmodule SampleSuggest do
+        def suggest("", []) do
+          :timer.sleep(500)
+          [{1, "One"}, {2, "Two"}, {3, "Three"}]
+        end
+
+        def suggest("Echo me", _options) do
+          :timer.sleep(500)
+          [{1, "Echo me"}]
+        end
+      end
+
+      def render(assigns) do
+        ~H"""
+        <.live_component
+          submit_name="some_submit_name"
+          module={PlausibleWeb.Live.Components.ComboBox}
+          suggest_fun={&SampleSuggest.suggest/2}
+          id="test-component"
+          async={true}
+          suggestions_limit={7}
+        />
+        """
+      end
+    end
+
+    test "options are empty at immediate render" do
+      doc =
+        render_component(
+          ComboBox,
+          submit_name: "test-submit-name",
+          id: "test-component",
+          suggest_fun: &ComboBox.StaticSearch.suggest/2,
+          async: true
+        )
+
+      refute element_exists?(doc, "#dropdown-test-component-option-0")
+    end
+
+    test "pre-fills the suggestions asynchronously", %{conn: conn} do
+      {:ok, lv, doc} = live_isolated(conn, SampleViewAsync, session: %{})
+      refute element_exists?(doc, "#dropdown-test-component-option-0")
+      :timer.sleep(1000)
+      doc = render(lv)
+      assert text_of_element(doc, "#dropdown-test-component-option-0") == "One"
+      assert text_of_element(doc, "#dropdown-test-component-option-1") == "Two"
+      assert text_of_element(doc, "#dropdown-test-component-option-2") == "Three"
+    end
+
+    test "uses the suggestions function asynchronously", %{conn: conn} do
+      {:ok, lv, _html} = live_isolated(conn, SampleViewAsync, session: %{})
+      doc = type_into_combo(lv, "test-component", "Echo me")
+      refute element_exists?(doc, "#dropdown-test-component-option-0")
+      :timer.sleep(1000)
+      doc = render(lv)
+      assert element_exists?(doc, "#dropdown-test-component-option-0")
+      assert text_of_element(doc, "#dropdown-test-component-option-0") == "Echo me"
+    end
+  end
+
   defp render_sample_component(options, extra_opts \\ []) do
     render_component(
       ComboBox,
@@ -282,7 +346,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
           options: options,
           submit_name: "test-submit-name",
           id: "test-component",
-          suggest_mod: ComboBox.StaticSearch
+          suggest_fun: &ComboBox.StaticSearch.suggest/2
         ],
         extra_opts
       )

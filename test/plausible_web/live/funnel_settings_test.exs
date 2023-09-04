@@ -51,12 +51,12 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       doc = conn |> html_response(200)
       assert Floki.text(doc) =~ "You need to define at least two goals to create a funnel."
 
-      add_goals_path = Routes.site_path(conn, :new_goal, site.domain)
+      add_goals_path = Routes.site_path(conn, :settings_goals, site.domain)
       assert element_exists?(doc, ~s/a[href="#{add_goals_path}"]/)
     end
   end
 
-  describe "FunnelSettings component" do
+  describe "FunnelSettings live view" do
     setup [:create_user, :log_in, :create_site]
 
     test "allows to delete funnels", %{conn: conn, site: site} do
