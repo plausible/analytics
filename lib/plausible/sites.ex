@@ -1,7 +1,6 @@
 defmodule Plausible.Sites do
-  use Plausible.Repo
-  alias Plausible.Site
-  alias Plausible.Site.SharedLink
+  alias Plausible.{Repo, Site, Site.SharedLink, Auth.User}
+  alias PlausibleWeb.Email
   import Ecto.Query
 
   def get_by_domain(domain) do
@@ -63,9 +62,9 @@ defmodule Plausible.Sites do
   defp do_invite(site, inviter, invitee_email, role) do
     attrs = %{email: invitee_email, role: role, site_id: site.id, inviter_id: inviter.id}
 
-    with :ok <- check_limit(site),
+    with :ok <- check_team_member_limit(site, role),
          invitee <- Plausible.Auth.find_user_by(email: invitee_email),
-         :ok <- ensure_new_membership(site, invitee),
+         :ok <- ensure_new_membership(site, invitee, role),
          %Ecto.Changeset{} = changeset <- Plausible.Auth.Invitation.new(attrs),
          {:ok, invitation} <- Repo.insert(changeset) do
       send_invitation_email(invitation, invitee)
@@ -75,22 +74,36 @@ defmodule Plausible.Sites do
     end
   end
 
-  def send_invitation_email(invitation, invitee) do
+  defp send_invitation_email(invitation, invitee) do
     invitation = Repo.preload(invitation, [:site, :inviter])
 
     email =
-      if invitee,
-        do: PlausibleWeb.Email.existing_user_invitation(invitation),
-        else: PlausibleWeb.Email.new_user_invitation(invitation)
+      case {invitee, invitation.role} do
+        {invitee, :owner} -> Email.ownership_transfer_request(invitation, invitee)
+        {nil, _role} -> Email.new_user_invitation(invitation)
+        {%User{}, _role} -> Email.existing_user_invitation(invitation)
+      end
 
     Plausible.Mailer.send(email)
   end
 
-  def ensure_new_membership(site, invitee) do
-    if invitee && is_member?(invitee.id, site), do: {:error, :already_a_member}, else: :ok
+  defp ensure_new_membership(_site, _invitee, :owner) do
+    :ok
   end
 
-  def check_limit(site) do
+  defp ensure_new_membership(site, invitee, _role) do
+    if invitee && is_member?(invitee.id, site) do
+      {:error, :already_a_member}
+    else
+      :ok
+    end
+  end
+
+  defp check_team_member_limit(_site, :owner) do
+    :ok
+  end
+
+  defp check_team_member_limit(site, _role) do
     owner = owner_for(site)
     usage = Plausible.Billing.Quota.team_member_usage(owner)
     limit = Plausible.Billing.Quota.team_member_limit(owner)

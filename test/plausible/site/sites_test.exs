@@ -142,6 +142,19 @@ defmodule Plausible.SitesTest do
       site = insert(:site, memberships: memberships)
       assert {:error, {:over_limit, 5}} = Sites.invite(site, inviter, invitee.email, :viewer)
     end
+
+    test "sends ownership transfer email when invitee role is owner" do
+      inviter = insert(:user)
+      site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               Sites.invite(site, inviter, "vini@plausible.test", :owner)
+
+      assert_email_delivered_with(
+        to: [nil: "vini@plausible.test"],
+        subject: "[Plausible Analytics] Request to transfer ownership of #{site.domain}"
+      )
+    end
   end
 
   describe "get_for_user/2" do
