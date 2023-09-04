@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-E06F7545.js"></script>
+    <script src="dist/sidebar_items-AC4564C4.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -200,6 +200,14 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#invite/4" translate="no">invite(site, inviter, invitee_email, role)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#is_member?/2" translate="no">is_member?(user_id, site)</a>
 
       </div>
@@ -319,7 +327,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">create_shared_link(site, name, password \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L81" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L132" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -387,7 +395,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">get_for_user(user_id, domain, roles \\ [:owner, :admin, :viewer])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L110" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L161" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -411,7 +419,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">get_for_user!(user_id, domain, roles \\ [:owner, :admin, :viewer])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L100" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L151" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -433,7 +441,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">has_admin_access?(user_id, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L143" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L194" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -455,7 +463,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">has_goals?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L131" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L182" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -477,7 +485,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">has_stats?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L77" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L128" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -486,6 +494,38 @@ Functions
   </div>
 
   <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="invite/4">
+
+  <div class="detail-header">
+    <a href="#invite/4" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">invite(site, inviter, invitee_email, role)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L57" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> invite(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()) ::
+  {:ok, <a href="Plausible.Auth.Invitation.html#t:t/0">Plausible.Auth.Invitation.t</a>()}
+  | {:error, <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}
+  | {:error, :already_a_member}
+  | {:error, {:over_limit, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}}</pre>
+
+      </div>
 
 
   </section>
@@ -499,7 +539,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">is_member?(user_id, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L139" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L190" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -521,7 +561,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">locked?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L147" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L198" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -543,7 +583,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">owned_site_ids(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L173" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L224" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -565,7 +605,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">owned_sites_count(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L160" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L211" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -587,7 +627,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">owned_sites_domains(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L166" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L217" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -609,7 +649,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">owner_for(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L189" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L240" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -631,7 +671,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">role(user_id, site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L151" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L202" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -653,7 +693,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">shared_link_url(site, link)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L94" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L145" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -675,7 +715,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">stats_start_date(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L60" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/sites.ex#L111" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
