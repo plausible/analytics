@@ -41,7 +41,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       phx-key="Escape"
     >
     </div>
-    <div class="fixed inset-0 flex items-center justify-center mt-32 z-50">
+    <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden">
       <div class="w-1/2 h-full">
         <.form
           :let={f}
