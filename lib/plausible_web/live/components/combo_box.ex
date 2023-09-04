@@ -165,7 +165,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     >
       <.option
         :if={display_creatable_option?(assigns)}
-        idx={length(@suggestions)}
+        idx={0}
         submit_value={@display_value}
         display_value={@display_value}
         target={@target}
@@ -178,7 +178,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
           {{submit_value, display_value}, idx} <-
             Enum.with_index(
               @suggestions,
-              fn {option_value, option}, idx -> {{option_value, to_string(option)}, idx} end
+              fn {option_value, option}, idx -> {{option_value, to_string(option)}, idx + 1} end
             )
         }
         :if={@suggestions != []}
@@ -230,7 +230,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         <% end %>
       </a>
     </li>
-    <li :if={@idx == @suggestions_limit - 1} class="text-xs text-gray-500 relative py-2 px-3">
+    <li :if={@idx == @suggestions_limit} class="text-xs text-gray-500 relative py-2 px-3">
       Max results reached. Refine your search by typing in goal name.
     </li>
     """
