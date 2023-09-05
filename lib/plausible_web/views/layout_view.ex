@@ -27,9 +27,7 @@ defmodule PlausibleWeb.LayoutView do
       [key: "People", value: "people"],
       [key: "Visibility", value: "visibility"],
       [key: "Goals", value: "goals"],
-      if Plausible.Funnels.enabled_for?(conn.assigns[:current_user]) do
-        [key: "Funnels", value: "funnels"]
-      end,
+      [key: "Funnels", value: "funnels"],
       [key: "Custom Properties", value: "properties"],
       [key: "Search Console", value: "search-console"],
       [key: "Email Reports", value: "email-reports"],

@@ -14,8 +14,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
         %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
-    true = Plausible.Funnels.enabled_for?("user:#{user_id}")
-
     socket =
       socket
       |> assign_new(:site, fn ->

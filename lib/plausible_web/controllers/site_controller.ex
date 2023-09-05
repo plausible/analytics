@@ -3,18 +3,21 @@ defmodule PlausibleWeb.SiteController do
   use Plausible.Repo
   alias Plausible.{Sites, Goals}
 
-  plug PlausibleWeb.RequireAccountPlug
+  plug(PlausibleWeb.RequireAccountPlug)
 
-  plug PlausibleWeb.AuthorizeSiteAccess,
-       [:owner, :admin, :super_admin] when action not in [:index, :new, :create_site]
+  plug(
+    PlausibleWeb.AuthorizeSiteAccess,
+    [:owner, :admin, :super_admin] when action not in [:index, :new, :create_site]
+  )
 
   def index(conn, params) do
     user = conn.assigns[:current_user]
 
     invitations =
       Repo.all(
-        from i in Plausible.Auth.Invitation,
+        from(i in Plausible.Auth.Invitation,
           where: i.email == ^user.email
+        )
       )
       |> Repo.preload(:site)
 
@@ -106,10 +109,11 @@ defmodule PlausibleWeb.SiteController do
 
     is_first_site =
       !Repo.exists?(
-        from sm in Plausible.Site.Membership,
+        from(sm in Plausible.Site.Membership,
           where:
             sm.user_id == ^user.id and
               sm.site_id != ^site.id
+        )
       )
 
     conn
@@ -203,7 +207,7 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_visibility(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
+    shared_links = Repo.all(from(l in Plausible.Site.SharedLink, where: l.site_id == ^site.id))
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -227,19 +231,15 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_funnels(conn, _params) do
-    if Plausible.Funnels.enabled_for?(conn.assigns[:current_user]) do
-      site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
-      conn
-      |> assign(:skip_plausible_tracking, true)
-      |> render("settings_funnels.html",
-        site: site,
-        connect_live_socket: true,
-        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-      )
-    else
-      conn |> Plug.Conn.put_status(401) |> Plug.Conn.halt()
-    end
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_funnels.html",
+      site: site,
+      connect_live_socket: true,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
   end
 
   def settings_props(conn, _params) do
@@ -430,7 +430,7 @@ defmodule PlausibleWeb.SiteController do
 
   def disable_weekly_report(conn, _params) do
     site = conn.assigns[:site]
-    Repo.delete_all(from wr in Plausible.Site.WeeklyReport, where: wr.site_id == ^site.id)
+    Repo.delete_all(from(wr in Plausible.Site.WeeklyReport, where: wr.site_id == ^site.id))
 
     conn
     |> put_flash(:success, "You will not receive weekly email reports going forward")
@@ -484,7 +484,7 @@ defmodule PlausibleWeb.SiteController do
 
   def disable_monthly_report(conn, _params) do
     site = conn.assigns[:site]
-    Repo.delete_all(from mr in Plausible.Site.MonthlyReport, where: mr.site_id == ^site.id)
+    Repo.delete_all(from(mr in Plausible.Site.MonthlyReport, where: mr.site_id == ^site.id))
 
     conn
     |> put_flash(:success, "You will not receive monthly email reports going forward")
@@ -544,7 +544,7 @@ defmodule PlausibleWeb.SiteController do
 
   def disable_spike_notification(conn, _params) do
     site = conn.assigns[:site]
-    Repo.delete_all(from mr in Plausible.Site.SpikeNotification, where: mr.site_id == ^site.id)
+    Repo.delete_all(from(mr in Plausible.Site.SpikeNotification, where: mr.site_id == ^site.id))
 
     conn
     |> put_flash(:success, "Spike notification disabled")
@@ -660,9 +660,10 @@ defmodule PlausibleWeb.SiteController do
     site_id = site.id
 
     case Repo.delete_all(
-           from l in Plausible.Site.SharedLink,
+           from(l in Plausible.Site.SharedLink,
              where: l.slug == ^slug,
              where: l.site_id == ^site_id
+           )
          ) do
       {1, _} ->
         conn
@@ -681,9 +682,10 @@ defmodule PlausibleWeb.SiteController do
     site_id = site.id
 
     case Repo.delete_all(
-           from d in Plausible.Site.CustomDomain,
+           from(d in Plausible.Site.CustomDomain,
              where: d.site_id == ^site_id,
              where: d.id == ^domain_id
+           )
          ) do
       {1, _} ->
         conn
@@ -874,10 +876,11 @@ defmodule PlausibleWeb.SiteController do
     cond do
       site.imported_data ->
         Oban.cancel_all_jobs(
-          from j in Oban.Job,
+          from(j in Oban.Job,
             where:
               j.queue == "google_analytics_imports" and
                 fragment("(? ->> 'site_id')::int", j.args) == ^site.id
+          )
         )
 
         Plausible.Imported.forget(site)
