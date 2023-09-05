@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           phx-submit="save-goal"
           phx-click-away="cancel-add-goal"
         >
-          <h2 class="text-xl font-black dark:text-gray-100">Add goal for <%= @domain %></h2>
+          <h2 class="text-xl font-black dark:text-gray-100">Add Goal for <%= @domain %></h2>
 
           <.tabs tabs={@tabs} />
 
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
           <div class="py-4">
             <button type="submit" class="button text-base font-bold w-full">
-              Add goal →
+              Add Goal →
             </button>
           </div>
         </.form>
@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div class="py-2">
       <.label for="page_path_input">
-        Page path
+        Page Path
       </.label>
 
       <.live_component
@@ -106,7 +106,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     <div class="my-6">
       <div id="event-fields">
         <div class="pb-6 text-xs text-gray-700 dark:text-gray-200 text-justify rounded-md">
-          Custom events are not tracked by default - you have to configure them on your site to be sent to Plausible. See examples and learn more in <a
+          Custom Events are not tracked by default - you have to configure them on your site to be sent to Plausible. See examples and learn more in <a
             class="text-indigo-500 hover:underline"
             target="_blank"
             rel="noreferrer"
@@ -118,7 +118,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           <.input
             autofocus
             field={@f[:event_name]}
-            label="Event name"
+            label="Event Name"
             class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500 w-full p-2 mt-2"
             placeholder="e.g. Signup"
             autocomplete="off"
@@ -156,13 +156,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
               class="ml-3 font-medium text-gray-900 dark:text-gray-200"
               id="enable-revenue-tracking"
             >
-              Enable revenue tracking
+              Enable Revenue Tracking
             </span>
           </div>
 
           <div class="rounded-md bg-yellow-50 dark:bg-yellow-900 p-4" x-show="active">
             <p class="text-xs text-yellow-700 dark:text-yellow-50 text-justify">
-              Revenue tracking is an upcoming premium feature that's free-to-use
+              Revenue Tracking is an upcoming premium feature that's free-to-use
               during the private preview. Pricing will be announced soon. See
               examples and learn more in <a
                 class="font-medium text-yellow underline hover:text-yellow-600"
@@ -196,7 +196,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
   def tabs(assigns) do
     ~H"""
-    <div class="mt-6 font-medium dark:text-gray-100">Goal trigger</div>
+    <div class="mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
     <div class="my-3 w-full flex rounded border border-gray-300 dark:border-gray-500">
       <.custom_events_tab tabs={@tabs} />
       <.pageviews_tab tabs={@tabs} />
@@ -216,7 +216,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       id="event-tab"
       phx-click="switch-tab"
     >
-      Custom event
+      Custom Event
     </a>
     """
   end

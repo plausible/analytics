@@ -49,15 +49,18 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
           phx-target="#funnel-form"
           onkeydown="return event.key != 'Enter';"
         >
-          <%= label(f, "Funnel name",
-            class: "block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          ) %>
+          <label
+            for={f[:name].name}
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            Funnel Name
+          </label>
           <.input field={f[:name]} />
 
           <div id="steps-builder">
-            <%= label(f, "Funnel Steps",
-              class: "mt-6 block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            ) %>
+            <label class="mt-6 block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Funnel Steps
+            </label>
 
             <div :for={step_idx <- @step_ids} class="flex mb-3">
               <div class="w-2/5 flex-1">
@@ -131,7 +134,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500"
       />
 
-      <.error :for={{msg, _} <- @field.errors}>Funnel name <%= msg %></.error>
+      <.error :for={{msg, _} <- @field.errors}>Funnel Name <%= msg %></.error>
     </div>
     """
   end
