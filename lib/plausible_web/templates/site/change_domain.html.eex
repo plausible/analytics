@@ -15,15 +15,15 @@
     </div>
 
     <p class="text-sm sm:text-sm text-gray-700 dark:text-gray-300">
-    <span class="font-bold dark:text-gray-100">Once you change your domain, you must update the JavaScript snippet on your site within 72 hours to guarantee continuous tracking</span>. If you're using the API, please also make sure to update your API credentials.</p> 
+    <span class="font-bold dark:text-gray-100">Once you change your domain, you must update the JavaScript snippet on your site within 72 hours to guarantee continuous tracking</span>. If you're using the API, please also make sure to update your API credentials.</p>
     <p class="text-sm sm:text-sm text-gray-700 dark:text-gray-300 mt-4">
     Visit our <a target="_blank" href="https://plausible.io/docs/change-domain-name/" class="text-indigo-500">documentation</a> for details.
     </p>
 
-    <%= submit "Change domain and add new snippet →", class: "button mt-4 w-full" %>
+    <%= submit "Change Domain and add new Snippet →", class: "button mt-4 w-full" %>
 
   <div class="text-center mt-8">
-    <%= link "Back to site settings", to: Routes.site_path(@conn, :settings_general, @site.domain), class: "text-indigo-500 w-full text-center" %>
+    <%= link "Back to Site Settings", to: Routes.site_path(@conn, :settings_general, @site.domain), class: "text-indigo-500 w-full text-center" %>
   </div>
   <% end %>
 </div>

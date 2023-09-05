@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
 
       resp = html_response(conn, 200)
       assert resp =~ "Define actions that you want your users to take"
-      assert resp =~ "compose goals into funnels"
+      assert resp =~ "compose Goals into Funnels"
       assert resp =~ "/#{site.domain}/settings/funnels"
       assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/goal-conversions"]|)
 
@@ -139,7 +139,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       lv = get_liveview(conn, site)
       html = lv |> element(~s/button[phx-click="add-goal"]/) |> render_click()
 
-      assert html =~ "Add goal for #{site.domain}"
+      assert html =~ "Add Goal for #{site.domain}"
 
       assert element_exists?(
                html,

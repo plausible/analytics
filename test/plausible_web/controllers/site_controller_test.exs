@@ -323,7 +323,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/general")
       resp = html_response(conn, 200)
 
-      assert resp =~ "Site timezone"
+      assert resp =~ "Site Timezone"
       assert resp =~ "Data Import from Google Analytics"
       assert resp =~ "https://accounts.google.com/o/oauth2/v2/auth?"
       assert resp =~ "analytics.readonly"
@@ -1241,8 +1241,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
 
-      assert resp =~ "Site domain"
-      assert resp =~ "Change domain"
+      assert resp =~ "Site Domain"
+      assert resp =~ "Change Domain"
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
     end
 

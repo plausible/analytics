@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
             id="funnels-list"
             funnels={@funnels}
           />
-          <button type="button" class="button mt-6" phx-click="add-funnel">+ Add funnel</button>
+          <button type="button" class="button mt-6" phx-click="add-funnel">+ Add Funnel</button>
         </div>
 
         <div :if={@goal_count < Funnel.min_steps()}>
