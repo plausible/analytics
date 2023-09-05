@@ -216,13 +216,11 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_goals(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    goals = Goals.for_site(site, preload_funnels?: true)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_goals.html",
       site: site,
-      goals: goals,
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
