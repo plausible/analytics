@@ -79,11 +79,11 @@ export function IntervalPicker({ graphData, query, site, updateInterval }) {
             as={Fragment}
             show={open}
             enter="transition ease-out duration-100"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
             leave="transition ease-in duration-75"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95">
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95">
             <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10" static>
               {options.map((option) => DropdownItem({ option, currentInterval, updateInterval }))}
             </Menu.Items>
