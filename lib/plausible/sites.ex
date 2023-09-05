@@ -149,21 +149,21 @@ defmodule Plausible.Sites do
   end
 
   def get_for_user!(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
-    if :superadmin in roles and Plausible.Auth.is_super_admin?(domain) do
+    if :super_admin in roles and Plausible.Auth.is_super_admin?(user_id) do
       get_by_domain!(domain)
     else
       user_id
-      |> get_for_user_q(domain, List.delete(roles, :superadmin))
+      |> get_for_user_q(domain, List.delete(roles, :super_admin))
       |> Repo.one!()
     end
   end
 
   def get_for_user(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
-    if :superadmin in roles and Plausible.Auth.is_super_admin?(domain) do
+    if :super_admin in roles and Plausible.Auth.is_super_admin?(user_id) do
       get_by_domain(domain)
     else
       user_id
-      |> get_for_user_q(domain, List.delete(roles, :superadmin))
+      |> get_for_user_q(domain, List.delete(roles, :super_admin))
       |> Repo.one()
     end
   end

@@ -143,4 +143,19 @@ defmodule Plausible.SitesTest do
       assert {:error, {:over_limit, 5}} = Sites.invite(site, inviter, invitee.email, :viewer)
     end
   end
+
+  describe "get_for_user/2" do
+    test "get site for super_admin" do
+      user1 = insert(:user)
+      user2 = insert(:user)
+      patch_env(:super_admin_user_ids, [user2.id])
+
+      %{id: site_id, domain: domain} = insert(:site, members: [user1])
+      assert %{id: ^site_id} = Sites.get_for_user(user1.id, domain)
+      assert %{id: ^site_id} = Sites.get_for_user(user1.id, domain, [:owner])
+
+      assert is_nil(Sites.get_for_user(user2.id, domain))
+      assert %{id: ^site_id} = Sites.get_for_user(user2.id, domain, [:super_admin])
+    end
+  end
 end

@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   alias Plausible.{Sites, Goals}
 
   def mount(_params, %{"current_user_id" => user_id, "domain" => domain}, socket) do
-    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :superadmin])
+    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
 
     # We'll have the options trimmed to only the data we care about, to keep
     # it minimal at the socket assigns, yet, we want to retain specific %Goal{}
