@@ -123,6 +123,15 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
                "No matches found. Try searching for something different."
     end
 
+    test "when no options available, hints the user to create one by typing" do
+      doc =
+        render_sample_component([],
+          creatable: true
+        )
+
+      assert text_of_element(doc, "#dropdown-test-component div") == "Create an item by typing."
+    end
+
     test "makes the html input required when required option is passed" do
       input_query = "input[type=text][required]"
       assert render_sample_component([], required: true) |> element_exists?(input_query)
