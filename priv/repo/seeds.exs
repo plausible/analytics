@@ -12,8 +12,6 @@
 
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
-FunWithFlags.enable(:funnels)
-
 native_stats_range =
   Date.range(
     Date.add(Date.utc_today(), -720),
