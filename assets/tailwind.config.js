@@ -21,7 +21,8 @@ module.exports = {
     },
     extend: {
       colors: {
-        orange: colors.orange,
+        yellow: colors.amber, // We started usign `yellow` in v2 but it was renamed to `amber` in v3 https://tailwindcss.com/docs/upgrade-guide#removed-color-aliases
+        gray: colors.slate,
         'gray-950': 'rgb(13, 18, 30)',
         'gray-850': 'rgb(26, 32, 44)',
         'gray-825': 'rgb(37, 47, 63)'
