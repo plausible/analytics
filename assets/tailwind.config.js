@@ -30,7 +30,6 @@ module.exports = {
         '44': '11rem'
       },
       width: {
-        '31percent': '31%',
         'content': 'fit-content'
       },
       opacity: {
@@ -47,20 +46,6 @@ module.exports = {
         'padding': 'padding',
       }
     },
-  },
-  variants: {
-    textColor: ['responsive', 'hover', 'focus', 'group-hover'],
-    display: ['responsive', 'hover', 'focus', 'group-hover'],
-    extend: {
-      textColor: ['dark'],
-      borderWidth: ['dark'],
-      backgroundOpacity: ['dark'],
-      display: ['dark'],
-      cursor: ['hover'],
-      justifyContent: ['responsive'],
-      backgroundColor: ['odd', 'even'],
-      shadow: ['dark']
-    }
   },
   plugins: [
     require('@tailwindcss/forms'),
