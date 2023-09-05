@@ -11,9 +11,6 @@
     "bundlemon": "bundlemon"
   },
   "dependencies": {
-    "@babel/core": "^7.14.3",
-    "@babel/preset-env": "^7.14.4",
-    "@babel/preset-react": "^7.13.13",
     "@headlessui/react": "^1.7.10",
     "@heroicons/react": "^2.0.11",
     "@juggle/resize-observer": "^3.3.1",
@@ -46,11 +43,12 @@
     "react-router-dom": "^5.2.0",
     "react-transition-group": "^4.4.2",
     "terser-webpack-plugin": "^5.1.2",
-    "url-search-params-polyfill": "^8.1.1",
-    "webpack": "5.88.1",
-    "webpack-cli": "^4.7.0"
+    "url-search-params-polyfill": "^8.1.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.4",
+    "@babel/preset-react": "^7.13.13",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/forms": "^0.5.6",
     "autoprefixer": "^10.4.15",
@@ -68,7 +66,9 @@
     "stylelint-config-prettier": "^9.0.3",
     "stylelint-config-standard": "^24.0.0",
     "tailwindcss": "^3.3.3",
-    "webpack-bundle-analyzer": "^4.4.2"
+    "webpack": "5.88.1",
+    "webpack-bundle-analyzer": "^4.4.2",
+    "webpack-cli": "^4.7.0"
   },
   "name": "assets"
 }
