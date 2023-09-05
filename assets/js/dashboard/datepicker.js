@@ -292,17 +292,6 @@ function DatePicker({ query, site, history }) {
 
     opts.date = opts.date ? formatISO(opts.date) : false;
 
-    const keybinds = {
-      'Today': 'D',
-      'Realtime': 'R',
-      'Last 7 days': 'W',
-      'Month to Date': 'M',
-      'Year to Date': 'Y',
-      'Last 12 months': 'L',
-      'Last 30 days': 'T',
-      'All time': 'A',
-    };
-
     return (
       <QueryLink
         to={{ from: false, to: false, period, ...opts }}
@@ -312,7 +301,8 @@ function DatePicker({ query, site, history }) {
           dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
         {text}
-        <span className='font-normal'>{keybinds[text]}</span>
+
+        {opts.keybindHint ? (<span className='font-normal'>{opts.keybindHint}</span>) : null}
       </QueryLink>
     );
   }
@@ -329,23 +319,23 @@ function DatePicker({ query, site, history }) {
             font-medium text-gray-800 dark:text-gray-200 date-options"
           >
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {renderLink("day", "Today")}
-              {renderLink("realtime", "Realtime")}
+              {renderLink("day", "Today", { keybindHint: 'D' })}
+              {renderLink("realtime", "Realtime", { keybindHint: 'R' })}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {renderLink("7d", "Last 7 Days")}
-              {renderLink("30d", "Last 30 Days")}
+              {renderLink("7d", "Last 7 Days", { keybindHint: 'W' })}
+              {renderLink("30d", "Last 30 Days", { keybindHint: 'T' })}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {renderLink('month', 'Month to Date')}
+              {renderLink('month', 'Month to Date', { keybindHint: 'M' })}
               {renderLink('month', 'Last Month', { date: lastMonth(site) })}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {renderLink("year", "Year to Date")}
-              {renderLink("12mo", "Last 12 months")}
+              {renderLink("year", "Year to Date", { keybindHint: 'Y' })}
+              {renderLink("12mo", "Last 12 months", { keybindHint: 'L' })}
             </div>
             <div className="py-1 date-option-group">
-              {renderLink("all", "All time")}
+              {renderLink("all", "All time", { keybindHint: 'A' })}
               <span
                 onClick={() => setMode('calendar')}
                 onKeyPress={() => setMode('calendar')}
