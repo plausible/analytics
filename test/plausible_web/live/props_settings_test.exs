@@ -1,202 +1,177 @@
-defmodule PlausibleWeb.Live.PropsSettings.FormTest do
+defmodule PlausibleWeb.Live.PropsSettingsTest do
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
-  defp seed(%{site: site}) do
-    populate_stats(site, [
-      build(:event,
-        name: "Payment",
-        "meta.key": ["amount"],
-        "meta.value": ["500"]
-      ),
-      build(:event,
-        name: "Payment",
-        "meta.key": ["amount", "logged_in"],
-        "meta.value": ["100", "false"]
-      ),
-      build(:event,
-        name: "Payment",
-        "meta.key": ["amount", "is_customer"],
-        "meta.value": ["100", "false"]
-      )
-    ])
+  describe "GET /:website/settings/properties" do
+    setup [:create_user, :log_in, :create_site]
 
-    :ok
+    test "lists props for the site and renders links", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
+      conn = get(conn, "/#{site.domain}/settings/properties")
+
+      resp = html_response(conn, 200)
+      assert resp =~ "Attach Custom Properties"
+
+      assert element_exists?(
+               resp,
+               ~s|a[href="https://plausible.io/docs/custom-props/introduction"]|
+             )
+
+      assert resp =~ "amount"
+      assert resp =~ "logged_in"
+      assert resp =~ "is_customer"
+    end
+
+    test "lists props with disallow actions", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
+      conn = get(conn, "/#{site.domain}/settings/properties")
+      resp = html_response(conn, 200)
+
+      for p <- site.allowed_event_props do
+        assert element_exists?(
+                 resp,
+                 ~s/button[phx-click="disallow-prop"][phx-value-prop=#{p}]#disallow-prop-#{p}/
+               )
+      end
+    end
+
+    test "if no props are allowed, a proper info is displayed", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/properties")
+      resp = html_response(conn, 200)
+      assert resp =~ "No properties configured for this site"
+    end
+
+    test "if props are enabled, no info about missing props is displayed", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
+      conn = get(conn, "/#{site.domain}/settings/properties")
+      resp = html_response(conn, 200)
+      refute resp =~ "No properties configured for this site"
+    end
+
+    test "add property button is rendered", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/properties")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, ~s/button[phx-click="add-prop"]/)
+    end
+
+    test "search props input is rendered", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/properties")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
+      assert element_exists?(resp, ~s/form[phx-change="filter"]#filter-form/)
+    end
   end
 
-  setup [:create_user, :log_in, :create_site, :seed]
+  # validating input
+  # clicking suggestions fills out input
+  # adding props
+  # error when reached props limit
+  # clearserror when fixed input
+  # removal
+  # removal shows confirmation
+  # allow existing props: shows/hides
+  # after adding all suggestions no allow existing props
 
-  test "shows message when site has no allowed properties", %{conn: conn, site: site} do
-    {:ok, _lv, doc} = get_liveview(conn, site)
-    assert doc =~ "No properties configured for this site yet"
+  describe "PropsSettings live view" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "allows prop removal", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in"])
+      {lv, html} = get_liveview(conn, site, with_html?: true)
+
+      assert html =~ "amount"
+      assert html =~ "logged_in"
+
+      html = lv |> element(~s/button#disallow-prop-amount/) |> render_click()
+
+      refute html =~ "amount"
+      assert html =~ "logged_in"
+
+      html = get(conn, "/#{site.domain}/settings/properties") |> html_response(200)
+
+      refute html =~ "amount"
+      assert html =~ "logged_in"
+    end
+
+    test "allows props filtering / search", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
+      {lv, html} = get_liveview(conn, site, with_html?: true)
+
+      assert html =~ to_string("amount")
+      assert html =~ to_string("logged_in")
+      assert html =~ to_string("is_customer")
+
+      html = type_into_search(lv, "is_customer")
+
+      refute html =~ to_string("amount")
+      refute html =~ to_string("logged_in")
+      assert html =~ to_string("is_customer")
+    end
+
+    test "allows resetting filter text via backspace icon", %{conn: conn, site: site} do
+      {:ok, site} = Plausible.Props.allow(site, ["amount", "logged_in", "is_customer"])
+      {lv, html} = get_liveview(conn, site, with_html?: true)
+
+      refute element_exists?(html, ~s/svg[phx-click="reset-filter-text"]#reset-filter/)
+
+      html = type_into_search(lv, to_string("is_customer"))
+
+      assert element_exists?(html, ~s/svg[phx-click="reset-filter-text"]#reset-filter/)
+
+      html = lv |> element(~s/svg#reset-filter/) |> render_click()
+
+      assert html =~ to_string("is_customer")
+      assert html =~ to_string("amount")
+      assert html =~ to_string("logged_in")
+    end
+
+    test "allows resetting filter text via no match link", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      html = type_into_search(lv, "Definitely this is not going to render any matches")
+
+      assert html =~ "No properties found for this site. Please refine or"
+      assert html =~ "reset your search"
+
+      assert element_exists?(html, ~s/a[phx-click="reset-filter-text"]#reset-filter-hint/)
+      html = lv |> element(~s/a#reset-filter-hint/) |> render_click()
+
+      refute html =~ "No properties found for this site. Please refine or"
+    end
+
+    test "clicking Add Property button renders the form view", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      html = lv |> element(~s/button[phx-click="add-prop"]/) |> render_click()
+
+      assert html =~ "Add Property for #{site.domain}"
+
+      assert element_exists?(
+               html,
+               ~s/div#props-form form[phx-submit="allow-prop"][phx-click-away="cancel-allow-prop"]/
+             )
+    end
   end
 
-  test "renders dropdown with suggestions", %{conn: conn, site: site} do
-    {:ok, _lv, doc} = get_liveview(conn, site)
-
-    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-1/) ==
-             "amount"
-
-    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-2/) ==
-             "logged_in"
-
-    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-3/) ==
-             "is_customer"
-  end
-
-  test "input is a required field", %{conn: conn, site: site} do
-    {:ok, _lv, doc} = get_liveview(conn, site)
-    assert element_exists?(doc, ~s/input#prop_input[required]/)
-  end
-
-  test "clicking suggestion fills out input", %{conn: conn, site: site} do
-    {:ok, lv, _doc} = get_liveview(conn, site)
-
-    doc =
-      lv
-      |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-1 a/)
-      |> render_click()
-
-    assert element_exists?(doc, ~s/input[type="hidden"][value="amount"]/)
-  end
-
-  test "saving from suggestion adds to the list", %{conn: conn, site: site} do
-    {:ok, lv, _doc} = get_liveview(conn, site)
-
-    doc = select_and_submit(lv, 1)
-
-    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "amount"
-    refute doc =~ "No properties configured for this site yet"
-  end
-
-  test "saving from manual input adds to the list", %{conn: conn, site: site} do
-    {:ok, lv, _doc} = get_liveview(conn, site)
-
-    type_into_combo(lv, "Operating System")
-
-    doc =
-      lv
-      |> form("#props-form")
-      |> render_submit()
-
-    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "Operating System"
-    refute doc =~ "No properties configured for this site yet"
-  end
-
-  test "shows error when input is invalid", %{conn: conn, site: site} do
-    {:ok, lv, _doc} = get_liveview(conn, site)
-
-    type_into_combo(lv, "   ")
-    doc = lv |> form("#props-form") |> render_submit()
-
-    assert text_of_element(doc, ~s/div#prop-errors div/) == "must be between 1 and 300 characters"
-    assert doc =~ "No properties configured for this site yet"
-  end
-
-  test "shows error when reached prop limit", %{conn: conn, site: site} do
-    props = for i <- 1..300, do: "my-prop-#{i}"
-    {:ok, site} = Plausible.Props.allow(site, props)
-    {:ok, lv, _doc} = get_liveview(conn, site)
-
-    type_into_combo(lv, "my-prop-301")
-    doc = lv |> form("#props-form") |> render_submit()
-
-    assert text_of_element(doc, ~s/div#prop-errors div/) == "should have at most 300 item(s)"
-  end
-
-  test "clears error message when user fixes input", %{conn: conn, site: site} do
-    {:ok, lv, _doc} = get_liveview(conn, site)
-
-    type_into_combo(lv, "   ")
-    doc = lv |> form("#props-form") |> render_submit()
-    assert text_of_element(doc, ~s/div#prop-errors div/) == "must be between 1 and 300 characters"
-
-    type_into_combo(lv, "my-prop")
-    doc = lv |> form("#props-form") |> render_submit()
-    refute element_exists?(doc, ~s/div#prop-errors/)
-  end
-
-  test "clicking remove button removes from the list", %{conn: conn, site: site} do
-    {:ok, site} = Plausible.Props.allow(site, "my-prop")
-    {:ok, lv, doc} = get_liveview(conn, site)
-
-    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "my-prop"
-
-    doc =
-      lv
-      |> element(~s/ul#allowed-props li#prop-0 button[phx-click="disallow"]/)
-      |> render_click()
-
-    refute element_exists?(doc, ~s/ul#allowed-props li#prop-0 span/)
-    assert doc =~ "No properties configured for this site yet"
-  end
-
-  test "remove button shows a confirmation popup", %{conn: conn, site: site} do
-    {:ok, site} = Plausible.Props.allow(site, "my-prop")
-    {:ok, _lv, doc} = get_liveview(conn, site)
-
-    assert "Are you sure you want to remove property 'my-prop'? This will just affect the UI, all of your analytics data will stay intact." ==
-             doc
-             |> Floki.find(~s/ul#allowed-props li#prop-0 button[phx-click="disallow"]/)
-             |> text_of_attr("data-confirm")
-  end
-
-  test "clicking allow existing props button saves props from events", %{conn: conn, site: site} do
-    {:ok, lv, _doc} = get_liveview(conn, site)
-
-    doc =
-      lv
-      |> element(~s/button[phx-click="allow-existing-props"]/)
-      |> render_click()
-
-    assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "amount"
-    assert text_of_element(doc, ~s/ul#allowed-props li#prop-1 span/) == "logged_in"
-    assert text_of_element(doc, ~s/ul#allowed-props li#prop-2 span/) == "is_customer"
-  end
-
-  test "does not show allow existing props button when there are no events with props", %{
-    conn: conn,
-    user: user
-  } do
-    {:ok, _lv, doc} = get_liveview(conn, insert(:site, members: [user]))
-    refute element_exists?(doc, ~s/button[phx-click="allow-existing-props"]/)
-  end
-
-  test "does not show allow existing props button after adding all suggestions", %{
-    conn: conn,
-    site: site
-  } do
-    {:ok, lv, _doc} = get_liveview(conn, site)
-
-    _doc = select_and_submit(lv, 1)
-    _doc = select_and_submit(lv, 1)
-    doc = select_and_submit(lv, 1)
-
-    refute element_exists?(doc, ~s/button[phx-click="allow-existing-props"]/)
-  end
-
-  defp get_liveview(conn, site) do
+  defp get_liveview(conn, site, opts \\ []) do
     conn = assign(conn, :live_module, PlausibleWeb.Live.PropsSettings)
-    {:ok, _lv, _doc} = live(conn, "/#{site.domain}/settings/properties")
+    {:ok, lv, html} = live(conn, "/#{site.domain}/settings/properties")
+
+    if Keyword.get(opts, :with_html?) do
+      {lv, html}
+    else
+      lv
+    end
   end
 
-  defp select_and_submit(lv, suggestion_index) do
+  defp type_into_search(lv, text) do
     lv
-    |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-#{suggestion_index} a/)
-    |> render_click()
-
-    lv
-    |> form("#props-form")
-    |> render_submit()
-  end
-
-  defp type_into_combo(lv, input) do
-    lv
-    |> element("input#prop_input")
+    |> element("form#filter-form")
     |> render_change(%{
-      "_target" => ["display-prop_input"],
-      "display-prop_input" => input
+      "_target" => ["filter-text"],
+      "filter-text" => "#{text}"
     })
   end
 end
