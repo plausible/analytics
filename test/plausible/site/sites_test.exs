@@ -169,6 +169,16 @@ defmodule Plausible.SitesTest do
       assert {:error, :forbidden} = Sites.invite(site, inviter, "vini@plausible.test", :owner)
     end
 
+    test "does not check for limits when transferring ownership" do
+      inviter = insert(:user)
+
+      memberships =
+        [build(:site_membership, user: inviter, role: :owner)] ++ build_list(5, :site_membership)
+
+      site = insert(:site, memberships: memberships)
+      assert {:ok, _invitation} = Sites.invite(site, inviter, "newowner@plausible.test", :owner)
+    end
+
     test "does not allow viewers to invite users" do
       inviter = insert(:user)
 

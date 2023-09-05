@@ -1,5 +1,5 @@
 defmodule Plausible.Sites do
-  alias Plausible.{Repo, Site, Site.SharedLink, Auth.User}
+  alias Plausible.{Repo, Site, Site.SharedLink, Auth.User, Billing.Quota}
   alias PlausibleWeb.Email
   import Ecto.Query
 
@@ -16,12 +16,10 @@ defmodule Plausible.Sites do
 
     Ecto.Multi.new()
     |> Ecto.Multi.run(:limit, fn _, _ ->
-      limit = Plausible.Billing.Quota.site_limit(user)
-      usage = Plausible.Billing.Quota.site_usage(user)
+      limit = Quota.site_limit(user)
+      usage = Quota.site_usage(user)
 
-      if Plausible.Billing.Quota.within_limit?(usage, limit),
-        do: {:ok, usage},
-        else: {:error, limit}
+      if Quota.within_limit?(usage, limit), do: {:ok, usage}, else: {:error, limit}
     end)
     |> Ecto.Multi.insert(:site, site_changeset)
     |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
@@ -54,6 +52,17 @@ defmodule Plausible.Sites do
           | {:error, :already_a_member}
           | {:error, {:over_limit, non_neg_integer()}}
           | {:error, :forbidden}
+  @doc """
+  Invites a new team member to the given site. Returns a
+  %Plausible.Auth.Invitation{} struct and sends the invitee an email to accept
+  this invitation.
+
+  The inviter must have enough permissions to invite the new team member,
+  otherwise this function returns `{:error, :forbidden}`.
+
+  If the new team member role is `:owner`, this function handles the invitation
+  as an ownership transfer and requires the inviter to be the owner of the site.
+  """
   def invite(site, inviter, invitee_email, role) do
     Repo.transaction(fn ->
       do_invite(site, inviter, invitee_email, role)
@@ -116,11 +125,11 @@ defmodule Plausible.Sites do
   end
 
   defp check_team_member_limit(site, _role) do
-    owner = owner_for(site)
-    usage = Plausible.Billing.Quota.team_member_usage(owner)
-    limit = Plausible.Billing.Quota.team_member_limit(owner)
+    site_owner = owner_for(site)
+    limit = Quota.team_member_limit(site_owner)
+    usage = Quota.team_member_usage(site_owner)
 
-    if Plausible.Billing.Quota.within_limit?(usage, limit),
+    if Quota.within_limit?(usage, limit),
       do: :ok,
       else: {:error, {:over_limit, limit}}
   end
