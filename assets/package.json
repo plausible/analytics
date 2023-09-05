@@ -23,7 +23,6 @@
     "@tailwindcss/forms": "^0.5.6",
     "abortcontroller-polyfill": "^1.7.3",
     "alpinejs": "^2.8.2",
-    "autoprefixer": "^10.2.6",
     "babel-loader": "^8.2.2",
     "chart.js": "^3.3.2",
     "chartjs-plugin-datalabels": "^2.2.0",
@@ -39,7 +38,6 @@
     "phoenix": "^1.7.2",
     "phoenix_html": "^3.3.1",
     "phoenix_live_view": "^0.18.18",
-    "postcss": "^8.3.0",
     "postcss-loader": "^6.1.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -49,13 +47,13 @@
     "react-popper": "^2.3.0",
     "react-router-dom": "^5.2.0",
     "react-transition-group": "^4.4.2",
-    "tailwindcss": "^3.3.3",
     "terser-webpack-plugin": "^5.1.2",
     "url-search-params-polyfill": "^8.1.1",
     "webpack": "5.88.1",
     "webpack-cli": "^4.7.0"
   },
   "devDependencies": {
+    "autoprefixer": "^10.4.15",
     "babel-eslint": "^10.1.0",
     "bundlemon": "^1.4.0",
     "eslint": "^7.2.0",
@@ -65,9 +63,11 @@
     "eslint-plugin-prettier": "^3.3.0",
     "eslint-plugin-react": "^7.21.5",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "postcss": "^8.4.29",
     "stylelint": "^14.1.0",
     "stylelint-config-prettier": "^9.0.3",
     "stylelint-config-standard": "^24.0.0",
+    "tailwindcss": "^3.3.3",
     "webpack-bundle-analyzer": "^4.4.2"
   },
   "name": "assets"
