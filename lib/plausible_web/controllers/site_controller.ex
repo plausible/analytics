@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.{Sites, Goals}
+  alias Plausible.Sites
 
   plug PlausibleWeb.RequireAccountPlug
 

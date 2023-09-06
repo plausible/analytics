@@ -1,12 +1,12 @@
 // Courtesy of Benjamin von Polheim:
 // https://blog.devgenius.io/build-a-performat-autocomplete-using-phoenix-liveview-and-alpine-js-8bcbbed17ba7
-let suggestionsDropdown = function(id) {
+let suggestionsDropdown = function(id, opts) {
   return {
     isOpen: false,
     id: id,
     open() { this.isOpen = true },
     close() { this.isOpen = false },
-    focus: 0,
+    focus: opts.focus ?? 0,
     setFocus(f) {
       this.focus = f;
     },
