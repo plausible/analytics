@@ -19,10 +19,10 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearch do
       choices
       |> Enum.map(fn
         {_, value} = choice ->
-          {choice, weight(value, input)}
+          {choice, weight(value, input, opts)}
 
         value ->
-          {value, weight(value, input)}
+          {value, weight(value, input, opts)}
       end)
       |> Enum.reject(fn {_choice, weight} -> weight < weight_threshold end)
       |> Enum.sort_by(fn {_choice, weight} -> weight end, :desc)
@@ -32,8 +32,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearch do
     end
   end
 
-  defp weight(value, input) do
-    value = to_string(value)
+  defp weight(value, input, opts) do
+    to_str = Keyword.get(opts, :to_string, &to_string/1)
+    value = to_str.(value)
 
     case {value, input} do
       {value, input} when value == input ->
