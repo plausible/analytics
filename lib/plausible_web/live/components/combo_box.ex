@@ -72,7 +72,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     <div
       id={"input-picker-main-#{@id}"}
       class={@class}
-      x-data={"window.suggestionsDropdown('#{@id}')"}
+      x-data={"window.suggestionsDropdown('#{@id}', {focus: #{initial_dropdown_focus(@creatable, @suggestions)}})"}
       x-on:keydown.arrow-up.prevent="focusPrev"
       x-on:keydown.arrow-down.prevent="focusNext"
       x-on:keydown.enter.prevent="select"
@@ -360,5 +360,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     else
       fun.(input, options)
     end
+  end
+
+  defp initial_dropdown_focus(creatable?, suggestions) do
+    if creatable? and Enum.count(suggestions) > 0, do: 1, else: 0
   end
 end

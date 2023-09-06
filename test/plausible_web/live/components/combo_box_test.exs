@@ -57,11 +57,24 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       assert text_of_attr(li2, "x-bind:class") =~ "focus === 2"
     end
 
-    test "Alpine.js: component refers to window.suggestionsDropdown" do
+    test "Alpine.js: component refers to window.suggestionsDropdown including initial focus value" do
       assert new_options(2)
              |> render_sample_component()
              |> find("div#input-picker-main-test-component")
-             |> text_of_attr("x-data") =~ "window.suggestionsDropdown('test-component')"
+             |> text_of_attr("x-data") =~
+               "window.suggestionsDropdown('test-component', {focus: 0})"
+
+      assert new_options(2)
+             |> render_sample_component(creatable: true)
+             |> find("div#input-picker-main-test-component")
+             |> text_of_attr("x-data") =~
+               "window.suggestionsDropdown('test-component', {focus: 1})"
+
+      assert []
+             |> render_sample_component(creatable: true)
+             |> find("div#input-picker-main-test-component")
+             |> text_of_attr("x-data") =~
+               "window.suggestionsDropdown('test-component', {focus: 0})"
     end
 
     test "Alpine.js: component sets up keyboard navigation" do
