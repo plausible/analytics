@@ -26,7 +26,7 @@
     "alpinejs": "^2.8.2",
     "autoprefixer": "^10.4.15",
     "babel-loader": "^8.2.2",
-    "chart.js": "^3.3.2",
+    "chart.js": "^4.4.0",
     "chartjs-plugin-datalabels": "^2.2.0",
     "classnames": "^2.3.1",
     "copy-webpack-plugin": "^9.0.0",
