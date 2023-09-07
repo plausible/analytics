@@ -44,6 +44,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   @monthly_pageview_limit_for_free_10k 10_000
+  @monthly_pageview_limit_for_trials :unlimited
 
   @spec monthly_pageview_limit(Plausible.Billing.Subscription.t()) ::
           non_neg_integer() | :unlimited
@@ -62,11 +63,13 @@ defmodule Plausible.Billing.Quota do
         @monthly_pageview_limit_for_free_10k
 
       _any ->
-        Sentry.capture_message("Unknown monthly pageview limit for plan",
-          extra: %{paddle_plan_id: subscription && subscription.paddle_plan_id}
-        )
+        if subscription do
+          Sentry.capture_message("Unknown monthly pageview limit for plan",
+            extra: %{paddle_plan_id: subscription.paddle_plan_id}
+          )
+        end
 
-        :unlimited
+        @monthly_pageview_limit_for_trials
     end
   end
 
