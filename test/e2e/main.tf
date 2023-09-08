@@ -40,9 +40,13 @@ resource "checkly_check" "plausible-io-api-health" {
   type         = "API"
   activated    = true
   frequency    = 1
-  double_check = true
 
   group_id = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type = "FIXED"
+    max_retries = 2
+  }
 
   alert_channel_subscription {
     channel_id = checkly_alert_channel.instatus.id
@@ -79,9 +83,13 @@ resource "checkly_check" "plausible-io-lb-health" {
   type         = "API"
   activated    = true
   frequency    = 1
-  double_check = true
 
   group_id = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type = "FIXED"
+    max_retries = 2
+  }
 
   request {
     url              = "https://ingress.lb.plausible.io/api/health"
@@ -113,9 +121,13 @@ resource "checkly_check" "plausible-io-custom-domain-server-health" {
   type         = "API"
   activated    = true
   frequency    = 1
-  double_check = true
 
   group_id = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type = "FIXED"
+    max_retries = 2
+  }
 
   request {
     url              = "https://custom.plausible.io"
@@ -134,8 +146,13 @@ resource "checkly_check" "plausible-io-ingestion" {
   type         = "API"
   activated    = true
   frequency    = 1
-  double_check = true
+
   group_id     = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type = "FIXED"
+    max_retries = 2
+  }
 
   request {
     url              = "https://plausible.io/api/event"
@@ -178,9 +195,13 @@ resource "checkly_check" "plausible-io-tracker-script" {
   type         = "API"
   activated    = true
   frequency    = 1
-  double_check = true
 
   group_id = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type = "FIXED"
+    max_retries = 2
+  }
 
   request {
     url              = "https://plausible.io/js/script.js"
@@ -204,8 +225,12 @@ resource "checkly_check" "ingest-plausible-io-ingestion" {
   type         = "API"
   activated    = true
   frequency    = 1
-  double_check = true
   group_id     = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type = "FIXED"
+    max_retries = 2
+  }
 
   request {
     url              = "https://ingest.plausible.io/api/event"
@@ -259,8 +284,12 @@ resource "checkly_check_group" "reachability" {
     "ap-southeast-2"
   ]
   concurrency               = 3
-  double_check              = true
   use_global_alert_settings = false
+
+  retry_strategy {
+    type = "FIXED"
+    max_retries = 2
+  }
 
   alert_channel_subscription {
     channel_id = checkly_alert_channel.pagerduty.id
