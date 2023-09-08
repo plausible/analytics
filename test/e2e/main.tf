@@ -199,6 +199,50 @@ resource "checkly_check" "plausible-io-tracker-script" {
   }
 }
 
+resource "checkly_check" "ingest-plausible-io-ingestion" {
+  name         = "Check ingest.plausible.io/api/event"
+  type         = "API"
+  activated    = true
+  frequency    = 1
+  double_check = true
+  group_id     = checkly_check_group.reachability.id
+
+  request {
+    url              = "https://ingest.plausible.io/api/event"
+    follow_redirects = false
+    skip_ssl         = false
+    method           = "POST"
+    headers = {
+      User-Agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36 OPR/71.0.3770.284"
+    }
+    body_type = "JSON"
+    body      = <<EOT
+      {
+        "name": "pageview",
+        "url": "https://internal--checkly.com/",
+        "domain": "internal--checkly.com",
+        "width": 1666
+      }
+EOT
+
+    assertion {
+      source     = "STATUS_CODE"
+      comparison = "EQUALS"
+      target     = 202
+    }
+    assertion {
+      source     = "TEXT_BODY"
+      comparison = "EQUALS"
+      target     = "ok"
+    }
+    assertion {
+      source     = "HEADERS"
+      property   = "x-plausible-dropped"
+      comparison = "IS_EMPTY"
+    }
+  }
+}
+
 resource "checkly_check_group" "reachability" {
   name      = "Reachability probes - via automation"
   activated = true
