@@ -147,12 +147,6 @@ defmodule Plausible.Stats.Imported do
             utm_medium: i.utm_medium
           })
 
-        :utm_source ->
-          imported_q
-          |> select_merge([i], %{
-            utm_source: fragment("if(empty(?), ?, ?)", i.utm_source, @no_ref, i.utm_source)
-          })
-
         :utm_campaign ->
           imported_q
           |> where([i], fragment("not empty(?)", i.utm_campaign))
