@@ -97,15 +97,9 @@ defmodule PlausibleWeb.Site.MembershipController do
   def transfer_ownership(conn, %{"email" => email}) do
     site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
-    user = Plausible.Auth.find_user_by(email: email)
 
     case Sites.invite(site, conn.assigns.current_user, email, :owner) do
-      {:ok, invitation} ->
-        invitation
-        |> Repo.preload([:site, :inviter])
-        |> PlausibleWeb.Email.ownership_transfer_request(user)
-        |> Plausible.Mailer.send()
-
+      {:ok, _invitation} ->
         conn
         |> put_flash(:success, "Site transfer request has been sent to #{email}")
         |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
