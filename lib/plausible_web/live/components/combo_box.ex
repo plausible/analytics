@@ -247,9 +247,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
         <% end %>
       </a>
     </li>
-    <li :if={@idx == @suggestions_limit} class="text-xs text-gray-500 relative py-2 px-3">
-      Max results reached. Refine your search by typing in goal name.
-    </li>
+    <div :if={@idx == @suggestions_limit} class="text-xs text-gray-500 relative py-2 px-3">
+      Max results reached. Refine your search by typing.
+    </div>
     """
   end
 
