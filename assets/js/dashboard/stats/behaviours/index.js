@@ -5,7 +5,6 @@ import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
 import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
-import DeprecatedConversions from './deprecated-conversions'
 import Properties from './props'
 import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
@@ -34,7 +33,7 @@ export default function Behaviours(props) {
 
   const [funnelNames, _setFunnelNames] = useState(site.funnels.map(({ name }) => name))
   const [selectedFunnel, setSelectedFunnel] = useState(storage.getItem(funnelKey))
-  
+
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] = useState(false)
 
   const onGoalFilterClick = useCallback((e) => {
@@ -89,11 +88,11 @@ export default function Behaviours(props) {
       <Transition
         as={Fragment}
         enter="transition ease-out duration-100"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
+        enterFrom="opacity-0 scale-95"
+        enterTo="opacity-100 scale-100"
         leave="transition ease-in duration-75"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
+        leaveFrom="opacity-100 scale-100"
+        leaveTo="opacity-0 scale-95"
       >
         <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
           <div className="py-1">
@@ -147,11 +146,7 @@ export default function Behaviours(props) {
 
   function renderConversions() {
     if (site.hasGoals) {
-      if (site.flags.props) {
-        return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
-      } else {
-        return <DeprecatedConversions site={site} query={query} />
-      }
+      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
     }
     else if (adminAccess) {
       return (
@@ -245,7 +240,7 @@ export default function Behaviours(props) {
     if (site.conversionsEnabled) {
       enabledModes.push(CONVERSIONS)
     }
-    if (site.propsEnabled && site.flags.props) {
+    if (site.propsEnabled) {
       enabledModes.push(PROPS)
     }
     if (site.funnelsEnabled && !isRealtime() && site.flags.funnels) {

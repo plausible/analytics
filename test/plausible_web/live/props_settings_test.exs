@@ -35,13 +35,13 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   test "renders dropdown with suggestions", %{conn: conn, site: site} do
     {:ok, _lv, doc} = get_liveview(conn, site)
 
-    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-0/) ==
+    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-1/) ==
              "amount"
 
-    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-1/) ==
+    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-2/) ==
              "logged_in"
 
-    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-2/) ==
+    assert text_of_element(doc, ~s/ul#dropdown-prop_input li#dropdown-prop_input-option-3/) ==
              "is_customer"
   end
 
@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
 
     doc =
       lv
-      |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-0 a/)
+      |> element(~s/ul#dropdown-prop_input li#dropdown-prop_input-option-1 a/)
       |> render_click()
 
     assert element_exists?(doc, ~s/input[type="hidden"][value="amount"]/)
@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   test "saving from suggestion adds to the list", %{conn: conn, site: site} do
     {:ok, lv, _doc} = get_liveview(conn, site)
 
-    doc = select_and_submit(lv, 0)
+    doc = select_and_submit(lv, 1)
 
     assert text_of_element(doc, ~s/ul#allowed-props li#prop-0 span/) == "amount"
     refute doc =~ "No properties configured for this site yet"
@@ -169,9 +169,9 @@ defmodule PlausibleWeb.Live.PropsSettings.FormTest do
   } do
     {:ok, lv, _doc} = get_liveview(conn, site)
 
-    _doc = select_and_submit(lv, 0)
-    _doc = select_and_submit(lv, 0)
-    doc = select_and_submit(lv, 0)
+    _doc = select_and_submit(lv, 1)
+    _doc = select_and_submit(lv, 1)
+    doc = select_and_submit(lv, 1)
 
     refute element_exists?(doc, ~s/button[phx-click="allow-existing-props"]/)
   end

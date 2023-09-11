@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       conn = get(conn, "/#{site.domain}/settings/funnels")
 
       resp = html_response(conn, 200)
-      assert resp =~ "Compose goals into funnels"
+      assert resp =~ "Compose Goals into Funnels"
       assert resp =~ "From blog to signup"
       assert resp =~ "From signup to blog"
       assert element_exists?(resp, "a[href=\"https://plausible.io/docs/funnel-analysis\"]")
@@ -51,12 +51,12 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       doc = conn |> html_response(200)
       assert Floki.text(doc) =~ "You need to define at least two goals to create a funnel."
 
-      add_goals_path = Routes.site_path(conn, :new_goal, site.domain)
+      add_goals_path = Routes.site_path(conn, :settings_goals, site.domain)
       assert element_exists?(doc, ~s/a[href="#{add_goals_path}"]/)
     end
   end
 
-  describe "FunnelSettings component" do
+  describe "FunnelSettings live view" do
     setup [:create_user, :log_in, :create_site]
 
     test "allows to delete funnels", %{conn: conn, site: site} do
@@ -165,12 +165,12 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       assert lv = find_live_child(lv, "funnels-form")
 
       lv
-      |> element("li#dropdown-step-1-option-0 a")
+      |> element("li#dropdown-step-1-option-1 a")
       |> render_click()
 
       doc =
         lv
-        |> element("li#dropdown-step-2-option-0 a")
+        |> element("li#dropdown-step-2-option-1 a")
         |> render_click()
 
       save_inactive = ~s/form button#save.cursor-not-allowed/
@@ -207,11 +207,11 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
       assert lv = find_live_child(lv, "funnels-form")
 
-      lv |> element("li#dropdown-step-1-option-0 a") |> render_click()
+      lv |> element("li#dropdown-step-1-option-1 a") |> render_click()
 
       :timer.sleep(1001)
 
-      lv |> element("li#dropdown-step-2-option-0 a") |> render_click()
+      lv |> element("li#dropdown-step-2-option-1 a") |> render_click()
 
       doc = lv |> element("#step-eval-0") |> render()
       assert text_of_element(doc, ~s/#step-eval-0/) =~ "Entering Visitors: 0"

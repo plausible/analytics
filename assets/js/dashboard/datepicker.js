@@ -101,7 +101,7 @@ function renderArrow(query, site, period, prevDate, nextDate) {
   );
 }
 
-function DatePickerArrows({site, query}) {
+function DatePickerArrows({ site, query }) {
   if (query.period === "year") {
     const prevDate = formatISO(shiftMonths(query.date, -12));
     const nextDate = formatISO(shiftMonths(query.date, 12));
@@ -122,7 +122,7 @@ function DatePickerArrows({site, query}) {
   return null
 }
 
-function DisplayPeriod({query, site}) {
+function DisplayPeriod({ query, site }) {
   if (query.period === "day") {
     if (isToday(site, query.date)) {
       return "Today";
@@ -154,7 +154,7 @@ function DisplayPeriod({query, site}) {
   return 'Realtime'
 }
 
-function DatePicker({query, site, history}) {
+function DatePicker({ query, site, history }) {
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState('menu')
   const dropDownNode = useRef(null)
@@ -208,21 +208,21 @@ function DatePicker({query, site, history}) {
     setOpen(false);
 
     const keybindings = {
-      d: {date: false, period: 'day'},
-      e: {date: formatISO(shiftDays(nowForSite(site), -1)), period: 'day'},
-      r: {period: 'realtime'},
-      w: {date: false, period: '7d'},
-      m: {date: false, period: 'month'},
-      y: {date: false, period: 'year'},
-      t: {date: false, period: '30d'},
-      s: {date: false, period: '6mo'},
-      l: {date: false, period: '12mo'},
-      a: {date: false, period: 'all'},
+      d: { date: false, period: 'day' },
+      e: { date: formatISO(shiftDays(nowForSite(site), -1)), period: 'day' },
+      r: { period: 'realtime' },
+      w: { date: false, period: '7d' },
+      m: { date: false, period: 'month' },
+      y: { date: false, period: 'year' },
+      t: { date: false, period: '30d' },
+      s: { date: false, period: '6mo' },
+      l: { date: false, period: '12mo' },
+      a: { date: false, period: 'all' },
     }
 
     const redirect = keybindings[e.key.toLowerCase()]
     if (redirect) {
-      navigateToQuery(history, query, {...newSearch, ...redirect})
+      navigateToQuery(history, query, { ...newSearch, ...redirect })
     } else if (e.key.toLowerCase() === 'x') {
       toggleComparisons(history, query, site)
     } else if (e.key.toLowerCase() === 'c') {
@@ -240,7 +240,7 @@ function DatePicker({query, site, history}) {
   })
 
   useEffect(() => {
-    if (mode === 'calendar' && open)   {
+    if (mode === 'calendar' && open) {
       openCalendar()
     }
   }, [mode])
@@ -260,9 +260,9 @@ function DatePicker({query, site, history}) {
       [from, to] = [parseNaiveDate(from), parseNaiveDate(to)]
 
       if (from.isSame(to)) {
-        navigateToQuery( history, query, { period: 'day', date: formatISO(from), from: false, to: false })
+        navigateToQuery(history, query, { period: 'day', date: formatISO(from), from: false, to: false })
       } else {
-        navigateToQuery( history, query, { period: 'custom', date: false, from: formatISO(from), to: formatISO(to) })
+        navigateToQuery(history, query, { period: 'custom', date: false, from: formatISO(from), to: formatISO(to) })
       }
     }
 
@@ -292,27 +292,17 @@ function DatePicker({query, site, history}) {
 
     opts.date = opts.date ? formatISO(opts.date) : false;
 
-    const keybinds = {
-      'Today': 'D',
-      'Realtime': 'R',
-      'Last 7 days': 'W',
-      'Month to Date': 'M',
-      'Year to Date': 'Y',
-      'Last 12 months': 'L',
-      'Last 30 days': 'T',
-      'All time': 'A',
-    };
-
     return (
       <QueryLink
-        to={{from: false, to: false, period, ...opts}}
+        to={{ from: false, to: false, period, ...opts }}
         onClick={() => setOpen(false)}
         query={query}
-        className={`${boldClass  } px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
+        className={`${boldClass} px-4 py-2 text-sm leading-tight hover:bg-gray-100 hover:text-gray-900
           dark:hover:bg-gray-900 dark:hover:text-gray-100 flex items-center justify-between`}
       >
         {text}
-        <span className='font-normal'>{keybinds[text]}</span>
+
+        {opts.keybindHint ? (<span className='font-normal'>{opts.keybindHint}</span>) : null}
       </QueryLink>
     );
   }
@@ -329,23 +319,23 @@ function DatePicker({query, site, history}) {
             font-medium text-gray-800 dark:text-gray-200 date-options"
           >
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {renderLink("day", "Today")}
-              {renderLink("realtime", "Realtime")}
+              {renderLink("day", "Today", { keybindHint: 'D' })}
+              {renderLink("realtime", "Realtime", { keybindHint: 'R' })}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {renderLink("7d", "Last 7 days")}
-              {renderLink("30d", "Last 30 days")}
+              {renderLink("7d", "Last 7 Days", { keybindHint: 'W' })}
+              {renderLink("30d", "Last 30 Days", { keybindHint: 'T' })}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              { renderLink('month', 'Month to Date') }
-              { renderLink('month', 'Last month', {date: lastMonth(site)}) }
+              {renderLink('month', 'Month to Date', { keybindHint: 'M' })}
+              {renderLink('month', 'Last Month', { date: lastMonth(site) })}
             </div>
             <div className="py-1 border-b border-gray-200 dark:border-gray-500 date-option-group">
-              {renderLink("year", "Year to Date")}
-              {renderLink("12mo", "Last 12 months")}
+              {renderLink("year", "Year to Date", { keybindHint: 'Y' })}
+              {renderLink("12mo", "Last 12 months", { keybindHint: 'L' })}
             </div>
             <div className="py-1 date-option-group">
-              {renderLink("all", "All time")}
+              {renderLink("all", "All time", { keybindHint: 'A' })}
               <span
                 onClick={() => setMode('calendar')}
                 onKeyPress={() => setMode('calendar')}
@@ -358,11 +348,11 @@ function DatePicker({query, site, history}) {
                 aria-expanded="false"
                 aria-controls="calendar"
               >
-                Custom range
+                Custom Range
                 <span className='font-normal'>C</span>
               </span>
             </div>
-            { !COMPARISON_DISABLED_PERIODS.includes(query.period) &&
+            {!COMPARISON_DISABLED_PERIODS.includes(query.period) &&
               <div className="py-1 date-option-group border-t border-gray-200 dark:border-gray-500">
                 <span
                   onClick={() => {
@@ -370,10 +360,10 @@ function DatePicker({query, site, history}) {
                     setOpen(false)
                   }}
                   className="px-4 py-2 text-sm leading-tight hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 cursor-pointer flex items-center justify-between">
-                  { isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare' }
+                  {isComparisonEnabled(query.comparison) ? 'Disable comparison' : 'Compare'}
                   <span className='font-normal'>X</span>
                 </span>
-              </div> }
+              </div>}
           </div>
         </div>
       );
@@ -388,7 +378,8 @@ function DatePicker({query, site, history}) {
               minDate: site.statsBegin,
               showMonths: 1,
               static: true,
-              animate: true}}
+              animate: true
+            }}
             ref={calendar}
             className="invisible"
             onClose={setCustomDate}
@@ -425,11 +416,11 @@ function DatePicker({query, site, history}) {
           show={open}
           as={Fragment}
           enter="transition ease-out duration-100"
-          enterFrom="transform opacity-0 scale-95"
-          enterTo="transform opacity-100 scale-100"
+          enterFrom="opacity-0 scale-95"
+          enterTo="opacity-100 scale-100"
           leave="transition ease-in duration-75"
-          leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95"
+          leaveFrom="opacity-100 scale-100"
+          leaveTo="opacity-0 scale-95"
         >
           {renderDropDownContent()}
         </Transition>

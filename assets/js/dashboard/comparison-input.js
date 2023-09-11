@@ -166,11 +166,11 @@ const ComparisonInput = function({ site, query, history }) {
             <Transition
               as={Fragment}
               enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
               leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95">
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95">
               <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10" static>
                 { Object.keys(COMPARISON_MODES).map((key) => ComparisonModeOption({ label: COMPARISON_MODES[key], value: key, isCurrentlySelected: key == query.comparison, updateMode, setUiMode })) }
                 { query.comparison !== "custom" && <span>

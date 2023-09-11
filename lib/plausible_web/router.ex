@@ -89,7 +89,6 @@ defmodule PlausibleWeb.Router do
     get "/:domain/screen-sizes", StatsController, :screen_sizes
     get "/:domain/conversions", StatsController, :conversions
     get "/:domain/custom-prop-values/:prop_key", StatsController, :custom_prop_values
-    get "/:domain/property/:prop_name", StatsController, :prop_breakdown
     get "/:domain/suggestions/:filter_name", StatsController, :filter_suggestions
   end
 
@@ -154,11 +153,6 @@ defmodule PlausibleWeb.Router do
 
     get "/share/:domain", StatsController, :shared_link
     post "/share/:slug/authenticate", StatsController, :authenticate_shared_link
-  end
-
-  scope "/:website/settings/funnels/", PlausibleWeb do
-    pipe_through [:browser, :csrf]
-    get "/", SiteController, :settings_funnels
   end
 
   scope "/", PlausibleWeb do
@@ -260,14 +254,12 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
     get "/:website/settings/properties", SiteController, :settings_props
+    get "/:website/settings/funnels", SiteController, :settings_funnels
 
     get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
     get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
-    get "/:website/goals/new", SiteController, :new_goal
-    post "/:website/goals", SiteController, :create_goal
-    delete "/:website/goals/:id", SiteController, :delete_goal
 
     put "/:website/settings/features/visibility/:setting",
         SiteController,

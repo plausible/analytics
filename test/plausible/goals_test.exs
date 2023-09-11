@@ -3,13 +3,19 @@ defmodule Plausible.GoalsTest do
 
   alias Plausible.Goals
 
-  test "create/2 trims input" do
+  test "create/2 creates goals and trims input" do
     site = insert(:site)
     {:ok, goal} = Goals.create(site, %{"page_path" => "/foo bar "})
     assert goal.page_path == "/foo bar"
 
     {:ok, goal} = Goals.create(site, %{"event_name" => "  some event name   "})
     assert goal.event_name == "some event name"
+  end
+
+  test "create/2 creates pageview goal and adds a leading slash if missing" do
+    site = insert(:site)
+    {:ok, goal} = Goals.create(site, %{"page_path" => "foo bar"})
+    assert goal.page_path == "/foo bar"
   end
 
   test "create/2 validates goal name is at most 120 chars" do
@@ -32,7 +38,32 @@ defmodule Plausible.GoalsTest do
              :eq
   end
 
-  test "for_site2 returns trimmed input even if it was saved with trailing whitespace" do
+  test "create/2 creates revenue goal" do
+    site = insert(:site)
+    {:ok, goal} = Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
+    assert goal.event_name == "Purchase"
+    assert goal.page_path == nil
+    assert goal.currency == :EUR
+  end
+
+  test "create/2 fails for unknown currency code" do
+    site = insert(:site)
+
+    assert {:error, changeset} =
+             Goals.create(site, %{"event_name" => "Purchase", "currency" => "Euro"})
+
+    assert [currency: {"is invalid", _}] = changeset.errors
+  end
+
+  test "create/2 clears currency for pageview goals" do
+    site = insert(:site)
+    {:ok, goal} = Goals.create(site, %{"page_path" => "/purchase", "currency" => "EUR"})
+    assert goal.event_name == nil
+    assert goal.page_path == "/purchase"
+    assert goal.currency == nil
+  end
+
+  test "for_site/1 returns trimmed input even if it was saved with trailing whitespace" do
     site = insert(:site)
     insert(:goal, %{site: site, event_name: " Signup "})
     insert(:goal, %{site: site, page_path: " /Signup "})
