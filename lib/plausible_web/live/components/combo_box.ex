@@ -17,16 +17,24 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   Any function can be supplied via `suggest_fun` attribute
   - see the provided `ComboBox.StaticSearch`.
 
-  In case the `suggest_fun` runs an operation that could be deferred,
-  the `async=true` attr calls it in a background Task and updates the
-  suggestions asynchronously.
+  In most cases the `suggest_fun` runs an operation that could be deferred,
+  so by default, the `async={true}` attr calls it in a background Task
+  and updates the suggestions asynchronously. This way, you can render
+  the component without having to wait for suggestions to load.
 
-  Similarly, the initial `options` don't have to be provided up-front
-  if e.g. querying the database for suggestions at initial render is
-  undesirable. In such case, lack of `options` attr value combined
-  with `async=true` will call `suggest_fun.("", [])` asynchronously
-  - that special clause can be used to provide the initial set
-  of suggestions updated right after the initial render.
+  If you explicitly need to make the operation sychronous, you may
+  pass `async={false}` option.
+
+  If your initial `options` are not provided up-front at initial render,
+  lack of `options` attr value combined with `async=true` calls the
+  `suggest_fun.("", [])` asynchronously - that special clause can be used
+  to provide the initial set of suggestions updated right after the initial render.
+
+  To simplify integration testing, suggestions load up synchronously during
+  tests. This lets you skip waiting for suggestions messages
+  to arrive. The asynchronous behaviour alone is already tested in
+  ComboBox own test suite, so there is no need for additional
+  verification.
   """
   use Phoenix.LiveComponent
   alias Phoenix.LiveView.JS
@@ -60,7 +68,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:required, :boolean, default: false)
   attr(:creatable, :boolean, default: false)
   attr(:errors, :list, default: [])
-  attr(:async, :boolean, default: false)
+  attr(:async, :boolean, default: Mix.env() != :test)
 
   def render(assigns) do
     assigns =
