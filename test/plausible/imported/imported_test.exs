@@ -306,12 +306,6 @@ defmodule Plausible.ImportedTest do
                  "name" => "social",
                  "visit_duration" => 20,
                  "visitors" => 3
-               },
-               %{
-                 "bounce_rate" => 100.0,
-                 "name" => "Direct / None",
-                 "visit_duration" => 60.0,
-                 "visitors" => 1
                }
              ]
     end
@@ -395,12 +389,6 @@ defmodule Plausible.ImportedTest do
                  "visitors" => 2,
                  "bounce_rate" => 100.0,
                  "visit_duration" => 50.0
-               },
-               %{
-                 "bounce_rate" => 0.0,
-                 "name" => "Direct / None",
-                 "visit_duration" => 100.0,
-                 "visitors" => 1
                }
              ]
     end
@@ -485,12 +473,6 @@ defmodule Plausible.ImportedTest do
                  "visitors" => 2,
                  "bounce_rate" => 100.0,
                  "visit_duration" => 50.0
-               },
-               %{
-                 "bounce_rate" => 0.0,
-                 "name" => "Direct / None",
-                 "visit_duration" => 100.0,
-                 "visitors" => 1
                }
              ]
     end
@@ -574,12 +556,6 @@ defmodule Plausible.ImportedTest do
                  "visitors" => 2,
                  "bounce_rate" => 100.0,
                  "visit_duration" => 50.0
-               },
-               %{
-                 "bounce_rate" => 0.0,
-                 "name" => "Direct / None",
-                 "visit_duration" => 100.0,
-                 "visitors" => 1
                }
              ]
     end
