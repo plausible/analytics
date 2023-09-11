@@ -443,9 +443,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_medium") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_medium),
       group_by: s.utm_medium,
       select_merge: %{
-        utm_medium: fragment("if(empty(?), ?, ?)", s.utm_medium, @no_ref, s.utm_medium)
+        utm_medium: s.utm_medium
       }
     )
   end
@@ -453,9 +454,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_source") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_source),
       group_by: s.utm_source,
       select_merge: %{
-        utm_source: fragment("if(empty(?), ?, ?)", s.utm_source, @no_ref, s.utm_source)
+        utm_source: s.utm_source
       }
     )
   end
@@ -463,9 +465,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_campaign") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_campaign),
       group_by: s.utm_campaign,
       select_merge: %{
-        utm_campaign: fragment("if(empty(?), ?, ?)", s.utm_campaign, @no_ref, s.utm_campaign)
+        utm_campaign: s.utm_campaign
       }
     )
   end
@@ -473,9 +476,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_content") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_content),
       group_by: s.utm_content,
       select_merge: %{
-        utm_content: fragment("if(empty(?), ?, ?)", s.utm_content, @no_ref, s.utm_content)
+        utm_content: s.utm_content
       }
     )
   end
@@ -483,9 +487,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_term") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_term),
       group_by: s.utm_term,
       select_merge: %{
-        utm_term: fragment("if(empty(?), ?, ?)", s.utm_term, @no_ref, s.utm_term)
+        utm_term: s.utm_term
       }
     )
   end
