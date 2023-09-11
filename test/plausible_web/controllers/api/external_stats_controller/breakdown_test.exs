@@ -243,8 +243,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"utm_medium" => "Search", "visitors" => 2},
-               %{"utm_medium" => "Direct / None", "visitors" => 1}
+               %{"utm_medium" => "Search", "visitors" => 2}
              ]
            }
   end
@@ -275,8 +274,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"utm_source" => "Google", "visitors" => 2},
-               %{"utm_source" => "Direct / None", "visitors" => 1}
+               %{"utm_source" => "Google", "visitors" => 2}
              ]
            }
   end
@@ -307,8 +305,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"utm_campaign" => "ads", "visitors" => 2},
-               %{"utm_campaign" => "Direct / None", "visitors" => 1}
+               %{"utm_campaign" => "ads", "visitors" => 2}
              ]
            }
   end
@@ -339,8 +336,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"utm_content" => "Content1", "visitors" => 2},
-               %{"utm_content" => "Direct / None", "visitors" => 1}
+               %{"utm_content" => "Content1", "visitors" => 2}
              ]
            }
   end
@@ -371,8 +367,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"utm_term" => "Term1", "visitors" => 2},
-               %{"utm_term" => "Direct / None", "visitors" => 1}
+               %{"utm_term" => "Term1", "visitors" => 2}
              ]
            }
   end
