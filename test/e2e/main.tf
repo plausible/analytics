@@ -36,15 +36,15 @@ provider "checkly" {
 }
 
 resource "checkly_check" "plausible-io-api-health" {
-  name         = "Check plausible.io/api/health"
-  type         = "API"
-  activated    = true
-  frequency    = 1
+  name      = "Check plausible.io/api/health"
+  type      = "API"
+  activated = true
+  frequency = 1
 
   group_id = checkly_check_group.reachability.id
 
   retry_strategy {
-    type = "FIXED"
+    type        = "FIXED"
     max_retries = 2
   }
 
@@ -79,15 +79,15 @@ resource "checkly_check" "plausible-io-api-health" {
 }
 
 resource "checkly_check" "plausible-io-lb-health" {
-  name         = "Check ingress.lb.plausible.io/api/health"
-  type         = "API"
-  activated    = true
-  frequency    = 1
+  name      = "Check ingress.lb.plausible.io/api/health"
+  type      = "API"
+  activated = true
+  frequency = 1
 
   group_id = checkly_check_group.reachability.id
 
   retry_strategy {
-    type = "FIXED"
+    type        = "FIXED"
     max_retries = 2
   }
 
@@ -117,15 +117,15 @@ resource "checkly_check" "plausible-io-lb-health" {
 }
 
 resource "checkly_check" "plausible-io-custom-domain-server-health" {
-  name         = "Check custom.plausible.io"
-  type         = "API"
-  activated    = true
-  frequency    = 1
+  name      = "Check custom.plausible.io"
+  type      = "API"
+  activated = true
+  frequency = 1
 
   group_id = checkly_check_group.reachability.id
 
   retry_strategy {
-    type = "FIXED"
+    type        = "FIXED"
     max_retries = 2
   }
 
@@ -142,15 +142,15 @@ resource "checkly_check" "plausible-io-custom-domain-server-health" {
 }
 
 resource "checkly_check" "plausible-io-ingestion" {
-  name         = "Check plausible.io/api/event"
-  type         = "API"
-  activated    = true
-  frequency    = 1
+  name      = "Check plausible.io/api/event"
+  type      = "API"
+  activated = true
+  frequency = 1
 
-  group_id     = checkly_check_group.reachability.id
+  group_id = checkly_check_group.reachability.id
 
   retry_strategy {
-    type = "FIXED"
+    type        = "FIXED"
     max_retries = 2
   }
 
@@ -191,15 +191,15 @@ EOT
 }
 
 resource "checkly_check" "plausible-io-tracker-script" {
-  name         = "Check plausible.io/js/script.js"
-  type         = "API"
-  activated    = true
-  frequency    = 1
+  name      = "Check plausible.io/js/script.js"
+  type      = "API"
+  activated = true
+  frequency = 1
 
   group_id = checkly_check_group.reachability.id
 
   retry_strategy {
-    type = "FIXED"
+    type        = "FIXED"
     max_retries = 2
   }
 
@@ -221,14 +221,14 @@ resource "checkly_check" "plausible-io-tracker-script" {
 }
 
 resource "checkly_check" "ingest-plausible-io-ingestion" {
-  name         = "Check ingest.plausible.io/api/event"
-  type         = "API"
-  activated    = true
-  frequency    = 1
-  group_id     = checkly_check_group.reachability.id
+  name      = "Check ingest.plausible.io/api/event"
+  type      = "API"
+  activated = true
+  frequency = 1
+  group_id  = checkly_check_group.reachability.id
 
   retry_strategy {
-    type = "FIXED"
+    type        = "FIXED"
     max_retries = 2
   }
 
@@ -287,7 +287,7 @@ resource "checkly_check_group" "reachability" {
   use_global_alert_settings = false
 
   retry_strategy {
-    type = "FIXED"
+    type        = "FIXED"
     max_retries = 2
   }
 
