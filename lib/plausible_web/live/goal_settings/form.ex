@@ -86,7 +86,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         ]}
         module={ComboBox}
         suggest_fun={fn input, options -> suggest_page_paths(input, options, @site) end}
-        async={true}
         creatable
       />
 
@@ -185,7 +184,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
                     ComboBox.StaticSearch.suggest(input, options, weight_threshold: 0.8)
                 end
               }
-              async={true}
             />
           </div>
         </div>
