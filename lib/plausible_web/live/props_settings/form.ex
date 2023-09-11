@@ -143,7 +143,8 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     {:noreply,
      assign(socket,
        site: site,
-       form: new_form(site)
+       form: new_form(site),
+       prop_key_options_count: 0
      )}
   end
 
