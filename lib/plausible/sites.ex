@@ -3,6 +3,12 @@ defmodule Plausible.Sites do
   alias PlausibleWeb.Email
   import Ecto.Query
 
+  @type invite_error() ::
+          Ecto.Changeset.t()
+          | :already_a_member
+          | {:over_limit, non_neg_integer()}
+          | :forbidden
+
   def get_by_domain(domain) do
     Repo.get_by(Site, domain: domain)
   end
@@ -46,6 +52,12 @@ defmodule Plausible.Sites do
     end
   end
 
+  @spec bulk_transfer_ownership(
+          [Site.t()],
+          Plausible.Auth.User.t(),
+          String.t(),
+          Keyword.t()
+        ) :: {:ok, [Plausible.Auth.Invitation.t()]} | {:error, invite_error()}
   def bulk_transfer_ownership(sites, inviter, invitee_email, opts \\ []) do
     Repo.transaction(fn ->
       for site <- sites do
@@ -55,11 +67,7 @@ defmodule Plausible.Sites do
   end
 
   @spec invite(Site.t(), Plausible.Auth.User.t(), String.t(), atom()) ::
-          {:ok, Plausible.Auth.Invitation.t()}
-          | {:error, Ecto.Changeset.t()}
-          | {:error, :already_a_member}
-          | {:error, {:over_limit, non_neg_integer()}}
-          | {:error, :forbidden}
+          {:ok, Plausible.Auth.Invitation.t()} | {:error, invite_error()}
   @doc """
   Invites a new team member to the given site. Returns a
   %Plausible.Auth.Invitation{} struct and sends the invitee an email to accept
@@ -99,8 +107,9 @@ defmodule Plausible.Sites do
     required_roles = if requested_role == :owner, do: [:owner], else: [:admin, :owner]
 
     membership_query =
-      from m in Plausible.Site.Membership,
+      from(m in Plausible.Site.Membership,
         where: m.user_id == ^inviter.id and m.site_id == ^site.id and m.role in ^required_roles
+      )
 
     if Repo.exists?(membership_query), do: :ok, else: {:error, :forbidden}
   end
