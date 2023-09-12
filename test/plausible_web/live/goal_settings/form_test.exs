@@ -95,20 +95,13 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     test "currency combo works", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
 
-      # Account for asynchronous updates. Here, the options, while static,
-      # are still a sizeable payload that we can defer before the user manages
-      # to click "this is revenue goal" switch.
-      # There's also throttling applied to the ComboBox.
-      :timer.sleep(200)
       type_into_combo(lv, "currency_input", "Polish")
-      :timer.sleep(200)
       html = render(lv)
 
       assert element_exists?(html, ~s/a[phx-value-display-value="PLN - Polish Zloty"]/)
       refute element_exists?(html, ~s/a[phx-value-display-value="EUR - Euro"]/)
 
       type_into_combo(lv, "currency_input", "Euro")
-      :timer.sleep(200)
       html = render(lv)
 
       refute element_exists?(html, ~s/a[phx-value-display-value="PLN - Polish Zloty"]/)
@@ -135,16 +128,12 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       type_into_combo(lv, "page_path_input", "/go/to/p")
 
-      # Account some large-ish margin for Clickhouse latency when providing suggestions asynchronously
-      # Might be too much, but also not enough on sluggish CI
-      :timer.sleep(350)
       html = render(lv)
       assert html =~ "Create &quot;/go/to/p&quot;"
       assert html =~ "/go/to/page/1"
       refute html =~ "/go/home"
 
       type_into_combo(lv, "page_path_input", "/go/h")
-      :timer.sleep(350)
       html = render(lv)
       assert html =~ "/go/home"
       refute html =~ "/go/to/page/1"

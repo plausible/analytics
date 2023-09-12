@@ -20,17 +20,12 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
 
     form = new_form(site)
 
-    prop_key_options =
-      site
-      |> Plausible.Props.suggest_keys_to_allow()
-      |> Enum.map(&{&1, &1})
-
     {:ok,
      assign(socket,
        form: form,
-       prop_key_options: prop_key_options,
        domain: domain,
        rendered_by: pid,
+       prop_key_options_count: 0,
        site: site
      )}
   end
@@ -66,8 +61,24 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
                 "py-2"
               ]}
               module={ComboBox}
-              options={@prop_key_options}
-              suggest_fun={&ComboBox.StaticSearch.suggest/2}
+              suggest_fun={
+                pid = self()
+
+                fn
+                  "", [] ->
+                    options =
+                      @site
+                      |> Plausible.Props.suggest_keys_to_allow()
+                      |> Enum.map(&{&1, &1})
+
+                    send(pid, {:update_prop_key_options_count, Enum.count(options)})
+
+                    options
+
+                  input, options ->
+                    ComboBox.StaticSearch.suggest(input, options)
+                end
+              }
               creatable
             />
 
@@ -85,17 +96,25 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
           </div>
 
           <button
-            :if={length(@prop_key_options) > 0}
+            :if={@prop_key_options_count > 0}
             title="Use this to add any existing properties from your past events into your settings. This allows you to set up properties without having to manually enter each item."
             class="mt-2 text-sm hover:underline text-indigo-600 dark:text-indigo-400 text-left"
             phx-click="allow-existing-props"
           >
-            Already sending custom properties? Click to add all existing properties.
+            Already sending custom properties? Click to add <%= @prop_key_options_count %> existing properties we found.
           </button>
         </.form>
       </div>
     </div>
     """
+  end
+
+  def handle_info({:update_prop_key_options_count, count}, socket) do
+    {:noreply, assign(socket, prop_key_options_count: count)}
+  end
+
+  def handle_info({:selection_made, %{submit_value: _prop}}, socket) do
+    {:noreply, socket}
   end
 
   def handle_event("allow-prop", %{"prop" => prop}, socket) do
@@ -124,7 +143,8 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     {:noreply,
      assign(socket,
        site: site,
-       form: new_form(site)
+       form: new_form(site),
+       prop_key_options_count: 0
      )}
   end
 
