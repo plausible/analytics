@@ -282,6 +282,15 @@ defmodule Plausible.Billing.QuotaTest do
       assert Quota.team_member_usage(me) == 3
     end
 
+    test "does not count ownership transfer as a team member" do
+      me = insert(:user)
+      site_i_own = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
+
+      insert(:invitation, site: site_i_own, inviter: me, role: :owner)
+
+      assert Quota.team_member_usage(me) == 0
+    end
+
     test "returns zero when user does not have any site" do
       me = insert(:user)
       assert Quota.team_member_usage(me) == 0

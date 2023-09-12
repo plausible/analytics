@@ -121,6 +121,7 @@ defmodule Plausible.Billing.Quota do
       from i in Plausible.Auth.Invitation,
         inner_join: os in subquery(owned_sites_query),
         on: i.site_id == os.site_id,
+        where: i.role != :owner,
         select: %{email: i.email},
         union: ^team_members_query
 
