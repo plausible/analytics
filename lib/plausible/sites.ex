@@ -101,17 +101,21 @@ defmodule Plausible.Sites do
     end
   end
 
-  defp check_invitation_permissions(_, _, _, check_permissions: false), do: :ok
+  defp check_invitation_permissions(site, inviter, requested_role, opts) do
+    check_permissions? = Keyword.get(opts, :check_permissions, true)
 
-  defp check_invitation_permissions(site, inviter, requested_role, _) do
-    required_roles = if requested_role == :owner, do: [:owner], else: [:admin, :owner]
+    if check_permissions? do
+      required_roles = if requested_role == :owner, do: [:owner], else: [:admin, :owner]
 
-    membership_query =
-      from(m in Plausible.Site.Membership,
-        where: m.user_id == ^inviter.id and m.site_id == ^site.id and m.role in ^required_roles
-      )
+      membership_query =
+        from(m in Plausible.Site.Membership,
+          where: m.user_id == ^inviter.id and m.site_id == ^site.id and m.role in ^required_roles
+        )
 
-    if Repo.exists?(membership_query), do: :ok, else: {:error, :forbidden}
+      if Repo.exists?(membership_query), do: :ok, else: {:error, :forbidden}
+    else
+      :ok
+    end
   end
 
   defp send_invitation_email(invitation, invitee) do
