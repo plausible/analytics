@@ -48,10 +48,27 @@ defmodule Plausible.Site.AdminTest do
         subject: "[Plausible Analytics] Request to transfer ownership of #{site1.domain}"
       )
 
+      assert Repo.exists?(
+               from i in Plausible.Auth.Invitation,
+                 where:
+                   i.site_id == ^site1.id and i.email == ^new_owner.email and i.role == :owner
+             )
+
+      assert_invitation_exists(site1, new_owner.email, :owner)
+
       assert_email_delivered_with(
         to: [nil: new_owner.email],
         subject: "[Plausible Analytics] Request to transfer ownership of #{site2.domain}"
       )
+
+      assert_invitation_exists(site2, new_owner.email, :owner)
     end
+  end
+
+  defp assert_invitation_exists(site, email, role) do
+    assert Repo.exists?(
+             from i in Plausible.Auth.Invitation,
+               where: i.site_id == ^site.id and i.email == ^email and i.role == ^role
+           )
   end
 end
