@@ -46,6 +46,14 @@ defmodule Plausible.Sites do
     end
   end
 
+  def bulk_transfer_ownership(sites, inviter, invitee_email, opts \\ []) do
+    Repo.transaction(fn ->
+      for site <- sites do
+        do_invite(site, inviter, invitee_email, :owner, opts)
+      end
+    end)
+  end
+
   @spec invite(Site.t(), Plausible.Auth.User.t(), String.t(), atom()) ::
           {:ok, Plausible.Auth.Invitation.t()}
           | {:error, Ecto.Changeset.t()}
@@ -69,10 +77,10 @@ defmodule Plausible.Sites do
     end)
   end
 
-  defp do_invite(site, inviter, invitee_email, role) do
+  defp do_invite(site, inviter, invitee_email, role, opts \\ []) do
     attrs = %{email: invitee_email, role: role, site_id: site.id, inviter_id: inviter.id}
 
-    with :ok <- check_invitation_permissions(site, inviter, role),
+    with :ok <- check_invitation_permissions(site, inviter, role, opts),
          :ok <- check_team_member_limit(site, role),
          invitee <- Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- ensure_new_membership(site, invitee, role),
@@ -85,18 +93,17 @@ defmodule Plausible.Sites do
     end
   end
 
-  defp check_invitation_permissions(site, inviter, requested_role) do
+  defp check_invitation_permissions(site, inviter, requested_role, check_permissions: false),
+    do: :ok
+
+  defp check_invitation_permissions(site, inviter, requested_role, _) do
     required_roles = if requested_role == :owner, do: [:owner], else: [:admin, :owner]
 
     membership_query =
       from m in Plausible.Site.Membership,
         where: m.user_id == ^inviter.id and m.site_id == ^site.id and m.role in ^required_roles
 
-    cond do
-      Plausible.Auth.is_super_admin?(inviter) -> :ok
-      Repo.exists?(membership_query) -> :ok
-      true -> {:error, :forbidden}
-    end
+    if Repo.exists?(membership_query), do: :ok, else: {:error, :forbidden}
   end
 
   defp send_invitation_email(invitation, invitee) do

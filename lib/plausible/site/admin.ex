@@ -74,11 +74,10 @@ defmodule Plausible.SiteAdmin do
     inviter = conn.assigns[:current_user]
 
     if new_owner do
-      Repo.transaction(fn ->
-        for site <- sites do
-          Plausible.Sites.invite(site, inviter, new_owner.email, :owner)
-        end
-      end)
+      {:ok, _} =
+        Plausible.Sites.bulk_transfer_ownership(sites, inviter, new_owner.email,
+          check_permissions: false
+        )
 
       :ok
     else
