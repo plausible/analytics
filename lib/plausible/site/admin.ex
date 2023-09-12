@@ -53,7 +53,7 @@ defmodule Plausible.SiteAdmin do
     ]
   end
 
-  def list_actions(conn) do
+  def list_actions(_conn) do
     [
       transfer_ownership: %{
         name: "Transfer ownership",
