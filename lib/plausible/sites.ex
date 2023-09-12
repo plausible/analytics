@@ -93,8 +93,7 @@ defmodule Plausible.Sites do
     end
   end
 
-  defp check_invitation_permissions(site, inviter, requested_role, check_permissions: false),
-    do: :ok
+  defp check_invitation_permissions(_, _, _, check_permissions: false), do: :ok
 
   defp check_invitation_permissions(site, inviter, requested_role, _) do
     required_roles = if requested_role == :owner, do: [:owner], else: [:admin, :owner]
