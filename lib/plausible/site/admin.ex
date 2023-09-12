@@ -53,6 +53,39 @@ defmodule Plausible.SiteAdmin do
     ]
   end
 
+  def list_actions(conn) do
+    [
+      transfer_ownership: %{
+        name: "Transfer ownership",
+        inputs: [
+          %{name: "email", title: "New Owner Email", default: nil}
+        ],
+        action: fn conn, sites, params -> transfer_ownership(conn, sites, params) end
+      }
+    ]
+  end
+
+  defp transfer_ownership(_conn, [], _params) do
+    {:error, "Please select at least one site from the list"}
+  end
+
+  defp transfer_ownership(conn, sites, %{"email" => email}) do
+    new_owner = Plausible.Auth.find_user_by(email: email)
+    inviter = conn.assigns[:current_user]
+
+    if new_owner do
+      Repo.transaction(fn ->
+        for site <- sites do
+          Plausible.Sites.invite(site, inviter, new_owner.email, :owner)
+        end
+      end)
+
+      :ok
+    else
+      {:error, "User could not be found"}
+    end
+  end
+
   defp format_date(date) do
     Timex.format!(date, "{Mshort} {D}, {YYYY}")
   end

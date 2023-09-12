@@ -92,7 +92,11 @@ defmodule Plausible.Sites do
       from m in Plausible.Site.Membership,
         where: m.user_id == ^inviter.id and m.site_id == ^site.id and m.role in ^required_roles
 
-    if Repo.exists?(membership_query), do: :ok, else: {:error, :forbidden}
+    cond do
+      Plausible.Auth.is_super_admin?(inviter) -> :ok
+      Repo.exists?(membership_query) -> :ok
+      true -> {:error, :forbidden}
+    end
   end
 
   defp send_invitation_email(invitation, invitee) do
