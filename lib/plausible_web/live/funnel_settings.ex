@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
       |> assign_new(:site, fn ->
         Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
       end)
-      |> assign_new(:all_funnels, fn %{site: site} ->
+      |> assign_new(:all_funnels, fn %{site: %{id: ^site_id} = site} ->
         Funnels.list(site)
       end)
       |> assign_new(:goal_count, fn %{site: site} ->
