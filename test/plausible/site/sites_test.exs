@@ -81,11 +81,10 @@ defmodule Plausible.SitesTest do
 
     test "returns validation errors" do
       inviter = insert(:user)
-      invitee = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
-      assert {:error, changeset} = Sites.invite(site, inviter, invitee.email, :invalid_role)
-      assert {"is invalid", _} = changeset.errors[:role]
+      assert {:error, changeset} = Sites.invite(site, inviter, "", :viewer)
+      assert {"can't be blank", _} = changeset.errors[:email]
     end
 
     test "returns error when user is already a member" do
@@ -142,6 +141,142 @@ defmodule Plausible.SitesTest do
       site = insert(:site, memberships: memberships)
       assert {:error, {:over_limit, 5}} = Sites.invite(site, inviter, invitee.email, :viewer)
     end
+
+    test "sends ownership transfer email when invitee role is owner" do
+      inviter = insert(:user)
+      site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               Sites.invite(site, inviter, "vini@plausible.test", :owner)
+
+      assert_email_delivered_with(
+        to: [nil: "vini@plausible.test"],
+        subject: "[Plausible Analytics] Request to transfer ownership of #{site.domain}"
+      )
+    end
+
+    test "only allows owners to transfer ownership" do
+      inviter = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: build(:user), role: :owner),
+            build(:site_membership, user: inviter, role: :admin)
+          ]
+        )
+
+      assert {:error, :forbidden} = Sites.invite(site, inviter, "vini@plausible.test", :owner)
+    end
+
+    test "does not check for limits when transferring ownership" do
+      inviter = insert(:user)
+
+      memberships =
+        [build(:site_membership, user: inviter, role: :owner)] ++ build_list(5, :site_membership)
+
+      site = insert(:site, memberships: memberships)
+      assert {:ok, _invitation} = Sites.invite(site, inviter, "newowner@plausible.test", :owner)
+    end
+
+    test "does not allow viewers to invite users" do
+      inviter = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: build(:user), role: :owner),
+            build(:site_membership, user: inviter, role: :viewer)
+          ]
+        )
+
+      assert {:error, :forbidden} = Sites.invite(site, inviter, "vini@plausible.test", :viewer)
+    end
+
+    test "allows admins to invite other admins" do
+      inviter = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: build(:user), role: :owner),
+            build(:site_membership, user: inviter, role: :admin)
+          ]
+        )
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               Sites.invite(site, inviter, "vini@plausible.test", :admin)
+    end
+  end
+
+  describe "bulk_transfer_ownership/4" do
+    test "initiates ownership transfer for multiple sites in one action" do
+      admin_user = insert(:user)
+      new_owner = insert(:user)
+
+      site1 =
+        insert(:site, memberships: [build(:site_membership, user: admin_user, role: :owner)])
+
+      site2 =
+        insert(:site, memberships: [build(:site_membership, user: admin_user, role: :owner)])
+
+      assert {:ok, _} = Sites.bulk_transfer_ownership([site1, site2], admin_user, new_owner.email)
+
+      assert_email_delivered_with(
+        to: [nil: new_owner.email],
+        subject: "[Plausible Analytics] Request to transfer ownership of #{site1.domain}"
+      )
+
+      assert Repo.exists?(
+               from(i in Plausible.Auth.Invitation,
+                 where:
+                   i.site_id == ^site1.id and i.email == ^new_owner.email and i.role == :owner
+               )
+             )
+
+      assert_invitation_exists(site1, new_owner.email, :owner)
+
+      assert_email_delivered_with(
+        to: [nil: new_owner.email],
+        subject: "[Plausible Analytics] Request to transfer ownership of #{site2.domain}"
+      )
+
+      assert_invitation_exists(site2, new_owner.email, :owner)
+    end
+
+    test "initiates ownership transfer for multiple sites in one action skipping permission checks" do
+      superadmin_user = insert(:user)
+      new_owner = insert(:user)
+
+      site1 = insert(:site)
+      site2 = insert(:site)
+
+      assert {:ok, _} =
+               Sites.bulk_transfer_ownership([site1, site2], superadmin_user, new_owner.email,
+                 check_permissions: false
+               )
+
+      assert_email_delivered_with(
+        to: [nil: new_owner.email],
+        subject: "[Plausible Analytics] Request to transfer ownership of #{site1.domain}"
+      )
+
+      assert Repo.exists?(
+               from(i in Plausible.Auth.Invitation,
+                 where:
+                   i.site_id == ^site1.id and i.email == ^new_owner.email and i.role == :owner
+               )
+             )
+
+      assert_invitation_exists(site1, new_owner.email, :owner)
+
+      assert_email_delivered_with(
+        to: [nil: new_owner.email],
+        subject: "[Plausible Analytics] Request to transfer ownership of #{site2.domain}"
+      )
+
+      assert_invitation_exists(site2, new_owner.email, :owner)
+    end
   end
 
   describe "get_for_user/2" do
@@ -157,5 +292,13 @@ defmodule Plausible.SitesTest do
       assert is_nil(Sites.get_for_user(user2.id, domain))
       assert %{id: ^site_id} = Sites.get_for_user(user2.id, domain, [:super_admin])
     end
+  end
+
+  defp assert_invitation_exists(site, email, role) do
+    assert Repo.exists?(
+             from(i in Plausible.Auth.Invitation,
+               where: i.site_id == ^site.id and i.email == ^email and i.role == ^role
+             )
+           )
   end
 end

@@ -166,7 +166,7 @@
                   <% end %>
                   <%= if Plausible.Billing.on_trial?(@current_user) do %>
                     <br/><br />
-                    Your 30-day free trial will end immediately and you will have to enter your card details to keep using Plausible.
+                    NB: Your 30-day free trial will end immediately and <strong>you will have to enter your card details</strong> to keep using Plausible.
                   <% end %>
                   </p>
                 </div>
