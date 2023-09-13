@@ -3,8 +3,8 @@
   <script>
     window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }
 
-    <%= if @conn.assigns[:dogfood_page_path] do %>
-      const pageUrl = window.location.protocol + "//" + window.location.host + '<%= @conn.assigns[:dogfood_page_path] %>'  + window.location.search
+    <%= if @conn.assigns[:dogfood_page_url] do %>
+      const pageUrl = '<%= @conn.assigns[:dogfood_page_url] %>'
     <% else %>
       const pageUrl = window.location.href
     <% end %>
