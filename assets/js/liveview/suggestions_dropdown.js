@@ -40,7 +40,12 @@ let suggestionsDropdown = function(id) {
       const currentFocus = this.focus
       return currentFocus - 1 >= this.leastFocusableIndex() ? currentFocus - 1 : this.maxFocusableIndex()
     },
-    close() { this.isOpen = false },
+    close(e) {
+      if (this.isOpen) {
+        e.stopPropagation()
+      }
+      this.isOpen = false
+    },
     select() {
       this.$refs[`dropdown-${this.id}-option-${this.focus}`]?.click()
       this.close()
