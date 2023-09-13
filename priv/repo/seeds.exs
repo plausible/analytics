@@ -205,12 +205,12 @@ native_stats_range
       operating_system: Enum.random(["Windows", "macOS", "Linux"]),
       operating_system_version: to_string(Enum.random(0..15)),
       user_id: Enum.random(1..1200),
-      "meta.key": ["url", "seeded-property-alice", "seeded-property-bob", "seeded-property-joe"],
+      "meta.key": ["url", "logged_in", "is_customer", "amount"],
       "meta.value": [
         Enum.random(long_random_urls),
-        Enum.random(long_random_urls),
-        Enum.random(long_random_urls),
-        Enum.random(long_random_urls)
+        Enum.random(["true", "false"]),
+        Enum.random(["true", "false"]),
+        to_string(Enum.random(1..9000))
       ]
     ]
     |> Keyword.merge(geolocation)
