@@ -40,7 +40,14 @@ let suggestionsDropdown = function(id) {
       const currentFocus = this.focus
       return currentFocus - 1 >= this.leastFocusableIndex() ? currentFocus - 1 : this.maxFocusableIndex()
     },
-    close() { this.isOpen = false },
+    close(e) {
+      // Pressing Escape should not propagate to window,
+      // so we'll only close the suggestions pop-up
+      if (this.isOpen && e.key === "Escape") {
+        e.stopPropagation()
+      }
+      this.isOpen = false
+    },
     select() {
       this.$refs[`dropdown-${this.id}-option-${this.focus}`]?.click()
       this.close()

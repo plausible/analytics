@@ -28,7 +28,6 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
     {:ok,
      assign(socket,
-       site_id: site_id,
        domain: domain,
        displayed_funnels: socket.assigns.all_funnels,
        add_funnel?: false,

@@ -144,16 +144,22 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:noreply, socket}
   end
 
-  def handle_info({:prop_allowed, prop}, %{assigns: %{site: site}} = socket)
+
+  def handle_info(
+        {:prop_allowed, prop},
+        %{assigns: %{site: site}} = socket
+      )
       when is_binary(prop) do
+    allowed_event_props = [prop | site.allowed_event_props]
+
     socket =
       socket
       |> assign(
         add_prop?: false,
         filter_text: "",
-        all_props: [prop | socket.assigns.all_props],
-        displayed_props: [prop | socket.assigns.all_props],
-        site: %{site | allowed_event_props: [prop | site.allowed_event_props]}
+        all_props: allowed_event_props,
+        displayed_props: allowed_event_props,
+        site: %{site | allowed_event_props: allowed_event_props}
       )
       |> put_flash(:success, "Property added successfully")
 
