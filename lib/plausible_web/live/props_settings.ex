@@ -9,27 +9,28 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   def mount(
         _params,
-        %{"site_id" => _site_id, "domain" => domain, "current_user_id" => user_id},
+        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
-    site =
-      if Plausible.Auth.is_super_admin?(user_id) do
-        Plausible.Sites.get_by_domain(domain)
-      else
-        Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin])
-      end
-
-    suggestions =
-      site
-      |> Plausible.Props.suggest_keys_to_allow()
-      |> Enum.map(&{&1, &1})
+    socket =
+      socket
+      |> assign_new(:site, fn ->
+        Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      end)
+      |> assign_new(:all_props, fn %{site: site} ->
+        site.allowed_event_props || []
+      end)
+      |> assign_new(:displayed_props, fn %{all_props: props} ->
+        props
+      end)
 
     {:ok,
      assign(socket,
-       site: site,
+       site_id: site_id,
+       domain: domain,
        current_user_id: user_id,
-       form: new_form(site),
-       suggestions: suggestions
+       add_prop?: false,
+       filter_text: ""
      )}
   end
 
@@ -37,90 +38,27 @@ defmodule PlausibleWeb.Live.PropsSettings do
     ~H"""
     <section id="props-settings-main">
       <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
+      <%= if @add_prop? do %>
+        <%= live_render(
+          @socket,
+          PlausibleWeb.Live.PropsSettings.Form,
+          id: "props-form",
+          session: %{
+            "current_user_id" => @current_user_id,
+            "domain" => @domain,
+            "site_id" => @site_id,
+            "rendered_by" => self()
+          }
+        ) %>
+      <% end %>
 
-      <h1 class="text-normal leading-6 font-medium text-gray-900 dark:text-gray-100">
-        Configured properties
-      </h1>
-
-      <h2 class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-400">
-        In order for the properties to show up on your dashboard, you need to
-        explicitly add them below first
-      </h2>
-
-      <.form :let={f} for={@form} id="props-form" phx-submit="allow" class="mt-5">
-        <div class="flex space-x-2">
-          <.live_component
-            id={:prop_input}
-            submit_name="prop"
-            class="flex-1"
-            module={ComboBox}
-            suggest_fun={&ComboBox.StaticSearch.suggest/2}
-            options={@suggestions}
-            required
-            creatable
-          />
-
-          <button id="allow" type="submit" class="button">+ Add</button>
-        </div>
-
-        <div :if={length(f[:allowed_event_props].errors) > 0} id="prop-errors" role="alert">
-          <%= PlausibleWeb.ErrorHelpers.error_tag(f, :allowed_event_props) %>
-        </div>
-      </.form>
-
-      <button
-        :if={length(@suggestions) > 0}
-        title="Use this to add any existing properties from your past events into your settings. This allows you to set up properties without having to manually enter each item."
-        class="mt-1 text-sm hover:underline text-indigo-600 dark:text-indigo-400"
-        phx-click="allow-existing-props"
-      >
-        Already sending custom properties? Click to add all existing properties
-      </button>
-
-      <div class="mt-5">
-        <%= if is_list(@site.allowed_event_props) && length(@site.allowed_event_props) > 0 do %>
-          <ul id="allowed-props" class="divide-gray-200 divide-y dark:divide-gray-600">
-            <li
-              :for={{prop, index} <- Enum.with_index(@site.allowed_event_props)}
-              id={"prop-#{index}"}
-              class="flex py-4"
-            >
-              <span class="flex-1 truncate font-medium text-sm text-gray-800 dark:text-gray-200">
-                <%= prop %>
-              </span>
-              <button
-                data-confirm={"Are you sure you want to remove property '#{prop}'? This will just affect the UI, all of your analytics data will stay intact."}
-                phx-click="disallow"
-                phx-value-prop={prop}
-                class="w-4 h-4 text-red-600 hover:text-red-700"
-                aria-label={"Remove #{prop} property"}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                  </path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-              </button>
-            </li>
-          </ul>
-        <% else %>
-          <p class="text-sm text-gray-800 dark:text-gray-200">
-            No properties configured for this site yet
-          </p>
-        <% end %>
-      </div>
+      <.live_component
+        module={PlausibleWeb.Live.PropsSettings.List}
+        id="props-list"
+        props={@displayed_props}
+        domain={@domain}
+        filter_text={@filter_text}
+      />
     </section>
     """
   end
@@ -133,8 +71,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
         {:noreply,
          assign(socket,
            site: site,
-           form: new_form(site),
-           suggestions: rebuild_suggestions(socket.assigns.suggestions, site.allowed_event_props)
+           form: new_form(site)
          )}
 
       {:error, changeset} ->
@@ -145,9 +82,38 @@ defmodule PlausibleWeb.Live.PropsSettings do
     end
   end
 
-  def handle_event("disallow", %{"prop" => prop}, socket) do
+  def handle_event("add-prop", _value, socket) do
+    {:noreply, assign(socket, add_prop?: true)}
+  end
+
+  def handle_event("filter", %{"filter-text" => filter_text}, socket) do
+    new_list =
+      ComboBox.StaticSearch.suggest(
+        filter_text,
+        socket.assigns.all_props
+      )
+
+    {:noreply, assign(socket, displayed_props: new_list, filter_text: filter_text)}
+  end
+
+  def handle_event("reset-filter-text", _params, socket) do
+    {:noreply, assign(socket, filter_text: "", displayed_props: socket.assigns.all_props)}
+  end
+
+  def handle_event("disallow-prop", %{"prop" => prop}, socket) do
     {:ok, site} = Plausible.Props.disallow(socket.assigns.site, prop)
-    {:noreply, assign(socket, site: site)}
+
+    socket =
+      socket
+      |> put_flash(:success, "Property removed successfully")
+      |> assign(
+        all_props: Enum.reject(socket.assigns.all_props, &(&1 == prop)),
+        displayed_props: Enum.reject(socket.assigns.displayed_props, &(&1 == prop)),
+        site: site
+      )
+
+    Process.send_after(self(), :clear_flash, 5000)
+    {:noreply, socket}
   end
 
   def handle_event("allow-existing-props", _params, socket) do
@@ -155,21 +121,52 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
     {:noreply,
      assign(socket,
-       site: site,
-       suggestions: rebuild_suggestions(socket.assigns.suggestions, site.allowed_event_props)
+       site: site
      )}
   end
 
-  defp rebuild_suggestions(suggestions, allowed_event_props) do
-    allowed_event_props = allowed_event_props || []
+  def handle_info(:cancel_add_prop, socket) do
+    {:noreply, assign(socket, add_prop?: false)}
+  end
 
-    suggestions =
-      for {suggestion, _} <- suggestions,
-          suggestion not in allowed_event_props,
-          do: {suggestion, suggestion}
+  def handle_info({:props_allowed, props}, socket) when is_list(props) do
+    socket =
+      socket
+      |> assign(
+        add_prop?: false,
+        filter_text: "",
+        all_props: props,
+        displayed_props: props,
+        site: %{socket.assigns.site | allowed_event_props: props}
+      )
+      |> put_flash(:success, "Properties added successfully")
 
-    send_update(ComboBox, id: :prop_input, suggestions: suggestions)
-    suggestions
+    {:noreply, socket}
+  end
+
+  def handle_info(
+        {:prop_allowed, prop},
+        %{assigns: %{site: site}} = socket
+      )
+      when is_binary(prop) do
+    allowed_event_props = [prop | site.allowed_event_props]
+
+    socket =
+      socket
+      |> assign(
+        add_prop?: false,
+        filter_text: "",
+        all_props: allowed_event_props,
+        displayed_props: allowed_event_props,
+        site: %{site | allowed_event_props: allowed_event_props}
+      )
+      |> put_flash(:success, "Property added successfully")
+
+    {:noreply, socket}
+  end
+
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
   end
 
   defp new_form(site) do

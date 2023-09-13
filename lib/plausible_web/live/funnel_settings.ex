@@ -11,22 +11,25 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def mount(
         _params,
-        %{"site_id" => _site_id, "domain" => domain, "current_user_id" => user_id},
+        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
-    true = Plausible.Funnels.enabled_for?("user:#{user_id}")
-
-    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
-
-    funnels = Funnels.list(site)
-    goal_count = Goals.count(site)
+    socket =
+      socket
+      |> assign_new(:site, fn ->
+        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      end)
+      |> assign_new(:funnels, fn %{site: site} ->
+        Funnels.list(site)
+      end)
+      |> assign_new(:goal_count, fn %{site: site} ->
+        Goals.count(site)
+      end)
 
     {:ok,
      assign(socket,
-       site_id: site.id,
-       domain: site.domain,
-       funnels: funnels,
-       goal_count: goal_count,
+       site_id: site_id,
+       domain: domain,
        add_funnel?: false,
        current_user_id: user_id
      )}
