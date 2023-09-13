@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Site.Removal — Plausible v0.0.1</title>
+    <title>PlausibleWeb.Live.PropsSettings.Form — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,19 +102,19 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/removal.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings/form.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Site.Removal</span> 
+  <span translate="no">PlausibleWeb.Live.PropsSettings.Form</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>A site deletion service stub.</p>
+<p>Live view for the custom props creation form</p>
   </section>
 
 
@@ -132,9 +132,41 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#run/1" translate="no">run(domain)</a>
+        <a href="#handle_event/3" translate="no">handle_event(binary, arg2, socket)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#handle_info/2" translate="no">handle_info(arg, socket)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:handle_info/2"><code class="inline">Phoenix.LiveView.handle_info/2</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#mount/3" translate="no">mount(params, map, socket)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#render/1" translate="no">render(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p></div>
 
     </div>
 
@@ -151,16 +183,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="run/1">
+<section class="detail" id="handle_event/3">
 
   <div class="detail-header">
-    <a href="#run/1" class="detail-link" title="Link to this function">
+    <a href="#handle_event/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">run(domain)</h1>
+    <h1 class="signature" translate="no">handle_event(binary, arg2, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/removal.ex#L10" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings/form.ex#L120" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -170,13 +202,73 @@ Functions
 
   <section class="docstring">
 
-      <div class="specs">
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="handle_info/2">
 
-          <pre translate="no"><span class="attribute">@spec</span> run(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()}</pre>
+  <div class="detail-header">
+    <a href="#handle_info/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">handle_info(arg, socket)</h1>
 
-      </div>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings/form.ex#L112" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
 
 
+  </div>
+
+  <section class="docstring">
+
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:handle_info/2"><code class="inline">Phoenix.LiveView.handle_info/2</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="mount/3">
+
+  <div class="detail-header">
+    <a href="#mount/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">mount(params, map, socket)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings/form.ex#L9" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="render/1">
+
+  <div class="detail-header">
+    <a href="#render/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">render(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings/form.ex#L33" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p>
   </section>
 </section>
 

@@ -191,6 +191,8 @@ PlausibleWeb.Live.FunnelSettings.html
 PlausibleWeb.Live.GoalSettings.Form.html
 PlausibleWeb.Live.GoalSettings.List.html
 PlausibleWeb.Live.GoalSettings.html
+PlausibleWeb.Live.PropsSettings.Form.html
+PlausibleWeb.Live.PropsSettings.List.html
 PlausibleWeb.Live.PropsSettings.html
 PlausibleWeb.LiveSocket.html
 PlausibleWeb.MJML.WeeklyReport.html
@@ -245,8 +247,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-C9927923.js
-dist/sidebar_items-E9F5E70A.js
+dist/search_data-E599BF1C.js
+dist/sidebar_items-38455D23.js
 index.html
 readme.html
 search.html
