@@ -149,7 +149,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
         %{assigns: %{site: site}} = socket
       )
       when is_binary(prop) do
-    allowed_event_props = [prop | site.allowed_event_props]
+    allowed_event_props = [prop | site.allowed_event_props || []]
 
     socket =
       socket

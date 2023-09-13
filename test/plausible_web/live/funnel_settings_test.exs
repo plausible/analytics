@@ -17,6 +17,14 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       assert element_exists?(resp, "a[href=\"https://plausible.io/docs/funnel-analysis\"]")
     end
 
+    test "search funnels input is rendered", %{conn: conn, site: site} do
+      setup_goals(site)
+      conn = get(conn, "/#{site.domain}/settings/funnels")
+      resp = html_response(conn, 200)
+      assert element_exists?(resp, ~s/input[type="text"]#filter-text/)
+      assert element_exists?(resp, ~s/form[phx-change="filter"]#filter-form/)
+    end
+
     test "lists funnels with delete actions", %{conn: conn, site: site} do
       {:ok, [f1_id, f2_id]} = setup_funnels(site)
       conn = get(conn, "/#{site.domain}/settings/funnels")
@@ -41,7 +49,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       assert element_exists?(resp, ~S/button[phx-click="add-funnel"]/)
     end
 
-    test "if not enough goals are present, a hint to create goals is rendered", %{
+    test "if not enough goals are present, renders a hint to create goals + no search", %{
       conn: conn,
       site: site
     } do
@@ -53,11 +61,58 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
       add_goals_path = Routes.site_path(conn, :settings_goals, site.domain)
       assert element_exists?(doc, ~s/a[href="#{add_goals_path}"]/)
+
+      refute element_exists?(doc, ~s/input[type="text"]#filter-text/)
+      refute element_exists?(doc, ~s/form[phx-change="filter"]#filter-form/)
     end
   end
 
   describe "FunnelSettings live view" do
     setup [:create_user, :log_in, :create_site]
+
+    test "allows list filtering / search", %{conn: conn, site: site} do
+      {:ok, _} = setup_funnels(site, ["Funnel One", "Search Me"])
+      {lv, html} = get_liveview(conn, site, with_html?: true)
+
+      assert html =~ "Funnel One"
+      assert html =~ "Search Me"
+
+      html = type_into_search(lv, "search")
+
+      refute html =~ "Funnel One"
+      assert html =~ "Search Me"
+    end
+
+    test "allows resetting filter text via backspace icon", %{conn: conn, site: site} do
+      {:ok, _} = setup_funnels(site, ["Funnel One", "Another"])
+      {lv, html} = get_liveview(conn, site, with_html?: true)
+
+      refute element_exists?(html, ~s/svg[phx-click="reset-filter-text"]#reset-filter/)
+
+      html = type_into_search(lv, "one")
+      refute html =~ "Another"
+
+      assert element_exists?(html, ~s/svg[phx-click="reset-filter-text"]#reset-filter/)
+
+      html = lv |> element(~s/svg#reset-filter/) |> render_click()
+
+      assert html =~ "Funnel One"
+      assert html =~ "Another"
+    end
+
+    test "allows resetting filter text via no match link", %{conn: conn, site: site} do
+      {:ok, _} = setup_funnels(site)
+      lv = get_liveview(conn, site)
+      html = type_into_search(lv, "Definitely this is not going to render any matches")
+
+      assert html =~ "No funnels found for this site. Please refine or"
+      assert html =~ "reset your search"
+
+      assert element_exists?(html, ~s/a[phx-click="reset-filter-text"]#reset-filter-hint/)
+      html = lv |> element(~s/a#reset-filter-hint/) |> render_click()
+
+      refute html =~ "No funnels found for this site. Please refine or"
+    end
 
     test "allows to delete funnels", %{conn: conn, site: site} do
       {:ok, [f1_id, _f2_id]} = setup_funnels(site)
@@ -83,7 +138,11 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       lv = get_liveview(conn, site)
       doc = render_click(lv, "add-funnel")
 
-      assert element_exists?(doc, ~s/form[phx-change="validate"][phx-submit="save"]/)
+      assert element_exists?(
+               doc,
+               ~s/form[phx-change="validate"][phx-submit="save"][phx-click-away="cancel-add-funnel"]/
+             )
+
       assert element_exists?(doc, ~s/form input[type="text"][name="funnel[name]"]/)
 
       assert element_exists?(
@@ -222,43 +281,22 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       doc = lv |> element("#funnel-eval") |> render()
       assert text_of_element(doc, ~s/#funnel-eval/) =~ "Last month conversion rate: 0%"
     end
-
-    test "cancel buttons renders the funnel list", %{
-      conn: conn,
-      site: site
-    } do
-      setup_goals(site)
-      lv = get_liveview(conn, site)
-      doc = lv |> element(~s/button[phx-click="add-funnel"]/) |> render_click()
-
-      cancel_button = ~s/button#cancel[phx-click="cancel-add-funnel"]/
-
-      assert element_exists?(doc, cancel_button)
-
-      doc =
-        lv
-        |> element(cancel_button)
-        |> render_click()
-
-      assert doc =~ "No funnels configured for this site yet"
-      assert element_exists?(doc, ~S/button[phx-click="add-funnel"]/)
-    end
   end
 
-  defp setup_funnels(site) do
+  defp setup_funnels(site, names \\ []) do
     {:ok, [g1, g2]} = setup_goals(site)
 
     {:ok, f1} =
       Plausible.Funnels.create(
         site,
-        "From blog to signup",
+        Enum.at(names, 0) || "From blog to signup",
         [%{"goal_id" => g1.id}, %{"goal_id" => g2.id}]
       )
 
     {:ok, f2} =
       Plausible.Funnels.create(
         site,
-        "From signup to blog",
+        Enum.at(names, 1) || "From signup to blog",
         [%{"goal_id" => g2.id}, %{"goal_id" => g1.id}]
       )
 
@@ -280,5 +318,14 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
     else
       lv
     end
+  end
+
+  defp type_into_search(lv, text) do
+    lv
+    |> element("form#filter-form")
+    |> render_change(%{
+      "_target" => ["filter-text"],
+      "filter-text" => "#{text}"
+    })
   end
 end

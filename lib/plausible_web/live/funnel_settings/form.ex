@@ -6,9 +6,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   """
 
   use Phoenix.LiveView
-  use Phoenix.HTML
   use Plausible.Funnel
 
+  import PlausibleWeb.Live.Components.Form
   alias Plausible.{Sites, Goals}
 
   def mount(_params, %{"current_user_id" => user_id, "domain" => domain}, socket) do
@@ -39,110 +39,100 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def render(assigns) do
     ~H"""
-    <div id="funnel-form" class="grid grid-cols-2 gap-6 mt-6">
-      <div class="col-span-2 sm:col-span-2">
-        <.form
-          :let={f}
-          for={@form}
-          phx-change="validate"
-          phx-submit="save"
-          phx-target="#funnel-form"
-          onkeydown="return event.key != 'Enter';"
-        >
-          <label
-            for={f[:name].name}
-            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+    <div
+      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"
+      phx-window-keydown="cancel-add-funnel"
+      phx-key="Escape"
+    >
+    </div>
+    <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overlofw-y-auto overflow-x-hidden">
+      <div class="w-2/5 h-full">
+        <div id="funnel-form">
+          <.form
+            :let={f}
+            for={@form}
+            phx-change="validate"
+            phx-submit="save"
+            phx-target="#funnel-form"
+            phx-click-away="cancel-add-funnel"
+            onkeydown="return event.key != 'Enter';"
+            class="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
           >
-            Funnel Name
-          </label>
-          <.input field={f[:name]} />
+            <h2 class="text-xl font-black dark:text-gray-100 mb-6">Add Funnel</h2>
 
-          <div id="steps-builder">
-            <label class="mt-6 block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Funnel Steps
+            <label for={f[:name].name} class="block mb-3 font-medium dark:text-gray-100">
+              Funnel Name
             </label>
 
-            <div :for={step_idx <- @step_ids} class="flex mb-3">
-              <div class="w-2/5 flex-1">
-                <.live_component
-                  submit_name="funnel[steps][][goal_id]"
-                  module={PlausibleWeb.Live.Components.ComboBox}
-                  suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
-                  id={"step-#{step_idx}"}
-                  options={reject_alrady_selected("step-#{step_idx}", @goals, @selections_made)}
-                />
+            <.input
+              field={f[:name]}
+              phx-debounce={200}
+              autocomplete="off"
+              placeholder="e.g. From Blog to Purchase"
+              autofocus
+              class="w-full focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500 w-full p-2 mt-2"
+            />
+
+            <div id="steps-builder" class="mt-6">
+              <label class="font-medium dark:text-gray-100">
+                Funnel Steps
+              </label>
+
+              <div :for={step_idx <- @step_ids} class="flex mb-3 mt-3">
+                <div class="w-2/5 flex-1">
+                  <.live_component
+                    submit_name="funnel[steps][][goal_id]"
+                    module={PlausibleWeb.Live.Components.ComboBox}
+                    suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
+                    id={"step-#{step_idx}"}
+                    options={reject_already_selected("step-#{step_idx}", @goals, @selections_made)}
+                  />
+                </div>
+
+                <div class="w-min inline-flex items-center align-middle">
+                  <.remove_step_button
+                    :if={length(@step_ids) > Funnel.min_steps()}
+                    step_idx={step_idx}
+                  />
+                </div>
+
+                <div class="w-4/12 align-middle ml-4 text-gray-500 dark:text-gray-400">
+                  <.evaluation
+                    :if={@evaluation_result}
+                    result={@evaluation_result}
+                    at={Enum.find_index(@step_ids, &(&1 == step_idx))}
+                  />
+                </div>
               </div>
 
-              <div class="w-min inline-flex items-center align-middle">
-                <.remove_step_button :if={length(@step_ids) > Funnel.min_steps()} step_idx={step_idx} />
+              <.add_step_button :if={
+                length(@step_ids) < Funnel.max_steps() and
+                  map_size(@selections_made) < length(@goals)
+              } />
+
+              <div class="mt-6">
+                <p id="funnel-eval" class="text-gray-500 dark:text-gray-400 text-sm mt-2 mb-2">
+                  <%= if @evaluation_result do %>
+                    Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
+                  <% else %>
+                    <span class="text-red-600 text-sm">
+                      Choose minimum <%= Funnel.min_steps() %> steps to evaluate funnel.
+                    </span>
+                  <% end %>
+                </p>
               </div>
 
-              <div class="w-2/5 inline-flex items-center ml-2 mb-3 text-gray-500 dark:text-gray-400">
-                <.evaluation
-                  :if={@evaluation_result}
-                  result={@evaluation_result}
-                  at={Enum.find_index(@step_ids, &(&1 == step_idx))}
-                />
-              </div>
-            </div>
-
-            <.add_step_button :if={
-              length(@step_ids) < Funnel.max_steps() and
-                map_size(@selections_made) < length(@goals)
-            } />
-
-            <div class="mt-6">
-              <p id="funnel-eval" class="text-gray-500 dark:text-gray-400 text-sm mt-2 mb-2">
-                <%= if @evaluation_result do %>
-                  Last month conversion rate: <strong><%= List.last(@evaluation_result.steps).conversion_rate %></strong>%
+              <div class="mt-6">
+                <%= if has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or length(@step_ids) > map_size(@selections_made) do %>
+                  <.submit_button_inactive />
                 <% else %>
-                  <span class="text-red-600 text-sm">
-                    Choose minimum <%= Funnel.min_steps() %> steps to evaluate funnel.
-                  </span>
+                  <.submit_button />
                 <% end %>
-              </p>
+              </div>
             </div>
-
-            <div class="mt-6">
-              <%= if has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or length(@step_ids) > map_size(@selections_made) do %>
-                <.submit_button_inactive />
-              <% else %>
-                <.submit_button />
-              <% end %>
-              <.cancel_button />
-            </div>
-          </div>
-        </.form>
+          </.form>
+        </div>
       </div>
-    </div>
-    """
-  end
-
-  attr(:field, Phoenix.HTML.FormField)
-
-  def input(assigns) do
-    ~H"""
-    <div phx-feedback-for={@field.name}>
-      <input
-        autocomplete="off"
-        autofocus
-        type="text"
-        id={@field.id}
-        name={@field.name}
-        value={@field.value}
-        phx-debounce="300"
-        class="focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-900 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500"
-      />
-
-      <.error :for={{msg, _} <- @field.errors}>Funnel Name <%= msg %></.error>
-    </div>
-    """
-  end
-
-  def error(assigns) do
-    ~H"""
-    <div class="mt-2 text-sm text-red-600">
-      <%= render_slot(@inner_block) %>
     </div>
     """
   end
@@ -151,7 +141,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def remove_step_button(assigns) do
     ~H"""
-    <div class="inline-flex items-center ml-2 mb-4 text-red-600">
+    <div class="inline-flex items-center ml-2 mb-4 text-red-500">
       <svg
         id={"remove-step-#{@step_idx}"}
         class="feather feather-sm cursor-pointer"
@@ -185,7 +175,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def submit_button(assigns) do
     ~H"""
-    <button id="save" type="submit" class="button mt-6">Save</button>
+    <button id="save" type="submit" class="button text-base font-bold w-full">
+      Add Funnel →
+    </button>
     """
   end
 
@@ -194,23 +186,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     <button
       type="none"
       id="save"
-      class="inline-block mt-6 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 active:bg-gray-50 transition ease-in-out duration-150 cursor-not-allowed"
+      class="w-full text-base font-bold py-2 border border-gray-300 dark:border-gray-500 rounded-md text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 active:bg-gray-50 transition ease-in-out duration-150 cursor-not-allowed"
     >
-      Save
-    </button>
-    """
-  end
-
-  def cancel_button(assigns) do
-    ~H"""
-    <button
-      type="button"
-      id="cancel"
-      class="inline-block mt-4 ml-2 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150 "
-      phx-click="cancel-add-funnel"
-      phx-target="#funnel-settings-main"
-    >
-      Cancel
+      Add Funnel →
     </button>
     """
   end
@@ -220,7 +198,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
   def evaluation(assigns) do
     ~H"""
-    <span class="text-xs" id={"step-eval-#{@at}"}>
+    <span class="text-sm" id={"step-eval-#{@at}"}>
       <% step = Enum.at(@result.steps, @at) %>
       <span :if={step && @at == 0}>
         <span
@@ -288,6 +266,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     end
   end
 
+  def handle_event("cancel-add-funnel", _value, socket) do
+    send(socket.parent_pid, :cancel_add_funnel)
+    {:noreply, socket}
+  end
+
   def handle_info({:selection_made, %{submit_value: goal_id, by: combo_box}}, socket) do
     selections_made = store_selection(socket.assigns, combo_box, goal_id)
 
@@ -353,7 +336,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
         steps
       )
 
-    query = Plausible.Stats.Query.from(site, %{"period" => "all"})
+    query = Plausible.Stats.Query.from(site, %{"period" => "month"})
     {:ok, {definition, query}}
   end
 
@@ -392,7 +375,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     Map.delete(selections_made, step_input_id)
   end
 
-  defp reject_alrady_selected(combo_box, goals, selections_made) do
+  defp reject_already_selected(combo_box, goals, selections_made) do
     selection_ids =
       Enum.map(selections_made, fn
         {_, %{id: goal_id}} -> goal_id
