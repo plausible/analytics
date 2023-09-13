@@ -38,12 +38,12 @@ defmodule Plausible.Workers.SpikeNotifierTest do
     SpikeNotifier.perform(nil, clickhouse_stub)
 
     assert_email_delivered_with(
-      subject: "Traffic spike on #{site.domain}",
+      subject: "Traffic Spike on #{site.domain}",
       to: [nil: "jerod@example.com"]
     )
 
     assert_email_delivered_with(
-      subject: "Traffic spike on #{site.domain}",
+      subject: "Traffic Spike on #{site.domain}",
       to: [nil: "uku@example.com"]
     )
   end
@@ -77,7 +77,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
     SpikeNotifier.perform(nil, clickhouse_stub)
 
     assert_email_delivered_with(
-      subject: "Traffic spike on #{site.domain}",
+      subject: "Traffic Spike on #{site.domain}",
       to: [nil: "uku@example.com"]
     )
 

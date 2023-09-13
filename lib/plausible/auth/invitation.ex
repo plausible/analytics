@@ -2,6 +2,8 @@ defmodule Plausible.Auth.Invitation do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @derive {Jason.Encoder, only: [:invitation_id, :role, :site]}
   @required [:email, :role, :site_id, :inviter_id]
   schema "invitations" do

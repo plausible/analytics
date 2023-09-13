@@ -18,7 +18,7 @@
               <p class="text-sm font-medium text-gray-900 dark:text-gray-50 truncate">
                 <%= membership.user.name %>
               </p>
-              <p class="text-sm text-gray-500 truncate">
+              <p class="text-sm text-gray-400 truncate">
                 <%= membership.user.email %>
               </p>
             </div>

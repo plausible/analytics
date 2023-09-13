@@ -46,11 +46,9 @@ defmodule PlausibleWeb.LayoutView do
       if Plausible.Funnels.enabled_for?(conn.assigns[:current_user]) do
         [key: "Funnels", value: "funnels"]
       end,
-      if Plausible.Props.enabled_for?(conn.assigns[:current_user]) do
-        [key: "Custom Properties", value: "properties"]
-      end,
+      [key: "Custom Properties", value: "properties"],
       [key: "Search Console", value: "search-console"],
-      [key: "Email reports", value: "email-reports"],
+      [key: "Email Reports", value: "email-reports"],
       if !is_selfhost() && conn.assigns[:site].custom_domain do
         [key: "Custom domain", value: "custom-domain"]
       end,

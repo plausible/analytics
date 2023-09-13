@@ -27,10 +27,10 @@ defmodule Plausible.Goal do
   def currency_options do
     options =
       for code <- valid_currencies() do
-        {"#{code} - #{Cldr.Currency.display_name!(code)}", code}
+        {code, "#{code} - #{Cldr.Currency.display_name!(code)}"}
       end
 
-    [{"Select reporting currency", nil}] ++ options
+    options
   end
 
   def changeset(goal, attrs \\ %{}) do
@@ -38,11 +38,25 @@ defmodule Plausible.Goal do
     |> cast(attrs, [:id, :site_id, :event_name, :page_path, :currency])
     |> validate_required([:site_id])
     |> cast_assoc(:site)
+    |> update_leading_slash()
     |> validate_event_name_and_page_path()
     |> update_change(:event_name, &String.trim/1)
     |> update_change(:page_path, &String.trim/1)
     |> validate_length(:event_name, max: 120)
     |> maybe_drop_currency()
+  end
+
+  defp update_leading_slash(changeset) do
+    case get_field(changeset, :page_path) do
+      "/" <> _ ->
+        changeset
+
+      page_path when is_binary(page_path) ->
+        put_change(changeset, :page_path, "/" <> page_path)
+
+      _ ->
+        changeset
+    end
   end
 
   defp validate_event_name_and_page_path(changeset) do

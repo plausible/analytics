@@ -27,10 +27,18 @@ defmodule PlausibleWeb.Components.Billing do
     <tr {@rest}>
       <td class={["py-4 text-sm whitespace-nowrap text-left", @pad && "pl-6"]}><%= @title %></td>
       <td class="py-4 text-sm whitespace-nowrap text-right">
-        <%= Cldr.Number.to_string!(@usage) %>
-        <%= if is_number(@limit), do: "/ #{Cldr.Number.to_string!(@limit)}" %>
+        <%= render_quota(@usage) %>
+        <%= if @limit, do: "/ #{render_quota(@limit)}" %>
       </td>
     </tr>
     """
+  end
+
+  defp render_quota(quota) do
+    case quota do
+      quota when is_number(quota) -> Cldr.Number.to_string!(quota)
+      :unlimited -> "∞"
+      nil -> ""
+    end
   end
 end

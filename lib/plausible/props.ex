@@ -118,10 +118,6 @@ defmodule Plausible.Props do
     )
   end
 
-  def enabled_for?(%Plausible.Auth.User{} = user) do
-    FunWithFlags.enabled?(:props, for: user)
-  end
-
   defp valid?(key) do
     String.length(key) in 1..@max_prop_key_length
   end

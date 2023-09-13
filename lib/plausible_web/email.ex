@@ -114,7 +114,7 @@ defmodule PlausibleWeb.Email do
     base_email()
     |> to(email)
     |> tag("spike-notification")
-    |> subject("Traffic spike on #{site.domain}")
+    |> subject("Traffic Spike on #{site.domain}")
     |> render("spike_notification.html", %{
       site: site,
       current_visitors: current_visitors,

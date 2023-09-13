@@ -142,32 +142,30 @@ defmodule Plausible.Stats.Imported do
 
         :utm_medium ->
           imported_q
+          |> where([i], fragment("not empty(?)", i.utm_medium))
           |> select_merge([i], %{
-            utm_medium: fragment("if(empty(?), ?, ?)", i.utm_medium, @no_ref, i.utm_medium)
-          })
-
-        :utm_source ->
-          imported_q
-          |> select_merge([i], %{
-            utm_source: fragment("if(empty(?), ?, ?)", i.utm_source, @no_ref, i.utm_source)
+            utm_medium: i.utm_medium
           })
 
         :utm_campaign ->
           imported_q
+          |> where([i], fragment("not empty(?)", i.utm_campaign))
           |> select_merge([i], %{
-            utm_campaign: fragment("if(empty(?), ?, ?)", i.utm_campaign, @no_ref, i.utm_campaign)
+            utm_campaign: i.utm_campaign
           })
 
         :utm_term ->
           imported_q
+          |> where([i], fragment("not empty(?)", i.utm_term))
           |> select_merge([i], %{
-            utm_term: fragment("if(empty(?), ?, ?)", i.utm_term, @no_ref, i.utm_term)
+            utm_term: i.utm_term
           })
 
         :utm_content ->
           imported_q
+          |> where([i], fragment("not empty(?)", i.utm_content))
           |> select_merge([i], %{
-            utm_content: fragment("if(empty(?), ?, ?)", i.utm_content, @no_ref, i.utm_content)
+            utm_content: i.utm_content
           })
 
         :page ->

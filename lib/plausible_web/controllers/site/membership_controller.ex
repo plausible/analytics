@@ -14,7 +14,6 @@ defmodule PlausibleWeb.Site.MembershipController do
   use Plausible.Repo
   alias Plausible.Sites
   alias Plausible.Site.Membership
-  alias Plausible.Auth.Invitation
 
   @only_owner_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
 
@@ -39,62 +38,46 @@ defmodule PlausibleWeb.Site.MembershipController do
   def invite_member(conn, %{"email" => email, "role" => role}) do
     site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
-    user = Plausible.Auth.find_user_by(email: email)
 
-    if user && Sites.is_member?(user.id, site) do
-      msg = "Cannot send invite because #{user.email} is already a member of #{site.domain}"
+    case Sites.invite(site, conn.assigns.current_user, email, role) do
+      {:ok, invitation} ->
+        conn
+        |> put_flash(
+          :success,
+          "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article("#{invitation.role}")}"
+        )
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
 
-      render(conn, "invite_member_form.html",
-        error: msg,
-        site: site,
-        layout: {PlausibleWeb.LayoutView, "focus.html"},
-        skip_plausible_tracking: true
-      )
-    else
-      case Repo.insert(
-             Invitation.new(%{
-               email: email,
-               role: role,
-               site_id: site.id,
-               inviter_id: conn.assigns[:current_user].id
-             })
-           ) do
-        {:ok, invitation} ->
-          invitation = Repo.preload(invitation, [:site, :inviter])
+      {:error, :already_a_member} ->
+        render(conn, "invite_member_form.html",
+          error: "Cannot send invite because #{email} is already a member of #{site.domain}",
+          site: site,
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          skip_plausible_tracking: true
+        )
 
-          email_template =
-            if user do
-              PlausibleWeb.Email.existing_user_invitation(invitation)
-            else
-              PlausibleWeb.Email.new_user_invitation(invitation)
-            end
+      {:error, {:over_limit, limit}} ->
+        render(conn, "invite_member_form.html",
+          error:
+            "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit.",
+          site: site,
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          skip_plausible_tracking: true
+        )
 
-          Plausible.Mailer.send(email_template)
+      {:error, %Ecto.Changeset{} = changeset} ->
+        error_msg =
+          case changeset.errors[:invitation] do
+            {"already sent", _} ->
+              "This invitation has been already sent. To send again, remove it from pending invitations first."
 
-          conn
-          |> put_flash(
-            :success,
-            "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article(role)}"
-          )
-          |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+            _ ->
+              "Something went wrong."
+          end
 
-        {:error, changeset} ->
-          error_msg =
-            case changeset.errors[:invitation] do
-              {"already sent", _} ->
-                "This invitation has been already sent. To send again, remove it from pending invitations first."
-
-              _ ->
-                "Something went wrong."
-            end
-
-          conn
-          |> put_flash(
-            :error,
-            error_msg
-          )
-          |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
-      end
+        conn
+        |> put_flash(:error, error_msg)
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
@@ -114,43 +97,28 @@ defmodule PlausibleWeb.Site.MembershipController do
   def transfer_ownership(conn, %{"email" => email}) do
     site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
-    user = Plausible.Auth.find_user_by(email: email)
 
-    invite_result =
-      Invitation.new(%{
-        email: email,
-        role: :owner,
-        site_id: site.id,
-        inviter_id: conn.assigns[:current_user].id
-      })
-      |> Repo.insert()
+    case Sites.invite(site, conn.assigns.current_user, email, :owner) do
+      {:ok, _invitation} ->
+        conn
+        |> put_flash(:success, "Site transfer request has been sent to #{email}")
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
 
-    conn =
-      case invite_result do
-        {:ok, invitation} ->
-          invitation
-          |> Repo.preload([:site, :inviter])
-          |> PlausibleWeb.Email.ownership_transfer_request(user)
-          |> Plausible.Mailer.send()
+      {:error, changeset} ->
+        errors = Plausible.ChangesetHelpers.traverse_errors(changeset)
 
-          put_flash(conn, :success, "Site transfer request has been sent to #{email}")
+        message =
+          case errors do
+            %{invitation: ["already sent" | _]} -> "Invitation has already been sent"
+            _other -> "Site transfer request to #{email} has failed"
+          end
 
-        {:error, changeset} ->
-          errors = Plausible.ChangesetHelpers.traverse_errors(changeset)
-
-          message =
-            case errors do
-              %{invitation: ["already sent" | _]} -> "Invitation has already been sent"
-              _other -> "Site transfer request to #{email} has failed"
-            end
-
-          conn
-          |> put_flash(:ttl, :timer.seconds(5))
-          |> put_flash(:error_title, "Transfer error")
-          |> put_flash(:error, message)
-      end
-
-    redirect(conn, to: Routes.site_path(conn, :settings_people, site.domain))
+        conn
+        |> put_flash(:ttl, :timer.seconds(5))
+        |> put_flash(:error_title, "Transfer error")
+        |> put_flash(:error, message)
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+    end
   end
 
   @doc """
