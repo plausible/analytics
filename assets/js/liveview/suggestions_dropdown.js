@@ -41,7 +41,9 @@ let suggestionsDropdown = function(id) {
       return currentFocus - 1 >= this.leastFocusableIndex() ? currentFocus - 1 : this.maxFocusableIndex()
     },
     close(e) {
-      if (this.isOpen) {
+      // Pressing Escape should not propagate to window,
+      // so we'll only close the suggestions pop-up
+      if (this.isOpen && e.key === "Escape") {
         e.stopPropagation()
       }
       this.isOpen = false
