@@ -52,7 +52,7 @@ defmodule PlausibleWeb.StatsController do
     stats_start_date = Plausible.Sites.stats_start_date(site)
     can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
-    dogfood_page_id = if !demo, do: :dashboard
+    dogfood_page_path = if !demo, do: ~p"/:dashboard"
 
     cond do
       stats_start_date && can_see_stats? ->
@@ -73,11 +73,14 @@ defmodule PlausibleWeb.StatsController do
           demo: demo,
           flags: get_flags(conn.assigns[:current_user]),
           is_dbip: is_dbip(),
-          dogfood_page_id: dogfood_page_id
+          dogfood_page_path: dogfood_page_path
         )
 
       !stats_start_date && can_see_stats? ->
-        render(conn, "waiting_first_pageview.html", site: site, dogfood_page_id: dogfood_page_id)
+        render(conn, "waiting_first_pageview.html",
+          site: site,
+          dogfood_page_path: dogfood_page_path
+        )
 
       Sites.locked?(site) ->
         owner = Sites.owner_for(site)
@@ -85,7 +88,7 @@ defmodule PlausibleWeb.StatsController do
         render(conn, "site_locked.html",
           owner: owner,
           site: site,
-          dogfood_page_id: dogfood_page_id
+          dogfood_page_path: dogfood_page_path
         )
     end
   end
@@ -247,7 +250,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("shared_link_password.html",
           link: shared_link,
           layout: {PlausibleWeb.LayoutView, "focus.html"},
-          dogfood_page_id: :shared_link
+          dogfood_page_path: ~p"/share/:dashboard"
         )
     end
   end
@@ -292,7 +295,7 @@ defmodule PlausibleWeb.StatsController do
           link: shared_link,
           error: "Incorrect password. Please try again.",
           layout: {PlausibleWeb.LayoutView, "focus.html"},
-          dogfood_page_id: :shared_link
+          dogfood_page_path: ~p"/share/:dashboard"
         )
       end
     else
@@ -316,7 +319,7 @@ defmodule PlausibleWeb.StatsController do
           title: title(conn, shared_link.site),
           offer_email_report: false,
           demo: false,
-          dogfood_page_id: :shared_link,
+          dogfood_page_path: ~p"/share/:dashboard",
           shared_link_auth: shared_link.slug,
           embedded: conn.params["embed"] == "true",
           background: conn.params["background"],
@@ -331,7 +334,7 @@ defmodule PlausibleWeb.StatsController do
         render(conn, "site_locked.html",
           owner: owner,
           site: shared_link.site,
-          dogfood_page_id: :shared_link
+          dogfood_page_path: ~p"/share/:dashboard"
         )
     end
   end

@@ -29,20 +29,6 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def dogfood_page_url(id), do: PlausibleWeb.Endpoint.url() <> dogfood_page_path(id)
-  def dogfood_page_path(:dashboard), do: "/:dashboard"
-  def dogfood_page_path(:shared_link), do: "/share/:dashboard"
-  def dogfood_page_path(:settings_general), do: "/:dashboard/settings/general"
-  def dogfood_page_path(:settings_people), do: "/:dashboard/settings/people"
-  def dogfood_page_path(:settings_visibility), do: "/:dashboard/settings/visibility"
-  def dogfood_page_path(:settings_goals), do: "/:dashboard/settings/goals"
-  def dogfood_page_path(:settings_funnels), do: "/:dashboard/settings/funnels"
-  def dogfood_page_path(:settings_props), do: "/:dashboard/settings/properties"
-  def dogfood_page_path(:settings_search_console), do: "/:dashboard/settings/search-console"
-  def dogfood_page_path(:settings_email_reports), do: "/:dashboard/settings/email-reports"
-  def dogfood_page_path(:settings_danger_zone), do: "/:dashboard/settings/danger-zone"
-  def dogfood_page_path(:register_from_invitation), do: "/register/invitation/:invitation_id"
-
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"
