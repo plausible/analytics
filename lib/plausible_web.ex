@@ -6,7 +6,6 @@ defmodule PlausibleWeb do
       import Plug.Conn
       import PlausibleWeb.ControllerHelpers
       alias PlausibleWeb.Router.Helpers, as: Routes
-      unquote(verified_routes())
     end
   end
 
@@ -42,17 +41,6 @@ defmodule PlausibleWeb do
       use Phoenix.Channel
     end
   end
-
-  def verified_routes do
-    quote do
-      use Phoenix.VerifiedRoutes,
-        endpoint: PlausibleWeb.Endpoint,
-        router: PlausibleWeb.Router,
-        statics: PlausibleWeb.static_paths()
-    end
-  end
-
-  def static_paths, do: ~w(css images js favicon.ico robots.txt)
 
   @doc """
   When used, dispatch to the appropriate controller/view/etc.
