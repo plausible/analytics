@@ -15,7 +15,7 @@ defmodule Plausible.Repo.Migrations.GoalsUnique do
       GROUP BY
       (site_id,
         CASE
-        WHEN page_path IS NOT NULL THEN goals.page_path
+        WHEN page_path IS NOT NULL THEN page_path
         WHEN event_name IS NOT NULL THEN event_name
         END )
     );
