@@ -60,6 +60,29 @@ defmodule PlausibleWeb.AuthController do
     )
   end
 
+  def register_form_new(conn, _params) do
+    render(conn, "register_form_new.html",
+      connect_live_socket: true,
+      layout: {PlausibleWeb.LayoutView, "focus.html"}
+    )
+  end
+
+  def register_new(conn, %{"user" => %{"email" => email, "password" => password}}) do
+    with :ok <- check_ip_rate_limit(conn),
+         {:ok, user} <- find_user(email),
+         :ok <- check_user_rate_limit(user),
+         :ok <- check_password(user, password) do
+      conn = set_user_session(conn, user)
+
+      if user.email_verified do
+        redirect(conn, to: Routes.site_path(conn, :new))
+      else
+        send_email_verification(user)
+        redirect(conn, to: Routes.auth_path(conn, :activate_form))
+      end
+    end
+  end
+
   def register(conn, params) do
     conn = put_layout(conn, html: {PlausibleWeb.LayoutView, :focus})
     user = Plausible.Auth.User.new(params["user"])
