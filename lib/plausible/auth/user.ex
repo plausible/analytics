@@ -46,6 +46,7 @@ defmodule Plausible.Auth.User do
     |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
     |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
     |> validate_confirmation(:password)
+    |> validate_password_strength()
     |> hash_password()
     |> start_trial
     |> set_email_verified
@@ -86,6 +87,38 @@ defmodule Plausible.Auth.User do
 
   def end_trial(user) do
     change(user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+  end
+
+  defp validate_password_strength(changeset) do
+    if password = get_change(changeset, :password) do
+      existing_phrases =
+        []
+        |> maybe_add_phrase(get_field(changeset, :name))
+        |> maybe_add_phrase(get_field(changeset, :email))
+
+      case ZXCVBN.zxcvbn(password, existing_phrases) do
+        %{score: score} when score <= 2 ->
+          add_error(changeset, :password, "is too weak", [])
+
+        %{score: _score} ->
+          changeset
+
+        :error ->
+          changeset
+      end
+    else
+      changeset
+    end
+  end
+
+  defp maybe_add_phrase(phrases, nil), do: phrases
+
+  defp maybe_add_phrase(phrases, phrase) do
+    parts = String.split(phrase)
+
+    [phrase, parts]
+    |> List.flatten(phrases)
+    |> Enum.uniq()
   end
 
   defp trial_expiry() do
