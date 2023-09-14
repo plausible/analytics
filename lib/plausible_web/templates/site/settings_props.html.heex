@@ -18,10 +18,14 @@
           Custom Properties
         </h1>
 
-        <h2 class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-400">
-          Attach custom properties when sending a pageview or an event to
-          create custom metrics
-        </h2>
+        <p class="mt-2 text-sm leading-5 text-gray-500 dark:text-gray-200">
+          Attach Custom Properties when sending a Pageview or an Event to
+          create custom metrics.
+        </p>
+        <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
+          In order for the properties to show up on your dashboard, you need to
+          explicitly add them below first.
+        </p>
       </span>
 
       <.link
@@ -48,7 +52,7 @@
     <PlausibleWeb.Components.Site.Feature.toggle
       site={@site}
       setting={:props_enabled}
-      label="Show properties in the dashboard"
+      label="Show Properties in the Dashboard"
       conn={@conn}
     >
       <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,

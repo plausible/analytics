@@ -57,13 +57,6 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       assert text_of_attr(li2, "x-bind:class") =~ "focus === 2"
     end
 
-    test "Alpine.js: component refers to window.suggestionsDropdown" do
-      assert new_options(2)
-             |> render_sample_component()
-             |> find("div#input-picker-main-test-component")
-             |> text_of_attr("x-data") =~ "window.suggestionsDropdown('test-component')"
-    end
-
     test "Alpine.js: component sets up keyboard navigation" do
       main =
         new_options(2)
@@ -121,6 +114,15 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
 
       refute text_of_element(doc, "#dropdown-test-component") ==
                "No matches found. Try searching for something different."
+    end
+
+    test "when no options available, hints the user to create one by typing" do
+      doc =
+        render_sample_component([],
+          creatable: true
+        )
+
+      assert text_of_element(doc, "#dropdown-test-component div") == "Create an item by typing."
     end
 
     test "makes the html input required when required option is passed" do

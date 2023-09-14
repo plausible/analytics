@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.{Sites, Goals}
+  alias Plausible.Sites
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -216,12 +216,10 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_goals(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    goals = Goals.for_site(site, preload_funnels?: true)
 
     conn
     |> render("settings_goals.html",
       site: site,
-      goals: goals,
       dogfood_page_path: "/:dashboard/settings/goals",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -229,19 +227,16 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_funnels(conn, _params) do
-    if Plausible.Funnels.enabled_for?(conn.assigns[:current_user]) do
-      site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
-      conn
-      |> render("settings_funnels.html",
-        site: site,
-        connect_live_socket: true,
-        dogfood_page_path: "/:dashboard/settings/funnels",
-        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-      )
-    else
-      conn |> Plug.Conn.put_status(401) |> Plug.Conn.halt()
-    end
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_funnels.html",
+      site: site,
+      dogfood_page_path: "/:dashboard/settings/funnels",
+      connect_live_socket: true,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
   end
 
   def settings_props(conn, _params) do

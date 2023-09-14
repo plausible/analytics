@@ -31,6 +31,17 @@ defmodule PlausibleWeb.Live.Components.ComboBox.StaticSearchTest do
       options = fake_options(["OS", "Version", "Logged In"])
       assert [] = StaticSearch.suggest("cow", options)
     end
+
+    test "uses custom to_string/1 function" do
+      options = fake_options([%{key: "OS"}, %{key: "Version"}, %{key: "Logged In"}])
+      assert [{_, %{key: "Version"}}] = StaticSearch.suggest("vers", options, to_string: & &1.key)
+    end
+
+    test "accepts custom jaro distance threshold" do
+      options = fake_options(["Joanna", "Joel", "John"])
+      assert [_, _, _] = StaticSearch.suggest("Joa", options, weight_threshold: 0.5)
+      assert [{_, "Joanna"}] = StaticSearch.suggest("Joa", options, weight_threshold: 0.9)
+    end
   end
 
   defp fake_options(option_names) do

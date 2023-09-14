@@ -11,23 +11,27 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def mount(
         _params,
-        %{"site_id" => _site_id, "domain" => domain, "current_user_id" => user_id},
+        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
-    true = Plausible.Funnels.enabled_for?("user:#{user_id}")
-
-    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
-
-    funnels = Funnels.list(site)
-    goal_count = Goals.count(site)
+    socket =
+      socket
+      |> assign_new(:site, fn ->
+        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      end)
+      |> assign_new(:all_funnels, fn %{site: %{id: ^site_id} = site} ->
+        Funnels.list(site)
+      end)
+      |> assign_new(:goal_count, fn %{site: site} ->
+        Goals.count(site)
+      end)
 
     {:ok,
      assign(socket,
-       site_id: site.id,
-       domain: site.domain,
-       funnels: funnels,
-       goal_count: goal_count,
+       domain: domain,
+       displayed_funnels: socket.assigns.all_funnels,
        add_funnel?: false,
+       filter_text: "",
        current_user_id: user_id
      )}
   end
@@ -53,9 +57,9 @@ defmodule PlausibleWeb.Live.FunnelSettings do
           <.live_component
             module={PlausibleWeb.Live.FunnelSettings.List}
             id="funnels-list"
-            funnels={@funnels}
+            funnels={@displayed_funnels}
+            filter_text={@filter_text}
           />
-          <button type="button" class="button mt-6" phx-click="add-funnel">+ Add Funnel</button>
         </div>
 
         <div :if={@goal_count < Funnel.min_steps()}>
@@ -72,12 +76,23 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     """
   end
 
-  def handle_event("add-funnel", _value, socket) do
-    {:noreply, assign(socket, add_funnel?: true)}
+  def handle_event("reset-filter-text", _params, socket) do
+    {:noreply, assign(socket, filter_text: "", displayed_funnels: socket.assigns.all_funnels)}
   end
 
-  def handle_event("cancel-add-funnel", _value, socket) do
-    {:noreply, assign(socket, add_funnel?: false)}
+  def handle_event("filter", %{"filter-text" => filter_text}, socket) do
+    new_list =
+      PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest(
+        filter_text,
+        socket.assigns.all_funnels,
+        to_string: & &1.name
+      )
+
+    {:noreply, assign(socket, displayed_funnels: new_list, filter_text: filter_text)}
+  end
+
+  def handle_event("add-funnel", _value, socket) do
+    {:noreply, assign(socket, add_funnel?: true)}
   end
 
   def handle_event("delete-funnel", %{"funnel-id" => id}, socket) do
@@ -88,13 +103,28 @@ defmodule PlausibleWeb.Live.FunnelSettings do
     :ok = Funnels.delete(site, id)
     socket = put_flash(socket, :success, "Funnel deleted successfully")
     Process.send_after(self(), :clear_flash, 5000)
-    {:noreply, assign(socket, funnels: Enum.reject(socket.assigns.funnels, &(&1.id == id)))}
+
+    {:noreply,
+     assign(socket,
+       all_funnels: Enum.reject(socket.assigns.all_funnels, &(&1.id == id)),
+       displayed_funnels: Enum.reject(socket.assigns.displayed_funnels, &(&1.id == id))
+     )}
   end
 
   def handle_info({:funnel_saved, funnel}, socket) do
     socket = put_flash(socket, :success, "Funnel saved successfully")
     Process.send_after(self(), :clear_flash, 5000)
-    {:noreply, assign(socket, add_funnel?: false, funnels: [funnel | socket.assigns.funnels])}
+
+    {:noreply,
+     assign(socket,
+       add_funnel?: false,
+       all_funnels: [funnel | socket.assigns.all_funnels],
+       displayed_funnels: [funnel | socket.assigns.displayed_funnels]
+     )}
+  end
+
+  def handle_info(:cancel_add_funnel, socket) do
+    {:noreply, assign(socket, add_funnel?: false)}
   end
 
   def handle_info(:clear_flash, socket) do

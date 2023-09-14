@@ -13,14 +13,44 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
   def render(assigns) do
     ~H"""
     <div>
+      <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
+        <form id="filter-form" phx-change="filter">
+          <div class="text-gray-800 text-sm inline-flex items-center">
+            <div class="relative rounded-md shadow-sm flex">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
+              </div>
+              <input
+                type="text"
+                name="filter-text"
+                id="filter-text"
+                class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+                placeholder="Search Funnels"
+                value={@filter_text}
+              />
+            </div>
+
+            <Heroicons.backspace
+              :if={String.trim(@filter_text) != ""}
+              class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
+              phx-click="reset-filter-text"
+              id="reset-filter"
+            />
+          </div>
+        </form>
+        <div class="mt-4 flex sm:ml-4 sm:mt-0">
+          <button type="button" phx-click="add-funnel" class="button">
+            + Add Funnel
+          </button>
+        </div>
+      </div>
       <%= if Enum.count(@funnels) > 0 do %>
         <div class="mt-4">
           <%= for funnel <- @funnels do %>
             <div class="border-b border-gray-300 dark:border-gray-500 py-3 flex justify-between">
               <span class="text-sm font-medium text-gray-900 dark:text-gray-100">
                 <%= funnel.name %>
-                <br />
-                <span class="text-sm text-gray-400 font-normal">
+                <span class="text-sm text-gray-400 font-normal block mt-1">
                   <%= funnel.steps_count %>-step funnel
                 </span>
               </span>
@@ -52,7 +82,21 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
           <% end %>
         </div>
       <% else %>
-        <div class="mt-4 dark:text-gray-100">No funnels configured for this site yet</div>
+        <p class="text-sm text-gray-800 dark:text-gray-200 mt-12 mb-8 text-center">
+          <span :if={String.trim(@filter_text) != ""}>
+            No funnels found for this site. Please refine or
+            <a
+              class="text-indigo-500 cursor-pointer underline"
+              phx-click="reset-filter-text"
+              id="reset-filter-hint"
+            >
+              reset your search.
+            </a>
+          </span>
+          <span :if={String.trim(@filter_text) == "" && Enum.empty?(@funnels)}>
+            No funnels configured for this site.
+          </span>
+        </p>
       <% end %>
     </div>
     """

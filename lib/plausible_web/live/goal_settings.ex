@@ -11,19 +11,23 @@ defmodule PlausibleWeb.Live.GoalSettings do
 
   def mount(
         _params,
-        %{"site_id" => _site_id, "domain" => domain, "current_user_id" => user_id},
+        %{"site_id" => site_id, "domain" => domain, "current_user_id" => user_id},
         socket
       ) do
-    site = Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
-
-    goals = Goals.for_site(site, preload_funnels?: true)
+    socket =
+      socket
+      |> assign_new(:site, fn ->
+        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+      end)
+      |> assign_new(:all_goals, fn %{site: site} ->
+        Goals.for_site(site, preload_funnels?: true)
+      end)
 
     {:ok,
      assign(socket,
-       site_id: site.id,
-       domain: site.domain,
-       all_goals: goals,
-       displayed_goals: goals,
+       site_id: site_id,
+       domain: domain,
+       displayed_goals: socket.assigns.all_goals,
        add_goal?: false,
        current_user_id: user_id,
        filter_text: ""
