@@ -183,7 +183,7 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       imported_pageviews: imported_pageviews,
       changeset: Plausible.Site.changeset(site, %{}),
-      dogfood_page_url: url(~p"/:dashboard/settings/general"),
+      dogfood_page_path: "/:dashboard/settings/general",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -196,7 +196,7 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> render("settings_people.html",
       site: site,
-      dogfood_page_url: url(~p"/:dashboard/settings/people"),
+      dogfood_page_path: "/:dashboard/settings/people",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -209,7 +209,7 @@ defmodule PlausibleWeb.SiteController do
     |> render("settings_visibility.html",
       site: site,
       shared_links: shared_links,
-      dogfood_page_url: url(~p"/:dashboard/settings/visibility"),
+      dogfood_page_path: "/:dashboard/settings/visibility",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -222,7 +222,7 @@ defmodule PlausibleWeb.SiteController do
     |> render("settings_goals.html",
       site: site,
       goals: goals,
-      dogfood_page_url: url(~p"/:dashboard/settings/goals"),
+      dogfood_page_path: "/:dashboard/settings/goals",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
@@ -236,7 +236,7 @@ defmodule PlausibleWeb.SiteController do
       |> render("settings_funnels.html",
         site: site,
         connect_live_socket: true,
-        dogfood_page_url: url(~p"/:dashboard/settings/funnels"),
+        dogfood_page_path: "/:dashboard/settings/funnels",
         layout: {PlausibleWeb.LayoutView, "site_settings.html"}
       )
     else
@@ -251,7 +251,7 @@ defmodule PlausibleWeb.SiteController do
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_props.html",
       site: site,
-      dogfood_page_url: url(~p"/:dashboard/settings/properties"),
+      dogfood_page_path: "/:dashboard/settings/properties",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"},
       connect_live_socket: true
     )
@@ -271,7 +271,7 @@ defmodule PlausibleWeb.SiteController do
     |> render("settings_search_console.html",
       site: site,
       search_console_domains: search_console_domains,
-      dogfood_page_url: url(~p"/:dashboard/settings/search-console"),
+      dogfood_page_path: "/:dashboard/settings/search-console",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -285,7 +285,7 @@ defmodule PlausibleWeb.SiteController do
       weekly_report: Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id),
       monthly_report: Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id),
       spike_notification: Repo.get_by(Plausible.Site.SpikeNotification, site_id: site.id),
-      dogfood_page_url: url(~p"/:dashboard/settings/email-reports"),
+      dogfood_page_path: "/:dashboard/settings/email-reports",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
@@ -309,7 +309,7 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> render("settings_danger_zone.html",
       site: site,
-      dogfood_page_url: url(~p"/:dashboard/settings/danger-zone"),
+      dogfood_page_path: "/:dashboard/settings/danger-zone",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
