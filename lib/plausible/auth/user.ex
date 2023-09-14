@@ -89,23 +89,31 @@ defmodule Plausible.Auth.User do
     change(user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
   end
 
-  defp validate_password_strength(changeset) do
-    if password = get_change(changeset, :password) do
+  def password_strength(changeset) do
+    if password = get_field(changeset, :password) do
       existing_phrases =
         []
         |> maybe_add_phrase(get_field(changeset, :name))
         |> maybe_add_phrase(get_field(changeset, :email))
 
       case ZXCVBN.zxcvbn(password, existing_phrases) do
-        %{score: score} when score <= 2 ->
-          add_error(changeset, :password, "is too weak", [])
-
-        %{score: _score} ->
-          changeset
+        %{score: score, feedback: feedback} ->
+          %{suggestions: feedback.suggestions,
+            warning: feedback.warning,
+            score: score
+          }
 
         :error ->
-          changeset
+          %{suggestions: [], warning: "", score: 3}
       end
+    else
+      %{suggestions: [], warning: "", score: 0}
+    end
+  end
+
+  defp validate_password_strength(changeset) do
+    if get_change(changeset, :password) != nil and password_strength(changeset).score <= 2 do
+      add_error(changeset, :password, "is too weak", [])
     else
       changeset
     end

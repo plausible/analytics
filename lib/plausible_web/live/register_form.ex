@@ -11,9 +11,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
   alias Plausible.Auth
 
   def mount(_params, %{"is_selfhost" => is_selfhost}, socket) do
+    changeset = Auth.User.changeset(%Auth.User{})
+
     {:ok,
      assign(socket,
-       form: to_form(Auth.User.changeset(%Auth.User{})),
+       form: to_form(changeset),
+       password_strength: Auth.User.password_strength(changeset),
        is_selfhost: is_selfhost,
        trigger_submit: false
      )}
@@ -83,6 +86,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
             class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
           />
         </div>
+        <.strength_meter {@password_strength} />
       </div>
 
       <div class="my-4">
@@ -133,13 +137,40 @@ defmodule PlausibleWeb.Live.RegisterForm do
     """
   end
 
+  def strength_meter(assigns) do
+    color = cond do
+      assigns.score <= 1 -> ["bg-red-500", "dark:bg-red-500"]
+      assigns.score == 2 -> ["bg-red-300", "dark:bg-red-300"]
+      assigns.score == 3 -> ["bg-blue-300", "dark:bg-blue-300"]
+      assigns.score >= 4 -> ["bg-blue-600", "dark:bg-blue-500"]
+    end
+
+    assigns = assign(assigns, :color, color)
+
+    ~H"""
+    <p class="text-xs text-gray-500" :if={@warning != "" or @suggestions != []}>
+      <span :if={@warning != ""}>
+      <%= @warning %>.
+      </span>
+      <span :for={suggestion <- @suggestions}>
+        <%= suggestion %>
+      </span>
+    </p>
+    <div class="w-full bg-gray-200 rounded-full h-1.5 mb-4 dark:bg-gray-700 mt-1">
+      <div class={["h-1.5", "rounded-full"] ++ @color} style={["width: " <> to_string(@score * 25) <> "%"]}></div>
+    </div>
+    """
+  end
+
   def handle_event("validate", %{"user" => params}, socket) do
     changeset =
       params
       |> Auth.User.new()
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, form: to_form(changeset))}
+    password_strength = Auth.User.password_strength(changeset)
+
+    {:noreply, assign(socket, form: to_form(changeset), password_strength: password_strength)}
   end
 
   def handle_event("register", %{"user" => params}, socket) do
