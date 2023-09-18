@@ -174,4 +174,13 @@ defmodule Plausible.GoalsTest do
 
     assert [^g3, ^g2] = Goals.for_site(site)
   end
+
+  test "must be either page_path or event_name" do
+    site = insert(:site)
+
+    assert {:error, changeset} =
+             Goals.create(site, %{"page_path" => "/foo", "event_name" => "/foo"})
+
+    assert {"cannot co-exist with page_path", _} = changeset.errors[:event_name]
+  end
 end

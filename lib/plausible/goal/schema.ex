@@ -43,6 +43,10 @@ defmodule Plausible.Goal do
     |> update_change(:event_name, &String.trim/1)
     |> update_change(:page_path, &String.trim/1)
     |> validate_length(:event_name, max: 120)
+    |> check_constraint(:event_name,
+      name: :check_event_name_or_page_path,
+      message: "cannot co-exist with page_path"
+    )
     |> maybe_drop_currency()
   end
 
