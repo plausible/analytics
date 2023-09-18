@@ -5,6 +5,8 @@ defmodule Plausible.Billing.QuotaTest do
   @v1_plan_id "558018"
   @v2_plan_id "654177"
   @v3_plan_id "749342"
+  @v4_growth_plan_id "change-me-749342"
+  @v4_business_plan_id "change-me-b749342"
 
   describe "site_limit/1" do
     test "returns 50 when user is on an old plan" do
@@ -348,6 +350,14 @@ defmodule Plausible.Billing.QuotaTest do
         )
 
       assert :unlimited == Quota.team_member_limit(user)
+    end
+
+    test "reads from json file when the user is on a v4 plan" do
+      user_on_growth = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+      user_on_business = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_business_plan_id))
+
+      assert 5 == Quota.team_member_limit(user_on_growth)
+      assert 50 == Quota.team_member_limit(user_on_business)
     end
   end
 end
