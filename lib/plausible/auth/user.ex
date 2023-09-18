@@ -96,7 +96,11 @@ defmodule Plausible.Auth.User do
         |> maybe_add_phrase(get_field(changeset, :name))
         |> maybe_add_phrase(get_field(changeset, :email))
 
-      case ZXCVBN.zxcvbn(password, existing_phrases) do
+      # checking only first 32 characters of the password
+      # in order to avoid unnecessary computation
+      password_slice = String.slice(password, 0, 32)
+
+      case ZXCVBN.zxcvbn(password_slice, existing_phrases) do
         %{score: score, feedback: feedback} ->
           %{suggestions: feedback.suggestions, warning: feedback.warning, score: score}
 
