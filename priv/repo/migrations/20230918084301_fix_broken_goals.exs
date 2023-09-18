@@ -2,9 +2,9 @@ defmodule Plausible.Repo.Migrations.FixBrokenGoals do
   use Ecto.Migration
 
   def up do
-    execute """
+    execute("""
     UPDATE goals SET page_path = NULL WHERE page_path IS NOT NULL AND event_name IS NOT NULL
-    """
+    """)
 
     execute("""
      ALTER TABLE goals
@@ -12,14 +12,15 @@ defmodule Plausible.Repo.Migrations.FixBrokenGoals do
      CHECK (
        (event_name IS NOT NULL AND page_path IS NULL) OR
        (event_name IS NULL AND page_path IS NOT NULL)
-     );
+     )
+     NOT VALID;
     """)
   end
 
   def down do
-    execute """
+    execute("""
     ALTER TABLE goals
     DROP CONSTRAINT check_event_name_or_page_path;
-    """
+    """)
   end
 end
