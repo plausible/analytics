@@ -68,10 +68,135 @@ defmodule PlausibleWeb.Live.Components.Form do
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         {@rest}
       />
+      <%= render_slot(@inner_block) %>
       <.error :for={msg <- @errors}>
         <%= msg %>
       </.error>
     </div>
+    """
+  end
+
+  attr(:id, :any, default: nil)
+  attr(:label, :string, default: nil)
+
+  attr(:field, Phoenix.HTML.FormField,
+    doc: "a form field struct retrieved from the form, for example: @form[:password]",
+    required: true
+  )
+
+  attr(:strength, :any)
+
+  attr(:rest, :global,
+    include: ~w(autocomplete disabled form maxlength minlength readonly required size)
+  )
+
+  def password_input_with_strength(%{field: field} = assigns) do
+    {too_weak?, errors} = case pop_strength_errors(field.errors) do
+      {strength_errors, other_errors} when strength_errors != [] ->
+        {true, other_errors}
+
+      {[], other_errors} ->
+        {false, other_errors}
+    end
+
+    strength = if too_weak? and assigns.strength.score >= 3 do
+      %{assigns.strength | score: 2}
+    else
+      assigns.strength
+    end
+
+    assigns =
+      assigns
+      |> assign(:field, %{field | errors: errors})
+      |> assign(:strength, strength)
+
+    ~H"""
+    <.input
+      field={@field}
+      type="password"
+      label={@label}
+      id={@id}
+      {@rest}>
+      <.strength_meter {@strength} />
+    </.input>
+    """
+  end
+
+  attr(:minimum, :integer, required: true)
+
+  attr(:field, Phoenix.HTML.FormField,
+    doc: "a form field struct retrieved from the form, for example: @form[:password]",
+    required: true
+  )
+
+  def password_length_hint(%{field: field} = assigns) do
+    {strength_errors, _} = pop_strength_errors(field.errors)
+
+    color = if :length in strength_errors do
+        "text-red-500"
+    else
+        "text-gray-500"
+    end
+
+    assigns = assign(assigns, :color, color)
+
+    ~H"""
+    <p class={["text-xs", @color,  "mt-1"]}>Min <%= @minimum %> characters</p>
+    """
+  end
+
+  defp pop_strength_errors(errors) do
+    {strength_errors, other_errors} = Enum.split_with(errors, &(elem(&1, 1)[:validation] == :strength))
+    {length_errors, other_errors} = Enum.split_with(other_errors, &(elem(&1, 1)[:validation] == :length))
+
+    detected = if strength_errors != [] do
+      [:strength]
+    else
+      []
+    end
+
+    if length_errors != [] do
+      [{_, meta}] = length_errors
+
+      if meta[:kind] == :min do
+        {[:length | detected], other_errors}
+      else
+        {detected, length_errors ++ other_errors}
+      end
+    else
+      {detected, other_errors}
+    end
+  end
+
+  attr(:score, :integer, default: 0)
+  attr(:warning, :string, default: "")
+  attr(:suggestions, :list, default: [])
+
+  def strength_meter(assigns) do
+    color = cond do
+      assigns.score <= 1 -> ["bg-red-500", "dark:bg-red-500"]
+      assigns.score == 2 -> ["bg-red-300", "dark:bg-red-300"]
+      assigns.score == 3 -> ["bg-blue-300", "dark:bg-blue-300"]
+      assigns.score >= 4 -> ["bg-blue-600", "dark:bg-blue-500"]
+    end
+
+    assigns = assign(assigns, :color, color)
+
+    ~H"""
+    <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2 mt-2 dark:bg-gray-700 mt-1">
+      <div class={["h-1.5", "rounded-full"] ++ @color} style={["width: " <> to_string(@score * 25) <> "%"]}></div>
+    </div>
+    <p :if={@score <= 2} class="text-sm text-red-500 phx-no-feedback:hidden">
+      Password is too weak
+    </p>
+    <p class="text-xs text-gray-500" :if={@warning != "" or @suggestions != []}>
+      <span :if={@warning != ""}>
+      <%= @warning %>.
+      </span>
+      <span :for={suggestion <- @suggestions}>
+        <%= suggestion %>
+      </span>
+    </p>
     """
   end
 
