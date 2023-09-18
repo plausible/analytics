@@ -25,8 +25,8 @@ defmodule PlausibleWeb.AuthControllerTest do
         user: %{
           name: "Jane Doe",
           email: "user@example.com",
-          password: "very-secret",
-          password_confirmation: "very-secret"
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
         }
       )
 
@@ -41,8 +41,8 @@ defmodule PlausibleWeb.AuthControllerTest do
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
-            password: "very-secret",
-            password_confirmation: "very-secret"
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123"
           }
         )
 
@@ -54,8 +54,8 @@ defmodule PlausibleWeb.AuthControllerTest do
         user: %{
           name: "Jane Doe",
           email: "user@example.com",
-          password: "very-secret",
-          password_confirmation: "very-secret"
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
         }
       )
 
@@ -69,8 +69,8 @@ defmodule PlausibleWeb.AuthControllerTest do
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
-            password: "very-secret",
-            password_confirmation: "very-secret"
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123"
           }
         )
 
@@ -83,8 +83,8 @@ defmodule PlausibleWeb.AuthControllerTest do
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
-            password: "very-secret",
-            password_confirmation: "very-secret"
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123"
           }
         )
 
@@ -133,8 +133,8 @@ defmodule PlausibleWeb.AuthControllerTest do
         user: %{
           name: "Jane Doe",
           email: "user@example.com",
-          password: "very-secret",
-          password_confirmation: "very-secret"
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
         }
       )
 
@@ -152,8 +152,8 @@ defmodule PlausibleWeb.AuthControllerTest do
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
-            password: "very-secret",
-            password_confirmation: "very-secret"
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123"
           }
         )
 
@@ -165,8 +165,8 @@ defmodule PlausibleWeb.AuthControllerTest do
         user: %{
           name: "Jane Doe",
           email: "user@example.com",
-          password: "very-secret",
-          password_confirmation: "very-secret"
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
         }
       )
 
@@ -182,8 +182,8 @@ defmodule PlausibleWeb.AuthControllerTest do
         user: %{
           name: "Jane Doe",
           email: "user@example.com",
-          password: "very-secret",
-          password_confirmation: "very-secret"
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
         }
       )
 
@@ -197,8 +197,8 @@ defmodule PlausibleWeb.AuthControllerTest do
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
-            password: "very-secret",
-            password_confirmation: "very-secret"
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123"
           }
         )
 
@@ -211,8 +211,8 @@ defmodule PlausibleWeb.AuthControllerTest do
           user: %{
             name: "Jane Doe",
             email: "user@example.com",
-            password: "very-secret",
-            password_confirmation: "very-secret"
+            password: "very-secret-and-very-long-123",
+            password_confirmation: "very-secret-and-very-long-123"
           }
         )
 
