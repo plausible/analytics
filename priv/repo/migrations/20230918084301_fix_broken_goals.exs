@@ -1,6 +1,9 @@
 defmodule Plausible.Repo.Migrations.FixBrokenGoals do
   use Ecto.Migration
 
+  @disable_ddl_transaction true
+  @disable_migration_lock true
+
   def up do
     execute("""
     UPDATE goals SET page_path = NULL WHERE page_path IS NOT NULL AND event_name IS NOT NULL
