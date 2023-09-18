@@ -91,19 +91,21 @@ defmodule PlausibleWeb.Live.Components.Form do
   )
 
   def password_input_with_strength(%{field: field} = assigns) do
-    {too_weak?, errors} = case pop_strength_errors(field.errors) do
-      {strength_errors, other_errors} when strength_errors != [] ->
-        {true, other_errors}
+    {too_weak?, errors} =
+      case pop_strength_errors(field.errors) do
+        {strength_errors, other_errors} when strength_errors != [] ->
+          {true, other_errors}
 
-      {[], other_errors} ->
-        {false, other_errors}
-    end
+        {[], other_errors} ->
+          {false, other_errors}
+      end
 
-    strength = if too_weak? and assigns.strength.score >= 3 do
-      %{assigns.strength | score: 2}
-    else
-      assigns.strength
-    end
+    strength =
+      if too_weak? and assigns.strength.score >= 3 do
+        %{assigns.strength | score: 2}
+      else
+        assigns.strength
+      end
 
     assigns =
       assigns
@@ -111,12 +113,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       |> assign(:strength, strength)
 
     ~H"""
-    <.input
-      field={@field}
-      type="password"
-      label={@label}
-      id={@id}
-      {@rest}>
+    <.input field={@field} type="password" label={@label} id={@id} {@rest}>
       <.strength_meter {@strength} />
     </.input>
     """
@@ -132,28 +129,33 @@ defmodule PlausibleWeb.Live.Components.Form do
   def password_length_hint(%{field: field} = assigns) do
     {strength_errors, _} = pop_strength_errors(field.errors)
 
-    color = if :length in strength_errors do
+    color =
+      if :length in strength_errors do
         "text-red-500"
-    else
+      else
         "text-gray-500"
-    end
+      end
 
     assigns = assign(assigns, :color, color)
 
     ~H"""
-    <p class={["text-xs", @color,  "mt-1"]}>Min <%= @minimum %> characters</p>
+    <p class={["text-xs", @color, "mt-1"]}>Min <%= @minimum %> characters</p>
     """
   end
 
   defp pop_strength_errors(errors) do
-    {strength_errors, other_errors} = Enum.split_with(errors, &(elem(&1, 1)[:validation] == :strength))
-    {length_errors, other_errors} = Enum.split_with(other_errors, &(elem(&1, 1)[:validation] == :length))
+    {strength_errors, other_errors} =
+      Enum.split_with(errors, &(elem(&1, 1)[:validation] == :strength))
 
-    detected = if strength_errors != [] do
-      [:strength]
-    else
-      []
-    end
+    {length_errors, other_errors} =
+      Enum.split_with(other_errors, &(elem(&1, 1)[:validation] == :length))
+
+    detected =
+      if strength_errors != [] do
+        [:strength]
+      else
+        []
+      end
 
     if length_errors != [] do
       [{_, meta}] = length_errors
@@ -173,25 +175,30 @@ defmodule PlausibleWeb.Live.Components.Form do
   attr(:suggestions, :list, default: [])
 
   def strength_meter(assigns) do
-    color = cond do
-      assigns.score <= 1 -> ["bg-red-500", "dark:bg-red-500"]
-      assigns.score == 2 -> ["bg-red-300", "dark:bg-red-300"]
-      assigns.score == 3 -> ["bg-blue-300", "dark:bg-blue-300"]
-      assigns.score >= 4 -> ["bg-blue-600", "dark:bg-blue-500"]
-    end
+    color =
+      cond do
+        assigns.score <= 1 -> ["bg-red-500", "dark:bg-red-500"]
+        assigns.score == 2 -> ["bg-red-300", "dark:bg-red-300"]
+        assigns.score == 3 -> ["bg-blue-300", "dark:bg-blue-300"]
+        assigns.score >= 4 -> ["bg-blue-600", "dark:bg-blue-500"]
+      end
 
     assigns = assign(assigns, :color, color)
 
     ~H"""
     <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2 mt-2 dark:bg-gray-700 mt-1">
-      <div class={["h-1.5", "rounded-full"] ++ @color} style={["width: " <> to_string(@score * 25) <> "%"]}></div>
+      <div
+        class={["h-1.5", "rounded-full"] ++ @color}
+        style={["width: " <> to_string(@score * 25) <> "%"]}
+      >
+      </div>
     </div>
     <p :if={@score <= 2} class="text-sm text-red-500 phx-no-feedback:hidden">
       Password is too weak
     </p>
-    <p class="text-xs text-gray-500" :if={@warning != "" or @suggestions != []}>
+    <p :if={@warning != "" or @suggestions != []} class="text-xs text-gray-500">
       <span :if={@warning != ""}>
-      <%= @warning %>.
+        <%= @warning %>.
       </span>
       <span :for={suggestion <- @suggestions}>
         <%= suggestion %>

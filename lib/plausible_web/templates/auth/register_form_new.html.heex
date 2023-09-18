@@ -1,9 +1,9 @@
 <div class="mx-auto mt-6 text-center dark:text-gray-300">
   <h1 class="text-3xl font-black">
     <%= if @is_selfhost do %>
-    Register your Plausible Analytics account
+      Register your Plausible Analytics account
     <% else %>
-    Register your 30-day unlimited-use free trial
+      Register your 30-day unlimited-use free trial
     <% end %>
   </h1>
   <div class="text-xl font-medium">Set up privacy-friendly analytics with just a few clicks</div>
@@ -11,9 +11,9 @@
 
 <div class="w-full max-w-3xl mt-4 mx-auto flex flex-shrink-0">
   <%= live_render(@conn, PlausibleWeb.Live.RegisterForm,
-          container: {:div, class: "contents"},
-          session: %{"is_selfhost" => @is_selfhost},
-          router: PlausibleWeb.Router
+    container: {:div, class: "contents"},
+    session: %{"is_selfhost" => @is_selfhost},
+    router: PlausibleWeb.Router
   ) %>
   <div class="pt-12 pl-8 hidden md:block">
     <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 0) %>

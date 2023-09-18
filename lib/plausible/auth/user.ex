@@ -98,10 +98,7 @@ defmodule Plausible.Auth.User do
 
       case ZXCVBN.zxcvbn(password, existing_phrases) do
         %{score: score, feedback: feedback} ->
-          %{suggestions: feedback.suggestions,
-            warning: feedback.warning,
-            score: score
-          }
+          %{suggestions: feedback.suggestions, warning: feedback.warning, score: score}
 
         :error ->
           %{suggestions: [], warning: "", score: 3}
@@ -113,7 +110,7 @@ defmodule Plausible.Auth.User do
 
   defp validate_password_strength(changeset) do
     if get_change(changeset, :password) != nil and password_strength(changeset).score <= 2 do
-      add_error(changeset, :password, "is too weak", [validation: :strength])
+      add_error(changeset, :password, "is too weak", validation: :strength)
     else
       changeset
     end

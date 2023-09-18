@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       phx-trigger-action={@trigger_submit}
       class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"
     >
-      <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()}>
+      <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()} />
 
       <h2 class="text-xl font-black dark:text-gray-100">Enter your details</h2>
 
