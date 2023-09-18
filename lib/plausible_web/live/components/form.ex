@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   def input(assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}>
+      <.label :if={@label != nil and @label != ""} for={@id}>
         <%= @label %>
       </.label>
       <input
