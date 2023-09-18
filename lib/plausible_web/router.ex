@@ -133,9 +133,7 @@ defmodule PlausibleWeb.Router do
     pipe_through [:browser, :csrf]
 
     get "/register", AuthController, :register_form
-    get "/register_new", AuthController, :register_form_new
     post "/register", AuthController, :register
-    post "/register_new", AuthController, :register_new
     get "/register/invitation/:invitation_id", AuthController, :register_from_invitation_form
     post "/register/invitation/:invitation_id", AuthController, :register_from_invitation
     get "/activate", AuthController, :activate_form

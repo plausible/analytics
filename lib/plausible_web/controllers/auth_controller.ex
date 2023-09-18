@@ -52,22 +52,13 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register_form(conn, _params) do
-    changeset = Auth.User.changeset(%Auth.User{})
-
     render(conn, "register_form.html",
-      changeset: changeset,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
-  end
-
-  def register_form_new(conn, _params) do
-    render(conn, "register_form_new.html",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
-  def register_new(conn, %{"user" => %{"email" => email, "password" => password}}) do
+  def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
     with :ok <- check_ip_rate_limit(conn),
          {:ok, user} <- find_user(email),
          :ok <- check_user_rate_limit(user),
@@ -80,33 +71,6 @@ defmodule PlausibleWeb.AuthController do
         send_email_verification(user)
         redirect(conn, to: Routes.auth_path(conn, :activate_form))
       end
-    end
-  end
-
-  def register(conn, params) do
-    conn = put_layout(conn, html: {PlausibleWeb.LayoutView, :focus})
-    user = Plausible.Auth.User.new(params["user"])
-
-    if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-      case Repo.insert(user) do
-        {:ok, user} ->
-          conn = set_user_session(conn, user)
-
-          if user.email_verified do
-            redirect(conn, to: Routes.site_path(conn, :new))
-          else
-            send_email_verification(user)
-            redirect(conn, to: Routes.auth_path(conn, :activate_form))
-          end
-
-        {:error, changeset} ->
-          render(conn, "register_form.html", changeset: changeset)
-      end
-    else
-      render(conn, "register_form.html",
-        changeset: user,
-        captcha_error: "Please complete the captcha to register"
-      )
     end
   end
 
