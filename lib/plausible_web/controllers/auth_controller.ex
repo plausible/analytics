@@ -4,28 +4,32 @@ defmodule PlausibleWeb.AuthController do
   alias Plausible.{Auth, Release}
   require Logger
 
-  plug PlausibleWeb.RequireLoggedOutPlug
-       when action in [
-              :register_form,
-              :register,
-              :register_from_invitation_form,
-              :register_from_invitation,
-              :login_form,
-              :login
-            ]
+  plug(
+    PlausibleWeb.RequireLoggedOutPlug
+    when action in [
+           :register_form,
+           :register,
+           :register_from_invitation_form,
+           :register_from_invitation,
+           :login_form,
+           :login
+         ]
+  )
 
-  plug PlausibleWeb.RequireAccountPlug
-       when action in [
-              :user_settings,
-              :save_settings,
-              :delete_me,
-              :password_form,
-              :set_password,
-              :activate_form
-            ]
+  plug(
+    PlausibleWeb.RequireAccountPlug
+    when action in [
+           :user_settings,
+           :save_settings,
+           :delete_me,
+           :password_form,
+           :set_password,
+           :activate_form
+         ]
+  )
 
-  plug :maybe_disable_registration when action in [:register_form, :register]
-  plug :assign_is_selfhost
+  plug(:maybe_disable_registration when action in [:register_form, :register])
+  plug(:assign_is_selfhost)
 
   defp maybe_disable_registration(conn, _opts) do
     selfhost_config = Application.get_env(:plausible, :selfhost)
@@ -170,14 +174,16 @@ defmodule PlausibleWeb.AuthController do
 
     has_invitation =
       Repo.exists?(
-        from i in Plausible.Auth.Invitation,
+        from(i in Plausible.Auth.Invitation,
           where: i.email == ^user.email
+        )
       )
 
     has_code =
       Repo.exists?(
-        from c in "email_verification_codes",
+        from(c in "email_verification_codes",
           where: c.user_id == ^user.id
+        )
       )
 
     render(conn, "activate.html",
@@ -192,8 +198,9 @@ defmodule PlausibleWeb.AuthController do
 
     has_invitation =
       Repo.exists?(
-        from i in Plausible.Auth.Invitation,
+        from(i in Plausible.Auth.Invitation,
           where: i.email == ^user.email
+        )
       )
 
     {code, ""} = Integer.parse(code)
@@ -408,8 +415,9 @@ defmodule PlausibleWeb.AuthController do
   defp find_user(email) do
     user =
       Repo.one(
-        from u in Plausible.Auth.User,
+        from(u in Plausible.Auth.User,
           where: u.email == ^email
+        )
       )
 
     if user, do: {:ok, user}, else: :user_not_found
@@ -527,8 +535,9 @@ defmodule PlausibleWeb.AuthController do
 
   def delete_api_key(conn, %{"id" => id}) do
     query =
-      from k in Auth.ApiKey,
+      from(k in Auth.ApiKey,
         where: k.id == ^id and k.user_id == ^conn.assigns[:current_user].id
+      )
 
     query
     |> Repo.one!()
