@@ -64,7 +64,7 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-mix-v5-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-mix-v6-${{ hashFiles('**/mix.lock') }}
           restore-keys: ${{ runner.os }}-mix-v5-
       - name: Install dependencies
         run: mix deps.get && npm install --prefix ./tracker
