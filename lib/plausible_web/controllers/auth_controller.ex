@@ -264,6 +264,7 @@ defmodule PlausibleWeb.AuthController do
     case Auth.Token.verify_password_reset(token) do
       {:ok, _} ->
         render(conn, "password_reset_form.html",
+          connect_live_socket: true,
           token: token,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
@@ -284,43 +285,13 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def password_reset(conn, %{"token" => token, "password" => pw}) do
-    case Auth.Token.verify_password_reset(token) do
-      {:ok, %{email: email}} ->
-        user = Repo.get_by(Auth.User, email: email)
-        changeset = Auth.User.set_password(user, pw)
-
-        case Repo.update(changeset) do
-          {:ok, _updated} ->
-            conn
-            |> put_flash(:login_title, "Password updated successfully")
-            |> put_flash(:login_instructions, "Please log in with your new credentials")
-            |> put_session(:current_user_id, nil)
-            |> delete_resp_cookie("logged_in")
-            |> redirect(to: Routes.auth_path(conn, :login_form))
-
-          {:error, changeset} ->
-            render(conn, "password_reset_form.html",
-              changeset: changeset,
-              token: token,
-              layout: {PlausibleWeb.LayoutView, "focus.html"}
-            )
-        end
-
-      {:error, :expired} ->
-        render_error(
-          conn,
-          401,
-          "Your token has expired. Please request another password reset link."
-        )
-
-      {:error, _} ->
-        render_error(
-          conn,
-          401,
-          "Your token is invalid. Please request another password reset link."
-        )
-    end
+  def password_reset(conn, _params) do
+    conn
+    |> put_flash(:login_title, "Password updated successfully")
+    |> put_flash(:login_instructions, "Please log in with your new credentials")
+    |> put_session(:current_user_id, nil)
+    |> delete_resp_cookie("logged_in")
+    |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
@@ -416,24 +387,16 @@ defmodule PlausibleWeb.AuthController do
 
   def password_form(conn, _params) do
     render(conn, "password_form.html",
+      connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "focus.html"},
       skip_plausible_tracking: true
     )
   end
 
-  def set_password(conn, %{"password" => pw}) do
-    changeset = Auth.User.set_password(conn.assigns[:current_user], pw)
-
-    case Repo.update(changeset) do
-      {:ok, _user} ->
-        redirect(conn, to: "/sites/new")
-
-      {:error, changeset} ->
-        render(conn, "password_form.html",
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-    end
+  def set_password(conn, _params) do
+    conn
+    |> put_flash(:success, "Password updated successfully")
+    |> redirect(to: Routes.site_path(conn, :index))
   end
 
   def user_settings(conn, _params) do
