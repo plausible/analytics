@@ -31,30 +31,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "default billing interval is monthly, and can switch to yearly", %{conn: conn} do
       {:ok, lv, doc} = get_liveview(conn)
 
-      doc
-      |> find(@monthly_interval_button)
-      |> text_of_attr("class")
-      |> then(fn class -> assert class =~ @interval_button_active_class end)
+      assert class_of_element(doc, @monthly_interval_button) =~ @interval_button_active_class
+      refute class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class
 
-      doc
-      |> find(@yearly_interval_button)
-      |> text_of_attr("class")
-      |> then(fn class -> refute class =~ @interval_button_active_class end)
+      doc = element(lv, @yearly_interval_button) |> render_click()
 
-      doc =
-        lv
-        |> element(@yearly_interval_button)
-        |> render_click()
-
-      doc
-      |> find(@monthly_interval_button)
-      |> text_of_attr("class")
-      |> then(fn class -> refute class =~ @interval_button_active_class end)
-
-      doc
-      |> find(@yearly_interval_button)
-      |> text_of_attr("class")
-      |> then(fn class -> assert class =~ @interval_button_active_class end)
+      refute class_of_element(doc, @monthly_interval_button) =~ @interval_button_active_class
+      assert class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class
     end
 
     test "default pageview limit is 10k", %{conn: conn} do
@@ -147,11 +130,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "gets default selected interval from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-
-      doc
-      |> find(@yearly_interval_button)
-      |> text_of_attr("class")
-      |> then(fn class -> assert class =~ @interval_button_active_class end)
+      assert class_of_element(doc, @yearly_interval_button) =~ @interval_button_active_class
     end
 
     test "gets default pageview limit from current subscription plan", %{conn: conn} do
@@ -172,10 +151,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "makes it clear that the user is currently on a growth tier", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      class =
-        doc
-        |> find(@plan_box_growth)
-        |> text_of_attr("class")
+      class = class_of_element(doc, @plan_box_growth)
 
       assert class =~ "ring-2"
       assert class =~ "ring-indigo-600"
@@ -194,10 +170,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "makes it clear that the user is currently on a business tier", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      class =
-        doc
-        |> find(@plan_box_business)
-        |> text_of_attr("class")
+      class = class_of_element(doc, @plan_box_business)
 
       assert class =~ "ring-2"
       assert class =~ "ring-indigo-600"
