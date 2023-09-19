@@ -237,7 +237,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
   defp type_into_input(lv, id, text) do
     lv
     |> element("form")
-    |> render_change(%{id => "#{text}"})
+    |> render_change(%{id => text})
   end
 
   defp mock_captcha_success() do

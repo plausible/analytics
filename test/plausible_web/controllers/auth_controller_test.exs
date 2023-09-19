@@ -414,14 +414,37 @@ defmodule PlausibleWeb.AuthControllerTest do
   describe "POST /password/reset" do
     alias Plausible.Auth.Token
 
-    test "with valid token - redirects the user to login and shows success message", %{conn: conn} do
+    test "redirects the user to login and shows success message", %{conn: conn} do
       user = insert(:user)
       token = Token.sign_password_reset(user.email)
 
-      conn =
-        post(conn, "/password/reset", %{token: token, password: "new-very-complex-password-123"})
+      conn = post(conn, "/password/reset", %{token: token})
 
       assert location = "/login" = redirected_to(conn, 302)
+
+      conn = get(recycle(conn), location)
+      assert html_response(conn, 200) =~ "Password updated successfully"
+    end
+  end
+
+  describe "GET|POST /password" do
+    setup %{conn: conn} do
+      user = insert(:user)
+      conn = init_test_session(conn, %{current_user_id: user.id})
+
+      {:ok, conn: conn, user: user}
+    end
+
+    test "GET shows form", %{conn: conn} do
+      conn = get(conn, "/password")
+
+      assert html_response(conn, 200) =~ "Set your password"
+    end
+
+    test "POST redirects to sites index", %{conn: conn} do
+      conn = post(conn, "/password", %{})
+
+      assert location = "/sites" = redirected_to(conn, 302)
 
       conn = get(recycle(conn), location)
       assert html_response(conn, 200) =~ "Password updated successfully"
