@@ -416,16 +416,18 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "with valid token - resets the password", %{conn: conn} do
       user = insert(:user)
       token = Token.sign_password_reset(user.email)
-      post(conn, "/password/reset", %{token: token, password: "new-password"})
+      post(conn, "/password/reset", %{token: token, password: "new-very-complex-password-123"})
 
       user = Plausible.Repo.get(User, user.id)
-      assert Password.match?("new-password", user.password_hash)
+      assert Password.match?("new-very-complex-password-123", user.password_hash)
     end
 
     test "with valid token - redirects the user to login and shows success message", %{conn: conn} do
       user = insert(:user)
       token = Token.sign_password_reset(user.email)
-      conn = post(conn, "/password/reset", %{token: token, password: "new-password"})
+
+      conn =
+        post(conn, "/password/reset", %{token: token, password: "new-very-complex-password-123"})
 
       assert location = "/login" = redirected_to(conn, 302)
 

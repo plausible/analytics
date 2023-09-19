@@ -65,8 +65,9 @@ defmodule Plausible.Auth.User do
 
     user
     |> cast(%{password: password}, [:password])
-    |> validate_required(:password)
-    |> validate_length(:password, min: 6, message: "has to be at least 6 characters")
+    |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
+    |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
+    |> validate_password_strength()
     |> cast(%{password_hash: hash}, [:password_hash])
   end
 
