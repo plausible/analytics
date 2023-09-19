@@ -81,9 +81,10 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   defp icon_class(link_assigns) do
-    cond do
-      String.contains?(link_assigns[:class], "text-sm") -> ["w-3 h-3"]
-      true -> ["w-4 h-4"]
+    if String.contains?(link_assigns[:class], "text-sm") do
+      ["w-3 h-3"]
+    else
+      ["w-4 h-4"]
     end
   end
 end
