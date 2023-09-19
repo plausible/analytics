@@ -8,9 +8,6 @@
     <%= if @conn.assigns[:connect_live_socket] do %>
     <meta name="csrf-token" content="<%= Plug.CSRFProtection.get_csrf_token() %>" />
     <meta name="websocket-url" content="<%= websocket_url() %>" />
-      <%= if PlausibleWeb.Captcha.enabled?() do %>
-      <meta name="hcaptcha-sitekey" content="<%= PlausibleWeb.Captcha.sitekey() %>" />
-      <% end %>
     <% end %>
     <meta name="robots" content="<%= @conn.private.robots %>" />
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">

@@ -91,11 +91,23 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
       <%= if PlausibleWeb.Captcha.enabled?() do %>
         <div class="mt-4">
-          <div phx-hook="HCaptcha" id="hcaptcha-placeholder" class="h-captcha"></div>
+          <div
+            phx-update="ignore"
+            id="hcaptcha-placeholder"
+            class="h-captcha"
+            data-sitekey={PlausibleWeb.Captcha.sitekey()}
+          >
+          </div>
           <%= if @captcha_error do %>
             <div class="text-red-500 text-xs italic mt-3"><%= @captcha_error %></div>
           <% end %>
-          <script src="https://hcaptcha.com/1/api.js?render=explicit" async defer>
+          <script
+            phx-update="ignore"
+            id="hcaptcha-script"
+            src="https://hcaptcha.com/1/api.js"
+            async
+            defer
+          >
           </script>
         </div>
       <% end %>
