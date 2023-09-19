@@ -66,7 +66,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
         </div>
         <div class="mt-1">
           <.password_input_with_strength
-            type="password"
             field={f[:password]}
             strength={@password_strength}
             class="dark:bg-gray-900 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:text-gray-300"
