@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Components.Generic do
 
       ~H"""
       <a
-        class={"inline-flex items-center gap-x-0.5 text-indigo-600 hover:text-indigo-700 " <> link_size}
+        class={"inline-flex items-center gap-x-0.5 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 " <> link_size}
         href={@href}
         target="_blank"
         rel="noopener noreferrer"
