@@ -4,6 +4,9 @@ defmodule PlausibleWeb.AuthControllerTest do
   use Plausible.Repo
 
   import Mox
+
+  alias Plausible.Auth.User
+
   setup :verify_on_exit!
 
   describe "GET /register" do
@@ -15,18 +18,20 @@ defmodule PlausibleWeb.AuthControllerTest do
   end
 
   describe "POST /register" do
-    setup do
-      mock_captcha_success()
-      :ok
-    end
-
     test "registering sends an activation link", %{conn: conn} do
-      post(conn, "/register",
-        user: %{
+      Repo.insert!(
+        User.new(%{
           name: "Jane Doe",
           email: "user@example.com",
           password: "very-secret-and-very-long-123",
           password_confirmation: "very-secret-and-very-long-123"
+        })
+      )
+
+      post(conn, "/register",
+        user: %{
+          email: "user@example.com",
+          password: "very-secret-and-very-long-123"
         }
       )
 
@@ -36,59 +41,45 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "user is redirected to activate page after registration", %{conn: conn} do
+      Repo.insert!(
+        User.new(%{
+          name: "Jane Doe",
+          email: "user@example.com",
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
+        })
+      )
+
       conn =
         post(conn, "/register",
           user: %{
-            name: "Jane Doe",
             email: "user@example.com",
-            password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
+            password: "very-secret-and-very-long-123"
           }
         )
 
       assert redirected_to(conn, 302) == "/activate"
     end
 
-    test "creates user record", %{conn: conn} do
-      post(conn, "/register",
-        user: %{
+    test "logs the user in", %{conn: conn} do
+      Repo.insert!(
+        User.new(%{
           name: "Jane Doe",
           email: "user@example.com",
           password: "very-secret-and-very-long-123",
           password_confirmation: "very-secret-and-very-long-123"
-        }
+        })
       )
 
-      user = Repo.one(Plausible.Auth.User)
-      assert user.name == "Jane Doe"
-    end
-
-    test "logs the user in", %{conn: conn} do
       conn =
         post(conn, "/register",
           user: %{
-            name: "Jane Doe",
             email: "user@example.com",
-            password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
+            password: "very-secret-and-very-long-123"
           }
         )
 
       assert get_session(conn, :current_user_id)
-    end
-
-    test "user is redirected to activation after registration", %{conn: conn} do
-      conn =
-        post(conn, "/register",
-          user: %{
-            name: "Jane Doe",
-            email: "user@example.com",
-            password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
-          }
-        )
-
-      assert redirected_to(conn) == "/activate"
     end
   end
 
@@ -203,20 +194,6 @@ defmodule PlausibleWeb.AuthControllerTest do
         )
 
       assert get_session(conn, :current_user_id)
-    end
-
-    test "user is redirected to activation after registration", %{conn: conn} do
-      conn =
-        post(conn, "/register",
-          user: %{
-            name: "Jane Doe",
-            email: "user@example.com",
-            password: "very-secret-and-very-long-123",
-            password_confirmation: "very-secret-and-very-long-123"
-          }
-        )
-
-      assert redirected_to(conn) == "/activate"
     end
   end
 
