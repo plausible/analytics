@@ -122,6 +122,10 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   attr(:minimum, :integer, required: true)
 
+  attr(:class, :any)
+  attr(:ok_class, :any)
+  attr(:error_class, :any)
+
   attr(:field, Phoenix.HTML.FormField,
     doc: "a form field struct retrieved from the form, for example: @form[:password]",
     required: true
@@ -130,17 +134,23 @@ defmodule PlausibleWeb.Live.Components.Form do
   def password_length_hint(%{field: field} = assigns) do
     {strength_errors, _} = pop_strength_errors(field.errors)
 
+    ok_class = assigns[:ok_class] || "text-gray-500"
+    error_class = assigns[:error_class] || "text-red-500"
+    class = assigns[:class] || ["text-xs", "mt-1"]
+
     color =
       if :length in strength_errors do
-        "text-red-500"
+        error_class
       else
-        "text-gray-500"
+        ok_class
       end
 
-    assigns = assign(assigns, :color, color)
+    final_class = [color | class]
+
+    assigns = assign(assigns, :class, final_class)
 
     ~H"""
-    <p class={["text-xs", @color, "mt-1"]}>Min <%= @minimum %> characters</p>
+    <p class={@class}>Min <%= @minimum %> characters</p>
     """
   end
 
