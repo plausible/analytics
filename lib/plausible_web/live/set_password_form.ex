@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Live.SetPasswordForm do
   alias Plausible.Repo
 
   def mount(_params, %{"reset_token" => reset_token}, socket) do
+    # by that point token should be already verified
     {:ok, %{email: email}} = Auth.Token.verify_password_reset(reset_token)
     user = Repo.get_by!(Auth.User, email: email)
     changeset = Auth.User.changeset(user)
