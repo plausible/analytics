@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   alias Plausible.{Billing, Users}
   alias Plausible.Billing.{Plans, Plan}
 
+  import PlausibleWeb.Components.Billing
+
   @volumes [10_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000]
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
@@ -43,12 +45,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def render(assigns) do
     ~H"""
+    <.subscription_past_due_notice class="container mb-2 mt-4" subscription={@user.subscription}/>
+    <.subscription_paused_notice class="container mb-2 mt-4" subscription={@user.subscription}/>
     <div class="bg-gray-100 py-12 sm:py-16">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="mx-auto max-w-4xl text-center">
           <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             <%= if @current_user_plan,
-              do: "Upgrade subscription plan",
+              do: "Change subscription plan",
               else: "Upgrade your free trial" %>
           </p>
         </div>

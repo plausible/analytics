@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      assert doc =~ "Upgrade subscription plan"
+      assert doc =~ "Change subscription plan"
       assert doc =~ "Questions?"
       refute doc =~ "What happens if I go over my page views limit?"
     end
@@ -205,6 +205,26 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
+  describe "for a user with a past_due subscription" do
+    setup [:create_user, :log_in, :create_past_due_subscription]
+
+    test "renders failed payment notice and link to update billing details", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      assert doc =~ "There was a problem with your latest payment"
+      assert doc =~ "https://update.billing.details"
+    end
+  end
+
+  describe "for a user with a paused subscription" do
+    setup [:create_user, :log_in, :create_paused_subscription]
+
+    test "renders subscription paused notice and link to update billing details", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      assert doc =~ "Your subscription is paused due to failed payments"
+      assert doc =~ "https://update.billing.details"
+    end
+  end
+
   @v4_growth_200k_yearly_plan_id "change-me-749347"
 
   defp subscribe_growth(%{user: user}) do
@@ -216,6 +236,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   defp subscribe_business(%{user: user}) do
     insert(:subscription, user: user, paddle_plan_id: @v4_business_5m_monthly_plan_id)
+    {:ok, user: Plausible.Users.with_subscription(user)}
+  end
+
+  defp create_past_due_subscription(%{user: user}) do
+    insert(:subscription, user: user, paddle_plan_id: @v4_growth_200k_yearly_plan_id, status: "past_due", update_url: "https://update.billing.details")
+    {:ok, user: Plausible.Users.with_subscription(user)}
+  end
+
+  defp create_paused_subscription(%{user: user}) do
+    insert(:subscription, user: user, paddle_plan_id: @v4_growth_200k_yearly_plan_id, status: "paused", update_url: "https://update.billing.details")
     {:ok, user: Plausible.Users.with_subscription(user)}
   end
 

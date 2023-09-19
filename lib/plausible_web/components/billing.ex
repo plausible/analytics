@@ -55,21 +55,12 @@ defmodule PlausibleWeb.Components.Billing do
       <div class="py-2 text-xl font-medium dark:text-gray-100">
         <%= PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long) %>
       </div>
-      <%= if @subscription && @subscription.status == "past_due" do %>
-        <span
-          class="text-sm text-gray-600 dark:text-gray-400 font-medium"
-          tooltip="Please update your billing details before changing plans"
-        >
-          Change plan
-        </span>
-      <% else %>
         <.styled_link
           href={Routes.billing_path(@conn, :choose_plan)}
           class="text-sm font-medium"
         >
           <%= upgrade_link_text(@subscription) %>
         </.styled_link>
-      <% end %>
     </div>
     """
   end
