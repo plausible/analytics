@@ -16,6 +16,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     {:ok,
      assign(socket,
        form: to_form(changeset),
+       captcha_error: nil,
        password_strength: Auth.User.password_strength(changeset),
        is_selfhost: is_selfhost,
        trigger_submit: false
@@ -107,11 +108,11 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
       <%= if PlausibleWeb.Captcha.enabled?() do %>
         <div class="mt-4">
-          <div class="h-captcha" data-sitekey={PlausibleWeb.Captcha.sitekey()}></div>
-          <%= if assigns[:captcha_error] do %>
+          <div phx-hook="HCaptcha" id="hcaptcha-placeholder" class="h-captcha"></div>
+          <%= if @captcha_error do %>
             <div class="text-red-500 text-xs italic mt-3"><%= @captcha_error %></div>
           <% end %>
-          <script src="https://hcaptcha.com/1/api.js" async defer>
+          <script src="https://hcaptcha.com/1/api.js?render=explicit" async defer>
           </script>
         </div>
       <% end %>
@@ -148,18 +149,23 @@ defmodule PlausibleWeb.Live.RegisterForm do
     {:noreply, assign(socket, form: to_form(changeset), password_strength: password_strength)}
   end
 
-  def handle_event("register", %{"user" => params}, socket) do
-    user = Plausible.Auth.User.new(params)
+  def handle_event("register", %{"user" => _} = params, socket) do
+    if not PlausibleWeb.Captcha.enabled?() or
+         PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
+      user = Plausible.Auth.User.new(params["user"])
 
-    case Plausible.Repo.insert(user) do
-      {:ok, _user} ->
-        {:noreply, assign(socket, trigger_submit: true)}
+      case Plausible.Repo.insert(user) do
+        {:ok, _user} ->
+          {:noreply, assign(socket, trigger_submit: true)}
 
-      {:error, changeset} ->
-        {:noreply,
-         assign(socket,
-           form: to_form(Map.put(changeset, :action, :validate))
-         )}
+        {:error, changeset} ->
+          {:noreply,
+           assign(socket,
+             form: to_form(Map.put(changeset, :action, :validate))
+           )}
+      end
+    else
+      {:noreply, assign(socket, :captcha_error, "Please complete the captcha to register")}
     end
   end
 end
