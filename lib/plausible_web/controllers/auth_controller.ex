@@ -83,14 +83,13 @@ defmodule PlausibleWeb.AuthController do
       redirect(conn, to: Routes.auth_path(conn, :login_form))
     else
       invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
-      changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
 
       if invitation do
         render(conn, "register_from_invitation_form.html",
-          changeset: changeset,
-          invitation: invitation,
-          dogfood_page_path: "/register/invitation/:invitation_id",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          connect_live_socket: true,
+          invitation_id: invitation.invitation_id,
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          skip_plausible_tracking: true
         )
       else
         render(conn, "invitation_expired.html",
@@ -101,49 +100,22 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def register_from_invitation(conn, %{"invitation_id" => invitation_id} = params) do
+  def register_from_invitation(conn, %{"user" => %{"email" => email, "password" => password}}) do
     if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == true do
       redirect(conn, to: Routes.auth_path(conn, :login_form))
     else
-      invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
-      user = Plausible.Auth.User.new(params["user"])
+      with :ok <- check_ip_rate_limit(conn),
+           {:ok, user} <- find_user(email),
+           :ok <- check_user_rate_limit(user),
+           :ok <- check_password(user, password) do
+        conn = set_user_session(conn, user)
 
-      user =
-        case invitation.role do
-          :owner -> user
-          _ -> Plausible.Auth.User.remove_trial_expiry(user)
+        if user.email_verified do
+          redirect(conn, to: Routes.site_path(conn, :index))
+        else
+          send_email_verification(user)
+          redirect(conn, to: Routes.auth_path(conn, :activate_form))
         end
-
-      if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-        case Repo.insert(user) do
-          {:ok, user} ->
-            conn = set_user_session(conn, user)
-
-            case user.email_verified do
-              false ->
-                send_email_verification(user)
-                redirect(conn, to: Routes.auth_path(conn, :activate_form))
-
-              true ->
-                redirect(conn, to: Routes.site_path(conn, :index))
-            end
-
-          {:error, changeset} ->
-            render(conn, "register_from_invitation_form.html",
-              invitation: invitation,
-              changeset: changeset,
-              layout: {PlausibleWeb.LayoutView, "focus.html"},
-              dogfood_page_path: "/register/invitation/:invitation_id"
-            )
-        end
-      else
-        render(conn, "register_from_invitation_form.html",
-          invitation: invitation,
-          changeset: user,
-          captcha_error: "Please complete the captcha to register",
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
-          dogfood_page_path: "/register/invitation/:invitation_id"
-        )
       end
     end
   end

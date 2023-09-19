@@ -104,7 +104,6 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   describe "POST /register/invitation/:invitation_id" do
     setup do
-      mock_captcha_success()
       inviter = insert(:user)
       site = insert(:site, members: [inviter])
 
@@ -115,6 +114,15 @@ defmodule PlausibleWeb.AuthControllerTest do
           email: "user@email.co",
           role: :admin
         )
+
+      Repo.insert!(
+        User.new(%{
+          name: "Jane Doe",
+          email: "user@example.com",
+          password: "very-secret-and-very-long-123",
+          password_confirmation: "very-secret-and-very-long-123"
+        })
+      )
 
       {:ok, %{site: site, invitation: invitation}}
     end
@@ -151,37 +159,6 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == "/activate"
     end
 
-    test "creates user record", %{conn: conn, invitation: invitation} do
-      post(conn, "/register/invitation/#{invitation.invitation_id}",
-        user: %{
-          name: "Jane Doe",
-          email: "user@example.com",
-          password: "very-secret-and-very-long-123",
-          password_confirmation: "very-secret-and-very-long-123"
-        }
-      )
-
-      user = Repo.get_by(Plausible.Auth.User, email: "user@example.com")
-      assert user.name == "Jane Doe"
-    end
-
-    test "leaves trial_expiry_date null when invitation role is not :owner", %{
-      conn: conn,
-      invitation: invitation
-    } do
-      post(conn, "/register/invitation/#{invitation.invitation_id}",
-        user: %{
-          name: "Jane Doe",
-          email: "user@example.com",
-          password: "very-secret-and-very-long-123",
-          password_confirmation: "very-secret-and-very-long-123"
-        }
-      )
-
-      user = Repo.get_by(Plausible.Auth.User, email: "user@example.com")
-      assert is_nil(user.trial_expiry_date)
-    end
-
     test "logs the user in", %{conn: conn, invitation: invitation} do
       conn =
         post(conn, "/register/invitation/#{invitation.invitation_id}",
@@ -194,41 +171,6 @@ defmodule PlausibleWeb.AuthControllerTest do
         )
 
       assert get_session(conn, :current_user_id)
-    end
-  end
-
-  describe "captcha failure" do
-    setup do
-      mock_captcha_failure()
-      inviter = insert(:user)
-      site = insert(:site, members: [inviter])
-
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: inviter,
-          email: "user@email.co",
-          role: :admin
-        )
-
-      {:ok, %{site: site, invitation: invitation}}
-    end
-
-    test "renders captcha errors in case of captcha input verification failure", %{
-      conn: conn,
-      invitation: invitation
-    } do
-      conn =
-        post(conn, "/register/invitation/#{invitation.invitation_id}",
-          user: %{
-            name: "Jane Doe",
-            email: "user@example.com",
-            password: "very-secret",
-            password_confirmation: "very-secret"
-          }
-        )
-
-      assert html_response(conn, 200) =~ "Please complete the captcha"
     end
   end
 

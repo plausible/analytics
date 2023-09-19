@@ -10,32 +10,9 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
   setup :verify_on_exit!
 
-  describe "GET /register" do
-    test "renders registration form (raw URL)", %{conn: conn} do
-      conn = get(conn, "/register")
-
-      html = html_response(conn, 200)
-
-      assert element_exists?(html, ~s|form[phx-change="validate"][phx-submit="register"]|)
-      assert element_exists?(html, ~s|input[type="hidden"][name="_csrf_token"]|)
-      assert element_exists?(html, ~s|input#user_name[type="text"][name="user[name]"]|)
-      assert element_exists?(html, ~s|input#user_email[type="email"][name="user[email]"]|)
-
-      assert element_exists?(
-               html,
-               ~s|input#user_password[type="password"][name="user[password]"]|
-             )
-
-      assert element_exists?(
-               html,
-               ~s|input#user_password_confirmation[type="password"][name="user[password_confirmation]"]|
-             )
-
-      assert element_exists?(html, ~s|button[type="submit"]|)
-    end
-
+  describe "/register" do
     test "renders registration form (LV)", %{conn: conn} do
-      lv = get_liveview(conn)
+      lv = get_liveview(conn, "/register")
       html = render(lv)
 
       assert element_exists?(html, ~s|form[phx-change="validate"][phx-submit="register"]|)
@@ -57,7 +34,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     end
 
     test "renders validation errors depending on input", %{conn: conn} do
-      lv = get_liveview(conn)
+      lv = get_liveview(conn, "/register")
 
       type_into_input(lv, "user[password]", "too-short")
       html = render(lv)
@@ -73,7 +50,7 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
     test "creates user entry on valid input", %{conn: conn} do
       mock_captcha_success()
 
-      lv = get_liveview(conn)
+      lv = get_liveview(conn, "/register")
 
       type_into_input(lv, "user[name]", "Mary Sue")
       type_into_input(lv, "user[email]", "mary.sue@plausible.test")
@@ -104,28 +81,155 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       assert String.length(password_hash) > 0
     end
+
+    test "renders error on failed captcha", %{conn: conn} do
+      mock_captcha_failure()
+
+      lv = get_liveview(conn, "/register")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[email]", "mary.sue@plausible.test")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert html =~ "Please complete the captcha to register"
+
+      refute Repo.one(User)
+    end
   end
 
-  test "renders error on failed captcha", %{conn: conn} do
-    mock_captcha_failure()
+  describe "/register/invitation/:invitation_id" do
+    setup do
+      inviter = insert(:user)
+      site = insert(:site, members: [inviter])
 
-    lv = get_liveview(conn)
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: "user@email.co",
+          role: :admin
+        )
 
-    type_into_input(lv, "user[name]", "Mary Sue")
-    type_into_input(lv, "user[email]", "mary.sue@plausible.test")
-    type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
-    type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
+      {:ok, %{site: site, invitation: invitation, inviter: inviter}}
+    end
 
-    html = lv |> element("form") |> render_submit()
+    test "registers user from invitation", %{conn: conn, invitation: invitation} do
+      mock_captcha_success()
 
-    assert html =~ "Please complete the captcha to register"
+      lv = get_liveview(conn, "/register/invitation/#{invitation.invitation_id}")
 
-    refute Repo.one(User)
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert [
+               csrf_input,
+               invitation_input,
+               email_input,
+               name_input,
+               password_input,
+               password_confirmation_input | _
+             ] = find(html, "input")
+
+      assert String.length(text_of_attr(csrf_input, "value")) > 0
+      assert text_of_attr(invitation_input, "value") == invitation.invitation_id
+      assert text_of_attr(name_input, "value") == "Mary Sue"
+      assert text_of_attr(email_input, "value") == "user@email.co"
+      assert text_of_attr(password_input, "value") == "very-long-and-very-secret-123"
+      assert text_of_attr(password_confirmation_input, "value") == "very-long-and-very-secret-123"
+
+      assert %{
+               name: "Mary Sue",
+               email: "user@email.co",
+               password_hash: password_hash,
+               # leaves trial_expiry_date null when invitation role is not :owner
+               trial_expiry_date: nil
+             } = Repo.get_by(User, email: "user@email.co")
+
+      assert String.length(password_hash) > 0
+    end
+
+    test "preserves trial_expiry_date when invitation role is :owner", %{
+      conn: conn,
+      site: site,
+      inviter: inviter
+    } do
+      mock_captcha_success()
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: inviter,
+          email: "owner_user@email.co",
+          role: :owner
+        )
+
+      lv = get_liveview(conn, "/register/invitation/#{invitation.invitation_id}")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
+
+      _html = lv |> element("form") |> render_submit()
+
+      assert %{
+               email: "owner_user@email.co",
+               trial_expiry_date: trial_expiry_date
+             } = Repo.get_by(User, email: "owner_user@email.co")
+
+      assert trial_expiry_date != nil
+    end
+
+    test "always uses original email from the invitation", %{conn: conn, invitation: invitation} do
+      mock_captcha_success()
+
+      lv = get_liveview(conn, "/register/invitation/#{invitation.invitation_id}")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[email]", "mary.sue@plausible.test")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert [
+               _csrf_input,
+               _invitation_input,
+               email_input | _
+             ] = find(html, "input")
+
+      # attempt at tampering with form
+      assert text_of_attr(email_input, "value") == "mary.sue@plausible.test"
+
+      assert Repo.get_by(User, email: "user@email.co")
+      refute Repo.get_by(User, email: "mary.sue@plausible.test")
+    end
+
+    test "renders error on failed captcha", %{conn: conn, invitation: invitation} do
+      mock_captcha_failure()
+
+      lv = get_liveview(conn, "/register/invitation/#{invitation.invitation_id}")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+      type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert html =~ "Please complete the captcha to register"
+
+      refute Repo.get_by(User, email: "user@email.co")
+    end
   end
 
-  defp get_liveview(conn) do
+  defp get_liveview(conn, url) do
     conn = assign(conn, :live_module, PlausibleWeb.Live.RegisterForm)
-    {:ok, lv, _html} = live(conn, "/register")
+    {:ok, lv, _html} = live(conn, url)
 
     lv
   end
