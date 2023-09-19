@@ -61,14 +61,13 @@ defmodule Plausible.Auth.User do
   end
 
   def set_password(user, password) do
-    hash = Plausible.Auth.Password.hash(password)
-
     user
     |> cast(%{password: password}, [:password])
+    |> validate_required([:password])
     |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
     |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
     |> validate_password_strength()
-    |> cast(%{password_hash: hash}, [:password_hash])
+    |> hash_password()
   end
 
   def hash_password(%{errors: [], changes: changes} = changeset) do
