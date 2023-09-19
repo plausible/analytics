@@ -109,12 +109,13 @@ defmodule PlausibleWeb.Live.Components.Form do
 
     assigns =
       assigns
+      |> assign(:non_empty?, String.length(field.value || "") > 0)
       |> assign(:field, %{field | errors: errors})
       |> assign(:strength, strength)
 
     ~H"""
     <.input field={@field} type="password" label={@label} id={@id} {@rest}>
-      <.strength_meter {@strength} />
+      <.strength_meter :if={@non_empty?} {@strength} />
     </.input>
     """
   end
