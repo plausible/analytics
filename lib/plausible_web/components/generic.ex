@@ -42,30 +42,44 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr :target, :string, default: ""
   attr :href, :string, required: true
   attr :new_tab, :boolean
-  attr :size, :string, values: ["sm", "base"], default: "base"
+  attr :class, :string, default: ""
   slot :inner_block
 
   def styled_link(assigns) do
     if assigns[:new_tab] do
-      [link_size, icon_size] =
-        case assigns[:size] do
-          "sm" -> ["text-sm", "w-3, h-3"]
-          "base" -> ["text-base", "w-4, h-4"]
+      icon_size =
+        cond do
+          String.contains?(assigns[:class], "text-sm") -> ["w-3 h-3"]
+          true -> ["w-4 h-4"]
         end
 
       ~H"""
-      <a
-        class={"inline-flex items-center gap-x-0.5 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 " <> link_size}
+      <.link
+        class={[
+          "inline-flex items-center gap-x-0.5 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600",
+          @class
+        ]}
         href={@href}
         target="_blank"
         rel="noopener noreferrer"
       >
         <%= render_slot(@inner_block) %>
         <Heroicons.arrow_top_right_on_square class={icon_size} />
-      </a>
+      </.link>
+      """
+    else
+      ~H"""
+      <.link
+        class={[
+          "text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600",
+          @class
+        ]}
+        href={@href}
+      >
+        <%= render_slot(@inner_block) %>
+      </.link>
       """
     end
   end
