@@ -49,11 +49,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   def styled_link(assigns) do
     if assigns[:new_tab] do
-      icon_size =
-        cond do
-          String.contains?(assigns[:class], "text-sm") -> ["w-3 h-3"]
-          true -> ["w-4 h-4"]
-        end
+      assigns = assign(assigns, :icon_class, icon_class(assigns))
 
       ~H"""
       <.link
@@ -66,7 +62,7 @@ defmodule PlausibleWeb.Components.Generic do
         rel="noopener noreferrer"
       >
         <%= render_slot(@inner_block) %>
-        <Heroicons.arrow_top_right_on_square class={icon_size} />
+        <Heroicons.arrow_top_right_on_square class={@icon_class} />
       </.link>
       """
     else
@@ -81,6 +77,13 @@ defmodule PlausibleWeb.Components.Generic do
         <%= render_slot(@inner_block) %>
       </.link>
       """
+    end
+  end
+
+  defp icon_class(link_assigns) do
+    cond do
+      String.contains?(link_assigns[:class], "text-sm") -> ["w-3 h-3"]
+      true -> ["w-4 h-4"]
     end
   end
 end
