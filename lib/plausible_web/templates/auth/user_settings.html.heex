@@ -77,10 +77,7 @@
           </span>
         <% else %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">Free trial</div>
-          <.styled_link
-            class="text-sm font-medium"
-            href={Routes.billing_path(@conn, :upgrade)}
-          >
+          <.styled_link class="text-sm font-medium" href={Routes.billing_path(@conn, :upgrade)}>
             Upgrade
           </.styled_link>
         <% end %>
