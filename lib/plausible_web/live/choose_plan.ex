@@ -19,14 +19,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:usage, fn %{user: user} ->
         Quota.monthly_pageview_usage(user)
       end)
-      |> assign_new(:current_user_plan, fn %{user: user} ->
+      |> assign_new(:owned_plan, fn %{user: user} ->
         Plans.get_subscription_plan(user.subscription)
       end)
       |> assign_new(:current_interval, fn %{user: user} ->
         current_user_subscription_interval(user.subscription)
       end)
-      |> assign_new(:selected_volume, fn %{current_user_plan: current_user_plan} ->
-        default_selected_volume(current_user_plan)
+      |> assign_new(:selected_volume, fn %{owned_plan: owned_plan} ->
+        default_selected_volume(owned_plan)
       end)
       |> assign_new(:available_plans, fn %{user: user} ->
         Plans.available_plans_with_prices(user)
@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="mx-auto max-w-4xl text-center">
           <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            <%= if @current_user_plan,
+            <%= if @owned_plan,
               do: "Change subscription plan",
               else: "Upgrade your free trial" %>
           </p>
@@ -71,19 +71,19 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <div class="isolate mx-auto mt-10 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <.plan_box
             name="Growth"
-            owned={@current_user_plan && Map.get(@current_user_plan, :kind) == :growth}
+            owned={@owned_plan && Map.get(@owned_plan, :kind) == :growth}
             selected_plan={@selected_growth_plan}
             {assigns}
           />
           <.plan_box
             name="Business"
-            owned={@current_user_plan && Map.get(@current_user_plan, :kind) == :business}
+            owned={@owned_plan && Map.get(@owned_plan, :kind) == :business}
             selected_plan={@selected_business_plan}
             {assigns}
           />
           <.enterprise_plan_box />
         </div>
-        <.pageview_limit_notice :if={!@current_user_plan} />
+        <.pageview_limit_notice :if={!@owned_plan} />
         <.help_links />
       </div>
     </div>
@@ -198,7 +198,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
           text={
             change_plan_link_text(
-              @current_user_plan,
+              @owned_plan,
               @selected_plan,
               @current_interval,
               @selected_interval
