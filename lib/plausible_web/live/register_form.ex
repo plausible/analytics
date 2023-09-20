@@ -12,18 +12,23 @@ defmodule PlausibleWeb.Live.RegisterForm do
   alias Plausible.Repo
 
   def mount(_params, %{"is_selfhost" => is_selfhost} = session, socket) do
-    {changeset, invitation_id} =
-      if invitation_id = session["invitation_id"] do
-        invitation = Repo.get_by!(Auth.Invitation, invitation_id: invitation_id)
-        {Auth.User.changeset(%Auth.User{email: invitation.email}), invitation.invitation_id}
+    socket =
+      assign_new(socket, :invitation, fn ->
+        if invitation_id = session["invitation_id"] do
+          Repo.get_by!(Auth.Invitation, invitation_id: invitation_id)
+        end
+      end)
+
+    changeset =
+      if invitation = socket.assigns.invitation do
+        Auth.User.changeset(%Auth.User{email: invitation.email})
       else
-        {Auth.User.changeset(%Auth.User{}), nil}
+        Auth.User.changeset(%Auth.User{})
       end
 
     {:ok,
      assign(socket,
        form: to_form(changeset),
-       invitation_id: invitation_id,
        captcha_error: nil,
        password_strength: Auth.User.password_strength(changeset),
        is_selfhost: is_selfhost,
@@ -42,16 +47,15 @@ defmodule PlausibleWeb.Live.RegisterForm do
       class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"
     >
       <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()} />
-      <input :if={@invitation_id} name="invitation_id" type="hidden" value={@invitation_id} />
 
       <h2 class="text-xl font-black dark:text-gray-100">Enter your details</h2>
 
-      <%= if @invitation_id do %>
-        <.email_input field={f[:email]} invitation_id={@invitation_id} />
+      <%= if @invitation do %>
+        <.email_input field={f[:email]} for_invitation={true} />
         <.name_input field={f[:name]} />
       <% else %>
         <.name_input field={f[:name]} />
-        <.email_input field={f[:email]} invitation_id={@invitation_id} />
+        <.email_input field={f[:email]} for_invitation={false} />
       <% end %>
 
       <div class="my-4">
@@ -115,7 +119,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
       <% end %>
 
       <% submit_text =
-        if @is_selfhost or @invitation_id do
+        if @is_selfhost or @invitation do
           "Create my account →"
         else
           "Start my free trial →"
@@ -169,7 +173,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     )
 
     {email_readonly, email_extra_classes} =
-      if assigns[:invitation_id] do
+      if assigns[:for_invitation] do
         {[readonly: "readonly"], ["bg-gray-100"]}
       else
         {[], []}
@@ -213,11 +217,13 @@ defmodule PlausibleWeb.Live.RegisterForm do
     {:noreply, assign(socket, form: to_form(changeset), password_strength: password_strength)}
   end
 
-  def handle_event("register", %{"user" => _, "invitation_id" => invitation_id} = params, socket) do
+  def handle_event(
+        "register",
+        %{"user" => _} = params,
+        %{assigns: %{invitation: %{} = invitation}} = socket
+      ) do
     if not PlausibleWeb.Captcha.enabled?() or
          PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-      invitation = Repo.get_by(Auth.Invitation, invitation_id: invitation_id)
-
       user =
         params["user"]
         |> Map.put("email", invitation.email)

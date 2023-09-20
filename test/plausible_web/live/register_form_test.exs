@@ -145,7 +145,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       assert [
                csrf_input,
-               invitation_input,
                email_input,
                name_input,
                password_input,
@@ -153,7 +152,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
              ] = find(html, "input")
 
       assert String.length(text_of_attr(csrf_input, "value")) > 0
-      assert text_of_attr(invitation_input, "value") == invitation.invitation_id
       assert text_of_attr(name_input, "value") == "Mary Sue"
       assert text_of_attr(email_input, "value") == "user@email.co"
       assert text_of_attr(password_input, "value") == "very-long-and-very-secret-123"
@@ -215,7 +213,6 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       assert [
                _csrf_input,
-               _invitation_input,
                email_input | _
              ] = find(html, "input")
 
