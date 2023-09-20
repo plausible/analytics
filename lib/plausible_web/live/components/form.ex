@@ -109,13 +109,13 @@ defmodule PlausibleWeb.Live.Components.Form do
 
     assigns =
       assigns
-      |> assign(:non_empty?, String.length(field.value || "") > 0)
+      |> assign(:too_weak?, too_weak?)
       |> assign(:field, %{field | errors: errors})
       |> assign(:strength, strength)
 
     ~H"""
     <.input field={@field} type="password" label={@label} id={@id} {@rest}>
-      <.strength_meter :if={@non_empty?} {@strength} />
+      <.strength_meter :if={@too_weak? or @strength.score > 0} {@strength} />
     </.input>
     """
   end
@@ -155,30 +155,21 @@ defmodule PlausibleWeb.Live.Components.Form do
   end
 
   defp pop_strength_errors(errors) do
-    {strength_errors, other_errors} =
-      Enum.split_with(errors, &(elem(&1, 1)[:validation] == :strength))
+    Enum.reduce(errors, {[], []}, fn {_, meta} = error, {detected, other_errors} ->
+      cond do
+        meta[:validation] == :required ->
+          {[:required | detected], other_errors}
 
-    {length_errors, other_errors} =
-      Enum.split_with(other_errors, &(elem(&1, 1)[:validation] == :length))
+        meta[:validation] == :length and meta[:kind] == :min ->
+          {[:length | detected], other_errors}
 
-    detected =
-      if strength_errors != [] do
-        [:strength]
-      else
-        []
+        meta[:validation] == :strength ->
+          {[:strength | detected], other_errors}
+
+        true ->
+          {detected, [error | other_errors]}
       end
-
-    if length_errors != [] do
-      [{_, meta}] = length_errors
-
-      if meta[:kind] == :min do
-        {[:length | detected], other_errors}
-      else
-        {detected, length_errors ++ other_errors}
-      end
-    else
-      {detected, other_errors}
-    end
+    end)
   end
 
   attr(:score, :integer, default: 0)
