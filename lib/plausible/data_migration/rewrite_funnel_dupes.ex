@@ -1,4 +1,17 @@
 defmodule Plausible.DataMigration.RewriteFunnelDupes do
+  @moduledoc """
+  A data fix migration that seeks funnels having steps
+  whose goals are equally named.
+  It then tries to rewrite the duplicate goals using the
+  oldest goal available. In extreme cases, e.g. when multiple
+  duplicates are found for a single funnel, it will either
+  reduce or completely remove the funnel.
+  This enables us to run a migration later on that will
+  delete duplicate goals and enforce goal uniqueness at the
+  database level via a CHECK constraint.
+
+  To run, just call the `run` function.
+  """
   use Plausible.DataMigration, dir: "FunnelDupeGoals", repo: Plausible.Repo
   import Ecto.Query
 
@@ -52,12 +65,9 @@ defmodule Plausible.DataMigration.RewriteFunnelDupes do
             "\nProcessing changes for funnel ID: #{funnel_id} - '#{Enum.at(changes, 0).funnel_name}'"
           )
 
-          case changes do
-            [_ | _] ->
-              Enum.each(changes, fn change ->
-                apply_change(funnel_id, change)
-              end)
-          end
+          Enum.each(changes, fn change ->
+            apply_change(funnel_id, change)
+          end)
         end
 
         IO.puts("\nFinished processing site ID: #{site_id} (#{meta.domain}).")
