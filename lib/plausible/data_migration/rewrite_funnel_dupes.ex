@@ -191,13 +191,4 @@ defmodule Plausible.DataMigration.RewriteFunnelDupes do
       all_goal_ids: all_goal_ids
     }
   end
-
-  def group_by_site_and_funnel(rows) do
-    rows
-    |> Enum.reduce(%{}, fn row, acc ->
-      Map.update(acc, row.site_id, %{row.funnel_id => row}, fn existing_value ->
-        Map.put(existing_value, row.funnel_id, row)
-      end)
-    end)
-  end
 end
