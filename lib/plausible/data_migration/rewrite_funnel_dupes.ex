@@ -21,11 +21,10 @@ defmodule Plausible.DataMigration.RewriteFunnelDupes do
 
     by_site_id = Enum.group_by(data, & &1.site_id)
 
-    Enum.reduce(by_site_id, %{}, fn {site_id, data}, acc ->
+    Enum.into(by_site_id, %{}, fn {site_id, data} ->
       site_meta =
-        acc
-        |> Map.get(site_id, %{})
-        |> Map.put(:domain, Enum.at(data, 0).domain)
+        %{}
+        |> Map.put(:domain, List.first(data).domain)
         |> Map.put(:site_id, site_id)
         |> Map.put(:funnels, Enum.uniq(for(d <- data, do: d.funnel_id)))
         |> Map.put(
@@ -46,10 +45,9 @@ defmodule Plausible.DataMigration.RewriteFunnelDupes do
             end
           )
           |> Enum.group_by(& &1.funnel_id)
-          |> Enum.into(%{})
         )
 
-      Map.put(acc, site_id, site_meta)
+      {site_id, site_meta}
     end)
     |> translate_to_db_ops()
     |> execute()
