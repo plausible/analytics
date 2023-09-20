@@ -155,7 +155,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
   defp email_input(assigns) do
     email_classes = ~w(
-      bg-gray-100
       dark:bg-gray-900
       shadow-sm
       focus:ring-indigo-500
