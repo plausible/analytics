@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       doc = render_password_input_with_strength("very-secret-and-very-long-123")
 
       assert element_exists?(doc, ~s/input#user_password[type="password"][name="user[password]"]/)
-      assert element_exists?(doc, ~s/div.rounded-full.bg-blue-600/)
+      assert element_exists?(doc, ~s/div.rounded-full.bg-indigo-600/)
       refute element_exists?(doc, "label")
       refute element_exists?(doc, "p")
     end

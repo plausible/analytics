@@ -190,8 +190,8 @@ defmodule PlausibleWeb.Live.Components.Form do
       cond do
         assigns.score <= 1 -> ["bg-red-500", "dark:bg-red-500"]
         assigns.score == 2 -> ["bg-red-300", "dark:bg-red-300"]
-        assigns.score == 3 -> ["bg-blue-300", "dark:bg-blue-300"]
-        assigns.score >= 4 -> ["bg-blue-600", "dark:bg-blue-500"]
+        assigns.score == 3 -> ["bg-indigo-300", "dark:bg-indigo-300"]
+        assigns.score >= 4 -> ["bg-indigo-600", "dark:bg-indigo-500"]
       end
 
     assigns = assign(assigns, :color, color)
