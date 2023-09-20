@@ -82,6 +82,22 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert String.length(password_hash) > 0
     end
 
+    test "renders only one error on empty password confirmation", %{conn: conn} do
+      mock_captcha_success()
+
+      lv = get_liveview(conn, "/register")
+
+      type_into_input(lv, "user[name]", "Mary Sue")
+      type_into_input(lv, "user[email]", "mary.sue@plausible.test")
+      type_into_input(lv, "user[password]", "very-long-and-very-secret-123")
+      type_into_input(lv, "user[password_confirmation]", "")
+
+      html = lv |> element("form") |> render_submit()
+
+      assert html =~ "does not match confirmation"
+      refute html =~ "can't be blank"
+    end
+
     test "renders error on failed captcha", %{conn: conn} do
       mock_captcha_failure()
 

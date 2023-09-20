@@ -16,7 +16,8 @@ defmodule Plausible.Auth.User do
 
   @type t() :: %__MODULE__{}
 
-  @required [:email, :name, :password, :password_confirmation]
+  @required [:email, :name, :password]
+
   schema "users" do
     field :email, :string
     field :password_hash
@@ -45,7 +46,7 @@ defmodule Plausible.Auth.User do
     |> validate_required(@required)
     |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
     |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
-    |> validate_confirmation(:password)
+    |> validate_confirmation(:password, required: true)
     |> validate_password_strength()
     |> hash_password()
     |> start_trial
