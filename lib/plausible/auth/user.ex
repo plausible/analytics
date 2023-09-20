@@ -91,25 +91,29 @@ defmodule Plausible.Auth.User do
   end
 
   def password_strength(changeset) do
-    if password = get_field(changeset, :password) do
-      existing_phrases =
-        []
-        |> maybe_add_phrase(get_field(changeset, :name))
-        |> maybe_add_phrase(get_field(changeset, :email))
+    case get_field(changeset, :password) do
+      nil ->
+        %{suggestions: [], warning: "", score: 0}
 
-      # checking only first 32 characters of the password
-      # in order to avoid unnecessary computation
-      password_slice = String.slice(password, 0, 32)
+      # Passwords past (approximately) 32 characters are treated
+      # as strong, despite what they contain, to avoid unnecessarily
+      # expensive computation.
+      password when byte_size(password) > 32 ->
+        %{suggestions: [], warning: "", score: 4}
 
-      case ZXCVBN.zxcvbn(password_slice, existing_phrases) do
-        %{score: score, feedback: feedback} ->
-          %{suggestions: feedback.suggestions, warning: feedback.warning, score: score}
+      password ->
+        existing_phrases =
+          []
+          |> maybe_add_phrase(get_field(changeset, :name))
+          |> maybe_add_phrase(get_field(changeset, :email))
 
-        :error ->
-          %{suggestions: [], warning: "", score: 3}
-      end
-    else
-      %{suggestions: [], warning: "", score: 0}
+        case ZXCVBN.zxcvbn(password, existing_phrases) do
+          %{score: score, feedback: feedback} ->
+            %{suggestions: feedback.suggestions, warning: feedback.warning, score: score}
+
+          :error ->
+            %{suggestions: [], warning: "", score: 3}
+        end
     end
   end
 

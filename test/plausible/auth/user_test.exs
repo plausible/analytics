@@ -43,6 +43,18 @@ defmodule Plausible.Auth.UserTest do
 
       assert strength.score == 1
     end
+
+    test "treats passwords past 32 bytes as very strong" do
+      strength =
+        %User{
+          name: "Clayman Sillywaggle",
+          email: "clay@example.com"
+        }
+        |> change(password: String.duplicate("a", 33))
+        |> User.password_strength()
+
+      assert strength.score == 4
+    end
   end
 
   describe "password strength validation" do
