@@ -1,8 +1,8 @@
 defmodule PlausibleWeb.Live.ChoosePlan do
   use Phoenix.LiveView
   use Phoenix.HTML
-  alias Plausible.{Billing, Users}
-  alias Plausible.Billing.{Plans, Plan}
+  alias Plausible.Users
+  alias Plausible.Billing.{Plans, Plan, Quota}
 
   import PlausibleWeb.Components.Billing
 
@@ -13,11 +13,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   def mount(_params, %{"user_id" => user_id}, socket) do
     user = Users.with_subscription(user_id)
 
-    usage =
-      user
-      |> Billing.usage_breakdown()
-      |> then(fn {pageviews, custom_events} -> pageviews + custom_events end)
-
+    usage = Quota.monthly_pageview_usage(user)
     current_user_plan = Plans.get_subscription_plan(user.subscription)
     current_interval = current_user_subscription_interval(user.subscription)
     selected_volume = default_selected_volume(current_user_plan)

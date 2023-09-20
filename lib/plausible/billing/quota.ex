@@ -75,7 +75,8 @@ defmodule Plausible.Billing.Quota do
 
   @spec monthly_pageview_usage(Plausible.Auth.User.t()) :: non_neg_integer()
   @doc """
-  Returns the amount of pageviews sent by the sites the user owns in last 30 days.
+  Returns the amount of pageviews and custom events
+  sent by the sites the user owns in last 30 days.
   """
   def monthly_pageview_usage(user) do
     user
