@@ -3,18 +3,25 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
+  @v4_growth_200k_yearly_plan_id "change-me-749347"
+  @v4_business_5m_monthly_plan_id "change-me-b749356"
+
   @monthly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="monthly"]/
   @yearly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="yearly"]/
   @interval_button_active_class "bg-indigo-600 text-white"
   @slider_input ~s/input[name="slider"]/
+
   @plan_box_growth "#plan-box-growth"
-  @plan_box_business "#plan-box-business"
   @growth_price_tag_amount "#{@plan_box_growth} > p > span:first-child"
   @growth_price_tag_interval "#{@plan_box_growth} > p > span:nth-child(2)"
   @growth_current_label "#{@plan_box_growth} > div.absolute"
+  @growth_checkout_button "#{@plan_box_growth} > #checkout"
+
+  @plan_box_business "#plan-box-business"
   @business_price_tag_amount "#{@plan_box_business} > p > span:first-child"
   @business_price_tag_interval "#{@plan_box_business} > p > span:nth-child(2)"
   @business_current_label "#{@plan_box_business} > div.absolute"
+  @business_checkout_button "#{@plan_box_business} > #checkout"
 
   describe "for a user with no subscription" do
     setup [:create_user, :log_in]
@@ -103,6 +110,39 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @business_price_tag_amount) == "€900"
       assert text_of_element(doc, @business_price_tag_interval) == "/year"
     end
+
+    test "checkout buttons are 'paddle buttons' with dynamic attributes", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      element(lv, @slider_input) |> render_change(%{slider: 2})
+      doc = element(lv, @yearly_interval_button) |> render_click()
+
+      growth_checkout_button = find(doc, @growth_checkout_button)
+
+      assert text_of_attr(growth_checkout_button, "class") =~ "paddle_button"
+
+      assert text_of_attr(growth_checkout_button, "data-product") ==
+               @v4_growth_200k_yearly_plan_id
+
+      assert text_of_attr(growth_checkout_button, "data-email") == user.email
+      assert text_of_attr(growth_checkout_button, "data-passthrough") == to_string(user.id)
+
+      element(lv, @slider_input) |> render_change(%{slider: 6})
+      doc = element(lv, @monthly_interval_button) |> render_click()
+
+      business_checkout_button = find(doc, @business_checkout_button)
+
+      assert text_of_attr(business_checkout_button, "class") =~ "paddle_button"
+
+      assert text_of_attr(business_checkout_button, "data-product") ==
+               @v4_business_5m_monthly_plan_id
+
+      assert text_of_attr(business_checkout_button, "data-email") == user.email
+      assert text_of_attr(business_checkout_button, "data-passthrough") == to_string(user.id)
+    end
   end
 
   describe "for a user with a v4 growth subscription plan" do
@@ -157,6 +197,48 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class =~ "ring-indigo-600"
       assert text_of_element(doc, @growth_current_label) == "CURRENT"
     end
+
+    test "checkout button text and click-disabling CSS classes are dynamic", %{conn: conn} do
+      {:ok, lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @growth_checkout_button) == "Currently on this plan"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
+      assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
+
+      doc = element(lv, @monthly_interval_button) |> render_click()
+
+      assert text_of_element(doc, @growth_checkout_button) == "Change billing interval"
+      assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 4})
+
+      assert text_of_element(doc, @growth_checkout_button) == "Upgrade"
+      assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
+
+      assert text_of_element(doc, @growth_checkout_button) == "Downgrade"
+      assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
+    end
+
+    test "checkout buttons are dynamic links to /billing/change-plan/preview/<plan_id>", %{
+      conn: conn
+    } do
+      {:ok, lv, doc} = get_liveview(conn)
+
+      growth_checkout_button = find(doc, @growth_checkout_button)
+
+      assert text_of_attr(growth_checkout_button, "href") =~
+               "/billing/change-plan/preview/#{@v4_growth_200k_yearly_plan_id}"
+
+      element(lv, @slider_input) |> render_change(%{slider: 6})
+      doc = element(lv, @monthly_interval_button) |> render_click()
+
+      business_checkout_button = find(doc, @business_checkout_button)
+
+      assert text_of_attr(business_checkout_button, "href") =~
+               "/billing/change-plan/preview/#{@v4_business_5m_monthly_plan_id}"
+    end
   end
 
   describe "for a user with a v4 business subscription plan" do
@@ -176,6 +258,29 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class =~ "ring-indigo-600"
       assert text_of_element(doc, @business_current_label) == "CURRENT"
     end
+
+    test "checkout button text and click-disabling CSS classes are dynamic", %{conn: conn} do
+      {:ok, lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @business_checkout_button) == "Currently on this plan"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none bg-gray-400"
+      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
+
+      doc = element(lv, @yearly_interval_button) |> render_click()
+
+      assert text_of_element(doc, @business_checkout_button) == "Change billing interval"
+      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
+
+      assert text_of_element(doc, @business_checkout_button) == "Upgrade"
+      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
+
+      assert text_of_element(doc, @business_checkout_button) == "Downgrade"
+      assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
+    end
   end
 
   describe "for a user with a past_due subscription" do
@@ -185,6 +290,26 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
       assert doc =~ "There was a problem with your latest payment"
       assert doc =~ "https://update.billing.details"
+    end
+
+    test "checkout buttons are disabled + notice about billing details (unless plan owned already)",
+         %{conn: conn} do
+      {:ok, lv, doc} = get_liveview(conn)
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
+      assert text_of_element(doc, @growth_checkout_button) =~ "Currently on this plan"
+      refute element_exists?(doc, "#{@growth_checkout_button} + p")
+
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none bg-gray-400"
+
+      assert text_of_element(doc, "#{@business_checkout_button} + p") =~
+               "Please update your billing details first"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 4})
+
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
+
+      assert text_of_element(doc, "#{@growth_checkout_button} + p") =~
+               "Please update your billing details first"
     end
   end
 
@@ -196,16 +321,42 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "Your subscription is paused due to failed payments"
       assert doc =~ "https://update.billing.details"
     end
+
+    test "checkout buttons are disabled + notice about billing details when plan not owned already",
+         %{conn: conn} do
+      {:ok, lv, doc} = get_liveview(conn)
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
+      assert text_of_element(doc, @growth_checkout_button) =~ "Currently on this plan"
+      refute element_exists?(doc, "#{@growth_checkout_button} + p")
+
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none bg-gray-400"
+
+      assert text_of_element(doc, "#{@business_checkout_button} + p") =~
+               "Please update your billing details first"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 4})
+
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
+
+      assert text_of_element(doc, "#{@growth_checkout_button} + p") =~
+               "Please update your billing details first"
+    end
   end
 
-  @v4_growth_200k_yearly_plan_id "change-me-749347"
+  describe "for a user with a cancelled subscription" do
+    setup [:create_user, :log_in, :create_cancelled_subscription]
+
+    test "checkout buttons are paddle buttons", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      assert class_of_element(doc, @growth_checkout_button) =~ "paddle_button"
+      assert class_of_element(doc, @business_checkout_button) =~ "paddle_button"
+    end
+  end
 
   defp subscribe_growth(%{user: user}) do
     insert(:subscription, user: user, paddle_plan_id: @v4_growth_200k_yearly_plan_id)
     {:ok, user: Plausible.Users.with_subscription(user)}
   end
-
-  @v4_business_5m_monthly_plan_id "change-me-b749356"
 
   defp subscribe_business(%{user: user}) do
     insert(:subscription, user: user, paddle_plan_id: @v4_business_5m_monthly_plan_id)
@@ -213,12 +364,34 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   defp create_past_due_subscription(%{user: user}) do
-    insert(:subscription, user: user, paddle_plan_id: @v4_growth_200k_yearly_plan_id, status: "past_due", update_url: "https://update.billing.details")
+    insert(:subscription,
+      user: user,
+      paddle_plan_id: @v4_growth_200k_yearly_plan_id,
+      status: "past_due",
+      update_url: "https://update.billing.details"
+    )
+
     {:ok, user: Plausible.Users.with_subscription(user)}
   end
 
   defp create_paused_subscription(%{user: user}) do
-    insert(:subscription, user: user, paddle_plan_id: @v4_growth_200k_yearly_plan_id, status: "paused", update_url: "https://update.billing.details")
+    insert(:subscription,
+      user: user,
+      paddle_plan_id: @v4_growth_200k_yearly_plan_id,
+      status: "paused",
+      update_url: "https://update.billing.details"
+    )
+
+    {:ok, user: Plausible.Users.with_subscription(user)}
+  end
+
+  defp create_cancelled_subscription(%{user: user}) do
+    insert(:subscription,
+      user: user,
+      paddle_plan_id: @v4_growth_200k_yearly_plan_id,
+      status: "deleted"
+    )
+
     {:ok, user: Plausible.Users.with_subscription(user)}
   end
 

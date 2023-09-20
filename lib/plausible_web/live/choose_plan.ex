@@ -19,6 +19,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> then(fn {pageviews, custom_events} -> pageviews + custom_events end)
 
     current_user_plan = Plans.get_subscription_plan(user.subscription)
+    current_interval = current_user_subscription_interval(user.subscription)
     selected_volume = default_selected_volume(current_user_plan)
 
     available_plans =
@@ -34,7 +35,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
        user: user,
        usage: usage,
        current_user_plan: current_user_plan,
-       selected_interval: default_selected_interval(user.subscription),
+       current_interval: current_interval,
+       selected_interval: current_interval || :monthly,
        selected_volume: selected_volume,
        available_growth_plans: available_growth_plans,
        available_business_plans: available_business_plans,
@@ -45,8 +47,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def render(assigns) do
     ~H"""
-    <.subscription_past_due_notice class="container mb-2 mt-4" subscription={@user.subscription}/>
-    <.subscription_paused_notice class="container mb-2 mt-4" subscription={@user.subscription}/>
+    <.subscription_past_due_notice class="container mb-2 mt-4" subscription={@user.subscription} />
+    <.subscription_paused_notice class="container mb-2 mt-4" subscription={@user.subscription} />
     <div class="bg-gray-100 py-12 sm:py-16">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <div class="mx-auto max-w-4xl text-center">
@@ -66,13 +68,13 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             name="Growth"
             owned={@current_user_plan && Map.get(@current_user_plan, :kind) == :growth}
             selected_plan={@selected_growth_plan}
-            selected_interval={@selected_interval}
+            {assigns}
           />
           <.plan_box
             name="Business"
             owned={@current_user_plan && Map.get(@current_user_plan, :kind) == :business}
             selected_plan={@selected_business_plan}
-            selected_interval={@selected_interval}
+            {assigns}
           />
           <.enterprise_plan_box />
         </div>
@@ -81,6 +83,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       </div>
     </div>
     <.slider_styles />
+    <.paddle_script />
     """
   end
 
@@ -110,10 +113,11 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp default_selected_volume(%Plan{monthly_pageview_limit: limit}), do: limit
   defp default_selected_volume(_), do: List.first(@volumes)
 
-  defp default_selected_interval(subscription) do
+  defp current_user_subscription_interval(subscription) do
     case Plans.subscription_interval(subscription) do
       "yearly" -> :yearly
-      _ -> :monthly
+      "monthly" -> :monthly
+      _ -> nil
     end
   end
 
@@ -184,12 +188,25 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <p class="mt-6 flex items-baseline gap-x-1">
         <.price_tag selected_interval={@selected_interval} selected_plan={@selected_plan} />
       </p>
-      <a
-        href="#"
-        class="mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-500"
-      >
-        Upgrade
-      </a>
+      <%= if @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] do %>
+        <.render_change_plan_link
+          selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
+          text={
+            change_plan_link_text(
+              @current_user_plan,
+              @selected_plan,
+              @current_interval,
+              @selected_interval
+            )
+          }
+          {assigns}
+        />
+      <% else %>
+        <.paddle_button
+          selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
+          user={@user}
+        />
+      <% end %>
       <ul role="list" class="mt-8 space-y-3 text-sm leading-6 text-gray-600 xl:mt-10">
         <li class="flex gap-x-3">
           <.check_icon class="text-indigo-600" /> 5 products
@@ -205,6 +222,55 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         </li>
       </ul>
     </div>
+    """
+  end
+
+  defp render_change_plan_link(assigns) do
+    ~H"""
+    <.change_plan_link
+      plan_already_owned={@text == "Currently on this plan"}
+      billing_details_expired={
+        @user.subscription && @user.subscription.status in ["past_due", "paused"]
+      }
+      {assigns}
+    />
+    """
+  end
+
+  defp change_plan_link(assigns) do
+    ~H"""
+    <.link
+      id="checkout"
+      href={"/billing/change-plan/preview/" <> @selected_plan_id}
+      class={[
+        "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
+        !(@plan_already_owned || @billing_details_expired) && "bg-indigo-600 hover:bg-indigo-500",
+        (@plan_already_owned || @billing_details_expired) && "pointer-events-none bg-gray-400"
+      ]}
+    >
+      <%= @text %>
+    </.link>
+    <p :if={@billing_details_expired && !@plan_already_owned} class="text-center text-sm text-red-500">
+      Please update your billing details first
+    </p>
+    """
+  end
+
+  defp paddle_button(assigns) do
+    ~H"""
+    <button
+      id="checkout"
+      data-theme="none"
+      data-product={@selected_plan_id}
+      data-email={@user.email}
+      data-disable-logout="true"
+      data-passthrough={@user.id}
+      data-success="/billing/upgrade-success"
+      data-init="true"
+      class="paddle_button w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-500"
+    >
+      Upgrade
+    </button>
     """
   end
 
@@ -334,6 +400,19 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
+  defp paddle_script(assigns) do
+    ~H"""
+    <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js">
+    </script>
+    <script :if={Application.get_env(:plausible, :environment) == "dev"}>
+      Paddle.Environment.set('sandbox')
+    </script>
+    <script>
+      Paddle.Setup({vendor: <%= Application.get_env(:plausible, :paddle) |> Keyword.fetch!(:vendor_id) %> })
+    </script>
+    """
+  end
+
   defp slider_styles(assigns) do
     ~H"""
     <style>
@@ -394,6 +473,37 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     </style>
     """
   end
+
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
+  defp change_plan_link_text(
+         %Plan{kind: from_kind, monthly_pageview_limit: from_volume},
+         %Plan{kind: to_kind, monthly_pageview_limit: to_volume},
+         from_interval,
+         to_interval
+       ) do
+    cond do
+      from_kind == :business && to_kind == :growth ->
+        "Downgrade to Growth"
+
+      from_kind == :growth && to_kind == :business ->
+        "Upgrade to Business"
+
+      from_volume == to_volume && from_interval == to_interval ->
+        "Currently on this plan"
+
+      from_volume == to_volume ->
+        "Change billing interval"
+
+      from_volume > to_volume ->
+        "Downgrade"
+
+      true ->
+        "Upgrade"
+    end
+  end
+
+  defp get_selected_plan_id(%Plan{monthly_product_id: plan_id}, :monthly), do: plan_id
+  defp get_selected_plan_id(%Plan{yearly_product_id: plan_id}, :yearly), do: plan_id
 
   defp volumes(), do: @volumes
 
