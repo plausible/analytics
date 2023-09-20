@@ -71,6 +71,7 @@ defmodule PlausibleWeb.Live.SetPasswordForm do
         <.password_input_with_strength
           field={f[:password]}
           strength={@password_strength}
+          phx-debounce={200}
           class="transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500"
         />
       </div>
