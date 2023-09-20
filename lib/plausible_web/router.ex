@@ -158,8 +158,6 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
-    get "/password", AuthController, :password_form
-    post "/password", AuthController, :set_password
     get "/logout", AuthController, :logout
     get "/settings", AuthController, :user_settings
     put "/settings", AuthController, :save_settings

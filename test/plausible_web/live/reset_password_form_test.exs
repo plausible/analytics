@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.SetPasswordFormTest do
+defmodule PlausibleWeb.Live.ResetPasswordFormTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
@@ -7,42 +7,6 @@ defmodule PlausibleWeb.Live.SetPasswordFormTest do
   alias Plausible.Auth.User
   alias Plausible.Auth.Token
   alias Plausible.Repo
-
-  describe "/password" do
-    setup %{conn: conn} do
-      user = insert(:user)
-      conn = init_test_session(conn, %{current_user_id: user.id})
-
-      {:ok, conn: conn, user: user}
-    end
-
-    test "sets new passowrd", %{conn: conn, user: user} do
-      lv = get_liveview(conn, "/password")
-
-      type_into_passowrd(lv, "very-secret-and-very-long-123")
-
-      html = lv |> element("form") |> render_submit()
-
-      assert [csrf_input, password_input | _] = find(html, "input")
-      assert String.length(text_of_attr(csrf_input, "value")) > 0
-      assert text_of_attr(password_input, "value") == "very-secret-and-very-long-123"
-      assert %{password_hash: new_hash} = Repo.one(User)
-      assert new_hash != user.password_hash
-    end
-
-    test "renders error when new password fails validation", %{conn: conn, user: user} do
-      lv = get_liveview(conn, "/password")
-
-      type_into_passowrd(lv, "too-short")
-
-      html = lv |> element("form") |> render_submit()
-
-      assert html =~ "Password is too weak"
-
-      assert %{password_hash: hash} = Repo.one(User)
-      assert hash == user.password_hash
-    end
-  end
 
   describe "/password/reset" do
     test "sets new password with valid token", %{conn: conn} do
@@ -79,7 +43,7 @@ defmodule PlausibleWeb.Live.SetPasswordFormTest do
   end
 
   defp get_liveview(conn, url) do
-    conn = assign(conn, :live_module, PlausibleWeb.Live.SetPasswordForm)
+    conn = assign(conn, :live_module, PlausibleWeb.Live.ResetPasswordForm)
     {:ok, lv, _html} = live(conn, url)
 
     lv

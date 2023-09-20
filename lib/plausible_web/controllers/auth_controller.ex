@@ -22,8 +22,6 @@ defmodule PlausibleWeb.AuthController do
            :user_settings,
            :save_settings,
            :delete_me,
-           :password_form,
-           :set_password,
            :activate_form
          ]
   )
@@ -383,20 +381,6 @@ defmodule PlausibleWeb.AuthController do
 
   def login_form(conn, _params) do
     render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
-  end
-
-  def password_form(conn, _params) do
-    render(conn, "password_form.html",
-      connect_live_socket: true,
-      layout: {PlausibleWeb.LayoutView, "focus.html"},
-      skip_plausible_tracking: true
-    )
-  end
-
-  def set_password(conn, _params) do
-    conn
-    |> put_flash(:success, "Password updated successfully")
-    |> redirect(to: Routes.site_path(conn, :index))
   end
 
   def user_settings(conn, _params) do

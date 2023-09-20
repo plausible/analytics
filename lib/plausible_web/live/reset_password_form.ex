@@ -1,6 +1,6 @@
-defmodule PlausibleWeb.Live.SetPasswordForm do
+defmodule PlausibleWeb.Live.ResetPasswordForm do
   @moduledoc """
-  LiveView for password set and reset form.
+  LiveView for password reset form.
   """
 
   use Phoenix.LiveView
@@ -27,20 +27,6 @@ defmodule PlausibleWeb.Live.SetPasswordForm do
      )}
   end
 
-  def mount(_params, %{"current_user_id" => user_id}, socket) do
-    user = Repo.get!(Auth.User, user_id)
-    changeset = Auth.User.changeset(user)
-
-    {:ok,
-     assign(socket,
-       user: user,
-       form: to_form(changeset),
-       reset_token: nil,
-       password_strength: Auth.User.password_strength(changeset),
-       trigger_submit: false
-     )}
-  end
-
   def render(assigns) do
     ~H"""
     <.form
@@ -54,11 +40,7 @@ defmodule PlausibleWeb.Live.SetPasswordForm do
     >
       <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()} />
       <h2 class="text-xl font-black dark:text-gray-100">
-        <%= if @reset_token do %>
-          Reset your password
-        <% else %>
-          Set your password
-        <% end %>
+        Reset your password
       </h2>
       <div class="my-4">
         <.password_length_hint
@@ -75,7 +57,7 @@ defmodule PlausibleWeb.Live.SetPasswordForm do
           class="transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500"
         />
       </div>
-      <input :if={@reset_token} name="token" type="hidden" value={@reset_token} />
+      <input name="token" type="hidden" value={@reset_token} />
       <button id="set" type="submit" class="button mt-4 w-full">
         Set password →
       </button>

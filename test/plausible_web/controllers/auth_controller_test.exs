@@ -427,30 +427,6 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
-  describe "GET|POST /password" do
-    setup %{conn: conn} do
-      user = insert(:user)
-      conn = init_test_session(conn, %{current_user_id: user.id})
-
-      {:ok, conn: conn, user: user}
-    end
-
-    test "GET shows form", %{conn: conn} do
-      conn = get(conn, "/password")
-
-      assert html_response(conn, 200) =~ "Set your password"
-    end
-
-    test "POST redirects to sites index", %{conn: conn} do
-      conn = post(conn, "/password", %{})
-
-      assert location = "/sites" = redirected_to(conn, 302)
-
-      conn = get(recycle(conn), location)
-      assert html_response(conn, 200) =~ "Password updated successfully"
-    end
-  end
-
   describe "GET /settings" do
     setup [:create_user, :log_in]
 
