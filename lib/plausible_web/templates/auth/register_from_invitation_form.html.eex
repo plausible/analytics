@@ -5,6 +5,5 @@
 
 <%= live_render(@conn, PlausibleWeb.Live.RegisterForm,
   container: {:div, class: "contents"},
-  session: %{"invitation_id" => @invitation_id, "is_selfhost" => @is_selfhost},
-  router: PlausibleWeb.Router
+  session: %{"invitation_id" => @invitation_id, "is_selfhost" => @is_selfhost}
 ) %>

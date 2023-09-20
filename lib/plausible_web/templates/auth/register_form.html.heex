@@ -12,8 +12,7 @@
 <div class="w-full max-w-3xl mt-4 mx-auto flex flex-shrink-0">
   <%= live_render(@conn, PlausibleWeb.Live.RegisterForm,
     container: {:div, class: "contents"},
-    session: %{"is_selfhost" => @is_selfhost},
-    router: PlausibleWeb.Router
+    session: %{"is_selfhost" => @is_selfhost}
   ) %>
   <div class="pt-12 pl-8 hidden md:block">
     <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 0) %>
