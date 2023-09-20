@@ -61,10 +61,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
-    with :ok <- check_ip_rate_limit(conn),
-         {:ok, user} <- find_user(email),
-         :ok <- check_user_rate_limit(user),
-         :ok <- check_password(user, password) do
+    with {:ok, user} <- login_user(conn, email, password) do
       conn = set_user_session(conn, user)
 
       if user.email_verified do
@@ -102,10 +99,7 @@ defmodule PlausibleWeb.AuthController do
     if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == true do
       redirect(conn, to: Routes.auth_path(conn, :login_form))
     else
-      with :ok <- check_ip_rate_limit(conn),
-           {:ok, user} <- find_user(email),
-           :ok <- check_user_rate_limit(user),
-           :ok <- check_password(user, password) do
+      with {:ok, user} <- login_user(conn, email, password) do
         conn = set_user_session(conn, user)
 
         if user.email_verified do
@@ -128,15 +122,6 @@ defmodule PlausibleWeb.AuthController do
     )
 
     result
-  end
-
-  defp set_user_session(conn, user) do
-    conn
-    |> put_session(:current_user_id, user.id)
-    |> put_resp_cookie("logged_in", "true",
-      http_only: false,
-      max_age: 60 * 60 * 24 * 365 * 5000
-    )
   end
 
   def activate_form(conn, _params) do
@@ -293,20 +278,22 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
+    with {:ok, user} <- login_user(conn, email, password) do
+      login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+
+      conn
+      |> set_user_session(user)
+      |> put_session(:login_dest, nil)
+      |> redirect(to: login_dest)
+    end
+  end
+
+  defp login_user(conn, email, password) do
     with :ok <- check_ip_rate_limit(conn),
          {:ok, user} <- find_user(email),
          :ok <- check_user_rate_limit(user),
          :ok <- check_password(user, password) do
-      login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
-      conn
-      |> put_session(:current_user_id, user.id)
-      |> put_resp_cookie("logged_in", "true",
-        http_only: false,
-        max_age: 60 * 60 * 24 * 365 * 5000
-      )
-      |> put_session(:login_dest, nil)
-      |> redirect(to: login_dest)
+      {:ok, user}
     else
       :wrong_password ->
         maybe_log_failed_login_attempts("wrong password for #{email}")
@@ -334,6 +321,15 @@ defmodule PlausibleWeb.AuthController do
           "Too many login attempts. Wait a minute before trying again."
         )
     end
+  end
+
+  defp set_user_session(conn, user) do
+    conn
+    |> put_session(:current_user_id, user.id)
+    |> put_resp_cookie("logged_in", "true",
+      http_only: false,
+      max_age: 60 * 60 * 24 * 365 * 5000
+    )
   end
 
   defp maybe_log_failed_login_attempts(message) do
