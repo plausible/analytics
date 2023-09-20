@@ -165,6 +165,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
               during the private preview. Pricing will be announced soon. See
               examples and learn more in <a
                 class="font-medium text-yellow underline hover:text-yellow-600"
+                target="_blank"
+                rel="noreferrer"
                 href="https://plausible.io/docs/ecommerce-revenue-tracking"
               >our docs</a>.
             </p>
