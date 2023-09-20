@@ -72,12 +72,13 @@ defmodule Plausible.Billing.Plans do
   def growth_plans_for(%User{} = user) do
     user = Plausible.Users.with_subscription(user)
     v4_available = FunWithFlags.enabled?(:business_tier, for: user)
+    owned_plan_id = user.subscription && user.subscription.paddle_plan_id
 
     cond do
-      find(user.subscription, @plans_v1) -> @plans_v1
-      find(user.subscription, @plans_v2) -> @plans_v2
-      find(user.subscription, @plans_v3) -> @plans_v3
-      find(user.subscription, plans_sandbox()) -> plans_sandbox()
+      find(owned_plan_id, @plans_v1) -> @plans_v1
+      find(owned_plan_id, @plans_v2) -> @plans_v2
+      find(owned_plan_id, @plans_v3) -> @plans_v3
+      find(owned_plan_id, plans_sandbox()) -> plans_sandbox()
       Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
       Timex.before?(user.inserted_at, ~D[2022-01-01]) -> @plans_v2
       v4_available -> Enum.filter(@plans_v4, &(&1.kind == :growth))
@@ -108,7 +109,7 @@ defmodule Plausible.Billing.Plans do
         do: yearly_product_id
   end
 
-  @spec find(String.t() | Subscription.t(), [Plan.t()]) ::
+  @spec find(String.t(), [Plan.t()]) ::
           Plan.t() | nil
   @spec find(nil, any()) :: nil
   @doc """
@@ -116,15 +117,9 @@ defmodule Plausible.Billing.Plans do
 
   Returns nil when plan can't be found.
   """
-  def find(product_id_or_subscription, scope \\ all())
+  def find(product_id, scope \\ all())
 
-  def find(nil, _scope) do
-    nil
-  end
-
-  def find(%Subscription{} = subscription, scope) do
-    find(subscription.paddle_plan_id, scope)
-  end
+  def find(nil, _scope), do: nil
 
   def find(product_id, scope) do
     Enum.find(scope, fn plan ->
@@ -138,7 +133,7 @@ defmodule Plausible.Billing.Plans do
     if subscription && subscription.paddle_plan_id == "free_10k" do
       :free_10k
     else
-      find(subscription) || get_enterprise_plan(subscription)
+      get_regular_plan(subscription) || get_enterprise_plan(subscription)
     end
   end
 
@@ -186,6 +181,10 @@ defmodule Plausible.Billing.Plans do
 
         plans
     end
+  end
+
+  defp get_regular_plan(%Subscription{} = subscription) do
+    find(subscription.paddle_plan_id)
   end
 
   defp get_enterprise_plan(nil), do: nil
