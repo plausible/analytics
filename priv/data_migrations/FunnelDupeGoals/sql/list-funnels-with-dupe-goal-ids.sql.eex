@@ -18,9 +18,9 @@ WITH DuplicateGoals AS (
 FunnelStepsWithDuplicateGoals AS (
 	SELECT
 		fs.id,
-		goal_id,
-		funnel_id,
-		name,
+		fs.goal_id,
+		fs.funnel_id,
+		f.name,
 		CASE
 			WHEN g.event_name IS NOT NULL THEN 'Event: ' || g.event_name
 			WHEN g.page_path IS NOT NULL THEN 'Page: ' || g.page_path
