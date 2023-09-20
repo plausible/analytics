@@ -26,7 +26,6 @@ defmodule Plausible.DataMigration.RewriteFunnelDupes do
         %{}
         |> Map.put(:domain, List.first(data).domain)
         |> Map.put(:site_id, site_id)
-        |> Map.put(:funnels, Enum.uniq(for(d <- data, do: d.funnel_id)))
         |> Map.put(
           :changes,
           Enum.map(
