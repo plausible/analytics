@@ -89,6 +89,15 @@ defmodule Plausible.Billing.Plans do
     Enum.filter(@plans_v4, &(&1.kind == :business))
   end
 
+  def available_plans_with_prices(%User{} = user) do
+    {growth_plans, business_plans} =
+      (growth_plans_for(user) ++ business_plans())
+      |> with_prices()
+      |> Enum.split_with(&(&1.kind == :growth))
+
+    %{growth: growth_plans, business: business_plans}
+  end
+
   @spec yearly_product_ids() :: [String.t()]
   @doc """
   List yearly plans product IDs.

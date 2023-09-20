@@ -22,12 +22,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     current_interval = current_user_subscription_interval(user.subscription)
     selected_volume = default_selected_volume(current_user_plan)
 
-    available_plans =
-      (Plans.growth_plans_for(user) ++ Plans.business_plans())
-      |> Plans.with_prices()
-
-    {available_growth_plans, available_business_plans} =
-      Enum.split_with(available_plans, &(&1.kind == :growth))
+    available_plans = Plans.available_plans_with_prices(user)
 
     {:ok,
      assign(
@@ -38,10 +33,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
        current_interval: current_interval,
        selected_interval: current_interval || :monthly,
        selected_volume: selected_volume,
-       available_growth_plans: available_growth_plans,
-       available_business_plans: available_business_plans,
-       selected_growth_plan: get_plan_by_volume(available_growth_plans, selected_volume),
-       selected_business_plan: get_plan_by_volume(available_business_plans, selected_volume)
+       available_plans: available_plans,
+       selected_growth_plan: get_plan_by_volume(available_plans.growth, selected_volume),
+       selected_business_plan: get_plan_by_volume(available_plans.business, selected_volume)
      )}
   end
 
@@ -104,9 +98,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
      assign(socket,
        selected_volume: new_volume,
        selected_growth_plan:
-         get_plan_by_volume(socket.assigns.available_growth_plans, new_volume),
+         get_plan_by_volume(socket.assigns.available_plans.growth, new_volume),
        selected_business_plan:
-         get_plan_by_volume(socket.assigns.available_business_plans, new_volume)
+         get_plan_by_volume(socket.assigns.available_plans.business, new_volume)
      )}
   end
 

@@ -5,6 +5,7 @@ defmodule Plausible.Billing.PlansTest do
   @v1_plan_id "558018"
   @v2_plan_id "654177"
   @v4_plan_id "change-me-749342"
+  @v4_business_plan_id "change-me-b749342"
 
   describe "getting subscription plans for user" do
     test "growth_plans_for/1 shows v1 pricing for users who are already on v1 pricing" do
@@ -45,6 +46,20 @@ defmodule Plausible.Billing.PlansTest do
       |> Enum.each(fn plan ->
         assert plan.kind == :business
       end)
+    end
+
+    test "available_plans_with_prices/1" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
+
+      %{growth: growth_plans, business: business_plans} = Plans.available_plans_with_prices(user)
+
+      assert Enum.find(growth_plans, fn plan ->
+               (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v2_plan_id
+             end)
+
+      assert Enum.find(business_plans, fn plan ->
+               (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v4_business_plan_id
+             end)
     end
   end
 
