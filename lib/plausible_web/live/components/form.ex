@@ -185,7 +185,17 @@ defmodule PlausibleWeb.Live.Components.Form do
         assigns.score >= 4 -> ["bg-indigo-600", "dark:bg-indigo-500"]
       end
 
-    assigns = assign(assigns, :color, color)
+    feedback =
+      cond do
+        assigns.warning != "" -> assigns.warning <> "."
+        assigns.suggestions != [] -> List.first(assigns.suggestions)
+        true -> nil
+      end
+
+    assigns =
+      assigns
+      |> assign(:color, color)
+      |> assign(:feedback, feedback)
 
     ~H"""
     <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2 mt-2 dark:bg-gray-700 mt-1">
@@ -198,13 +208,8 @@ defmodule PlausibleWeb.Live.Components.Form do
     <p :if={@score <= 2} class="text-sm text-red-500 phx-no-feedback:hidden">
       Password is too weak
     </p>
-    <p :if={@warning != "" or @suggestions != []} class="text-xs text-gray-500">
-      <span :if={@warning != ""}>
-        <%= @warning %>.
-      </span>
-      <span :for={suggestion <- @suggestions}>
-        <%= suggestion %>
-      </span>
+    <p :if={@feedback} class="text-xs text-gray-500">
+      <%= @feedback %>
     </p>
     """
   end

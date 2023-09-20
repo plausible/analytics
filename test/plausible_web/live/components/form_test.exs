@@ -130,7 +130,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       assert find(doc, "p") == []
     end
 
-    test "renders hints paragraph only when any presented" do
+    test "renders hints paragraph when warning hint is present" do
       doc =
         render_component(&Form.strength_meter/1,
           score: 2,
@@ -140,7 +140,9 @@ defmodule PlausibleWeb.Live.Components.FormTest do
 
       assert [_p_warning, p_hint] = find(doc, "p")
       assert text(p_hint) == "Test warning hint."
+    end
 
+    test "renders only first suggestion when no warning present" do
       doc =
         render_component(&Form.strength_meter/1,
           score: 2,
@@ -150,8 +152,10 @@ defmodule PlausibleWeb.Live.Components.FormTest do
 
       assert [_p_warning, p_hint] = find(doc, "p")
       assert text(p_hint) =~ "Test suggestion 1."
-      assert text(p_hint) =~ "Test suggestion 2."
+      refute text(p_hint) =~ "Test suggestion 2."
+    end
 
+    test "favors hint warning over suggestion when both present" do
       doc =
         render_component(&Form.strength_meter/1,
           score: 2,
@@ -161,8 +165,8 @@ defmodule PlausibleWeb.Live.Components.FormTest do
 
       assert [_p_warning, p_hint] = find(doc, "p")
       assert text(p_hint) =~ "Test warning hint."
-      assert text(p_hint) =~ "Test suggestion 1."
-      assert text(p_hint) =~ "Test suggestion 2."
+      refute text(p_hint) =~ "Test suggestion 1."
+      refute text(p_hint) =~ "Test suggestion 2."
     end
   end
 
