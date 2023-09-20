@@ -8,11 +8,11 @@
   <% end %>
   <div class="my-4 mt-8">
     <%= label f, :email, class: "block text-gray-700 dark:text-gray-300  text-sm font-bold mb-2" %>
-    <%= email_input f, :email, class: "bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500", placeholder: "user@example.com" %>
+    <%= email_input f, :email, autocomplete: "username", class: "bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500", placeholder: "user@example.com" %>
   </div>
   <div class="my-4">
     <%= label f, :password, class: "block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" %>
-    <%= password_input f, :password, class: "transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500" %>
+    <%= password_input f, :password, id: "current-password", autocomplete: "current-password", class: "transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500" %>
     <p class="text-gray-500 text-xs my-2">Forgot password? <a href="/password/request-reset" class="underline text-gray-800 dark:text-gray-50">Click here</a> to reset it.</p>
   </div>
   <%= submit "Login →", class: "button mt-4 w-full" %>

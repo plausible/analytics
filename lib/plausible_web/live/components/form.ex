@@ -114,7 +114,7 @@ defmodule PlausibleWeb.Live.Components.Form do
       |> assign(:strength, strength)
 
     ~H"""
-    <.input field={@field} type="password" label={@label} id={@id} {@rest}>
+    <.input field={@field} type="password" autocomplete="new-password" label={@label} id={@id} {@rest}>
       <.strength_meter :if={@too_weak? or @strength.score > 0} {@strength} />
     </.input>
     """
