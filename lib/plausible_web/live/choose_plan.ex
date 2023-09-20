@@ -11,28 +11,43 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   @billing_faq_link "https://plausible.io/docs/billing"
 
   def mount(_params, %{"user_id" => user_id}, socket) do
-    user = Users.with_subscription(user_id)
+    socket =
+      socket
+      |> assign_new(:user, fn ->
+        Users.with_subscription(user_id)
+      end)
+      |> assign_new(:usage, fn %{user: user} ->
+        Quota.monthly_pageview_usage(user)
+      end)
+      |> assign_new(:current_user_plan, fn %{user: user} ->
+        Plans.get_subscription_plan(user.subscription)
+      end)
+      |> assign_new(:current_interval, fn %{user: user} ->
+        current_user_subscription_interval(user.subscription)
+      end)
+      |> assign_new(:selected_volume, fn %{current_user_plan: current_user_plan} ->
+        default_selected_volume(current_user_plan)
+      end)
+      |> assign_new(:available_plans, fn %{user: user} ->
+        Plans.available_plans_with_prices(user)
+      end)
+      |> assign_new(:selected_interval, fn %{current_interval: current_interval} ->
+        current_interval || :monthly
+      end)
+      |> assign_new(:selected_growth_plan, fn %{
+                                                available_plans: available_plans,
+                                                selected_volume: selected_volume
+                                              } ->
+        get_plan_by_volume(available_plans.growth, selected_volume)
+      end)
+      |> assign_new(:selected_business_plan, fn %{
+                                                  available_plans: available_plans,
+                                                  selected_volume: selected_volume
+                                                } ->
+        get_plan_by_volume(available_plans.business, selected_volume)
+      end)
 
-    usage = Quota.monthly_pageview_usage(user)
-    current_user_plan = Plans.get_subscription_plan(user.subscription)
-    current_interval = current_user_subscription_interval(user.subscription)
-    selected_volume = default_selected_volume(current_user_plan)
-
-    available_plans = Plans.available_plans_with_prices(user)
-
-    {:ok,
-     assign(
-       socket,
-       user: user,
-       usage: usage,
-       current_user_plan: current_user_plan,
-       current_interval: current_interval,
-       selected_interval: current_interval || :monthly,
-       selected_volume: selected_volume,
-       available_plans: available_plans,
-       selected_growth_plan: get_plan_by_volume(available_plans.growth, selected_volume),
-       selected_business_plan: get_plan_by_volume(available_plans.business, selected_volume)
-     )}
+    {:ok, socket}
   end
 
   def render(assigns) do
