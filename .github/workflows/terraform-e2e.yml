@@ -12,6 +12,10 @@ on:
     paths:
       - 'test/e2e/**.tf'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   terraform:
     concurrency: terraform_checkly
