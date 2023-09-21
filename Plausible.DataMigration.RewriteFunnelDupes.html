@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>PlausibleWeb.Components.Site.Feature — Plausible v0.0.1</title>
+    <title>Plausible.DataMigration.RewriteFunnelDupes — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,20 +102,27 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">PlausibleWeb.Components.Site.Feature</span> 
+  <span translate="no">Plausible.DataMigration.RewriteFunnelDupes</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>Phoenix Component for rendering a user-facing feature toggle
-capable of flipping booleans in <a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a> via the <code class="inline">toggle_feature</code> controller action.</p>
+<p>A data fix migration that seeks funnels having steps
+whose goals are equally named.
+It then tries to rewrite the duplicate goals using the
+oldest goal available. In extreme cases, e.g. when multiple
+duplicates are found for a single funnel, it will either
+reduce or completely remove the funnel.
+This enables us to run a migration later on that will
+delete duplicate goals and enforce goal uniqueness at the
+database level via a CHECK constraint.</p><p>To run, just call the <code class="inline">run</code> function.</p>
   </section>
 
 
@@ -133,17 +140,7 @@ capable of flipping booleans in <a href="Plausible.Site.html"><code class="inlin
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#__resource__/0" translate="no">__resource__()</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>The resource name, as an atom, for this view</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#button_active/1" translate="no">button_active(assigns)</a>
+        <a href="#apply_change/2" translate="no">apply_change(funnel_id, change)</a>
 
       </div>
 
@@ -151,7 +148,7 @@ capable of flipping booleans in <a href="Plausible.Site.html"><code class="inlin
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#button_inactive/1" translate="no">button_inactive(assigns)</a>
+        <a href="#confirm/3" translate="no">confirm(message, func, default_choice \\ :yes)</a>
 
       </div>
 
@@ -159,17 +156,7 @@ capable of flipping booleans in <a href="Plausible.Site.html"><code class="inlin
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#render/2" translate="no">render(template, assigns \\ %{})</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Renders the given template locally.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#target/4" translate="no">target(site, setting, conn, set_to)</a>
+        <a href="#execute/1" translate="no">execute(data)</a>
 
       </div>
 
@@ -177,23 +164,49 @@ capable of flipping booleans in <a href="Plausible.Site.html"><code class="inlin
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#template_not_found/2" translate="no">template_not_found(template, assigns)</a>
+        <a href="#run/1" translate="no">run(_ \\ [])</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Callback invoked when no template is found.
-By default it raises but can be customized
-to render a particular template.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#toggle/1" translate="no">toggle(assigns)</a>
+        <a href="#run_sql/2" translate="no">run_sql(name, assigns \\ [])</a>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>) (required)</li><li><code class="inline">setting</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">conn</code> (<a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html"><code class="inline">Plug.Conn</code></a>) (required)</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code></li></ul></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#run_sql_confirm/2" translate="no">run_sql_confirm(name, options \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#to_db_ops/1" translate="no">to_db_ops(meta)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#to_map/1" translate="no">to_map(row)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#translate_to_db_ops/1" translate="no">translate_to_db_ops(data)</a>
+
+      </div>
 
     </div>
 
@@ -210,38 +223,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="__resource__/0">
+<section class="detail" id="apply_change/2">
 
   <div class="detail-header">
-    <a href="#__resource__/0" class="detail-link" title="Link to this function">
+    <a href="#apply_change/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">__resource__()</h1>
+    <h1 class="signature" translate="no">apply_change(funnel_id, change)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L6" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>The resource name, as an atom, for this view</p>
-  </section>
-</section>
-<section class="detail" id="button_active/1">
-
-  <div class="detail-header">
-    <a href="#button_active/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">button_active(assigns)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L39" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L75" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -254,16 +245,18 @@ Functions
 
   </section>
 </section>
-<section class="detail" id="button_inactive/1">
+<section class="detail" id="confirm/3">
+
+    <span id="confirm/2"></span>
 
   <div class="detail-header">
-    <a href="#button_inactive/1" class="detail-link" title="Link to this function">
+    <a href="#confirm/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">button_inactive(assigns)</h1>
+    <h1 class="signature" translate="no">confirm(message, func, default_choice \\ :yes)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L48" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L15" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -276,40 +269,16 @@ Functions
 
   </section>
 </section>
-<section class="detail" id="render/2">
-
-    <span id="render/1"></span>
+<section class="detail" id="execute/1">
 
   <div class="detail-header">
-    <a href="#render/2" class="detail-link" title="Link to this function">
+    <a href="#execute/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">render(template, assigns \\ %{})</h1>
+    <h1 class="signature" translate="no">execute(data)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L6" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Renders the given template locally.</p>
-  </section>
-</section>
-<section class="detail" id="target/4">
-
-  <div class="detail-header">
-    <a href="#target/4" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">target(site, setting, conn, set_to)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L34" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L55" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -322,16 +291,18 @@ Functions
 
   </section>
 </section>
-<section class="detail" id="template_not_found/2">
+<section class="detail" id="run/1">
+
+    <span id="run/0"></span>
 
   <div class="detail-header">
-    <a href="#template_not_found/2" class="detail-link" title="Link to this function">
+    <a href="#run/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">template_not_found(template, assigns)</h1>
+    <h1 class="signature" translate="no">run(_ \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L6" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L18" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -341,27 +312,21 @@ Functions
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> template_not_found(<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">binary</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
-
-      </div>
-
-<p>Callback invoked when no template is found.
-By default it raises but can be customized
-to render a particular template.</p>
   </section>
 </section>
-<section class="detail" id="toggle/1">
+<section class="detail" id="run_sql/2">
+
+    <span id="run_sql/1"></span>
 
   <div class="detail-header">
-    <a href="#toggle/1" class="detail-link" title="Link to this function">
+    <a href="#run_sql/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">toggle(assigns)</h1>
+    <h1 class="signature" translate="no">run_sql(name, assigns \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L15" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -371,19 +336,97 @@ to render a particular template.</p>
 
   <section class="docstring">
 
-<h2 id="toggle/1-attributes" class="section-heading">
-  <a href="#toggle/1-attributes">
-    <i class="ri-link-m" aria-hidden="true"></i>
-    Attributes
-  </a>
-</h2>
-<ul><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>) (required)</li><li><code class="inline">setting</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">conn</code> (<a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html"><code class="inline">Plug.Conn</code></a>) (required)</li></ul><h2 id="toggle/1-slots" class="section-heading">
-  <a href="#toggle/1-slots">
-    <i class="ri-link-m" aria-hidden="true"></i>
-    Slots
-  </a>
-</h2>
-<ul><li><code class="inline">inner_block</code></li></ul>
+
+  </section>
+</section>
+<section class="detail" id="run_sql_confirm/2">
+
+    <span id="run_sql_confirm/1"></span>
+
+  <div class="detail-header">
+    <a href="#run_sql_confirm/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">run_sql_confirm(name, options \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L15" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="to_db_ops/1">
+
+  <div class="detail-header">
+    <a href="#to_db_ops/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">to_db_ops(meta)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L134" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="to_map/1">
+
+  <div class="detail-header">
+    <a href="#to_map/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">to_map(row)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L166" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="translate_to_db_ops/1">
+
+  <div class="detail-header">
+    <a href="#translate_to_db_ops/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">translate_to_db_ops(data)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/data_migration/rewrite_funnel_dupes.ex#L128" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 
