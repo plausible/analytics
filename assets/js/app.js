@@ -36,12 +36,12 @@ if (triggers.length > 0) {
   })
 }
 
-const registerForm = document.getElementById('register-form')
+const registerForm = document.getElementById('register-via-invitation-form')
 
 if (registerForm) {
   registerForm.addEventListener('submit', function(e) {
     e.preventDefault();
-    setTimeout(submitForm, 1000);
+    setTimeout(submitForm, 5000);
     var formSubmitted = false;
 
     function submitForm() {
@@ -51,7 +51,7 @@ if (registerForm) {
       }
     }
     /* eslint-disable-next-line no-undef */
-    plausible('Signup', { callback: submitForm });
+    plausible('Signup via invitation', {u: '/register/invitation/:invitation_id', callback: submitForm });
   })
 }
 

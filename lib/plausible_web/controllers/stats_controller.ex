@@ -51,14 +51,14 @@ defmodule PlausibleWeb.StatsController do
   def stats(%{assigns: %{site: site}} = conn, _params) do
     stats_start_date = Plausible.Sites.stats_start_date(site)
     can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
+    demo = site.domain == PlausibleWeb.Endpoint.host()
+    dogfood_page_path = if !demo, do: "/:dashboard"
 
     cond do
       stats_start_date && can_see_stats? ->
-        demo = site.domain == PlausibleWeb.Endpoint.host()
         offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
 
         conn
-        |> assign(:skip_plausible_tracking, !demo)
         |> remove_email_report_banner(site)
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> render("stats.html",
@@ -72,20 +72,24 @@ defmodule PlausibleWeb.StatsController do
           offer_email_report: offer_email_report,
           demo: demo,
           flags: get_flags(conn.assigns[:current_user]),
-          is_dbip: is_dbip()
+          is_dbip: is_dbip(),
+          dogfood_page_path: dogfood_page_path
         )
 
       !stats_start_date && can_see_stats? ->
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("waiting_first_pageview.html", site: site)
+        render(conn, "waiting_first_pageview.html",
+          site: site,
+          dogfood_page_path: dogfood_page_path
+        )
 
       Sites.locked?(site) ->
         owner = Sites.owner_for(site)
 
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("site_locked.html", owner: owner, site: site)
+        render(conn, "site_locked.html",
+          owner: owner,
+          site: site,
+          dogfood_page_path: dogfood_page_path
+        )
     end
   end
 
@@ -234,10 +238,10 @@ defmodule PlausibleWeb.StatsController do
     else
       _e ->
         conn
-        |> assign(:skip_plausible_tracking, true)
         |> render("shared_link_password.html",
           link: shared_link,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          dogfood_page_path: "/share/:dashboard"
         )
     end
   end
@@ -278,11 +282,11 @@ defmodule PlausibleWeb.StatsController do
         |> redirect(to: "/share/#{URI.encode_www_form(shared_link.site.domain)}?auth=#{slug}")
       else
         conn
-        |> assign(:skip_plausible_tracking, true)
         |> render("shared_link_password.html",
           link: shared_link,
           error: "Incorrect password. Please try again.",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          dogfood_page_path: "/share/:dashboard"
         )
       end
     else
@@ -294,7 +298,6 @@ defmodule PlausibleWeb.StatsController do
     cond do
       !shared_link.site.locked ->
         conn
-        |> assign(:skip_plausible_tracking, true)
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")
         |> render("stats.html",
@@ -307,7 +310,7 @@ defmodule PlausibleWeb.StatsController do
           title: title(conn, shared_link.site),
           offer_email_report: false,
           demo: false,
-          skip_plausible_tracking: true,
+          dogfood_page_path: "/share/:dashboard",
           shared_link_auth: shared_link.slug,
           embedded: conn.params["embed"] == "true",
           background: conn.params["background"],
@@ -319,9 +322,11 @@ defmodule PlausibleWeb.StatsController do
       Sites.locked?(shared_link.site) ->
         owner = Sites.owner_for(shared_link.site)
 
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("site_locked.html", owner: owner, site: shared_link.site)
+        render(conn, "site_locked.html",
+          owner: owner,
+          site: shared_link.site,
+          dogfood_page_path: "/share/:dashboard"
+        )
     end
   end
 

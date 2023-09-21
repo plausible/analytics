@@ -98,13 +98,13 @@ defmodule PlausibleWeb.AuthController do
         render(conn, "register_from_invitation_form.html",
           changeset: changeset,
           invitation: invitation,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
-          skip_plausible_tracking: true
+          dogfood_page_path: "/register/invitation/:invitation_id",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
       else
         render(conn, "invitation_expired.html",
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
-          skip_plausible_tracking: true
+          dogfood_page_path: "/register/invitation/:invitation_id",
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
       end
     end
@@ -142,7 +142,7 @@ defmodule PlausibleWeb.AuthController do
               invitation: invitation,
               changeset: changeset,
               layout: {PlausibleWeb.LayoutView, "focus.html"},
-              skip_plausible_tracking: true
+              dogfood_page_path: "/register/invitation/:invitation_id"
             )
         end
       else
@@ -151,7 +151,7 @@ defmodule PlausibleWeb.AuthController do
           changeset: user,
           captcha_error: "Please complete the captcha to register",
           layout: {PlausibleWeb.LayoutView, "focus.html"},
-          skip_plausible_tracking: true
+          dogfood_page_path: "/register/invitation/:invitation_id"
         )
       end
     end
