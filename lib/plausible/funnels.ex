@@ -45,21 +45,27 @@ defmodule Plausible.Funnels do
         ]
   def list(%Plausible.Site{id: site_id}) do
     Repo.all(
-      from f in Funnel,
+      from(f in Funnel,
         inner_join: steps in assoc(f, :steps),
         where: f.site_id == ^site_id,
         select: %{name: f.name, id: f.id, steps_count: count(steps)},
         group_by: f.id,
         order_by: [desc: :id]
+      )
     )
   end
 
-  @spec delete(Plausible.Site.t(), pos_integer()) :: :ok
+  @spec delete(Plausible.Site.t() | pos_integer(), pos_integer()) :: :ok
   def delete(%Plausible.Site{id: site_id}, funnel_id) do
+    delete(site_id, funnel_id)
+  end
+
+  def delete(site_id, funnel_id) do
     Repo.delete_all(
-      from f in Funnel,
+      from(f in Funnel,
         where: f.site_id == ^site_id,
         where: f.id == ^funnel_id
+      )
     )
 
     :ok
@@ -73,7 +79,7 @@ defmodule Plausible.Funnels do
 
   def get(site_id, funnel_id) when is_integer(site_id) and is_integer(funnel_id) do
     q =
-      from f in Funnel,
+      from(f in Funnel,
         where: f.site_id == ^site_id,
         where: f.id == ^funnel_id,
         inner_join: steps in assoc(f, :steps),
@@ -82,6 +88,7 @@ defmodule Plausible.Funnels do
         preload: [
           steps: {steps, goal: goal}
         ]
+      )
 
     Repo.one(q)
   end
