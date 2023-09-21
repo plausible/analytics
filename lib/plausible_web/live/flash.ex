@@ -24,6 +24,7 @@ defmodule PlausibleWeb.Live.Flash do
         </.flash>
       </div>
       <div
+        :if={Application.get_env(:plausible, :environment) == "dev"}
         id="live-view-connection-status"
         class="hidden"
         phx-disconnected={JS.show()}
@@ -37,7 +38,7 @@ defmodule PlausibleWeb.Live.Flash do
             Oops, a server blip
           </:title>
           <:message>
-            Please wait while we're trying to reconnect...
+            Live socket disconnected.
           </:message>
         </.flash>
       </div>

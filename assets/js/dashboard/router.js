@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import {BrowserRouter, Switch, Route, useLocation} from "react-router-dom";
+import { BrowserRouter, Switch, Route, useLocation } from "react-router-dom";
 
 import Dash from './index'
 import SourcesModal from './stats/modals/sources'
@@ -9,7 +9,10 @@ import PagesModal from './stats/modals/pages'
 import EntryPagesModal from './stats/modals/entry-pages'
 import ExitPagesModal from './stats/modals/exit-pages'
 import ModalTable from './stats/modals/table'
+import PropsModal from './stats/modals/props'
+import ConversionsModal from './stats/modals/conversions'
 import FilterModal from './stats/modals/filter-modal'
+import * as url from './util/url';
 
 function ScrollToTop() {
   const location = useLocation();
@@ -23,14 +26,14 @@ function ScrollToTop() {
   return null;
 }
 
-export default function Router({site, loggedIn, currentUserRole}) {
+export default function Router({ site, loggedIn, currentUserRole }) {
   return (
     <BrowserRouter>
       <Route path="/:domain">
         <ScrollToTop />
         <Dash site={site} loggedIn={loggedIn} currentUserRole={currentUserRole} />
         <Switch>
-          <Route exact path={["/:domain/sources", "/:domain/utm_mediums", "/:domain/utm_sources", "/:domain/utm_campaigns", "/:domain/utm_contents", "/:domain/utm_terms" ]}>
+          <Route exact path={["/:domain/sources", "/:domain/utm_mediums", "/:domain/utm_sources", "/:domain/utm_campaigns", "/:domain/utm_contents", "/:domain/utm_terms"]}>
             <SourcesModal site={site} />
           </Route>
           <Route exact path="/:domain/referrers/Google">
@@ -49,13 +52,19 @@ export default function Router({site, loggedIn, currentUserRole}) {
             <ExitPagesModal site={site} />
           </Route>
           <Route path="/:domain/countries">
-            <ModalTable title="Top countries" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/countries`} filter={{country: 'code', country_name: 'name'}} keyLabel="Country" renderIcon={renderCountryIcon} />
+            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filter={{ country: 'code', country_labels: 'name' }} keyLabel="Country" renderIcon={renderCountryIcon} />
           </Route>
           <Route path="/:domain/regions">
-            <ModalTable title="Top regions" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/regions`} filter={{region: 'code', region_name: 'name'}} keyLabel="Region" renderIcon={renderRegionIcon} />
+            <ModalTable title="Top regions" site={site} endpoint={url.apiPath(site, '/regions')} filter={{ region: 'code', region_labels: 'name' }} keyLabel="Region" renderIcon={renderRegionIcon} />
           </Route>
           <Route path="/:domain/cities">
-            <ModalTable title="Top cities" site={site} endpoint={`/api/stats/${encodeURIComponent(site.domain)}/cities`} filter={{city: 'code', city_name: 'name'}} keyLabel="City" renderIcon={renderCityIcon} />
+            <ModalTable title="Top cities" site={site} endpoint={url.apiPath(site, '/cities')} filter={{ city: 'code', city_labels: 'name' }} keyLabel="City" renderIcon={renderCityIcon} />
+          </Route>
+          <Route path="/:domain/custom-prop-values/:prop_key">
+            <PropsModal site={site} />
+          </Route>
+          <Route path="/:domain/conversions">
+            <ConversionsModal site={site} />
           </Route>
           <Route path={["/:domain/filter/:field"]}>
             <FilterModal site={site} />

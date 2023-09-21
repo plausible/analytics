@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- Add `referrers.csv` to CSV export
+- Add a new Properties section in the dashboard to break down by custom properties
+- Add `custom_props.csv` to CSV export (almost the same as the old `prop_breakdown.csv`, but has different column headers, and includes props for pageviews too, not only custom events)
+- Add `referrers.csv` to CSV export
+
+### Removed
+- Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
+- Removed the `prop-breakdown.csv` file from CSV export
+
+### Changed
+- Limit the number of Goal Conversions shown on the dashboard and render a "Details" link when there are more entries to show
+- Show Outbound Links / File Downloads / 404 Pages / Cloaked Links instead of Goal Conversions when filtering by the corresponding goal
+- Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
+
+
+>>>>>>> f7ed6464 (update changelog)
+### Fixed
+- Only return `(none)` values in custom property breakdown for the first page (pagination) of results
+- Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
+- Fix [broken interval selection](https://github.com/plausible/analytics/issues/2982) in the all time view plausible/analytics#3110
+- Fixed [IPv6 problems](https://github.com/plausible/analytics/issues/3173) in data migration plausible/analytics#3179
+- Fixed [long URLs display](https://github.com/plausible/analytics/issues/3158) in Outbound Link breakdown view
+- Fixed [Sentry reports](https://github.com/plausible/analytics/discussions/3166) for ingestion requests plausible/analytics#3182
+- Fix breakdown pagination bug in the dashboard details view when filtering by goals
+- Update bot detection (matomo 6.1.4, ua_inspector 3.4.0)
+- Improved the Goal Settings page (search, autcompletion etc.)
+
+## v2.0.0 - 2023-07-12
+
+### Added
 - Call to action for tracking Goal Conversions and an option to hide the section from the dashboard
 - Add support for `with_imported=true` in Stats API aggregate endpoint
 - Ability to use '--' instead of '=' sign in the `tagged-events` classnames
@@ -14,6 +44,7 @@ All notable changes to this project will be documented in this file.
 - Add `MAILER_NAME` environment variable support plausible/analytics#2937
 - Add `MAILGUN_BASE_URI` support for `Bamboo.MailgunAdapter` plausible/analytics#2935
 - Add a landing page for self-hosters plausible/analytics#2989
+- Allow optional IPv6 for clickhouse repo plausible/analytics#2970
 
 ### Fixed
 - Fix tracker bug - call callback function even when event is ignored

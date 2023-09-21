@@ -204,17 +204,6 @@ custom_script_name =
   config_dir
   |> get_var_from_path_or_env("CUSTOM_SCRIPT_NAME", "script")
 
-{site_limit, ""} =
-  config_dir
-  |> get_var_from_path_or_env("SITE_LIMIT", "50")
-  |> Integer.parse()
-
-site_limit_exempt =
-  config_dir
-  |> get_var_from_path_or_env("SITE_LIMIT_EXEMPT", "")
-  |> String.split(",")
-  |> Enum.map(&String.trim/1)
-
 disable_cron =
   config_dir
   |> get_var_from_path_or_env("DISABLE_CRON", "false")
@@ -237,12 +226,15 @@ if byte_size(websocket_url) > 0 and
   """
 end
 
+secure_cookie =
+  config_dir
+  |> get_var_from_path_or_env("SECURE_COOKIE", if(is_selfhost, do: "false", else: "true"))
+  |> String.to_existing_atom()
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
   super_admin_user_ids: super_admin_user_ids,
-  site_limit: site_limit,
-  site_limit_exempt: site_limit_exempt,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts
@@ -260,14 +252,24 @@ config :plausible, PlausibleWeb.Endpoint,
     protocol_options: [max_request_line_length: 8192, max_header_value_length: 8192]
   ],
   secret_key_base: secret_key_base,
-  websocket_url: websocket_url
+  websocket_url: websocket_url,
+  secure_cookie: secure_cookie
 
 maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
+
+db_cacertfile = get_var_from_path_or_env(config_dir, "DATABASE_CACERTFILE", CAStore.file_path())
 
 if is_nil(db_socket_dir) do
   config :plausible, Plausible.Repo,
     url: db_url,
-    socket_options: maybe_ipv6
+    socket_options: maybe_ipv6,
+    ssl_opts: [
+      cacertfile: db_cacertfile,
+      verify: :verify_peer,
+      customize_hostname_check: [
+        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+      ]
+    ]
 else
   config :plausible, Plausible.Repo,
     socket_dir: db_socket_dir,
@@ -309,11 +311,20 @@ maybe_ch_ipv6 =
   get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
   |> String.to_existing_atom()
 
+ch_cacertfile = get_var_from_path_or_env(config_dir, "CLICKHOUSE_CACERTFILE")
+
 ch_transport_opts = [
   keepalive: true,
   show_econnreset: true,
   inet6: maybe_ch_ipv6
 ]
+
+ch_transport_opts =
+  if ch_cacertfile do
+    ch_transport_opts ++ [cacertfile: ch_cacertfile]
+  else
+    ch_transport_opts
+  end
 
 config :plausible, Plausible.ClickhouseRepo,
   loggers: [Ecto.LogEntry],

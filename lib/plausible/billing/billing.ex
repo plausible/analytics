@@ -76,6 +76,7 @@ defmodule Plausible.Billing do
   def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: {true, :no_trial}
 
   def needs_to_upgrade?(user) do
+    user = Plausible.Users.with_subscription(user)
     trial_is_over = Timex.before?(user.trial_expiry_date, Timex.today())
     subscription_active = subscription_is_active?(user.subscription)
 
@@ -99,6 +100,7 @@ defmodule Plausible.Billing do
   def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
 
   def on_trial?(user) do
+    user = Plausible.Users.with_subscription(user)
     !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
   end
 
@@ -106,11 +108,8 @@ defmodule Plausible.Billing do
     Timex.diff(user.trial_expiry_date, Timex.today(), :days)
   end
 
-  def usage(user) do
-    {pageviews, custom_events} = usage_breakdown(user)
-    pageviews + custom_events
-  end
-
+  @spec last_two_billing_months_usage(Plausible.Auth.User.t(), Date.t()) ::
+          {non_neg_integer(), non_neg_integer()}
   def last_two_billing_months_usage(user, today \\ Timex.today()) do
     {first, second} = last_two_billing_cycles(user, today)
 
@@ -152,37 +151,6 @@ defmodule Plausible.Billing do
   def usage_breakdown(user) do
     site_ids = Plausible.Sites.owned_site_ids(user)
     Plausible.Stats.Clickhouse.usage_breakdown(site_ids)
-  end
-
-  @doc """
-  Returns the number of sites that an account is allowed to have. Accounts for
-  grandfathering old accounts to unlimited websites and ignores site limit on self-hosted
-  installations.
-  """
-  @limit_accounts_since ~D[2021-05-05]
-  def sites_limit(user) do
-    user = Plausible.Repo.preload(user, :enterprise_plan)
-
-    cond do
-      Timex.before?(user.inserted_at, @limit_accounts_since) ->
-        nil
-
-      Application.get_env(:plausible, :is_selfhost) ->
-        nil
-
-      user.email in Application.get_env(:plausible, :site_limit_exempt) ->
-        nil
-
-      user.enterprise_plan ->
-        if has_active_enterprise_subscription(user) do
-          nil
-        else
-          Application.get_env(:plausible, :site_limit)
-        end
-
-      true ->
-        Application.get_env(:plausible, :site_limit)
-    end
   end
 
   defp handle_subscription_created(params) do
@@ -253,18 +221,6 @@ defmodule Plausible.Billing do
     end
   end
 
-  defp has_active_enterprise_subscription(user) do
-    Plausible.Repo.exists?(
-      from(s in Plausible.Billing.Subscription,
-        join: e in Plausible.Billing.EnterprisePlan,
-        on: s.user_id == e.user_id and s.paddle_plan_id == e.paddle_plan_id,
-        where: s.user_id == ^user.id,
-        where: s.paddle_plan_id == ^user.enterprise_plan.paddle_plan_id,
-        where: s.status == "active"
-      )
-    )
-  end
-
   defp format_subscription(params) do
     %{
       paddle_subscription_id: params["subscription_id"],
@@ -288,9 +244,10 @@ defmodule Plausible.Billing do
 
     case user.grace_period do
       %GracePeriod{allowance_required: allowance_required} ->
-        new_allowance = Plausible.Billing.Plans.allowance(user.subscription)
+        new_monthly_pageview_limit =
+          Plausible.Billing.Quota.monthly_pageview_limit(user.subscription)
 
-        if new_allowance > allowance_required do
+        if new_monthly_pageview_limit > allowance_required do
           user
           |> Plausible.Auth.GracePeriod.remove_changeset()
           |> Repo.update!()

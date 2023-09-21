@@ -31,6 +31,22 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert redirected_to(conn) == "/#{site.domain}/settings/people"
     end
 
+    test "fails to create invitation when is over limit", %{conn: conn, user: user} do
+      memberships =
+        [build(:site_membership, user: user, role: :owner)] ++ build_list(5, :site_membership)
+
+      site = insert(:site, memberships: memberships)
+
+      conn =
+        post(conn, "/sites/#{site.domain}/memberships/invite", %{
+          email: "john.doe@example.com",
+          role: "admin"
+        })
+
+      assert html_response(conn, 200) =~
+               "Your account is limited to 5 team members. You can upgrade your plan to increase this limit."
+    end
+
     test "fails to create invitation with insufficient permissions", %{conn: conn, user: user} do
       site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
 
@@ -95,7 +111,13 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
     test "renders form with error if the invitee is already a member", %{conn: conn, user: user} do
       second_member = insert(:user)
-      site = insert(:site, members: [user, second_member])
+
+      memberships = [
+        build(:site_membership, user: user, role: :owner),
+        build(:site_membership, user: second_member)
+      ]
+
+      site = insert(:site, memberships: memberships)
 
       conn =
         post(conn, "/sites/#{site.domain}/memberships/invite", %{

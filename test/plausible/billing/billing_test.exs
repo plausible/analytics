@@ -3,98 +3,6 @@ defmodule Plausible.BillingTest do
   use Bamboo.Test, shared: true
   alias Plausible.Billing
 
-  describe "usage" do
-    test "is 0 with no events" do
-      user = insert(:user)
-
-      assert Billing.usage(user) == 0
-    end
-
-    test "counts the total number of events from all sites the user owns" do
-      user = insert(:user)
-      site1 = insert(:site, members: [user])
-      site2 = insert(:site, members: [user])
-
-      populate_stats(site1, [
-        build(:pageview),
-        build(:pageview)
-      ])
-
-      populate_stats(site2, [
-        build(:pageview),
-        build(:event, name: "custom events")
-      ])
-
-      assert Billing.usage(user) == 4
-    end
-
-    test "only counts usage from sites where the user is the owner" do
-      user = insert(:user)
-
-      insert(:site,
-        domain: "site-with-no-views.com",
-        memberships: [
-          build(:site_membership, user: user, role: :owner)
-        ]
-      )
-
-      insert(:site,
-        domain: "test-site.com",
-        memberships: [
-          build(:site_membership, user: user, role: :admin)
-        ]
-      )
-
-      assert Billing.usage(user) == 0
-    end
-  end
-
-  describe "sites_limit" do
-    test "is the globally configured site limit for regular accounts" do
-      user = insert(:user, subscription: build(:subscription))
-
-      assert Billing.sites_limit(user) == Application.get_env(:plausible, :site_limit)
-    end
-
-    test "is limited for enterprise customers who have not upgraded yet" do
-      enterprise_plan_paddle_id = "123321"
-
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: enterprise_plan_paddle_id),
-          subscription: build(:subscription, paddle_plan_id: "99999")
-        )
-
-      assert Billing.sites_limit(user) == Application.get_env(:plausible, :site_limit)
-    end
-
-    test "is unlimited for enterprise customers. Their site limit is checked in a background job so as to avoid service disruption" do
-      enterprise_plan_paddle_id = "123321"
-
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: enterprise_plan_paddle_id),
-          subscription: build(:subscription, paddle_plan_id: enterprise_plan_paddle_id)
-        )
-
-      assert Billing.sites_limit(user) == nil
-    end
-
-    test "is unlimited for enterprise customers who are due to change a plan" do
-      enterprise_plan_paddle_id = "123321"
-
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: enterprise_plan_paddle_id),
-          subscription: build(:subscription, paddle_plan_id: enterprise_plan_paddle_id)
-        )
-
-      insert(:enterprise_plan, user_id: user.id, paddle_plan_id: "new-paddle-plan-id")
-
-      assert Billing.sites_limit(user) == nil
-    end
-  end
-
   describe "last_two_billing_cycles" do
     test "billing on the 1st" do
       last_bill_date = ~D[2021-01-01]
@@ -199,15 +107,13 @@ defmodule Plausible.BillingTest do
 
   describe "on_trial?" do
     test "is true with >= 0 trial days left" do
-      user = insert(:user) |> Repo.preload(:subscription)
+      user = insert(:user)
 
       assert Billing.on_trial?(user)
     end
 
     test "is false with < 0 trial days left" do
-      user =
-        insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: -1))
-        |> Repo.preload(:subscription)
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: -1))
 
       refute Billing.on_trial?(user)
     end
@@ -222,14 +128,11 @@ defmodule Plausible.BillingTest do
   describe "needs_to_upgrade?" do
     test "is false for a trial user" do
       user = insert(:user)
-      user = Repo.preload(user, :subscription)
-
       refute Billing.needs_to_upgrade?(user)
     end
 
     test "is true for a user with an expired trial" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
-      user = Repo.preload(user, :subscription)
 
       assert Billing.needs_to_upgrade?(user)
     end
@@ -237,7 +140,6 @@ defmodule Plausible.BillingTest do
     test "is false for a user with an expired trial but an active subscription" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user)
-      user = Repo.preload(user, :subscription)
 
       refute Billing.needs_to_upgrade?(user)
     end
@@ -245,7 +147,6 @@ defmodule Plausible.BillingTest do
     test "is false for a user with a cancelled subscription IF the billing cycle isn't completed yet" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user, status: "deleted", next_bill_date: Timex.today())
-      user = Repo.preload(user, :subscription)
 
       refute Billing.needs_to_upgrade?(user)
     end
@@ -259,15 +160,12 @@ defmodule Plausible.BillingTest do
         next_bill_date: Timex.shift(Timex.today(), days: -1)
       )
 
-      user = Repo.preload(user, :subscription)
-
       assert Billing.needs_to_upgrade?(user)
     end
 
     test "is false for a deleted subscription if not next_bill_date specified" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user, status: "deleted", next_bill_date: nil)
-      user = Repo.preload(user, :subscription)
 
       assert Billing.needs_to_upgrade?(user)
     end

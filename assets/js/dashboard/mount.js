@@ -19,6 +19,7 @@ if (container) {
     conversionsEnabled: container.dataset.conversionsEnabled === 'true',
     funnelsEnabled: container.dataset.funnelsEnabled === 'true',
     propsEnabled: container.dataset.propsEnabled === 'true',
+    hasProps: container.dataset.hasProps === 'true',
     funnels: JSON.parse(container.dataset.funnels),
     statsBegin: container.dataset.statsBegin,
     nativeStatsBegin: container.dataset.nativeStatsBegin,

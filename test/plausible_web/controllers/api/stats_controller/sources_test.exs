@@ -568,6 +568,74 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
     end
+
+    test "filters out entries without utm_medium present", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_medium: "social",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_medium: "social",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          utm_medium: "",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_medium: "social",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_medium: "",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 100
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "social",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_mediums?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "social",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/utm_campaigns" do
@@ -656,10 +724,82 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                }
              ]
     end
+
+    test "filters out entries without utm_campaign present", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_campaign: "profile",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_campaign: "profile",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          utm_campaign: "",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_campaign: "",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_campaign: "profile",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_campaign: "",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "profile",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_campaigns?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "profile",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/utm_sources" do
-    setup [:create_user, :log_in, :create_new_site]
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "returns top utm_sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
@@ -701,6 +841,326 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
                  "visitors" => 1,
                  "bounce_rate" => 0,
                  "visit_duration" => 900
+               }
+             ]
+    end
+  end
+
+  describe "GET /api/stats/:domain/utm_terms" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "returns top utm_terms by unique user ids", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_term: "oat milk",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_term: "oat milk",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          utm_term: "Sweden",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_term: "Sweden",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_term: "oat milk",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_term: "Sweden",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Sweden",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
+               },
+               %{
+                 "name" => "oat milk",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Sweden",
+                 "visitors" => 3,
+                 "bounce_rate" => 67,
+                 "visit_duration" => 300
+               },
+               %{
+                 "name" => "oat milk",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               }
+             ]
+    end
+
+    test "filters out entries without utm_term present", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_term: "oat milk",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_term: "oat milk",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          utm_term: "",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_term: "",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_term: "oat milk",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_term: "",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "oat milk",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "oat milk",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               }
+             ]
+    end
+  end
+
+  describe "GET /api/stats/:domain/utm_contents" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "returns top utm_contents by unique user ids", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_content: "ad",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_content: "ad",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          utm_content: "blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_content: "blog",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_content: "ad",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_content: "blog",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "blog",
+                 "visitors" => 2,
+                 "bounce_rate" => 100,
+                 "visit_duration" => 0
+               },
+               %{
+                 "name" => "ad",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "blog",
+                 "visitors" => 3,
+                 "bounce_rate" => 67,
+                 "visit_duration" => 300
+               },
+               %{
+                 "name" => "ad",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
+               }
+             ]
+    end
+
+    test "filters out entries without utm_content present", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          utm_content: "ad",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_content: "ad",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:15:00]
+        ),
+        build(:pageview,
+          utm_content: "",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          utm_content: "",
+          timestamp: ~N[2021-01-01 00:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_sources,
+          utm_content: "ad",
+          date: ~D[2021-01-01],
+          visit_duration: 700,
+          bounces: 1,
+          visits: 1,
+          visitors: 1
+        ),
+        build(:imported_sources,
+          utm_content: "",
+          date: ~D[2021-01-01],
+          bounces: 0,
+          visits: 1,
+          visitors: 1,
+          visit_duration: 900
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "ad",
+                 "visitors" => 1,
+                 "bounce_rate" => 0,
+                 "visit_duration" => 900
+               }
+             ]
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "ad",
+                 "visitors" => 2,
+                 "bounce_rate" => 50,
+                 "visit_duration" => 800.0
                }
              ]
     end
@@ -923,13 +1383,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           "/api/stats/#{site.domain}/referrers/10words?period=day"
         )
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 3,
-               "referrers" => [
-                 %{"name" => "10words.com", "visitors" => 2},
-                 %{"name" => "10words.com/page1", "visitors" => 1}
-               ]
-             }
+      assert json_response(conn, 200) == [
+               %{"name" => "10words.com", "visitors" => 2},
+               %{"name" => "10words.com/page1", "visitors" => 1}
+             ]
     end
 
     test "calculates bounce rate and visit duration for referrer urls", %{conn: conn, site: site} do
@@ -964,17 +1421,14 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           "/api/stats/#{site.domain}/referrers/10words?period=day&date=2021-01-01&detailed=true"
         )
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 2,
-               "referrers" => [
-                 %{
-                   "name" => "10words.com",
-                   "visitors" => 2,
-                   "bounce_rate" => 50.0,
-                   "visit_duration" => 450
-                 }
-               ]
-             }
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "10words.com",
+                 "visitors" => 2,
+                 "bounce_rate" => 50.0,
+                 "visit_duration" => 450
+               }
+             ]
     end
 
     test "gets keywords from Google", %{conn: conn, user: user, site: site} do
@@ -1032,17 +1486,14 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           "/api/stats/#{site.domain}/referrers/10words?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 1,
-               "referrers" => [
-                 %{
-                   "name" => "10words.com",
-                   "total_visitors" => 2,
-                   "conversion_rate" => 50.0,
-                   "visitors" => 1
-                 }
-               ]
-             }
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "10words.com",
+                 "total_visitors" => 2,
+                 "conversion_rate" => 50.0,
+                 "visitors" => 1
+               }
+             ]
     end
 
     test "returns top referring urls for a pageview goal", %{conn: conn, site: site} do
@@ -1073,191 +1524,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           "/api/stats/#{site.domain}/referrers/10words?period=day&filters=#{filters}"
         )
 
-      assert json_response(conn, 200) == %{
-               "total_visitors" => 1,
-               "referrers" => [
-                 %{
-                   "name" => "10words.com",
-                   "total_visitors" => 2,
-                   "conversion_rate" => 50.0,
-                   "visitors" => 1
-                 }
-               ]
-             }
-    end
-  end
-
-  describe "GET /api/stats/:domain/utm_terms" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
-
-    test "returns top utm_terms by unique user ids", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          utm_term: "oat milk",
-          user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          utm_term: "oat milk",
-          user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:15:00]
-        ),
-        build(:pageview,
-          utm_term: "Sweden",
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          utm_term: "Sweden",
-          timestamp: ~N[2021-01-01 00:00:00]
-        )
-      ])
-
-      populate_stats(site, [
-        build(:imported_sources,
-          utm_term: "oat milk",
-          date: ~D[2021-01-01],
-          visit_duration: 700,
-          bounces: 1,
-          visits: 1,
-          visitors: 1
-        ),
-        build(:imported_sources,
-          utm_term: "Sweden",
-          date: ~D[2021-01-01],
-          bounces: 0,
-          visits: 1,
-          visitors: 1,
-          visit_duration: 900
-        )
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01"
-        )
-
       assert json_response(conn, 200) == [
                %{
-                 "name" => "Sweden",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0
-               },
-               %{
-                 "name" => "oat milk",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900
-               }
-             ]
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_terms?period=day&date=2021-01-01&with_imported=true"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "Sweden",
-                 "visitors" => 3,
-                 "bounce_rate" => 67,
-                 "visit_duration" => 300
-               },
-               %{
-                 "name" => "oat milk",
-                 "visitors" => 2,
-                 "bounce_rate" => 50,
-                 "visit_duration" => 800.0
-               }
-             ]
-    end
-  end
-
-  describe "GET /api/stats/:domain/utm_contents" do
-    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
-
-    test "returns top utm_contents by unique user ids", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview,
-          utm_content: "ad",
-          user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          utm_content: "ad",
-          user_id: @user_id,
-          timestamp: ~N[2021-01-01 00:15:00]
-        ),
-        build(:pageview,
-          utm_content: "blog",
-          timestamp: ~N[2021-01-01 00:00:00]
-        ),
-        build(:pageview,
-          utm_content: "blog",
-          timestamp: ~N[2021-01-01 00:00:00]
-        )
-      ])
-
-      populate_stats(site, [
-        build(:imported_sources,
-          utm_content: "ad",
-          date: ~D[2021-01-01],
-          visit_duration: 700,
-          bounces: 1,
-          visits: 1,
-          visitors: 1
-        ),
-        build(:imported_sources,
-          utm_content: "blog",
-          date: ~D[2021-01-01],
-          bounces: 0,
-          visits: 1,
-          visitors: 1,
-          visit_duration: 900
-        )
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "blog",
-                 "visitors" => 2,
-                 "bounce_rate" => 100,
-                 "visit_duration" => 0
-               },
-               %{
-                 "name" => "ad",
-                 "visitors" => 1,
-                 "bounce_rate" => 0,
-                 "visit_duration" => 900
-               }
-             ]
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/utm_contents?period=day&date=2021-01-01&with_imported=true"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "blog",
-                 "visitors" => 3,
-                 "bounce_rate" => 67,
-                 "visit_duration" => 300
-               },
-               %{
-                 "name" => "ad",
-                 "visitors" => 2,
-                 "bounce_rate" => 50,
-                 "visit_duration" => 800.0
+                 "name" => "10words.com",
+                 "total_visitors" => 2,
+                 "conversion_rate" => 50.0,
+                 "visitors" => 1
                }
              ]
     end

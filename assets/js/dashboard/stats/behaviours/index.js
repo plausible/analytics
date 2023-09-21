@@ -1,29 +1,31 @@
-import React, { Fragment, useState, useEffect } from 'react'
+import React, { Fragment, useState, useEffect, useCallback } from 'react'
 import { Menu, Transition } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import classNames from 'classnames'
 import * as storage from '../../util/storage'
 
-import Conversions from './conversions'
+import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
+import Properties from './props'
 import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
+import { SPECIAL_GOALS } from './goal-conversions'
 
 const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
 const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
 
 export const CONVERSIONS = 'conversions'
-export const FUNNELS = 'funnels'
 export const PROPS = 'props'
+export const FUNNELS = 'funnels'
 
 export const sectionTitles = {
   [CONVERSIONS]: 'Goal Conversions',
-  [FUNNELS]: 'Funnels',
-  [PROPS]: 'Custom Properties'
+  [PROPS]: 'Custom Properties',
+  [FUNNELS]: 'Funnels'
 }
 
 export default function Behaviours(props) {
-  const site = props.site
-  const adminAccess = ['owner', 'admin', 'super_admin'].includes(props.currentUserRole)
+  const { site, query, currentUserRole } = props
+  const adminAccess = ['owner', 'admin', 'super_admin'].includes(currentUserRole)
   const tabKey = `behavioursTab__${site.domain}`
   const funnelKey = `behavioursTabFunnel__${site.domain}`
   const [enabledModes, setEnabledModes] = useState(getEnabledModes())
@@ -31,6 +33,27 @@ export default function Behaviours(props) {
 
   const [funnelNames, _setFunnelNames] = useState(site.funnels.map(({ name }) => name))
   const [selectedFunnel, setSelectedFunnel] = useState(storage.getItem(funnelKey))
+
+  const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] = useState(false)
+
+  const onGoalFilterClick = useCallback((e) => {
+    const goalName = e.target.innerHTML
+    const isSpecialGoal = Object.keys(SPECIAL_GOALS).includes(goalName)
+    const isPageviewGoal = goalName.startsWith('Visit ')
+
+    if (!isSpecialGoal && !isPageviewGoal && enabledModes.includes(PROPS) && site.hasProps) {
+      setShowingPropsForGoalFilter(true)
+      setMode(PROPS)
+    }
+  }, [])
+
+  useEffect(() => {
+    const justRemovedGoalFilter = !query.filters.goal
+    if (mode === PROPS && justRemovedGoalFilter && showingPropsForGoalFilter) {
+      setShowingPropsForGoalFilter(false)
+      setMode(CONVERSIONS)
+    }
+  }, [!!query.filters.goal])
 
   useEffect(() => {
     setMode(defaultMode())
@@ -65,11 +88,11 @@ export default function Behaviours(props) {
       <Transition
         as={Fragment}
         enter="transition ease-out duration-100"
-        enterFrom="transform opacity-0 scale-95"
-        enterTo="transform opacity-100 scale-100"
+        enterFrom="opacity-0 scale-95"
+        enterTo="opacity-100 scale-100"
         leave="transition ease-in duration-75"
-        leaveFrom="transform opacity-100 scale-100"
-        leaveTo="transform opacity-0 scale-95"
+        leaveFrom="opacity-100 scale-100"
+        leaveTo="opacity-0 scale-95"
       >
         <Menu.Items className="text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
           <div className="py-1">
@@ -82,7 +105,7 @@ export default function Behaviours(props) {
                       className={classNames(
                         active ? 'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer' : 'text-gray-700 dark:text-gray-200',
                         'block px-4 py-2 text-sm',
-                        selectedFunnel === funnelName ? 'font-bold text-gray-500' : ''
+                        (mode === FUNNELS && selectedFunnel === funnelName) ? 'font-bold text-gray-500' : ''
                       )}
                     >
                       {funnelName}
@@ -115,14 +138,16 @@ export default function Behaviours(props) {
     return (
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
         {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS, 'Goals')}
-        {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
         {isEnabled(PROPS) && tabSwitcher(PROPS, 'Properties')}
+        {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
       </div>
     )
   }
 
   function renderConversions() {
-    if (site.hasGoals) { return <Conversions site={site} query={props.query} /> }
+    if (site.hasGoals) {
+      return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
+    }
     else if (adminAccess) {
       return (
         <FeatureSetupNotice
@@ -140,7 +165,7 @@ export default function Behaviours(props) {
   }
 
   function renderFunnels() {
-    if (selectedFunnel) { return <Funnel site={site} query={props.query} funnelName={selectedFunnel} /> }
+    if (selectedFunnel) { return <Funnel site={site} query={query} funnelName={selectedFunnel} /> }
     else if (adminAccess) {
       return (
         <FeatureSetupNotice
@@ -158,7 +183,9 @@ export default function Behaviours(props) {
   }
 
   function renderProps() {
-    if (adminAccess) {
+    if (site.hasProps) {
+      return <Properties site={site} query={query} />
+    } else if (adminAccess) {
       return (
         <FeatureSetupNotice
           site={site}
@@ -166,7 +193,7 @@ export default function Behaviours(props) {
           shortFeatureName={'props'}
           title={'No custom properties found'}
           info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
-          settingsLink={`/${encodeURIComponent(site.domain)}/settings/props`}
+          settingsLink={`/${encodeURIComponent(site.domain)}/settings/properties`}
           onHideAction={onHideAction(PROPS)}
         />
       )
@@ -189,10 +216,10 @@ export default function Behaviours(props) {
     switch (mode) {
       case CONVERSIONS:
         return renderConversions()
-      case FUNNELS:
-        return renderFunnels()
       case PROPS:
         return renderProps()
+      case FUNNELS:
+        return renderFunnels()
     }
   }
 
@@ -203,8 +230,8 @@ export default function Behaviours(props) {
     if (storedMode && enabledModes.includes(storedMode)) { return storedMode }
 
     if (enabledModes.includes(CONVERSIONS)) { return CONVERSIONS }
-    if (enabledModes.includes(FUNNELS)) { return FUNNELS }
-    return PROPS
+    if (enabledModes.includes(PROPS)) { return PROPS }
+    return FUNNELS
   }
 
   function getEnabledModes() {
@@ -213,11 +240,11 @@ export default function Behaviours(props) {
     if (site.conversionsEnabled) {
       enabledModes.push(CONVERSIONS)
     }
-    if (site.funnelsEnabled && !isRealtime() && site.flags.funnels) {
-      enabledModes.push(FUNNELS)
-    }
-    if (site.propsEnabled && !isRealtime() && site.flags.props) {
+    if (site.propsEnabled) {
       enabledModes.push(PROPS)
+    }
+    if (site.funnelsEnabled && !isRealtime()) {
+      enabledModes.push(FUNNELS)
     }
     return enabledModes
   }
@@ -227,7 +254,15 @@ export default function Behaviours(props) {
   }
 
   function isRealtime() {
-    return props.query.period === 'realtime'
+    return query.period === 'realtime'
+  }
+
+  function sectionTitle() {
+    if (mode === CONVERSIONS) {
+      return specialTitleWhenGoalFilter(query, sectionTitles[mode])
+    } else {
+      return sectionTitles[mode]
+    }
   }
 
   if (mode) {
@@ -236,7 +271,7 @@ export default function Behaviours(props) {
         <div className="w-full p-4 bg-white rounded shadow-xl dark:bg-gray-825">
           <div className="flex justify-between w-full">
             <h3 className="font-bold dark:text-gray-100">
-              {sectionTitles[mode] + (isRealtime() ? ' (last 30min)' : '')}
+              {sectionTitle() + (isRealtime() ? ' (last 30min)' : '')}
             </h3>
             {tabs()}
           </div>

@@ -4,17 +4,26 @@ defmodule Plausible.Stats.Timeseries do
   import Plausible.Stats.{Base, Util}
   use Plausible.Stats.Fragments
 
-  @typep metric :: :pageviews | :visitors | :visits | :bounce_rate | :visit_duration
+  @typep metric ::
+           :pageviews
+           | :visitors
+           | :visits
+           | :bounce_rate
+           | :visit_duration
+           | :average_revenue
+           | :total_revenue
   @typep value :: nil | integer() | float()
   @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
 
-  @event_metrics [:visitors, :pageviews]
+  @event_metrics [:visitors, :pageviews, :average_revenue, :total_revenue]
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
 
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
+
+    {currency, event_metrics} = get_revenue_tracking_currency(site, query, event_metrics)
 
     [event_result, session_result] =
       Plausible.ClickhouseRepo.parallel_tasks([
@@ -27,6 +36,7 @@ defmodule Plausible.Stats.Timeseries do
       |> Map.merge(Enum.find(event_result, fn row -> date_eq(row[:date], step) end) || %{})
       |> Map.merge(Enum.find(session_result, fn row -> date_eq(row[:date], step) end) || %{})
       |> Map.update!(:date, &date_format/1)
+      |> cast_revenue_metrics_to_money(currency)
     end)
   end
 
@@ -216,7 +226,9 @@ defmodule Plausible.Stats.Timeseries do
         :visits -> Map.merge(row, %{visits: 0})
         :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
         :bounce_rate -> Map.merge(row, %{bounce_rate: nil})
-        :visit_duration -> Map.merge(row, %{:visit_duration => nil})
+        :visit_duration -> Map.merge(row, %{visit_duration: nil})
+        :average_revenue -> Map.merge(row, %{average_revenue: nil})
+        :total_revenue -> Map.merge(row, %{total_revenue: nil})
       end
     end)
   end

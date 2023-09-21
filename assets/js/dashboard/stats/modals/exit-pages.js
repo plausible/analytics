@@ -5,8 +5,8 @@ import { withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../util/number-formatter'
-import {parseQuery} from '../../query'
-
+import { parseQuery } from '../../query'
+import { trimURL } from '../../util/url'
 class ExitPagesModal extends React.Component {
   constructor(props) {
     super(props)
@@ -24,18 +24,18 @@ class ExitPagesModal extends React.Component {
   }
 
   loadPages() {
-    const {query, page} = this.state;
+    const { query, page } = this.state;
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/exit-pages`, query, {limit: 100, page})
-      .then((res) => this.setState((state) => ({loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100})))
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/exit-pages`, query, { limit: 100, page })
+      .then((res) => this.setState((state) => ({ loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100 })))
   }
 
   loadMore() {
-    this.setState({loading: true, page: this.state.page + 1}, this.loadPages.bind(this))
+    this.setState({ loading: true, page: this.state.page + 1 }, this.loadPages.bind(this))
   }
 
   formatPercentage(number) {
-    if (typeof(number) === 'number') {
+    if (typeof (number) === 'number') {
       return number + '%'
     } else {
       return '-'
@@ -68,12 +68,12 @@ class ExitPagesModal extends React.Component {
 
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
-        <td className="p-2">
-          <Link to={{pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString()}} className="hover:underline">{page.name}</Link>
+        <td className="p-2 truncate">
+          <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString() }} className="hover:underline">{trimURL(page.name, 40)}</Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.unique_exits)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_exits)}</td>}
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visitors)}</td>
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visits)}</td>}
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{this.formatPercentage(page.exit_rate)}</td>}
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>
@@ -114,7 +114,7 @@ class ExitPagesModal extends React.Component {
                 </tr>
               </thead>
               <tbody>
-                { this.state.pages.map(this.renderPage.bind(this)) }
+                {this.state.pages.map(this.renderPage.bind(this))}
               </tbody>
             </table>
           </main>
@@ -126,8 +126,8 @@ class ExitPagesModal extends React.Component {
   render() {
     return (
       <Modal site={this.props.site}>
-        { this.renderBody() }
-        { this.renderLoading() }
+        {this.renderBody()}
+        {this.renderLoading()}
       </Modal>
     )
   }

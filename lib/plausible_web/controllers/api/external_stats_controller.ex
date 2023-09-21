@@ -121,8 +121,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       |> String.split(",")
 
     case validate_all_metrics(metrics, property, query) do
-      {:error, reason} -> {:error, reason}
-      metrics -> {:ok, Enum.map(metrics, &String.to_atom/1)}
+      {:error, reason} ->
+        {:error, reason}
+
+      metrics ->
+        {:ok, Enum.map(metrics, &String.to_existing_atom/1)}
     end
   end
 

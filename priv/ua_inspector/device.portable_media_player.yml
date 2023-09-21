@@ -100,3 +100,9 @@ Sylvania:
   regex: '(SLTDVD102[34])'
   device: 'portable media player'
   model: '$1'
+
+# KuGou
+KuGou:
+  regex: 'KuGou[_ -](P5)'
+  device: 'portable media player'
+  model: '$1'

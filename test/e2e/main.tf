@@ -26,19 +26,32 @@ variable "checkly_alert_channel_pagerduty_service_key" {
   sensitive = true
 }
 
+variable "checkly_alert_channel_instatus_webhook_url" {
+  sensitive = true
+}
+
 provider "checkly" {
   api_key    = var.checkly_api_key
   account_id = var.checkly_account_id
 }
 
 resource "checkly_check" "plausible-io-api-health" {
-  name         = "Check plausible.io/api/health"
-  type         = "API"
-  activated    = true
-  frequency    = 1
-  double_check = true
+  name      = "Check plausible.io/api/health"
+  type      = "API"
+  activated = true
+  frequency = 1
 
   group_id = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type        = "FIXED"
+    max_retries = 2
+  }
+
+  alert_channel_subscription {
+    channel_id = checkly_alert_channel.instatus.id
+    activated  = true
+  }
 
   request {
     url              = "https://plausible.io/api/health"
@@ -66,13 +79,17 @@ resource "checkly_check" "plausible-io-api-health" {
 }
 
 resource "checkly_check" "plausible-io-lb-health" {
-  name         = "Check ingress.lb.plausible.io/api/health"
-  type         = "API"
-  activated    = true
-  frequency    = 1
-  double_check = true
+  name      = "Check ingress.lb.plausible.io/api/health"
+  type      = "API"
+  activated = true
+  frequency = 1
 
   group_id = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type        = "FIXED"
+    max_retries = 2
+  }
 
   request {
     url              = "https://ingress.lb.plausible.io/api/health"
@@ -100,13 +117,17 @@ resource "checkly_check" "plausible-io-lb-health" {
 }
 
 resource "checkly_check" "plausible-io-custom-domain-server-health" {
-  name         = "Check custom.plausible.io"
-  type         = "API"
-  activated    = true
-  frequency    = 1
-  double_check = true
+  name      = "Check custom.plausible.io"
+  type      = "API"
+  activated = true
+  frequency = 1
 
   group_id = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type        = "FIXED"
+    max_retries = 2
+  }
 
   request {
     url              = "https://custom.plausible.io"
@@ -121,12 +142,17 @@ resource "checkly_check" "plausible-io-custom-domain-server-health" {
 }
 
 resource "checkly_check" "plausible-io-ingestion" {
-  name         = "Check plausible.io/api/event"
-  type         = "API"
-  activated    = true
-  frequency    = 1
-  double_check = true
-  group_id     = checkly_check_group.reachability.id
+  name      = "Check plausible.io/api/event"
+  type      = "API"
+  activated = true
+  frequency = 1
+
+  group_id = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type        = "FIXED"
+    max_retries = 2
+  }
 
   request {
     url              = "https://plausible.io/api/event"
@@ -165,13 +191,17 @@ EOT
 }
 
 resource "checkly_check" "plausible-io-tracker-script" {
-  name         = "Check plausible.io/js/script.js"
-  type         = "API"
-  activated    = true
-  frequency    = 1
-  double_check = true
+  name      = "Check plausible.io/js/script.js"
+  type      = "API"
+  activated = true
+  frequency = 1
 
   group_id = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type        = "FIXED"
+    max_retries = 2
+  }
 
   request {
     url              = "https://plausible.io/js/script.js"
@@ -186,6 +216,54 @@ resource "checkly_check" "plausible-io-tracker-script" {
       source     = "TEXT_BODY"
       comparison = "CONTAINS"
       target     = "window.plausible"
+    }
+  }
+}
+
+resource "checkly_check" "ingest-plausible-io-ingestion" {
+  name      = "Check ingest.plausible.io/api/event"
+  type      = "API"
+  activated = true
+  frequency = 1
+  group_id  = checkly_check_group.reachability.id
+
+  retry_strategy {
+    type        = "FIXED"
+    max_retries = 2
+  }
+
+  request {
+    url              = "https://ingest.plausible.io/api/event"
+    follow_redirects = false
+    skip_ssl         = false
+    method           = "POST"
+    headers = {
+      User-Agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.121 Safari/537.36 OPR/71.0.3770.284"
+    }
+    body_type = "JSON"
+    body      = <<EOT
+      {
+        "name": "pageview",
+        "url": "https://internal--checkly.com/",
+        "domain": "internal--checkly.com",
+        "width": 1666
+      }
+EOT
+
+    assertion {
+      source     = "STATUS_CODE"
+      comparison = "EQUALS"
+      target     = 202
+    }
+    assertion {
+      source     = "TEXT_BODY"
+      comparison = "EQUALS"
+      target     = "ok"
+    }
+    assertion {
+      source     = "HEADERS"
+      property   = "x-plausible-dropped"
+      comparison = "IS_EMPTY"
     }
   }
 }
@@ -206,8 +284,12 @@ resource "checkly_check_group" "reachability" {
     "ap-southeast-2"
   ]
   concurrency               = 3
-  double_check              = true
   use_global_alert_settings = false
+
+  retry_strategy {
+    type        = "FIXED"
+    max_retries = 2
+  }
 
   alert_channel_subscription {
     channel_id = checkly_alert_channel.pagerduty.id
@@ -228,5 +310,16 @@ resource "checkly_alert_channel" "pagerduty" {
     account      = "plausible"
     service_key  = var.checkly_alert_channel_pagerduty_service_key
     service_name = "Plausible application"
+  }
+}
+
+resource "checkly_alert_channel" "instatus" {
+  webhook {
+    name     = "Instatus integration"
+    method   = "POST"
+    template = <<EOT
+  {"alert": "{{ALERT_TYPE}}"}
+EOT
+    url      = var.checkly_alert_channel_instatus_webhook_url
   }
 }

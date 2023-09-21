@@ -13,7 +13,7 @@ import { IntervalPicker, getStoredInterval, storeInterval } from './interval-pic
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import classNames from 'classnames';
-import { parseNaiveDate, isBefore } from '../../util/date'
+import { monthsBetweenDates, parseNaiveDate, isBefore } from '../../util/date'
 import { isComparisonEnabled } from '../../comparison-input'
 
 const calculateMaximumY = function(dataset) {
@@ -33,7 +33,7 @@ class LineGraph extends React.Component {
     super(props);
     this.boundary = React.createRef()
     this.regenerateChart = this.regenerateChart.bind(this);
-    this.updateWindowDimensions =  this.updateWindowDimensions.bind(this);
+    this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
     this.state = {
       exported: false
     };
@@ -93,15 +93,15 @@ class LineGraph extends React.Component {
           x: {
             grid: { display: false },
             ticks: {
-              callback: function (val, _index, _ticks) {
+              callback: function(val, _index, _ticks) {
                 if (this.getLabelForValue(val) == "__blank__") return ""
 
                 const hasMultipleYears =
                   graphData.labels
-                  .filter((date) => typeof date === 'string')
-                  .map(date => date.split('-')[0])
-                  .filter((value, index, list) => list.indexOf(value) === index)
-                  .length > 1
+                    .filter((date) => typeof date === 'string')
+                    .map(date => date.split('-')[0])
+                    .filter((value, index, list) => list.indexOf(value) === index)
+                    .length > 1
 
                 if (graphData.interval === 'hour' && query.period !== 'day') {
                   const date = dateFormatter({
@@ -235,12 +235,12 @@ class LineGraph extends React.Component {
     if (document.cookie.includes('exporting')) {
       setTimeout(this.pollExportReady.bind(this), 1000);
     } else {
-      this.setState({exported: false})
+      this.setState({ exported: false })
     }
   }
 
   downloadSpinner() {
-    this.setState({exported: true});
+    this.setState({ exported: true });
     document.cookie = "exporting=";
     setTimeout(this.pollExportReady.bind(this), 1000);
   }
@@ -304,14 +304,14 @@ class LineGraph extends React.Component {
       const source = this.props.topStatData.imported_source
       const withImported = this.props.topStatData.with_imported;
       const strike = withImported ? "" : " line-through"
-      const target =  url.setQuery('with_imported', !withImported)
+      const target = url.setQuery('with_imported', !withImported)
       const tip = withImported ? "" : "do not ";
 
       return (
         <Link to={target} className="w-4 h-4 mx-2">
           <div tooltip={`Stats ${tip}include data imported from ${source}.`} className="cursor-pointer w-4 h-4">
             <svg className="absolute dark:text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>{ source[0].toUpperCase() }</text>
+              <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>{source[0].toUpperCase()}</text>
             </svg>
           </div>
         </Link>
@@ -333,20 +333,20 @@ class LineGraph extends React.Component {
 
   render() {
     const { mainGraphRefreshing, updateMetric, updateInterval, metric, topStatData, query, site, graphData, lastLoadTimestamp } = this.props
-    const canvasClass = classNames('mt-4 select-none', {'cursor-pointer': !['minute', 'hour'].includes(graphData?.interval)})
+    const canvasClass = classNames('mt-4 select-none', { 'cursor-pointer': !['minute', 'hour'].includes(graphData?.interval) })
 
     return (
       <div>
-        <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{height: this.getTopStatsHeight()}}>
+        <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{ height: this.getTopStatsHeight() }}>
           <TopStats site={site} query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={lastLoadTimestamp} />
         </div>
         <div className="relative px-2">
           {mainGraphRefreshing && renderLoader()}
           <div className="absolute right-4 -top-8 py-1 flex items-center">
-            { this.downloadLink() }
-            { this.samplingNotice() }
-            { this.importedNotice() }
-            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={updateInterval}/>
+            {this.downloadLink()}
+            {this.samplingNotice()}
+            {this.importedNotice()}
+            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={updateInterval} />
           </div>
           <FadeIn show={graphData}>
             <div className="relative h-96 w-full z-0">
@@ -385,10 +385,14 @@ export default class VisitorGraph extends React.Component {
 
   getIntervalFromStorage() {
     const { query, site } = this.props
-    const storedInterval = getStoredInterval(query.period, site.domain)
+    let interval = getStoredInterval(query.period, site.domain)
 
-    if (this.isIntervalValid(storedInterval)) {
-      return storedInterval
+    if (interval !== "week" && interval !== "month" && query.period === "custom" && monthsBetweenDates(query.from, query.to) > 12) {
+      interval = "month"
+    }
+
+    if (this.isIntervalValid(interval)) {
+      return interval
     } else {
       return null
     }
@@ -402,7 +406,7 @@ export default class VisitorGraph extends React.Component {
   }
 
   onVisible() {
-    this.setState({mainGraphLoadingState: LoadingState.loading}, this.fetchGraphData)
+    this.setState({ mainGraphLoadingState: LoadingState.loading }, this.fetchGraphData)
     this.fetchTopStatData()
     if (this.props.query.period === 'realtime') {
       document.addEventListener('tick', this.fetchGraphData)
@@ -420,7 +424,7 @@ export default class VisitorGraph extends React.Component {
     }
 
     if (metric !== prevState.metric) {
-      this.setState({mainGraphLoadingState: LoadingState.refreshing}, this.fetchGraphData)
+      this.setState({ mainGraphLoadingState: LoadingState.refreshing }, this.fetchGraphData)
     }
   }
 
@@ -510,7 +514,7 @@ export default class VisitorGraph extends React.Component {
   }
 
   render() {
-    const {mainGraphLoadingState, topStatsLoadingState} = this.state
+    const { mainGraphLoadingState, topStatsLoadingState } = this.state
 
     const showLoader =
       [mainGraphLoadingState, topStatsLoadingState].includes(LoadingState.loading) &&

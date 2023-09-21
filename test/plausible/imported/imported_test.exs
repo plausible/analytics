@@ -306,12 +306,6 @@ defmodule Plausible.ImportedTest do
                  "name" => "social",
                  "visit_duration" => 20,
                  "visitors" => 3
-               },
-               %{
-                 "bounce_rate" => 100.0,
-                 "name" => "Direct / None",
-                 "visit_duration" => 60.0,
-                 "visitors" => 1
                }
              ]
     end
@@ -395,12 +389,6 @@ defmodule Plausible.ImportedTest do
                  "visitors" => 2,
                  "bounce_rate" => 100.0,
                  "visit_duration" => 50.0
-               },
-               %{
-                 "bounce_rate" => 0.0,
-                 "name" => "Direct / None",
-                 "visit_duration" => 100.0,
-                 "visitors" => 1
                }
              ]
     end
@@ -485,12 +473,6 @@ defmodule Plausible.ImportedTest do
                  "visitors" => 2,
                  "bounce_rate" => 100.0,
                  "visit_duration" => 50.0
-               },
-               %{
-                 "bounce_rate" => 0.0,
-                 "name" => "Direct / None",
-                 "visit_duration" => 100.0,
-                 "visitors" => 1
                }
              ]
     end
@@ -574,12 +556,6 @@ defmodule Plausible.ImportedTest do
                  "visitors" => 2,
                  "bounce_rate" => 100.0,
                  "visit_duration" => 50.0
-               },
-               %{
-                 "bounce_rate" => 0.0,
-                 "name" => "Direct / None",
-                 "visit_duration" => 100.0,
-                 "visitors" => 1
                }
              ]
     end
@@ -748,11 +724,11 @@ defmodule Plausible.ImportedTest do
       assert json_response(conn, 200) == [
                %{
                  "name" => "/page2",
-                 "unique_exits" => 3,
-                 "total_exits" => 4,
+                 "visitors" => 3,
+                 "visits" => 4,
                  "exit_rate" => 80.0
                },
-               %{"name" => "/page1", "unique_exits" => 2, "total_exits" => 2, "exit_rate" => 66}
+               %{"name" => "/page1", "visitors" => 2, "visits" => 2, "exit_rate" => 66}
              ]
     end
 
@@ -837,7 +813,8 @@ defmodule Plausible.ImportedTest do
         build(:pageview,
           country_code: "GB",
           timestamp: ~N[2021-01-01 00:15:00]
-        )
+        ),
+        build(:imported_visitors, date: ~D[2021-01-01], visitors: 2)
       ])
 
       import_data(
@@ -905,7 +882,8 @@ defmodule Plausible.ImportedTest do
       populate_stats(site, [
         build(:pageview, screen_size: "Desktop", timestamp: ~N[2021-01-01 00:15:00]),
         build(:pageview, screen_size: "Desktop", timestamp: ~N[2021-01-01 00:15:00]),
-        build(:pageview, screen_size: "Laptop", timestamp: ~N[2021-01-01 00:15:00])
+        build(:pageview, screen_size: "Laptop", timestamp: ~N[2021-01-01 00:15:00]),
+        build(:imported_visitors, date: ~D[2021-01-01], visitors: 2)
       ])
 
       import_data(
@@ -949,7 +927,8 @@ defmodule Plausible.ImportedTest do
     test "Browsers data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-01 00:15:00]),
-        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:15:00])
+        build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:15:00]),
+        build(:imported_visitors, visitors: 2, date: ~D[2021-01-01])
       ])
 
       import_data(
@@ -988,16 +967,17 @@ defmodule Plausible.ImportedTest do
 
       assert stats = json_response(conn, 200)
       assert length(stats) == 3
-      assert %{"name" => "Firefox", "visitors" => 2, "percentage" => 50} in stats
-      assert %{"name" => "Mobile App", "visitors" => 1, "percentage" => 25} in stats
-      assert %{"name" => "Chrome", "visitors" => 1, "percentage" => 25} in stats
+      assert %{"name" => "Firefox", "visitors" => 2, "percentage" => 50.0} in stats
+      assert %{"name" => "Mobile App", "visitors" => 1, "percentage" => 25.0} in stats
+      assert %{"name" => "Chrome", "visitors" => 1, "percentage" => 25.0} in stats
     end
 
     test "OS data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
         build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
-        build(:pageview, operating_system: "GNU/Linux", timestamp: ~N[2021-01-01 00:15:00])
+        build(:pageview, operating_system: "GNU/Linux", timestamp: ~N[2021-01-01 00:15:00]),
+        build(:imported_visitors, date: ~D[2021-01-01], visitors: 2)
       ])
 
       import_data(

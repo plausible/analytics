@@ -6,10 +6,14 @@ on:
   pull_request:
     branches: [master, stable]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build and test
-    runs-on: buildjet-4vcpu-ubuntu-2004
+    runs-on: buildjet-16vcpu-ubuntu-2204
 
     strategy:
       matrix:
@@ -18,6 +22,9 @@ jobs:
     services:
       postgres:
         image: postgres:${{ matrix.postgres_version }}
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME || '' }}
+          password: ${{ secrets.DOCKERHUB_TOKEN || '' }}
         ports:
           - 5432:5432
         env:
@@ -30,6 +37,9 @@ jobs:
 
       clickhouse:
         image: clickhouse/clickhouse-server:23.3.7.5-alpine
+        credentials:
+          username: ${{ secrets.DOCKERHUB_USERNAME || '' }}
+          password: ${{ secrets.DOCKERHUB_TOKEN || '' }}
         ports:
           - 8123:8123
         env:
@@ -40,7 +50,7 @@ jobs:
             --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Read .tool-versions
@@ -52,7 +62,7 @@ jobs:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
       - name: Restore dependencies cache
-        uses: actions/cache@v3
+        uses: buildjet/cache@v3
         with:
           path: |
             deps

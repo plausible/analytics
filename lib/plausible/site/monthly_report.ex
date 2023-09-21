@@ -13,7 +13,7 @@ defmodule Plausible.Site.MonthlyReport do
     settings
     |> cast(attrs, [:site_id, :recipients])
     |> validate_required([:site_id, :recipients])
-    |> unique_constraint(:site)
+    |> unique_constraint(:site_id)
   end
 
   def add_recipient(report, recipient) do

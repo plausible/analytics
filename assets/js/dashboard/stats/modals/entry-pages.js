@@ -1,11 +1,12 @@
 import React from "react";
-import { Link , withRouter } from 'react-router-dom'
+import { Link, withRouter } from 'react-router-dom'
 
 
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
-import {parseQuery} from '../../query'
+import { parseQuery } from '../../query'
+import { trimURL } from '../../util/url'
 
 class EntryPagesModal extends React.Component {
   constructor(props) {
@@ -24,12 +25,12 @@ class EntryPagesModal extends React.Component {
   }
 
   loadPages() {
-    const {query, page} = this.state;
+    const { query, page } = this.state;
 
     api.get(
       `/api/stats/${encodeURIComponent(this.props.site.domain)}/entry-pages`,
       query,
-      {limit: 100, page}
+      { limit: 100, page }
     )
       .then(
         (res) => this.setState((state) => ({
@@ -42,11 +43,11 @@ class EntryPagesModal extends React.Component {
 
   loadMore() {
     const { page } = this.state;
-    this.setState({loading: true, page: page + 1}, this.loadPages.bind(this))
+    this.setState({ loading: true, page: page + 1 }, this.loadPages.bind(this))
   }
 
   formatBounceRate(page) {
-    if (typeof(page.bounce_rate) === 'number') {
+    if (typeof (page.bounce_rate) === 'number') {
       return `${page.bounce_rate}%`;
     }
     return '-';
@@ -78,7 +79,7 @@ class EntryPagesModal extends React.Component {
 
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
-        <td className="p-2">
+        <td className="p-2 truncate">
           <Link
             to={{
               pathname: `/${encodeURIComponent(this.props.site.domain)}`,
@@ -86,12 +87,12 @@ class EntryPagesModal extends React.Component {
             }}
             className="hover:underline"
           >
-            {page.name}
+            {trimURL(page.name, 40)}
           </Link>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_visitors)}</td>}
-        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.unique_entrances)}</td>
-        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.total_entrances)}</td>}
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visitors)}</td>
+        {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visits)}</td>}
         {this.showExtra() && <td className="p-2 w-32 font-medium" align="right">{durationFormatter(page.visit_duration)}</td>}
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.conversion_rate)}%</td>}
       </tr>
@@ -130,13 +131,13 @@ class EntryPagesModal extends React.Component {
                   </th>
                   {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Visitors </th>}
                   <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >{this.label()} </th>
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Entrances </th> }
-                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Visit Duration </th> }
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Entrances </th>}
+                  {this.showExtra() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Visit Duration </th>}
                   {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >CR </th>}
                 </tr>
               </thead>
               <tbody>
-                { this.state.pages.map(this.renderPage.bind(this)) }
+                {this.state.pages.map(this.renderPage.bind(this))}
               </tbody>
             </table>
           </main>
@@ -148,8 +149,8 @@ class EntryPagesModal extends React.Component {
   render() {
     return (
       <Modal site={this.props.site}>
-        { this.renderBody() }
-        { this.renderLoading() }
+        {this.renderBody()}
+        {this.renderLoading()}
       </Modal>
     )
   }

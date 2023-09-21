@@ -8,7 +8,7 @@ In the last billing cycle (<%= date_format(@last_cycle.first) %> to <%= date_for
 <%= if @suggested_plan == :enterprise do %>
 This is more than our standard plans, so please reply back to this email to get a quote for your volume.
 <% else %>
-Based on that we recommend you select the <%= @suggested_plan[:volume] %>/mo plan.
+Based on that we recommend you select the <%= @suggested_plan.volume %>/mo plan.
 <br /><br />
 You can upgrade your subscription using our self-serve platform. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
 <br /><br />

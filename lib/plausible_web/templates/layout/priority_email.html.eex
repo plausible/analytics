@@ -1,0 +1,13 @@
+<%= PlausibleWeb.EmailView.greet_recipient(assigns) %>
+<br /><br />
+
+<%= @inner_content %>
+<br /><br />
+
+Regards,<br />
+The Plausible Team 💌
+<br /><br />
+
+--
+<br /><br />
+<%= link(plausible_url(), to: plausible_url()) %><br />

@@ -57,7 +57,7 @@ function Regions({query, site, onClick}) {
       getFilterFor={getFilterFor}
       onClick={onClick}
       keyLabel="Region"
-      metrics={maybeWithCR([VISITORS_METRIC], query)}
+      metrics={[VISITORS_METRIC]}
       detailsLink={sitePath(site, '/regions')}
       query={query}
       renderIcon={renderIcon}
@@ -84,7 +84,7 @@ function Cities({query, site}) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="City"
-      metrics={maybeWithCR([VISITORS_METRIC], query)}
+      metrics={[VISITORS_METRIC]}
       detailsLink={sitePath(site, '/cities')}
       query={query}
       renderIcon={renderIcon}

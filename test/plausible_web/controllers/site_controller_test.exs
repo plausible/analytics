@@ -170,10 +170,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      # default site limit defined in config/.test.env
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
+      insert_list(50, :site, members: [user])
 
       conn =
         post(conn, "/sites", %{
@@ -185,7 +182,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html = html_response(conn, 200)
       assert html =~ "Upgrade required"
-      assert html =~ "Your account is limited to 3 sites"
+      assert html =~ "Your account is limited to 50 sites"
       assert html =~ "Please contact support"
       refute Repo.get_by(Plausible.Site, domain: "over-limit.example.com")
     end
@@ -326,7 +323,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/general")
       resp = html_response(conn, 200)
 
-      assert resp =~ "Site timezone"
+      assert resp =~ "Site Timezone"
       assert resp =~ "Data Import from Google Analytics"
       assert resp =~ "https://accounts.google.com/o/oauth2/v2/auth?"
       assert resp =~ "analytics.readonly"
@@ -624,131 +621,6 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "GET /:website/goals/new" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "shows form to create a new goal", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/goals/new")
-
-      assert html_response(conn, 200) =~ "Add goal"
-    end
-  end
-
-  describe "POST /:website/goals" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "creates a pageview goal for the website", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/#{site.domain}/goals", %{
-          goal: %{
-            page_path: "/success",
-            event_name: ""
-          }
-        })
-
-      goal = Repo.one(Plausible.Goal)
-
-      assert goal.page_path == "/success"
-      assert goal.event_name == nil
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
-    end
-
-    test "creates a custom event goal for the website", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/#{site.domain}/goals", %{
-          goal: %{
-            page_path: "",
-            event_name: "Signup"
-          }
-        })
-
-      goal = Repo.one(Plausible.Goal)
-
-      assert goal.event_name == "Signup"
-      assert goal.page_path == nil
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
-    end
-
-    test "creates a custom event goal with a revenue value", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/#{site.domain}/goals", %{
-          goal: %{
-            page_path: "",
-            event_name: "Purchase",
-            currency: "EUR"
-          }
-        })
-
-      goal = Repo.get_by(Plausible.Goal, site_id: site.id)
-
-      assert goal.event_name == "Purchase"
-      assert goal.page_path == nil
-      assert goal.currency == :EUR
-
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
-    end
-
-    test "fails to create a custom event goal with a non-existant currency", %{
-      conn: conn,
-      site: site
-    } do
-      conn =
-        post(conn, "/#{site.domain}/goals", %{
-          goal: %{
-            page_path: "",
-            event_name: "Purchase",
-            currency: "EEEE"
-          }
-        })
-
-      refute Repo.get_by(Plausible.Goal, site_id: site.id)
-
-      assert html_response(conn, 200) =~ "is invalid"
-    end
-
-    test "Cleans currency for pageview goal creation", %{conn: conn, site: site} do
-      conn =
-        post(conn, "/#{site.domain}/goals", %{
-          goal: %{
-            page_path: "/purchase",
-            event_name: "",
-            currency: "EUR"
-          }
-        })
-
-      goal = Repo.get_by(Plausible.Goal, site_id: site.id)
-
-      assert goal.event_name == nil
-      assert goal.page_path == "/purchase"
-      assert goal.currency == nil
-
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
-    end
-  end
-
-  describe "DELETE /:website/goals/:id" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "deletes goal", %{conn: conn, site: site} do
-      goal = insert(:goal, site: site, event_name: "Custom event")
-
-      conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
-
-      assert Repo.aggregate(Plausible.Goal, :count, :id) == 0
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/goals"
-    end
-
-    test "fails to delete goal for a foreign site", %{conn: conn, site: site} do
-      another_site = insert(:site)
-      goal = insert(:goal, site: another_site, event_name: "Custom event")
-
-      conn = delete(conn, "/#{site.domain}/goals/#{goal.id}")
-
-      assert Repo.aggregate(Plausible.Goal, :count, :id) == 1
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find goal"
-    end
-  end
-
   describe "PUT /:website/settings/features/visibility/:setting" do
     def build_conn_with_some_url(context) do
       {:ok, Map.put(context, :conn, build_conn(:get, "/some_parent_path"))}
@@ -853,7 +725,21 @@ defmodule PlausibleWeb.SiteControllerTest do
       site: site,
       user: user
     } do
+      conn = post(conn, "/sites/#{site.domain}/weekly-report/enable")
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You will receive an email report"
+
+      report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
+      assert report.recipients == [user.email]
+    end
+
+    test "creates a weekly report record twice (e.g. from a second tab)", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
       post(conn, "/sites/#{site.domain}/weekly-report/enable")
+      conn = post(conn, "/sites/#{site.domain}/weekly-report/enable")
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You will receive an email report"
 
       report = Repo.get_by(Plausible.Site.WeeklyReport, site_id: site.id)
       assert report.recipients == [user.email]
@@ -929,8 +815,22 @@ defmodule PlausibleWeb.SiteControllerTest do
       site: site,
       user: user
     } do
-      post(conn, "/sites/#{site.domain}/monthly-report/enable")
+      conn = post(conn, "/sites/#{site.domain}/monthly-report/enable")
 
+      report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
+      assert report.recipients == [user.email]
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You will receive an email report"
+    end
+
+    test "enable monthly report twice (e.g. from a second tab)", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      post(conn, "/sites/#{site.domain}/monthly-report/enable")
+      conn = post(conn, "/sites/#{site.domain}/monthly-report/enable")
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~ "You will receive an email report"
       report = Repo.get_by(Plausible.Site.MonthlyReport, site_id: site.id)
       assert report.recipients == [user.email]
     end
@@ -1341,8 +1241,8 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, Routes.site_path(conn, :settings_general, site.domain))
       resp = html_response(conn, 200)
 
-      assert resp =~ "Site domain"
-      assert resp =~ "Change domain"
+      assert resp =~ "Site Domain"
+      assert resp =~ "Change Domain"
       assert resp =~ Routes.site_path(conn, :change_domain, site.domain)
     end
 

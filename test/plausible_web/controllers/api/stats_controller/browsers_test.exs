@@ -14,8 +14,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Chrome", "visitors" => 2, "percentage" => 67},
-               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33}
+               %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.7},
+               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.3}
              ]
     end
 
@@ -113,7 +113,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       populate_stats(site, [
         build(:pageview, browser: "Chrome"),
         build(:imported_browsers, browser: "Chrome"),
-        build(:imported_browsers, browser: "Firefox")
+        build(:imported_browsers, browser: "Firefox"),
+        build(:imported_visitors, visitors: 2)
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
@@ -125,8 +126,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day&with_imported=true")
 
       assert json_response(conn, 200) == [
-               %{"name" => "Chrome", "visitors" => 2, "percentage" => 67},
-               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33}
+               %{"name" => "Chrome", "visitors" => 2, "percentage" => 66.7},
+               %{"name" => "Firefox", "visitors" => 1, "percentage" => 33.3}
              ]
     end
 
@@ -162,7 +163,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
 
       assert json_response(conn, 200) == [
-               %{"name" => "(not set)", "visitors" => 1, "percentage" => 100}
+               %{"name" => "(not set)", "visitors" => 1, "percentage" => 100.0}
              ]
     end
   end
@@ -187,8 +188,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "78.0", "visitors" => 2, "percentage" => 67},
-               %{"name" => "77.0", "visitors" => 1, "percentage" => 33}
+               %{"name" => "78.0", "visitors" => 2, "percentage" => 66.7},
+               %{"name" => "77.0", "visitors" => 1, "percentage" => 33.3}
              ]
     end
 

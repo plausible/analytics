@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def activation_email(user, code) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("activation-email")
     |> subject("#{code} es tu código de verificación")
@@ -37,8 +37,7 @@ defmodule PlausibleWeb.Email do
     |> subject("Esperando las primeras visitas")
     |> render("site_setup_help_email.html", user: user, site: site)
       user: user,
-      site: site,
-      unsubscribe: true
+      site: site
     )
   end
 
@@ -49,8 +48,7 @@ defmodule PlausibleWeb.Email do
     |> subject("Estamos registrando las estadísticas")
     |> render("site_setup_success_email.html", user: user, site: site)
       user: user,
-      site: site,
-      unsubscribe: true
+      site: site
     )
   end
 
@@ -63,7 +61,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def password_reset_email(email, reset_link) do
-    base_email(%{layout: nil})
+    priority_email(%{layout: nil})
     |> to(email)
     |> tag("password-reset-email")
     |> subject("Reiniciamos tu contraseña")
@@ -79,7 +77,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def trial_upgrade_email(user, day, {pageviews, custom_events}) do
-    suggested_plan = Plausible.Billing.Plans.suggested_plan(user, pageviews + custom_events)
+    suggested_plan = Plausible.Billing.Plans.suggest(user, pageviews + custom_events)
 
     base_email()
     |> to(user)
@@ -90,8 +88,7 @@ defmodule PlausibleWeb.Email do
       day: day,
       custom_events: custom_events,
       usage: pageviews + custom_events,
-      suggested_plan: suggested_plan,
-      unsubscribe: true
+      suggested_plan: suggested_plan
     )
   end
 
@@ -104,6 +101,8 @@ defmodule PlausibleWeb.Email do
   end
 
   def weekly_report(email, site, assigns) do
+    assigns = Keyword.put(assigns, :site, site)
+
     base_email(%{layout: nil})
     |> to(email)
     |> tag("weekly-report")
@@ -125,7 +124,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def over_limit_email(user, usage, last_cycle, suggested_plan) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("over-limit")
     |> subject("[Acción requerida] Superaste tu plan!")
@@ -133,8 +132,7 @@ defmodule PlausibleWeb.Email do
       user: user,
       usage: usage,
       last_cycle: last_cycle,
-      suggested_plan: suggested_plan,
-      unsubscribe: true
+      suggested_plan: suggested_plan
     })
   end
 
@@ -153,7 +151,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def dashboard_locked(user, usage, last_cycle, suggested_plan) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("dashboard-locked")
     |> subject("[Acción requerida] Tu panel de estadísticas está bloqueado")
@@ -168,7 +166,7 @@ defmodule PlausibleWeb.Email do
   def yearly_renewal_notification(user) do
     date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
 
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("yearly-renewal")
     |> subject("Tu suscripción está por renovarse")
@@ -183,7 +181,7 @@ defmodule PlausibleWeb.Email do
   def yearly_expiration_notification(user) do
     date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
 
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("yearly-expiration")
     |> subject("Tu subscripción está por expirar")
@@ -202,7 +200,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def new_user_invitation(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.email)
     |> tag("new-user-invitation")
     |> subject("Fuiste invitado a #{invitation.site.domain}")
@@ -212,7 +210,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def existing_user_invitation(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.email)
     |> tag("existing-user-invitation")
     |> subject("Fuiste invitado a #{invitation.site.domain}")
@@ -222,7 +220,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def ownership_transfer_request(invitation, new_owner_account) do
-    base_email()
+    priority_email()
     |> to(invitation.email)
     |> tag("ownership-transfer-request")
     |> subject("Transferir propiedad a #{invitation.site.domain}")
@@ -233,7 +231,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def invitation_accepted(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.inviter.email)
     |> tag("invitation-accepted")
     |> subject(
@@ -246,7 +244,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def invitation_rejected(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.inviter.email)
     |> tag("invitation-rejected")
     |> subject(
@@ -259,7 +257,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def ownership_transfer_accepted(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-accepted")
     |> subject(
@@ -272,7 +270,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def ownership_transfer_rejected(invitation) do
-    base_email()
+    priority_email()
     |> to(invitation.inviter.email)
     |> tag("ownership-transfer-rejected")
     |> subject(
@@ -285,7 +283,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def site_member_removed(membership) do
-    base_email()
+    priority_email()
     |> to(membership.user.email)
     |> tag("site-member-removed")
     |> subject("Tu acceso a #{membership.site.domain} fue revocado")
@@ -296,7 +294,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def import_success(user, site) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("import-success-email")
     |> subject("La carga de GA finalizó para #{site.domain}")
@@ -309,7 +307,7 @@ defmodule PlausibleWeb.Email do
   end
 
   def import_failure(user, site) do
-    base_email()
+    priority_email()
     |> to(user)
     |> tag("import-failure-email")
     |> subject("La carga de GA falló en #{site.domain}")
@@ -333,6 +331,17 @@ defmodule PlausibleWeb.Email do
       feedback: feedback,
       trace_id: trace_id
     })
+  end
+
+  @doc """
+    Unlike the default 'base' emails, priority emails cannot be unsubscribed from. This is achieved
+    by sending them through a dedicated 'priority' message stream in Postmark.
+  """
+  def priority_email(), do: priority_email(%{layout: "priority_email.html"})
+
+  def priority_email(%{layout: layout}) do
+    base_email(%{layout: layout})
+    |> put_param("MessageStream", "priority")
   end
 
   def base_email(), do: base_email(%{layout: "base_email.html"})

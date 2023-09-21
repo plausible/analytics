@@ -4,11 +4,11 @@ import * as storage from '../../util/storage'
 import * as url from '../../util/url'
 import * as api from '../../api'
 import ListReport from './../reports/list'
-import { VISITORS_METRIC, UNIQUE_ENTRANCES_METRIC, UNIQUE_EXITS_METRIC, maybeWithCR } from './../reports/metrics';
+import { VISITORS_METRIC, maybeWithCR } from './../reports/metrics';
 
-function EntryPages({query, site}) {
+function EntryPages({ query, site }) {
   function fetchData() {
-    return api.get(url.apiPath(site, '/entry-pages'), query, {limit: 9})
+    return api.get(url.apiPath(site, '/entry-pages'), query, { limit: 9 })
   }
 
   function externalLinkDest(page) {
@@ -16,7 +16,7 @@ function EntryPages({query, site}) {
   }
 
   function getFilterFor(listItem) {
-    return { entry_page: listItem['name']}
+    return { entry_page: listItem['name'] }
   }
 
   return (
@@ -24,7 +24,7 @@ function EntryPages({query, site}) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Entry page"
-      metrics={maybeWithCR([UNIQUE_ENTRANCES_METRIC], query)}
+      metrics={maybeWithCR([{ ...VISITORS_METRIC, label: 'Unique Entrances' }], query)}
       detailsLink={url.sitePath(site, '/entry-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
@@ -33,9 +33,9 @@ function EntryPages({query, site}) {
   )
 }
 
-function ExitPages({query, site}) {
+function ExitPages({ query, site }) {
   function fetchData() {
-    return api.get(url.apiPath(site, '/exit-pages'), query, {limit: 9})
+    return api.get(url.apiPath(site, '/exit-pages'), query, { limit: 9 })
   }
 
   function externalLinkDest(page) {
@@ -43,7 +43,7 @@ function ExitPages({query, site}) {
   }
 
   function getFilterFor(listItem) {
-    return { exit_page: listItem['name']}
+    return { exit_page: listItem['name'] }
   }
 
   return (
@@ -51,7 +51,7 @@ function ExitPages({query, site}) {
       fetchData={fetchData}
       getFilterFor={getFilterFor}
       keyLabel="Exit page"
-      metrics={maybeWithCR([UNIQUE_EXITS_METRIC], query)}
+      metrics={maybeWithCR([{ ...VISITORS_METRIC, label: "Unique Exits" }], query)}
       detailsLink={url.sitePath(site, '/exit-pages')}
       query={query}
       externalLinkDest={externalLinkDest}
@@ -60,9 +60,9 @@ function ExitPages({query, site}) {
   )
 }
 
-function TopPages({query, site}) {
+function TopPages({ query, site }) {
   function fetchData() {
-    return api.get(url.apiPath(site, '/pages'), query, {limit: 9})
+    return api.get(url.apiPath(site, '/pages'), query, { limit: 9 })
   }
 
   function externalLinkDest(page) {
@@ -88,15 +88,15 @@ function TopPages({query, site}) {
 }
 
 const labelFor = {
-	'pages': 'Top Pages',
-	'entry-pages': 'Entry Pages',
-	'exit-pages': 'Exit Pages',
+  'pages': 'Top Pages',
+  'entry-pages': 'Entry Pages',
+  'exit-pages': 'Exit Pages',
 }
 
 export default class Pages extends React.Component {
   constructor(props) {
     super(props)
-    this.tabKey = `pageTab__${  props.site.domain}`
+    this.tabKey = `pageTab__${props.site.domain}`
     const storedTab = storage.getItem(this.tabKey)
     this.state = {
       mode: storedTab || 'pages'
@@ -106,19 +106,19 @@ export default class Pages extends React.Component {
   setMode(mode) {
     return () => {
       storage.setItem(this.tabKey, mode)
-      this.setState({mode})
+      this.setState({ mode })
     }
   }
 
   renderContent() {
-    switch(this.state.mode) {
-    case "entry-pages":
-      return <EntryPages site={this.props.site} query={this.props.query} />
-    case "exit-pages":
-      return <ExitPages site={this.props.site} query={this.props.query} />
-    case "pages":
-    default:
-      return <TopPages site={this.props.site} query={this.props.query} />
+    switch (this.state.mode) {
+      case "entry-pages":
+        return <EntryPages site={this.props.site} query={this.props.query} />
+      case "exit-pages":
+        return <ExitPages site={this.props.site} query={this.props.query} />
+      case "pages":
+      default:
+        return <TopPages site={this.props.site} query={this.props.query} />
     }
   }
 
@@ -155,13 +155,13 @@ export default class Pages extends React.Component {
             {labelFor[this.state.mode] || 'Page Visits'}
           </h3>
           <div className="flex font-medium text-xs text-gray-500 dark:text-gray-400 space-x-2">
-            { this.renderPill('Top Pages', 'pages') }
-            { this.renderPill('Entry Pages', 'entry-pages') }
-            { this.renderPill('Exit Pages', 'exit-pages') }
+            {this.renderPill('Top Pages', 'pages')}
+            {this.renderPill('Entry Pages', 'entry-pages')}
+            {this.renderPill('Exit Pages', 'exit-pages')}
           </div>
         </div>
         {/* Main Contents */}
-        { this.renderContent() }
+        {this.renderContent()}
       </div>
     )
   }

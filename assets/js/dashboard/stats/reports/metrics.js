@@ -1,21 +1,13 @@
 import numberFormatter from "../../util/number-formatter"
 import React from "react"
+import Money from "../behaviours/money"
 
 export const VISITORS_METRIC = {
   name: 'visitors',
   label: 'Visitors',
   realtimeLabel: 'Current visitors',
-  goalFilterLabel: 'Conversions'
-}
-export const UNIQUE_ENTRANCES_METRIC = {
-  ...VISITORS_METRIC,
-  name: 'unique_entrances',
-  label: 'Unique Entrances'
-}
-export const UNIQUE_EXITS_METRIC = {
-  ...VISITORS_METRIC,
-  name: 'unique_exits',
-  label: 'Unique Exits'
+  goalFilterLabel: 'Conversions',
+  plot: true
 }
 export const PERCENTAGE_METRIC = { name: 'percentage', label: '%' }
 export const CR_METRIC = { name: 'conversion_rate', label: 'CR' }
@@ -33,7 +25,11 @@ export function maybeWithCR(metrics, query) {
 }
 
 export function displayMetricValue(value, metric) {
-  if ([PERCENTAGE_METRIC, CR_METRIC].includes(metric)) {
+  if (['total_revenue', 'average_revenue'].includes(metric.name)) {
+    return <Money formatted={value} />
+  } else if (metric === PERCENTAGE_METRIC) {
+    return value
+  } else if (metric === CR_METRIC) {
     return `${value}%`
   } else {
     return <span tooltip={value}>{ numberFormatter(value) }</span>

@@ -87,7 +87,6 @@ defmodule Plausible.Auth do
       user =
         user
         |> Repo.preload(site_memberships: :site)
-        |> Repo.preload(:subscription)
 
       for membership <- user.site_memberships do
         Repo.delete!(membership)
@@ -97,7 +96,6 @@ defmodule Plausible.Auth do
         end
       end
 
-      if user.subscription, do: Repo.delete!(user.subscription)
       Repo.delete!(user)
     end)
   end
@@ -114,8 +112,9 @@ defmodule Plausible.Auth do
   end
 
   def is_super_admin?(nil), do: false
+  def is_super_admin?(%Plausible.Auth.User{id: id}), do: is_super_admin?(id)
 
-  def is_super_admin?(user_id) do
+  def is_super_admin?(user_id) when is_integer(user_id) do
     user_id in Application.get_env(:plausible, :super_admin_user_ids)
   end
 

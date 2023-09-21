@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.{Sites, Goals}
+  alias Plausible.Sites
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -52,26 +52,23 @@ defmodule PlausibleWeb.SiteController do
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
 
-    owned_site_count = Plausible.Sites.owned_sites_count(current_user)
-    site_limit = Plausible.Billing.sites_limit(current_user)
-    is_at_limit = site_limit && owned_site_count >= site_limit
-    is_first_site = owned_site_count == 0
-
-    changeset = Plausible.Site.changeset(%Plausible.Site{})
+    limit = Plausible.Billing.Quota.site_limit(current_user)
+    usage = Plausible.Billing.Quota.site_usage(current_user)
+    within_limit? = Plausible.Billing.Quota.within_limit?(usage, limit)
 
     render(conn, "new.html",
-      changeset: changeset,
-      is_first_site: is_first_site,
-      is_at_limit: is_at_limit,
-      site_limit: site_limit,
+      changeset: Plausible.Site.changeset(%Plausible.Site{}),
+      is_first_site: usage == 0,
+      is_at_limit: !within_limit?,
+      site_limit: limit,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    site_count = Plausible.Sites.owned_sites_count(user)
-    is_first_site = site_count == 0
+    usage = Plausible.Billing.Quota.site_usage(user)
+    is_first_site = usage == 0
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
@@ -122,53 +119,6 @@ defmodule PlausibleWeb.SiteController do
       is_first_site: is_first_site,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
-  end
-
-  def new_goal(conn, _params) do
-    site = conn.assigns[:site]
-    changeset = Plausible.Goal.changeset(%Plausible.Goal{})
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("new_goal.html",
-      site: site,
-      changeset: changeset,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
-  end
-
-  def create_goal(conn, %{"goal" => goal}) do
-    site = conn.assigns[:site]
-
-    case Plausible.Goals.create(site, goal) do
-      {:ok, _} ->
-        conn
-        |> put_flash(:success, "Goal created successfully")
-        |> redirect(to: Routes.site_path(conn, :settings_goals, site.domain))
-
-      {:error, changeset} ->
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("new_goal.html",
-          site: site,
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-    end
-  end
-
-  def delete_goal(conn, %{"id" => goal_id}) do
-    case Plausible.Goals.delete(goal_id, conn.assigns[:site]) do
-      :ok ->
-        conn
-        |> put_flash(:success, "Goal deleted successfully")
-        |> redirect(to: Routes.site_path(conn, :settings_goals, conn.assigns[:site].domain))
-
-      {:error, :not_found} ->
-        conn
-        |> put_flash(:error, "Could not find goal")
-        |> redirect(to: Routes.site_path(conn, :settings_goals, conn.assigns[:site].domain))
-    end
   end
 
   @feature_titles %{
@@ -266,30 +216,38 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_goals(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
-    goals = Goals.for_site(site, preload_funnels?: true)
 
     conn
     |> assign(:skip_plausible_tracking, true)
     |> render("settings_goals.html",
       site: site,
-      goals: goals,
+      connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
 
   def settings_funnels(conn, _params) do
-    if Plausible.Funnels.enabled_for?(conn.assigns[:current_user]) do
-      site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
-      conn
-      |> assign(:skip_plausible_tracking, true)
-      |> render("settings_funnels.html",
-        site: site,
-        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-      )
-    else
-      conn |> Plug.Conn.put_status(401) |> Plug.Conn.halt()
-    end
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_funnels.html",
+      site: site,
+      connect_live_socket: true,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
+  def settings_props(conn, _params) do
+    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("settings_props.html",
+      site: site,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"},
+      connect_live_socket: true
+    )
   end
 
   def settings_search_console(conn, _params) do
@@ -452,11 +410,14 @@ defmodule PlausibleWeb.SiteController do
   def enable_weekly_report(conn, _params) do
     site = conn.assigns[:site]
 
-    Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
-      site_id: site.id,
-      recipients: [conn.assigns[:current_user].email]
-    })
-    |> Repo.insert!()
+    result =
+      Plausible.Site.WeeklyReport.changeset(%Plausible.Site.WeeklyReport{}, %{
+        site_id: site.id,
+        recipients: [conn.assigns[:current_user].email]
+      })
+      |> Repo.insert()
+
+    :ok = tolerate_unique_contraint_violation(result, "weekly_reports_site_id_index")
 
     conn
     |> put_flash(:success, "You will receive an email report every Monday going forward")
@@ -502,11 +463,15 @@ defmodule PlausibleWeb.SiteController do
   def enable_monthly_report(conn, _params) do
     site = conn.assigns[:site]
 
-    Plausible.Site.MonthlyReport.changeset(%Plausible.Site.MonthlyReport{}, %{
-      site_id: site.id,
-      recipients: [conn.assigns[:current_user].email]
-    })
-    |> Repo.insert!()
+    result =
+      %Plausible.Site.MonthlyReport{}
+      |> Plausible.Site.MonthlyReport.changeset(%{
+        site_id: site.id,
+        recipients: [conn.assigns[:current_user].email]
+      })
+      |> Repo.insert()
+
+    :ok = tolerate_unique_contraint_violation(result, "monthly_reports_site_id_index")
 
     conn
     |> put_flash(:success, "You will receive an email report every month going forward")
@@ -965,5 +930,23 @@ defmodule PlausibleWeb.SiteController do
       site: site,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
+  end
+
+  defp tolerate_unique_contraint_violation(result, name) do
+    case result do
+      {:ok, _} ->
+        :ok
+
+      {:error,
+       %{
+         errors: [
+           site_id: {_, [constraint: :unique, constraint_name: ^name]}
+         ]
+       }} ->
+        :ok
+
+      other ->
+        other
+    end
   end
 end

@@ -23,10 +23,12 @@ defmodule Plausible.Stats.Breakdown do
 
     event_results =
       if Enum.any?(event_goals) do
+        revenue_goals = Enum.filter(event_goals, &Plausible.Goal.revenue?/1)
+
         site
         |> breakdown(event_query, "event:name", metrics, pagination)
         |> transform_keys(%{name: :goal})
-        |> cast_revenue_metrics_to_money(event_goals)
+        |> cast_revenue_metrics_to_money(revenue_goals)
       else
         []
       end
@@ -66,10 +68,11 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination) do
-    {limit, _} = pagination
+    {currency, metrics} = get_revenue_tracking_currency(site, query, metrics)
+    {_limit, page} = pagination
 
     none_result =
-      if include_none_result?(query.filters[property]) do
+      if page == 1 && include_none_result?(query.filters[property]) do
         none_query = Query.put_filter(query, property, {:is, "(none)"})
 
         from(e in base_event_query(site, none_query),
@@ -85,16 +88,10 @@ defmodule Plausible.Stats.Breakdown do
 
     trace(query, property, metrics)
 
-    results =
-      breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
-      |> Kernel.++(none_result)
-      |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
-
-    if Enum.find_index(results, fn value -> value[custom_prop] == "(none)" end) == limit do
-      Enum.slice(results, 0..(limit - 1))
-    else
-      results
-    end
+    breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
+    |> Kernel.++(none_result)
+    |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
+    |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
   end
 
   def breakdown(site, query, "event:page" = property, metrics, pagination) do
@@ -155,26 +152,6 @@ defmodule Plausible.Stats.Breakdown do
   def breakdown(site, query, property, metrics, pagination) do
     trace(query, property, metrics)
     breakdown_sessions(site, query, property, metrics, pagination)
-  end
-
-  defp cast_revenue_metrics_to_money(event_results, goals) do
-    cast_and_put = fn map, key, currency ->
-      if decimal = Map.get(map, key),
-        do: Map.put(map, key, Money.new!(currency, decimal)),
-        else: map
-    end
-
-    revenue_goals = Enum.filter(goals, &Plausible.Goal.revenue?/1)
-
-    Enum.map(event_results, fn result ->
-      if matching_goal = Enum.find(revenue_goals, &(&1.event_name == result.goal)) do
-        result
-        |> cast_and_put.(:total_revenue, matching_goal.currency)
-        |> cast_and_put.(:average_revenue, matching_goal.currency)
-      else
-        result
-      end
-    end)
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
@@ -466,9 +443,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_medium") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_medium),
       group_by: s.utm_medium,
       select_merge: %{
-        utm_medium: fragment("if(empty(?), ?, ?)", s.utm_medium, @no_ref, s.utm_medium)
+        utm_medium: s.utm_medium
       }
     )
   end
@@ -476,9 +454,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_source") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_source),
       group_by: s.utm_source,
       select_merge: %{
-        utm_source: fragment("if(empty(?), ?, ?)", s.utm_source, @no_ref, s.utm_source)
+        utm_source: s.utm_source
       }
     )
   end
@@ -486,9 +465,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_campaign") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_campaign),
       group_by: s.utm_campaign,
       select_merge: %{
-        utm_campaign: fragment("if(empty(?), ?, ?)", s.utm_campaign, @no_ref, s.utm_campaign)
+        utm_campaign: s.utm_campaign
       }
     )
   end
@@ -496,9 +476,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_content") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_content),
       group_by: s.utm_content,
       select_merge: %{
-        utm_content: fragment("if(empty(?), ?, ?)", s.utm_content, @no_ref, s.utm_content)
+        utm_content: s.utm_content
       }
     )
   end
@@ -506,9 +487,10 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:utm_term") do
     from(
       s in q,
+      where: fragment("not empty(?)", s.utm_term),
       group_by: s.utm_term,
       select_merge: %{
-        utm_term: fragment("if(empty(?), ?, ?)", s.utm_term, @no_ref, s.utm_term)
+        utm_term: s.utm_term
       }
     )
   end

@@ -47,7 +47,8 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
 
       %{"data" => sites} = json_response(conn, 200)
 
-      assert Enum.map(sites, & &1["domain"]) == [site.domain, site2.domain]
+      assert %{"domain" => site.domain} in sites
+      assert %{"domain" => site2.domain} in sites
     end
   end
 
@@ -92,16 +93,6 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
     test "when the logged-in user is an owner of the site", %{conn: conn, user: user} do
       site = insert(:site)
       insert(:site_membership, user: user, site: site, role: :owner)
-
-      conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
-
-      assert json_response(conn, 200) == "ok"
-      assert %{conversions_enabled: false} = Plausible.Sites.get_by_domain(site.domain)
-    end
-
-    test "when the logged-in user is an super-admin", %{conn: conn, user: user} do
-      site = insert(:site)
-      patch_env(:super_admin_user_ids, [user.id])
 
       conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
 

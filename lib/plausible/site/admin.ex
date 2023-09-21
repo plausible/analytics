@@ -41,14 +41,6 @@ defmodule Plausible.SiteAdmin do
       public: nil,
       owner: %{value: &get_owner_email/1},
       other_members: %{value: &get_other_members/1},
-      allowed_event_props: %{
-        value: fn site ->
-          case site.allowed_event_props do
-            nil -> ""
-            list -> Enum.join(list, ", ")
-          end
-        end
-      },
       limits: %{
         value: fn site ->
           case site.ingest_rate_limit_threshold do
@@ -63,36 +55,34 @@ defmodule Plausible.SiteAdmin do
 
   def list_actions(_conn) do
     [
-      set_allowed_event_props: %{
+      transfer_ownership: %{
+        name: "Transfer ownership",
         inputs: [
-          %{
-            name: "props",
-            title:
-              "Insert comma separated property names (e.g: author, logged_in, url, ...). Submit a blank field to allow all property names",
-            default: ""
-          }
+          %{name: "email", title: "New Owner Email", default: nil}
         ],
-        name: "Allow only these custom properties",
-        action: &set_allowed_props_for_site/3
+        action: fn conn, sites, params -> transfer_ownership(conn, sites, params) end
       }
     ]
   end
 
-  def set_allowed_props_for_site(_conn, [site], params) do
-    props_list =
-      case String.trim(params["props"]) do
-        "" -> nil
-        props -> String.split(props, ~r/\s*,\s*/)
-      end
-
-    Plausible.Site.set_allowed_event_props(site, props_list)
-    |> Repo.update!()
-
-    :ok
+  defp transfer_ownership(_conn, [], _params) do
+    {:error, "Please select at least one site from the list"}
   end
 
-  def set_allowed_props_for_site(_, _, _) do
-    {:error, "Please select only one site for this action"}
+  defp transfer_ownership(conn, sites, %{"email" => email}) do
+    new_owner = Plausible.Auth.find_user_by(email: email)
+    inviter = conn.assigns[:current_user]
+
+    if new_owner do
+      {:ok, _} =
+        Plausible.Sites.bulk_transfer_ownership(sites, inviter, new_owner.email,
+          check_permissions: false
+        )
+
+      :ok
+    else
+      {:error, "User could not be found"}
+    end
   end
 
   defp format_date(date) do

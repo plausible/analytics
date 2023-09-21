@@ -5,23 +5,12 @@ import * as storage from '../../util/storage'
 import Bar from '../bar'
 import numberFormatter from '../../util/number-formatter'
 import * as api from '../../api'
+import Money from './money'
+import { isValidHttpUrl, trimURL } from '../../util/url'
 
 const MOBILE_UPPER_WIDTH = 767
 const DEFAULT_WIDTH = 1080
 const BREAKDOWN_LIMIT = 100
-
-// https://stackoverflow.com/a/43467144
-function isValidHttpUrl(string) {
-  let url;
-
-  try {
-    url = new URL(string);
-  } catch (_) {
-    return false;
-  }
-
-  return url.protocol === "http:" || url.protocol === "https:";
-}
 
 export default class PropertyBreakdown extends React.Component {
   constructor(props) {
@@ -71,15 +60,10 @@ export default class PropertyBreakdown extends React.Component {
     this.setState({ viewport: window.innerWidth });
   }
 
-  getBarMaxWidth() {
-    const { viewport } = this.state;
-    return viewport > MOBILE_UPPER_WIDTH ? "16rem" : "10rem";
-  }
-
-  fetch({concat}) {
+  fetch({ concat }) {
     if (!this.props.query.filters['goal']) return
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, {limit: BREAKDOWN_LIMIT, page: this.state.page})
+    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/property/${encodeURIComponent(this.state.propKey)}`, this.props.query, { limit: BREAKDOWN_LIMIT, page: this.state.page })
       .then((res) => {
         let breakdown = concat ? this.state.breakdown.concat(res) : res
 
@@ -92,15 +76,15 @@ export default class PropertyBreakdown extends React.Component {
   }
 
   fetchAndReplace() {
-    this.fetch({concat: false})
+    this.fetch({ concat: false })
   }
 
   fetchAndConcat() {
-    this.fetch({concat: true})
+    this.fetch({ concat: true })
   }
 
   loadMore() {
-    this.setState({loading: true, page: this.state.page + 1}, this.fetchAndConcat.bind(this))
+    this.setState({ loading: true, page: this.state.page + 1 }, this.fetchAndConcat.bind(this))
   }
 
   renderUrl(value) {
@@ -118,45 +102,48 @@ export default class PropertyBreakdown extends React.Component {
     return (
       <span className="flex px-2 py-1.5 group dark:text-gray-300 relative z-9 break-all">
         <Link
-          to={{pathname: window.location.pathname, search: query.toString()}}
+          to={{ pathname: window.location.pathname, search: query.toString() }}
           className="md:truncate hover:underline block"
         >
-          { value.name }
+          {trimURL(value.name, 100)}
         </Link>
-        { this.renderUrl(value) }
+        {this.renderUrl(value)}
       </span>
     )
   }
 
   renderPropValue(value) {
     const query = new URLSearchParams(window.location.search)
-    query.set('props', JSON.stringify({[this.state.propKey]: value.name}))
+    query.set('props', JSON.stringify({ [this.state.propKey]: value.name }))
     const { viewport } = this.state;
 
     return (
       <div className="flex items-center justify-between my-2" key={value.name}>
-        <Bar
-          count={value.unique_conversions}
-          plot="unique_conversions"
-          all={this.state.breakdown}
-          bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
-          maxWidthDeduction={this.getBarMaxWidth()}
-        >
-          {this.renderPropContent(value, query)}
-        </Bar>
-        <div className="dark:text-gray-200">
+        <div className="flex-1 truncate">
+          <Bar
+            count={value.unique_conversions}
+            plot="unique_conversions"
+            all={this.state.breakdown}
+            bg="bg-red-50 dark:bg-gray-500 dark:bg-opacity-15"
+          >
+            {this.renderPropContent(value, query)}
+          </Bar>
+        </div>
+        <div className="flex dark:text-gray-200">
           <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.unique_conversions)}</span>
           {
             viewport > MOBILE_UPPER_WIDTH ?
-            (
-              <span
-                className="font-medium inline-block w-20 text-right"
-              >{numberFormatter(value.total_conversions)}
-              </span>
-            )
-            : null
+              (
+                <span
+                  className="font-medium inline-block w-20 text-right"
+                >{numberFormatter(value.total_conversions)}
+                </span>
+              )
+              : null
           }
           <span className="font-medium inline-block w-20 text-right">{numberFormatter(value.conversion_rate)}%</span>
+          {this.props.renderRevenueColumn && <span className="hidden md:inline-block md:w-20 font-medium text-right"><Money formatted={value.total_revenue} /></span>}
+          {this.props.renderRevenueColumn && <span className="hidden md:inline-block md:w-20 font-medium text-right"><Money formatted={value.average_revenue} /></span>}
         </div>
       </div>
     )
@@ -164,7 +151,7 @@ export default class PropertyBreakdown extends React.Component {
 
   changePropKey(newKey) {
     storage.setItem(this.storageKey, newKey)
-    this.setState({propKey: newKey, loading: true, breakdown: [], page: 1, moreResultsAvailable: false}, this.fetchAndReplace)
+    this.setState({ propKey: newKey, loading: true, breakdown: [], page: 1, moreResultsAvailable: false }, this.fetchAndReplace)
   }
 
   renderLoading() {
@@ -201,11 +188,11 @@ export default class PropertyBreakdown extends React.Component {
         <div className="flex-col sm:flex-row flex items-center pb-1">
           <span className="text-xs font-bold text-gray-600 dark:text-gray-300 self-start sm:self-auto mb-1 sm:mb-0">Breakdown by:</span>
           <ul className="flex flex-wrap font-medium text-xs text-gray-500 dark:text-gray-400 leading-5 pl-1 sm:pl-2">
-            { this.props.goal.prop_names.map(this.renderPill.bind(this)) }
+            {this.props.goal.prop_names.map(this.renderPill.bind(this))}
           </ul>
         </div>
-        { this.renderBody() }
-        { this.renderLoading()}
+        {this.renderBody()}
+        {this.renderLoading()}
       </div>
     )
   }

@@ -30,7 +30,7 @@
 
 <div class="px-4 py-6 bg-white shadow dark:bg-gray-800 sm:rounded-md sm:overflow-hidden sm:p-6">
   <header class="relative">
-    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">Shared links</h2>
+    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">Shared Links</h2>
     <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">You can share your stats privately by generating a shared link. The links are impossible to guess and you can add password protection for extra security.</p>
     <%= link(to: "https://plausible.io/docs/shared-links", target: "_blank", rel: "noreferrer") do %>
       <svg class="absolute top-0 right-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
@@ -65,13 +65,13 @@
       </div>
     <% end %>
 
-    <%= link("+ New link", to: Routes.site_path(@conn, :new_shared_link, @site.domain), class: "button mt-4") %>
+    <%= link("+ New Link", to: Routes.site_path(@conn, :new_shared_link, @site.domain), class: "button mt-4") %>
   </div>
 </div>
 
 <div class="px-4 py-6 bg-white shadow dark:bg-gray-800 sm:rounded-md sm:overflow-hidden sm:p-6">
   <header class="relative">
-    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">Embed dashboard</h2>
+    <h2 class="text-lg font-medium text-gray-900 leading-6 dark:text-gray-100">Embed Dashboard</h2>
     <p class="mt-1 text-sm text-gray-500 leading-5 dark:text-gray-200">You can use shared links to embed your stats in any other webpage using an <code>iframe</code>. Copy & paste a shared link into the form below to generate the embed code.</p>
     <%= link(to: "https://plausible.io/docs/embed-dashboard", target: "_blank", rel: "noreferrer") do %>
       <svg class="absolute top-0 right-0 w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>
@@ -80,7 +80,7 @@
 
   <div class="max-w-xl mt-4">
     <div>
-      <label for="embed-link" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Enter shared link</label>
+      <label for="embed-link" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Enter Shared Link</label>
       <p class="mt-1 text-xs text-gray-500 dark:text-gray-200">Only public shared links without password protection can be embedded</p>
       <div class="mt-1">
         <input type="text" name="embed-link" id="embed-link" onclick="this.select()" class="block w-full border-gray-300 dark:border-gray-700 rounded-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-900 dark:text-gray-300">
@@ -88,7 +88,7 @@
     </div>
 
     <div class="mt-4">
-      <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select theme</label>
+      <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Theme</label>
       <select id="theme" name="theme" class="block w-full py-2 pl-3 pr-10 mt-1 text-base border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300">
         <option selected>Light</option>
         <option>Dark</option>
@@ -97,7 +97,7 @@
     </div>
 
     <div class="mt-4">
-      <label for="background" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Custom background colour (optional)</label>
+      <label for="background" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Custom Background Colour (optional)</label>
       <p class="mt-1 text-xs text-gray-500 dark:text-gray-200">Hint: try using `transparent` background to blend the dashboard with your site background</p>
       <div class="mt-1">
         <input type="text" name="background" id="background" class="block w-full border-gray-300 dark:border-gray-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300" placeholder="#F9FAFB">
@@ -106,11 +106,11 @@
   </div>
 
   <input type="hidden" id="base-url" value="<%= plausible_url() %>" />
-  <button id="generate-embed" class="my-4 button">Generate embed code 👇</button>
+  <button id="generate-embed" class="my-4 button">Generate Embed Code 👇</button>
 
   <div class="mt-2">
     <div class="max-w-xl">
-      <label for="embed-code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Embed code</label>
+      <label for="embed-code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Embed Code</label>
 
       <div class="relative mt-1">
         <textarea id="embed-code" name="embed-code" rows="3" readonly="readonly" onclick="this.select()" class="block w-full max-w-xl border-gray-300 dark:border-gray-700 resize-none shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-900 dark:text-gray-300"></textarea>
