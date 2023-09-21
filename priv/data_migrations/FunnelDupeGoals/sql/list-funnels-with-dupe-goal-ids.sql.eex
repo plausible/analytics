@@ -1,0 +1,62 @@
+WITH DuplicateGoals AS (
+	SELECT
+		g.site_id,
+			CASE
+				WHEN g.event_name IS NOT NULL THEN 'Event: ' || g.event_name
+				WHEN g.page_path IS NOT NULL THEN 'Page: ' || g.page_path
+			END AS goal_name,
+		ARRAY_AGG(g.id) AS duplicate_ids
+	FROM
+		goals g
+	WHERE
+		g.site_id IS NOT NULL
+	GROUP BY
+		g.site_id,
+		goal_name
+	HAVING COUNT(*) > 1
+),
+FunnelStepsWithDuplicateGoals AS (
+	SELECT
+		fs.id,
+		fs.goal_id,
+		fs.funnel_id,
+		f.name,
+		CASE
+			WHEN g.event_name IS NOT NULL THEN 'Event: ' || g.event_name
+			WHEN g.page_path IS NOT NULL THEN 'Page: ' || g.page_path
+		END AS goal_name,
+		dg.duplicate_ids
+	FROM
+		funnel_steps fs
+	JOIN goals g ON fs.goal_id = g.id
+	JOIN funnels f ON fs.funnel_id = f.id
+	JOIN DuplicateGoals dg ON f.site_id = dg.site_id
+	WHERE
+		fs.goal_id = ANY(dg.duplicate_ids) -- Ch
+)
+SELECT
+	s.domain,
+	f.site_id,
+	f.name as funnel_name,
+	f.id,
+	fs.id,
+	fs.goal_id,
+	fs.goal_name,
+	fs.duplicate_ids,
+	array_agg(fs2.goal_id)
+FROM
+	funnels f
+JOIN FunnelStepsWithDuplicateGoals fs ON f.id = fs.funnel_id
+JOIN funnel_steps fs2 ON f.id = fs2.funnel_id
+JOIN sites s ON s.id = f.site_id
+GROUP BY
+	s.domain,
+	f.site_id,
+	f.name,
+	f.id,
+	fs.id,
+	fs.goal_id,
+	fs.goal_name,
+	fs.duplicate_ids
+ORDER BY fs.id ASC
+;

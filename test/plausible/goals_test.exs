@@ -24,6 +24,20 @@ defmodule Plausible.GoalsTest do
     assert {"should be at most %{count} character(s)", _} = changeset.errors[:event_name]
   end
 
+  test "create/2 fails to create the same pageview goal twice" do
+    site = insert(:site)
+    {:ok, _} = Goals.create(site, %{"page_path" => "foo bar"})
+    assert {:error, changeset} = Goals.create(site, %{"page_path" => "foo bar"})
+    assert {"has already been taken", _} = changeset.errors[:page_path]
+  end
+
+  test "create/2 fails to create the same custom event goal twice" do
+    site = insert(:site)
+    {:ok, _} = Goals.create(site, %{"event_name" => "foo bar"})
+    assert {:error, changeset} = Goals.create(site, %{"event_name" => "foo bar"})
+    assert {"has already been taken", _} = changeset.errors[:event_name]
+  end
+
   test "create/2 sets site.updated_at for revenue goal" do
     site_1 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
     {:ok, _goal_1} = Goals.create(site_1, %{"event_name" => "Checkout", "currency" => "BRL"})
@@ -170,7 +184,7 @@ defmodule Plausible.GoalsTest do
     assert Enum.count(f1.steps) == 2
 
     refute Plausible.Funnels.get(site.id, f2.id)
-    assert Repo.all(from fs in Plausible.Funnel.Step, where: fs.funnel_id == ^f2.id) == []
+    assert Repo.all(from(fs in Plausible.Funnel.Step, where: fs.funnel_id == ^f2.id)) == []
 
     assert [^g3, ^g2] = Goals.for_site(site)
   end
