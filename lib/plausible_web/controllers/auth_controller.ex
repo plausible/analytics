@@ -1,15 +1,13 @@
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.{Auth, Release}
+  alias Plausible.Auth
   require Logger
 
   plug(
     PlausibleWeb.RequireLoggedOutPlug
     when action in [
-           :register_form,
            :register,
-           :register_from_invitation_form,
            :register_from_invitation,
            :login_form,
            :login
@@ -26,28 +24,7 @@ defmodule PlausibleWeb.AuthController do
          ]
   )
 
-  plug(:maybe_disable_registration when action in [:register_form, :register])
   plug(:assign_is_selfhost)
-
-  defp maybe_disable_registration(conn, _opts) do
-    selfhost_config = Application.get_env(:plausible, :selfhost)
-    disable_registration = Keyword.fetch!(selfhost_config, :disable_registration)
-    first_launch? = Release.should_be_first_launch?()
-
-    cond do
-      first_launch? ->
-        conn
-
-      disable_registration in [:invite_only, true] ->
-        conn
-        |> put_flash(:error, "Registration is disabled on this instance")
-        |> redirect(to: Routes.auth_path(conn, :login_form))
-        |> halt()
-
-      true ->
-        conn
-    end
-  end
 
   defp assign_is_selfhost(conn, _opts) do
     assign(conn, :is_selfhost, Plausible.Release.selfhost?())
@@ -73,41 +50,15 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def register_from_invitation_form(conn, %{"invitation_id" => invitation_id}) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == true do
-      redirect(conn, to: Routes.auth_path(conn, :login_form))
-    else
-      invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
-
-      if invitation do
-        render(conn, "register_from_invitation_form.html",
-          connect_live_socket: true,
-          invitation_id: invitation.invitation_id,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
-          skip_plausible_tracking: true
-        )
-      else
-        render(conn, "invitation_expired.html",
-          dogfood_page_path: "/register/invitation/:invitation_id",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-      end
-    end
-  end
-
   def register_from_invitation(conn, %{"user" => %{"email" => email, "password" => password}}) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == true do
-      redirect(conn, to: Routes.auth_path(conn, :login_form))
-    else
-      with {:ok, user} <- login_user(conn, email, password) do
-        conn = set_user_session(conn, user)
+    with {:ok, user} <- login_user(conn, email, password) do
+      conn = set_user_session(conn, user)
 
-        if user.email_verified do
-          redirect(conn, to: Routes.site_path(conn, :index))
-        else
-          send_email_verification(user)
-          redirect(conn, to: Routes.auth_path(conn, :activate_form))
-        end
+      if user.email_verified do
+        redirect(conn, to: Routes.site_path(conn, :index))
+      else
+        send_email_verification(user)
+        redirect(conn, to: Routes.auth_path(conn, :activate_form))
       end
     end
   end

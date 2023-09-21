@@ -25,6 +25,10 @@ defmodule PlausibleWeb.Router do
     plug :protect_from_forgery
   end
 
+  pipeline :focus_layout do
+    plug :put_root_layout, html: {PlausibleWeb.LayoutView, :focus}
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
@@ -132,9 +136,24 @@ defmodule PlausibleWeb.Router do
   scope "/", PlausibleWeb do
     pipe_through [:browser, :csrf]
 
-    get "/register", AuthController, :register_form
+    scope alias: Live, assigns: %{connect_live_socket: true} do
+      pipe_through [PlausibleWeb.RequireLoggedOutPlug, :focus_layout]
+
+      scope assigns: %{disable_registration_for: [:invite_only, true]} do
+        pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
+
+        live "/register", RegisterForm, :register_form, as: :auth
+      end
+
+      scope assigns: %{disable_registration_for: true} do
+        pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
+
+        live "/register/invitation/:invitation_id", RegisterForm, :register_from_invitation_form,
+          as: :auth
+      end
+    end
+
     post "/register", AuthController, :register
-    get "/register/invitation/:invitation_id", AuthController, :register_from_invitation_form
     post "/register/invitation/:invitation_id", AuthController, :register_from_invitation
     get "/activate", AuthController, :activate_form
     post "/activate/request-code", AuthController, :request_activation_code
