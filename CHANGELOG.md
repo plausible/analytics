@@ -18,8 +18,6 @@ All notable changes to this project will be documented in this file.
 - Show Outbound Links / File Downloads / 404 Pages / Cloaked Links instead of Goal Conversions when filtering by the corresponding goal
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
 
-
->>>>>>> f7ed6464 (update changelog)
 ### Fixed
 - Only return `(none)` values in custom property breakdown for the first page (pagination) of results
 - Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
@@ -30,6 +28,7 @@ All notable changes to this project will be documented in this file.
 - Fix breakdown pagination bug in the dashboard details view when filtering by goals
 - Update bot detection (matomo 6.1.4, ua_inspector 3.4.0)
 - Improved the Goal Settings page (search, autcompletion etc.)
+- Log mailer errors plausible/analytics#3336
 
 ## v2.0.0 - 2023-07-12
 
