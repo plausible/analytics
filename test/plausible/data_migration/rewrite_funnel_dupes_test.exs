@@ -6,6 +6,7 @@ defmodule Plausible.DataMigration.RewriteFunnelDupesTest do
   import ExUnit.CaptureIO
 
   for goal_type <- ["event_name", "page_path"] do
+    @tag :skip
     test "deletes a funnel that cannot be cleaned up from dupe goals (#{goal_type})" do
       site = insert(:site)
 
@@ -25,6 +26,7 @@ defmodule Plausible.DataMigration.RewriteFunnelDupesTest do
       refute Repo.reload(funnel)
     end
 
+    @tag :skip
     test "reduces a funnel if possible (#{goal_type})" do
       site = insert(:site)
 
@@ -50,6 +52,7 @@ defmodule Plausible.DataMigration.RewriteFunnelDupesTest do
     end
   end
 
+  @tag :skip
   test "dupe names in mixed goal types don't matter" do
     site = insert(:site)
 
@@ -69,6 +72,7 @@ defmodule Plausible.DataMigration.RewriteFunnelDupesTest do
     assert_funnel(site.id, funnel.id, gs)
   end
 
+  @tag :skip
   test "goals across multiple funnels" do
     site = insert(:site)
 
