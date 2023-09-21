@@ -74,13 +74,23 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <.plan_box
             name="Growth"
             owned={@owned_plan && Map.get(@owned_plan, :kind) == :growth}
-            selected_plan={@selected_growth_plan}
+            selected_plan={
+              if @selected_growth_plan,
+                do: @selected_growth_plan,
+                else: List.last(@available_plans.growth)
+            }
+            disabled={!@selected_growth_plan}
             {assigns}
           />
           <.plan_box
             name="Business"
             owned={@owned_plan && Map.get(@owned_plan, :kind) == :business}
-            selected_plan={@selected_business_plan}
+            selected_plan={
+              if @selected_business_plan,
+                do: @selected_business_plan,
+                else: List.last(@available_plans.business)
+            }
+            disabled={!@selected_business_plan}
             {assigns}
           />
           <.enterprise_plan_box />
@@ -105,7 +115,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   def handle_event("slide", %{"slider" => index}, socket) do
-    new_volume = Enum.at(@volumes, String.to_integer(index))
+    index = String.to_integer(index)
+
+    new_volume =
+      if index == length(@volumes) do
+        :enterprise
+      else
+        Enum.at(@volumes, index)
+      end
 
     {:noreply,
      assign(socket,
@@ -120,7 +137,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp default_selected_volume(%Plan{monthly_pageview_limit: limit}, _usage), do: limit
 
   defp default_selected_volume(_, usage) do
-    Enum.find(@volumes, &(usage < &1))
+    Enum.find(@volumes, &(usage < &1)) || :enterprise
   end
 
   defp current_user_subscription_interval(subscription) do
@@ -130,6 +147,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       _ -> nil
     end
   end
+
+  defp get_plan_by_volume(_, :enterprise), do: nil
 
   defp get_plan_by_volume(plans, volume) do
     Enum.find(plans, &(&1.monthly_pageview_limit == volume))
@@ -164,7 +183,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <form class="mt-6 max-w-2xl mx-auto">
       <p class="text-xl text-gray-600 text-center">
-        Monthly pageviews: <b><%= PlausibleWeb.StatsView.large_number_format(@selected_volume) %></b>
+        Monthly pageviews: <b><%= slider_value(@selected_volume) %></b>
       </p>
       <input
         phx-change="slide"
@@ -172,9 +191,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         class="shadow-lg"
         type="range"
         min="0"
-        max="7"
+        max={length(volumes())}
         step="1"
-        value={Enum.find_index(volumes(), &(&1 == @selected_volume))}
+        value={Enum.find_index(volumes(), &(&1 == @selected_volume)) || length(volumes())}
       />
     </form>
     """
@@ -195,7 +214,18 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <%= @name %>
         </h3>
       </div>
-      <p class="mt-6 flex items-baseline gap-x-1">
+      <p :if={@disabled} class="pt-10 pb-3 text-xl text-center text-red-700">
+        Unavailable at this volume
+      </p>
+      <.plan_box_body {assigns} />
+    </div>
+    """
+  end
+
+  def plan_box_body(assigns) do
+    ~H"""
+    <div id={"#{String.downcase(@name)}-body"} class={@disabled && "hidden"}>
+      <p id={"#{String.downcase(@name)}-price-tag"} class="mt-6 flex items-baseline gap-x-1">
         <.price_tag selected_interval={@selected_interval} selected_plan={@selected_plan} />
       </p>
       <%= if @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] do %>
@@ -214,24 +244,24 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <% else %>
         <.paddle_button
           selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
-          user={@user}
+          {assigns}
         />
       <% end %>
-      <ul role="list" class="mt-8 space-y-3 text-sm leading-6 text-gray-600 xl:mt-10">
-        <li class="flex gap-x-3">
-          <.check_icon class="text-indigo-600" /> 5 products
-        </li>
-        <li class="flex gap-x-3">
-          <.check_icon class="text-indigo-600" /> Up to 1,000 subscribers
-        </li>
-        <li class="flex gap-x-3">
-          <.check_icon class="text-indigo-600" /> Basic analytics
-        </li>
-        <li class="flex gap-x-3">
-          <.check_icon class="text-indigo-600" /> 48-hour support response time
-        </li>
-      </ul>
     </div>
+    <ul role="list" class="mt-8 space-y-3 text-sm leading-6 text-gray-600 xl:mt-10">
+      <li class="flex gap-x-3">
+        <.check_icon class="text-indigo-600" /> 5 products
+      </li>
+      <li class="flex gap-x-3">
+        <.check_icon class="text-indigo-600" /> Up to 1,000 subscribers
+      </li>
+      <li class="flex gap-x-3">
+        <.check_icon class="text-indigo-600" /> Basic analytics
+      </li>
+      <li class="flex gap-x-3">
+        <.check_icon class="text-indigo-600" /> 48-hour support response time
+      </li>
+    </ul>
     """
   end
 
@@ -250,7 +280,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp change_plan_link(assigns) do
     ~H"""
     <.link
-      id="checkout"
+      id={"#{String.downcase(@name)}-checkout"}
       href={"/billing/change-plan/preview/" <> @selected_plan_id}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
@@ -269,7 +299,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp paddle_button(assigns) do
     ~H"""
     <button
-      id="checkout"
+      id={"#{String.downcase(@name)}-checkout"}
       data-theme="none"
       data-product={@selected_plan_id}
       data-email={@user.email}
@@ -514,6 +544,16 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp get_selected_plan_id(%Plan{monthly_product_id: plan_id}, :monthly), do: plan_id
   defp get_selected_plan_id(%Plan{yearly_product_id: plan_id}, :yearly), do: plan_id
+
+  defp slider_value(:enterprise) do
+    List.last(@volumes)
+    |> PlausibleWeb.StatsView.large_number_format()
+    |> Kernel.<>("+")
+  end
+
+  defp slider_value(volume) when is_integer(volume) do
+    PlausibleWeb.StatsView.large_number_format(volume)
+  end
 
   defp volumes(), do: @volumes
 

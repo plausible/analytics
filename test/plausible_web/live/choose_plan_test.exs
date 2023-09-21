@@ -13,16 +13,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @slider_input ~s/input[name="slider"]/
 
   @plan_box_growth "#plan-box-growth"
-  @growth_price_tag_amount "#{@plan_box_growth} > p > span:first-child"
-  @growth_price_tag_interval "#{@plan_box_growth} > p > span:nth-child(2)"
+  @growth_price_tag "#growth-price-tag"
+  @growth_price_tag_amount "#{@growth_price_tag} > span:first-child"
+  @growth_price_tag_interval "#{@growth_price_tag} > span:nth-child(2)"
   @growth_current_label "#{@plan_box_growth} > div.absolute"
-  @growth_checkout_button "#{@plan_box_growth} > #checkout"
+  @growth_checkout_button "#growth-checkout"
 
   @plan_box_business "#plan-box-business"
-  @business_price_tag_amount "#{@plan_box_business} > p > span:first-child"
-  @business_price_tag_interval "#{@plan_box_business} > p > span:nth-child(2)"
+  @business_price_tag "#business-price-tag"
+  @business_price_tag_amount "#{@business_price_tag} > span:first-child"
+  @business_price_tag_interval "#{@business_price_tag} > span:nth-child(2)"
   @business_current_label "#{@plan_box_business} > div.absolute"
-  @business_checkout_button "#{@plan_box_business} > #checkout"
+  @business_checkout_button "#business-checkout"
 
   describe "for a user with no subscription" do
     setup [:create_user, :log_in]
@@ -92,6 +94,28 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "Monthly pageviews: <b>10M</b"
       assert text_of_element(doc, @growth_price_tag_amount) == "€80"
       assert text_of_element(doc, @business_price_tag_amount) == "€160"
+    end
+
+    test "renders business and growth tiers unavailable when enterprise-level volume selected", %{
+      conn: conn
+    } do
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 8})
+
+      assert class_of_element(doc, "#growth-body") =~ "hidden"
+      assert class_of_element(doc, "#business-body") =~ "hidden"
+
+      assert text_of_element(doc, "#{@plan_box_growth} > p") == "Unavailable at this volume"
+      assert text_of_element(doc, "#{@plan_box_business} > p") == "Unavailable at this volume"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
+
+      refute class_of_element(doc, "#growth-body") =~ "hidden"
+      refute class_of_element(doc, "#business-body") =~ "hidden"
+
+      refute element_exists?(doc, "#{@plan_box_growth} > p")
+      refute element_exists?(doc, "#{@plan_box_business} > p")
     end
 
     test "switching billing interval changes business and growth prices", %{conn: conn} do
