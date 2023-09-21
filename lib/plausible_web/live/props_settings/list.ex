@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
           <button
             type="button"
             phx-click="add-prop"
-            class="mt-2 block items-center rounded-md bg-indigo-600 p-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            class="mt-2 block items-center rounded-md bg-indigo-600 p-2 text-sm text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             + Add Property
           </button>

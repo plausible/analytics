@@ -6,13 +6,17 @@ on:
   pull_request:
     branches: [master, stable]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build and test
     runs-on: buildjet-4vcpu-ubuntu-2004
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Read .tool-versions
       uses: marocchino/tool-versions-action@v1
       id: versions
