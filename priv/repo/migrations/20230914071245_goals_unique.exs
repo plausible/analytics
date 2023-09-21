@@ -8,19 +8,23 @@ defmodule Plausible.Repo.Migrations.GoalsUnique do
     execute """
     DELETE
     FROM
-    goals
+    goals g
     WHERE
-    id NOT IN (
+    g.id NOT IN (
       SELECT
-      min(id)
+      min(g2.id)
       FROM
-      goals
+      goals g2
       GROUP BY
-      (site_id,
+      (g2.site_id,
         CASE
-        WHEN page_path IS NOT NULL THEN page_path
-        WHEN event_name IS NOT NULL THEN event_name
+        WHEN g2.page_path IS NOT NULL THEN g2.page_path
+        WHEN g2.event_name IS NOT NULL THEN g2.event_name
         END )
+    )
+    AND g.id NOT IN (
+      SELECT fs.goal_id
+      FROM funnel_steps fs
     );
     """
 
