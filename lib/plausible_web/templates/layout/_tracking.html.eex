@@ -1,9 +1,0 @@
-<%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
-  <%= if Application.get_env(:plausible, :environment) in ["prod", "staging"] do %>
-    <script defer data-domain="<%= base_domain() %>" event-logged_in="<%= !!@conn.assigns[:current_user] %>" src="<%="#{plausible_url()}/js/script.pageview-props.js"%>"></script>
-    <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
-  <% else %>
-    <script defer data-domain="<%= base_domain() %>" event-logged_in="<%= !!@conn.assigns[:current_user] %>" src="<%="#{plausible_url()}/js/plausible.local.pageview-props.js"%>"></script>
-    <script>window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }</script>
-  <% end %>
-<% end %>
