@@ -27,8 +27,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:current_interval, fn %{user: user} ->
         current_user_subscription_interval(user.subscription)
       end)
-      |> assign_new(:selected_volume, fn %{owned_plan: owned_plan} ->
-        default_selected_volume(owned_plan)
+      |> assign_new(:selected_volume, fn %{owned_plan: owned_plan, usage: usage} ->
+        default_selected_volume(owned_plan, usage)
       end)
       |> assign_new(:available_plans, fn %{user: user} ->
         Plans.available_plans_with_prices(user)
@@ -117,8 +117,11 @@ defmodule PlausibleWeb.Live.ChoosePlan do
      )}
   end
 
-  defp default_selected_volume(%Plan{monthly_pageview_limit: limit}), do: limit
-  defp default_selected_volume(_), do: List.first(@volumes)
+  defp default_selected_volume(%Plan{monthly_pageview_limit: limit}, _usage), do: limit
+
+  defp default_selected_volume(_, usage) do
+    Enum.find(@volumes, &(usage < &1))
+  end
 
   defp current_user_subscription_interval(subscription) do
     case Plans.subscription_interval(subscription) do
