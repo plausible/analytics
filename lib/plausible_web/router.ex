@@ -145,7 +145,10 @@ defmodule PlausibleWeb.Router do
         live "/register", RegisterForm, :register_form, as: :auth
       end
 
-      scope assigns: %{disable_registration_for: true} do
+      scope assigns: %{
+              disable_registration_for: true,
+              dogfood_page_path: "/register/invitation/:invitation_id"
+            } do
         pipe_through PlausibleWeb.Plugs.MaybeDisableRegistration
 
         live "/register/invitation/:invitation_id", RegisterForm, :register_from_invitation_form,
