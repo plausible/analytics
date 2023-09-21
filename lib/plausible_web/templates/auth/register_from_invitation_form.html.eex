@@ -1,9 +1,0 @@
-<div class="mx-auto mt-6 text-center dark:text-gray-300">
-  <h1 class="text-3xl font-black">Register your Plausible Analytics account</h1>
-  <div class="text-xl font-medium">Set up privacy-friendly analytics with just a few clicks</div>
-</div>
-
-<%= live_render(@conn, PlausibleWeb.Live.RegisterForm,
-  container: {:div, class: "contents"},
-  session: %{"invitation_id" => @invitation_id, "is_selfhost" => @is_selfhost}
-) %>
