@@ -41,4 +41,50 @@ defmodule PlausibleWeb.Components.Generic do
     </div>
     """
   end
+
+  attr :href, :string, required: true
+  attr :new_tab, :boolean
+  attr :class, :string, default: ""
+  slot :inner_block
+
+  def styled_link(assigns) do
+    if assigns[:new_tab] do
+      assigns = assign(assigns, :icon_class, icon_class(assigns))
+
+      ~H"""
+      <.link
+        class={[
+          "inline-flex items-center gap-x-0.5 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600",
+          @class
+        ]}
+        href={@href}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <%= render_slot(@inner_block) %>
+        <Heroicons.arrow_top_right_on_square class={@icon_class} />
+      </.link>
+      """
+    else
+      ~H"""
+      <.link
+        class={[
+          "text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600",
+          @class
+        ]}
+        href={@href}
+      >
+        <%= render_slot(@inner_block) %>
+      </.link>
+      """
+    end
+  end
+
+  defp icon_class(link_assigns) do
+    if String.contains?(link_assigns[:class], "text-sm") do
+      ["w-3 h-3"]
+    else
+      ["w-4 h-4"]
+    end
+  end
 end
