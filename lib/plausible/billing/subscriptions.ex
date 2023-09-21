@@ -1,5 +1,6 @@
 defmodule Plausible.Billing.Subscriptions do
   alias Plausible.Billing.Subscription
+
   @moduledoc """
   The subscription statuses are stored in Paddle. They can only be changed
   through Paddle webhooks, which always send the current subscription status
@@ -35,4 +36,11 @@ defmodule Plausible.Billing.Subscriptions do
   @valid_statuses ["active", "past_due", "deleted", "paused"]
 
   def valid_statuses(), do: @valid_statuses
+
+  def expired?(%Subscription{status: status, next_bill_date: next_bill_date}) do
+    cancelled? = status == "deleted"
+    expired? = Timex.compare(next_bill_date, Timex.today()) < 0
+
+    cancelled? && expired?
+  end
 end

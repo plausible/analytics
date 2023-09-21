@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
+  alias Plausible.{Repo, Billing.Subscription}
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
@@ -29,7 +30,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      assert doc =~ "Upgrade your free trial"
+      assert doc =~ "Upgrade your account"
       assert doc =~ "You have used <b>0</b>\nbillable pageviews in the last 30 days"
       assert doc =~ "Questions?"
       assert doc =~ "What happens if I go over my page views limit?"
@@ -350,6 +351,20 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
       assert class_of_element(doc, @growth_checkout_button) =~ "paddle_button"
       assert class_of_element(doc, @business_checkout_button) =~ "paddle_button"
+    end
+
+    test "currently owned tier is highlighted if stats are still unlocked", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      assert text_of_element(doc, @growth_current_label) == "CURRENT"
+    end
+
+    test "currently owned tier is not highlighted if stats are locked", %{conn: conn, user: user} do
+      user.subscription
+      |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
+      |> Repo.update()
+
+      {:ok, _lv, doc} = get_liveview(conn)
+      refute element_exists?(doc, @growth_current_label)
     end
   end
 

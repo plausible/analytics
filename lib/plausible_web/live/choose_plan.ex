@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Live.ChoosePlan do
   use Phoenix.LiveView
   use Phoenix.HTML
+  alias Plausible.Billing.Subscriptions
   alias Plausible.Users
   alias Plausible.Billing.{Plans, Plan, Quota}
 
@@ -19,8 +20,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:usage, fn %{user: user} ->
         Quota.monthly_pageview_usage(user)
       end)
-      |> assign_new(:owned_plan, fn %{user: user} ->
-        Plans.get_subscription_plan(user.subscription)
+      |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
+        (subscription && !Subscriptions.expired?(subscription) &&
+           Plans.get_subscription_plan(subscription)) || nil
       end)
       |> assign_new(:current_interval, fn %{user: user} ->
         current_user_subscription_interval(user.subscription)
@@ -60,7 +62,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <p class="mt-2 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             <%= if @owned_plan,
               do: "Change subscription plan",
-              else: "Upgrade your free trial" %>
+              else: "Upgrade your account" %>
           </p>
         </div>
         <p class="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-600">
