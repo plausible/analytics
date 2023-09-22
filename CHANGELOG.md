@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - Improved the Goal Settings page (search, autcompletion etc.)
 - Log mailer errors plausible/analytics#3336
 - Allow custom event timeseries in stats API plausible/analytics#3505
+- Fixed [Last 7 days with hourly resolution doesn't include today](https://github.com/plausible/analytics/issues/3342)
 
 ## v2.0.0 - 2023-07-12
 

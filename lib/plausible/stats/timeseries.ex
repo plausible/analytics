@@ -89,11 +89,7 @@ defmodule Plausible.Stats.Timeseries do
   @full_day_in_hours 23
   defp buckets(%Query{interval: "hour"} = query) do
     n_buckets =
-      if query.date_range.first == query.date_range.last do
-        @full_day_in_hours
-      else
-        Timex.diff(query.date_range.last, query.date_range.first, :hours)
-      end
+      Timex.diff(query.date_range.last, query.date_range.first, :hours) + @full_day_in_hours
 
     Enum.map(0..n_buckets, fn step ->
       query.date_range.first
