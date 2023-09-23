@@ -65,21 +65,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
   end
 
   def render(assigns) do
-    form_extra = %{
-      class: [
-        "w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"
-      ]
-    }
-
-    form_extra =
-      if assigns.live_action == :register_form do
-        %{form_extra | class: ["plausible-event-name=Signup" | form_extra.class]}
-      else
-        Map.put(form_extra, :id, "register-via-invitation-form")
-      end
-
-    assigns = assign(assigns, :form_extra, form_extra)
-
     ~H"""
     <div class="mx-auto mt-6 text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
@@ -96,10 +81,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
       <.form
         :let={f}
         for={@form}
+        id="register-form"
+        phx-hook="Metrics"
         phx-change="validate"
         phx-submit="register"
         phx-trigger-action={@trigger_submit}
-        {@form_extra}
+        class="w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"
       >
         <input name="_csrf_token" type="hidden" value={Plug.CSRFProtection.get_csrf_token()} />
 
@@ -312,10 +299,24 @@ defmodule PlausibleWeb.Live.RegisterForm do
     end
   end
 
+  def handle_event("send_metrics_after", _params, socket) do
+    {:noreply, assign(socket, trigger_submit: true)}
+  end
+
   defp add_user(socket, user) do
     case Repo.insert(user) do
       {:ok, _user} ->
-        {:noreply, assign(socket, trigger_submit: true)}
+        metrics_params =
+          if socket.assigns.invitation do
+            %{
+              event_name: "Signup via invitation",
+              params: %{u: "/register/invitation/:invitation_id"}
+            }
+          else
+            %{event_name: "Signup", params: %{}}
+          end
+
+        {:noreply, push_event(socket, "send_metrics", metrics_params)}
 
       {:error, changeset} ->
         {:noreply,

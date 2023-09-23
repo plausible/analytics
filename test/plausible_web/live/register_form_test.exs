@@ -17,17 +17,21 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       assert element_exists?(html, ~s|form[phx-change="validate"][phx-submit="register"]|)
       assert element_exists?(html, ~s|input[type="hidden"][name="_csrf_token"]|)
-      assert element_exists?(html, ~s|input#user_name[type="text"][name="user[name]"]|)
-      assert element_exists?(html, ~s|input#user_email[type="email"][name="user[email]"]|)
+      assert element_exists?(html, ~s|input#register-form_name[type="text"][name="user[name]"]|)
 
       assert element_exists?(
                html,
-               ~s|input#user_password[type="password"][name="user[password]"]|
+               ~s|input#register-form_email[type="email"][name="user[email]"]|
              )
 
       assert element_exists?(
                html,
-               ~s|input#user_password_confirmation[type="password"][name="user[password_confirmation]"]|
+               ~s|input#register-form_password[type="password"][name="user[password]"]|
+             )
+
+      assert element_exists?(
+               html,
+               ~s|input#register-form_password_confirmation[type="password"][name="user[password_confirmation]"]|
              )
 
       assert element_exists?(html, ~s|button[type="submit"]|)
