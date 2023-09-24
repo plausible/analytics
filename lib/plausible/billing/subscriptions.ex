@@ -1,5 +1,5 @@
 defmodule Plausible.Billing.Subscriptions do
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing.{Subscription, Plan, Plans}
 
   @moduledoc """
   The subscription statuses are stored in Paddle. They can only be changed
@@ -42,5 +42,12 @@ defmodule Plausible.Billing.Subscriptions do
     expired? = Timex.compare(next_bill_date, Timex.today()) < 0
 
     cancelled? && expired?
+  end
+
+  def business_tier?(%Subscription{} = subscription) do
+    case Plans.get_subscription_plan(subscription) do
+      %Plan{kind: :business} -> true
+      _ -> false
+    end
   end
 end

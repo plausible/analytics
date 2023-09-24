@@ -54,47 +54,51 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def render(assigns) do
     ~H"""
-    <.subscription_past_due_notice class="container mb-2 mt-4" subscription={@user.subscription} />
-    <.subscription_paused_notice class="container mb-2 mt-4" subscription={@user.subscription} />
-    <div class="bg-gray-100 dark:bg-gray-900 py-12 sm:py-16 text-gray-900 dark:text-gray-100">
+    <div class="bg-gray-100 dark:bg-gray-900 pt-1 pb-12 sm:pb-16 text-gray-900 dark:text-gray-100">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <div class="mx-auto max-w-4xl text-center">
-          <p class="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
-            <%= if @owned_plan,
-              do: "Change subscription plan",
-              else: "Upgrade your account" %>
-          </p>
+        <.subscription_past_due_notice class="pb-2" subscription={@user.subscription} />
+        <.subscription_paused_notice class="pb-2" subscription={@user.subscription} />
+        <div class="p-4 bg-white shadow-lg dark:bg-gray-800 rounded">
+          <div class="mx-auto max-w-4xl text-center">
+            <p class="text-4xl font-bold tracking-tight sm:text-5xl">
+              <%= if @owned_plan,
+                do: "Change subscription plan",
+                else: "Upgrade your account" %>
+            </p>
+          </div>
+          <.interval_picker selected_interval={@selected_interval} />
+          <.slider selected_volume={@selected_volume} />
         </div>
-        <p class="mx-auto mt-6 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
+        <div class="mt-8 bg-white shadow-lg dark:bg-gray-800 p-6 rounded">
+          <div class="isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+            <.plan_box
+              name="Growth"
+              owned={@owned_plan && Map.get(@owned_plan, :kind) == :growth}
+              selected_plan={
+                if @selected_growth_plan,
+                  do: @selected_growth_plan,
+                  else: List.last(@available_plans.growth)
+              }
+              disabled={!@selected_growth_plan}
+              {assigns}
+            />
+            <.plan_box
+              name="Business"
+              owned={@owned_plan && Map.get(@owned_plan, :kind) == :business}
+              selected_plan={
+                if @selected_business_plan,
+                  do: @selected_business_plan,
+                  else: List.last(@available_plans.business)
+              }
+              disabled={!@selected_business_plan}
+              {assigns}
+            />
+            <.enterprise_plan_box />
+          </div>
+        </div>
+        <p class="mx-auto mt-2 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
           <.usage usage={@usage} />
         </p>
-        <.interval_picker selected_interval={@selected_interval} />
-        <.slider selected_volume={@selected_volume} />
-        <div class="isolate mx-auto mt-10 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-          <.plan_box
-            name="Growth"
-            owned={@owned_plan && Map.get(@owned_plan, :kind) == :growth}
-            selected_plan={
-              if @selected_growth_plan,
-                do: @selected_growth_plan,
-                else: List.last(@available_plans.growth)
-            }
-            disabled={!@selected_growth_plan}
-            {assigns}
-          />
-          <.plan_box
-            name="Business"
-            owned={@owned_plan && Map.get(@owned_plan, :kind) == :business}
-            selected_plan={
-              if @selected_business_plan,
-                do: @selected_business_plan,
-                else: List.last(@available_plans.business)
-            }
-            disabled={!@selected_business_plan}
-            {assigns}
-          />
-          <.enterprise_plan_box />
-        </div>
         <.pageview_limit_notice :if={!@owned_plan} />
         <.help_links />
       </div>
@@ -156,39 +160,57 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp interval_picker(assigns) do
     ~H"""
-    <div class="mt-16 flex justify-center">
-      <fieldset class="grid grid-cols-2 gap-x-1 rounded-full p-1 text-center text-xs font-semibold leading-5 ring-1 ring-inset ring-gray-300 dark:ring-gray-700">
-        <label
-          class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval === :monthly, do: "bg-indigo-600 text-white"}"}
-          phx-click="set_interval"
-          phx-value-interval="monthly"
-        >
-          <input type="radio" name="frequency" value="monthly" class="sr-only" />
-          <span>Monthly billing</span>
-        </label>
-        <label
-          class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval === :yearly, do: "bg-indigo-600 text-white"}"}
-          phx-click="set_interval"
-          phx-value-interval="yearly"
-        >
-          <input type="radio" name="frequency" value="yearly" class="sr-only" />
-          <span>Yearly billing</span>
-        </label>
-      </fieldset>
+    <div class="mt-6 flex justify-center">
+      <div class="flex flex-col">
+        <.two_months_free active={@selected_interval == :yearly} />
+        <fieldset class="grid grid-cols-2 gap-x-1 rounded-full p-1 text-center text-xs font-semibold leading-5 ring-1 ring-inset ring-gray-300 dark:ring-gray-600">
+          <label
+            class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval == :monthly, do: "bg-indigo-600 text-white"}"}
+            phx-click="set_interval"
+            phx-value-interval="monthly"
+          >
+            <input type="radio" name="frequency" value="monthly" class="sr-only" />
+            <span>Monthly</span>
+          </label>
+          <label
+            class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval == :yearly, do: "bg-indigo-600 text-white"}"}
+            phx-click="set_interval"
+            phx-value-interval="yearly"
+          >
+            <input type="radio" name="frequency" value="yearly" class="sr-only" />
+            <span>Yearly</span>
+          </label>
+        </fieldset>
+      </div>
+    </div>
+    """
+  end
+
+  def two_months_free(assigns) do
+    ~H"""
+    <div class="grid grid-cols-2 gap-x-1">
+      <div></div>
+      <span class={[
+        "mb-1 block whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4",
+        @active && "bg-yellow-100 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200",
+        !@active && "text-gray-500 border-gray-700 dark:text-gray-400 dark:border-gray-600"
+      ]}>
+        2 months free
+      </span>
     </div>
     """
   end
 
   defp slider(assigns) do
     ~H"""
-    <form class="mt-6 max-w-2xl mx-auto">
+    <form class="mt-4 max-w-2xl mx-auto">
       <p class="text-xl text-gray-600 dark:text-gray-400 text-center">
         Monthly pageviews: <b><%= slider_value(@selected_volume) %></b>
       </p>
       <input
         phx-change="slide"
         name="slider"
-        class="shadow-lg dark:bg-gray-600"
+        class="shadow border border-gray-200 dark:bg-gray-600 dark:border-none"
         type="range"
         min="0"
         max={length(volumes())}
@@ -204,65 +226,86 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <div
       id={"plan-box-#{String.downcase(@name)}"}
       class={[
-        "relative rounded-3xl p-8 xl:p-10 dark:bg-gray-800",
+        "rounded-3xl px-8 py-6 dark:bg-gray-800",
         !@owned && "ring-1 ring-gray-300 dark:ring-gray-600",
         @owned && "ring-2 ring-indigo-600"
       ]}
     >
-      <.current_label :if={@owned} />
       <div class="flex items-center justify-between gap-x-4">
-        <h3 class="text-lg font-semibold leading-8 text-gray-900 dark:text-gray-100">
+        <h3 class={["text-lg font-semibold leading-8",
+          !@owned && "text-gray-900 dark:text-gray-100",
+          @owned && "text-indigo-600"
+        ]}>
           <%= @name %>
         </h3>
+        <.current_label :if={@owned} />
       </div>
-      <p :if={@disabled} class="pt-10 pb-3 text-xl text-center text-red-700 dark:text-red-500">
-        Unavailable at this volume
-      </p>
-      <.plan_box_body {assigns} />
+      <div id={"#{String.downcase(@name)}-body"}>
+        <.render_price_info disabled={@disabled} {assigns}/>
+        <%= cond do %>
+          <% @disabled -> %>
+            <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
+          <% @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] -> %>
+            <.render_change_plan_link
+              selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
+              text={
+                change_plan_link_text(
+                  @owned_plan,
+                  @selected_plan,
+                  @current_interval,
+                  @selected_interval
+                )
+              }
+              {assigns}
+            />
+          <% true -> %>
+            <.paddle_button
+              selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
+              {assigns}
+            />
+        <% end %>
+      </div>
+      <ul
+        role="list"
+        class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-100 xl:mt-10"
+      >
+        <li class="flex gap-x-3">
+          <.check_icon class="text-indigo-600 dark:text-green-600" /> 5 products
+        </li>
+        <li class="flex gap-x-3">
+          <.check_icon class="text-indigo-600 dark:text-green-600" /> Up to 1,000 subscribers
+        </li>
+        <li class="flex gap-x-3">
+          <.check_icon class="text-indigo-600 dark:text-green-600" /> Basic analytics
+        </li>
+        <li class="flex gap-x-3">
+          <.check_icon class="text-indigo-600 dark:text-green-600" /> 48-hour support response time
+        </li>
+      </ul>
     </div>
     """
   end
 
-  def plan_box_body(assigns) do
+  def render_price_info(%{disabled: true} = assigns) do
     ~H"""
-    <div id={"#{String.downcase(@name)}-body"} class={@disabled && "hidden"}>
-      <p id={"#{String.downcase(@name)}-price-tag"} class="mt-6 flex items-baseline gap-x-1">
-        <.price_tag selected_interval={@selected_interval} selected_plan={@selected_plan} />
-      </p>
-      <%= if @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] do %>
-        <.render_change_plan_link
-          selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
-          text={
-            change_plan_link_text(
-              @owned_plan,
-              @selected_plan,
-              @current_interval,
-              @selected_interval
-            )
-          }
-          {assigns}
-        />
-      <% else %>
-        <.paddle_button
-          selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
-          {assigns}
-        />
-      <% end %>
-    </div>
-    <ul role="list" class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-100 xl:mt-10">
-      <li class="flex gap-x-3">
-        <.check_icon class="text-indigo-600 dark:text-green-600" /> 5 products
-      </li>
-      <li class="flex gap-x-3">
-        <.check_icon class="text-indigo-600 dark:text-green-600" /> Up to 1,000 subscribers
-      </li>
-      <li class="flex gap-x-3">
-        <.check_icon class="text-indigo-600 dark:text-green-600" /> Basic analytics
-      </li>
-      <li class="flex gap-x-3">
-        <.check_icon class="text-indigo-600 dark:text-green-600" /> 48-hour support response time
-      </li>
-    </ul>
+    <p class="mt-6 flex items-baseline gap-x-1">
+      <span class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+        Custom
+      </span>
+    </p>
+    <p class="h-4 mt-1"></p>
+    """
+  end
+
+  def render_price_info(assigns) do
+    ~H"""
+    <p
+      id={"#{String.downcase(@name)}-price-tag"}
+      class="mt-6 flex items-baseline gap-x-1"
+    >
+      <.price_tag selected_interval={@selected_interval} selected_plan={@selected_plan} />
+    </p>
+    <p class="mt-1 text-xs">+ VAT if applicable</p>
     """
   end
 
@@ -286,12 +329,16 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
         !(@plan_already_owned || @billing_details_expired) && "bg-indigo-600 hover:bg-indigo-500",
-        (@plan_already_owned || @billing_details_expired) && "pointer-events-none bg-gray-400 dark:bg-gray-600"
+        (@plan_already_owned || @billing_details_expired) &&
+          "pointer-events-none bg-gray-400 dark:bg-gray-600"
       ]}
     >
       <%= @text %>
     </.link>
-    <p :if={@billing_details_expired && !@plan_already_owned} class="text-center text-sm text-red-700 dark:text-red-500">
+    <p
+      :if={@billing_details_expired && !@plan_already_owned}
+      class="text-center text-sm text-red-700 dark:text-red-500"
+    >
       Please update your billing details first
     </p>
     """
@@ -315,17 +362,35 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
+  defp contact_button(assigns) do
+    ~H"""
+    <.link
+      href={contact_link()}
+      class={[
+        "mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 bg-gray-800 hover:bg-gray-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500",
+        @class
+      ]}
+    >
+      Contact us
+    </.link>
+    """
+  end
+
   defp enterprise_plan_box(assigns) do
     ~H"""
-    <div class="rounded-3xl p-8 ring-1 xl:p-10 bg-gray-900 ring-gray-900 dark:bg-gray-100 dark:ring-gray-100">
-      <h3 class="text-lg font-semibold leading-8 text-white dark:text-gray-900">Enterprise</h3>
+    <div class="rounded-3xl px-8 py-6 ring-1 bg-gray-900 ring-gray-900 dark:bg-gray-800 dark:ring-gray-600">
+      <h3 class="text-lg font-semibold leading-8 text-white dark:text-gray-100">Enterprise</h3>
       <p class="mt-6 flex items-baseline gap-x-1">
-        <span class="text-4xl font-bold tracking-tight text-white dark:text-gray-900">Custom</span>
+        <span class="text-4xl font-bold tracking-tight text-white dark:text-gray-100">
+          Custom
+        </span>
       </p>
-      <a {%{href: contact_link(), class: "mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 bg-gray-800 hover:bg-gray-700 text-white dark:bg-indigo-600 dark:hover:bg-indigo-500"}}>
-        Contact us
-      </a>
-      <ul role="list" class="mt-8 space-y-3 text-sm leading-6 xl:mt-10 text-gray-300 dark:text-gray-900">
+      <p class="h-4 mt-1"></p>
+      <.contact_button class=""/>
+      <ul
+        role="list"
+        class="mt-8 space-y-3 text-sm leading-6 xl:mt-10 text-gray-300"
+      >
         <li class="flex gap-x-3">
           <.check_icon class="text-white dark:text-green-600" /> Unlimited products
         </li>
@@ -336,7 +401,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <.check_icon class="text-white dark:text-green-600" /> Advanced analytics
         </li>
         <li class="flex gap-x-3">
-          <.check_icon class="text-white dark:text-green-600" /> 1-hour, dedicated support response time
+          <.check_icon class="text-white dark:text-green-600" />
+          1-hour, dedicated support response time
         </li>
         <li class="flex gap-x-3">
           <.check_icon class="text-white dark:text-green-600" /> Marketing automations
@@ -351,8 +417,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp current_label(assigns) do
     ~H"""
-    <div class="text-sm font-semibold text-white bg-green-300 absolute -right-1 -top-1 w-max px-4 py-1 rounded-md rounded-md ring-2 ring-indigo-600 text-center bg-indigo-600">
-      CURRENT
+    <div class="flex items-center justify-between gap-x-4">
+      <p class="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600 dark:ring-1 dark:ring-indigo-600/40">
+        Current
+      </p>
     </div>
     """
   end
@@ -430,6 +498,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp price_tag(%{selected_interval: :yearly} = assigns) do
     ~H"""
+    <span class="text-2xl font-bold w-max tracking-tight line-through text-gray-500 dark:text-gray-600 mr-1">
+      <%= @selected_plan.monthly_cost
+      |> Money.mult!(12)
+      |> Money.to_string!(format: :short, fractional_digits: 2)
+      |> String.replace(".00", "") %>
+    </span>
     <span class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
       <%= @selected_plan.yearly_cost
       |> Money.to_string!(format: :short, fractional_digits: 2)
