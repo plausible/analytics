@@ -264,10 +264,13 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
           role: :admin
         )
 
-      delete(
-        conn,
-        Routes.invitation_path(conn, :remove_invitation, site.domain, invitation.invitation_id)
-      )
+      conn =
+        delete(
+          conn,
+          Routes.invitation_path(conn, :remove_invitation, site.domain, invitation.invitation_id)
+        )
+
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/people"
 
       refute Repo.exists?(
                from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
