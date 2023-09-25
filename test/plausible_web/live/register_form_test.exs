@@ -63,6 +63,8 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       html = lv |> element("form") |> render_submit()
 
+      assert_push_event(lv, "send-metrics", %{event_name: "Signup", params: %{}})
+
       assert [
                csrf_input,
                name_input,
@@ -118,6 +120,16 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
 
       refute Repo.one(User)
     end
+
+    test "pushing send-metrics-after event submits the form", %{conn: conn} do
+      lv = get_liveview(conn, "/register")
+
+      refute render(lv) =~ ~s|phx-trigger-action="phx-trigger-action"|
+
+      render_hook(lv, "send-metrics-after", %{event_name: "Signup", params: %{}})
+
+      assert render(lv) =~ ~s|phx-trigger-action="phx-trigger-action"|
+    end
   end
 
   describe "/register/invitation/:invitation_id" do
@@ -146,6 +158,8 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       type_into_input(lv, "user[password_confirmation]", "very-long-and-very-secret-123")
 
       html = lv |> element("form") |> render_submit()
+
+      assert_push_event(lv, "send-metrics", %{event_name: "Signup via invitation", params: %{}})
 
       assert [
                csrf_input,
@@ -241,6 +255,19 @@ defmodule PlausibleWeb.Live.RegisterFormTest do
       assert html =~ "Please complete the captcha to register"
 
       refute Repo.get_by(User, email: "user@email.co")
+    end
+
+    test "pushing send-metrics-after event submits the form", %{
+      conn: conn,
+      invitation: invitation
+    } do
+      lv = get_liveview(conn, "/register/invitation/#{invitation.invitation_id}")
+
+      refute render(lv) =~ ~s|phx-trigger-action="phx-trigger-action"|
+
+      render_hook(lv, "send-metrics-after", %{event_name: "Signup via invitation", params: %{}})
+
+      assert render(lv) =~ ~s|phx-trigger-action="phx-trigger-action"|
     end
   end
 

@@ -8,9 +8,9 @@ if (csrfToken && websocketUrl) {
   let Hooks = {}
   Hooks.Metrics = {
     mounted() {
-      this.handleEvent("send_metrics", ({ event_name, params }) => {
+      this.handleEvent("send-metrics", ({ event_name, params }) => {
         const afterMetrics = () => {
-          this.pushEvent("send_metrics_after", {event_name, params})
+          this.pushEvent("send-metrics-after", {event_name, params})
         }
         setTimeout(afterMetrics, 5000)
         params.callback = afterMetrics 

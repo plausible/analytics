@@ -299,7 +299,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     end
   end
 
-  def handle_event("send_metrics_after", _params, socket) do
+  def handle_event("send-metrics-after", _params, socket) do
     {:noreply, assign(socket, trigger_submit: true)}
   end
 
@@ -316,7 +316,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
             %{event_name: "Signup", params: %{}}
           end
 
-        {:noreply, push_event(socket, "send_metrics", metrics_params)}
+        {:noreply, push_event(socket, "send-metrics", metrics_params)}
 
       {:error, changeset} ->
         {:noreply,
