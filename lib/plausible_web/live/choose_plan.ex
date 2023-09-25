@@ -188,7 +188,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <div></div>
       <span class={[
         "mb-1 block whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 ring-1",
-        @active && "bg-yellow-100 ring-yellow-700 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200",
+        @active &&
+          "bg-yellow-100 ring-yellow-700 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200",
         !@active && "text-gray-500 ring-gray-300 dark:text-gray-400 dark:ring-gray-600"
       ]}>
         2 months free
@@ -228,7 +229,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       ]}
     >
       <div class="flex items-center justify-between gap-x-4">
-        <h3 class={["text-lg font-semibold leading-8",
+        <h3 class={[
+          "text-lg font-semibold leading-8",
           !@owned && "text-gray-900 dark:text-gray-100",
           @owned && "text-indigo-600"
         ]}>
@@ -237,7 +239,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <.current_label :if={@owned} />
       </div>
       <div id={"#{String.downcase(@name)}-body"}>
-        <.render_price_info disabled={@disabled} {assigns}/>
+        <.render_price_info disabled={@disabled} {assigns} />
         <%= cond do %>
           <% @disabled -> %>
             <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
@@ -295,10 +297,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def render_price_info(assigns) do
     ~H"""
-    <p
-      id={"#{String.downcase(@name)}-price-tag"}
-      class="mt-6 flex items-baseline gap-x-1"
-    >
+    <p id={"#{String.downcase(@name)}-price-tag"} class="mt-6 flex items-baseline gap-x-1">
       <.price_tag selected_interval={@selected_interval} selected_plan={@selected_plan} />
     </p>
     <p class="mt-1 text-xs">+ VAT if applicable</p>
@@ -382,11 +381,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         </span>
       </p>
       <p class="h-4 mt-1"></p>
-      <.contact_button class=""/>
-      <ul
-        role="list"
-        class="mt-8 space-y-3 text-sm leading-6 xl:mt-10 text-gray-300"
-      >
+      <.contact_button class="" />
+      <ul role="list" class="mt-8 space-y-3 text-sm leading-6 xl:mt-10 text-gray-300">
         <li class="flex gap-x-3">
           <.check_icon class="text-white dark:text-green-600" /> Unlimited products
         </li>
@@ -468,13 +464,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  defp price_tag(%{selected_plan: %Plan{monthly_cost: nil, yearly_cost: nil}} = assigns) do
+  defp price_tag(%{selected_plan: %Plan{monthly_cost: nil}} = assigns) do
     ~H"""
     <span class="text-4xl font-bold tracking-tight text-gray-900">
       N/A
-    </span>
-    <span class="text-sm font-semibold leading-6 text-gray-600">
-      ❗️
     </span>
     """
   end
