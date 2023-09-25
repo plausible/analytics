@@ -237,4 +237,8 @@ defmodule Plausible.TestUtils do
       10
     )
   end
+
+  def random_ip() do
+    Enum.map_join(1..4, ".", fn _ -> Enum.random(1..254) end)
+  end
 end

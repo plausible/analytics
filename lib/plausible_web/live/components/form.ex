@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.Components.Form do
   def input(assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label for={@id}>
+      <.label :if={@label != nil and @label != ""} for={@id}>
         <%= @label %>
       </.label>
       <input
@@ -68,10 +68,149 @@ defmodule PlausibleWeb.Live.Components.Form do
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         {@rest}
       />
+      <%= render_slot(@inner_block) %>
       <.error :for={msg <- @errors}>
         <%= msg %>
       </.error>
     </div>
+    """
+  end
+
+  attr(:id, :any, default: nil)
+  attr(:label, :string, default: nil)
+
+  attr(:field, Phoenix.HTML.FormField,
+    doc: "a form field struct retrieved from the form, for example: @form[:password]",
+    required: true
+  )
+
+  attr(:strength, :any)
+
+  attr(:rest, :global,
+    include: ~w(autocomplete disabled form maxlength minlength readonly required size)
+  )
+
+  def password_input_with_strength(%{field: field} = assigns) do
+    {too_weak?, errors} =
+      case pop_strength_errors(field.errors) do
+        {strength_errors, other_errors} when strength_errors != [] ->
+          {true, other_errors}
+
+        {[], other_errors} ->
+          {false, other_errors}
+      end
+
+    strength =
+      if too_weak? and assigns.strength.score >= 3 do
+        %{assigns.strength | score: 2}
+      else
+        assigns.strength
+      end
+
+    assigns =
+      assigns
+      |> assign(:too_weak?, too_weak?)
+      |> assign(:field, %{field | errors: errors})
+      |> assign(:strength, strength)
+
+    ~H"""
+    <.input field={@field} type="password" autocomplete="new-password" label={@label} id={@id} {@rest}>
+      <.strength_meter :if={@too_weak? or @strength.score > 0} {@strength} />
+    </.input>
+    """
+  end
+
+  attr(:minimum, :integer, required: true)
+
+  attr(:class, :any)
+  attr(:ok_class, :any)
+  attr(:error_class, :any)
+
+  attr(:field, Phoenix.HTML.FormField,
+    doc: "a form field struct retrieved from the form, for example: @form[:password]",
+    required: true
+  )
+
+  def password_length_hint(%{field: field} = assigns) do
+    {strength_errors, _} = pop_strength_errors(field.errors)
+
+    ok_class = assigns[:ok_class] || "text-gray-500"
+    error_class = assigns[:error_class] || "text-red-500"
+    class = assigns[:class] || ["text-xs", "mt-1"]
+
+    color =
+      if :length in strength_errors do
+        error_class
+      else
+        ok_class
+      end
+
+    final_class = [color | class]
+
+    assigns = assign(assigns, :class, final_class)
+
+    ~H"""
+    <p class={@class}>Min <%= @minimum %> characters</p>
+    """
+  end
+
+  defp pop_strength_errors(errors) do
+    Enum.reduce(errors, {[], []}, fn {_, meta} = error, {detected, other_errors} ->
+      cond do
+        meta[:validation] == :required ->
+          {[:required | detected], other_errors}
+
+        meta[:validation] == :length and meta[:kind] == :min ->
+          {[:length | detected], other_errors}
+
+        meta[:validation] == :strength ->
+          {[:strength | detected], other_errors}
+
+        true ->
+          {detected, [error | other_errors]}
+      end
+    end)
+  end
+
+  attr(:score, :integer, default: 0)
+  attr(:warning, :string, default: "")
+  attr(:suggestions, :list, default: [])
+
+  def strength_meter(assigns) do
+    color =
+      cond do
+        assigns.score <= 1 -> ["bg-red-500", "dark:bg-red-500"]
+        assigns.score == 2 -> ["bg-red-300", "dark:bg-red-300"]
+        assigns.score == 3 -> ["bg-indigo-300", "dark:bg-indigo-300"]
+        assigns.score >= 4 -> ["bg-indigo-600", "dark:bg-indigo-500"]
+      end
+
+    feedback =
+      cond do
+        assigns.warning != "" -> assigns.warning <> "."
+        assigns.suggestions != [] -> List.first(assigns.suggestions)
+        true -> nil
+      end
+
+    assigns =
+      assigns
+      |> assign(:color, color)
+      |> assign(:feedback, feedback)
+
+    ~H"""
+    <div class="w-full bg-gray-200 rounded-full h-1.5 mb-2 mt-2 dark:bg-gray-700 mt-1">
+      <div
+        class={["h-1.5", "rounded-full"] ++ @color}
+        style={["width: " <> to_string(@score * 25) <> "%"]}
+      >
+      </div>
+    </div>
+    <p :if={@score <= 2} class="text-sm text-red-500 phx-no-feedback:hidden">
+      Password is too weak
+    </p>
+    <p :if={@feedback} class="text-xs text-gray-500">
+      <%= @feedback %>
+    </p>
     """
   end
 

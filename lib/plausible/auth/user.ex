@@ -16,7 +16,8 @@ defmodule Plausible.Auth.User do
 
   @type t() :: %__MODULE__{}
 
-  @required [:email, :name, :password, :password_confirmation]
+  @required [:email, :name, :password]
+
   schema "users" do
     field :email, :string
     field :password_hash
@@ -43,9 +44,10 @@ defmodule Plausible.Auth.User do
     %Plausible.Auth.User{}
     |> cast(attrs, @required)
     |> validate_required(@required)
-    |> validate_length(:password, min: 6, message: "has to be at least 6 characters")
-    |> validate_length(:password, max: 64, message: "cannot be longer than 64 characters")
-    |> validate_confirmation(:password)
+    |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
+    |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
+    |> validate_confirmation(:password, required: true)
+    |> validate_password_strength()
     |> hash_password()
     |> start_trial
     |> set_email_verified
@@ -60,13 +62,13 @@ defmodule Plausible.Auth.User do
   end
 
   def set_password(user, password) do
-    hash = Plausible.Auth.Password.hash(password)
-
     user
     |> cast(%{password: password}, [:password])
-    |> validate_required(:password)
-    |> validate_length(:password, min: 6, message: "has to be at least 6 characters")
-    |> cast(%{password_hash: hash}, [:password_hash])
+    |> validate_required([:password])
+    |> validate_length(:password, min: 12, message: "has to be at least 12 characters")
+    |> validate_length(:password, max: 128, message: "cannot be longer than 128 characters")
+    |> validate_password_strength()
+    |> hash_password()
   end
 
   def hash_password(%{errors: [], changes: changes} = changeset) do
@@ -86,6 +88,51 @@ defmodule Plausible.Auth.User do
 
   def end_trial(user) do
     change(user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
+  end
+
+  def password_strength(changeset) do
+    case get_field(changeset, :password) do
+      nil ->
+        %{suggestions: [], warning: "", score: 0}
+
+      # Passwords past (approximately) 32 characters are treated
+      # as strong, despite what they contain, to avoid unnecessarily
+      # expensive computation.
+      password when byte_size(password) > 32 ->
+        %{suggestions: [], warning: "", score: 4}
+
+      password ->
+        existing_phrases =
+          []
+          |> maybe_add_phrase(get_field(changeset, :name))
+          |> maybe_add_phrase(get_field(changeset, :email))
+
+        case ZXCVBN.zxcvbn(password, existing_phrases) do
+          %{score: score, feedback: feedback} ->
+            %{suggestions: feedback.suggestions, warning: feedback.warning, score: score}
+
+          :error ->
+            %{suggestions: [], warning: "", score: 3}
+        end
+    end
+  end
+
+  defp validate_password_strength(changeset) do
+    if get_change(changeset, :password) != nil and password_strength(changeset).score <= 2 do
+      add_error(changeset, :password, "is too weak", validation: :strength)
+    else
+      changeset
+    end
+  end
+
+  defp maybe_add_phrase(phrases, nil), do: phrases
+
+  defp maybe_add_phrase(phrases, phrase) do
+    parts = String.split(phrase)
+
+    [phrase, parts]
+    |> List.flatten(phrases)
+    |> Enum.uniq()
   end
 
   defp trial_expiry() do

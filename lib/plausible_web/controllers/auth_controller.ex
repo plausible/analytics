@@ -1,158 +1,64 @@
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.{Auth, Release}
+  alias Plausible.Auth
   require Logger
 
-  plug PlausibleWeb.RequireLoggedOutPlug
-       when action in [
-              :register_form,
-              :register,
-              :register_from_invitation_form,
-              :register_from_invitation,
-              :login_form,
-              :login
-            ]
+  plug(
+    PlausibleWeb.RequireLoggedOutPlug
+    when action in [
+           :register,
+           :register_from_invitation,
+           :login_form,
+           :login
+         ]
+  )
 
-  plug PlausibleWeb.RequireAccountPlug
-       when action in [
-              :user_settings,
-              :save_settings,
-              :delete_me,
-              :password_form,
-              :set_password,
-              :activate_form
-            ]
+  plug(
+    PlausibleWeb.RequireAccountPlug
+    when action in [
+           :user_settings,
+           :save_settings,
+           :delete_me,
+           :activate_form
+         ]
+  )
 
-  plug :maybe_disable_registration when action in [:register_form, :register]
-  plug :assign_is_selfhost
-
-  defp maybe_disable_registration(conn, _opts) do
-    selfhost_config = Application.get_env(:plausible, :selfhost)
-    disable_registration = Keyword.fetch!(selfhost_config, :disable_registration)
-    first_launch? = Release.should_be_first_launch?()
-
-    cond do
-      first_launch? ->
-        conn
-
-      disable_registration in [:invite_only, true] ->
-        conn
-        |> put_flash(:error, "Registration is disabled on this instance")
-        |> redirect(to: Routes.auth_path(conn, :login_form))
-        |> halt()
-
-      true ->
-        conn
-    end
-  end
+  plug(:assign_is_selfhost)
 
   defp assign_is_selfhost(conn, _opts) do
     assign(conn, :is_selfhost, Plausible.Release.selfhost?())
   end
 
   def register_form(conn, _params) do
-    changeset = Auth.User.changeset(%Auth.User{})
-
     render(conn, "register_form.html",
-      changeset: changeset,
+      connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
-  def register(conn, params) do
-    conn = put_layout(conn, html: {PlausibleWeb.LayoutView, :focus})
-    user = Plausible.Auth.User.new(params["user"])
+  def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
+    with {:ok, user} <- login_user(conn, email, password) do
+      conn = set_user_session(conn, user)
 
-    if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-      case Repo.insert(user) do
-        {:ok, user} ->
-          conn = set_user_session(conn, user)
-
-          if user.email_verified do
-            redirect(conn, to: Routes.site_path(conn, :new))
-          else
-            send_email_verification(user)
-            redirect(conn, to: Routes.auth_path(conn, :activate_form))
-          end
-
-        {:error, changeset} ->
-          render(conn, "register_form.html", changeset: changeset)
-      end
-    else
-      render(conn, "register_form.html",
-        changeset: user,
-        captcha_error: "Please complete the captcha to register"
-      )
-    end
-  end
-
-  def register_from_invitation_form(conn, %{"invitation_id" => invitation_id}) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == true do
-      redirect(conn, to: Routes.auth_path(conn, :login_form))
-    else
-      invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
-      changeset = Plausible.Auth.User.changeset(%Plausible.Auth.User{})
-
-      if invitation do
-        render(conn, "register_from_invitation_form.html",
-          changeset: changeset,
-          invitation: invitation,
-          dogfood_page_path: "/register/invitation/:invitation_id",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+      if user.email_verified do
+        redirect(conn, to: Routes.site_path(conn, :new))
       else
-        render(conn, "invitation_expired.html",
-          dogfood_page_path: "/register/invitation/:invitation_id",
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+        send_email_verification(user)
+        redirect(conn, to: Routes.auth_path(conn, :activate_form))
       end
     end
   end
 
-  def register_from_invitation(conn, %{"invitation_id" => invitation_id} = params) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) == true do
-      redirect(conn, to: Routes.auth_path(conn, :login_form))
-    else
-      invitation = Repo.get_by(Plausible.Auth.Invitation, invitation_id: invitation_id)
-      user = Plausible.Auth.User.new(params["user"])
+  def register_from_invitation(conn, %{"user" => %{"email" => email, "password" => password}}) do
+    with {:ok, user} <- login_user(conn, email, password) do
+      conn = set_user_session(conn, user)
 
-      user =
-        case invitation.role do
-          :owner -> user
-          _ -> Plausible.Auth.User.remove_trial_expiry(user)
-        end
-
-      if PlausibleWeb.Captcha.verify(params["h-captcha-response"]) do
-        case Repo.insert(user) do
-          {:ok, user} ->
-            conn = set_user_session(conn, user)
-
-            case user.email_verified do
-              false ->
-                send_email_verification(user)
-                redirect(conn, to: Routes.auth_path(conn, :activate_form))
-
-              true ->
-                redirect(conn, to: Routes.site_path(conn, :index))
-            end
-
-          {:error, changeset} ->
-            render(conn, "register_from_invitation_form.html",
-              invitation: invitation,
-              changeset: changeset,
-              layout: {PlausibleWeb.LayoutView, "focus.html"},
-              dogfood_page_path: "/register/invitation/:invitation_id"
-            )
-        end
+      if user.email_verified do
+        redirect(conn, to: Routes.site_path(conn, :index))
       else
-        render(conn, "register_from_invitation_form.html",
-          invitation: invitation,
-          changeset: user,
-          captcha_error: "Please complete the captcha to register",
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
-          dogfood_page_path: "/register/invitation/:invitation_id"
-        )
+        send_email_verification(user)
+        redirect(conn, to: Routes.auth_path(conn, :activate_form))
       end
     end
   end
@@ -169,28 +75,21 @@ defmodule PlausibleWeb.AuthController do
     result
   end
 
-  defp set_user_session(conn, user) do
-    conn
-    |> put_session(:current_user_id, user.id)
-    |> put_resp_cookie("logged_in", "true",
-      http_only: false,
-      max_age: 60 * 60 * 24 * 365 * 5000
-    )
-  end
-
   def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
 
     has_invitation =
       Repo.exists?(
-        from i in Plausible.Auth.Invitation,
+        from(i in Plausible.Auth.Invitation,
           where: i.email == ^user.email
+        )
       )
 
     has_code =
       Repo.exists?(
-        from c in "email_verification_codes",
+        from(c in "email_verification_codes",
           where: c.user_id == ^user.id
+        )
       )
 
     render(conn, "activate.html",
@@ -205,8 +104,9 @@ defmodule PlausibleWeb.AuthController do
 
     has_invitation =
       Repo.exists?(
-        from i in Plausible.Auth.Invitation,
+        from(i in Plausible.Auth.Invitation,
           where: i.email == ^user.email
+        )
       )
 
     {code, ""} = Integer.parse(code)
@@ -298,6 +198,7 @@ defmodule PlausibleWeb.AuthController do
     case Auth.Token.verify_password_reset(token) do
       {:ok, _} ->
         render(conn, "password_reset_form.html",
+          connect_live_socket: true,
           token: token,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
@@ -318,60 +219,32 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def password_reset(conn, %{"token" => token, "password" => pw}) do
-    case Auth.Token.verify_password_reset(token) do
-      {:ok, %{email: email}} ->
-        user = Repo.get_by(Auth.User, email: email)
-        changeset = Auth.User.set_password(user, pw)
-
-        case Repo.update(changeset) do
-          {:ok, _updated} ->
-            conn
-            |> put_flash(:login_title, "Password updated successfully")
-            |> put_flash(:login_instructions, "Please log in with your new credentials")
-            |> put_session(:current_user_id, nil)
-            |> delete_resp_cookie("logged_in")
-            |> redirect(to: Routes.auth_path(conn, :login_form))
-
-          {:error, changeset} ->
-            render(conn, "password_reset_form.html",
-              changeset: changeset,
-              token: token,
-              layout: {PlausibleWeb.LayoutView, "focus.html"}
-            )
-        end
-
-      {:error, :expired} ->
-        render_error(
-          conn,
-          401,
-          "Your token has expired. Please request another password reset link."
-        )
-
-      {:error, _} ->
-        render_error(
-          conn,
-          401,
-          "Your token is invalid. Please request another password reset link."
-        )
-    end
+  def password_reset(conn, _params) do
+    conn
+    |> put_flash(:login_title, "Password updated successfully")
+    |> put_flash(:login_instructions, "Please log in with your new credentials")
+    |> put_session(:current_user_id, nil)
+    |> delete_resp_cookie("logged_in")
+    |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
   def login(conn, %{"email" => email, "password" => password}) do
+    with {:ok, user} <- login_user(conn, email, password) do
+      login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+
+      conn
+      |> set_user_session(user)
+      |> put_session(:login_dest, nil)
+      |> redirect(to: login_dest)
+    end
+  end
+
+  defp login_user(conn, email, password) do
     with :ok <- check_ip_rate_limit(conn),
          {:ok, user} <- find_user(email),
          :ok <- check_user_rate_limit(user),
          :ok <- check_password(user, password) do
-      login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
-      conn
-      |> put_session(:current_user_id, user.id)
-      |> put_resp_cookie("logged_in", "true",
-        http_only: false,
-        max_age: 60 * 60 * 24 * 365 * 5000
-      )
-      |> put_session(:login_dest, nil)
-      |> redirect(to: login_dest)
+      {:ok, user}
     else
       :wrong_password ->
         maybe_log_failed_login_attempts("wrong password for #{email}")
@@ -401,6 +274,15 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  defp set_user_session(conn, user) do
+    conn
+    |> put_session(:current_user_id, user.id)
+    |> put_resp_cookie("logged_in", "true",
+      http_only: false,
+      max_age: 60 * 60 * 24 * 365 * 5000
+    )
+  end
+
   defp maybe_log_failed_login_attempts(message) do
     if Application.get_env(:plausible, :log_failed_login_attempts) do
       Logger.warning("[login] #{message}")
@@ -421,8 +303,9 @@ defmodule PlausibleWeb.AuthController do
   defp find_user(email) do
     user =
       Repo.one(
-        from u in Plausible.Auth.User,
+        from(u in Plausible.Auth.User,
           where: u.email == ^email
+        )
       )
 
     if user, do: {:ok, user}, else: :user_not_found
@@ -445,28 +328,6 @@ defmodule PlausibleWeb.AuthController do
 
   def login_form(conn, _params) do
     render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
-  end
-
-  def password_form(conn, _params) do
-    render(conn, "password_form.html",
-      layout: {PlausibleWeb.LayoutView, "focus.html"},
-      skip_plausible_tracking: true
-    )
-  end
-
-  def set_password(conn, %{"password" => pw}) do
-    changeset = Auth.User.set_password(conn.assigns[:current_user], pw)
-
-    case Repo.update(changeset) do
-      {:ok, _user} ->
-        redirect(conn, to: "/sites/new")
-
-      {:error, changeset} ->
-        render(conn, "password_form.html",
-          changeset: changeset,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-    end
   end
 
   def user_settings(conn, _params) do
@@ -540,8 +401,9 @@ defmodule PlausibleWeb.AuthController do
 
   def delete_api_key(conn, %{"id" => id}) do
     query =
-      from k in Auth.ApiKey,
+      from(k in Auth.ApiKey,
         where: k.id == ^id and k.user_id == ^conn.assigns[:current_user].id
+      )
 
     query
     |> Repo.one!()

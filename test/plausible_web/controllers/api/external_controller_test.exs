@@ -936,7 +936,6 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     end
 
     test "Uses the Forwarded header when cf-connecting-ip and x-forwarded-for are missing", %{
-      conn: conn,
       site: site
     } do
       params = %{
@@ -945,7 +944,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         url: "http://gigride.live/"
       }
 
-      conn
+      build_conn()
       |> put_req_header("forwarded", "by=0.0.0.0;for=216.160.83.56;host=somehost.com;proto=https")
       |> post("/api/event", params)
 
@@ -954,14 +953,14 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.country_code == "US"
     end
 
-    test "Forwarded header can parse ipv6", %{conn: conn, site: site} do
+    test "Forwarded header can parse ipv6", %{site: site} do
       params = %{
         name: "pageview",
         domain: site.domain,
         url: "http://gigride.live/"
       }
 
-      conn
+      build_conn()
       |> put_req_header(
         "forwarded",
         "by=0.0.0.0;for=\"[2001:218:1:1:1:1:1:1]\",for=0.0.0.0;host=somehost.com;proto=https"

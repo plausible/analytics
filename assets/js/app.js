@@ -36,25 +36,6 @@ if (triggers.length > 0) {
   })
 }
 
-const registerForm = document.getElementById('register-via-invitation-form')
-
-if (registerForm) {
-  registerForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    setTimeout(submitForm, 5000);
-    var formSubmitted = false;
-
-    function submitForm() {
-      if (!formSubmitted) {
-        formSubmitted = true;
-        registerForm.submit();
-      }
-    }
-    /* eslint-disable-next-line no-undef */
-    plausible('Signup via invitation', {u: '/register/invitation/:invitation_id', callback: submitForm });
-  })
-}
-
 const changelogNotification = document.getElementById('changelog-notification')
 
 if (changelogNotification) {
