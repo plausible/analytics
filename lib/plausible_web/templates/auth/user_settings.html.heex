@@ -1,24 +1,26 @@
 <%= if !Application.get_env(:plausible, :is_selfhost) do %>
-  <div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-24 bg-white border-t-2 border-orange-200 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-orange-200 ">
-    <div class="flex justify-between">
-      <h2 class="text-xl font-black dark:text-gray-100 w-full">Subscription Plan</h2>
-      <span
-        :if={@subscription && Plausible.Billing.Subscriptions.business_tier?(@subscription)}
-        class={[
-          "w-max inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 text-indigo-600 bg-blue-100 dark:text-yellow-200 dark:border dark:bg-inherit dark:border-yellow-200"
-        ]}
-      >
-        Business
-      </span>
-      <span
-        :if={@subscription}
-        class={[
-          "w-max inline-flex items-center px-2.5 py-0.5 rounded-md ml-2 text-sm font-bold leading-5",
-          subscription_colors(@subscription.status)
-        ]}
-      >
-        <%= present_subscription_status(@subscription.status) %>
-      </span>
+  <div class="max-w-2xl px-8 pt-4 pb-8 mx-auto mt-24 bg-white border-t-2 border-orange-200 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-orange-200 ">
+    <div class="flex flex-wrap justify-between">
+      <h2 class="text-xl font-black dark:text-gray-100 w-max mr-4 mt-2">Subscription Plan</h2>
+      <div class="gap-x-2 mt-2 inline-flex">
+        <span
+          :if={@subscription && Plausible.Billing.Subscriptions.business_tier?(@subscription)}
+          class={[
+            "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 text-indigo-600 bg-blue-100 dark:text-yellow-200 dark:border dark:bg-inherit dark:border-yellow-200"
+          ]}
+        >
+          Business
+        </span>
+        <span
+          :if={@subscription}
+          class={[
+            "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5",
+            subscription_colors(@subscription.status)
+          ]}
+        >
+          <%= present_subscription_status(@subscription.status) %>
+        </span>
+      </div>
     </div>
 
     <div class="my-4 border-b border-gray-400"></div>

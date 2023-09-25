@@ -28,8 +28,8 @@ defmodule PlausibleWeb.Components.Billing do
   def usage_and_limits_row(assigns) do
     ~H"""
     <tr {@rest}>
-      <td class={["py-4 text-sm whitespace-nowrap text-left", @pad && "pl-6"]}><%= @title %></td>
-      <td class="py-4 text-sm whitespace-nowrap text-right">
+      <td class={["py-4 pr-1 text-sm sm:whitespace-nowrap text-left", @pad && "pl-6"]}><%= @title %></td>
+      <td class="py-4 text-sm sm:whitespace-nowrap text-right">
         <%= render_quota(@usage) %>
         <%= if @limit, do: "/ #{render_quota(@limit)}" %>
       </td>

@@ -58,43 +58,39 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
         <.subscription_past_due_notice class="pb-2" subscription={@user.subscription} />
         <.subscription_paused_notice class="pb-2" subscription={@user.subscription} />
-        <div class="p-4 bg-white shadow-lg dark:bg-gray-800 rounded">
-          <div class="mx-auto max-w-4xl text-center">
-            <p class="text-4xl font-bold tracking-tight sm:text-5xl">
-              <%= if @owned_plan,
-                do: "Change subscription plan",
-                else: "Upgrade your account" %>
-            </p>
-          </div>
-          <.interval_picker selected_interval={@selected_interval} />
-          <.slider selected_volume={@selected_volume} />
+        <div class="mx-auto max-w-4xl text-center">
+          <p class="text-4xl font-bold tracking-tight sm:text-5xl">
+            <%= if @owned_plan,
+              do: "Change subscription plan",
+              else: "Upgrade your account" %>
+          </p>
         </div>
-        <div class="mt-8 bg-white shadow-lg dark:bg-gray-800 p-6 rounded">
-          <div class="isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
-            <.plan_box
-              name="Growth"
-              owned={@owned_plan && Map.get(@owned_plan, :kind) == :growth}
-              selected_plan={
-                if @selected_growth_plan,
-                  do: @selected_growth_plan,
-                  else: List.last(@available_plans.growth)
-              }
-              disabled={!@selected_growth_plan}
-              {assigns}
-            />
-            <.plan_box
-              name="Business"
-              owned={@owned_plan && Map.get(@owned_plan, :kind) == :business}
-              selected_plan={
-                if @selected_business_plan,
-                  do: @selected_business_plan,
-                  else: List.last(@available_plans.business)
-              }
-              disabled={!@selected_business_plan}
-              {assigns}
-            />
-            <.enterprise_plan_box />
-          </div>
+        <.interval_picker selected_interval={@selected_interval} />
+        <.slider selected_volume={@selected_volume} />
+        <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
+          <.plan_box
+            name="Growth"
+            owned={@owned_plan && Map.get(@owned_plan, :kind) == :growth}
+            selected_plan={
+              if @selected_growth_plan,
+                do: @selected_growth_plan,
+                else: List.last(@available_plans.growth)
+            }
+            disabled={!@selected_growth_plan}
+            {assigns}
+          />
+          <.plan_box
+            name="Business"
+            owned={@owned_plan && Map.get(@owned_plan, :kind) == :business}
+            selected_plan={
+              if @selected_business_plan,
+                do: @selected_business_plan,
+                else: List.last(@available_plans.business)
+            }
+            disabled={!@selected_business_plan}
+            {assigns}
+          />
+          <.enterprise_plan_box />
         </div>
         <p class="mx-auto mt-2 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
           <.usage usage={@usage} />
@@ -191,9 +187,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <div class="grid grid-cols-2 gap-x-1">
       <div></div>
       <span class={[
-        "mb-1 block whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4",
-        @active && "bg-yellow-100 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200",
-        !@active && "text-gray-500 border-gray-700 dark:text-gray-400 dark:border-gray-600"
+        "mb-1 block whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 ring-1",
+        @active && "bg-yellow-100 ring-yellow-700 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200",
+        !@active && "text-gray-500 ring-gray-300 dark:text-gray-400 dark:ring-gray-600"
       ]}>
         2 months free
       </span>
@@ -210,7 +206,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <input
         phx-change="slide"
         name="slider"
-        class="shadow border border-gray-200 dark:bg-gray-600 dark:border-none"
+        class="shadow-md border border-gray-200 dark:bg-gray-600 dark:border-none"
         type="range"
         min="0"
         max={length(volumes())}
@@ -226,7 +222,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <div
       id={"plan-box-#{String.downcase(@name)}"}
       class={[
-        "rounded-3xl px-8 py-6 dark:bg-gray-800",
+        "rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
         !@owned && "ring-1 ring-gray-300 dark:ring-gray-600",
         @owned && "ring-2 ring-indigo-600"
       ]}
@@ -378,7 +374,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp enterprise_plan_box(assigns) do
     ~H"""
-    <div class="rounded-3xl px-8 py-6 ring-1 bg-gray-900 ring-gray-900 dark:bg-gray-800 dark:ring-gray-600">
+    <div class="rounded-3xl px-6 sm:px-8 py-4 sm:py-6 ring-1 bg-gray-900 ring-gray-900 dark:bg-gray-800 dark:ring-gray-600">
       <h3 class="text-lg font-semibold leading-8 text-white dark:text-gray-100">Enterprise</h3>
       <p class="mt-6 flex items-baseline gap-x-1">
         <span class="text-4xl font-bold tracking-tight text-white dark:text-gray-100">
