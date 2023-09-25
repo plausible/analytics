@@ -16,6 +16,9 @@ defmodule Plausible.Plugins.API.TokensTest do
       assert from_db.token_hash == token.token_hash
       assert from_db.description == "My test token"
       assert from_db.site_id == site.id
+      hint = from_db.hint
+      assert is_binary(hint) and byte_size(hint) == 4
+      assert String.ends_with?(raw, hint)
     end
 
     test "fails to store on input errors" do

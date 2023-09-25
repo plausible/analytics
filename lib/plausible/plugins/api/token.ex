@@ -22,6 +22,7 @@ defmodule Plausible.Plugins.API.Token do
     timestamps()
     field(:token_hash, :binary)
     field(:description, :string)
+    field(:hint, :string)
 
     belongs_to(:site, Site)
   end
@@ -42,13 +43,15 @@ defmodule Plausible.Plugins.API.Token do
     :crypto.hash(:sha256, raw)
   end
 
-  @fields [:token_hash, :description, :site_id]
-  @required_fields [:token_hash, :description, :site]
+  @fields [:description, :site_id]
+  @required_fields [:description, :site, :token_hash, :hint]
 
-  @spec insert_changeset(Site.t(), map()) :: Ecto.Changeset.t()
-  def insert_changeset(site, attrs) do
+  @spec insert_changeset(Site.t(), map(), map()) :: Ecto.Changeset.t()
+  def insert_changeset(site, %{hash: hash, raw: raw}, attrs \\ %{}) do
     %__MODULE__{}
     |> cast(attrs, @fields)
+    |> put_change(:token_hash, hash)
+    |> put_change(:hint, String.slice(raw, -4, 4))
     |> put_assoc(:site, site)
     |> validate_required(@required_fields)
   end

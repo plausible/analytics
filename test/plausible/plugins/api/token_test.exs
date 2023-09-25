@@ -46,13 +46,14 @@ defmodule Plausible.Plugins.API.TokenTest do
 
   describe "insert_changeset/2" do
     test "required fields" do
-      changeset = Token.insert_changeset(nil, %{})
+      changeset = Token.insert_changeset(nil, %{raw: "", hash: ""}, %{})
       refute changeset.valid?
 
       assert [
-               token_hash: {"can't be blank", _},
                description: {"can't be blank", _},
-               site: {"can't be blank", _}
+               site: {"can't be blank", _},
+               token_hash: {"can't be blank", _},
+               hint: {"can't be blank", _}
              ] = changeset.errors
     end
 
@@ -60,9 +61,8 @@ defmodule Plausible.Plugins.API.TokenTest do
       site = build(:site, id: 1_892_787)
 
       changeset =
-        Token.insert_changeset(site, %{
-          "description" => "My token",
-          "token_hash" => Token.generate().hash
+        Token.insert_changeset(site, Token.generate(), %{
+          "description" => "My token"
         })
 
       assert changeset.valid?

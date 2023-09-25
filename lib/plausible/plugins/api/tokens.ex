@@ -12,10 +12,10 @@ defmodule Plausible.Plugins.API.Tokens do
   @spec create(Site.t(), String.t()) ::
           {:ok, Token.t(), String.t()} | {:error, Ecto.Changeset.t()}
   def create(%Site{} = site, description) do
-    with %{raw: raw, hash: hash} <- Token.generate(),
-         changeset <- Token.insert_changeset(site, %{token_hash: hash, description: description}),
-         {:ok, token} <- Repo.insert(changeset) do
-      {:ok, token, raw}
+    with generated_token <- Token.generate(),
+         changeset <- Token.insert_changeset(site, generated_token, %{description: description}),
+         {:ok, saved_token} <- Repo.insert(changeset) do
+      {:ok, saved_token, generated_token.raw}
     end
   end
 
@@ -27,8 +27,7 @@ defmodule Plausible.Plugins.API.Tokens do
           inner_join: s in Site,
           on: s.id == t.site_id,
           where: t.token_hash == ^Token.hash(raw),
-          where: s.domain == ^domain or s.domain_changed_from == ^domain,
-          select: t
+          where: s.domain == ^domain or s.domain_changed_from == ^domain
         )
       )
 

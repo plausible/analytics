@@ -6,6 +6,7 @@ defmodule Plausible.Repo.Migrations.PluginsAPITokens do
       add(:id, :uuid, primary_key: true)
       add(:site_id, references(:sites, on_delete: :delete_all), null: false)
       add(:token_hash, :bytea, null: false)
+      add(:hint, :string, null: false)
       add(:description, :string, null: false)
       timestamps()
     end
