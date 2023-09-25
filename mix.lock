@@ -142,4 +142,5 @@
   "websock": {:hex, :websock, "0.5.2", "b3c08511d8d79ed2c2f589ff430bd1fe799bb389686dafce86d28801783d8351", [:mix], [], "hexpm", "925f5de22fca6813dfa980fb62fd542ec43a2d1a1f83d2caec907483fe66ff05"},
   "websock_adapter": {:hex, :websock_adapter, "0.5.3", "4908718e42e4a548fc20e00e70848620a92f11f7a6add8cf0886c4232267498d", [:mix], [{:bandit, ">= 0.6.0", [hex: :bandit, repo: "hexpm", optional: true]}, {:plug, "~> 1.14", [hex: :plug, repo: "hexpm", optional: false]}, {:plug_cowboy, "~> 2.6", [hex: :plug_cowboy, repo: "hexpm", optional: true]}, {:websock, "~> 0.5", [hex: :websock, repo: "hexpm", optional: false]}], "hexpm", "cbe5b814c1f86b6ea002b52dd99f345aeecf1a1a6964e209d208fb404d930d3d"},
   "yamerl": {:hex, :yamerl, "0.10.0", "4ff81fee2f1f6a46f1700c0d880b24d193ddb74bd14ef42cb0bcf46e81ef2f8e", [:rebar3], [], "hexpm", "346adb2963f1051dc837a2364e4acf6eb7d80097c0f53cbdc3046ec8ec4b4e6e"},
+  "zxcvbn": {:git, "https://github.com/techgaun/zxcvbn-elixir.git", "aede1d49d39e89d7b3d1c381de5f04c9907d8171", []},
 }
