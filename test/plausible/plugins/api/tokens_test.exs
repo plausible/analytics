@@ -32,6 +32,16 @@ defmodule Plausible.Plugins.API.TokensTest do
       assert found.id == found.id
     end
 
+    test "finds the right token after domain change" do
+      site = insert(:site, domain: "foo1.example.com")
+      assert {:ok, _, raw} = Tokens.create(site, "My test token")
+
+      {:ok, _} = Plausible.Site.Domain.change(site, "foo2.example.com")
+
+      assert {:ok, found} = Tokens.find("foo1.example.com", raw)
+      assert {:ok, ^found} = Tokens.find("foo2.example.com", raw)
+    end
+
     test "fails to find the token" do
       site = insert(:site)
       assert {:ok, _, _} = Tokens.create(site, "My test token")
