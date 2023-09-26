@@ -38,4 +38,18 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
              ]
            }
   end
+
+  test "plug halts when no authorization header is passed" do
+    conn =
+      build_conn()
+      |> AuthorizePluginsAPI.call()
+
+    assert conn.halted
+
+    assert json_response(conn, 401) == %{
+             "errors" => [
+               %{"detail" => "Plugins API: unauthorized"}
+             ]
+           }
+  end
 end
