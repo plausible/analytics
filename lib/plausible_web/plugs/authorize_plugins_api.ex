@@ -18,8 +18,8 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPI do
 
   defp authorize(conn, domain, token_value) do
     case Tokens.find(domain, token_value) do
-      {:ok, _token} ->
-        {:ok, conn}
+      {:ok, token} ->
+        {:ok, Plug.Conn.assign(conn, :authorized_site, token.site)}
 
       {:error, :not_found} ->
         Errors.unauthorized(conn)
