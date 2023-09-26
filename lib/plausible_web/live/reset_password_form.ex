@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
         Repo.get_by!(Auth.User, email: email)
       end)
 
-    changeset = Auth.User.changeset(socket.assigns.user)
+    changeset = Auth.User.settings_changeset(socket.assigns.user)
 
     {:ok,
      assign(socket,

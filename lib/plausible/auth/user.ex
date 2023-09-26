@@ -26,7 +26,7 @@ defmodule Plausible.Auth.User do
     field :name, :string
     field :last_seen, :naive_datetime
     field :trial_expiry_date, :date
-    field :theme, :string
+    field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 
@@ -51,6 +51,13 @@ defmodule Plausible.Auth.User do
     |> hash_password()
     |> start_trial
     |> set_email_verified
+    |> unique_constraint(:email)
+  end
+
+  def settings_changeset(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:email, :name, :theme])
+    |> validate_required([:email, :name, :theme])
     |> unique_constraint(:email)
   end
 
