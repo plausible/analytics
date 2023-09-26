@@ -5,14 +5,14 @@ defmodule PlausibleWeb.Plugins.API.Errors do
 
   import Plug.Conn
 
-  @spec unauthorized(Conn.t()) :: Conn.t()
+  @spec unauthorized(Plug.Conn.t()) :: Plug.Conn.t()
   def unauthorized(conn) do
     conn
     |> put_resp_header("www-authenticate", ~s[Basic realm="Plugins API Access"])
     |> error(:unauthorized, "Plugins API: unauthorized")
   end
 
-  @spec error(Conn.t(), Conn.status(), String.t() | [String.t()]) :: Conn.t()
+  @spec error(Plug.Conn.t(), Plug.Conn.status(), String.t() | [String.t()]) :: Plug.Conn.t()
   def error(conn, status, message) when is_binary(message) do
     error(conn, status, [message])
   end
