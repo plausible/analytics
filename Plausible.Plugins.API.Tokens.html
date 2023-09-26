@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>PlausibleWeb.Api.ExternalStatsController — Plausible v0.0.1</title>
+    <title>Plausible.Plugins.API.Tokens — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,16 +102,21 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/api/external_stats_controller.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/tokens.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">PlausibleWeb.Api.ExternalStatsController</span> 
+  <span translate="no">Plausible.Plugins.API.Tokens</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>Context module for Plugins API Tokens.
+Exposes high-level operation for token-based authentication flows.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -128,7 +133,7 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#aggregate/2" translate="no">aggregate(conn, params)</a>
+        <a href="#create/2" translate="no">create(site, description)</a>
 
       </div>
 
@@ -136,23 +141,7 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#breakdown/2" translate="no">breakdown(conn, params)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#realtime_visitors/2" translate="no">realtime_visitors(conn, params)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#timeseries/2" translate="no">timeseries(conn, params)</a>
+        <a href="#find/2" translate="no">find(domain, raw)</a>
 
       </div>
 
@@ -171,16 +160,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="aggregate/2">
+<section class="detail" id="create/2">
 
   <div class="detail-header">
-    <a href="#aggregate/2" class="detail-link" title="Link to this function">
+    <a href="#create/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">aggregate(conn, params)</h1>
+    <h1 class="signature" translate="no">create(site, description)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/api/external_stats_controller.ex#L13" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/tokens.ex#L14" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -189,20 +178,28 @@ Functions
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
+  {:ok, <a href="Plausible.Plugins.API.Token.html#t:t/0">Plausible.Plugins.API.Token.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}
+  | {:error, <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+
+      </div>
 
 
   </section>
 </section>
-<section class="detail" id="breakdown/2">
+<section class="detail" id="find/2">
 
   <div class="detail-header">
-    <a href="#breakdown/2" class="detail-link" title="Link to this function">
+    <a href="#find/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">breakdown(conn, params)</h1>
+    <h1 class="signature" translate="no">find(domain, raw)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/api/external_stats_controller.ex#L53" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/tokens.ex#L23" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -212,49 +209,12 @@ Functions
 
   <section class="docstring">
 
+      <div class="specs">
 
-  </section>
-</section>
-<section class="detail" id="realtime_visitors/2">
+          <pre translate="no"><span class="attribute">@spec</span> find(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
+  {:ok, <a href="Plausible.Plugins.API.Token.html#t:t/0">Plausible.Plugins.API.Token.t</a>()} | {:error, :not_found}</pre>
 
-  <div class="detail-header">
-    <a href="#realtime_visitors/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">realtime_visitors(conn, params)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/api/external_stats_controller.ex#L7" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="timeseries/2">
-
-  <div class="detail-header">
-    <a href="#timeseries/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">timeseries(conn, params)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/api/external_stats_controller.ex#L174" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
+      </div>
 
 
   </section>

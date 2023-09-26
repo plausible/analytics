@@ -80,6 +80,8 @@ Plausible.Ingestion.Request.html
 Plausible.Mailer.html
 Plausible.OpenTelemetry.Sampler.html
 Plausible.PaddleApi.Mock.html
+Plausible.Plugins.API.Token.html
+Plausible.Plugins.API.Tokens.html
 Plausible.PromEx.Plugins.PlausibleMetrics.html
 Plausible.PromEx.html
 Plausible.Props.html
@@ -251,8 +253,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-9CAED069.js
-dist/sidebar_items-B5CE7344.js
+dist/search_data-EC8034AB.js
+dist/sidebar_items-97E28490.js
 index.html
 readme.html
 search.html
