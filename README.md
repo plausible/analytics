@@ -15,7 +15,7 @@
     <br /><br />
 </p>
 
-[Plausible Analytics](https://plausible.io/) is a simple, lightweight (< 1 KB), open source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host or have us run Plausible for you in the cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). Made and hosted in the EU 🇪🇺
+[Plausible Analytics](https://plausible.io/) is an easy to use, lightweight (< 1 KB), open source and privacy-friendly alternative to Google Analytics. It doesn’t use cookies and is fully compliant with GDPR, CCPA and PECR. You can self-host or have us run Plausible for you in the cloud. Here's [the live demo of our own website stats](https://plausible.io/plausible.io). Made and hosted in the EU 🇪🇺
 
 We are dedicated to making web analytics more privacy-friendly. Our mission is to reduce corporate surveillance by providing an alternative web analytics tool which doesn’t come from the AdTech world. We are completely independent and solely funded by our subscribers.
 
@@ -23,16 +23,17 @@ We are dedicated to making web analytics more privacy-friendly. Our mission is t
 
 ## Why Plausible?
 
-Here's what makes Plausible a great Google Analytics alternative and why we're trusted by thousands of paying subscribers to deliver their website and business insights:
+Here's what makes Plausible a great Google Analytics alternative and why we're trusted by 11,000+ paying subscribers to deliver their website and business insights:
 
 - **Clutter Free**: Plausible Analytics provides [simple web analytics](https://plausible.io/simple-web-analytics) and it cuts through the noise. No layers of menus, no need for custom reports. Get all the important insights on one single page. No training necessary.
 - **GDPR/CCPA/PECR compliant**: Measure traffic, not individuals. No personal data or IP addresses are ever stored in our database. We don't use cookies or any other persistent identifiers. [Read more about our data policy](https://plausible.io/data-policy)
-- **Lightweight**: Plausible Analytics works by loading a script on your website, like Google Analytics. Our script is [45x smaller](https://plausible.io/lightweight-web-analytics), making your website quicker to load.
+- **Lightweight**: Plausible Analytics works by loading a script on your website, like Google Analytics. Our script is [45x smaller](https://plausible.io/lightweight-web-analytics), making your website quicker to load. You can also send events directly to our [events API](https://plausible.io/docs/events-api).
 - **Email or Slack reports**: Keep an eye on your traffic with weekly and/or monthly email or Slack reports. You can also get traffic spike notifications.
-- **Open website stats**: You have the option to be transparent and open your web analytics to everyone. Your website stats are private by default but you can choose to make them public so anyone with your custom link can view them.
-- **Define key goals and track conversions**: Set custom events or page URLs as your goals and see how they convert over time to understand and identify the trends that matter. Includes easy ways to track outbound link clicks and 404 error pages.
+- **Invite team members and share stats**: You have the option to be transparent and open your web analytics to everyone. Your website stats are private by default but you can choose to make them public so anyone with your custom link can view them. You can [invite team members](https://plausible.io/docs/users-roles) and assign user roles too.
+- **Define key goals and track conversions**: Create custom events with custom dimensions to track conversions and attribution to understand and identify the trends that matter. Includes easy ways to track outbound link clicks, file downloads and 404 error pages.
 - **Search keywords**: Integrate your dashboard with Google Search Console to get the most accurate reporting on your search keywords.
 - **SPA support**: Plausible is built with modern web frameworks in mind and it works automatically with any pushState based router on the frontend. We also support frameworks that use the URL hash for routing. See [our documentation](https://plausible.io/docs/hash-based-routing).
+- **Smooth transition from Google Analytics**: There's a realtime dashboard, entry pages report and integration with Search Console. You can track your paid campaigns and conversions. You can invite team members. You can even [import your historical Google Analytics stats](https://plausible.io/docs/google-analytics-import). Learn how to [get the most out of your Plausible experience](https://plausible.io/docs/your-plausible-experience) and join thousands who have already migrated from Google Analytics.
 
 Interested to learn more? [Read more on our website](https://plausible.io), learn more about the team and the goals of the project on [our about page](https://plausible.io/about) or explore [the documentation](https://plausible.io/docs).
 
@@ -56,17 +57,13 @@ Our managed hosting can save a substantial amount of developer time and resource
 
 ### Can Plausible Analytics be self-hosted?
 
-Plausible is fully [open source web analytics](https://plausible.io/open-source-website-analytics) and we have a free as in beer [Plausible Analytics Self-Hosted](https://plausible.io/self-hosted-web-analytics) solution. It’s exactly the same product as our cloud solution with a less frequent release schedule (think of it as a long term support release).
-
-Bug fixes and new features are released to the cloud version several times per week. Features are battle-tested in the cloud which allows us to fix any bugs before the general self-hosted release. Every six months or so we combine all the changes into a new self-hosted release.
-
-The main difference between the two is that the self-hosted version you have to install, host and manage yourself on your own infrastructure while the cloud version we manage everything for your ease and convenience. Here's the overview of all the differences:
+Plausible is [open source web analytics](https://plausible.io/open-source-website-analytics) and we have a free as in beer [self-hosted solution](https://plausible.io/self-hosted-web-analytics). Here are the differences between Plausible Analytics managed hosting in the cloud and the self-hosting:
 
 |  | Plausible Cloud  | Self-Hosting |
 | ------------- | ------------- | ------------- |
 | Hosting | Easy and convenient. It takes 2 minutes to start counting your stats with a worldwide CDN, high availability, backups, security and maintenance all done for you by us. We manage everything so you don’t have to worry about anything and can focus on your stats. | You do it all yourself. You need to get a server and you need to manage your infrastructure. You are responsible for installation, maintenance, upgrades, server capacity, uptime, backup, security, stability, consistency, loading time and so on. |
 | Storage | All visitor data is exclusively processed on EU-owned cloud infrastructure. We keep your site data on a secure, encrypted and green energy powered server in Germany. This ensures that your site data is protected by the strict European Union data privacy laws and ensures compliance with GDPR. Your website data never leaves the EU. | You have full control and can host your instance on any server in any country that you wish. Host it on a server in your basement or host it with any cloud provider wherever you want, even those that are not GDPR compliant. |
-| Releases | Continuously developed and improved with new features and updates multiple times per week. | [It's a long term release](https://plausible.io/blog/building-open-source) published approximately twice per year so latest features won't be immediately available. You can see all the [currently unreleased features in the changelog](https://github.com/plausible/analytics/blob/master/CHANGELOG.md).|
+| Releases | Continuously developed and improved with new features and updates multiple times per week. | [It's a long term release](https://plausible.io/blog/building-open-source) published twice per year. Selected enterprise features are not available as we aim to ensure a protective barrier around our cloud offering. |
 | Raw data | You see all your site stats and metrics on our modern-looking, simple to use and fast loading dashboard. You can only see the stats aggregated in the dashboard. You can download the stats using the [CSV export](https://plausible.io/docs/export-stats), [stats API](https://plausible.io/docs/stats-api) or tools such as the [Data Studio Connector](https://plausible.io/docs/integration-guides#google-data-studio). | Do you want access to the raw data? Self-hosting gives you that option. You can take the data directly from the ClickHouse database. |
 | Premium Support | Real support delivered by real human beings who build and maintain Plausible. | Premium support is not included. Self-hosting is community supported only. |
 | Costs | There's a cost associated with providing an analytics service so we charge a subscription fee. We choose the subscription business model rather than the business model of surveillance capitalism. Your money funds further development of Plausible. | You need to pay for your server, CDN, backups and whatever other cost there is associated with running the infrastructure. You never have to pay any fees to us. Your money goes to 3rd party companies with no connection to us.|
@@ -90,13 +87,12 @@ For anyone wishing to contribute to Plausible, we recommend taking a look at [ou
 
 ## Feedback & Roadmap
 
-We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://plausible.io/feedback) directly here on GitHub. Please let us know if you have any requests and vote on open issues so we can better prioritize.
+We welcome feedback from our community. We have a public roadmap driven by the features suggested by the community members. Take a look at our [feedback board](https://plausible.io/feedback). Please let us know if you have any requests and vote on open issues so we can better prioritize.
 
-To stay up to date with all the latest news and product updates, make sure to follow us on [Twitter](https://twitter.com/plausiblehq), [LinkedIn](https://www.linkedin.com/company/plausible-analytics/) or [Mastodon](https://fosstodon.org/@plausible).
+To stay up to date with all the latest news and product updates, make sure to follow us on [X (formerly Twitter)](https://twitter.com/plausiblehq), [LinkedIn](https://www.linkedin.com/company/plausible-analytics/) or [Mastodon](https://fosstodon.org/@plausible).
 
 ## License
 
-Plausible is open-source under the GNU Affero General Public License Version 3 (AGPLv3) or any later version. You can [find it here](https://github.com/plausible/analytics/blob/master/LICENSE.md).
+Plausible is open source under the GNU Affero General Public License Version 3 (AGPLv3) or any later version. You can [find it here](https://github.com/plausible/analytics/blob/master/LICENSE.md).
 
-The only exception is our JavaScript tracker which gets included on your website. To avoid issues with AGPL virality, we've
-released the tracker under the MIT license. You can [find it here](https://github.com/plausible/analytics/blob/master/tracker/LICENSE.md).
+To avoid issues with AGPL virality, we've released the JavaScript tracker which gets included on your website under the MIT license. You can [find it here](https://github.com/plausible/analytics/blob/master/tracker/LICENSE.md).
