@@ -2,8 +2,7 @@ defmodule Plausible.Billing.Plan do
   @moduledoc false
 
   @derive Jason.Encoder
-
-  @enforce_keys ~w(kind site_limit monthly_pageview_limit team_member_limit volume monthly_product_id yearly_product_id)a
+  @enforce_keys ~w(kind site_limit monthly_pageview_limit team_member_limit extra_features volume monthly_product_id yearly_product_id)a
   defstruct @enforce_keys ++ [:monthly_cost, :yearly_cost]
 
   @type t() ::
@@ -16,7 +15,8 @@ defmodule Plausible.Billing.Plan do
             monthly_cost: Money.t() | nil,
             yearly_cost: Money.t() | nil,
             monthly_product_id: String.t() | nil,
-            yearly_product_id: String.t() | nil
+            yearly_product_id: String.t() | nil,
+            extra_features: [atom()]
           }
           | :enterprise
 
@@ -30,6 +30,8 @@ defmodule Plausible.Billing.Plans do
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
   alias Plausible.Auth.User
+
+  @available_features ["props", "revenue_goals", "funnels"]
 
   for f <- [
         :plans_v1,
@@ -54,12 +56,20 @@ defmodule Plausible.Billing.Plans do
             _any -> raise ArgumentError, "Failed to parse team member limit from plan JSON files"
           end
 
+        extra_features =
+          Enum.map(raw.extra_features, fn feature ->
+            if feature in @available_features,
+              do: String.to_atom(feature),
+              else: raise(ArgumentError, "Failed to parse extra features from plan JSON files")
+          end)
+
         volume = PlausibleWeb.StatsView.large_number_format(raw.monthly_pageview_limit)
 
         raw
         |> Map.put(:volume, volume)
         |> Map.put(:kind, String.to_atom(raw.kind))
         |> Map.put(:team_member_limit, team_member_limit)
+        |> Map.put(:extra_features, extra_features)
         |> Plan.new()
       end)
 
