@@ -27,7 +27,8 @@ defmodule Plausible.Plugins.API.Tokens do
           inner_join: s in Site,
           on: s.id == t.site_id,
           where: t.token_hash == ^Token.hash(raw),
-          where: s.domain == ^domain or s.domain_changed_from == ^domain
+          where: s.domain == ^domain or s.domain_changed_from == ^domain,
+          preload: [:site]
         )
       )
 
