@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>PlausibleWeb.PageController — Plausible v0.0.1</title>
+    <title>PlausibleWeb.Plugins.API.Errors — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,16 +102,20 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/page_controller.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugins/api/errors.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">PlausibleWeb.PageController</span> 
+  <span translate="no">PlausibleWeb.Plugins.API.Errors</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>Common responses for Plugins API</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -128,11 +132,17 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#index/2" translate="no">index(conn, params)</a>
+        <a href="#error/3" translate="no">error(conn, status, message)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>The root path is never accessible in Plausible.Cloud because it is handled by the upstream reverse proxy.</p></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#unauthorized/1" translate="no">unauthorized(conn)</a>
+
+      </div>
 
     </div>
 
@@ -149,16 +159,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="index/2">
+<section class="detail" id="error/3">
 
   <div class="detail-header">
-    <a href="#index/2" class="detail-link" title="Link to this function">
+    <a href="#error/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">index(conn, params)</h1>
+    <h1 class="signature" translate="no">error(conn, status, message)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/page_controller.ex#L12" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugins/api/errors.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -168,7 +178,42 @@ Functions
 
   <section class="docstring">
 
-<p>The root path is never accessible in Plausible.Cloud because it is handled by the upstream reverse proxy.</p><p>This controller action is only ever triggered in self-hosted Plausible.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> error(<a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html#t:status/0">Plug.Conn.status</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]) ::
+  <a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="unauthorized/1">
+
+  <div class="detail-header">
+    <a href="#unauthorized/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">unauthorized(conn)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugins/api/errors.ex#L9" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> unauthorized(<a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()) :: <a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
 
