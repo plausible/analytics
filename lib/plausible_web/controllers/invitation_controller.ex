@@ -31,9 +31,8 @@ defmodule PlausibleWeb.InvitationController do
         end
 
       membership_changeset =
-        (existing_membership ||
-           %Membership{user_id: user.id, site_id: invitation.site.id})
-        |> Membership.changeset(%{role: invitation.role})
+        (existing_membership || Membership.new(invitation.site, user))
+        |> Membership.set_role(invitation.role)
 
       multi =
         multi

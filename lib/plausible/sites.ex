@@ -28,14 +28,8 @@ defmodule Plausible.Sites do
       if Quota.within_limit?(usage, limit), do: {:ok, usage}, else: {:error, limit}
     end)
     |> Ecto.Multi.insert(:site, site_changeset)
-    |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
-      membership_changeset =
-        Site.Membership.changeset(%Site.Membership{}, %{
-          site_id: site.id,
-          user_id: user.id
-        })
-
-      repo.insert(membership_changeset)
+    |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
+      Site.Membership.new(site, user)
     end)
     |> maybe_start_trial(user)
     |> Repo.transaction()

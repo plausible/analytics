@@ -149,7 +149,8 @@ defmodule PlausibleWeb.Site.MembershipController do
     if can_grant_role? do
       membership =
         membership
-        |> Membership.changeset(%{role: new_role})
+        |> Ecto.Changeset.change()
+        |> Membership.set_role(new_role)
         |> Repo.update!()
 
       redirect_target =
