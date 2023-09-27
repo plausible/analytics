@@ -76,7 +76,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       user: user
     } do
       inviter = insert(:user)
-      site = insert(:site)
+      site = insert(:site, members: [inviter])
 
       invitation =
         insert(:invitation, site_id: site.id, inviter: inviter, email: user.email, role: :owner)
@@ -122,7 +122,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
 
       inviter = insert(:user)
-      site = insert(:site, locked: false)
+      site = insert(:site, members: [inviter], locked: false)
 
       invitation =
         insert(:invitation, site_id: site.id, inviter: inviter, email: user.email, role: :owner)
@@ -132,7 +132,6 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Repo.reload!(site).locked
     end
 
-    # FIXME: test started failing after changes
     test "will end the trial of the new owner immediately", %{
       conn: conn,
       user: user
@@ -142,7 +141,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
 
       inviter = insert(:user)
-      site = insert(:site, locked: false)
+      site = insert(:site, members: [inviter], locked: false)
 
       invitation =
         insert(:invitation, site_id: site.id, inviter: inviter, email: user.email, role: :owner)
@@ -163,7 +162,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
 
       inviter = insert(:user)
-      site = insert(:site, locked: false)
+      site = insert(:site, members: [inviter], locked: false)
 
       invitation =
         insert(:invitation, site_id: site.id, inviter: inviter, email: user.email, role: :owner)

@@ -2,6 +2,8 @@ defmodule Plausible.Site.Membership do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   schema "site_memberships" do
     field :role, Ecto.Enum, values: [:owner, :admin, :viewer]
     belongs_to :site, Plausible.Site
