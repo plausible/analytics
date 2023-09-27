@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   alias Plausible.Billing.Subscriptions
   alias Plausible.Users
   alias Plausible.Billing.{Plans, Plan, Quota}
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   import PlausibleWeb.Components.Billing
 
@@ -69,25 +70,25 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <.slider selected_volume={@selected_volume} />
         <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <.plan_box
-            name="Growth"
+            kind={:growth}
             owned={@owned_plan && Map.get(@owned_plan, :kind) == :growth}
-            selected_plan={
+            plan_to_render={
               if @selected_growth_plan,
                 do: @selected_growth_plan,
                 else: List.last(@available_plans.growth)
             }
-            disabled={!@selected_growth_plan}
+            available={!!@selected_growth_plan}
             {assigns}
           />
           <.plan_box
-            name="Business"
+            kind={:business}
             owned={@owned_plan && Map.get(@owned_plan, :kind) == :business}
-            selected_plan={
+            plan_to_render={
               if @selected_business_plan,
                 do: @selected_business_plan,
                 else: List.last(@available_plans.business)
             }
-            disabled={!@selected_business_plan}
+            available={!!@selected_business_plan}
             {assigns}
           />
           <.enterprise_plan_box />
@@ -221,7 +222,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp plan_box(assigns) do
     ~H"""
     <div
-      id={"plan-box-#{String.downcase(@name)}"}
+      id={"#{@kind}-plan-box"}
       class={[
         "rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
         !@owned && "ring-1 ring-gray-300 dark:ring-gray-600",
@@ -234,33 +235,33 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           !@owned && "text-gray-900 dark:text-gray-100",
           @owned && "text-indigo-600"
         ]}>
-          <%= @name %>
+          <%= String.capitalize(to_string(@kind)) %>
         </h3>
         <.current_label :if={@owned} />
       </div>
-      <div id={"#{String.downcase(@name)}-body"}>
-        <.render_price_info disabled={@disabled} {assigns} />
+      <div>
+        <.render_price_info available={@available} {assigns} />
         <%= cond do %>
-          <% @disabled -> %>
+          <% !@available -> %>
             <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
-          <% @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] -> %>
+          <% @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] ->%>
             <.render_change_plan_link
-              selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
+              paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
               text={
                 change_plan_link_text(
                   @owned_plan,
-                  @selected_plan,
+                  @plan_to_render,
                   @current_interval,
                   @selected_interval
                 )
               }
               {assigns}
             />
-          <% true -> %>
-            <.paddle_button
-              selected_plan_id={get_selected_plan_id(@selected_plan, @selected_interval)}
-              {assigns}
-            />
+        <% true -> %>
+          <.paddle_button
+            paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
+            {assigns}
+          />
         <% end %>
       </div>
       <ul
@@ -284,7 +285,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  def render_price_info(%{disabled: true} = assigns) do
+  def render_price_info(%{available: false} = assigns) do
     ~H"""
     <p class="mt-6 flex items-baseline gap-x-1">
       <span class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -297,8 +298,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def render_price_info(assigns) do
     ~H"""
-    <p id={"#{String.downcase(@name)}-price-tag"} class="mt-6 flex items-baseline gap-x-1">
-      <.price_tag selected_interval={@selected_interval} selected_plan={@selected_plan} />
+    <p class="mt-6 flex items-baseline gap-x-1">
+      <.price_tag
+        kind={@kind}
+        selected_interval={@selected_interval}
+        plan_to_render={@plan_to_render}
+      />
     </p>
     <p class="mt-1 text-xs">+ VAT if applicable</p>
     """
@@ -319,8 +324,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp change_plan_link(assigns) do
     ~H"""
     <.link
-      id={"#{String.downcase(@name)}-checkout"}
-      href={"/billing/change-plan/preview/" <> @selected_plan_id}
+      id={"#{@kind}-checkout"}
+      href={"/billing/change-plan/preview/" <> @paddle_product_id}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
         !(@plan_already_owned || @billing_details_expired) && "bg-indigo-600 hover:bg-indigo-500",
@@ -342,15 +347,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp paddle_button(assigns) do
     ~H"""
     <button
-      id={"#{String.downcase(@name)}-checkout"}
-      data-theme="none"
-      data-product={@selected_plan_id}
-      data-email={@user.email}
-      data-disable-logout="true"
-      data-passthrough={@user.id}
-      data-success="/billing/upgrade-success"
-      data-init="true"
-      class="paddle_button w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-500"
+      id={"#{@kind}-checkout"}
+      onclick={"Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passtrough: @user.id, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})"}
+      class="w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-500"
     >
       Upgrade
     </button>
@@ -410,7 +409,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp current_label(assigns) do
     ~H"""
     <div class="flex items-center justify-between gap-x-4">
-      <p class="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600 dark:ring-1 dark:ring-indigo-600/40">
+      <p
+        id="current-label"
+        class="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600 dark:ring-1 dark:ring-indigo-600/40"
+      >
         Current
       </p>
     </div>
@@ -464,7 +466,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  defp price_tag(%{selected_plan: %Plan{monthly_cost: nil}} = assigns) do
+  defp price_tag(%{plan_to_render: %Plan{monthly_cost: nil}} = assigns) do
     ~H"""
     <span class="text-4xl font-bold tracking-tight text-gray-900">
       N/A
@@ -474,12 +476,18 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp price_tag(%{selected_interval: :monthly} = assigns) do
     ~H"""
-    <span class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-      <%= @selected_plan.monthly_cost
+    <span
+      id={"#{@kind}-price-tag-amount"}
+      class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+    >
+      <%= @plan_to_render.monthly_cost
       |> Money.to_string!(format: :short, fractional_digits: 2)
       |> String.replace(".00", "") %>
     </span>
-    <span class="text-sm font-semibold leading-6 text-gray-600 dark:text-gray-500">
+    <span
+      id={"#{@kind}-price-tag-interval"}
+      class="text-sm font-semibold leading-6 text-gray-600 dark:text-gray-500"
+    >
       /month
     </span>
     """
@@ -488,17 +496,20 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp price_tag(%{selected_interval: :yearly} = assigns) do
     ~H"""
     <span class="text-2xl font-bold w-max tracking-tight line-through text-gray-500 dark:text-gray-600 mr-1">
-      <%= @selected_plan.monthly_cost
+      <%= @plan_to_render.monthly_cost
       |> Money.mult!(12)
       |> Money.to_string!(format: :short, fractional_digits: 2)
       |> String.replace(".00", "") %>
     </span>
-    <span class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-      <%= @selected_plan.yearly_cost
+    <span
+      id={"#{@kind}-price-tag-amount"}
+      class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
+    >
+      <%= @plan_to_render.yearly_cost
       |> Money.to_string!(format: :short, fractional_digits: 2)
       |> String.replace(".00", "") %>
     </span>
-    <span class="text-sm font-semibold leading-6 text-gray-600">
+    <span id={"#{@kind}-price-tag-interval"} class="text-sm font-semibold leading-6 text-gray-600">
       /year
     </span>
     """
@@ -606,8 +617,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     end
   end
 
-  defp get_selected_plan_id(%Plan{monthly_product_id: plan_id}, :monthly), do: plan_id
-  defp get_selected_plan_id(%Plan{yearly_product_id: plan_id}, :yearly), do: plan_id
+  defp get_paddle_product_id(%Plan{monthly_product_id: plan_id}, :monthly), do: plan_id
+  defp get_paddle_product_id(%Plan{yearly_product_id: plan_id}, :yearly), do: plan_id
 
   defp slider_value(:enterprise) do
     List.last(@volumes)

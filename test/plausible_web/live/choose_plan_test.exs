@@ -12,18 +12,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @interval_button_active_class "bg-indigo-600 text-white"
   @slider_input ~s/input[name="slider"]/
 
-  @plan_box_growth "#plan-box-growth"
-  @growth_price_tag "#growth-price-tag"
-  @growth_price_tag_amount "#{@growth_price_tag} > span:first-child"
-  @growth_price_tag_interval "#{@growth_price_tag} > span:nth-child(2)"
-  @growth_current_label "#{@plan_box_growth} > div.absolute"
+  @growth_plan_box "#growth-plan-box"
+  @growth_price_tag_amount "#growth-price-tag-amount"
+  @growth_price_tag_interval "#growth-price-tag-interval"
+  @growth_current_label "#{@growth_plan_box} #current-label"
   @growth_checkout_button "#growth-checkout"
 
-  @plan_box_business "#plan-box-business"
-  @business_price_tag "#business-price-tag"
-  @business_price_tag_amount "#{@business_price_tag} > span:first-child"
-  @business_price_tag_interval "#{@business_price_tag} > span:nth-child(2)"
-  @business_current_label "#{@plan_box_business} > div.absolute"
+  @business_plan_box "#business-plan-box"
+  @business_price_tag_amount "#business-price-tag-amount"
+  @business_price_tag_interval "#business-price-tag-interval"
+  @business_current_label "#{@business_plan_box} #current-label"
   @business_checkout_button "#business-checkout"
 
   describe "for a user with no subscription" do
@@ -96,26 +94,25 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @business_price_tag_amount) == "€160"
     end
 
-    test "renders business and growth tiers unavailable when enterprise-level volume selected", %{
-      conn: conn
-    } do
+    test "renders contact links for business and growth tiers when enterprise-level volume selected",
+         %{
+           conn: conn
+         } do
       {:ok, lv, _doc} = get_liveview(conn)
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 8})
 
-      assert class_of_element(doc, "#growth-body") =~ "hidden"
-      assert class_of_element(doc, "#business-body") =~ "hidden"
-
-      assert text_of_element(doc, "#{@plan_box_growth} > p") == "Unavailable at this volume"
-      assert text_of_element(doc, "#{@plan_box_business} > p") == "Unavailable at this volume"
+      assert text_of_element(doc, @growth_plan_box) =~ "Custom"
+      assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
+      assert text_of_element(doc, @business_plan_box) =~ "Custom"
+      assert text_of_element(doc, @business_plan_box) =~ "Contact us"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
 
-      refute class_of_element(doc, "#growth-body") =~ "hidden"
-      refute class_of_element(doc, "#business-body") =~ "hidden"
-
-      refute element_exists?(doc, "#{@plan_box_growth} > p")
-      refute element_exists?(doc, "#{@plan_box_business} > p")
+      refute text_of_element(doc, @growth_plan_box) =~ "Custom"
+      refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
+      refute text_of_element(doc, @business_plan_box) =~ "Custom"
+      refute text_of_element(doc, @business_plan_box) =~ "Contact us"
     end
 
     test "switching billing interval changes business and growth prices", %{conn: conn} do
@@ -136,7 +133,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @business_price_tag_interval) == "/year"
     end
 
-    test "checkout buttons are 'paddle buttons' with dynamic attributes", %{
+    test "checkout buttons are 'paddle buttons' with dynamic onclick attribute", %{
       conn: conn,
       user: user
     } do
@@ -145,28 +142,19 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       element(lv, @slider_input) |> render_change(%{slider: 2})
       doc = element(lv, @yearly_interval_button) |> render_click()
 
-      growth_checkout_button = find(doc, @growth_checkout_button)
-
-      assert text_of_attr(growth_checkout_button, "class") =~ "paddle_button"
-
-      assert text_of_attr(growth_checkout_button, "data-product") ==
-               @v4_growth_200k_yearly_plan_id
-
-      assert text_of_attr(growth_checkout_button, "data-email") == user.email
-      assert text_of_attr(growth_checkout_button, "data-passthrough") == to_string(user.id)
+      assert %{
+        "disableLogout" => true,
+        "email" => user.email,
+        "passtrough" => user.id,
+        "product" => @v4_growth_200k_yearly_plan_id,
+        "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+        "theme" => "none"
+      } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
 
       element(lv, @slider_input) |> render_change(%{slider: 6})
       doc = element(lv, @monthly_interval_button) |> render_click()
 
-      business_checkout_button = find(doc, @business_checkout_button)
-
-      assert text_of_attr(business_checkout_button, "class") =~ "paddle_button"
-
-      assert text_of_attr(business_checkout_button, "data-product") ==
-               @v4_business_5m_monthly_plan_id
-
-      assert text_of_attr(business_checkout_button, "data-email") == user.email
-      assert text_of_attr(business_checkout_button, "data-passthrough") == to_string(user.id)
+      assert get_paddle_checkout_params(find(doc, @business_checkout_button))["product"] == @v4_business_5m_monthly_plan_id
     end
   end
 
@@ -216,11 +204,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "makes it clear that the user is currently on a growth tier", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      class = class_of_element(doc, @plan_box_growth)
+      class = class_of_element(doc, @growth_plan_box)
 
       assert class =~ "ring-2"
       assert class =~ "ring-indigo-600"
-      assert text_of_element(doc, @growth_current_label) == "CURRENT"
+      assert text_of_element(doc, @growth_current_label) == "Current"
     end
 
     test "checkout button text and click-disabling CSS classes are dynamic", %{conn: conn} do
@@ -277,11 +265,11 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "makes it clear that the user is currently on a business tier", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 
-      class = class_of_element(doc, @plan_box_business)
+      class = class_of_element(doc, @business_plan_box)
 
       assert class =~ "ring-2"
       assert class =~ "ring-indigo-600"
-      assert text_of_element(doc, @business_current_label) == "CURRENT"
+      assert text_of_element(doc, @business_current_label) == "Current"
     end
 
     test "checkout button text and click-disabling CSS classes are dynamic", %{conn: conn} do
@@ -373,13 +361,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "checkout buttons are paddle buttons", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert class_of_element(doc, @growth_checkout_button) =~ "paddle_button"
-      assert class_of_element(doc, @business_checkout_button) =~ "paddle_button"
+      assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~ "Paddle.Checkout.open"
+      assert text_of_attr(find(doc, @business_checkout_button), "onclick") =~ "Paddle.Checkout.open"
     end
 
     test "currently owned tier is highlighted if stats are still unlocked", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert text_of_element(doc, @growth_current_label) == "CURRENT"
+      assert text_of_element(doc, @growth_current_label) == "Current"
     end
 
     test "currently owned tier is not highlighted if stats are locked", %{conn: conn, user: user} do
@@ -437,5 +425,14 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   defp get_liveview(conn) do
     conn = assign(conn, :live_module, PlausibleWeb.Live.ChoosePlan)
     {:ok, _lv, _doc} = live(conn, "/billing/choose-plan")
+  end
+
+  defp get_paddle_checkout_params(element) do
+    with onclick <- text_of_attr(element, "onclick"),
+         [[_, checkout_params_str]] <- Regex.scan(~r/Paddle\.Checkout\.open\((.*?)\)/, onclick),
+         {:ok, checkout_params} <- Jason.decode(checkout_params_str)
+    do
+      checkout_params
+    end
   end
 end
