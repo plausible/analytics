@@ -22,15 +22,17 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   require Logger
 
-  @spec accept_invitation(String.t(), Auth.User.t()) ::
+  @spec accept_invitation(String.t(), Auth.User.t(), Keyword.t()) ::
           {:ok, Site.Membership.t()} | {:error, :invitation_not_found | Ecto.Changeset.t()}
-  def accept_invitation(invitation_id, user) do
+  def accept_invitation(invitation_id, user, opts \\ []) do
+    selfhost? = Keyword.get(opts, :selfhost?, Plausible.Release.selfhost?())
+
     with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
       membership = get_or_create_membership(invitation, user)
 
       multi =
         if invitation.role == :owner do
-          add_and_transfer_ownership(invitation, membership, user)
+          add_and_transfer_ownership(invitation, membership, user, selfhost?)
         else
           add(invitation, membership, user)
         end
@@ -53,15 +55,21 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  defp add_and_transfer_ownership(invitation, membership, user) do
-    Multi.new()
-    |> downgrade_previous_owner(invitation.site, user)
-    |> maybe_end_trial_of_new_owner(user)
-    |> Multi.insert_or_update(:membership, membership)
-    |> Multi.delete(:invitation, invitation)
-    |> Multi.run(:site_locker, fn _, %{user: updated_user} ->
-      {:ok, Billing.SiteLocker.update_sites_for(updated_user, send_email?: false)}
-    end)
+  defp add_and_transfer_ownership(invitation, membership, user, selfhost?) do
+    multi =
+      Multi.new()
+      |> downgrade_previous_owner(invitation.site, user)
+      |> maybe_end_trial_of_new_owner(user, selfhost?)
+      |> Multi.insert_or_update(:membership, membership)
+      |> Multi.delete(:invitation, invitation)
+
+    if selfhost? do
+      multi
+    else
+      Multi.run(multi, :site_locker, fn _, %{user: updated_user} ->
+        {:ok, Billing.SiteLocker.update_sites_for(updated_user, send_email?: false)}
+      end)
+    end
   end
 
   # If there's an existing membership, we DO NOT change the role
@@ -118,11 +126,11 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   # If the new owner is the same as the old owner, it's a no-op
-  defp maybe_end_trial_of_new_owner(multi, new_owner) do
+  defp maybe_end_trial_of_new_owner(multi, new_owner, selfhost?) do
     new_owner_id = new_owner.id
 
     cond do
-      Plausible.Release.selfhost?() ->
+      selfhost? ->
         Multi.put(multi, :user, new_owner)
 
       Billing.on_trial?(new_owner) or is_nil(new_owner.trial_expiry_date) ->
