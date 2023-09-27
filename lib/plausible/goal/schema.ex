@@ -42,6 +42,8 @@ defmodule Plausible.Goal do
     |> validate_event_name_and_page_path()
     |> update_change(:event_name, &String.trim/1)
     |> update_change(:page_path, &String.trim/1)
+    |> unique_constraint(:event_name, name: :goals_event_name_unique)
+    |> unique_constraint(:page_path, name: :goals_page_path_unique)
     |> validate_length(:event_name, max: 120)
     |> check_constraint(:event_name,
       name: :check_event_name_or_page_path,

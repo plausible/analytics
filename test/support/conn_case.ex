@@ -36,6 +36,12 @@ defmodule PlausibleWeb.ConnCase do
       Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})
     end
 
-    {:ok, conn: Phoenix.ConnTest.build_conn()}
+    # randomize client ip to avoid accidentally hitting
+    # rate limiting during tests
+    conn =
+      Phoenix.ConnTest.build_conn()
+      |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+
+    {:ok, conn: conn}
   end
 end

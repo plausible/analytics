@@ -48,7 +48,8 @@ defmodule Plausible.Billing.Subscription do
     %__MODULE__{
       paddle_plan_id: "free_10k",
       status: "active",
-      next_bill_amount: "0"
+      next_bill_amount: "0",
+      currency_code: "EUR"
     }
     |> cast(attrs, @required_fields)
     |> validate_required([:user_id])

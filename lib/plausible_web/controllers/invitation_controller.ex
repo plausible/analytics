@@ -131,6 +131,6 @@ defmodule PlausibleWeb.InvitationController do
 
     conn
     |> put_flash(:success, "You have removed the invitation for #{invitation.email}")
-    |> redirect(to: Routes.site_path(conn, :settings_general, invitation.site.domain))
+    |> redirect(to: Routes.site_path(conn, :settings_people, invitation.site.domain))
   end
 end

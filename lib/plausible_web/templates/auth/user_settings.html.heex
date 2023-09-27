@@ -60,13 +60,13 @@
             <%= subscription_quota(@subscription) %> pageviews
           </div>
 
-          <.link
+          <.styled_link
             :if={@subscription.status == "active"}
             href={Routes.billing_path(@conn, :change_plan_form)}
-            class="text-sm text-indigo-500 font-medium"
+            class="text-sm font-medium"
           >
             Change plan
-          </.link>
+          </.styled_link>
 
           <span
             :if={@subscription.status == "past_due"}
@@ -77,12 +77,9 @@
           </span>
         <% else %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">Free trial</div>
-          <.link
-            href={Routes.billing_path(@conn, :upgrade)}
-            class="text-sm text-indigo-500 font-medium"
-          >
+          <.styled_link class="text-sm font-medium" href={Routes.billing_path(@conn, :upgrade)}>
             Upgrade
-          </.link>
+          </.styled_link>
         <% end %>
       </div>
       <div
