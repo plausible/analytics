@@ -15,6 +15,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   alias Ecto.Multi
   alias Plausible.Auth
   alias Plausible.Billing
+  alias Plausible.Memberships.Invitations
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Site.Memberships.Invitations
@@ -24,7 +25,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   @spec accept_invitation(String.t(), Auth.User.t()) ::
           {:ok, Site.Membership.t()} | {:error, :invitation_not_found | Ecto.Changeset.t()}
   def accept_invitation(invitation_id, user) do
-    with {:ok, invitation} <- find_invitation(invitation_id) do
+    with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
       membership = get_or_create_membership(invitation, user)
 
       multi =
@@ -133,19 +134,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
       true ->
         Multi.put(multi, :user, new_owner)
-    end
-  end
-
-  defp find_invitation(invitation_id) do
-    invitation =
-      Auth.Invitation
-      |> Repo.get_by(invitation_id: invitation_id)
-      |> Repo.preload([:site, :inviter])
-
-    if invitation do
-      {:ok, invitation}
-    else
-      {:error, :invitation_not_found}
     end
   end
 
