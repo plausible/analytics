@@ -1,5 +1,5 @@
 defmodule PlausibleWeb.Site.InvitationControllerTest do
-  use PlausibleWeb.ConnCase
+  use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
   use Bamboo.Test
 
