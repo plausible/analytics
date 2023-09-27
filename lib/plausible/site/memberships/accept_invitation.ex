@@ -59,7 +59,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     |> Multi.insert_or_update(:membership, membership)
     |> Multi.delete(:invitation, invitation)
     |> Multi.run(:site_locker, fn _, %{user: updated_user} ->
-      {:ok, Billing.SiteLocker.check_sites_for(updated_user, send_email?: false)}
+      {:ok, Billing.SiteLocker.update_sites_for(updated_user, send_email?: false)}
     end)
   end
 

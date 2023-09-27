@@ -3,13 +3,13 @@ defmodule Plausible.Billing.SiteLockerTest do
   use Bamboo.Test, shared: true
   alias Plausible.Billing.SiteLocker
 
-  describe "check_sites_for/1" do
+  describe "update_sites_for/1" do
     test "does not lock sites if user is on trial" do
       user = insert(:user, trial_expiry_date: Timex.today())
 
       site = insert(:site, locked: true, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       refute Repo.reload!(site).locked
     end
@@ -19,7 +19,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       insert(:subscription, status: "active", user: user)
       site = insert(:site, locked: true, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       refute Repo.reload!(site).locked
     end
@@ -29,7 +29,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       insert(:subscription, status: "past_due", user: user)
       site = insert(:site, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       refute Repo.reload!(site).locked
     end
@@ -39,7 +39,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       insert(:subscription, status: "deleted", user: user)
       site = insert(:site, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       refute Repo.reload!(site).locked
     end
@@ -56,7 +56,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       insert(:subscription, status: "active", user: user)
       site = insert(:site, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       refute Repo.reload!(site).locked
     end
@@ -72,7 +72,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
       site = insert(:site, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       refute Repo.reload!(site).locked
     end
@@ -89,7 +89,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       insert(:subscription, status: "active", user: user)
       site = insert(:site, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       assert Repo.reload!(site).locked
     end
@@ -106,7 +106,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       insert(:subscription, status: "active", user: user)
       insert(:site, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       assert_email_delivered_with(
         to: [user],
@@ -127,7 +127,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       insert(:subscription, status: "active", user: user)
       insert(:site, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       assert_email_delivered_with(
         to: [user],
@@ -135,7 +135,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       )
 
       user = Repo.reload!(user)
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       assert_no_emails_delivered()
     end
@@ -145,7 +145,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
       site = insert(:site, locked: true, members: [user])
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       assert Repo.reload!(site).locked
     end
@@ -167,7 +167,7 @@ defmodule Plausible.Billing.SiteLockerTest do
           ]
         )
 
-      SiteLocker.check_sites_for(user)
+      SiteLocker.update_sites_for(user)
 
       owner_site = Repo.reload!(owner_site)
       viewer_site = Repo.reload!(viewer_site)

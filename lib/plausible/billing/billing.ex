@@ -73,6 +73,9 @@ defmodule Plausible.Billing do
     end
   end
 
+  @spec needs_to_upgrade?(Plausible.Auth.User.t()) ::
+          {true, :no_trial | :no_active_subscription | :grace_period_ended | nil}
+          | {false, nil}
   def needs_to_upgrade?(%Plausible.Auth.User{trial_expiry_date: nil}), do: {true, :no_trial}
 
   def needs_to_upgrade?(user) do
@@ -260,8 +263,30 @@ defmodule Plausible.Billing do
     end
   end
 
-  defp check_lock_status(user) do
-    Plausible.Billing.SiteLocker.check_sites_for(user)
+  def paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
+
+  defp active_subscription_query(user_id) do
+    from(s in Subscription,
+      where: s.user_id == ^user_id and s.status == "active",
+      order_by: [desc: s.inserted_at],
+      limit: 1
+    )
+  end
+
+  defp after_subscription_update(subscription) do
+    user =
+      Plausible.Auth.User
+      |> Repo.get!(subscription.user_id)
+      |> Map.put(:subscription, subscription)
+
+    user
+    |> maybe_remove_grace_period()
+    |> update_lock_status()
+    |> maybe_adjust_api_key_limits()
+  end
+
+  defp update_lock_status(user) do
+    Plausible.Billing.SiteLocker.update_sites_for(user)
     user
   end
 
@@ -279,26 +304,5 @@ defmodule Plausible.Billing do
     end
 
     user
-  end
-
-  def paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
-
-  defp active_subscription_query(user_id) do
-    from s in Subscription,
-      where: s.user_id == ^user_id and s.status == "active",
-      order_by: [desc: s.inserted_at],
-      limit: 1
-  end
-
-  defp after_subscription_update(subscription) do
-    user =
-      Plausible.Auth.User
-      |> Repo.get!(subscription.user_id)
-      |> Map.put(:subscription, subscription)
-
-    user
-    |> maybe_remove_grace_period()
-    |> check_lock_status()
-    |> maybe_adjust_api_key_limits()
   end
 end
