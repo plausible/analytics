@@ -1,6 +1,13 @@
 defmodule Plausible.Site.Memberships.AcceptInvitation do
   @moduledoc """
-  Service for accepting invitations, including ownership transfers
+  Service for accepting invitations, including ownership transfers.
+
+  Accepting invitation accounts for the fact that it's possible
+  that accepting user has an existing membership for the site and
+  acts permissively to not unnecesarily disrupt the flow while
+  also maintaining integrity of site memberships. This also applies
+  to cases where users update their email address between issuing
+  the invitation and accepting it.
   """
 
   import Ecto.Query, only: [from: 2]
