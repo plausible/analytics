@@ -131,11 +131,16 @@ defmodule Plausible.BillingTest do
       assert Billing.check_needs_to_upgrade(user) == {false, nil}
     end
 
-    # FIXME: reason result is not consistent with expectation, why?
     test "is true for a user with an expired trial" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
 
       assert Billing.check_needs_to_upgrade(user) == {true, :no_active_subscription}
+    end
+
+    test "is true for a user with empty trial expiry date" do
+      user = insert(:user, trial_expiry_date: nil)
+
+      assert Billing.check_needs_to_upgrade(user) == {true, :no_trial}
     end
 
     test "is false for a user with an expired trial but an active subscription" do
@@ -164,15 +169,21 @@ defmodule Plausible.BillingTest do
       assert Billing.check_needs_to_upgrade(user) == {true, :no_active_subscription}
     end
 
-    # FIXME: revise if that makes sense
-    test "is true for a deleted subscription if not next_bill_date specified" do
+    test "is true for a deleted subscription if no next_bill_date specified" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user, status: "deleted", next_bill_date: nil)
 
       assert Billing.check_needs_to_upgrade(user) == {true, :no_active_subscription}
     end
 
-    # FIXME: missing grace period test
+    test "is true for a user past their grace period" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
+      insert(:subscription, user: user, next_bill_date: Timex.today())
+
+      user = user |> Plausible.Auth.GracePeriod.end_changeset() |> Repo.update!()
+
+      assert Billing.check_needs_to_upgrade(user) == {true, :grace_period_ended}
+    end
   end
 
   @subscription_id "subscription-123"
