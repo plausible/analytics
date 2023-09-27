@@ -86,6 +86,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     |> Site.Membership.set_role(invitation.role)
   end
 
+  # If the new owner is the same as old owner, we do not downgrade them
+  # to avoid leaving site without an owner!
   defp downgrade_previous_owner(multi, site, new_owner) do
     new_owner_id = new_owner.id
 
@@ -115,7 +117,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  # If new owner is the same as the old owner, it's a no-op
+  # If the new owner is the same as the old owner, it's a no-op
   defp maybe_end_trial_of_new_owner(multi, new_owner) do
     new_owner_id = new_owner.id
 
