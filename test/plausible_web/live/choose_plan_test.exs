@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
+  @v1_10k_yearly_plan_id "572810"
   @v4_growth_200k_yearly_plan_id "change-me-749347"
   @v4_business_5m_monthly_plan_id "change-me-b749356"
 
@@ -143,23 +144,24 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       doc = element(lv, @yearly_interval_button) |> render_click()
 
       assert %{
-        "disableLogout" => true,
-        "email" => user.email,
-        "passtrough" => user.id,
-        "product" => @v4_growth_200k_yearly_plan_id,
-        "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
-        "theme" => "none"
-      } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
+               "disableLogout" => true,
+               "email" => user.email,
+               "passtrough" => user.id,
+               "product" => @v4_growth_200k_yearly_plan_id,
+               "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+               "theme" => "none"
+             } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
 
       element(lv, @slider_input) |> render_change(%{slider: 6})
       doc = element(lv, @monthly_interval_button) |> render_click()
 
-      assert get_paddle_checkout_params(find(doc, @business_checkout_button))["product"] == @v4_business_5m_monthly_plan_id
+      assert get_paddle_checkout_params(find(doc, @business_checkout_button))["product"] ==
+               @v4_business_5m_monthly_plan_id
     end
   end
 
   describe "for a user with a v4 growth subscription plan" do
-    setup [:create_user, :log_in, :subscribe_growth]
+    setup [:create_user, :log_in, :subscribe_v4_growth]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -255,7 +257,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a v4 business subscription plan" do
-    setup [:create_user, :log_in, :subscribe_business]
+    setup [:create_user, :log_in, :subscribe_v4_business]
 
     test "gets default pageview limit from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -362,7 +364,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "checkout buttons are paddle buttons", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~ "Paddle.Checkout.open"
-      assert text_of_attr(find(doc, @business_checkout_button), "onclick") =~ "Paddle.Checkout.open"
+
+      assert text_of_attr(find(doc, @business_checkout_button), "onclick") =~
+               "Paddle.Checkout.open"
     end
 
     test "currently owned tier is highlighted if stats are still unlocked", %{conn: conn} do
@@ -380,45 +384,71 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
-  defp subscribe_growth(%{user: user}) do
-    insert(:subscription, user: user, paddle_plan_id: @v4_growth_200k_yearly_plan_id)
-    {:ok, user: Plausible.Users.with_subscription(user)}
+  describe "for a grandfathered user" do
+    setup [:create_user, :log_in]
+
+    test "on a v1 plan, Growth tiers are available at 20M, 50M, 50M+, but Business tiers are not", %{conn: conn, user: user} do
+      create_subscription_for(user, paddle_plan_id: @v1_10k_yearly_plan_id)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 8})
+      assert doc =~ "Monthly pageviews: <b>20M</b"
+      assert text_of_element(doc, @business_plan_box) =~ "Contact us"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€900"
+      assert text_of_element(doc, @growth_price_tag_interval) == "/year"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 9})
+      assert doc =~ "Monthly pageviews: <b>50M</b"
+      assert text_of_element(doc, @business_plan_box) =~ "Contact us"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€1K"
+      assert text_of_element(doc, @growth_price_tag_interval) == "/year"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 10})
+      assert doc =~ "Monthly pageviews: <b>50M+</b"
+      assert text_of_element(doc, @business_plan_box) =~ "Contact us"
+      assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
+      assert doc =~ "Monthly pageviews: <b>10M</b"
+      refute text_of_element(doc, @business_plan_box) =~ "Contact us"
+      refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
+    end
   end
 
-  defp subscribe_business(%{user: user}) do
-    insert(:subscription, user: user, paddle_plan_id: @v4_business_5m_monthly_plan_id)
-    {:ok, user: Plausible.Users.with_subscription(user)}
+  defp subscribe_v4_growth(%{user: user}) do
+    create_subscription_for(user, paddle_plan_id: @v4_growth_200k_yearly_plan_id)
+  end
+
+  defp subscribe_v4_business(%{user: user}) do
+    create_subscription_for(user, paddle_plan_id: @v4_business_5m_monthly_plan_id)
   end
 
   defp create_past_due_subscription(%{user: user}) do
-    insert(:subscription,
-      user: user,
+    create_subscription_for(user,
       paddle_plan_id: @v4_growth_200k_yearly_plan_id,
       status: "past_due",
       update_url: "https://update.billing.details"
     )
-
-    {:ok, user: Plausible.Users.with_subscription(user)}
   end
 
   defp create_paused_subscription(%{user: user}) do
-    insert(:subscription,
-      user: user,
+    create_subscription_for(user,
       paddle_plan_id: @v4_growth_200k_yearly_plan_id,
       status: "paused",
       update_url: "https://update.billing.details"
     )
-
-    {:ok, user: Plausible.Users.with_subscription(user)}
   end
 
   defp create_cancelled_subscription(%{user: user}) do
-    insert(:subscription,
-      user: user,
+    create_subscription_for(user,
       paddle_plan_id: @v4_growth_200k_yearly_plan_id,
       status: "deleted"
     )
+  end
 
+  defp create_subscription_for(user, subscription_options) do
+    insert(:subscription, Keyword.put(subscription_options, :user, user))
     {:ok, user: Plausible.Users.with_subscription(user)}
   end
 
@@ -430,8 +460,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   defp get_paddle_checkout_params(element) do
     with onclick <- text_of_attr(element, "onclick"),
          [[_, checkout_params_str]] <- Regex.scan(~r/Paddle\.Checkout\.open\((.*?)\)/, onclick),
-         {:ok, checkout_params} <- Jason.decode(checkout_params_str)
-    do
+         {:ok, checkout_params} <- Jason.decode(checkout_params_str) do
       checkout_params
     end
   end

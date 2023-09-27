@@ -8,7 +8,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   import PlausibleWeb.Components.Billing
 
-  @volumes [10_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000, 5_000_000, 10_000_000]
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
 
@@ -28,11 +27,18 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:current_interval, fn %{user: user} ->
         current_user_subscription_interval(user.subscription)
       end)
-      |> assign_new(:selected_volume, fn %{owned_plan: owned_plan, usage: usage} ->
-        default_selected_volume(owned_plan, usage)
-      end)
       |> assign_new(:available_plans, fn %{user: user} ->
         Plans.available_plans_with_prices(user)
+      end)
+      |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
+        get_available_volumes(available_plans)
+      end)
+      |> assign_new(:selected_volume, fn %{
+                                           owned_plan: owned_plan,
+                                           usage: usage,
+                                           available_volumes: available_volumes
+                                         } ->
+        default_selected_volume(owned_plan, usage, available_volumes)
       end)
       |> assign_new(:selected_interval, fn %{current_interval: current_interval} ->
         current_interval || :monthly
@@ -67,7 +73,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           </p>
         </div>
         <.interval_picker selected_interval={@selected_interval} />
-        <.slider selected_volume={@selected_volume} />
+        <.slider selected_volume={@selected_volume} available_volumes={@available_volumes} />
         <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <.plan_box
             kind={:growth}
@@ -117,28 +123,29 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def handle_event("slide", %{"slider" => index}, socket) do
     index = String.to_integer(index)
+    %{available_plans: available_plans, available_volumes: available_volumes} = socket.assigns
 
     new_volume =
-      if index == length(@volumes) do
+      if index == length(available_volumes) do
         :enterprise
       else
-        Enum.at(@volumes, index)
+        Enum.at(available_volumes, index)
       end
 
     {:noreply,
      assign(socket,
        selected_volume: new_volume,
        selected_growth_plan:
-         get_plan_by_volume(socket.assigns.available_plans.growth, new_volume),
+         get_plan_by_volume(available_plans.growth, new_volume),
        selected_business_plan:
-         get_plan_by_volume(socket.assigns.available_plans.business, new_volume)
+         get_plan_by_volume(available_plans.business, new_volume)
      )}
   end
 
-  defp default_selected_volume(%Plan{monthly_pageview_limit: limit}, _usage), do: limit
+  defp default_selected_volume(%Plan{monthly_pageview_limit: limit}, _, _), do: limit
 
-  defp default_selected_volume(_, usage) do
-    Enum.find(@volumes, &(usage < &1)) || :enterprise
+  defp default_selected_volume(_, usage, available_volumes) do
+    Enum.find(available_volumes, &(usage < &1)) || :enterprise
   end
 
   defp current_user_subscription_interval(subscription) do
@@ -203,7 +210,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <form class="mt-4 max-w-2xl mx-auto">
       <p class="text-xl text-gray-600 dark:text-gray-400 text-center">
-        Monthly pageviews: <b><%= slider_value(@selected_volume) %></b>
+        Monthly pageviews: <b><%= slider_value(@selected_volume, @available_volumes) %></b>
       </p>
       <input
         phx-change="slide"
@@ -211,9 +218,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         class="shadow-md border border-gray-200 dark:bg-gray-600 dark:border-none"
         type="range"
         min="0"
-        max={length(volumes())}
+        max={length(@available_volumes)}
         step="1"
-        value={Enum.find_index(volumes(), &(&1 == @selected_volume)) || length(volumes())}
+        value={Enum.find_index(@available_volumes, &(&1 == @selected_volume)) || length(@available_volumes)}
       />
     </form>
     """
@@ -244,7 +251,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <%= cond do %>
           <% !@available -> %>
             <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
-          <% @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] ->%>
+          <% @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] -> %>
             <.render_change_plan_link
               paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
               text={
@@ -257,11 +264,11 @@ defmodule PlausibleWeb.Live.ChoosePlan do
               }
               {assigns}
             />
-        <% true -> %>
-          <.paddle_button
-            paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
-            {assigns}
-          />
+          <% true -> %>
+            <.paddle_button
+              paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
+              {assigns}
+            />
         <% end %>
       </div>
       <ul
@@ -617,20 +624,26 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     end
   end
 
+  defp get_available_volumes(%{business: business_plans, growth: growth_plans}) do
+    growth_volumes = Enum.map(growth_plans, & &1.monthly_pageview_limit)
+    business_volumes = Enum.map(business_plans, & &1.monthly_pageview_limit)
+
+    growth_volumes ++ business_volumes
+    |> Enum.uniq()
+  end
+
   defp get_paddle_product_id(%Plan{monthly_product_id: plan_id}, :monthly), do: plan_id
   defp get_paddle_product_id(%Plan{yearly_product_id: plan_id}, :yearly), do: plan_id
 
-  defp slider_value(:enterprise) do
-    List.last(@volumes)
+  defp slider_value(:enterprise, available_volumes) do
+    List.last(available_volumes)
     |> PlausibleWeb.StatsView.large_number_format()
     |> Kernel.<>("+")
   end
 
-  defp slider_value(volume) when is_integer(volume) do
+  defp slider_value(volume, _) when is_integer(volume) do
     PlausibleWeb.StatsView.large_number_format(volume)
   end
-
-  defp volumes(), do: @volumes
 
   defp contact_link(), do: @contact_link
 
