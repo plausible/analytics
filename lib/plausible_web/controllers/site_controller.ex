@@ -230,7 +230,6 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("settings_funnels.html",
       site: site,
       dogfood_page_path: "/:dashboard/settings/funnels",
@@ -243,7 +242,6 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
     conn
-    |> assign(:skip_plausible_tracking, true)
     |> render("settings_props.html",
       site: site,
       dogfood_page_path: "/:dashboard/settings/properties",
