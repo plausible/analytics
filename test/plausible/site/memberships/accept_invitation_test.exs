@@ -231,5 +231,46 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert Repo.reload!(new_owner).trial_expiry_date == Date.add(Date.utc_today(), -1)
       assert Repo.reload!(site).locked
     end
+
+    test "ends grace period and sends an email about it if new owner is in grace period" do
+      site = insert(:site, locked: false)
+
+      existing_owner = insert(:user)
+      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+      new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
+      insert(:subscription, user: new_owner, next_bill_date: Timex.today())
+
+      new_owner =
+        new_owner
+        |> Plausible.Auth.GracePeriod.start_changeset(100)
+        |> then(fn changeset ->
+          grace_period =
+            changeset
+            |> get_field(:grace_period)
+            |> Map.put(:end_date, Date.add(Date.utc_today(), -1))
+
+          change(changeset, grace_period: grace_period)
+        end)
+        |> Repo.update!()
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: existing_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:ok, _membership} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
+
+      assert Repo.reload!(new_owner).grace_period.is_over
+      assert Repo.reload!(site).locked
+
+      assert_email_delivered_with(
+        to: [{"Jane Smith", new_owner.email}],
+        subject: "[Action required] Your Plausible dashboard is now locked"
+      )
+    end
   end
 end
