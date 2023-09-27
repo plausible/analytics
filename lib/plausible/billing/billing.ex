@@ -83,7 +83,7 @@ defmodule Plausible.Billing do
     cond do
       trial_is_over && !subscription_active -> {true, :no_active_subscription}
       Plausible.Auth.GracePeriod.expired?(user) -> {true, :grace_period_ended}
-      true -> false
+      true -> {false, nil}
     end
   end
 

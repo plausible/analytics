@@ -132,6 +132,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Repo.reload!(site).locked
     end
 
+    # FIXME: test started failing after changes
     test "will end the trial of the new owner immediately", %{
       conn: conn,
       user: user

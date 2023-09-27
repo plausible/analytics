@@ -128,27 +128,28 @@ defmodule Plausible.BillingTest do
   describe "needs_to_upgrade?" do
     test "is false for a trial user" do
       user = insert(:user)
-      refute Billing.needs_to_upgrade?(user)
+      assert Billing.needs_to_upgrade?(user) == {false, nil}
     end
 
+    # FIXME: reason result is not consistent with expectation, why?
     test "is true for a user with an expired trial" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
 
-      assert Billing.needs_to_upgrade?(user)
+      assert Billing.needs_to_upgrade?(user) == {true, :no_active_subscription}
     end
 
     test "is false for a user with an expired trial but an active subscription" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user)
 
-      refute Billing.needs_to_upgrade?(user)
+      assert Billing.needs_to_upgrade?(user) == {false, nil}
     end
 
     test "is false for a user with a cancelled subscription IF the billing cycle isn't completed yet" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user, status: "deleted", next_bill_date: Timex.today())
 
-      refute Billing.needs_to_upgrade?(user)
+      assert Billing.needs_to_upgrade?(user) == {false, nil}
     end
 
     test "is true for a user with a cancelled subscription IF the billing cycle is complete" do
@@ -160,15 +161,18 @@ defmodule Plausible.BillingTest do
         next_bill_date: Timex.shift(Timex.today(), days: -1)
       )
 
-      assert Billing.needs_to_upgrade?(user)
+      assert Billing.needs_to_upgrade?(user) == {true, :no_active_subscription}
     end
 
-    test "is false for a deleted subscription if not next_bill_date specified" do
+    # FIXME: revise if that makes sense
+    test "is true for a deleted subscription if not next_bill_date specified" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user, status: "deleted", next_bill_date: nil)
 
-      assert Billing.needs_to_upgrade?(user)
+      assert Billing.needs_to_upgrade?(user) == {true, :no_active_subscription}
     end
+
+    # FIXME: missing grace period test
   end
 
   @subscription_id "subscription-123"
