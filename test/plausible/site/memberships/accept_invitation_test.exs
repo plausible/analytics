@@ -33,6 +33,30 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       )
     end
 
+    test "does not degrade role when trying to invite self as an owner" do
+      site = insert(:site)
+      user = insert(:user)
+      membership = insert(:site_membership, user: user, site: site, role: :owner)
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: user,
+          email: user.email,
+          role: :admin
+        )
+
+      assert {:ok, invited_membership} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, user)
+
+      assert invited_membership.id == membership.id
+      membership = Repo.reload!(membership)
+      assert membership.role == :owner
+      assert membership.site_id == site.id
+      assert membership.user_id == user.id
+      refute Repo.reload(invitation)
+    end
+
     test "handles accepting invitation as already a member gracefully" do
       inviter = insert(:user)
       invitee = insert(:user)
@@ -137,6 +161,29 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
         assert Repo.reload!(owner_membership).role == :admin
         refute Repo.reload(invitation)
       end
+    end
+
+    test "does note degrade or alter trial when accepting ownership transfer by self" do
+      site = insert(:site)
+      owner = insert(:user, trial_expiry_date: nil)
+      owner_membership = insert(:site_membership, user: owner, site: site, role: :owner)
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: owner,
+          email: owner.email,
+          role: :owner
+        )
+
+      assert {:ok, membership} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, owner)
+
+      assert membership.id == owner_membership.id
+      assert membership.role == :owner
+      assert Repo.reload!(owner).trial_expiry_date == nil
+
+      refute Repo.reload(invitation)
     end
 
     test "locks the site if the new owner has no active subscription or trial" do

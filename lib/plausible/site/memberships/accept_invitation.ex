@@ -110,7 +110,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
     case previous_owner do
       %{user_id: ^new_owner_id} ->
-        Multi.put(multi, :previous_owner, previous_owner)
+        Multi.put(multi, :previous_owner_membership, previous_owner)
 
       nil ->
         Logger.warn(
@@ -118,10 +118,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
             ", new owner ID: #{new_owner_id}"
         )
 
-        Multi.put(multi, :previous_owner, nil)
+        Multi.put(multi, :previous_owner_membership, nil)
 
       previous_owner ->
-        Multi.update(multi, :previous_owner, Site.Membership.set_role(previous_owner, :admin))
+        Multi.update(
+          multi,
+          :previous_owner_membership,
+          Site.Membership.set_role(previous_owner, :admin)
+        )
     end
   end
 
@@ -135,7 +139,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
       Billing.on_trial?(new_owner) or is_nil(new_owner.trial_expiry_date) ->
         Multi.update(multi, :user, fn
-          %{previous_owner: %{id: ^new_owner_id}} ->
+          %{previous_owner_membership: %{user_id: ^new_owner_id}} ->
             Ecto.Changeset.change(new_owner)
 
           _ ->
