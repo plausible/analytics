@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   end
 
   describe "POST /sites/invitations/:invitation_id/reject" do
-    test "deletes the invitation", %{conn: conn, user: user} do
+    test "rejects the invitation", %{conn: conn, user: user} do
       site = insert(:site)
 
       invitation =
@@ -91,24 +91,20 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
           role: :admin
         )
 
-      post(conn, "/sites/invitations/#{invitation.invitation_id}/reject")
+      conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/reject")
 
-      refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
+      assert redirected_to(conn, 302) == "/sites"
+
+      refute Repo.reload(invitation)
     end
 
-    test "notifies the original inviter", %{conn: conn, user: user} do
-      inviter = insert(:user)
-      site = insert(:site)
+    test "renders error for non-existent invitation", %{conn: conn} do
+      conn = post(conn, "/sites/invitations/does-not-exist/reject")
 
-      invitation =
-        insert(:invitation, site_id: site.id, inviter: inviter, email: user.email, role: :admin)
+      assert redirected_to(conn, 302) == "/sites"
 
-      post(conn, "/sites/invitations/#{invitation.invitation_id}/reject")
-
-      assert_email_delivered_with(
-        to: [nil: inviter.email],
-        subject: "[Plausible Analytics] #{user.email} rejected your invitation to #{site.domain}"
-      )
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Invitation missing or already accepted"
     end
   end
 
@@ -132,9 +128,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       assert redirected_to(conn, 302) == "/#{site.domain}/settings/people"
 
-      refute Repo.exists?(
-               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
-             )
+      refute Repo.reload(invitation)
     end
 
     test "fails to remove an invitation with insufficient permission", %{conn: conn, user: user} do
@@ -153,9 +147,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         Routes.invitation_path(conn, :remove_invitation, site.domain, invitation.invitation_id)
       )
 
-      assert Repo.exists?(
-               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
-             )
+      assert Repo.reload(invitation)
     end
 
     test "fails to remove an invitation from the outside", %{conn: my_conn, user: me} do
@@ -184,9 +176,26 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       delete(my_conn, remove_invitation_path)
 
-      assert Repo.exists?(
-               from i in Plausible.Auth.Invitation, where: i.email == "jane@example.com"
-             )
+      assert Repo.reload(invitation)
+    end
+
+    test "renders error for non-existent invitation", %{conn: conn, user: user} do
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :admin)])
+
+      remove_invitation_path =
+        Routes.invitation_path(
+          conn,
+          :remove_invitation,
+          site.domain,
+          "does_not_exist"
+        )
+
+      conn = delete(conn, remove_invitation_path)
+
+      assert redirected_to(conn, 302) == "/#{site.domain}/settings/people"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "Invitation missing or already removed"
     end
   end
 end
