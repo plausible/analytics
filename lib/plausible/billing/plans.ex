@@ -69,6 +69,7 @@ defmodule Plausible.Billing.Plans do
   As new versions of plans are introduced, users who were on old plans can
   still choose from old plans.
   """
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def growth_plans_for(%User{} = user) do
     user = Plausible.Users.with_subscription(user)
     v4_available = FunWithFlags.enabled?(:business_tier, for: user)
