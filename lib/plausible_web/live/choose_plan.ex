@@ -194,7 +194,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <div class="grid grid-cols-2 gap-x-1">
       <div></div>
-      <span class={[
+      <span id="two-months-free" class={[
         "mb-1 block whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 ring-1",
         @active &&
           "bg-yellow-100 ring-yellow-700 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200",

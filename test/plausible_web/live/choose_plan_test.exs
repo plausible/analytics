@@ -12,6 +12,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @yearly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="yearly"]/
   @interval_button_active_class "bg-indigo-600 text-white"
   @slider_input ~s/input[name="slider"]/
+  @two_months_free "#two-months-free"
 
   @growth_plan_box "#growth-plan-box"
   @growth_price_tag_amount "#growth-price-tag-amount"
@@ -35,6 +36,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "You have used <b>0</b>\nbillable pageviews in the last 30 days"
       assert doc =~ "Questions?"
       assert doc =~ "What happens if I go over my page views limit?"
+    end
+
+    test "changing billing interval changes two months free colour", %{conn: conn} do
+      {:ok, lv, doc} = get_liveview(conn)
+
+      assert class_of_element(doc, @two_months_free) =~ "text-gray-500"
+      refute class_of_element(doc, @two_months_free) =~ "text-yellow-700"
+
+      doc = element(lv, @yearly_interval_button) |> render_click()
+
+      refute class_of_element(doc, @two_months_free) =~ "text-gray-500"
+      assert class_of_element(doc, @two_months_free) =~ "text-yellow-700"
     end
 
     test "default billing interval is monthly, and can switch to yearly", %{conn: conn} do
