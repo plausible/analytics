@@ -1,5 +1,10 @@
 <%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
-  <script defer data-domain={dogfood_domain(@conn)} src={dogfood_script_url()}>
+  <script
+    defer
+    data-api={dogfood_api_destination()}
+    data-domain={dogfood_domain(@conn)}
+    src={dogfood_script_url()}
+  >
   </script>
   <script>
     window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }

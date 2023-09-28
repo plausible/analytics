@@ -29,6 +29,16 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  @doc """
+  Temporary override to do more testing of the new ingest.plausible.io endpoint for accepting events. In staging and locally
+  will fall back to staging.plausible.io/api/event and localhost:8000/api/event respectively.
+  """
+  def dogfood_api_destination() do
+    if Application.get_env(:plausible, :environment) == "prod" do
+      "https://ingest.plausible.io/api/event"
+    end
+  end
+
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"
