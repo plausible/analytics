@@ -2,6 +2,8 @@ defmodule Plausible.Site.SharedLink do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   schema "shared_links" do
     belongs_to :site, Plausible.Site
     field :name, :string
