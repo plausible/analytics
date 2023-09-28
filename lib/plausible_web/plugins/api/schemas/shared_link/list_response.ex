@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Plugins.API.Schemas.SharedLink.ListResponse do
+  @moduledoc """
+  OpenAPI schema for SharedLink list response
+  """
   use PlausibleWeb, :open_api_schema
 
   OpenApiSpex.schema(%{

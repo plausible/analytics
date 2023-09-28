@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Plugins.API.Spec do
+  @moduledoc """
+  OpenAPI specification for the Plugins API
+  """
   alias OpenApiSpex.{Components, Info, OpenApi, Paths, Server}
   alias PlausibleWeb.Plugins.API.Router
   @behaviour OpenApi

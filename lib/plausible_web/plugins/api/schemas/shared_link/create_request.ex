@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Plugins.API.Schemas.SharedLink.CreateRequest do
+  @moduledoc """
+  OpenAPI schema for SharedLink creation request
+  """
   use PlausibleWeb, :open_api_schema
 
   OpenApiSpex.schema(%{

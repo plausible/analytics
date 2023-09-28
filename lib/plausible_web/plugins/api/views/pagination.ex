@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Plugins.API.Views.Pagination do
+  @moduledoc """
+  A view capable of rendering pagination metadata included
+  in responses containing lists of objects.
+  """
   use Phoenix.View,
     namespace: PlausibleWeb.Plugins.API,
     root: ""
