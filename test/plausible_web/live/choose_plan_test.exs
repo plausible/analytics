@@ -448,13 +448,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       doc = element(lv, @yearly_interval_button) |> render_click()
 
       assert %{
-        "disableLogout" => true,
-        "email" => user.email,
-        "passthrough" => user.id,
-        "product" => @v4_growth_200k_yearly_plan_id,
-        "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
-        "theme" => "none"
-      } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
+               "disableLogout" => true,
+               "email" => user.email,
+               "passthrough" => user.id,
+               "product" => @v4_growth_200k_yearly_plan_id,
+               "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+               "theme" => "none"
+             } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
     end
   end
 
