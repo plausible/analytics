@@ -546,6 +546,18 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert user.name == "New name"
     end
 
+    test "does not allow setting non-profile fields", %{conn: conn, user: user} do
+      expiry_date = user.trial_expiry_date
+
+      assert %Date{} = expiry_date
+
+      put(conn, "/settings", %{
+        "user" => %{"name" => "New name", "trial_expiry_date" => "2023-07-14"}
+      })
+
+      assert Repo.reload!(user).trial_expiry_date == expiry_date
+    end
+
     test "redirects user to /settings", %{conn: conn} do
       conn = put(conn, "/settings", %{"user" => %{"name" => "New name"}})
 
