@@ -429,6 +429,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
+  describe "for a free_10k subscription" do
+    setup [:create_user, :log_in, :subscribe_free_10k]
+
+    test "does not highlight any tier", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      refute element_exists?(doc, @growth_current_label)
+      refute element_exists?(doc, @business_current_label)
+    end
+  end
+
   defp subscribe_v4_growth(%{user: user}) do
     create_subscription_for(user, paddle_plan_id: @v4_growth_200k_yearly_plan_id)
   end
@@ -463,6 +473,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   defp create_subscription_for(user, subscription_options) do
     insert(:subscription, Keyword.put(subscription_options, :user, user))
     {:ok, user: Plausible.Users.with_subscription(user)}
+  end
+
+  defp subscribe_free_10k(%{user: user}) do
+    Plausible.Billing.Subscription.free(%{user_id: user.id})
+    |> Repo.insert!()
+
+    {:ok, user: user}
   end
 
   defp get_liveview(conn) do

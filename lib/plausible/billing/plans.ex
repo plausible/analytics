@@ -183,7 +183,7 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp get_regular_plan(%Subscription{} = subscription) do
+  def get_regular_plan(%Subscription{} = subscription) do
     find(subscription.paddle_plan_id)
   end
 

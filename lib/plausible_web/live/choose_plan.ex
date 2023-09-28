@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
         (subscription && !Subscriptions.expired?(subscription) &&
-           Plans.get_subscription_plan(subscription)) || nil
+           Plans.get_regular_plan(subscription)) || nil
       end)
       |> assign_new(:current_interval, fn %{user: user} ->
         current_user_subscription_interval(user.subscription)
@@ -251,7 +251,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <%= cond do %>
           <% !@available -> %>
             <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
-          <% @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] -> %>
+          <% @owned_plan && @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] -> %>
             <.render_change_plan_link
               paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
               text={

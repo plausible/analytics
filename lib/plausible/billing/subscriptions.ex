@@ -37,6 +37,8 @@ defmodule Plausible.Billing.Subscriptions do
 
   def valid_statuses(), do: @valid_statuses
 
+  def expired?(%Subscription{paddle_plan_id: "free_10k"}), do: false
+
   def expired?(%Subscription{status: status, next_bill_date: next_bill_date}) do
     cancelled? = status == "deleted"
     expired? = Timex.compare(next_bill_date, Timex.today()) < 0
