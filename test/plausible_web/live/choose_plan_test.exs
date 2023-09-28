@@ -36,6 +36,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "You have used <b>0</b>\nbillable pageviews in the last 30 days"
       assert doc =~ "Questions?"
       assert doc =~ "What happens if I go over my page views limit?"
+      assert doc =~ "Enterprise"
+      assert doc =~ "+ VAT if applicable"
     end
 
     test "changing billing interval changes two months free colour", %{conn: conn} do
@@ -400,7 +402,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   describe "for a grandfathered user" do
     setup [:create_user, :log_in]
 
-    test "on a v1 plan, Growth tiers are available at 20M, 50M, 50M+, but Business tiers are not", %{conn: conn, user: user} do
+    test "on a v1 plan, Growth tiers are available at 20M, 50M, 50M+, but Business tiers are not",
+         %{conn: conn, user: user} do
       create_subscription_for(user, paddle_plan_id: @v1_10k_yearly_plan_id)
 
       {:ok, lv, _doc} = get_liveview(conn)

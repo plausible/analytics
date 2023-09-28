@@ -135,10 +135,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     {:noreply,
      assign(socket,
        selected_volume: new_volume,
-       selected_growth_plan:
-         get_plan_by_volume(available_plans.growth, new_volume),
-       selected_business_plan:
-         get_plan_by_volume(available_plans.business, new_volume)
+       selected_growth_plan: get_plan_by_volume(available_plans.growth, new_volume),
+       selected_business_plan: get_plan_by_volume(available_plans.business, new_volume)
      )}
   end
 
@@ -194,12 +192,15 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <div class="grid grid-cols-2 gap-x-1">
       <div></div>
-      <span id="two-months-free" class={[
-        "mb-1 block whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 ring-1",
-        @active &&
-          "bg-yellow-100 ring-yellow-700 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200",
-        !@active && "text-gray-500 ring-gray-300 dark:text-gray-400 dark:ring-gray-600"
-      ]}>
+      <span
+        id="two-months-free"
+        class={[
+          "mb-1 block whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 ring-1",
+          @active &&
+            "bg-yellow-100 ring-yellow-700 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200",
+          !@active && "text-gray-500 ring-gray-300 dark:text-gray-400 dark:ring-gray-600"
+        ]}
+      >
         2 months free
       </span>
     </div>
@@ -220,7 +221,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         min="0"
         max={length(@available_volumes)}
         step="1"
-        value={Enum.find_index(@available_volumes, &(&1 == @selected_volume)) || length(@available_volumes)}
+        value={
+          Enum.find_index(@available_volumes, &(&1 == @selected_volume)) || length(@available_volumes)
+        }
       />
     </form>
     """
@@ -628,7 +631,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     growth_volumes = Enum.map(growth_plans, & &1.monthly_pageview_limit)
     business_volumes = Enum.map(business_plans, & &1.monthly_pageview_limit)
 
-    growth_volumes ++ business_volumes
+    (growth_volumes ++ business_volumes)
     |> Enum.uniq()
   end
 
