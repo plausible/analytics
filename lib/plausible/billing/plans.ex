@@ -130,7 +130,7 @@ defmodule Plausible.Billing.Plans do
   def get_subscription_plan(nil), do: nil
 
   def get_subscription_plan(subscription) do
-    if subscription && subscription.paddle_plan_id == "free_10k" do
+    if subscription.paddle_plan_id == "free_10k" do
       :free_10k
     else
       get_regular_plan(subscription) || get_enterprise_plan(subscription)
@@ -186,8 +186,6 @@ defmodule Plausible.Billing.Plans do
   def get_regular_plan(%Subscription{} = subscription) do
     find(subscription.paddle_plan_id)
   end
-
-  defp get_enterprise_plan(nil), do: nil
 
   defp get_enterprise_plan(%Subscription{} = subscription) do
     Repo.get_by(EnterprisePlan,
