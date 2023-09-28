@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert %{
                "disableLogout" => true,
                "email" => user.email,
-               "passtrough" => user.id,
+               "passthrough" => user.id,
                "product" => @v4_growth_200k_yearly_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
