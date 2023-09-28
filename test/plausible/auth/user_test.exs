@@ -3,6 +3,68 @@ defmodule Plausible.Auth.UserTest do
 
   alias Plausible.Auth.User
 
+  describe "settings_changeset/2" do
+    test "fails for empty input and user" do
+      changeset = User.settings_changeset(%User{}, %{})
+
+      refute changeset.valid?
+    end
+
+    test "succeeds for non-empty user even if input is empty" do
+      changeset =
+        User.settings_changeset(
+          %User{name: "Mary Jane", email: "mary@plausible.test", theme: "system"},
+          %{}
+        )
+
+      assert changeset.valid?
+    end
+
+    test "succeeds for valid user details input" do
+      changeset =
+        User.settings_changeset(
+          %User{name: "Mary Jane", email: "mary@plausible.test", theme: "system"},
+          %{name: "Tony Mangle", email: "tony@plausible.test"}
+        )
+
+      assert changeset.valid?
+      assert changeset.changes == %{name: "Tony Mangle", email: "tony@plausible.test"}
+    end
+
+    test "succeeds for valid theme input" do
+      changeset =
+        User.settings_changeset(
+          %User{name: "Mary Jane", email: "mary@plausible.test", theme: "system"},
+          %{theme: "dark"}
+        )
+
+      assert changeset.valid?
+      assert changeset.changes == %{theme: :dark}
+    end
+
+    test "fails on invalid user details input" do
+      changeset =
+        User.settings_changeset(
+          %User{name: "Mary Jane", email: "mary@plausible.test", theme: "system"},
+          %{name: ""}
+        )
+
+      refute changeset.valid?
+      assert changeset.errors[:name]
+    end
+
+    test "fails on invalid theme input" do
+      changeset =
+        User.settings_changeset(
+          %User{name: "Mary Jane", email: "mary@plausible.test", theme: "system"},
+          %{theme: "invalid"}
+        )
+
+      refute changeset.valid?
+      assert changeset.errors[:theme]
+    end
+  end
+
   describe "password_strength/1" do
     test "scores password with all arguments in changes" do
       assert %{score: score, warning: warning, suggestions: suggestions} =

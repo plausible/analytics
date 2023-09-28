@@ -44,7 +44,7 @@ defmodule Plausible.Auth do
           Ecto.Multi.new()
           |> Ecto.Multi.update(
             :user,
-            Plausible.Auth.User.changeset(user, %{email_verified: true})
+            Ecto.Changeset.change(user, email_verified: true)
           )
           |> Ecto.Multi.update_all(
             :codes,

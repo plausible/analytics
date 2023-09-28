@@ -331,12 +331,12 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def user_settings(conn, _params) do
-    changeset = Auth.User.changeset(conn.assigns[:current_user])
+    changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
     render_settings(conn, changeset)
   end
 
   def save_settings(conn, %{"user" => user_params}) do
-    changes = Auth.User.changeset(conn.assigns[:current_user], user_params)
+    changes = Auth.User.settings_changeset(conn.assigns[:current_user], user_params)
 
     case Repo.update(changes) do
       {:ok, _user} ->

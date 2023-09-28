@@ -27,9 +27,9 @@ defmodule PlausibleWeb.Live.RegisterForm do
     else
       changeset =
         if invitation = socket.assigns.invitation do
-          Auth.User.changeset(%Auth.User{email: invitation.email})
+          Auth.User.settings_changeset(%Auth.User{email: invitation.email})
         else
-          Auth.User.changeset(%Auth.User{})
+          Auth.User.settings_changeset(%Auth.User{})
         end
 
       {:ok,
