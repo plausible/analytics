@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Error do
     render("500.json", assigns)
   end
 
-  @spec render(Phoenix.Template.name(), map) :: map | binary()
+  @spec render(String.t(), map) :: map | binary()
   def render("400.json", _assigns) do
     %{errors: [%{detail: "Bad request"}]}
   end

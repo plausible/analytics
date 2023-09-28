@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Plugins.API.Errors do
     |> error(:unauthorized, "Plugins API: unauthorized")
   end
 
-  @spec internal_server_error(Conn.t()) :: Conn.t()
+  @spec internal_server_error(Plug.Conn.t()) :: Plug.Conn.t()
   def internal_server_error(conn) do
     contact_support_note =
       if not Plausible.Release.selfhost?() do

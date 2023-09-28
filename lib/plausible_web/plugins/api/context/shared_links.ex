@@ -8,7 +8,7 @@ defmodule PlausibleWeb.Plugins.API.Context.SharedLinks do
 
   alias Plausible.Repo
 
-  @spec get_shared_links(Plausible.Site.t(), Keyword.t()) :: {:ok, Paginator.Page.t()}
+  @spec get_shared_links(Plausible.Site.t(), map()) :: {:ok, Paginator.Page.t()}
   def get_shared_links(site, params) do
     query =
       from l in Plausible.Site.SharedLink,
@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Plugins.API.Context.SharedLinks do
     get_by_name(site, name)
   end
 
-  @spec get_or_create(Plausible.Site.t(), String.t(), String.t()) ::
+  @spec get_or_create(Plausible.Site.t(), String.t(), String.t() | nil) ::
           {:ok, Plausible.Site.SharedLink.t()}
   def get_or_create(site, name, password \\ nil) do
     case get_by_name(site, name) do

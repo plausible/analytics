@@ -108,7 +108,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       assert resp.data.href =~ "http://localhost:8000/share/#{site.domain}?auth="
 
       [location] = get_resp_header(conn, "location")
-      assert location == Routes.shared_links_url(base_uri(), :get, resp.data.id)
+
+      assert location ==
+               Routes.shared_links_url(base_uri(), :get, resp.data.id)
 
       assert ^resp =
                initial_conn

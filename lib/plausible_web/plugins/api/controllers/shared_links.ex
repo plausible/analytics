@@ -48,7 +48,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
 
   @spec create(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def create(
-        %{body_params: %Schemas.SharedLink.CreateRequest{name: name, password: password}} = conn,
+        %{
+          private: %{
+            open_api_spex: %{
+              body_params: %Schemas.SharedLink.CreateRequest{name: name, password: password}
+            }
+          }
+        } = conn,
         _params
       ) do
     site = conn.assigns.authorized_site
@@ -83,7 +89,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
   )
 
   @spec get(Plug.Conn.t(), map()) :: Plug.Conn.t()
-  def get(conn, %{id: id}) do
+  def get(%{private: %{open_api_spex: %{params: %{id: id}}}} = conn, _params) do
     site = conn.assigns.authorized_site
 
     case Context.SharedLinks.get(site, id) do

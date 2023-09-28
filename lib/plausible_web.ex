@@ -54,7 +54,7 @@ defmodule PlausibleWeb do
       alias PlausibleWeb.Plugins.API.Views
       alias PlausibleWeb.Plugins.API.Context
 
-      plug(OpenApiSpex.Plug.CastAndValidate, json_render_error_v2: true)
+      plug(OpenApiSpex.Plug.CastAndValidate, json_render_error_v2: true, replace_params: false)
 
       use OpenApiSpex.ControllerSpecs
     end
