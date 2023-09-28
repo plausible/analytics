@@ -11,18 +11,8 @@ defmodule PlausibleWeb.Plugins.API.Spec do
     %OpenApi{
       servers: [
         %Server{
-          description: "Local server",
-          url: "http://localhost:8000/api/plugins",
-          variables: %{}
-        },
-        %Server{
-          description: "Staging server",
-          url: "https://staging.plausible.io/api/plugins",
-          variables: %{}
-        },
-        %Server{
-          description: "Production server",
-          url: "https://plausible.io/api/plugins",
+          description: "This server",
+          url: to_string(PlausibleWeb.Plugins.API.base_uri()),
           variables: %{}
         }
       ],
