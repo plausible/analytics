@@ -21,10 +21,12 @@ defmodule PlausibleWeb.Plugins.API.Views.SharedLink do
         authorized_site: site
       }) do
     %{
-      id: shared_link.id,
-      name: shared_link.name,
-      password_protected: is_binary(shared_link.password_hash),
-      href: Plausible.Sites.shared_link_url(site, shared_link)
+      data: %{
+        id: shared_link.id,
+        name: shared_link.name,
+        password_protected: is_binary(shared_link.password_hash),
+        href: Plausible.Sites.shared_link_url(site, shared_link)
+      }
     }
   end
 end

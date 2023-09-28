@@ -52,10 +52,12 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(200)
         |> assert_schema("SharedLink", spec())
 
-      assert resp.href == "http://localhost:8000/share/#{site.domain}?auth=#{shared_link.slug}"
-      assert resp.id == shared_link.id
-      assert resp.password_protected == false
-      assert resp.name == "Some Link Name"
+      assert resp.data.href ==
+               "http://localhost:8000/share/#{site.domain}?auth=#{shared_link.slug}"
+
+      assert resp.data.id == shared_link.id
+      assert resp.data.password_protected == false
+      assert resp.data.name == "Some Link Name"
     end
 
     test "fails to retrieve non-existing link", %{conn: conn, site: site, token: token} do
@@ -102,11 +104,11 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(201)
         |> assert_schema("SharedLink", spec())
 
-      assert resp.name == "My Shared Link"
-      assert resp.href =~ "http://localhost:8000/share/#{site.domain}?auth="
+      assert resp.data.name == "My Shared Link"
+      assert resp.data.href =~ "http://localhost:8000/share/#{site.domain}?auth="
 
       [location] = get_resp_header(conn, "location")
-      assert location == Routes.shared_links_url(base_uri(), :get, resp.id)
+      assert location == Routes.shared_links_url(base_uri(), :get, resp.data.id)
 
       assert ^resp =
                initial_conn
@@ -139,13 +141,14 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(201)
         |> assert_schema("SharedLink", spec())
 
-      id = resp.id
+      id = resp.data.id
 
       conn = create.()
 
       assert ^id =
                conn
                |> json_response(201)
+               |> Map.fetch!("data")
                |> Map.fetch!("id")
     end
 
@@ -204,7 +207,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(200)
         |> assert_schema("SharedLink.ListResponse", spec())
 
-      assert [%{name: "Shared Link 5"}, %{name: "Shared Link 4"}] = page1.data
+      assert [%{data: %{name: "Shared Link 5"}}, %{data: %{name: "Shared Link 4"}}] = page1.data
       assert page1.meta.pagination.has_next_page == true
       assert page1.meta.pagination.has_prev_page == false
       assert page1.meta.pagination.links.next
@@ -216,7 +219,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(200)
         |> assert_schema("SharedLink.ListResponse", spec())
 
-      assert [%{name: "Shared Link 3"}, %{name: "Shared Link 2"}] = page2.data
+      assert [%{data: %{name: "Shared Link 3"}}, %{data: %{name: "Shared Link 2"}}] = page2.data
 
       assert page2.meta.pagination.has_next_page == true
       assert page2.meta.pagination.has_prev_page == true
