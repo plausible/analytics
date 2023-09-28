@@ -440,6 +440,22 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute element_exists?(doc, @growth_current_label)
       refute element_exists?(doc, @business_current_label)
     end
+
+    test "renders Paddle upgrade buttons", %{conn: conn, user: user} do
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      element(lv, @slider_input) |> render_change(%{slider: 2})
+      doc = element(lv, @yearly_interval_button) |> render_click()
+
+      assert %{
+        "disableLogout" => true,
+        "email" => user.email,
+        "passthrough" => user.id,
+        "product" => @v4_growth_200k_yearly_plan_id,
+        "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+        "theme" => "none"
+      } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
+    end
   end
 
   defp subscribe_v4_growth(%{user: user}) do
