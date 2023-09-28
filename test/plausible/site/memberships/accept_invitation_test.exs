@@ -279,7 +279,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert Repo.reload!(site).locked
     end
 
-    test "ends grace period and sends an email about it if new owner is in grace period" do
+    test "ends grace period and sends an email about it if new owner is past grace period" do
       site = insert(:site, locked: false)
 
       existing_owner = insert(:user)
