@@ -43,6 +43,42 @@ defmodule PlausibleWeb do
     end
   end
 
+  def plugins_api_controller do
+    quote do
+      use Phoenix.Controller, namespace: PlausibleWeb.Plugins.API
+      import Plug.Conn
+      import PlausibleWeb.Plugins.API.Router.Helpers
+      import PlausibleWeb.Plugins.API, only: [base_uri: 0]
+
+      alias PlausibleWeb.Plugins.API.Schemas
+      alias PlausibleWeb.Plugins.API.Views
+      alias PlausibleWeb.Plugins.API.Context
+
+      plug(OpenApiSpex.Plug.CastAndValidate, json_render_error_v2: true)
+
+      use OpenApiSpex.ControllerSpecs
+    end
+  end
+
+  def plugins_api_view do
+    quote do
+      use Phoenix.View,
+        namespace: PlausibleWeb.Plugins.API,
+        root: ""
+
+      alias PlausibleWeb.Plugins.API.Router.Helpers
+      import PlausibleWeb.Plugins.API.Views.Pagination, only: [render_metadata_links: 4]
+    end
+  end
+
+  def open_api_schema do
+    quote do
+      require OpenApiSpex
+      alias OpenApiSpex.Schema
+      alias PlausibleWeb.Plugins.API.Schemas
+    end
+  end
+
   @doc """
   When used, dispatch to the appropriate controller/view/etc.
   """
