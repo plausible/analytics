@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Live.ChoosePlan do
+  @moduledoc """
+  LiveView for upgrading to a plan, or changing an existing plan.
+  """
   use Phoenix.LiveView
   use Phoenix.HTML
   alias Plausible.Billing.Subscriptions
