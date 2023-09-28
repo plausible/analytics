@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
+  @moduledoc """
+  Controller for the Shared Link resource under Plugins API
+  """
   use PlausibleWeb, :plugins_api_controller
 
   operation(:index,
