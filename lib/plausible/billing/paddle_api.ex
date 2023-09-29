@@ -137,10 +137,15 @@ defmodule Plausible.Billing.PaddleApi do
         {:ok, products}
 
       {:ok, %{body: body}} ->
-        {:error, "unsuccessful API response with body: #{inspect(body)}"}
+        Sentry.capture_message("Paddle API: Unexpected response when fetching prices",
+          extra: %{api_response: body, product_ids: product_ids}
+        )
+
+        {:error, :api_error}
 
       {:error, %{reason: reason}} ->
-        {:error, reason}
+        Sentry.capture_message("Paddle API: Error when fetching prices", extra: %{reason: reason})
+        {:error, :api_error}
     end
   end
 

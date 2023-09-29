@@ -175,11 +175,7 @@ defmodule Plausible.Billing.Plans do
           |> Map.put(:yearly_cost, prices[plan.yearly_product_id])
         end)
 
-      {:error, reason} ->
-        Sentry.capture_message("Failed to fetch product prices and currencies from Paddle",
-          extra: %{reason: reason}
-        )
-
+      {:error, :api_error} ->
         plans
     end
   end
