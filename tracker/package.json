@@ -13,7 +13,7 @@
     "uglify-js": "^3.9.4"
   },
   "devDependencies": {
-    "eslint": "^8.48.0",
+    "eslint": "^8.50.0",
     "eslint-plugin-playwright": "^0.16.0"
   }
 }
