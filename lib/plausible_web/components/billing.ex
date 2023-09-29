@@ -190,5 +190,6 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   defp upgrade_link_text(nil), do: "Upgrade"
+  defp upgrade_link_text(%Subscription{status: "deleted"}), do: "Upgrade"
   defp upgrade_link_text(_subscription), do: "Change plan"
 end
