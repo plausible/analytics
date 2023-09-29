@@ -22,6 +22,7 @@ defmodule Plausible.Billing.Plan do
 end
 
 defmodule Plausible.Billing.Plans do
+  alias Plausible.Billing.Subscriptions
   use Plausible.Repo
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
   alias Plausible.Auth.User
@@ -180,8 +181,16 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def get_regular_plan(%Subscription{} = subscription) do
-    find(subscription.paddle_plan_id)
+  def get_regular_plan(subscription, opts \\ [])
+
+  def get_regular_plan(nil, _opts), do: nil
+
+  def get_regular_plan(%Subscription{} = subscription, opts) do
+    if Keyword.get(opts, :only_non_expired) && Subscriptions.expired?(subscription) do
+      nil
+    else
+      find(subscription.paddle_plan_id)
+    end
   end
 
   defp get_enterprise_plan(%Subscription{} = subscription) do

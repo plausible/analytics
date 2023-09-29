@@ -37,6 +37,14 @@ defmodule Plausible.Billing.Subscriptions do
 
   def valid_statuses(), do: @valid_statuses
 
+  @spec expired?(Subscription.t()) :: boolean()
+  @doc """
+  Returns whether the given subscription is expired. That means that the
+  subscription status is `deleted` and the date until which the customer
+  has paid for (i.e. `next_bill_date`) has passed.
+  """
+  def expired?(subscription)
+
   def expired?(%Subscription{paddle_plan_id: "free_10k"}), do: false
 
   def expired?(%Subscription{status: status, next_bill_date: next_bill_date}) do

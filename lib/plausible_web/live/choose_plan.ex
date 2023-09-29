@@ -24,8 +24,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         Quota.monthly_pageview_usage(user)
       end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
-        (subscription && !Subscriptions.expired?(subscription) &&
-           Plans.get_regular_plan(subscription)) || nil
+        Plans.get_regular_plan(subscription, only_non_expired: true)
       end)
       |> assign_new(:current_interval, fn %{user: user} ->
         current_user_subscription_interval(user.subscription)
