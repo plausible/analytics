@@ -93,12 +93,9 @@ defmodule Plausible.Billing.Plans do
   end
 
   def available_plans_with_prices(%User{} = user) do
-    {growth_plans, business_plans} =
-      (growth_plans_for(user) ++ business_plans())
-      |> with_prices()
-      |> Enum.split_with(&(&1.kind == :growth))
-
-    %{growth: growth_plans, business: business_plans}
+    (growth_plans_for(user) ++ business_plans())
+    |> with_prices()
+    |> Enum.group_by(& &1.kind)
   end
 
   @spec yearly_product_ids() :: [String.t()]
@@ -163,10 +160,7 @@ defmodule Plausible.Billing.Plans do
   given plan and returns the new list of plans with completed information.
   """
   def with_prices([_ | _] = plans) do
-    product_ids =
-      Enum.reduce(plans, [], fn plan, acc ->
-        acc ++ [plan.monthly_product_id, plan.yearly_product_id]
-      end)
+    product_ids = Enum.flat_map(plans, &[&1.monthly_product_id, &1.yearly_product_id])
 
     case Plausible.Billing.paddle_api().fetch_prices(product_ids) do
       {:ok, prices} ->
@@ -198,6 +192,13 @@ defmodule Plausible.Billing.Plans do
       user_id: subscription.user_id,
       paddle_plan_id: subscription.paddle_plan_id
     )
+  end
+
+  def business_tier?(%Subscription{} = subscription) do
+    case get_subscription_plan(subscription) do
+      %Plan{kind: :business} -> true
+      _ -> false
+    end
   end
 
   @enterprise_level_usage 10_000_000
