@@ -1,5 +1,5 @@
 defmodule Plausible.Billing.Subscriptions do
-  alias Plausible.Billing.{Subscription, Plan, Plans}
+  alias Plausible.Billing.{Subscription}
 
   @spec expired?(Subscription.t()) :: boolean()
   @doc """

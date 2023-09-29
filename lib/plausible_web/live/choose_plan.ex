@@ -4,7 +4,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   """
   use Phoenix.LiveView
   use Phoenix.HTML
-  alias Plausible.Billing.Subscriptions
   alias Plausible.Users
   alias Plausible.Billing.{Plans, Plan, Quota}
   alias PlausibleWeb.Router.Helpers, as: Routes

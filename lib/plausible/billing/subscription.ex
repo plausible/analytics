@@ -1,7 +1,6 @@
 defmodule Plausible.Billing.Subscription do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Plausible.Billing.Subscriptions
 
   @moduledoc """
   The subscription statuses are stored in Paddle. They can only be changed
