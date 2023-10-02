@@ -142,7 +142,7 @@ defmodule Plausible.SitesTest do
       assert {:error, {:over_limit, 5}} = Sites.invite(site, inviter, invitee.email, :viewer)
     end
 
-    test "sends ownership transfer email when invitee role is owner" do
+    test "sends ownership transfer email when inviter role is owner" do
       inviter = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
@@ -167,6 +167,36 @@ defmodule Plausible.SitesTest do
         )
 
       assert {:error, :forbidden} = Sites.invite(site, inviter, "vini@plausible.test", :owner)
+    end
+
+    test "allows ownership transfer to existing site members" do
+      inviter = insert(:user)
+      invitee = insert(:user)
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: inviter, role: :owner),
+            build(:site_membership, user: invitee, role: :viewer)
+          ]
+        )
+
+      assert {:ok, %Plausible.Auth.Invitation{}} =
+               Sites.invite(site, inviter, invitee.email, :owner)
+    end
+
+    test "does not allow transferring ownership to existing owner" do
+      inviter = insert(:user, email: "vini@plausible.test")
+
+      site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: inviter, role: :owner)
+          ]
+        )
+
+      assert {:error, :transfer_to_self} =
+               Sites.invite(site, inviter, "vini@plausible.test", :owner)
     end
 
     test "does not check for limits when transferring ownership" do

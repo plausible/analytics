@@ -2,7 +2,9 @@ defmodule Plausible.Mailer do
   use Bamboo.Mailer, otp_app: :plausible
   require Logger
 
-  @spec send(Bamboo.Email.t()) :: :ok | {:error, :hard_bounce} | {:error, :unknown_error}
+  @type result() :: :ok | {:error, :hard_bounce} | {:error, :unknown_error}
+
+  @spec send(Bamboo.Email.t()) :: result()
   def send(email) do
     case deliver_now(email) do
       {:ok, _email} -> :ok

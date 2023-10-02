@@ -8,7 +8,7 @@ defmodule Plausible.Workers.LockSites do
     users = Repo.all(from u in Plausible.Auth.User, preload: [subscription: ^subscription_q])
 
     for user <- users do
-      Plausible.Billing.SiteLocker.check_sites_for(user)
+      Plausible.Billing.SiteLocker.update_sites_for(user)
     end
 
     :ok
