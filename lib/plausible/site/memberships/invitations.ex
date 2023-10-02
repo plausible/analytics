@@ -1,6 +1,8 @@
 defmodule Plausible.Site.Memberships.Invitations do
   @moduledoc false
 
+  import Ecto.Query, only: [from: 2]
+
   alias Plausible.Auth
   alias Plausible.Repo
 
@@ -32,5 +34,12 @@ defmodule Plausible.Site.Memberships.Invitations do
     else
       {:error, :invitation_not_found}
     end
+  end
+
+  @spec delete_invitation(Auth.Invitation.t()) :: :ok
+  def delete_invitation(invitation) do
+    Repo.delete_all(from(i in Auth.Invitation, where: i.id == ^invitation.id))
+
+    :ok
   end
 end
