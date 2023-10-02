@@ -39,6 +39,8 @@ defmodule PlausibleWeb.PluginsAPICase do
       Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, {:shared, self()})
     end
 
+    conn = Phoenix.ConnTest.build_conn()
+
     {:ok, conn: conn}
   end
 end
