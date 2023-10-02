@@ -78,7 +78,10 @@ defmodule Plausible.Billing.PlansTest do
         inserted_at: Timex.shift(Timex.now(), minutes: -2)
       )
 
-      assert Plans.latest_enterprise_plan_for(user).paddle_plan_id == "123"
+      enterprise_plan = Plans.latest_enterprise_plan_for(user)
+
+      assert enterprise_plan.paddle_plan_id == "123"
+      assert enterprise_plan.price_per_interval == Money.new(:EUR, "10.0")
     end
   end
 

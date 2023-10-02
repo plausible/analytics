@@ -135,13 +135,17 @@ defmodule Plausible.Billing.Plans do
   end
 
   def latest_enterprise_plan_for(user) do
-    Repo.one!(
-      from(e in EnterprisePlan,
-        where: e.user_id == ^user.id,
-        order_by: [desc: e.inserted_at],
-        limit: 1
+    enterprise_plan =
+      Repo.one!(
+        from(e in EnterprisePlan,
+          where: e.user_id == ^user.id,
+          order_by: [desc: e.inserted_at],
+          limit: 1
+        )
       )
-    )
+
+    enterprise_plan
+    |> Map.put(:price_per_interval, get_price_for(enterprise_plan))
   end
 
   def subscription_interval(subscription) do
@@ -192,6 +196,13 @@ defmodule Plausible.Billing.Plans do
       nil
     else
       find(subscription.paddle_plan_id)
+    end
+  end
+
+  def get_price_for(%EnterprisePlan{paddle_plan_id: product_id}) do
+    case Plausible.Billing.paddle_api().fetch_prices([product_id]) do
+      {:ok, prices} -> Map.fetch!(prices, product_id)
+      {:error, :api_error} -> nil
     end
   end
 

@@ -17,6 +17,7 @@ defmodule Plausible.Billing.EnterprisePlan do
     field :monthly_pageview_limit, :integer
     field :hourly_api_request_limit, :integer
     field :site_limit, :integer
+    field :price_per_interval, :any, virtual: true
 
     belongs_to :user, Plausible.Auth.User
 
