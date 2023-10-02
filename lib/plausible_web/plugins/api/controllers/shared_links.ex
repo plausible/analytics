@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
   @spec index(Plug.Conn.t(), %{}) :: Plug.Conn.t()
   def index(conn, _params) do
     {:ok, pagination} =
-      Context.SharedLinks.get_shared_links(conn.assigns.authorized_site, conn.query_params)
+      API.SharedLinks.get_shared_links(conn.assigns.authorized_site, conn.query_params)
 
     conn
     |> put_view(Views.SharedLink)
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
       ) do
     site = conn.assigns.authorized_site
 
-    {:ok, shared_link} = Context.SharedLinks.get_or_create(site, name, password)
+    {:ok, shared_link} = API.SharedLinks.get_or_create(site, name, password)
 
     conn
     |> put_view(Views.SharedLink)
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
   def get(%{private: %{open_api_spex: %{params: %{id: id}}}} = conn, _params) do
     site = conn.assigns.authorized_site
 
-    case Context.SharedLinks.get(site, id) do
+    case API.SharedLinks.get(site, id) do
       nil ->
         conn
         |> put_view(Views.Error)
