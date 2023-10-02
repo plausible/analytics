@@ -196,10 +196,10 @@ defmodule PlausibleWeb.AuthController do
 
   def password_reset_form(conn, params) do
     case Auth.Token.verify_password_reset(params["token"]) do
-      {:ok, _} ->
+      {:ok, %{email: email}} ->
         render(conn, "password_reset_form.html",
           connect_live_socket: true,
-          token: params["token"],
+          email: email,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 

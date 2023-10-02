@@ -409,16 +409,17 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert html_response(conn, 401) =~ "Your token is invalid"
     end
+
+    test "without token - shows error page", %{conn: conn} do
+      conn = get(conn, "/password/reset", %{})
+
+      assert html_response(conn, 401) =~ "Your token is invalid"
+    end
   end
 
   describe "POST /password/reset" do
-    alias Plausible.Auth.Token
-
     test "redirects the user to login and shows success message", %{conn: conn} do
-      user = insert(:user)
-      token = Token.sign_password_reset(user.email)
-
-      conn = post(conn, "/password/reset", %{token: token})
+      conn = post(conn, "/password/reset", %{})
 
       assert location = "/login" = redirected_to(conn, 302)
 
