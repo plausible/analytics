@@ -23,25 +23,6 @@ defmodule PlausibleWeb.Plugins.API.ErrorsTest do
     end
   end
 
-  describe "internal_server_error/1" do
-    test "sends a 500 response" do
-      conn =
-        Plug.Test.conn(:get, "/")
-        |> Errors.internal_server_error()
-
-      assert conn.halted
-
-      assert json_response(conn, 500) == %{
-               "errors" => [
-                 %{
-                   "detail" =>
-                     "Internal server error, please try again. If the problem persists please contact support@plausible.io"
-                 }
-               ]
-             }
-    end
-  end
-
   describe "error/3" do
     test "formats the given error message" do
       message = "Some message"

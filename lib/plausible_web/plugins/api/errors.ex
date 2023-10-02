@@ -12,20 +12,6 @@ defmodule PlausibleWeb.Plugins.API.Errors do
     |> error(:unauthorized, "Plugins API: unauthorized")
   end
 
-  @spec internal_server_error(Plug.Conn.t()) :: Plug.Conn.t()
-  def internal_server_error(conn) do
-    contact_support_note =
-      if not Plausible.Release.selfhost?() do
-        "If the problem persists please contact support@plausible.io"
-      end
-
-    error(
-      conn,
-      :internal_server_error,
-      "Internal server error, please try again. #{contact_support_note}"
-    )
-  end
-
   @spec error(Plug.Conn.t(), Plug.Conn.status(), String.t() | [String.t()]) :: Plug.Conn.t()
   def error(conn, status, message) when is_binary(message) do
     error(conn, status, [message])
