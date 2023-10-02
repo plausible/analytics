@@ -122,7 +122,9 @@ defmodule Plausible.MixProject do
       {:mjml_eex, "~> 0.9.0"},
       {:mjml, "~> 1.5.0"},
       {:heroicons, "~> 0.5.0"},
-      {:zxcvbn, git: "https://github.com/techgaun/zxcvbn-elixir.git"}
+      {:zxcvbn, git: "https://github.com/techgaun/zxcvbn-elixir.git"},
+      {:open_api_spex, "~> 3.18"},
+      {:paginator, git: "https://github.com/duffelhq/paginator.git"}
     ]
   end
 

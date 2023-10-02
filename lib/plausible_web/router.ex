@@ -67,6 +67,10 @@ defmodule PlausibleWeb.Router do
     forward "/", FunWithFlags.UI.Router, namespace: "flags"
   end
 
+  scope path: "/api/plugins" do
+    forward "/", PlausibleWeb.Plugins.API.Router
+  end
+
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
     get "/:domain/funnels/:id", StatsController, :funnel
