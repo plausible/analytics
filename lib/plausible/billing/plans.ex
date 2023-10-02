@@ -19,6 +19,10 @@ defmodule Plausible.Billing.Plan do
             yearly_product_id: String.t() | nil
           }
           | :enterprise
+
+  def new(params) when is_map(params) do
+    struct!(__MODULE__, params)
+  end
 end
 
 defmodule Plausible.Billing.Plans do
@@ -38,7 +42,7 @@ defmodule Plausible.Billing.Plans do
       ] do
     path = Application.app_dir(:plausible, ["priv", "#{f}.json"])
 
-    contents =
+    plans_list =
       path
       |> File.read!()
       |> Jason.decode!(keys: :atoms!)
@@ -56,10 +60,10 @@ defmodule Plausible.Billing.Plans do
         |> Map.put(:volume, volume)
         |> Map.put(:kind, String.to_atom(raw.kind))
         |> Map.put(:team_member_limit, team_member_limit)
-        |> then(&struct!(Plan, &1))
+        |> Plan.new()
       end)
 
-    Module.put_attribute(__MODULE__, f, contents)
+    Module.put_attribute(__MODULE__, f, plans_list)
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
@@ -108,19 +112,11 @@ defmodule Plausible.Billing.Plans do
         do: yearly_product_id
   end
 
-  @spec find(String.t(), [Plan.t()]) ::
-          Plan.t() | nil
-  @spec find(nil, any()) :: nil
-  @doc """
-  Finds a plan by product ID.
+  defp find(product_id, scope \\ all())
 
-  Returns nil when plan can't be found.
-  """
-  def find(product_id, scope \\ all())
+  defp find(nil, _scope), do: nil
 
-  def find(nil, _scope), do: nil
-
-  def find(product_id, scope) do
+  defp find(product_id, scope) do
     Enum.find(scope, fn plan ->
       product_id in [plan.monthly_product_id, plan.yearly_product_id]
     end)
@@ -194,6 +190,8 @@ defmodule Plausible.Billing.Plans do
     )
   end
 
+  def business_tier?(nil), do: false
+
   def business_tier?(%Subscription{} = subscription) do
     case get_subscription_plan(subscription) do
       %Plan{kind: :business} -> true
@@ -226,10 +224,9 @@ defmodule Plausible.Billing.Plans do
     user = Plausible.Users.with_subscription(user)
 
     available_plans =
-      case get_subscription_plan(user.subscription) do
-        %Plan{kind: :business} -> business_plans()
-        _ -> growth_plans_for(user)
-      end
+      if business_tier?(user.subscription),
+        do: business_plans(),
+        else: growth_plans_for(user)
 
     Enum.find(available_plans, &(usage_during_cycle < &1.monthly_pageview_limit))
   end

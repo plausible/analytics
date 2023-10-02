@@ -183,6 +183,12 @@ defmodule PlausibleWeb.Components.Billing do
 
   def subscription_paused_notice(assigns), do: ~H""
 
+  def format_price(%Money{} = money) do
+    money
+    |> Money.to_string!(format: :short, fractional_digits: 2)
+    |> String.replace(".00", "")
+  end
+
   defp upgrade_link_text(nil), do: "Upgrade"
   defp upgrade_link_text(_subscription), do: "Change plan"
 end

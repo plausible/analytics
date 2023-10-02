@@ -124,14 +124,12 @@ defmodule Plausible.Billing.PaddleApi do
     case HTTPClient.impl().get(prices_url(), @headers, %{product_ids: Enum.join(product_ids, ",")}) do
       {:ok, %{body: %{"success" => true, "response" => %{"products" => products}}}} ->
         products =
-          products
-          |> Enum.reduce(%{}, fn %{
-                                   "currency" => currency,
-                                   "price" => %{"net" => net_price},
-                                   "product_id" => product_id
-                                 },
-                                 acc ->
-            Map.put(acc, Integer.to_string(product_id), Money.from_float!(currency, net_price))
+          Enum.into(products, %{}, fn %{
+                                        "currency" => currency,
+                                        "price" => %{"net" => net_price},
+                                        "product_id" => product_id
+                                      } ->
+            {Integer.to_string(product_id), Money.from_float!(currency, net_price)}
           end)
 
         {:ok, products}

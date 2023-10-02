@@ -5,10 +5,6 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta name="description" content="A lightweight, non-intrusive alternative to Google Analytics."/>
-    <%= if @conn.assigns[:connect_live_socket] do %>
-    <meta name="csrf-token" content="<%= Plug.CSRFProtection.get_csrf_token() %>" />
-    <meta name="websocket-url" content="<%= websocket_url() %>" />
-    <% end %>
     <meta name="robots" content="<%= @conn.private.robots %>" />
     <%= if @conn.assigns[:connect_live_socket] do %>
       <meta name="csrf-token" content="<%= Plug.CSRFProtection.get_csrf_token() %>" />
