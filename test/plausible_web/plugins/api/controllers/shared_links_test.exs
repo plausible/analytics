@@ -190,7 +190,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       assert resp.meta.pagination.links == %{}
     end
 
-    test "returns an shared links list with pagination", %{
+    test "returns a shared links list with pagination", %{
       conn: conn,
       token: token,
       site: site
