@@ -42,6 +42,12 @@ site =
     stats_start_date: NaiveDateTime.new!(imported_stats_range.first, ~T[00:00:00])
   )
 
+# Plugins API: on dev environment, use "plausible-plugin-dev-seed-token" for "dummy.site" to authenticate
+seeded_token = Plausible.Plugins.API.Token.generate("seed-token")
+
+{:ok, _, _} =
+  Plausible.Plugins.API.Tokens.create(site, "plausible-plugin-dev-seed-token", seeded_token)
+
 {:ok, goal1} = Plausible.Goals.create(site, %{"page_path" => "/"})
 {:ok, goal2} = Plausible.Goals.create(site, %{"page_path" => "/register"})
 {:ok, goal3} = Plausible.Goals.create(site, %{"page_path" => "/login"})

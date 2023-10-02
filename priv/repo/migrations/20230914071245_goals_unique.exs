@@ -18,8 +18,8 @@ defmodule Plausible.Repo.Migrations.GoalsUnique do
       GROUP BY
       (g2.site_id,
         CASE
-        WHEN g2.page_path IS NOT NULL THEN g2.page_path
-        WHEN g2.event_name IS NOT NULL THEN g2.event_name
+        WHEN g2.page_path IS NOT NULL THEN 'Page: ' || g2.page_path
+        WHEN g2.event_name IS NOT NULL THEN 'Event: ' || g2.event_name
         END )
     )
     AND g.id NOT IN (

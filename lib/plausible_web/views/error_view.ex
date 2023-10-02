@@ -1,6 +1,19 @@
 defmodule PlausibleWeb.ErrorView do
   use PlausibleWeb, :view
 
+  def render("500.json", %{conn: %{private: %{PlausibleWeb.Plugins.API.Router => _}}}) do
+    contact_support_note =
+      if not Plausible.Release.selfhost?() do
+        "If the problem persists please contact support@plausible.io"
+      end
+
+    %{
+      errors: [
+        %{detail: "Internal server error, please try again. #{contact_support_note}"}
+      ]
+    }
+  end
+
   def render("500.json", _assigns) do
     %{
       status: 500,
