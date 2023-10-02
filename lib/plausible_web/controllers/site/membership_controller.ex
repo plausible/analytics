@@ -104,6 +104,13 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> put_flash(:success, "Site transfer request has been sent to #{email}")
         |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
 
+      {:error, :transfer_to_self} ->
+        conn
+        |> put_flash(:ttl, :timer.seconds(5))
+        |> put_flash(:error_title, "Transfer error")
+        |> put_flash(:error, "Can't transfer ownership to existing owner")
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+
       {:error, changeset} ->
         errors = Plausible.ChangesetHelpers.traverse_errors(changeset)
 
@@ -149,7 +156,8 @@ defmodule PlausibleWeb.Site.MembershipController do
     if can_grant_role? do
       membership =
         membership
-        |> Membership.changeset(%{role: new_role})
+        |> Ecto.Changeset.change()
+        |> Membership.set_role(new_role)
         |> Repo.update!()
 
       redirect_target =
