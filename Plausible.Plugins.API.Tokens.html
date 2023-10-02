@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-CC8FCE27.js"></script>
+    <script src="dist/sidebar_items-18856BD8.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -133,7 +133,7 @@ Exposes high-level operation for token-based authentication flows.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create/2" translate="no">create(site, description)</a>
+        <a href="#create/3" translate="no">create(site, description, generated_token \\ Token.generate())</a>
 
       </div>
 
@@ -160,14 +160,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="create/2">
+<section class="detail" id="create/3">
+
+    <span id="create/2"></span>
 
   <div class="detail-header">
-    <a href="#create/2" class="detail-link" title="Link to this function">
+    <a href="#create/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">create(site, description)</h1>
+    <h1 class="signature" translate="no">create(site, description, generated_token \\ Token.generate())</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/tokens.ex#L14" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -178,14 +180,6 @@ Functions
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> create(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
-  {:ok, <a href="Plausible.Plugins.API.Token.html#t:t/0">Plausible.Plugins.API.Token.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}
-  | {:error, <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
-
-      </div>
 
 
   </section>
@@ -199,7 +193,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">find(domain, raw)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/tokens.ex#L23" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/tokens.ex#L22" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
