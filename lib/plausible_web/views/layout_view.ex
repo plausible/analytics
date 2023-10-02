@@ -39,6 +39,22 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def nolt_sso_token(user) do
+    defmodule JWT do
+      use Joken.Config
+    end
+
+    {:ok, token, claims} =
+      JWT.generate_and_sign(%{
+        "id" => user.id,
+        "email" => user.email,
+        "name" => user.name
+        # imageUrl: Plausible.Auth.User.profile_img(user),
+      })
+
+    token
+  end
+
   def home_dest(conn) do
     if conn.assigns[:current_user] do
       "/sites"
