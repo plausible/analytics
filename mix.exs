@@ -90,7 +90,7 @@ defmodule Plausible.MixProject do
       {:mox, "~> 1.0", only: :test},
       {:nanoid, "~> 2.0.2"},
       {:oauther, "~> 1.3"},
-      {:oban, "~> 2.12.0"},
+      {:oban, "~> 2.16.1"},
       {:observer_cli, "~> 1.7"},
       {:opentelemetry, "~> 1.1"},
       {:opentelemetry_api, "~> 1.1"},
