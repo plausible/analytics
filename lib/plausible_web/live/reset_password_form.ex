@@ -11,11 +11,9 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
   alias Plausible.Auth
   alias Plausible.Repo
 
-  def mount(_params, %{"reset_token" => reset_token}, socket) do
+  def mount(_params, %{"email" => email}, socket) do
     socket =
       assign_new(socket, :user, fn ->
-        # by that point token should be already verified
-        {:ok, %{email: email}} = Auth.Token.verify_password_reset(reset_token)
         Repo.get_by!(Auth.User, email: email)
       end)
 
@@ -24,7 +22,6 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
     {:ok,
      assign(socket,
        form: to_form(changeset),
-       reset_token: reset_token,
        password_strength: Auth.User.password_strength(changeset),
        trigger_submit: false
      )}
@@ -60,7 +57,6 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
           class="transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500"
         />
       </div>
-      <input name="token" type="hidden" value={@reset_token} />
       <button id="set" type="submit" class="button mt-4 w-full">
         Set password →
       </button>
