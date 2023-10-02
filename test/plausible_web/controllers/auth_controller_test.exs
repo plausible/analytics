@@ -2,12 +2,15 @@ defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
   use Plausible.Repo
+  import Plausible.Test.Support.HTML
 
   import Mox
 
   alias Plausible.Auth.User
 
   setup :verify_on_exit!
+
+  @v3_plan_id "749355"
 
   describe "GET /register" do
     test "shows the register form", %{conn: conn} do
@@ -495,6 +498,93 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, "/settings")
       assert html_response(conn, 200) =~ "10M pageviews"
       assert html_response(conn, 200) =~ "yearly billing"
+    end
+
+    test "links to upgrade to a plan", %{conn: conn} do
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      upgrade_link_1 = find(doc, "#monthly-quota-box a")
+      upgrade_link_2 = find(doc, "#upgrade-link-2")
+
+      assert text(upgrade_link_1) == "Upgrade"
+      assert text_of_attr(upgrade_link_1, "href") == Routes.billing_path(conn, :choose_plan)
+
+      assert text(upgrade_link_2) == "Upgrade"
+      assert text_of_attr(upgrade_link_2, "href") == Routes.billing_path(conn, :choose_plan)
+    end
+
+    test "links to change existing plan", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
+
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-link-2")
+      assert doc =~ "Cancel my subscription"
+
+      change_plan_link = find(doc, "#monthly-quota-box a")
+
+      assert text(change_plan_link) == "Change plan"
+      assert text_of_attr(change_plan_link, "href") == Routes.billing_path(conn, :choose_plan)
+    end
+
+    test "links to upgrade to enterprise plan",
+         %{conn: conn, user: user} do
+      insert(:enterprise_plan,
+        paddle_plan_id: "123",
+        user: user,
+        monthly_pageview_limit: 20_000_000,
+        billing_interval: :yearly
+      )
+
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      upgrade_link_1 = find(doc, "#monthly-quota-box a")
+      upgrade_link_2 = find(doc, "#upgrade-link-2")
+
+      assert text(upgrade_link_1) == "Upgrade"
+
+      assert text_of_attr(upgrade_link_1, "href") ==
+               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+
+      assert text(upgrade_link_2) == "Upgrade"
+
+      assert text_of_attr(upgrade_link_2, "href") ==
+               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+    end
+
+    test "links to change enterprise plan and cancel subscription",
+         %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
+
+      insert(:enterprise_plan,
+        paddle_plan_id: "123",
+        user: user,
+        monthly_pageview_limit: 20_000_000,
+        billing_interval: :yearly
+      )
+
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-link-2")
+      assert doc =~ "Cancel my subscription"
+
+      change_plan_link = find(doc, "#monthly-quota-box a")
+
+      assert text(change_plan_link) == "Change plan"
+
+      assert text_of_attr(change_plan_link, "href") ==
+               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end
 
     test "shows invoices for subscribed user", %{conn: conn, user: user} do

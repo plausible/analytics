@@ -50,6 +50,7 @@ defmodule PlausibleWeb.Components.Billing do
   def monthly_quota_box(%{business_tier: true} = assigns) do
     ~H"""
     <div
+      id="monthly-quota-box"
       class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900"
       style="width: 11.75rem;"
     >
@@ -57,7 +58,7 @@ defmodule PlausibleWeb.Components.Billing do
       <div class="py-2 text-xl font-medium dark:text-gray-100">
         <%= PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long) %>
       </div>
-      <.styled_link href={Routes.billing_path(@conn, :choose_plan)} class="text-sm font-medium">
+      <.styled_link href={upgrade_link_href(@user)} class="text-sm font-medium">
         <%= change_plan_or_upgrade_text(@subscription) %>
       </.styled_link>
     </div>
@@ -239,7 +240,8 @@ defmodule PlausibleWeb.Components.Billing do
   def upgrade_link(%{business_tier: true} = assigns) do
     ~H"""
     <.link
-      href={PlausibleWeb.Router.Helpers.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+      id="upgrade-link-2"
+      href={upgrade_link_href(@user)}
       class="inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
     >
       Upgrade
@@ -256,6 +258,15 @@ defmodule PlausibleWeb.Components.Billing do
       Upgrade
     </.link>
     """
+  end
+
+  defp upgrade_link_href(user) do
+    action =
+      if Plausible.Auth.enterprise_configured?(user),
+        do: :upgrade_to_enterprise_plan,
+        else: :choose_plan
+
+    Routes.billing_path(PlausibleWeb.Endpoint, action)
   end
 
   defp change_plan_or_upgrade_text(nil), do: "Upgrade"
