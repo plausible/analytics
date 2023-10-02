@@ -16,7 +16,7 @@ defmodule Mix.Tasks.CancelSubscription do
 
     Repo.get_by!(Subscription, paddle_subscription_id: paddle_subscription_id)
     |> Subscription.changeset(%{status: "deleted"})
-    |> Repo.update()
+    |> Repo.update!()
 
     Logger.info("Successfully set the subscription status to 'deleted'.")
   end
