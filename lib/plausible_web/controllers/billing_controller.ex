@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.BillingController do
+  alias Plausible.Billing.Plans
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Billing
@@ -44,6 +45,22 @@ defmodule PlausibleWeb.BillingController do
         user: user,
         layout: {PlausibleWeb.LayoutView, "focus.html"},
         connect_live_socket: true
+      )
+    else
+      render_error(conn, 404)
+    end
+  end
+
+  def upgrade_to_enterprise_plan(conn, _params) do
+    user = conn.assigns[:current_user]
+
+    if FunWithFlags.enabled?(:business_tier, for: user) do
+      render(conn, "upgrade_to_enterprise_plan.html",
+        user: user,
+        latest_enterprise_plan: Plans.latest_enterprise_plan_for(user),
+        contact_link: "https://plausible.io/contact",
+        skip_plausible_tracking: true,
+        layout: {PlausibleWeb.LayoutView, "focus.html"}
       )
     else
       render_error(conn, 404)

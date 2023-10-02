@@ -1,0 +1,38 @@
+<div class="mx-auto mt-6 text-center">
+  <h1 class="text-3xl font-black">Upgrade to Enterprise</h1>
+</div>
+<div class="w-full max-w-lg px-4 mx-auto mt-4">
+  <div class="flex-1 p-8 mt-8 bg-white rounded shadow-md">
+    <div class="w-full pb-4">
+      <span>
+        We've prepared a custom enterprise plan for your account with the following limits:
+      </span>
+    </div>
+    <PlausibleWeb.Components.Billing.present_enterprise_plan plan={@latest_enterprise_plan} />
+    <ul class="w-full py-4">
+      <span>The plan is priced at <b><%= # TODO %></b></span>
+      <span>
+        per <%= if @latest_enterprise_plan.billing_interval == :yearly, do: "year", else: "month" %> + VAT if applicable. Click the button below to upgrade.
+      </span>
+    </ul>
+    <PlausibleWeb.Components.Billing.paddle_button
+      id="paddle-button"
+      paddle_product_id={@latest_enterprise_plan.paddle_plan_id}
+      user={@user}
+    >
+      <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2">
+        <path
+          fill-rule="evenodd"
+          d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+          clip-rule="evenodd"
+        >
+        </path>
+      </svg>
+      Pay securely via Paddle
+    </PlausibleWeb.Components.Billing.paddle_button>
+  </div>
+</div>
+<div class="mt-8 text-center">
+  Questions? <a class="text-indigo-600" href={@contact_link}>Contact us</a>
+</div>
+<PlausibleWeb.Components.Billing.paddle_script />

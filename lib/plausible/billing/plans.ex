@@ -134,6 +134,16 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
+  def latest_enterprise_plan_for(user) do
+    Repo.one!(
+      from(e in EnterprisePlan,
+        where: e.user_id == ^user.id,
+        order_by: [desc: e.inserted_at],
+        limit: 1
+      )
+    )
+  end
+
   def subscription_interval(subscription) do
     case get_subscription_plan(subscription) do
       %EnterprisePlan{billing_interval: interval} ->

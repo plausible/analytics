@@ -61,6 +61,25 @@ defmodule Plausible.Billing.PlansTest do
                (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v4_business_plan_id
              end)
     end
+
+    test "latest_enterprise_plan_for/1" do
+      user = insert(:user)
+      insert(:enterprise_plan, user: user, paddle_plan_id: "123", inserted_at: Timex.now())
+
+      insert(:enterprise_plan,
+        user: user,
+        paddle_plan_id: "456",
+        inserted_at: Timex.shift(Timex.now(), hours: -10)
+      )
+
+      insert(:enterprise_plan,
+        user: user,
+        paddle_plan_id: "789",
+        inserted_at: Timex.shift(Timex.now(), minutes: -2)
+      )
+
+      assert Plans.latest_enterprise_plan_for(user).paddle_plan_id == "123"
+    end
   end
 
   describe "subscription_interval" do

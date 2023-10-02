@@ -145,4 +145,72 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert html_response(conn, 200) =~ "Your account is being upgraded"
     end
   end
+
+  describe "GET /upgrade-to-enterprise-plan (no existing subscription)" do
+    setup [:create_user, :log_in, :configure_enterprise_plan]
+
+    test "displays basic page content", %{conn: conn} do
+      doc =
+        conn
+        |> get("/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      assert doc =~ "Upgrade to Enterprise"
+      assert doc =~ "prepared a custom enterprise plan for your account with the following limits"
+      assert doc =~ "Questions?"
+      assert doc =~ "Contact us"
+      assert doc =~ "Pay securely via Paddle"
+    end
+
+    test "displays info about the enterprise plan to upgrade to", %{conn: conn} do
+      doc =
+        conn
+        |> get("/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      assert doc =~ ~r/Up to\s*<b>\s*50M\s*<\/b>\s*monthly pageviews/
+      assert doc =~ ~r/Up to\s*<b>\s*20k\s*<\/b>\s*sites/
+      assert doc =~ ~r/Up to\s*<b>\s*5k\s*<\/b>\s*hourly api requests/
+      assert doc =~ "per year"
+    end
+
+    test "data-product attribute on the checkout link is the paddle_plan_id of the enterprise plan",
+         %{conn: conn, user: user} do
+      doc =
+        conn
+        |> get("/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      assert %{
+               "disableLogout" => true,
+               "email" => user.email,
+               "passthrough" => user.id,
+               "product" => "123",
+               "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+               "theme" => "none"
+             } == get_paddle_checkout_params(find(doc, "#paddle-button"))
+    end
+  end
+
+  defp configure_enterprise_plan(%{user: user}) do
+    insert(:enterprise_plan,
+      user_id: user.id,
+      paddle_plan_id: "123",
+      billing_interval: :yearly,
+      monthly_pageview_limit: 50_000_000,
+      site_limit: 20000,
+      hourly_api_request_limit: 5000,
+      inserted_at: Timex.now() |> Timex.shift(hours: 1)
+    )
+
+    :ok
+  end
+
+  defp get_paddle_checkout_params(element) do
+    with onclick <- text_of_attr(element, "onclick"),
+         [[_, checkout_params_str]] <- Regex.scan(~r/Paddle\.Checkout\.open\((.*?)\)/, onclick),
+         {:ok, checkout_params} <- Jason.decode(checkout_params_str) do
+      checkout_params
+    end
+  end
 end

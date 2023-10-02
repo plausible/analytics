@@ -183,6 +183,28 @@ defmodule PlausibleWeb.Components.Billing do
 
   def subscription_paused_notice(assigns), do: ~H""
 
+  def present_enterprise_plan(assigns) do
+    ~H"""
+    <ul class="w-full py-4">
+      <li>
+        Up to <b><%= present_limit(@plan, :monthly_pageview_limit) %></b> monthly pageviews
+      </li>
+      <li>
+        Up to <b><%= present_limit(@plan, :site_limit) %></b> sites
+      </li>
+      <li>
+        Up to <b><%= present_limit(@plan, :hourly_api_request_limit) %></b> hourly api requests
+      </li>
+    </ul>
+    """
+  end
+
+  defp present_limit(enterprise_plan, key) do
+    enterprise_plan
+    |> Map.fetch!(key)
+    |> PlausibleWeb.StatsView.large_number_format()
+  end
+
   def format_price(%Money{} = money) do
     money
     |> Money.to_string!(format: :short, fractional_digits: 2)
