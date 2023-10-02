@@ -150,15 +150,9 @@
         </div>
       <% true -> %>
         <div class="mt-8">
-          <%= link("Upgrade",
-            to:
-              if(FunWithFlags.enabled?(:business_tier, for: @user),
-                do: PlausibleWeb.Router.Helpers.billing_path(PlausibleWeb.Endpoint, :choose_plan),
-                else: "/billing/upgrade"
-              ),
-            class:
-              "inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
-          ) %>
+          <PlausibleWeb.Components.Billing.upgrade_link business_tier={
+            FunWithFlags.enabled?(:business_tier, for: @user)
+          } />
         </div>
     <% end %>
   </div>

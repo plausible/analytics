@@ -236,6 +236,28 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
+  def upgrade_link(%{business_tier: true} = assigns) do
+    ~H"""
+    <.link
+      href={PlausibleWeb.Router.Helpers.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+      class="inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
+    >
+      Upgrade
+    </.link>
+    """
+  end
+
+  def upgrade_link(assigns) do
+    ~H"""
+    <.link
+      href="/billing/upgrade"
+      class="inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
+    >
+      Upgrade
+    </.link>
+    """
+  end
+
   defp upgrade_link_text(nil), do: "Upgrade"
   defp upgrade_link_text(%Subscription{status: "deleted"}), do: "Upgrade"
   defp upgrade_link_text(_subscription), do: "Change plan"
