@@ -10,7 +10,7 @@ defmodule Plausible.Billing.SiteLocker do
           | :no_active_subscription
 
   @spec update_sites_for(Plausible.Auth.User.t(), [update_opt()]) ::
-          {:locked, lock_reason()} | {:unlocked, nil}
+          {:locked, lock_reason()} | :unlocked
   def update_sites_for(user, opts \\ []) do
     send_email? = Keyword.get(opts, :send_email?, true)
 
@@ -40,7 +40,7 @@ defmodule Plausible.Billing.SiteLocker do
 
       :no_upgrade_needed ->
         set_lock_status_for(user, false)
-        {:unlocked, nil}
+        :unlocked
     end
   end
 

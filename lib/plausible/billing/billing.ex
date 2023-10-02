@@ -283,13 +283,8 @@ defmodule Plausible.Billing do
 
     user
     |> maybe_remove_grace_period()
-    |> update_lock_status()
+    |> tap(&Plausible.Billing.SiteLocker.update_sites_for/1)
     |> maybe_adjust_api_key_limits()
-  end
-
-  defp update_lock_status(user) do
-    Plausible.Billing.SiteLocker.update_sites_for(user)
-    user
   end
 
   defp maybe_adjust_api_key_limits(user) do
