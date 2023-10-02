@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Components.Billing do
         <%= PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long) %>
       </div>
       <.styled_link href={Routes.billing_path(@conn, :choose_plan)} class="text-sm font-medium">
-        <%= upgrade_link_text(@subscription) %>
+        <%= change_plan_or_upgrade_text(@subscription) %>
       </.styled_link>
     </div>
     """
@@ -258,7 +258,7 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  defp upgrade_link_text(nil), do: "Upgrade"
-  defp upgrade_link_text(%Subscription{status: "deleted"}), do: "Upgrade"
-  defp upgrade_link_text(_subscription), do: "Change plan"
+  defp change_plan_or_upgrade_text(nil), do: "Upgrade"
+  defp change_plan_or_upgrade_text(%Subscription{status: "deleted"}), do: "Upgrade"
+  defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 end
