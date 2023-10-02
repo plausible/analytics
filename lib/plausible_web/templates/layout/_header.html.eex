@@ -28,7 +28,9 @@
               <% end %>
               <li class="hidden mr-6 sm:block">
                 <%= link("Docs", to: "https://plausible.io/docs", class: "font-bold rounded m-1 p-1 hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100", style: "line-height: 40px;", target: "_blank", rel: "noreferrer") %>
-                <%= link("Feedback", to: "https://plausible.nolt.io/sso/#{nolt_sso_token(@conn.assigns[:current_user])}?returnUrl=https://plausible.nolt.io", class: "font-bold rounded m-1 p-1 hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100", style: "line-height: 40px;", target: "_blank", rel: "noreferrer") %>
+                <%= if !Application.get_env(:plausible, :is_selfhost) do %>
+                  <%= link("Feedback", to: feedback_link(@conn.assigns[:current_user]), class: "font-bold rounded m-1 p-1 hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100", style: "line-height: 40px;", target: "_blank", rel: "noreferrer") %>
+                <% end %>
               </li>
               <li class="w-full sm:w-auto">
                 <div class="relative font-bold rounded">

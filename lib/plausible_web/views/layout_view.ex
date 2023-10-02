@@ -39,20 +39,24 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def nolt_sso_token(user) do
+  def feedback_link(user) do
     defmodule JWT do
       use Joken.Config
     end
 
-    {:ok, token, claims} =
-      JWT.generate_and_sign(%{
-        "id" => user.id,
-        "email" => user.email,
-        "name" => user.name
-        # imageUrl: Plausible.Auth.User.profile_img(user),
-      })
+    token_params = %{
+      "id" => user.id,
+      "email" => user.email,
+      "name" => user.name
+    }
 
-    token
+    case JWT.generate_and_sign(token_params) do
+      {:ok, token, _claims} ->
+        "https://feedback.plausible.io/sso/#{token}?returnUrl=https://feedback.plausible.io"
+
+      _ ->
+        "https://feedback.plausible.io"
+    end
   end
 
   def home_dest(conn) do
