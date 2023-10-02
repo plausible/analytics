@@ -82,7 +82,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       refute Repo.reload(invitation)
     end
 
-    test "returns an error on non-existent inviation" do
+    test "returns an error on non-existent invitation" do
       invitee = insert(:user)
 
       assert {:error, :invitation_not_found} =
