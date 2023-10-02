@@ -105,6 +105,10 @@ Plausible.Site.GateKeeper.html
 Plausible.Site.GoogleAuth.html
 Plausible.Site.ImportedData.html
 Plausible.Site.Membership.html
+Plausible.Site.Memberships.AcceptInvitation.html
+Plausible.Site.Memberships.RejectInvitation.html
+Plausible.Site.Memberships.RemoveInvitation.html
+Plausible.Site.Memberships.html
 Plausible.Site.MonthlyReport.html
 Plausible.Site.Removal.html
 Plausible.Site.SharedLink.html
@@ -274,8 +278,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-0B327250.js
-dist/sidebar_items-18856BD8.js
+dist/search_data-09CF9EDC.js
+dist/sidebar_items-EC7673F3.js
 index.html
 readme.html
 search.html

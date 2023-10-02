@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-18856BD8.js"></script>
+    <script src="dist/sidebar_items-EC7673F3.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -121,6 +121,28 @@ Plausible
         Summary
       </a>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:lock_reason/0" translate="no">lock_reason()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:update_opt/0" translate="no">update_opt()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -128,7 +150,7 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_sites_for/1" translate="no">check_sites_for(user)</a>
+        <a href="#send_grace_period_end_email/1" translate="no">send_grace_period_end_email(user)</a>
 
       </div>
 
@@ -142,27 +164,67 @@ Plausible
 
     </div>
 
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#update_sites_for/2" translate="no">update_sites_for(user, opts \\ [])</a>
+
+      </div>
+
+    </div>
+
 </div>
 
   </section>
 
 
-  <section id="functions" class="details-list">
+  <section id="types" class="details-list">
     <h1 class="section-heading">
-      <a class="hover-link" href="#functions">
+      <a class="hover-link" href="#types">
         <i class="ri-link-m" aria-hidden="true"></i>
-Functions
+Types
       </a>
     </h1>
-    <div class="functions-list">
-<section class="detail" id="check_sites_for/1">
+    <div class="types-list">
+<section class="detail" id="t:lock_reason/0">
 
   <div class="detail-header">
-    <a href="#check_sites_for/1" class="detail-link" title="Link to this function">
+    <a href="#t:lock_reason/0" class="detail-link" title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
+      <span class="sr-only">Link to this type</span>
     </a>
-    <h1 class="signature" translate="no">check_sites_for(user)</h1>
+    <h1 class="signature" translate="no">lock_reason()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L6" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> lock_reason() ::
+  :grace_period_ended_now
+  | :grace_period_ended_already
+  | :no_trial
+  | :no_active_subscription</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="t:update_opt/0">
+
+  <div class="detail-header">
+    <a href="#t:update_opt/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">update_opt()</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L4" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -173,6 +235,53 @@ Functions
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> update_opt() :: {:send_email?, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+Functions
+      </a>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="send_grace_period_end_email/1">
+
+  <div class="detail-header">
+    <a href="#send_grace_period_end_email/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">send_grace_period_end_email(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L70" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> send_grace_period_end_email(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
+  <a href="Plausible.Mailer.html#t:result/0">Plausible.Mailer.result</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -186,7 +295,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">set_lock_status_for(user, status)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L24" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L48" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -195,6 +304,44 @@ Functions
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> set_lock_status_for(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="update_sites_for/2">
+
+    <span id="update_sites_for/1"></span>
+
+  <div class="detail-header">
+    <a href="#update_sites_for/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">update_sites_for(user, opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/site_locker.ex#L14" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> update_sites_for(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), [<a href="#t:update_opt/0">update_opt</a>()]) ::
+  {:locked, <a href="#t:lock_reason/0">lock_reason</a>()} | :unlocked</pre>
+
+      </div>
 
 
   </section>
