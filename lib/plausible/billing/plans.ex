@@ -64,6 +64,8 @@ defmodule Plausible.Billing.Plans do
       end)
 
     Module.put_attribute(__MODULE__, f, plans_list)
+
+    # https://hexdocs.pm/elixir/1.15/Module.html#module-external_resource
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
