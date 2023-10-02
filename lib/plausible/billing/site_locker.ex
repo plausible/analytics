@@ -3,7 +3,11 @@ defmodule Plausible.Billing.SiteLocker do
 
   @type update_opt() :: {:send_email?, boolean()}
 
-  @type lock_reason() :: :grace_period_ended_now | :grace_period_ended_already
+  @type lock_reason() ::
+          :grace_period_ended_now
+          | :grace_period_ended_already
+          | :no_trial
+          | :no_active_subscription
 
   @spec update_sites_for(Plausible.Auth.User.t(), [update_opt()]) ::
           {:locked, lock_reason()} | {:unlocked, nil}
@@ -13,7 +17,7 @@ defmodule Plausible.Billing.SiteLocker do
     user = Plausible.Users.with_subscription(user)
 
     case Plausible.Billing.check_needs_to_upgrade(user) do
-      {true, :grace_period_ended} ->
+      {:needs_to_upgrade, :grace_period_ended} ->
         set_lock_status_for(user, true)
 
         if user.grace_period.is_over != true do
@@ -30,11 +34,11 @@ defmodule Plausible.Billing.SiteLocker do
           {:locked, :grace_period_ended_already}
         end
 
-      {true, reason} ->
+      {:needs_to_upgrade, reason} ->
         set_lock_status_for(user, true)
         {:locked, reason}
 
-      {false, _} ->
+      :no_upgrade_needed ->
         set_lock_status_for(user, false)
         {:unlocked, nil}
     end

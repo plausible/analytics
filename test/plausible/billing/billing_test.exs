@@ -128,33 +128,33 @@ defmodule Plausible.BillingTest do
   describe "check_needs_to_upgrade" do
     test "is false for a trial user" do
       user = insert(:user)
-      assert Billing.check_needs_to_upgrade(user) == {false, nil}
+      assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
     end
 
     test "is true for a user with an expired trial" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
 
-      assert Billing.check_needs_to_upgrade(user) == {true, :no_active_subscription}
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_active_subscription}
     end
 
     test "is true for a user with empty trial expiry date" do
       user = insert(:user, trial_expiry_date: nil)
 
-      assert Billing.check_needs_to_upgrade(user) == {true, :no_trial}
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_trial}
     end
 
     test "is false for a user with an expired trial but an active subscription" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user)
 
-      assert Billing.check_needs_to_upgrade(user) == {false, nil}
+      assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
     end
 
     test "is false for a user with a cancelled subscription IF the billing cycle isn't completed yet" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user, status: "deleted", next_bill_date: Timex.today())
 
-      assert Billing.check_needs_to_upgrade(user) == {false, nil}
+      assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
     end
 
     test "is true for a user with a cancelled subscription IF the billing cycle is complete" do
@@ -166,14 +166,14 @@ defmodule Plausible.BillingTest do
         next_bill_date: Timex.shift(Timex.today(), days: -1)
       )
 
-      assert Billing.check_needs_to_upgrade(user) == {true, :no_active_subscription}
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_active_subscription}
     end
 
     test "is true for a deleted subscription if no next_bill_date specified" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user, status: "deleted", next_bill_date: nil)
 
-      assert Billing.check_needs_to_upgrade(user) == {true, :no_active_subscription}
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_active_subscription}
     end
 
     test "is true for a user past their grace period" do
@@ -182,7 +182,7 @@ defmodule Plausible.BillingTest do
 
       user = user |> Plausible.Auth.GracePeriod.end_changeset() |> Repo.update!()
 
-      assert Billing.check_needs_to_upgrade(user) == {true, :grace_period_ended}
+      assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :grace_period_ended}
     end
   end
 
