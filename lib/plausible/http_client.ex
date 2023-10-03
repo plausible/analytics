@@ -19,6 +19,7 @@ defmodule Plausible.HTTPClient.Interface do
           {:ok, Finch.Response.t()}
           | {:error, Mint.Types.error() | Finch.Error.t() | Plausible.HTTPClient.Non200Error.t()}
 
+  @callback get(url(), headers(), params()) :: response()
   @callback get(url(), headers()) :: response()
   @callback get(url()) :: response()
   @callback post(url(), headers(), params()) :: response()
@@ -53,8 +54,8 @@ defmodule Plausible.HTTPClient do
   Make a GET request
   """
   @impl Plausible.HTTPClient.Interface
-  def get(url, headers \\ []) do
-    call(:get, url, headers, nil)
+  def get(url, headers \\ [], params \\ nil) do
+    call(:get, url, headers, params)
   end
 
   # TODO: Is it possible to tell the type checker that we're returning a module that conforms to the

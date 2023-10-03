@@ -200,6 +200,7 @@ defmodule PlausibleWeb.Router do
     get "/billing/change-plan/preview/:plan_id", BillingController, :change_plan_preview
     post "/billing/change-plan/:new_plan_id", BillingController, :change_plan
     get "/billing/upgrade", BillingController, :upgrade
+    get "/billing/choose-plan", BillingController, :choose_plan
     get "/billing/upgrade/:plan_id", BillingController, :upgrade_to_plan
     get "/billing/upgrade/enterprise/:plan_id", BillingController, :upgrade_enterprise_plan
     get "/billing/change-plan/enterprise/:plan_id", BillingController, :change_enterprise_plan

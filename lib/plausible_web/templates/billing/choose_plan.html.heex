@@ -1,0 +1,4 @@
+<%= live_render(@conn, PlausibleWeb.Live.ChoosePlan,
+  id: "choose-plan",
+  session: %{"user_id" => @user.id}
+) %>

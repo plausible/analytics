@@ -2,9 +2,7 @@
   {
     "kind":"growth",
     "monthly_pageview_limit":10000,
-    "monthly_cost":"$9",
     "monthly_product_id":"749342",
-    "yearly_cost":"$90",
     "yearly_product_id":"749343",
     "site_limit":50,
     "team_member_limit":"unlimited"
@@ -12,9 +10,7 @@
   {
     "kind":"growth",
     "monthly_pageview_limit":100000,
-    "monthly_cost":"$19",
     "monthly_product_id":"749344",
-    "yearly_cost":"$190",
     "yearly_product_id":"749345",
     "site_limit":50,
     "team_member_limit":"unlimited"
@@ -22,9 +18,7 @@
   {
     "kind":"growth",
     "monthly_pageview_limit":200000,
-    "monthly_cost":"$29",
     "monthly_product_id":"749346",
-    "yearly_cost":"$290",
     "yearly_product_id":"749347",
     "site_limit":50,
     "team_member_limit":"unlimited"
@@ -32,9 +26,7 @@
   {
     "kind":"growth",
     "monthly_pageview_limit":500000,
-    "monthly_cost":"$49",
     "monthly_product_id":"749348",
-    "yearly_cost":"$490",
     "yearly_product_id":"749349",
     "site_limit":50,
     "team_member_limit":"unlimited"
@@ -42,9 +34,7 @@
   {
     "kind":"growth",
     "monthly_pageview_limit":1000000,
-    "monthly_cost":"$69",
     "monthly_product_id":"749350",
-    "yearly_cost":"$690",
     "yearly_product_id":"749352",
     "site_limit":50,
     "team_member_limit":"unlimited"
@@ -52,9 +42,7 @@
   {
     "kind":"growth",
     "monthly_pageview_limit":2000000,
-    "monthly_cost":"$89",
     "monthly_product_id":"749353",
-    "yearly_cost":"$890",
     "yearly_product_id":"749355",
     "site_limit":50,
     "team_member_limit":"unlimited"
@@ -62,9 +50,7 @@
   {
     "kind":"growth",
     "monthly_pageview_limit":5000000,
-    "monthly_cost":"$129",
     "monthly_product_id":"749356",
-    "yearly_cost":"$1290",
     "yearly_product_id":"749357",
     "site_limit":50,
     "team_member_limit":"unlimited"
@@ -72,9 +58,7 @@
   {
     "kind":"growth",
     "monthly_pageview_limit":10000000,
-    "monthly_cost":"$169",
     "monthly_product_id":"749358",
-    "yearly_cost":"$1690",
     "yearly_product_id":"749359",
     "site_limit":50,
     "team_member_limit":"unlimited"

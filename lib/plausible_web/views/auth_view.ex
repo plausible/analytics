@@ -10,10 +10,19 @@ defmodule PlausibleWeb.AuthView do
     PlausibleWeb.Endpoint.url()
   end
 
-  def subscription_quota(subscription) do
+  def subscription_quota(subscription, options \\ [])
+
+  def subscription_quota(nil, _options), do: "Free trial"
+
+  def subscription_quota(subscription, options) do
     subscription
     |> Plausible.Billing.Quota.monthly_pageview_limit()
     |> PlausibleWeb.StatsView.large_number_format()
+    |> then(fn quota ->
+      if Keyword.get(options, :format) == :long,
+        do: "#{quota} pageviews",
+        else: quota
+    end)
   end
 
   def subscription_interval(subscription) do

@@ -1,16 +1,26 @@
 <%= if !Application.get_env(:plausible, :is_selfhost) do %>
-  <div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-24 bg-white border-t-2 border-orange-200 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-orange-200 ">
-    <div class="flex justify-between">
-      <h2 class="text-xl font-black dark:text-gray-100">Subscription Plan</h2>
-      <span
-        :if={@subscription}
-        class={[
-          "inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-bold leading-5",
-          subscription_colors(@subscription.status)
-        ]}
-      >
-        <%= present_subscription_status(@subscription.status) %>
-      </span>
+  <div class="max-w-2xl px-8 pt-4 pb-8 mx-auto mt-24 bg-white border-t-2 border-orange-200 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-orange-200 ">
+    <div class="flex flex-wrap justify-between">
+      <h2 class="text-xl font-black dark:text-gray-100 w-max mr-4 mt-2">Subscription Plan</h2>
+      <div class="gap-x-2 mt-2 inline-flex">
+        <span
+          :if={@subscription && Plausible.Billing.Plans.business_tier?(@subscription)}
+          class={[
+            "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5 text-indigo-600 bg-blue-100 dark:text-yellow-200 dark:border dark:bg-inherit dark:border-yellow-200"
+          ]}
+        >
+          Business
+        </span>
+        <span
+          :if={@subscription}
+          class={[
+            "w-max px-2.5 py-0.5 rounded-md text-sm font-bold leading-5",
+            subscription_colors(@subscription.status)
+          ]}
+        >
+          <%= present_subscription_status(@subscription.status) %>
+        </span>
+      </div>
     </div>
 
     <div class="my-4 border-b border-gray-400"></div>
@@ -50,38 +60,11 @@
     </div>
 
     <div class="flex flex-col items-center justify-between mt-8 sm:flex-row sm:items-start">
-      <div
-        class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900"
-        style="width: 11.75rem;"
-      >
-        <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
-        <%= if @subscription do %>
-          <div class="py-2 text-xl font-medium dark:text-gray-100">
-            <%= subscription_quota(@subscription) %> pageviews
-          </div>
-
-          <.styled_link
-            :if={@subscription.status == "active"}
-            href={Routes.billing_path(@conn, :change_plan_form)}
-            class="text-sm font-medium"
-          >
-            Change plan
-          </.styled_link>
-
-          <span
-            :if={@subscription.status == "past_due"}
-            class="text-sm text-gray-600 dark:text-gray-400 font-medium"
-            tooltip="Please update your billing details before changing plans"
-          >
-            Change plan
-          </span>
-        <% else %>
-          <div class="py-2 text-xl font-medium dark:text-gray-100">Free trial</div>
-          <.styled_link class="text-sm font-medium" href={Routes.billing_path(@conn, :upgrade)}>
-            Upgrade
-          </.styled_link>
-        <% end %>
-      </div>
+      <PlausibleWeb.Components.Billing.monthly_quota_box
+        subscription={@subscription}
+        conn={@conn}
+        business_tier={FunWithFlags.enabled?(:business_tier, for: @user)}
+      />
       <div
         class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900"
         style="width: 11.75rem;"
@@ -168,7 +151,11 @@
       <% true -> %>
         <div class="mt-8">
           <%= link("Upgrade",
-            to: "/billing/upgrade",
+            to:
+              if(FunWithFlags.enabled?(:business_tier, for: @user),
+                do: PlausibleWeb.Router.Helpers.billing_path(PlausibleWeb.Endpoint, :choose_plan),
+                else: "/billing/upgrade"
+              ),
             class:
               "inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
           ) %>

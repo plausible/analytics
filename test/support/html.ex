@@ -37,6 +37,12 @@ defmodule Plausible.Test.Support.HTML do
     |> String.trim()
   end
 
+  def class_of_element(html, element) do
+    html
+    |> find(element)
+    |> text_of_attr("class")
+  end
+
   def text_of_attr(element, attr) do
     element
     |> Floki.attribute(attr)
