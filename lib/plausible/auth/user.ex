@@ -124,6 +124,17 @@ defmodule Plausible.Auth.User do
     end
   end
 
+  def profile_img_url(%__MODULE__{email: email}) do
+    hash =
+      email
+      |> String.trim()
+      |> String.downcase()
+      |> :erlang.md5()
+      |> Base.encode16(case: :lower)
+
+    "https://www.gravatar.com/avatar/#{hash}?s=150&d=identicon"
+  end
+
   defp validate_password_strength(changeset) do
     if get_change(changeset, :password) != nil and password_strength(changeset).score <= 2 do
       add_error(changeset, :password, "is too weak", validation: :strength)

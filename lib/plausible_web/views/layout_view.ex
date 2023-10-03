@@ -47,7 +47,8 @@ defmodule PlausibleWeb.LayoutView do
     token_params = %{
       "id" => user.id,
       "email" => user.email,
-      "name" => user.name
+      "name" => user.name,
+      "imageUrl" => Plausible.Auth.User.profile_img_url(user)
     }
 
     case JWT.generate_and_sign(token_params) do
