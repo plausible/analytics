@@ -55,14 +55,28 @@ defmodule PlausibleWeb.BillingController do
     user = Plausible.Users.with_subscription(conn.assigns[:current_user])
 
     if FunWithFlags.enabled?(:business_tier, for: user) do
-      render(conn, "upgrade_to_enterprise_plan.html",
-        user: user,
-        latest_enterprise_plan: Plans.latest_enterprise_plan_for(user),
-        subscription_exists: user.subscription && user.subscription.status != "deleted",
-        contact_link: "https://plausible.io/contact",
-        skip_plausible_tracking: true,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
+      latest_enterprise_plan = Plans.latest_enterprise_plan_for(user)
+      subscription_exists? = user.subscription && user.subscription.status != "deleted"
+
+      subscribed_to_latest? =
+        subscription_exists? &&
+          user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
+
+      if subscribed_to_latest? do
+        render(conn, "change_enterprise_plan_contact_us.html",
+          skip_plausible_tracking: true,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      else
+        render(conn, "upgrade_to_enterprise_plan.html",
+          user: user,
+          latest_enterprise_plan: latest_enterprise_plan,
+          subscription_exists: subscription_exists?,
+          contact_link: "https://plausible.io/contact",
+          skip_plausible_tracking: true,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+      end
     else
       render_error(conn, 404)
     end
