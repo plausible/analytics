@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-AE26B8DB.js"></script>
+    <script src="dist/sidebar_items-C257CCA4.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -146,7 +146,8 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns the amount of pageviews sent by the sites the user owns in last 30 days.</p></div>
+        <div class="summary-synopsis"><p>Returns the amount of pageviews and custom events
+sent by the sites the user owns in last 30 days.</p></div>
 
     </div>
 
@@ -235,7 +236,7 @@ Functions
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> monthly_pageview_limit(Plausible.Billing.Subscription.t()) ::
+          <pre translate="no"><span class="attribute">@spec</span> monthly_pageview_limit(<a href="Plausible.Billing.Subscription.html#t:t/0">Plausible.Billing.Subscription.t</a>()) ::
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :unlimited</pre>
 
       </div>
@@ -252,7 +253,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">monthly_pageview_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L80" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L81" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -268,7 +269,8 @@ Functions
 
       </div>
 
-<p>Returns the amount of pageviews sent by the sites the user owns in last 30 days.</p>
+<p>Returns the amount of pageviews and custom events
+sent by the sites the user owns in last 30 days.</p>
   </section>
 </section>
 <section class="detail" id="site_limit/1">
@@ -337,7 +339,7 @@ background job so as to avoid service disruption.</p>
     </a>
     <h1 class="signature" translate="no">team_member_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L91" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L92" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -365,7 +367,7 @@ background job so as to avoid service disruption.</p>
     </a>
     <h1 class="signature" translate="no">team_member_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L107" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L108" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -394,7 +396,7 @@ with the user's sites.</p>
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L140" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L141" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

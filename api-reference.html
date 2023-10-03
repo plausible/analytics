@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-AE26B8DB.js"></script>
+    <script src="dist/sidebar_items-C257CCA4.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -262,6 +262,17 @@ period.</p></div>
     <a href="Plausible.Billing.SiteLocker.html" translate="no">Plausible.Billing.SiteLocker</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Billing.Subscription.html" translate="no">Plausible.Billing.Subscription</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>The subscription statuses are stored in Paddle. They can only be changed
+through Paddle webhooks, which always send the current subscription status
+via the payload.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1636,6 +1647,15 @@ to the Plausible frontend.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="PlausibleWeb.Live.ChoosePlan.html" translate="no">PlausibleWeb.Live.ChoosePlan</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>LiveView for upgrading to a plan, or changing an existing plan.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="PlausibleWeb.Live.Components.ComboBox.html" translate="no">PlausibleWeb.Live.Components.ComboBox</a>
 
   </div>
@@ -2127,6 +2147,18 @@ configuration.</p></div>
 </h2>
 
     <div class="summary">
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Mix.Tasks.CancelSubscription.html" translate="no">mix cancel_subscription</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This task is meant to replicate the behavior of cancelling
+a subscription. On production, this action is initiated by
+a Paddle webhook. Currently, only the subscription status
+is changed with that action.</p></div>
+
+</div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="Mix.Tasks.CleanClickhouse.html" translate="no">mix clean_clickhouse</a>

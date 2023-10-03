@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-AE26B8DB.js"></script>
+    <script src="dist/sidebar_items-C257CCA4.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -102,7 +102,7 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L23" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L28" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
@@ -128,21 +128,33 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#find/2" translate="no">find(product_id_or_subscription, scope \\ all())</a>
+        <a href="#available_plans_with_prices/1" translate="no">available_plans_with_prices(user)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Finds a plan by product ID.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#for_user/1" translate="no">for_user(user)</a>
+        <a href="#business_plans/0" translate="no">business_plans()</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns a list of plans available for the user to choose.</p></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#business_tier?/1" translate="no">business_tier?(subscription)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_regular_plan/2" translate="no">get_regular_plan(subscription, opts \\ [])</a>
+
+      </div>
 
     </div>
 
@@ -151,6 +163,16 @@ Plausible
         <a href="#get_subscription_plan/1" translate="no">get_subscription_plan(subscription)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#growth_plans_for/1" translate="no">growth_plans_for(user)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns a list of growth plans available for the user to choose.</p></div>
 
     </div>
 
@@ -170,6 +192,19 @@ Plausible
 
         <div class="summary-synopsis"><p>Returns the most appropriate plan for a user based on their usage during a
 given cycle.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#with_prices/1" translate="no">with_prices(plans)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>This function takes a list of plans as an argument, gathers all product
+IDs in a single list, and makes an API call to Paddle. After a successful
+response, fills in the <code class="inline">monthly_cost</code> and <code class="inline">yearly_cost</code> fields for each
+given plan and returns the new list of plans with completed information.</p></div>
 
     </div>
 
@@ -196,18 +231,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="find/2">
-
-    <span id="find/1"></span>
+<section class="detail" id="available_plans_with_prices/1">
 
   <div class="detail-header">
-    <a href="#find/2" class="detail-link" title="Link to this function">
+    <a href="#available_plans_with_prices/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">find(product_id_or_subscription, scope \\ all())</h1>
+    <h1 class="signature" translate="no">available_plans_with_prices(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L100" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L101" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -217,30 +250,19 @@ Functions
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> find(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | Plausible.Billing.Subscription.t(), [
-  Plausible.Billing.Plan.t()
-]) ::
-  Plausible.Billing.Plan.t() | nil</pre>
-
-          <pre translate="no"><span class="attribute">@spec</span> find(nil, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: nil</pre>
-
-      </div>
-
-<p>Finds a plan by product ID.</p><p>Returns nil when plan can't be found.</p>
   </section>
 </section>
-<section class="detail" id="for_user/1">
+<section class="detail" id="business_plans/0">
 
   <div class="detail-header">
-    <a href="#for_user/1" class="detail-link" title="Link to this function">
+    <a href="#business_plans/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">for_user(user)</h1>
+    <h1 class="signature" translate="no">business_plans()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L68" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L97" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -250,14 +272,53 @@ Functions
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> for_user(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: [Plausible.Billing.Plan.t()]</pre>
+  </section>
+</section>
+<section class="detail" id="business_tier?/1">
 
-      </div>
+  <div class="detail-header">
+    <a href="#business_tier?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">business_tier?(subscription)</h1>
 
-<p>Returns a list of plans available for the user to choose.</p><p>As new versions of plans are introduced, users who were on old plans can
-still choose from old plans.</p>
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L195" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="get_regular_plan/2">
+
+    <span id="get_regular_plan/1"></span>
+
+  <div class="detail-header">
+    <a href="#get_regular_plan/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_regular_plan(subscription, opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L176" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 <section class="detail" id="get_subscription_plan/1">
@@ -269,7 +330,7 @@ still choose from old plans.</p>
     </a>
     <h1 class="signature" translate="no">get_subscription_plan(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L116" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L127" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -282,6 +343,35 @@ still choose from old plans.</p>
 
   </section>
 </section>
+<section class="detail" id="growth_plans_for/1">
+
+  <div class="detail-header">
+    <a href="#growth_plans_for/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">growth_plans_for(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L80" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> growth_plans_for(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: [Plausible.Billing.Plan.t()]</pre>
+
+      </div>
+
+<p>Returns a list of growth plans available for the user to choose.</p><p>As new versions of plans are introduced, users who were on old plans can
+still choose from old plans.</p>
+  </section>
+</section>
 <section class="detail" id="subscription_interval/1">
 
   <div class="detail-header">
@@ -291,7 +381,7 @@ still choose from old plans.</p>
     </a>
     <h1 class="signature" translate="no">subscription_interval(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L124" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L137" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -313,7 +403,7 @@ still choose from old plans.</p>
     </a>
     <h1 class="signature" translate="no">suggest(user, usage_during_cycle)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L163" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L217" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -337,6 +427,31 @@ plan.</p><p>Otherwise, it recommends the plan where the cycle usage falls just u
 plan's limit from the available options for the user.</p>
   </section>
 </section>
+<section class="detail" id="with_prices/1">
+
+  <div class="detail-header">
+    <a href="#with_prices/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">with_prices(plans)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L160" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>This function takes a list of plans as an argument, gathers all product
+IDs in a single list, and makes an API call to Paddle. After a successful
+response, fills in the <code class="inline">monthly_cost</code> and <code class="inline">yearly_cost</code> fields for each
+given plan and returns the new list of plans with completed information.</p>
+  </section>
+</section>
 <section class="detail" id="yearly_product_ids/0">
 
   <div class="detail-header">
@@ -346,7 +461,7 @@ plan's limit from the available options for the user.</p>
     </a>
     <h1 class="signature" translate="no">yearly_product_ids()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L86" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/plans.ex#L111" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
