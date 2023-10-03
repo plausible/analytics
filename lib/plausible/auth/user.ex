@@ -122,6 +122,9 @@ defmodule Plausible.Auth.User do
             %{suggestions: [], warning: "", score: 3}
         end
     end
+  catch
+    _kind, _value ->
+      %{suggestions: [], warning: "", score: 3}
   end
 
   defp validate_password_strength(changeset) do
