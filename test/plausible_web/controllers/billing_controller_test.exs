@@ -160,6 +160,8 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert doc =~ "prepared a custom enterprise plan for your account with the following limits"
       assert doc =~ "Questions?"
       assert doc =~ "Contact us"
+      assert doc =~ "+ VAT if applicable"
+      assert doc =~ "Click the button below to upgrade"
       assert doc =~ "Pay securely via Paddle"
     end
 
@@ -194,6 +196,51 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
   end
 
+  describe "GET /upgrade-to-enterprise-plan (active subscription, new enterprise plan configured)" do
+    setup [:create_user, :log_in, :subscribe_enterprise, :configure_enterprise_plan]
+
+    test "displays basic page content", %{conn: conn} do
+      doc =
+        conn
+        |> get("/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      assert doc =~ "Change subscription plan"
+      assert doc =~ "prepared your account for an upgrade to custom limits"
+      assert doc =~ "+ VAT if applicable"
+      assert doc =~ "calculate the prorated amount that your card will be charged"
+      assert doc =~ "Preview changes"
+      assert doc =~ "Questions?"
+      assert doc =~ "Contact us"
+    end
+
+    test "displays info about the enterprise plan to upgrade to", %{conn: conn} do
+      doc =
+        conn
+        |> get("/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      assert doc =~ ~r/Up to\s*<b>\s*50M\s*<\/b>\s*monthly pageviews/
+      assert doc =~ ~r/Up to\s*<b>\s*20k\s*<\/b>\s*sites/
+      assert doc =~ ~r/Up to\s*<b>\s*5k\s*<\/b>\s*hourly api requests/
+      assert doc =~ ~r/The plan is priced at\s*<b>\s*€10\s*<\/b>\s*/
+      assert doc =~ "per year"
+    end
+
+    test "preview changes links to :change_plan_preview action", %{conn: conn} do
+      doc =
+        conn
+        |> get("/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      preview_changes_link = find(doc, "#preview-changes")
+      assert text(preview_changes_link) == "Preview changes"
+
+      assert text_of_attr(preview_changes_link, "href") ==
+               Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_preview, "123")
+    end
+  end
+
   defp configure_enterprise_plan(%{user: user}) do
     insert(:enterprise_plan,
       user_id: user.id,
@@ -206,6 +253,11 @@ defmodule PlausibleWeb.BillingControllerTest do
     )
 
     :ok
+  end
+
+  defp subscribe_enterprise(%{user: user}) do
+    insert(:subscription, user: user, paddle_plan_id: "321")
+    {:ok, user: Plausible.Users.with_subscription(user)}
   end
 
   defp get_paddle_checkout_params(element) do
