@@ -56,10 +56,10 @@ defmodule PlausibleWeb.BillingController do
 
     if FunWithFlags.enabled?(:business_tier, for: user) do
       latest_enterprise_plan = Plans.latest_enterprise_plan_for(user)
-      subscription_exists? = user.subscription && user.subscription.status != "deleted"
+      subscription_resumable? = Plausible.Billing.Subscriptions.resumable?(user.subscription)
 
       subscribed_to_latest? =
-        subscription_exists? &&
+        subscription_resumable? &&
           user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
 
       if subscribed_to_latest? do
@@ -71,7 +71,7 @@ defmodule PlausibleWeb.BillingController do
         render(conn, "upgrade_to_enterprise_plan.html",
           user: user,
           latest_enterprise_plan: latest_enterprise_plan,
-          subscription_exists: subscription_exists?,
+          subscription_resumable: subscription_resumable?,
           contact_link: "https://plausible.io/contact",
           skip_plausible_tracking: true,
           layout: {PlausibleWeb.LayoutView, "focus.html"}

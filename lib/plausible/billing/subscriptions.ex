@@ -19,4 +19,10 @@ defmodule Plausible.Billing.Subscriptions do
 
     cancelled? && expired?
   end
+
+  def resumable?(nil), do: false
+
+  def resumable?(%Subscription{status: status}) do
+    status in ["active", "past_due", "paused"]
+  end
 end

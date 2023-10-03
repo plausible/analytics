@@ -1,13 +1,15 @@
 <div class="mx-auto mt-6 text-center">
   <h1 class="text-3xl font-black">
-    <%= if @subscription_exists, do: "Change subscription plan", else: "Upgrade to Enterprise" %>
+    <%= if @subscription_resumable,
+      do: "Change subscription plan",
+      else: "Upgrade to Enterprise" %>
   </h1>
 </div>
 <div class="w-full max-w-lg px-4 mx-auto mt-4">
   <div class="flex-1 p-8 mt-8 bg-white rounded shadow-md">
     <div class="w-full pb-4">
       <span>
-        <%= if @subscription_exists,
+        <%= if @subscription_resumable,
           do:
             "We've prepared your account for an upgrade to custom limits outside the listed plans:",
           else:
@@ -28,14 +30,14 @@
       <span>
         per <%= if @latest_enterprise_plan.billing_interval == :yearly,
           do: "year",
-          else: "month" %> + VAT if applicable. <%= if @subscription_exists,
+          else: "month" %> + VAT if applicable. <%= if @subscription_resumable,
           do:
             "On the next page, our payment provider will calculate the prorated amount that your card will be charged if you decide to upgrade now.",
           else: "Click the button below to upgrade." %>
       </span>
     </ul>
     <div class="w-max">
-      <%= if @subscription_exists do %>
+      <%= if @subscription_resumable do %>
         <span class="inline-flex w-full rounded-md shadow-sm">
           <.link
             id="preview-changes"

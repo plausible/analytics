@@ -140,7 +140,7 @@
     </article>
 
     <%= cond do %>
-      <% @subscription && @subscription.status in ["active", "past_due", "paused"] && @subscription.cancel_url -> %>
+      <% Plausible.Billing.Subscriptions.resumable?(@subscription) && @subscription.cancel_url -> %>
         <div class="mt-8">
           <%= link("Cancel my subscription",
             to: @subscription.cancel_url,
