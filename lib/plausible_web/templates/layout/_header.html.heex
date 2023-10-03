@@ -42,6 +42,7 @@
                       <%= link("Help", to: "https://plausible.io/docs", class: "text-gray-700 block px-3.5 py-1.5 hover:bg-gray-100 hover:text-gray-900", target: "_blank", rel: "noopener noreferrer") %>
                       <%= if !Application.get_env(:plausible, :is_selfhost) do %>
                         <%= link("Feedback", to: "https://feedback.plausible.io", class: "text-gray-700 block px-3.5 py-1.5 hover:bg-gray-100 hover:text-gray-900", target: "_blank", rel: "noopener noreferrer") %>
+                        <%= link("Contact Support", to: "https://plausible.io/contact", class: "text-gray-700 block px-3.5 py-1.5 hover:bg-gray-100 hover:text-gray-900", target: "_blank", rel: "noopener noreferrer") %>
                       <% end %>
                     </div>
                     <div class="py-1.5" role="none">
