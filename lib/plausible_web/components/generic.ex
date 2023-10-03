@@ -87,4 +87,48 @@ defmodule PlausibleWeb.Components.Generic do
       ["w-4 h-4"]
     end
   end
+
+  slot :button, required: true do
+    attr :class, :string
+  end
+
+  slot :panel, required: true do
+    attr :class, :string
+  end
+
+  def dropdown(assigns) do
+    ~H"""
+    <div class="flex justify-center">
+      <div
+        x-data="window.dropdown"
+        x-on:keydown.escape.prevent.stop="close($refs.button)"
+        x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
+        x-id="['dropdown-button']"
+        class="relative"
+      >
+        <button
+          x-ref="button"
+          x-on:click="toggle()"
+          x-bind:aria-expanded="open"
+          x-bind:aria-controls="$id('dropdown-button')"
+          type="button"
+          class={List.first(@button).class}
+        >
+          <%= render_slot(List.first(@button)) %>
+        </button>
+        <div
+          x-ref="panel"
+          x-show="open"
+          x-transition.origin.top.left
+          x-on:click.outside="close($refs.button)"
+          x-bind:id="$id('dropdown-button')"
+          style="display: none;"
+          class={List.first(@panel).class}
+        >
+          <%= render_slot(List.first(@panel)) %>
+        </div>
+      </div>
+    </div>
+    """
+  end
 end
