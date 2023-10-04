@@ -1,12 +1,12 @@
 <div class="mx-auto mt-6 text-center">
-  <h1 class="text-3xl font-black">
+  <h1 class="text-3xl font-black text-black dark:text-gray-100">
     <%= if @subscription_resumable,
       do: "Change subscription plan",
       else: "Upgrade to Enterprise" %>
   </h1>
 </div>
-<div class="w-full max-w-lg px-4 mx-auto mt-4">
-  <div class="flex-1 p-8 mt-8 bg-white rounded shadow-md">
+<div class="w-full max-w-lg px-4 mx-auto mt-4 text-gray-900 dark:text-gray-100">
+  <div class="flex-1 p-8 mt-8 rounded bg-white shadow-md dark:bg-gray-800 dark:shadow-none">
     <div class="w-full pb-4">
       <span>
         <%= if @subscription_resumable,
@@ -82,7 +82,7 @@
     </div>
   </div>
 </div>
-<div class="mt-8 text-center">
+<div class="mt-8 text-center text-gray-900 dark:text-gray-100">
   Questions? <a class="text-indigo-600" href={@contact_link}>Contact us</a>
 </div>
 <PlausibleWeb.Components.Billing.paddle_script />
