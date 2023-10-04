@@ -11,6 +11,7 @@ defmodule PlausibleWeb.AuthControllerTest do
   setup :verify_on_exit!
 
   @v3_plan_id "749355"
+  @configured_enterprise_plan_paddle_plan_id "123"
 
   describe "GET /register" do
     test "shows the register form", %{conn: conn} do
@@ -463,15 +464,10 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "shows enterprise plan subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "123", user: user)
 
-      insert(:enterprise_plan,
-        paddle_plan_id: "123",
-        user: user,
-        monthly_pageview_limit: 10_000_000,
-        billing_interval: :yearly
-      )
+      configure_enterprise_plan(user)
 
       conn = get(conn, "/settings")
-      assert html_response(conn, 200) =~ "10M pageviews"
+      assert html_response(conn, 200) =~ "20M pageviews"
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
@@ -479,24 +475,19 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, paddle_plan_id: "123", user: user)
+      insert(:subscription, paddle_plan_id: @configured_enterprise_plan_paddle_plan_id, user: user)
 
       insert(:enterprise_plan,
-        paddle_plan_id: "123",
+        paddle_plan_id: "1234",
         user: user,
         monthly_pageview_limit: 10_000_000,
         billing_interval: :yearly
       )
 
-      insert(:enterprise_plan,
-        paddle_plan_id: "1234",
-        user: user,
-        monthly_pageview_limit: 20_000_000,
-        billing_interval: :yearly
-      )
+      configure_enterprise_plan(user)
 
       conn = get(conn, "/settings")
-      assert html_response(conn, 200) =~ "10M pageviews"
+      assert html_response(conn, 200) =~ "20M pageviews"
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
@@ -536,12 +527,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "links to upgrade to enterprise plan",
          %{conn: conn, user: user} do
-      insert(:enterprise_plan,
-        paddle_plan_id: "123",
-        user: user,
-        monthly_pageview_limit: 20_000_000,
-        billing_interval: :yearly
-      )
+      configure_enterprise_plan(user)
 
       doc =
         get(conn, "/settings")
@@ -565,12 +551,7 @@ defmodule PlausibleWeb.AuthControllerTest do
          %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
 
-      insert(:enterprise_plan,
-        paddle_plan_id: "123",
-        user: user,
-        monthly_pageview_limit: 20_000_000,
-        billing_interval: :yearly
-      )
+      configure_enterprise_plan(user)
 
       doc =
         get(conn, "/settings")
@@ -848,6 +829,15 @@ defmodule PlausibleWeb.AuthControllerTest do
            body: %{"success" => success}
          }}
       end
+    )
+  end
+
+  defp configure_enterprise_plan(user) do
+    insert(:enterprise_plan,
+      paddle_plan_id: @configured_enterprise_plan,
+      user: user,
+      monthly_pageview_limit: 20_000_000,
+      billing_interval: :yearly
     )
   end
 end
