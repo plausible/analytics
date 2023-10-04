@@ -20,19 +20,7 @@ defmodule Plausible.Plugins.API.Goals do
           create_request() | list(create_request())
         ) :: {:ok, list(Plausible.Goal.t())} | {:error, Ecto.Changeset.t()}
   def create(site, goal_or_goals) do
-    Repo.transaction(fn ->
-      goal_or_goals
-      |> List.wrap()
-      |> Enum.map(fn goal ->
-        case Plausible.Goals.find_or_create(site, convert_to_create_params(goal)) do
-          {:ok, goal} ->
-            goal
-
-          {:error, changeset} ->
-            Repo.rollback(changeset)
-        end
-      end)
-    end)
+    Repo.transaction(fn -> find_or_create(site, goal_or_goals) end)
   end
 
   @spec get_goals(Plausible.Site.t(), map()) :: {:ok, Paginator.Page.t()}
@@ -84,5 +72,19 @@ defmodule Plausible.Plugins.API.Goals do
 
   defp convert_to_create_params(%CreateRequest.Pageview{goal: %{path: page_path}}) do
     %{"goal_type" => "page", "page_path" => page_path}
+  end
+
+  defp find_or_create(site, goal_or_goals) do
+    goal_or_goals
+    |> List.wrap()
+    |> Enum.map(fn goal ->
+      case Plausible.Goals.find_or_create(site, convert_to_create_params(goal)) do
+        {:ok, goal} ->
+          goal
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
   end
 end
