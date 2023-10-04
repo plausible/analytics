@@ -66,6 +66,7 @@ defmodule Plausible.Auth.User do
     user
     |> cast(attrs, [:email, :password])
     |> validate_required([:email, :password])
+    |> validate_email_changed()
     |> check_password()
     |> unique_constraint(:email)
     |> put_change(:email_verified, false)
@@ -76,13 +77,13 @@ defmodule Plausible.Auth.User do
     if user.previous_email do
       user
       |> change()
+      |> unique_constraint(:email)
       |> put_change(:email_verified, true)
       |> put_change(:email, user.previous_email)
       |> put_change(:previous_email, nil)
     else
-      user
-      |> change()
-      |> add_error(:previous_email, "can't be blank", validation: :required)
+      # It shouldn't happen under normal circumstances
+      raise "Previous email is empty for user #{user.id} (#{user.email}) when it shouldn't."
     end
   end
 
@@ -150,6 +151,14 @@ defmodule Plausible.Auth.User do
   catch
     _kind, _value ->
       %{suggestions: [], warning: "", score: 3}
+  end
+
+  defp validate_email_changed(changeset) do
+    if !get_change(changeset, :email) && !changeset.errors[:email] do
+      add_error(changeset, :email, "can't be the same", validation: :different_email)
+    else
+      changeset
+    end
   end
 
   defp check_password(changeset) do

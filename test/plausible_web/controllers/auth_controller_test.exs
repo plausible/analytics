@@ -440,7 +440,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "shows the form", %{conn: conn} do
       conn = get(conn, "/settings")
-      assert html_response(conn, 200) =~ "Account settings"
+      assert resp = html_response(conn, 200)
+      assert resp =~ "Change account name"
+      assert resp =~ "Change email address"
     end
 
     test "shows subscription", %{conn: conn, user: user} do

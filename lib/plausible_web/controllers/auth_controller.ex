@@ -155,6 +155,7 @@ defmodule PlausibleWeb.AuthController do
           error: "Code is expired, please request another one",
           has_pin: false,
           has_invitation: has_invitation,
+          has_memberships: has_memberships,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
@@ -403,7 +404,10 @@ defmodule PlausibleWeb.AuthController do
 
       {:error, _} ->
         conn
-        |> put_flash(:error, "Could not cancel email update")
+        |> put_flash(
+          :error,
+          "Could not cancel email update because previous email has already been taken"
+        )
         |> redirect(to: Routes.auth_path(conn, :activate_form))
     end
   end
