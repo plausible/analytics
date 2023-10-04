@@ -92,6 +92,7 @@ defmodule PlausibleWeb.Components.Generic do
           x-show="open"
           x-transition.origin.top.left
           x-on:click.outside="close($refs.button)"
+          x-on:click="onPanelClick"
           x-bind:id="$id('dropdown-button')"
           style="display: none;"
           class={List.first(@panel).class}

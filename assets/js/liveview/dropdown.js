@@ -17,5 +17,11 @@ window.dropdown = {
 
     this.open = false
     focusAfter && focusAfter.focus()
+  },
+
+  onPanelClick(e) {
+    if (e.target.tagName === 'A') {
+      this.close()
+    }
   }
 }
