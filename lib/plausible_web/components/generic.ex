@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <div class="flex justify-center">
       <div
-        x-data="window.dropdown"
+        x-data="dropdown"
         x-on:keydown.escape.prevent.stop="close($refs.button)"
         x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
         x-id="['dropdown-button']"

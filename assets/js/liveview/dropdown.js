@@ -1,7 +1,6 @@
 // From https://alpinejs.dev/component/dropdown
-//
 
-window.dropdown = {
+export default () => ({
   open: false,
   toggle() {
     if (this.open) {
@@ -24,4 +23,4 @@ window.dropdown = {
       this.close()
     }
   }
-}
+})
