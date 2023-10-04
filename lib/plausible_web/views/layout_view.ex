@@ -40,11 +40,11 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def feedback_link(user) do
-    defmodule JWT do
-      use Joken.Config
-    end
+  defmodule JWT do
+    use Joken.Config
+  end
 
+  def feedback_link(user) do
     token_params = %{
       "id" => user.id,
       "email" => user.email,
