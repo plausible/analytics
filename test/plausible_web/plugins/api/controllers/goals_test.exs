@@ -113,6 +113,34 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert [%{event_name: "Purchase", currency: :EUR}] = Plausible.Goals.for_site(site)
     end
 
+    test "fails to create a revenue goal with unknown currency", %{
+      conn: conn,
+      token: token,
+      site: site
+    } do
+      url = Routes.goals_url(base_uri(), :create)
+
+      payload = %{
+        goal_type: "Goal.Revenue",
+        goal: %{event_name: "Purchase", currency: "DFJKHJESFHYU"}
+      }
+
+      assert_request_schema(payload, "Goal.CreateRequest.Revenue", spec())
+
+      conn =
+        conn
+        |> authenticate(site.domain, token)
+        |> put_req_header("content-type", "application/json")
+        |> put(url, payload)
+
+      resp =
+        conn
+        |> json_response(422)
+        |> assert_schema("UnprocessableEntityError", spec())
+
+      assert [%{detail: "currency: is invalid"}] = resp.errors
+    end
+
     test "edge case - revenue goals exists under the same name and different currency", %{
       conn: conn,
       token: token,
