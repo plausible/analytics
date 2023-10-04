@@ -11,7 +11,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
     end
   end
 
-  describe "unathorized calls" do
+  describe "unauthorized calls" do
     for {method, url} <- [
           {:get, Routes.shared_links_url(base_uri(), :get, 1)},
           {:put, Routes.shared_links_url(base_uri(), :create)},

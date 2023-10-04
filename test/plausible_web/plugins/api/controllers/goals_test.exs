@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
   end
 
-  describe "unathorized calls" do
+  describe "unauthorized calls" do
     for {method, url} <- [
           {:get, Routes.goals_url(base_uri(), :index)},
           {:get, Routes.goals_url(base_uri(), :get, 1)},
