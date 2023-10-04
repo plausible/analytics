@@ -32,12 +32,54 @@ defmodule Plausible.Goals do
     end)
     |> Repo.transaction()
     |> case do
-      {:ok, %{goal: goal}} -> {:ok, Repo.preload(goal, :site)}
-      {:error, _failed_operation, failed_value, _changes_so_far} -> {:error, failed_value}
+      {:ok, %{goal: goal}} ->
+        {:ok, Repo.preload(goal, :site)}
+
+      {:error, _failed_operation, failed_value, _changes_so_far} ->
+        {:error, failed_value}
     end
   end
 
-  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name}) do
+  def find_or_create(site, %{
+        "goal_type" => "event",
+        "event_name" => event_name,
+        "currency" => currency
+      })
+      when is_binary(event_name) and is_binary(currency) do
+    query =
+      from g in Goal,
+        inner_join: assoc(g, :site),
+        where: g.site_id == ^site.id,
+        where: g.event_name == ^event_name,
+        where: not is_nil(g.currency),
+        preload: [:site]
+
+    goal = Repo.one(query)
+
+    case goal do
+      nil ->
+        create(site, %{"event_name" => event_name, "currency" => currency})
+
+      _ ->
+        if to_string(goal.currency) == currency do
+          {:ok, goal}
+        else
+          # we must disallow creation of the same goal name with different currency
+          changeset =
+            goal
+            |> Goal.changeset()
+            |> Ecto.Changeset.add_error(
+              :currency,
+              "event_name '#{goal.event_name}' has already been taken"
+            )
+
+          {:error, changeset}
+        end
+    end
+  end
+
+  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name})
+      when is_binary(event_name) do
     query =
       from g in Goal,
         inner_join: assoc(g, :site),
@@ -74,6 +116,13 @@ defmodule Plausible.Goals do
   def find_or_create(_, %{"goal_type" => "page"}), do: {:missing, "page_path"}
 
   def for_site(site, opts \\ []) do
+    site
+    |> for_site_query(opts)
+    |> Repo.all()
+    |> Enum.map(&maybe_trim/1)
+  end
+
+  def for_site_query(site, opts \\ []) do
     query =
       from g in Goal,
         inner_join: assoc(g, :site),
@@ -91,20 +140,15 @@ defmodule Plausible.Goals do
         query
       end
 
-    query =
-      if opts[:preload_funnels?] do
-        from(g in query,
-          left_join: assoc(g, :funnels),
-          group_by: g.id,
-          preload: [:funnels]
-        )
-      else
-        query
-      end
-
-    query
-    |> Repo.all()
-    |> Enum.map(&maybe_trim/1)
+    if opts[:preload_funnels?] do
+      from(g in query,
+        left_join: assoc(g, :funnels),
+        group_by: g.id,
+        preload: [:funnels]
+      )
+    else
+      query
+    end
   end
 
   @doc """
