@@ -12,6 +12,7 @@ defmodule Plausible.Auth.UserAdmin do
     [
       name: nil,
       email: nil,
+      previous_email: nil,
       trial_expiry_date: nil
     ]
   end
