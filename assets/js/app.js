@@ -4,12 +4,12 @@ import "./polyfills/closest"
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import Alpine from 'alpinejs'
 import "./liveview/live_socket"
-import suggestionsDropdown from "./liveview/suggestions_dropdown"
+import comboBox from "./liveview/combo-box"
 import dropdown from "./liveview/dropdown"
 import "./liveview/phx_events"
 
 Alpine.data('dropdown', dropdown)
-Alpine.data('suggestionsDropdown', suggestionsDropdown)
+Alpine.data('comboBox', comboBox)
 Alpine.start()
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
