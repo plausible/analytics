@@ -284,6 +284,64 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
   end
 
+  describe "GET /upgrade-to-enterprise-plan (deleted enterprise subscription)" do
+    setup [:create_user, :log_in, :configure_enterprise_plan]
+
+    setup context do
+      subscribe_enterprise(context,
+        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
+        status: "deleted"
+      )
+
+      context
+    end
+
+    test "displays the same content as for a user without a subscription", %{conn: conn} do
+      doc =
+        conn
+        |> get("/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      assert doc =~ "Upgrade to Enterprise"
+      assert doc =~ "prepared a custom enterprise plan for your account with the following limits"
+      assert doc =~ "Questions?"
+      assert doc =~ "Contact us"
+      assert doc =~ "+ VAT if applicable"
+      assert doc =~ "Click the button below to upgrade"
+      assert doc =~ "Pay securely via Paddle"
+    end
+
+    test "still allows to subscribe back to the same plan", %{conn: conn} do
+      doc =
+        conn
+        |> get("/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      assert doc =~ ~r/Up to\s*<b>\s*50M\s*<\/b>\s*monthly pageviews/
+      assert doc =~ ~r/Up to\s*<b>\s*20k\s*<\/b>\s*sites/
+      assert doc =~ ~r/Up to\s*<b>\s*5k\s*<\/b>\s*hourly api requests/
+      assert doc =~ ~r/The plan is priced at\s*<b>\s*€10\s*<\/b>\s*/
+      assert doc =~ "per year"
+    end
+
+    test "renders paddle button with the correct checkout params",
+         %{conn: conn, user: user} do
+      doc =
+        conn
+        |> get("/billing/upgrade-to-enterprise-plan")
+        |> html_response(200)
+
+      assert %{
+               "disableLogout" => true,
+               "email" => user.email,
+               "passthrough" => user.id,
+               "product" => @configured_enterprise_plan_paddle_plan_id,
+               "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
+               "theme" => "none"
+             } == get_paddle_checkout_params(find(doc, "#paddle-button"))
+    end
+  end
+
   defp configure_enterprise_plan(%{user: user}) do
     insert(:enterprise_plan,
       user_id: user.id,
