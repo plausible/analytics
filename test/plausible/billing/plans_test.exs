@@ -4,31 +4,62 @@ defmodule Plausible.Billing.PlansTest do
 
   @v1_plan_id "558018"
   @v2_plan_id "654177"
-  @v3_plan_id "749342"
+  @v4_plan_id "change-me-749342"
+  @v4_business_plan_id "change-me-b749342"
 
-  describe "for_user" do
-    test "shows v1 pricing for users who are already on v1 pricing" do
+  describe "getting subscription plans for user" do
+    test "growth_plans_for/1 shows v1 pricing for users who are already on v1 pricing" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
 
-      assert List.first(Plans.for_user(user)).monthly_product_id == @v1_plan_id
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v1_plan_id
     end
 
-    test "shows v2 pricing for users who are already on v2 pricing" do
+    test "growth_plans_for/1 shows v2 pricing for users who are already on v2 pricing" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
 
-      assert List.first(Plans.for_user(user)).monthly_product_id == @v2_plan_id
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v2_plan_id
     end
 
-    test "shows v2 pricing for users who signed up in 2021" do
+    test "growth_plans_for/1 shows v2 pricing for users who signed up in 2021" do
       user = insert(:user, inserted_at: ~N[2021-12-31 00:00:00])
 
-      assert List.first(Plans.for_user(user)).monthly_product_id == @v2_plan_id
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v2_plan_id
     end
 
-    test "shows v3 pricing for everyone else" do
+    test "growth_plans_for/1 shows v4 pricing for everyone else" do
       user = insert(:user)
 
-      assert List.first(Plans.for_user(user)).monthly_product_id == @v3_plan_id
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v4_plan_id
+    end
+
+    test "growth_plans_for/1 does not return business plans" do
+      user = insert(:user)
+
+      Plans.growth_plans_for(user)
+      |> Enum.each(fn plan ->
+        assert plan.kind != :business
+      end)
+    end
+
+    test "business_plans/0 returns only v4 business plans" do
+      Plans.business_plans()
+      |> Enum.each(fn plan ->
+        assert plan.kind == :business
+      end)
+    end
+
+    test "available_plans_with_prices/1" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
+
+      %{growth: growth_plans, business: business_plans} = Plans.available_plans_with_prices(user)
+
+      assert Enum.find(growth_plans, fn plan ->
+               (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v2_plan_id
+             end)
+
+      assert Enum.find(business_plans, fn plan ->
+               (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v4_business_plan_id
+             end)
     end
   end
 
@@ -63,19 +94,19 @@ defmodule Plausible.Billing.PlansTest do
 
       assert %Plausible.Billing.Plan{
                monthly_pageview_limit: 100_000,
-               monthly_cost: "$12",
+               monthly_cost: nil,
                monthly_product_id: "558745",
                volume: "100k",
-               yearly_cost: "$96",
+               yearly_cost: nil,
                yearly_product_id: "590752"
              } = Plans.suggest(user, 10_000)
 
       assert %Plausible.Billing.Plan{
                monthly_pageview_limit: 200_000,
-               monthly_cost: "$18",
+               monthly_cost: nil,
                monthly_product_id: "597485",
                volume: "200k",
-               yearly_cost: "$144",
+               yearly_cost: nil,
                yearly_product_id: "597486"
              } = Plans.suggest(user, 100_000)
     end
@@ -123,7 +154,23 @@ defmodule Plausible.Billing.PlansTest do
                "749352",
                "749355",
                "749357",
-               "749359"
+               "749359",
+               "change-me-749343",
+               "change-me-749345",
+               "change-me-749347",
+               "change-me-749349",
+               "change-me-749352",
+               "change-me-749355",
+               "change-me-749357",
+               "change-me-749359",
+               "change-me-b749343",
+               "change-me-b749345",
+               "change-me-b749347",
+               "change-me-b749349",
+               "change-me-b749352",
+               "change-me-b749355",
+               "change-me-b749357",
+               "change-me-b749359"
              ] == Plans.yearly_product_ids()
     end
   end

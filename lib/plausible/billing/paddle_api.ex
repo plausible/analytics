@@ -120,6 +120,33 @@ defmodule Plausible.Billing.PaddleApi do
     end
   end
 
+  def fetch_prices([_ | _] = product_ids) do
+    case HTTPClient.impl().get(prices_url(), @headers, %{product_ids: Enum.join(product_ids, ",")}) do
+      {:ok, %{body: %{"success" => true, "response" => %{"products" => products}}}} ->
+        products =
+          Enum.into(products, %{}, fn %{
+                                        "currency" => currency,
+                                        "price" => %{"net" => net_price},
+                                        "product_id" => product_id
+                                      } ->
+            {Integer.to_string(product_id), Money.from_float!(currency, net_price)}
+          end)
+
+        {:ok, products}
+
+      {:ok, %{body: body}} ->
+        Sentry.capture_message("Paddle API: Unexpected response when fetching prices",
+          extra: %{api_response: body, product_ids: product_ids}
+        )
+
+        {:error, :api_error}
+
+      {:error, %{reason: reason}} ->
+        Sentry.capture_message("Paddle API: Error when fetching prices", extra: %{reason: reason})
+        {:error, :api_error}
+    end
+  end
+
   def checkout_domain() do
     case Application.get_env(:plausible, :environment) do
       "dev" -> "https://sandbox-checkout.paddle.com"
@@ -152,5 +179,9 @@ defmodule Plausible.Billing.PaddleApi do
 
   defp get_subscription_url() do
     Path.join(vendors_domain(), "/api/2.0/subscription/users")
+  end
+
+  defp prices_url() do
+    Path.join(checkout_domain(), "/api/2.0/prices")
   end
 end

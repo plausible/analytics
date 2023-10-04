@@ -235,17 +235,19 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
-    test "cleans up the url", %{conn: conn} do
-      conn =
-        post(conn, "/sites", %{
-          "site" => %{
-            "domain" => "https://www.Example.com/",
-            "timezone" => "Europe/London"
-          }
-        })
+    for url <- ["https://Example.com/", "HTTPS://EXAMPLE.COM/", "/Example.com/", "//Example.com/"] do
+      test "cleans up an url like #{url}", %{conn: conn} do
+        conn =
+          post(conn, "/sites", %{
+            "site" => %{
+              "domain" => unquote(url),
+              "timezone" => "Europe/London"
+            }
+          })
 
-      assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.get_by(Plausible.Site, domain: "example.com")
+        assert redirected_to(conn) == "/example.com/snippet"
+        assert Repo.get_by(Plausible.Site, domain: "example.com")
+      end
     end
 
     test "renders form again when domain is missing", %{conn: conn} do

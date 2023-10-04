@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
+  import PlausibleWeb.Components.Billing
 
   def base_domain do
     PlausibleWeb.Endpoint.host()

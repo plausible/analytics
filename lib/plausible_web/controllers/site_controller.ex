@@ -45,7 +45,7 @@ defmodule PlausibleWeb.SiteController do
       sites: sites,
       visitors: visitors,
       pagination: pagination,
-      needs_to_upgrade: user_owns_sites && Plausible.Billing.needs_to_upgrade?(user)
+      needs_to_upgrade: user_owns_sites && Plausible.Billing.check_needs_to_upgrade(user)
     )
   end
 

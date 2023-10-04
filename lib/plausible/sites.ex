@@ -6,6 +6,7 @@ defmodule Plausible.Sites do
   @type invite_error() ::
           Ecto.Changeset.t()
           | :already_a_member
+          | :transfer_to_self
           | {:over_limit, non_neg_integer()}
           | :forbidden
 
@@ -28,14 +29,8 @@ defmodule Plausible.Sites do
       if Quota.within_limit?(usage, limit), do: {:ok, usage}, else: {:error, limit}
     end)
     |> Ecto.Multi.insert(:site, site_changeset)
-    |> Ecto.Multi.run(:site_membership, fn repo, %{site: site} ->
-      membership_changeset =
-        Site.Membership.changeset(%Site.Membership{}, %{
-          site_id: site.id,
-          user_id: user.id
-        })
-
-      repo.insert(membership_changeset)
+    |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
+      Site.Membership.new(site, user)
     end)
     |> maybe_start_trial(user)
     |> Repo.transaction()
@@ -91,6 +86,7 @@ defmodule Plausible.Sites do
     with :ok <- check_invitation_permissions(site, inviter, role, opts),
          :ok <- check_team_member_limit(site, role),
          invitee <- Plausible.Auth.find_user_by(email: invitee_email),
+         :ok <- ensure_transfer_valid(site, invitee, role),
          :ok <- ensure_new_membership(site, invitee, role),
          %Ecto.Changeset{} = changeset <- Plausible.Auth.Invitation.new(attrs),
          {:ok, invitation} <- Repo.insert(changeset) do
@@ -129,6 +125,18 @@ defmodule Plausible.Sites do
       end
 
     Plausible.Mailer.send(email)
+  end
+
+  defp ensure_transfer_valid(site, invitee, :owner) do
+    if invitee && role(invitee.id, site) == :owner do
+      {:error, :transfer_to_self}
+    else
+      :ok
+    end
+  end
+
+  defp ensure_transfer_valid(_site, _invitee, _role) do
+    :ok
   end
 
   defp ensure_new_membership(_site, _invitee, :owner) do

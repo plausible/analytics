@@ -122,6 +122,9 @@ defmodule Plausible.Auth.User do
             %{suggestions: [], warning: "", score: 3}
         end
     end
+  catch
+    _kind, _value ->
+      %{suggestions: [], warning: "", score: 3}
   end
 
   def profile_img_url(%__MODULE__{email: email}) do
