@@ -22,33 +22,18 @@ defmodule PlausibleWeb.BillingControllerTest do
       conn: conn,
       user: user
     } do
-      plan = insert(:enterprise_plan, user: user)
+      insert(:enterprise_plan, user: user)
       conn = get(conn, "/billing/upgrade")
-
-      assert redirected_to(conn) == "/billing/upgrade/enterprise/#{plan.id}"
+      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end
   end
 
-  describe "GET /upgrade/enterprise/:plan_id" do
+  describe "GET /upgrade/enterprise/:plan_id (deprecated)" do
     setup [:create_user, :log_in]
 
-    test "renders enteprise plan upgrade page", %{conn: conn, user: user} do
-      plan = insert(:enterprise_plan, user: user)
-
-      conn = get(conn, "/billing/upgrade/enterprise/#{plan.id}")
-
-      assert html_response(conn, 200) =~ "Upgrade your free trial"
-      assert html_response(conn, 200) =~ "enterprise plan"
-    end
-
-    test "redirects to change-plan page if user is already subscribed to the given enterprise plan",
-         %{conn: conn, user: user} do
-      plan = insert(:enterprise_plan, user: user)
-      insert(:subscription, paddle_plan_id: plan.paddle_plan_id, user: user)
-
-      conn = get(conn, "/billing/upgrade/enterprise/#{plan.id}")
-
-      assert redirected_to(conn) == "/billing/change-plan"
+    test "redirects to the new :upgrade_to_enterprise_plan action", %{conn: conn} do
+      conn = get(conn, "/billing/upgrade/enterprise/123")
+      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end
   end
 
@@ -68,57 +53,20 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert redirected_to(conn) == "/billing/upgrade"
     end
 
-    test "redirects to enterprise upgrade page if user is due for an enteprise plan upgrade",
+    test "redirects to enterprise upgrade page if user has an enterprise plan configured",
          %{conn: conn, user: user} do
-      insert(:subscription, user: user, paddle_plan_id: "standard-plan-id")
-      enterprise_plan = insert(:enterprise_plan, user: user, paddle_plan_id: "new-custom-id")
-
+      insert(:enterprise_plan, user: user, paddle_plan_id: "123")
       conn = get(conn, "/billing/change-plan")
-
-      assert redirected_to(conn) == "/billing/change-plan/enterprise/#{enterprise_plan.id}"
-    end
-
-    test "prompts to contact us if user has enterprise plan and existing subscription",
-         %{conn: conn, user: user} do
-      insert(:subscription, user: user, paddle_plan_id: "enterprise-plan-id")
-      insert(:enterprise_plan, user: user, paddle_plan_id: "enterprise-plan-id")
-
-      conn = get(conn, "/billing/change-plan")
-
-      assert html_response(conn, 200) =~ "please contact us"
+      assert redirected_to(conn) == "/billing/upgrade-to-enterprise-plan"
     end
   end
 
-  describe "GET /change-plan/enterprise/:plan_id" do
+  describe "GET /change-plan/enterprise/:plan_id (deprecated)" do
     setup [:create_user, :log_in]
 
-    test "shows change plan page if user has subsription and enterprise plan", %{
-      conn: conn,
-      user: user
-    } do
-      insert(:subscription, user: user)
-
-      plan =
-        insert(:enterprise_plan,
-          user: user,
-          monthly_pageview_limit: 1000,
-          hourly_api_request_limit: 500,
-          site_limit: 100
-        )
-
-      conn = get(conn, "/billing/change-plan/enterprise/#{plan.id}")
-
-      assert html_response(conn, 200) =~ "Change subscription plan"
-      assert html_response(conn, 200) =~ "Up to <b>1k</b> monthly pageviews"
-      assert html_response(conn, 200) =~ "Up to <b>500</b> hourly api requests"
-      assert html_response(conn, 200) =~ "Up to <b>100</b> sites"
-    end
-
-    test "renders 404 is user does not have enterprise plan", %{conn: conn, user: user} do
-      insert(:subscription, user: user)
+    test "redirects to the new :upgrade_to_enterprise_plan action", %{conn: conn} do
       conn = get(conn, "/billing/change-plan/enterprise/123")
-
-      assert conn.status == 404
+      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end
   end
 

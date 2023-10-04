@@ -13,18 +13,14 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade(conn, _params) do
-    user =
-      conn.assigns[:current_user]
-      |> Repo.preload(:enterprise_plan)
+    user = conn.assigns[:current_user]
 
     cond do
+      Plausible.Auth.enterprise_configured?(user) ->
+        redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+
       user.subscription && user.subscription.status == "active" ->
         redirect(conn, to: Routes.billing_path(conn, :change_plan_form))
-
-      user.enterprise_plan ->
-        redirect(conn,
-          to: Routes.billing_path(conn, :upgrade_enterprise_plan, user.enterprise_plan.id)
-        )
 
       true ->
         render(conn, "upgrade.html",
@@ -87,26 +83,10 @@ defmodule PlausibleWeb.BillingController do
     end
   end
 
-  def upgrade_enterprise_plan(conn, %{"plan_id" => plan_id}) do
-    user = conn.assigns[:current_user]
-    subscription = user.subscription
-    plan = Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: user.id, id: plan_id)
-
-    cond do
-      plan && subscription && plan.paddle_plan_id == subscription.paddle_plan_id ->
-        redirect(conn, to: Routes.billing_path(conn, :change_plan_form))
-
-      plan ->
-        render(conn, "upgrade_to_plan.html",
-          skip_plausible_tracking: true,
-          user: user,
-          plan: plan,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-
-      true ->
-        render_error(conn, 404)
-    end
+  def upgrade_enterprise_plan(conn, _params) do
+    # DEPRECATED - For some time we need to ensure that the existing
+    # links sent out to customers will lead the user to the right place
+    redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
   end
 
   def upgrade_success(conn, _params) do
@@ -114,27 +94,13 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_plan_form(conn, _params) do
-    user =
-      conn.assigns[:current_user]
-      |> Repo.preload(:enterprise_plan)
+    user = conn.assigns[:current_user]
 
     subscription = Billing.active_subscription_for(user.id)
 
     cond do
-      subscription && user.enterprise_plan &&
-          subscription.paddle_plan_id !== user.enterprise_plan.paddle_plan_id ->
-        redirect(conn,
-          to: Routes.billing_path(conn, :change_enterprise_plan, user.enterprise_plan.id)
-        )
-
-      subscription && user.enterprise_plan &&
-          subscription.paddle_plan_id == user.enterprise_plan.paddle_plan_id ->
-        render(conn, "change_enterprise_plan_contact_us.html",
-          skip_plausible_tracking: true,
-          user: user,
-          plan: user.enterprise_plan,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+      Plausible.Auth.enterprise_configured?(user) ->
+        redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
 
       subscription ->
         render(conn, "change_plan.html",
@@ -148,26 +114,10 @@ defmodule PlausibleWeb.BillingController do
     end
   end
 
-  def change_enterprise_plan(conn, %{"plan_id" => plan_id}) do
-    user = conn.assigns[:current_user]
-
-    new_plan = Repo.get_by(Plausible.Billing.EnterprisePlan, user_id: user.id, id: plan_id)
-
-    cond do
-      is_nil(user.subscription) ->
-        redirect(conn, to: "/billing/upgrade")
-
-      is_nil(new_plan) || new_plan.paddle_plan_id == user.subscription.paddle_plan_id ->
-        render_error(conn, 404)
-
-      true ->
-        render(conn, "change_enterprise_plan.html",
-          skip_plausible_tracking: true,
-          user: user,
-          plan: new_plan,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-    end
+  def change_enterprise_plan(conn, _params) do
+    # DEPRECATED - For some time we need to ensure that the existing
+    # links sent out to customers will lead the user to the right place
+    redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
   end
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
