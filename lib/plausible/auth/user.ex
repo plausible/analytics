@@ -132,7 +132,7 @@ defmodule Plausible.Auth.User do
       |> :erlang.md5()
       |> Base.encode16(case: :lower)
 
-    "https://gravatar.plausible.io/avatar/#{hash}?s=150&d=identicon"
+    Path.join(gravatar_base_url(), "/avatar/#{hash}?s=150&d=identicon")
   end
 
   defp validate_password_strength(changeset) do
@@ -166,6 +166,14 @@ defmodule Plausible.Auth.User do
       change(user, email_verified: false)
     else
       change(user, email_verified: true)
+    end
+  end
+
+  defp gravatar_base_url() do
+    if Application.get_env(:plausible, :is_selfhost) do
+      "https://www.gravatar.com"
+    else
+      "https://gravatar.plausible.io"
     end
   end
 end
