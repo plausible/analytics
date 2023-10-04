@@ -2,17 +2,15 @@
   <div class="container">
     <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">
       <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
-        <div class="flex items-center justify-between">
-          <a href={home_dest(@conn)}>
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"), class: "h-8 w-auto sm:h-10 -mt-2 hidden dark:inline", alt: "Plausible logo", loading: "lazy")%>
-            <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "h-8 w-auto sm:h-10 -mt-2 inline dark:hidden", alt: "Plausible logo", loading: "lazy") %>
+        <a href={home_dest(@conn)}>
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"), class: "h-8 w-auto sm:h-10 -mt-2 hidden dark:inline", alt: "Plausible logo", loading: "lazy")%>
+          <%= img_tag(PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"), class: "h-8 w-auto sm:h-10 -mt-2 inline dark:hidden", alt: "Plausible logo", loading: "lazy") %>
           </a>
-        </div>
       </div>
-      <div class="absolute inset-y-0 right-0 flex items-center justify-end w-2/3 sm:w-auto">
+      <div class="absolute inset-y-0 right-0 flex items-center justify-end">
         <%= cond do %>
           <% @conn.assigns[:current_user] -> %>
-            <ul class="flex w-full sm:w-auto">
+            <ul class="flex items-center w-full sm:w-auto">
               <%= if Application.get_env(:plausible, :is_selfhost) do %>
                 <li class="hidden mr-6 sm:block">
                   <%= link(to: "https://github.com/plausible/analytics", class: "font-bold rounded m-1 ml-0 p-1 hover:bg-gray-200 dark:hover:bg-gray-900 dark:text-gray-100", style: "line-height: 40px;", target: "_blank") do %>
@@ -23,26 +21,26 @@
               <% end %>
               <%= if Plausible.Billing.on_trial?(@conn.assigns[:current_user]) && !Application.get_env(:plausible, :is_selfhost) do %>
                 <li class="hidden mr-6 sm:block">
-                  <%= link(trial_notificaton(@conn.assigns[:current_user]), to: "/settings", class: "font-bold text-sm text-yellow-900 dark:text-yellow-900 rounded p-2 bg-yellow-100 dark:bg-yellow-100", style: "line-height: 40px;") %>
+                  <%= link(trial_notificaton(@conn.assigns[:current_user]), to: "/settings", class: "text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100") %>
                 </li>
               <% end %>
               <li class="w-full sm:w-auto">
                 <.dropdown>
-                  <:button class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100">
-                    <span class="font-medium truncate"><%= @conn.assigns[:current_user].name %></span>
+                  <:button class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <span class="font-medium truncate dark:text-gray-100"><%= @conn.assigns[:current_user].name %></span>
                     <%= img_tag(Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user]), class: "w-7 rounded-full") %>
                   </:button>
-                  <:panel class="absolute right-0 z-10 mt-2 w-60 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <:panel class="absolute right-0 z-10 mt-2 w-60 origin-top-right divide-y divide-gray-100 dark:divide-gray-400 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                     <div class="px-3.5 py-3" role="none">
-                      <p class="block text-sm text-gray-500" role="none">Signed in as</p>
-                      <p class="truncate font-medium text-gray-900" role="none"><%= @conn.assigns[:current_user].email %></p>
+                      <p class="block text-sm text-gray-500 dark:text-gray-400" role="none">Signed in as</p>
+                      <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none"><%= @conn.assigns[:current_user].email %></p>
                     </div>
                     <div class="py-1.5" role="none">
-                      <%= link("Account Settings", to: "/settings", class: "text-gray-700 block px-3.5 py-1.5 hover:bg-gray-100 hover:text-gray-900") %>
-                      <%= link("Help", to: "https://plausible.io/docs", class: "text-gray-700 block px-3.5 py-1.5 hover:bg-gray-100 hover:text-gray-900", target: "_blank", rel: "noopener noreferrer") %>
+                      <.dropdown_link href="/settings">Account Settings</.dropdown_link>
+                      <.dropdown_link new_tab href="https://plausible.io/docs">Help</.dropdown_link>
                       <%= if !Application.get_env(:plausible, :is_selfhost) do %>
-                        <%= link("Feedback", to: "https://feedback.plausible.io", class: "text-gray-700 block px-3.5 py-1.5 hover:bg-gray-100 hover:text-gray-900", target: "_blank", rel: "noopener noreferrer") %>
-                        <%= link("Contact Support", to: "https://plausible.io/contact", class: "text-gray-700 block px-3.5 py-1.5 hover:bg-gray-100 hover:text-gray-900", target: "_blank", rel: "noopener noreferrer") %>
+                        <.dropdown_link new_tab href="https://feedback.plausible.io">Feedback</.dropdown_link>
+                        <.dropdown_link new_tab href="https://plausible.io/contact">Contact</.dropdown_link>
                       <% end %>
                     </div>
                     <div class="py-1.5" role="none">

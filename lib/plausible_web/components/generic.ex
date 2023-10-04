@@ -43,49 +43,20 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :href, :string, required: true
-  attr :new_tab, :boolean
+  attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
   slot :inner_block
 
   def styled_link(assigns) do
-    if assigns[:new_tab] do
-      assigns = assign(assigns, :icon_class, icon_class(assigns))
-
-      ~H"""
-      <.link
-        class={[
-          "inline-flex items-center gap-x-0.5 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600",
-          @class
-        ]}
-        href={@href}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <%= render_slot(@inner_block) %>
-        <Heroicons.arrow_top_right_on_square class={@icon_class} />
-      </.link>
-      """
-    else
-      ~H"""
-      <.link
-        class={[
-          "text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600",
-          @class
-        ]}
-        href={@href}
-      >
-        <%= render_slot(@inner_block) %>
-      </.link>
-      """
-    end
-  end
-
-  defp icon_class(link_assigns) do
-    if String.contains?(link_assigns[:class], "text-sm") do
-      ["w-3 h-3"]
-    else
-      ["w-4 h-4"]
-    end
+    ~H"""
+    <.unstyled_link
+      new_tab={@new_tab}
+      href={@href}
+      class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600"
+    >
+      <%= render_slot(@inner_block) %>
+    </.unstyled_link>
+    """
   end
 
   slot :button, required: true do
@@ -130,5 +101,61 @@ defmodule PlausibleWeb.Components.Generic do
       </div>
     </div>
     """
+  end
+
+  attr :href, :string, required: true
+  attr :new_tab, :boolean, default: false
+  slot :inner_block, required: true
+
+  def dropdown_link(assigns) do
+    ~H"""
+    <.unstyled_link
+      new_tab={@new_tab}
+      href={@href}
+      class="w-full justify-between text-gray-700 dark:text-gray-300 block px-3.5 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+    >
+      <%= render_slot(@inner_block) %>
+    </.unstyled_link>
+    """
+  end
+
+  attr :href, :string, required: true
+  attr :new_tab, :boolean, default: false
+  attr :class, :string, default: ""
+  slot :inner_block
+
+  def unstyled_link(assigns) do
+    if assigns[:new_tab] do
+      assigns = assign(assigns, :icon_class, icon_class(assigns))
+
+      ~H"""
+      <.link
+        class={[
+          "inline-flex items-center gap-x-0.5",
+          @class
+        ]}
+        href={@href}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <%= render_slot(@inner_block) %>
+        <Heroicons.arrow_top_right_on_square class={["opacity-60", @icon_class]} />
+      </.link>
+      """
+    else
+      ~H"""
+      <.link class={@class} href={@href}>
+        <%= render_slot(@inner_block) %>
+      </.link>
+      """
+    end
+  end
+
+  defp icon_class(link_assigns) do
+    if String.contains?(link_assigns[:class], "text-sm") do
+      ["w-3 h-3"]
+    else
+      ["w-4 h-4"]
+    end
   end
 end
