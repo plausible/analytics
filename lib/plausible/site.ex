@@ -221,12 +221,12 @@ defmodule Plausible.Site do
   defp clean_domain(changeset) do
     clean_domain =
       (get_field(changeset, :domain) || "")
+      |> String.downcase()
       |> String.trim()
       |> String.replace_leading("http://", "")
       |> String.replace_leading("https://", "")
+      |> String.trim("/")
       |> String.replace_leading("www.", "")
-      |> String.replace_trailing("/", "")
-      |> String.downcase()
 
     change(changeset, %{domain: clean_domain})
   end
