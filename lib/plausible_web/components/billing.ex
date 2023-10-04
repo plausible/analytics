@@ -58,7 +58,11 @@ defmodule PlausibleWeb.Components.Billing do
       <div class="py-2 text-xl font-medium dark:text-gray-100">
         <%= PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long) %>
       </div>
-      <.styled_link href={upgrade_link_href(@user)} class="text-sm font-medium">
+      <.styled_link
+        id="#upgrade-or-change-plan-link"
+        href={upgrade_link_href(@user)}
+        class="text-sm font-medium"
+      >
         <%= change_plan_or_upgrade_text(@subscription) %>
       </.styled_link>
     </div>

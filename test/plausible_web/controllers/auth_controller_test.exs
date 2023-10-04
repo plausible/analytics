@@ -525,6 +525,46 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_attr(change_plan_link, "href") == Routes.billing_path(conn, :choose_plan)
     end
 
+    test "upgrade_to_enterprise_plan link does not show up when subscription is past_due", %{
+      conn: conn,
+      user: user
+    } do
+      configure_enterprise_plan(user)
+
+      insert(:subscription,
+        user: user,
+        status: "past_due",
+        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
+      )
+
+      doc =
+        conn
+        |> get(Routes.auth_path(conn, :user_settings))
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-or-change-plan-link")
+    end
+
+    test "upgrade_to_enterprise_plan link does not show up when subscription is paused", %{
+      conn: conn,
+      user: user
+    } do
+      configure_enterprise_plan(user)
+
+      insert(:subscription,
+        user: user,
+        status: "paused",
+        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
+      )
+
+      doc =
+        conn
+        |> get(Routes.auth_path(conn, :user_settings))
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-or-change-plan-link")
+    end
+
     test "links to upgrade to enterprise plan",
          %{conn: conn, user: user} do
       configure_enterprise_plan(user)
@@ -834,7 +874,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   defp configure_enterprise_plan(user) do
     insert(:enterprise_plan,
-      paddle_plan_id: @configured_enterprise_plan,
+      paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
       user: user,
       monthly_pageview_limit: 20_000_000,
       billing_interval: :yearly

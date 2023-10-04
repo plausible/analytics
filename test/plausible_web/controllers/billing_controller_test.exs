@@ -147,6 +147,8 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
   end
 
+  @configured_enterprise_plan_paddle_plan_id "123"
+
   describe "GET /upgrade-to-enterprise-plan (no existing subscription)" do
     setup [:create_user, :log_in, :configure_enterprise_plan]
 
@@ -189,14 +191,12 @@ defmodule PlausibleWeb.BillingControllerTest do
                "disableLogout" => true,
                "email" => user.email,
                "passthrough" => user.id,
-               "product" => "123",
+               "product" => @configured_enterprise_plan_paddle_plan_id,
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, "#paddle-button"))
     end
   end
-
-  @configured_enteprise_plan "123"
 
   describe "GET /upgrade-to-enterprise-plan (active subscription, new enterprise plan configured)" do
     setup [:create_user, :log_in, :subscribe_enterprise, :configure_enterprise_plan]
@@ -242,7 +242,7 @@ defmodule PlausibleWeb.BillingControllerTest do
                Routes.billing_path(
                  PlausibleWeb.Endpoint,
                  :change_plan_preview,
-                 @configured_enteprise_plan
+                 @configured_enterprise_plan_paddle_plan_id
                )
     end
   end
@@ -252,7 +252,9 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "GET /upgrade-to-enterprise-plan (already subscribed to latest enterprise plan)" do
     setup [:create_user, :log_in, :configure_enterprise_plan]
 
-    setup context, do: subscribe_enterprise(context, paddle_plan_id: @configured_enteprise_plan)
+    setup context do
+      subscribe_enterprise(context, paddle_plan_id: @configured_enterprise_plan_paddle_plan_id)
+    end
 
     test "renders contact note", %{conn: conn} do
       doc =
@@ -263,6 +265,22 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert doc =~ "Need to change your limits?"
       assert doc =~ "Your account is on an enterprise plan"
       assert doc =~ "contact us at #{@enterprise_contact_link}"
+    end
+  end
+
+  describe "GET /upgrade-to-enterprise-plan (subscription past_due or paused)" do
+    setup [:create_user, :log_in, :configure_enterprise_plan]
+
+    test "redirects to /settings when past_due", %{conn: conn} = context do
+      subscribe_enterprise(context, status: "past_due")
+      conn = get(conn, "/billing/upgrade-to-enterprise-plan")
+      assert redirected_to(conn) == "/settings"
+    end
+
+    test "redirects to /settings when paused", %{conn: conn} = context do
+      subscribe_enterprise(context, status: "paused")
+      conn = get(conn, "/billing/upgrade-to-enterprise-plan")
+      assert redirected_to(conn) == "/settings"
     end
   end
 
@@ -281,8 +299,14 @@ defmodule PlausibleWeb.BillingControllerTest do
   end
 
   defp subscribe_enterprise(%{user: user}, opts \\ []) do
-    paddle_plan_id = Keyword.get(opts, :paddle_plan_id) || "321"
-    insert(:subscription, user: user, paddle_plan_id: paddle_plan_id)
+    opts =
+      opts
+      |> Keyword.put(:user, user)
+      |> Keyword.put_new(:paddle_plan_id, "321")
+      |> Keyword.put_new(:status, "active")
+
+    insert(:subscription, opts)
+
     {:ok, user: Plausible.Users.with_subscription(user)}
   end
 
