@@ -296,7 +296,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       paddle_plan_id: "123",
       billing_interval: :yearly,
       monthly_pageview_limit: 50_000_000,
-      site_limit: 20000,
+      site_limit: 20_000,
       hourly_api_request_limit: 5000,
       inserted_at: Timex.now() |> Timex.shift(hours: 1)
     )
