@@ -132,7 +132,7 @@ defmodule Plausible.Auth.User do
       |> :erlang.md5()
       |> Base.encode16(case: :lower)
 
-    "https://www.gravatar.com/avatar/#{hash}?s=150&d=identicon"
+    "https://gravatar.plausible.io/avatar/#{hash}?s=150&d=identicon"
   end
 
   defp validate_password_strength(changeset) do
