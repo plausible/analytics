@@ -8,9 +8,9 @@ defmodule PlausibleWeb.Plugins.API.Schemas.SharedLink.ListResponse do
     title: "SharedLink.ListResponse",
     description: "Shared Links list response",
     type: :object,
-    required: [:data, :meta],
+    required: [:shared_links, :meta],
     properties: %{
-      data: %Schema{
+      shared_links: %Schema{
         items: Schemas.SharedLink,
         type: :array
       },

@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
   end
 
   operation(:create,
-    summary: "Create Shared Link",
+    summary: "Get or create Shared Link",
     request_body: {"Shared Link params", "application/json", Schemas.SharedLink.CreateRequest},
     responses: %{
       created: {"Shared Link", "application/json", Schemas.SharedLink},
@@ -51,7 +51,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
         %{
           private: %{
             open_api_spex: %{
-              body_params: %Schemas.SharedLink.CreateRequest{name: name, password: password}
+              body_params: %Schemas.SharedLink.CreateRequest{
+                shared_link: %{name: name} = shared_link
+              }
             }
           }
         } = conn,
@@ -59,7 +61,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinks do
       ) do
     site = conn.assigns.authorized_site
 
-    {:ok, shared_link} = API.SharedLinks.get_or_create(site, name, password)
+    {:ok, shared_link} = API.SharedLinks.get_or_create(site, name, shared_link[:password])
 
     conn
     |> put_view(Views.SharedLink)
