@@ -59,6 +59,7 @@ defmodule PlausibleWeb.Components.Billing do
         <%= PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long) %>
       </div>
       <.styled_link
+        :if={show_upgrade_or_change_plan_link?(@user, @subscription)}
         id="#upgrade-or-change-plan-link"
         href={upgrade_link_href(@user)}
         class="text-sm font-medium"
@@ -281,4 +282,11 @@ defmodule PlausibleWeb.Components.Billing do
   defp change_plan_or_upgrade_text(nil), do: "Upgrade"
   defp change_plan_or_upgrade_text(%Subscription{status: "deleted"}), do: "Upgrade"
   defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
+
+  defp show_upgrade_or_change_plan_link?(user, subscription) do
+    is_enterprise? = Plausible.Auth.enterprise_configured?(user)
+    subscription_halted? = subscription && subscription.status in ["past_due", "paused"]
+
+    !(is_enterprise? && subscription_halted?)
+  end
 end
