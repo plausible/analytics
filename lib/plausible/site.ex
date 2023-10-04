@@ -166,21 +166,6 @@ defmodule Plausible.Site do
     )
   end
 
-  @togglable_features ~w[conversions_enabled funnels_enabled props_enabled]a
-  def feature_toggle_change(site, property, opts \\ [])
-      when property in @togglable_features do
-    override = Keyword.get(opts, :override)
-
-    attrs =
-      if is_boolean(override) do
-        %{property => override}
-      else
-        %{property => !Map.fetch!(site, property)}
-      end
-
-    cast(site, attrs, @togglable_features)
-  end
-
   def remove_imported_data(site) do
     change(site, imported_data: nil)
   end

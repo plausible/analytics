@@ -34,22 +34,31 @@ defmodule PlausibleWeb.Api.InternalController do
     end
   end
 
+  @feature_toggle %{
+    "funnels" => :funnels_enabled,
+    "props" => :props_enabled,
+    "conversions" => :conversions_enabled
+  }
   def disable_feature(conn, %{"domain" => domain, "feature" => feature}) do
     with %User{id: user_id} <- conn.assigns[:current_user],
          site <- Sites.get_by_domain(domain),
-         true <- Sites.has_admin_access?(user_id, site) || Auth.is_super_admin?(user_id) do
-      property =
-        case feature do
-          "funnels" -> :funnels_enabled
-          "props" -> :props_enabled
-          "conversions" -> :conversions_enabled
-        end
-
-      change = Plausible.Site.feature_toggle_change(site, property, override: false)
-      Repo.update!(change)
-
+         true <- Sites.has_admin_access?(user_id, site) || Auth.is_super_admin?(user_id),
+         {:ok, property} <- Map.fetch(@feature_toggle, feature),
+         {:ok, _site} <- Plausible.Sites.toggle_feature(site, property, override: false) do
       json(conn, "ok")
     else
+      {:error, :upgrade_required} ->
+        PlausibleWeb.Api.Helpers.payment_required(
+          conn,
+          "This feature is part of the Plausible Business plan. To get access to this feature, please upgrade your account"
+        )
+
+      :error ->
+        PlausibleWeb.Api.Helpers.bad_request(
+          conn,
+          "The feature you tried to disable is not valid. Valid features are: #{@feature_toggle |> Map.keys() |> Enum.join(", ")}"
+        )
+
       _ ->
         PlausibleWeb.Api.Helpers.unauthorized(
           conn,

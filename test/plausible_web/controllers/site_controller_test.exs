@@ -640,6 +640,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         conn: conn0
       } do
         site = insert(:site)
+        insert(:site_membership, user: build(:user), site: site, role: :owner)
         insert(:site_membership, user: user, site: site, role: :admin)
 
         conn =

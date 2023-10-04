@@ -134,12 +134,9 @@ defmodule PlausibleWeb.SiteController do
       when setting in ~w[conversions_enabled funnels_enabled props_enabled] and
              value in ["true", "false"] do
     site = conn.assigns[:site]
-
     setting = String.to_existing_atom(setting)
-    change = Plausible.Site.feature_toggle_change(site, setting, override: value == "true")
-    result = Repo.update(change)
 
-    case result do
+    case Plausible.Sites.toggle_feature(site, setting, override: value == "true") do
       {:ok, updated_site} ->
         message =
           if Map.fetch!(updated_site, setting) do
@@ -150,6 +147,21 @@ defmodule PlausibleWeb.SiteController do
 
         conn
         |> put_flash(:success, message)
+        |> redirect(to: redirect_path)
+
+      {:error, :upgrade_required} ->
+        conn
+        |> put_flash(
+          :error,
+          [
+            "This feature is part of the Plausible Business plan. To get access to this feature, please ",
+            Phoenix.HTML.Link.link("upgrade your account",
+              to: Routes.billing_path(conn, :choose_plan),
+              class: "underline"
+            ),
+            "."
+          ]
+        )
         |> redirect(to: redirect_path)
 
       {:error, _} ->
