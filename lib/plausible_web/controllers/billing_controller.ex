@@ -62,20 +62,25 @@ defmodule PlausibleWeb.BillingController do
         subscription_resumable? &&
           user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
 
-      if subscribed_to_latest? do
-        render(conn, "change_enterprise_plan_contact_us.html",
-          skip_plausible_tracking: true,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-      else
-        render(conn, "upgrade_to_enterprise_plan.html",
-          user: user,
-          latest_enterprise_plan: latest_enterprise_plan,
-          subscription_resumable: subscription_resumable?,
-          contact_link: "https://plausible.io/contact",
-          skip_plausible_tracking: true,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+      cond do
+        user.subscription && user.subscription.status in ["past_due", "paused"] ->
+          redirect(conn, to: Routes.auth_path(conn, :user_settings))
+
+        subscribed_to_latest? ->
+          render(conn, "change_enterprise_plan_contact_us.html",
+            skip_plausible_tracking: true,
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
+
+        true ->
+          render(conn, "upgrade_to_enterprise_plan.html",
+            user: user,
+            latest_enterprise_plan: latest_enterprise_plan,
+            subscription_resumable: subscription_resumable?,
+            contact_link: "https://plausible.io/contact",
+            skip_plausible_tracking: true,
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
       end
     else
       render_error(conn, 404)
