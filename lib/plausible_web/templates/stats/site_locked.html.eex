@@ -21,12 +21,12 @@
         <% role when role in [:admin, :viewer] -> %>
           <div class="mt-3 text-gray-600 dark:text-gray-300 text-center">
             <p>
-            This dashboard is currently locked and cannot be accessed. The site owner <b><%= @owner.email %></b> must upgrade their subscription plan in order to
+            This dashboard is currently locked and cannot be accessed. The site owner <b><%= @site.owner.email %></b> must upgrade their subscription plan in order to
             unlock the stats.
             </p>
             <div class="mt-6 text-sm text-gray-500">
               <p>Want to pay for this site with the account you're logged in with?</p>
-              <p class="mt-1">Contact <%= @owner.email %> and ask them to <%= link("transfer the ownership", class: "text-indigo-500", to: "https://plausible.io/docs/transfer-ownership", rel: "noreferrer") %> of the site over to you</p>
+              <p class="mt-1">Contact <%= @site.owner.email %> and ask them to <%= link("transfer the ownership", class: "text-indigo-500", to: "https://plausible.io/docs/transfer-ownership", rel: "noreferrer") %> of the site over to you</p>
             </div>
           </div>
           <div class="mt-6 w-full text-center">

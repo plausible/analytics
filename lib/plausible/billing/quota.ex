@@ -188,9 +188,8 @@ defmodule Plausible.Billing.Quota do
   def check_feature_access(site_or_user, feature)
 
   def check_feature_access(%Plausible.Site{} = site, feature) do
-    site
-    |> Plausible.Sites.owner_for()
-    |> check_feature_access(feature)
+    site = Plausible.Repo.preload(site, :owner)
+    check_feature_access(site.owner, feature)
   end
 
   def check_feature_access(%Plausible.Auth.User{} = user, feature) do

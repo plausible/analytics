@@ -83,13 +83,8 @@ defmodule PlausibleWeb.StatsController do
         )
 
       Sites.locked?(site) ->
-        owner = Sites.owner_for(site)
-
-        render(conn, "site_locked.html",
-          owner: owner,
-          site: site,
-          dogfood_page_path: dogfood_page_path
-        )
+        site = Plausible.Repo.preload(site, :owner)
+        render(conn, "site_locked.html", site: site, dogfood_page_path: dogfood_page_path)
     end
   end
 
@@ -320,7 +315,7 @@ defmodule PlausibleWeb.StatsController do
         )
 
       Sites.locked?(shared_link.site) ->
-        owner = Sites.owner_for(shared_link.site)
+        owner = Plausible.Repo.preload(shared_link.site, :owner)
 
         render(conn, "site_locked.html",
           owner: owner,
