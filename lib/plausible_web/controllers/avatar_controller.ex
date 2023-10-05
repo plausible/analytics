@@ -3,7 +3,7 @@ defmodule PlausibleWeb.AvatarController do
   This module proxies requests to BASE_URL/avatar/:hash to www.gravatar.com/avatar/:hash.
 
   The purpose is to make use of Gravatar's convenient avatar service without exposing information
-  that could be used for tracking the Plausible user. Comapred to requesting the Gravatar directly
+  that could be used for tracking the Plausible user. Compared to requesting the Gravatar directly
   from the browser, this proxy module protects the Plausible user from disclosing to Gravatar:
   1. The client IP address
   2. User-Agent
