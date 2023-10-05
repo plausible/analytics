@@ -51,8 +51,8 @@ defmodule Plausible.Goals do
           goal
           |> Goal.changeset()
           |> Ecto.Changeset.add_error(
-            :currency,
-            "event_name '#{goal.event_name}' has already been taken"
+            :event_name,
+            "'#{goal.event_name}' (with currency: #{goal.currency}) has already been taken"
           )
 
         {:error, changeset}

@@ -161,7 +161,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         |> json_response(422)
         |> assert_schema("UnprocessableEntityError", spec())
 
-      assert [%{detail: "currency: event_name 'Purchase' has already been taken"}] = resp.errors
+      assert [%{detail: "event_name: 'Purchase' (with currency: USD) has already been taken"}] =
+               resp.errors
     end
 
     test "creates a pageview goal", %{conn: conn, token: token, site: site} do
@@ -346,7 +347,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         |> json_response(422)
         |> assert_schema("UnprocessableEntityError", spec())
 
-      assert [%{detail: "currency: event_name 'Purchase' has already been taken"}] = resp.errors
+      assert [%{detail: "event_name: 'Purchase' (with currency: EUR) has already been taken"}] =
+               resp.errors
     end
   end
 
