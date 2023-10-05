@@ -117,8 +117,12 @@ defimpl String.Chars, for: Plausible.Goal do
     "Visit " <> page_path
   end
 
-  def to_string(%{event_name: name}) when is_binary(name) do
+  def to_string(%{event_name: name, currency: nil}) when is_binary(name) do
     name
+  end
+
+  def to_string(%{event_name: name, currency: currency}) when is_binary(name) do
+    name <> " (#{currency})"
   end
 end
 

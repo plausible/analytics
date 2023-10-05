@@ -38,6 +38,16 @@ defmodule Plausible.GoalsTest do
     assert {"has already been taken", _} = changeset.errors[:event_name]
   end
 
+  test "create/2 fails to create the same currency goal twice" do
+    site = insert(:site)
+    {:ok, _} = Goals.create(site, %{"event_name" => "foo bar", "currency" => "EUR"})
+
+    assert {:error, changeset} =
+             Goals.create(site, %{"event_name" => "foo bar", "currency" => "EUR"})
+
+    assert {"has already been taken", _} = changeset.errors[:event_name]
+  end
+
   test "create/2 sets site.updated_at for revenue goal" do
     site_1 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
     {:ok, _goal_1} = Goals.create(site_1, %{"event_name" => "Checkout", "currency" => "BRL"})

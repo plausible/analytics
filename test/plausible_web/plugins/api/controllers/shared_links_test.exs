@@ -1,23 +1,23 @@
 defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
   use PlausibleWeb.PluginsAPICase, async: true
 
-  setup %{test: test} do
-    site = insert(:site)
-    {:ok, _token, raw_token} = Plausible.Plugins.API.Tokens.create(site, Atom.to_string(test))
-
-    {:ok,
-     %{
-       site: site,
-       token: raw_token
-     }}
+  describe "examples" do
+    test "SharedLink" do
+      assert_schema(
+        Schemas.SharedLink.schema().example,
+        "SharedLink",
+        spec()
+      )
+    end
   end
 
-  describe "unathorized calls" do
+  describe "unauthorized calls" do
     for {method, url} <- [
           {:get, Routes.shared_links_url(base_uri(), :get, 1)},
-          {:post, Routes.shared_links_url(base_uri(), :create)}
+          {:put, Routes.shared_links_url(base_uri(), :create)},
+          {:get, Routes.shared_links_url(base_uri(), :index)}
         ] do
-      test "unauthorized call to #{url}", %{conn: conn} do
+      test "unauthorized call: #{method} #{url}", %{conn: conn} do
         conn
         |> unquote(method)(unquote(url))
         |> json_response(401)
@@ -52,12 +52,12 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(200)
         |> assert_schema("SharedLink", spec())
 
-      assert resp.data.href ==
+      assert resp.shared_link.href ==
                "http://localhost:8000/share/#{site.domain}?auth=#{shared_link.slug}"
 
-      assert resp.data.id == shared_link.id
-      assert resp.data.password_protected == false
-      assert resp.data.name == "Some Link Name"
+      assert resp.shared_link.id == shared_link.id
+      assert resp.shared_link.password_protected == false
+      assert resp.shared_link.name == "Some Link Name"
     end
 
     test "fails to retrieve non-existing link", %{conn: conn, site: site, token: token} do
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
     end
   end
 
-  describe "post /shared_links" do
+  describe "put /shared_links" do
     test "successfully creates a shared link with the location header", %{
       conn: conn,
       site: site,
@@ -95,8 +95,10 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       conn =
         initial_conn
         |> put_req_header("content-type", "application/json")
-        |> post(url, %{
-          name: "My Shared Link"
+        |> put(url, %{
+          shared_link: %{
+            name: "My Shared Link"
+          }
         })
 
       resp =
@@ -104,13 +106,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(201)
         |> assert_schema("SharedLink", spec())
 
-      assert resp.data.name == "My Shared Link"
-      assert resp.data.href =~ "http://localhost:8000/share/#{site.domain}?auth="
+      assert resp.shared_link.name == "My Shared Link"
+      assert resp.shared_link.href =~ "http://localhost:8000/share/#{site.domain}?auth="
 
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.shared_links_url(base_uri(), :get, resp.data.id)
+               Routes.shared_links_url(base_uri(), :get, resp.shared_link.id)
 
       assert ^resp =
                initial_conn
@@ -131,8 +133,10 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
       create = fn ->
         initial_conn
         |> put_req_header("content-type", "application/json")
-        |> post(url, %{
-          name: "My Shared Link"
+        |> put(url, %{
+          shared_link: %{
+            name: "My Shared Link"
+          }
         })
       end
 
@@ -143,14 +147,14 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(201)
         |> assert_schema("SharedLink", spec())
 
-      id = resp.data.id
+      id = resp.shared_link.id
 
       conn = create.()
 
       assert ^id =
                conn
                |> json_response(201)
-               |> Map.fetch!("data")
+               |> Map.fetch!("shared_link")
                |> Map.fetch!("id")
     end
 
@@ -161,11 +165,11 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         conn
         |> authenticate(site.domain, token)
         |> put_req_header("content-type", "application/json")
-        |> post(url, %{})
+        |> put(url, %{})
         |> json_response(422)
         |> assert_schema("UnprocessableEntityError", spec())
 
-      assert %{errors: [%{detail: "Missing field: name"}]} = resp
+      assert %{errors: [%{detail: "Missing field: shared_link"}]} = resp
     end
   end
 
@@ -184,7 +188,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(200)
         |> assert_schema("SharedLink.ListResponse", spec())
 
-      assert resp.data == []
+      assert resp.shared_links == []
       assert resp.meta.pagination.has_next_page == false
       assert resp.meta.pagination.has_prev_page == false
       assert resp.meta.pagination.links == %{}
@@ -209,7 +213,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(200)
         |> assert_schema("SharedLink.ListResponse", spec())
 
-      assert [%{data: %{name: "Shared Link 5"}}, %{data: %{name: "Shared Link 4"}}] = page1.data
+      assert [%{shared_link: %{name: "Shared Link 5"}}, %{shared_link: %{name: "Shared Link 4"}}] =
+               page1.shared_links
+
       assert page1.meta.pagination.has_next_page == true
       assert page1.meta.pagination.has_prev_page == false
       assert page1.meta.pagination.links.next
@@ -221,7 +227,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> json_response(200)
         |> assert_schema("SharedLink.ListResponse", spec())
 
-      assert [%{data: %{name: "Shared Link 3"}}, %{data: %{name: "Shared Link 2"}}] = page2.data
+      assert [%{shared_link: %{name: "Shared Link 3"}}, %{shared_link: %{name: "Shared Link 2"}}] =
+               page2.shared_links
 
       assert page2.meta.pagination.has_next_page == true
       assert page2.meta.pagination.has_prev_page == true

@@ -10,7 +10,7 @@ defmodule Plausible.Plugins.API.Tokens do
   import Ecto.Query
 
   @spec create(Site.t(), String.t()) ::
-          {:ok, Token.t(), String.t(), String.t()} | {:error, Ecto.Changeset.t()}
+          {:ok, Token.t(), String.t()} | {:error, Ecto.Changeset.t()}
   def create(%Site{} = site, description, generated_token \\ Token.generate()) do
     with changeset <- Token.insert_changeset(site, generated_token, %{description: description}),
          {:ok, saved_token} <- Repo.insert(changeset) do

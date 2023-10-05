@@ -11,7 +11,8 @@ defmodule PlausibleWeb.Plugins.API.Views.SharedLink do
         conn: conn
       }) do
     %{
-      data: render_many(shared_links, __MODULE__, "shared_link.json", authorized_site: site),
+      shared_links:
+        render_many(shared_links, __MODULE__, "shared_link.json", authorized_site: site),
       meta: render_metadata_links(metadata, :shared_links_url, :index, conn.query_params)
     }
   end
@@ -21,7 +22,7 @@ defmodule PlausibleWeb.Plugins.API.Views.SharedLink do
         authorized_site: site
       }) do
     %{
-      data: %{
+      shared_link: %{
         id: shared_link.id,
         name: shared_link.name,
         password_protected: is_binary(shared_link.password_hash),

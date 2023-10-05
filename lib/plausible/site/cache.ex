@@ -209,6 +209,18 @@ defmodule Plausible.Site.Cache do
     [:plausible, :cache, cache_name, :refresh, mode]
   end
 
+  @spec touch_site!(Site.t(), DateTime.t()) :: Site.t()
+  def touch_site!(site, now) do
+    now =
+      now
+      |> DateTime.truncate(:second)
+      |> DateTime.to_naive()
+
+    site
+    |> Ecto.Changeset.change(updated_at: now)
+    |> Plausible.Repo.update!()
+  end
+
   def enabled?() do
     Application.fetch_env!(:plausible, :sites_by_domain_cache_enabled) == true
   end

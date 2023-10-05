@@ -37,5 +37,37 @@ defmodule PlausibleWeb.Plugins.API.ErrorsTest do
                "errors" => [%{"detail" => "Some message"}]
              }
     end
+
+    defmodule Example do
+      use Ecto.Schema
+      import Ecto.Changeset
+
+      schema "" do
+        field(:name)
+        field(:email)
+        field(:age, :integer)
+      end
+
+      def changeset(example, params \\ %{}) do
+        example
+        |> cast(params, [:name, :email, :age])
+        |> validate_required([:name, :email])
+        |> validate_format(:email, ~r/@/)
+        |> validate_inclusion(:age, 18..100)
+      end
+    end
+
+    test "formats changeset errors" do
+      changeset = Example.changeset(%Example{}, %{email: "foo", age: 101})
+
+      assert Plug.Test.conn(:get, "/")
+             |> Errors.error(:bad_request, changeset)
+             |> json_response(400)
+             |> Map.fetch!("errors") == [
+               %{"detail" => "age: is invalid"},
+               %{"detail" => "email: has invalid format"},
+               %{"detail" => "name: can't be blank"}
+             ]
+    end
   end
 end
