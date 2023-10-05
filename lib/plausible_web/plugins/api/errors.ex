@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Plugins.API.Errors do
   """
 
   import Plug.Conn
+  import Plausible.ChangesetHelpers
 
   @spec unauthorized(Plug.Conn.t()) :: Plug.Conn.t()
   def unauthorized(conn) do
@@ -12,7 +13,11 @@ defmodule PlausibleWeb.Plugins.API.Errors do
     |> error(:unauthorized, "Plugins API: unauthorized")
   end
 
-  @spec error(Plug.Conn.t(), Plug.Conn.status(), String.t() | [String.t()] | map() | [map()]) ::
+  @spec error(
+          Plug.Conn.t(),
+          Plug.Conn.status(),
+          String.t() | [String.t()] | Ecto.Changeset.t() | [Ecto.Changeset.t()]
+        ) ::
           Plug.Conn.t()
   def error(conn, status, message) when is_binary(message) do
     error(conn, status, [message])
@@ -30,10 +35,14 @@ defmodule PlausibleWeb.Plugins.API.Errors do
             message when is_binary(message) ->
               %{detail: message}
 
-            m when is_map(m) ->
-              [{key, message}] = Enum.into(m, [])
-              %{detail: "#{key}: #{message}"}
+            %Ecto.Changeset{} = changeset ->
+              changeset
+              |> traverse_errors()
+              |> Enum.map(fn {key, message} ->
+                %{detail: "#{key}: #{message}"}
+              end)
           end)
+          |> List.flatten()
       })
 
     conn

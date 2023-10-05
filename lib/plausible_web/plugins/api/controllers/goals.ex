@@ -4,8 +4,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
   """
   use PlausibleWeb, :plugins_api_controller
 
-  import Plausible.ChangesetHelpers
-
   operation(:index,
     summary: "Retrieve Goals",
     parameters: [
@@ -59,11 +57,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
         |> render("goal.json", goal: goal, authorized_site: site)
 
       {:error, changeset} ->
-        Errors.error(
-          conn,
-          422,
-          traverse_errors(changeset)
-        )
+        Errors.error(conn, 422, changeset)
     end
   end
 
@@ -84,11 +78,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
         |> render("index.json", goals: goals, authorized_site: site)
 
       {:error, changeset} ->
-        Errors.error(
-          conn,
-          422,
-          traverse_errors(changeset)
-        )
+        Errors.error(conn, 422, changeset)
     end
   end
 
