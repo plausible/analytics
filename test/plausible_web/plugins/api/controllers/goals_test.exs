@@ -141,7 +141,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert [%{detail: "currency: is invalid"}] = resp.errors
     end
 
-    test "edge case - revenue goals exists under the same name and different currency", %{
+    test "edge case - revenue goal exists under the same name and different currency", %{
       conn: conn,
       token: token,
       site: site
