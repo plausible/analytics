@@ -1,8 +1,8 @@
 <div class="w-full max-w-3xl mt-4 mx-auto flex">
-  <%= if @has_pin do %>
+  <%= if @has_email_code? do %>
     <%= form_for @conn, "/activate", [class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"], fn f -> %>
       <h2 class="text-xl font-black dark:text-gray-100">
-        <%= if @has_memberships do %>
+        <%= if @has_any_sites? do %>
         Verify your email address
         <% else %>
         Activate your account
@@ -37,7 +37,7 @@
         Entered the wrong email address?
       </div>
       <ul class="list-disc text-xs text-gray-500 leading-tight mt-1">
-        <%= if @has_memberships do %>
+        <%= if @has_any_sites? do %>
         <li>
           <%= link("Change email back to", class: "underline text-indigo-600", to: "/settings/email/cancel", method: "post") %> to <%= @conn.assigns[:current_user].previous_email %>
         </li>
@@ -63,7 +63,7 @@
     </div>
   <% end %>
 
-  <%= if !@has_invitation and !@has_memberships do %>
+  <%= if !@has_any_invitations? and !@has_any_sites? do %>
     <div class="pt-12 pl-8 hidden md:block">
       <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 1) %>
     </div>

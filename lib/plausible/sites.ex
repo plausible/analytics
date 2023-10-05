@@ -260,6 +260,15 @@ defmodule Plausible.Sites do
     role(user_id, site) in [:admin, :owner]
   end
 
+  @spec has_any_sites?(String.t()) :: boolean()
+  def has_any_sites?(user_id) do
+    Repo.exists?(
+      from(m in Plausible.Site.Membership,
+        where: m.user_id == ^user_id
+      )
+    )
+  end
+
   def locked?(%Site{locked: locked}) do
     locked
   end

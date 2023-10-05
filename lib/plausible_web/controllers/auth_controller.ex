@@ -79,31 +79,10 @@ defmodule PlausibleWeb.AuthController do
   def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
 
-    has_invitation =
-      Repo.exists?(
-        from(i in Plausible.Auth.Invitation,
-          where: i.email == ^user.email
-        )
-      )
-
-    has_code =
-      Repo.exists?(
-        from(c in "email_verification_codes",
-          where: c.user_id == ^user.id
-        )
-      )
-
-    has_memberships =
-      Repo.exists?(
-        from(m in Plausible.Site.Membership,
-          where: m.user_id == ^user.id
-        )
-      )
-
     render(conn, "activate.html",
-      has_pin: has_code,
-      has_invitation: has_invitation,
-      has_memberships: has_memberships,
+      has_email_code?: Plausible.Users.has_email_code?(user.id),
+      has_any_invitations?: Plausible.Site.Memberships.has_any_invitations?(user.email),
+      has_any_sites?: Plausible.Sites.has_any_sites?(user.id),
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
@@ -111,31 +90,20 @@ defmodule PlausibleWeb.AuthController do
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
 
-    has_invitation =
-      Repo.exists?(
-        from(i in Plausible.Auth.Invitation,
-          where: i.email == ^user.email
-        )
-      )
-
-    has_memberships =
-      Repo.exists?(
-        from(m in Plausible.Site.Membership,
-          where: m.user_id == ^user.id
-        )
-      )
+    has_any_invitations? = Plausible.Site.Memberships.has_any_invitations?(user.email)
+    has_any_sites? = Plausible.Sites.has_any_sites?(user.id)
 
     {code, ""} = Integer.parse(code)
 
     case Auth.verify_email(user, code) do
       :ok ->
         cond do
-          has_memberships ->
+          has_any_sites? ->
             conn
             |> put_flash(:success, "Email updated successfully")
             |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
 
-          has_invitation ->
+          has_any_invitations? ->
             redirect(conn, to: Routes.site_path(conn, :index))
 
           true ->
@@ -145,18 +113,18 @@ defmodule PlausibleWeb.AuthController do
       {:error, :incorrect} ->
         render(conn, "activate.html",
           error: "Incorrect activation code",
-          has_pin: true,
-          has_invitation: has_invitation,
-          has_memberships: has_memberships,
+          has_email_code?: true,
+          has_any_invitations?: has_any_invitations?,
+          has_any_sites?: has_any_sites?,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
       {:error, :expired} ->
         render(conn, "activate.html",
           error: "Code is expired, please request another one",
-          has_pin: false,
-          has_invitation: has_invitation,
-          has_memberships: has_memberships,
+          has_email_code?: false,
+          has_any_invitations?: has_any_invitations?,
+          has_any_sites?: has_any_sites?,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
