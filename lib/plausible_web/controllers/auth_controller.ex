@@ -7,6 +7,7 @@ defmodule PlausibleWeb.AuthController do
   plug(
     PlausibleWeb.RequireLoggedOutPlug
     when action in [
+           :register_form,
            :register,
            :register_from_invitation,
            :login_form,
@@ -19,8 +20,15 @@ defmodule PlausibleWeb.AuthController do
     when action in [
            :user_settings,
            :save_settings,
+           :update_email,
+           :cancel_update_email,
+           :new_api_key,
+           :create_api_key,
+           :delete_api_key,
            :delete_me,
-           :activate_form
+           :activate_form,
+           :activate,
+           :request_activation_code
          ]
   )
 
@@ -28,13 +36,6 @@ defmodule PlausibleWeb.AuthController do
 
   defp assign_is_selfhost(conn, _opts) do
     assign(conn, :is_selfhost, Plausible.Release.selfhost?())
-  end
-
-  def register_form(conn, _params) do
-    render(conn, "register_form.html",
-      connect_live_socket: true,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
   end
 
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
