@@ -401,7 +401,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert resp.goal.display_name == "Visit /checkout"
     end
 
-    test "retrieve custom event goal by ID", %{conn: conn, site: site, token: token} do
+    test "retrieves custom event goal by ID", %{conn: conn, site: site, token: token} do
       {:ok, goal} = Plausible.Goals.create(site, %{"event_name" => "Signup"})
 
       url = Routes.goals_url(base_uri(), :get, goal.id)
