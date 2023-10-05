@@ -5,17 +5,15 @@ defmodule PlausibleWeb.Components.Generic do
   use Phoenix.Component
 
   attr :title, :string, default: "Notice"
-  attr :class, :string, default: ""
+  attr :size, :atom, default: :sm
+  attr :rest, :global
   slot :inner_block
 
   def notice(assigns) do
     ~H"""
-    <div class={[
-      "rounded-md bg-yellow-50 dark:bg-yellow-100 p-4",
-      @class
-    ]}>
+    <div class="rounded-md bg-yellow-50 dark:bg-yellow-100 p-4" {@rest}>
       <div class="flex">
-        <div class="flex-shrink-0">
+        <div :if={@size !== :xs} class="flex-shrink-0">
           <svg
             class="h-5 w-5 text-yellow-400"
             viewBox="0 0 20 20"
@@ -30,8 +28,13 @@ defmodule PlausibleWeb.Components.Generic do
           </svg>
         </div>
         <div class="ml-3">
-          <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-900"><%= @title %></h3>
-          <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-800">
+          <h3
+            :if={@size !== :xs}
+            class={"text-#{@size} font-medium text-yellow-800 dark:text-yellow-900 mb-2"}
+          >
+            <%= @title %>
+          </h3>
+          <div class={"text-#{@size} text-yellow-700 dark:text-yellow-800"}>
             <p>
               <%= render_slot(@inner_block) %>
             </p>

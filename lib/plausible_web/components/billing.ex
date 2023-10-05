@@ -4,7 +4,61 @@ defmodule PlausibleWeb.Components.Billing do
   use Phoenix.Component
   import PlausibleWeb.Components.Generic
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing.{Subscription, Quota}
+
+  @feature_labels %{
+    props: "Custom properties",
+    funnels: "Funnels",
+    revenue_goals: "Revenue Goals"
+  }
+  defp feature_labels, do: @feature_labels
+
+  attr(:site, Plausible.Site, required: true)
+  attr(:current_user, Plausible.Auth.User, required: true)
+  attr(:feature, :atom, required: true, values: Map.keys(@feature_labels))
+  attr(:grandfathered?, :boolean, default: false)
+  attr(:size, :atom, default: :sm)
+  attr(:rest, :global)
+
+  def extra_feature_notice(assigns) do
+    private_preview? = not FunWithFlags.enabled?(:business_tier, for: assigns.current_user)
+    owner? = assigns.current_user.id == assigns.site.owner.id
+    has_access? = Quota.check_feature_access(assigns.site.owner, assigns.feature)
+
+    message =
+      cond do
+        private_preview? && assigns.grandfathered? ->
+          "#{@feature_labels[assigns.feature]} is an upcoming premium functionality that's free-to-use during the private preview. Existing subscribers will be grandfathered and will keep having access to this feature without any change to their plan."
+
+        private_preview? ->
+          "#{@feature_labels[assigns.feature]} is an upcoming premium functionality that's free-to-use during the private preview. Pricing will be announced soon."
+
+        Plausible.Billing.on_trial?(assigns.site.owner) ->
+          "#{@feature_labels[assigns.feature]} is part of the Plausible Business plan. You can access it during your trial, but you'll need to subscribe to the Business plan to retain access after the trial ends."
+
+        not has_access? && owner? ->
+          ~H"""
+          <%= feature_labels()[@feature] %> is part of the Plausible Business plan. To get access to it, please
+          <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
+            upgrade your subscription
+          </.link> to the Business plan.
+          """
+
+        not has_access? && not owner? ->
+          "#{@feature_labels[assigns.feature]} is part of the Plausible Business plan. To get access to it, please reach out to the site owner to upgrade your subscription to the Business plan."
+
+        true ->
+          nil
+      end
+
+    assigns = assign(assigns, :message, message)
+
+    ~H"""
+    <.notice :if={@message} class="rounded-t-md rounded-b-none" size={@size} {@rest}>
+      <%= @message %>
+    </.notice>
+    """
+  end
 
   slot(:inner_block, required: true)
   attr(:rest, :global)

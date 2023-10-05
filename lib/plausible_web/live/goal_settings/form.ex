@@ -20,7 +20,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       ) do
     form = to_form(Plausible.Goal.changeset(%Plausible.Goal{}))
 
-    site = Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+    site =
+      user_id
+      |> Plausible.Sites.get_for_user!(domain, [:owner, :admin, :super_admin])
+      |> Repo.preload([:custom_domain, :owner])
+
+    owner = Plausible.Users.with_subscription(site.owner)
+    site = Map.put(site, :owner, owner)
 
     {:ok,
      assign(socket,
@@ -54,7 +60,12 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
           <.tabs tabs={@tabs} />
 
-          <.custom_event_fields :if={@tabs.custom_events} f={f} />
+          <.custom_event_fields
+            :if={@tabs.custom_events}
+            f={f}
+            current_user={@current_user}
+            site={@site}
+          />
           <.pageview_fields :if={@tabs.pageviews} f={f} site={@site} />
 
           <div class="py-4">
@@ -99,6 +110,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   attr(:f, Phoenix.HTML.Form)
+  attr(:site, Plausible.Site)
+  attr(:current_user, Plausible.Auth.User)
 
   def custom_event_fields(assigns) do
     ~H"""
@@ -159,18 +172,15 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             </span>
           </div>
 
-          <div class="rounded-md bg-yellow-50 dark:bg-yellow-900 p-4" x-show="active">
-            <p class="text-xs text-yellow-700 dark:text-yellow-50 text-justify">
-              Revenue Tracking is an upcoming premium feature that's free-to-use
-              during the private preview. Pricing will be announced soon. See
-              examples and learn more in <a
-                class="font-medium text-yellow underline hover:text-yellow-600"
-                target="_blank"
-                rel="noreferrer"
-                href="https://plausible.io/docs/ecommerce-revenue-tracking"
-              >our docs</a>.
-            </p>
-          </div>
+          <span x-show="active">
+            <PlausibleWeb.Components.Billing.extra_feature_notice
+              site={@site}
+              current_user={@current_user}
+              feature={:revenue_goals}
+              size={:xs}
+              class="rounded-b-md"
+            />
+          </span>
 
           <div x-show="active">
             <.live_component
