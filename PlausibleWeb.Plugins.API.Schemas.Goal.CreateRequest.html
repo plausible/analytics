@@ -7,13 +7,13 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Plugins.API.Context.SharedLinks — Plausible v0.0.1</title>
+    <title>PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-C257CCA4.js"></script>
+    <script src="dist/sidebar_items-C578755A.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -102,20 +102,19 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/context/shared_links.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugins/api/schemas/goal/create_request.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Plugins.API.Context.SharedLinks</span> 
+  <span translate="no">PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>Plugins API Context module for Shared Links.
-All high level Shared Links operations should be implemented here.</p>
+<p>OpenAPI schema for Goal creation request</p>
   </section>
 
 
@@ -126,6 +125,20 @@ All high level Shared Links operations should be implemented here.</p>
         Summary
       </a>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:t/0" translate="no">t()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -133,25 +146,11 @@ All high level Shared Links operations should be implemented here.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#get/2" translate="no">get(site, id)</a>
+        <a href="#schema/0" translate="no">schema()</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_or_create/3" translate="no">get_or_create(site, name, password \\ nil)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_shared_links/2" translate="no">get_shared_links(site, params)</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/open_api_spex/3.18.0/OpenApiSpex.Schema.html#c:schema/0"><code class="inline">OpenApiSpex.Schema.schema/0</code></a>.</p></div>
 
     </div>
 
@@ -159,6 +158,46 @@ All high level Shared Links operations should be implemented here.</p>
 
   </section>
 
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+Types
+      </a>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:t/0">
+
+  <div class="detail-header">
+    <a href="#t:t/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">t()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugins/api/schemas/goal/create_request.ex#L8" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> t() :: %PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest{}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -168,16 +207,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="get/2">
+<section class="detail" id="schema/0">
 
   <div class="detail-header">
-    <a href="#get/2" class="detail-link" title="Link to this function">
+    <a href="#schema/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">get(site, id)</h1>
+    <h1 class="signature" translate="no">schema()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/context/shared_links.ex#L22" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugins/api/schemas/goal/create_request.ex#L8" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -187,73 +226,7 @@ Functions
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>() | <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
-  nil | <a href="Plausible.Site.SharedLink.html#t:t/0">Plausible.Site.SharedLink.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="get_or_create/3">
-
-    <span id="get_or_create/2"></span>
-
-  <div class="detail-header">
-    <a href="#get_or_create/3" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get_or_create(site, name, password \\ nil)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/context/shared_links.ex#L32" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get_or_create(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil) ::
-  {:ok, <a href="Plausible.Site.SharedLink.html#t:t/0">Plausible.Site.SharedLink.t</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="get_shared_links/2">
-
-  <div class="detail-header">
-    <a href="#get_shared_links/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get_shared_links(site, params)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/plugins/api/context/shared_links.ex#L12" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get_shared_links(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: {:ok, <a href="https://hexdocs.pm/paginator/1.2.0/Paginator.Page.html#t:t/0">Paginator.Page.t</a>()}</pre>
-
-      </div>
-
-
+<p>Callback implementation for <a href="https://hexdocs.pm/open_api_spex/3.18.0/OpenApiSpex.Schema.html#c:schema/0"><code class="inline">OpenApiSpex.Schema.schema/0</code></a>.</p>
   </section>
 </section>
 
