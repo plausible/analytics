@@ -52,7 +52,6 @@ defmodule Plausible.Plugins.API.Goals do
 
   defp get_query(site) do
     from g in Plausible.Goal,
-      inner_join: assoc(g, :site),
       where: g.site_id == ^site.id,
       order_by: [desc: g.id],
       left_join: assoc(g, :funnels),
