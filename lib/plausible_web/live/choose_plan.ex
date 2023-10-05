@@ -73,7 +73,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
               else: "Upgrade your account" %>
           </p>
         </div>
-        <div class="mt-12 flex flex-row justify-between">
+        <div class="mt-12 max-w-md lg:max-w-none mx-auto lg:flex flex-row justify-between">
           <.slider selected_volume={@selected_volume} available_volumes={@available_volumes} />
           <.interval_picker selected_interval={@selected_interval} />
         </div>
@@ -165,8 +165,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp interval_picker(assigns) do
     ~H"""
-    <div class="flex justify-center self-end">
-      <div class="relative flex flex-col">
+    <div class="mt-4 lg:flex justify-center self-end">
+      <div class="relative ">
         <.two_months_free active={@selected_interval == :yearly} />
         <fieldset class="grid grid-cols-2 gap-x-1 rounded-full bg-white p-1 text-center text-sm font-semibold leading-5 shadow dark:ring-gray-600">
           <label
@@ -193,7 +193,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def two_months_free(assigns) do
     ~H"""
-    <span class="absolute -right-16 -top-3 whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-yellow-100 border border-yellow-300 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200">
+    <span class="absolute -right-4 lg:-right-16 -top-3 whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-yellow-100 border border-yellow-300 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200">
       2 months free
     </span>
     """
@@ -201,7 +201,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp slider(assigns) do
     ~H"""
-    <form class="w-2/5">
+    <form class="w-full lg:w-2/5">
       <p class="font-medium leading-6 text-gray-600 dark:text-gray-500">
         <b class="text-xl text-gray-900"><%= slider_value(@selected_volume, @available_volumes) %></b>
         monthly pageviews
