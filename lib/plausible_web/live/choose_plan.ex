@@ -203,7 +203,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <form class="w-full lg:w-2/5">
       <p class="font-medium leading-6 text-gray-600 dark:text-gray-500">
-        <b class="text-xl text-gray-900"><%= slider_value(@selected_volume, @available_volumes) %></b>
+        <b id="slider-value" class="text-xl text-gray-900">
+          <%= slider_value(@selected_volume, @available_volumes) %>
+        </b>
         monthly pageviews
       </p>
       <input
