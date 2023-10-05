@@ -320,7 +320,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       |> assert_schema("Goal.ListResponse", spec())
     end
 
-    test "edge case - revenue goals exists under the same name and different currency", %{
+    test "edge case - revenue goals exist under the same name and different currency", %{
       conn: conn,
       token: token,
       site: site
