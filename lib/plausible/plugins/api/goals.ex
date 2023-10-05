@@ -38,18 +38,6 @@ defmodule Plausible.Plugins.API.Goals do
     |> Repo.one()
   end
 
-  @spec get(Plausible.Site.t(), String.t() | atom(), String.t()) :: nil | Plausible.Goal.t()
-  def get(site, column, value) when column in ["event_name", "page_path"] do
-    get(site, String.to_existing_atom(column), value)
-  end
-
-  def get(site, column, value) when column in [:event_name, :page_path] and is_binary(value) do
-    site
-    |> get_query()
-    |> where([g], field(g, ^column) == ^value)
-    |> Repo.one()
-  end
-
   defp get_query(site) do
     from g in Plausible.Goal,
       where: g.site_id == ^site.id,
