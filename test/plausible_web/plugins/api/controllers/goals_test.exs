@@ -364,7 +364,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert %{errors: [%{detail: "Invalid integer. Got: string"}]} = resp
     end
 
-    test "retrieve revenue goal by ID", %{conn: conn, site: site, token: token} do
+    test "retrieves revenue goal by ID", %{conn: conn, site: site, token: token} do
       {:ok, goal} =
         Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
 
