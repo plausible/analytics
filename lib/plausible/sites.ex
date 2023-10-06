@@ -315,9 +315,14 @@ defmodule Plausible.Sites do
     override = Keyword.get(opts, :override)
     toggle = if is_boolean(override), do: override, else: !Map.fetch!(site, property)
 
-    with :ok <- check_feature_access.(property, toggle),
-         changeset <- Ecto.Changeset.change(site, %{property => toggle}),
-         {:ok, site} <- Plausible.Repo.update(changeset),
-         do: {:ok, site}
+    case check_feature_access.(property, toggle) do
+      :ok ->
+        site
+        |> Ecto.Changeset.change(%{property => toggle})
+        |> Repo.update()
+
+      {:error, :upgrade_required} ->
+        {:error, :upgrade_required}
+    end
   end
 end

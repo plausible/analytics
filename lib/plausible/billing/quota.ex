@@ -158,10 +158,12 @@ defmodule Plausible.Billing.Quota do
     ]
 
     Plausible.Repo.transaction(fn ->
-      Enum.reduce(queries, [], fn {feature, query}, acc ->
-        if Plausible.Repo.exists?(query), do: [feature | acc], else: acc
-      end)
+      Enum.reduce(queries, [], &check_extra_feature_usage/2)
     end)
+  end
+
+  defp check_extra_feature_usage({feature, query}, acc) do
+    if Plausible.Repo.exists?(query), do: [feature | acc], else: acc
   end
 
   @all_features [:props, :revenue_goals, :funnels]
@@ -193,7 +195,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   def check_feature_access(%Plausible.Auth.User{} = user, feature) do
-    if FunWithFlags.enabled?(:business_tier) do
+    if FunWithFlags.enabled?(:business_tier, for: user) do
       if feature in extra_features_limit(user), do: :ok, else: {:error, :upgrade_required}
     else
       :ok

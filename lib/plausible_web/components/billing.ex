@@ -20,10 +20,11 @@ defmodule PlausibleWeb.Components.Billing do
   attr(:size, :atom, default: :sm)
   attr(:rest, :global)
 
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def extra_feature_notice(assigns) do
     private_preview? = not FunWithFlags.enabled?(:business_tier, for: assigns.current_user)
     owner? = assigns.current_user.id == assigns.site.owner.id
-    has_access? = Quota.check_feature_access(assigns.site.owner, assigns.feature)
+    has_access? = Quota.check_feature_access(assigns.site.owner, assigns.feature) == :ok
 
     message =
       cond do

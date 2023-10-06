@@ -149,21 +149,6 @@ defmodule PlausibleWeb.SiteController do
         |> put_flash(:success, message)
         |> redirect(to: redirect_path)
 
-      {:error, :upgrade_required} ->
-        conn
-        |> put_flash(
-          :error,
-          [
-            "This feature is part of the Plausible Business plan. To get access to this feature, please ",
-            Phoenix.HTML.Link.link("upgrade your account",
-              to: Routes.billing_path(conn, :choose_plan),
-              class: "underline"
-            ),
-            "."
-          ]
-        )
-        |> redirect(to: redirect_path)
-
       {:error, _} ->
         conn
         |> put_flash(
