@@ -34,6 +34,7 @@
       setting={:funnels_enabled}
       label="Show Funnels in the Dashboard"
       conn={@conn}
+      disabled?={not @has_access?}
     >
       <%= live_render(@conn, PlausibleWeb.Live.FunnelSettings,
         session: %{"site_id" => @site.id, "domain" => @site.domain}

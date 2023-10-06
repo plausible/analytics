@@ -9,18 +9,28 @@ defmodule PlausibleWeb.Components.Site.Feature do
   attr :setting, :atom, required: true
   attr :label, :string, required: true
   attr :conn, Plug.Conn, required: true
+  attr :disabled?, :boolean, default: false
   slot :inner_block
 
   def toggle(assigns) do
     ~H"""
     <div>
       <div class="mt-4 mb-8 flex items-center">
-        <%= if Map.fetch!(@site, @setting) do %>
-          <.button_active to={target(@site, @setting, @conn, false)} />
-        <% else %>
-          <.button_inactive to={target(@site, @setting, @conn, true)} />
-        <% end %>
-        <span class="ml-2 text-sm font-medium text-gray-900 leading-5 dark:text-gray-100">
+        <.button
+          conn={@conn}
+          site={@site}
+          setting={@setting}
+          set_to={!Map.fetch!(@site, @setting)}
+          disabled?={@disabled?}
+        />
+
+        <span class={[
+          "ml-2 text-sm font-medium leading-5 mb-1",
+          if(assigns.disabled?,
+            do: "text-gray-500 dark:text-gray-300",
+            else: "text-gray-900  dark:text-gray-100"
+          )
+        ]}>
           <%= @label %>
         </span>
       </div>
@@ -36,21 +46,27 @@ defmodule PlausibleWeb.Components.Site.Feature do
     Routes.site_path(conn, :update_feature_visibility, site.domain, setting, r: r, set: set_to)
   end
 
-  def button_active(assigns) do
+  defp button(assigns) do
     ~H"""
-    <%= button(to: @to, method: :put, class: "bg-indigo-600 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-      <span class="translate-x-5 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200">
-      </span>
-    <% end %>
-    """
-  end
-
-  def button_inactive(assigns) do
-    ~H"""
-    <%= button(to: @to, method: :put, class: "bg-gray-200 dark:bg-gray-700 relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring") do %>
-      <span class="translate-x-0 inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200">
-      </span>
-    <% end %>
+    <.form action={target(@site, @setting, @conn, @set_to)} method="put" for={nil}>
+      <button
+        type="submit"
+        class={[
+          "relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full transition-colors ease-in-out duration-200 focus:outline-none focus:ring",
+          if(assigns.set_to, do: "bg-gray-200 dark:bg-gray-700", else: "bg-indigo-600"),
+          if(assigns.disabled?, do: "cursor-not-allowed")
+        ]}
+        disabled={@disabled?}
+      >
+        <span
+          aria-hidden="true"
+          class={[
+            "inline-block h-5 w-5 rounded-full bg-white dark:bg-gray-800 shadow transform transition ease-in-out duration-200",
+            if(assigns.set_to, do: "translate-x-0", else: "translate-x-5")
+          ]}
+        />
+      </button>
+    </.form>
     """
   end
 end

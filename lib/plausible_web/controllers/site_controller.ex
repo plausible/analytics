@@ -227,10 +227,12 @@ defmodule PlausibleWeb.SiteController do
     site = Repo.preload(conn.assigns[:site], [:custom_domain, :owner])
     owner = Plausible.Users.with_subscription(site.owner)
     site = Map.put(site, :owner, owner)
+    has_access? = Plausible.Billing.Quota.check_feature_access(site, :funnels) == :ok
 
     conn
     |> render("settings_funnels.html",
       site: site,
+      has_access?: has_access?,
       dogfood_page_path: "/:dashboard/settings/funnels",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -241,10 +243,12 @@ defmodule PlausibleWeb.SiteController do
     site = Repo.preload(conn.assigns[:site], [:custom_domain, :owner])
     owner = Plausible.Users.with_subscription(site.owner)
     site = Map.put(site, :owner, owner)
+    has_access? = Plausible.Billing.Quota.check_feature_access(site, :props) == :ok
 
     conn
     |> render("settings_props.html",
       site: site,
+      has_access?: has_access?,
       dogfood_page_path: "/:dashboard/settings/properties",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"},
       connect_live_socket: true

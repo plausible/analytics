@@ -48,6 +48,7 @@
       site={@site}
       setting={:props_enabled}
       label="Show Properties in the Dashboard"
+      disabled?={not @has_access?}
       conn={@conn}
     >
       <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,
