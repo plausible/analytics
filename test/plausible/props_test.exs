@@ -12,7 +12,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow/2 adds props to the array" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     assert {:ok, site} = Plausible.Props.allow(site, "my-prop-1")
     assert {:ok, site} = Plausible.Props.allow(site, "my-prop-2")
@@ -22,7 +22,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow/2 takes a single prop or multiple" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     assert {:ok, site} = Plausible.Props.allow(site, "my-prop-1")
     assert {:ok, site} = Plausible.Props.allow(site, ["my-prop-3", "my-prop-2"])
@@ -32,14 +32,14 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow/2 trims trailing whitespaces" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     assert {:ok, site} = Plausible.Props.allow(site, "   my-prop-1 ")
     assert %Plausible.Site{allowed_event_props: ["my-prop-1"]} = Plausible.Repo.reload!(site)
   end
 
   test "allow/2 fails when prop list is too long" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
     props = for i <- 1..300, do: "my-prop-#{i}"
 
     assert {:ok, site} = Plausible.Props.allow(site, props)
@@ -51,7 +51,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow/2 fails when prop key is too long" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     long_prop = String.duplicate("a", 301)
     assert {:error, changeset} = Plausible.Props.allow(site, long_prop)
@@ -59,7 +59,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow/2 fails when prop key is empty" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     assert {:error, changeset} = Plausible.Props.allow(site, "")
     assert {"must be between 1 and 300 characters", []} == changeset.errors[:allowed_event_props]
@@ -69,7 +69,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow/2 does not fail when prop key is already in the list" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     assert {:ok, site} = Plausible.Props.allow(site, "my-prop-1")
     assert {:ok, site} = Plausible.Props.allow(site, "my-prop-1")
@@ -77,7 +77,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "disallow/2 removes the prop from the array" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     assert {:ok, site} = Plausible.Props.allow(site, "my-prop-1")
     assert {:ok, site} = Plausible.Props.allow(site, "my-prop-2")
@@ -86,7 +86,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "disallow/2 does not fail when prop is not in the list" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     assert {:ok, site} = Plausible.Props.allow(site, "my-prop-1")
     assert {:ok, site} = Plausible.Props.disallow(site, "my-prop-2")
@@ -120,7 +120,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow_existing_props/1 saves the most frequent prop keys" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     populate_stats(site, [
       build(:event,
@@ -147,7 +147,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow_existing_props/1 skips invalid keys" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     populate_stats(site, [
       build(:event,
@@ -174,7 +174,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow_existing_props/1 can be run multiple times" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     populate_stats(site, [
       build(:event,
@@ -229,7 +229,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "suggest_keys_to_allow/2 returns prop keys from events" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     populate_stats(site, [
       build(:event,
@@ -254,7 +254,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "suggest_keys_to_allow/2 does not return internal prop keys from special event types" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
 
     populate_stats(site, [
       build(:event,
@@ -279,7 +279,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "configured?/1 returns whether the site has allow at least one prop" do
-    site = insert(:site, members: [build(:user)])
+    site = insert(:site)
     refute Plausible.Props.configured?(site)
 
     {:ok, site} = Plausible.Props.allow(site, "hello-world")
