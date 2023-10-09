@@ -31,6 +31,8 @@ defmodule Plausible.Billing.Subscription.Status do
     https://developer.paddle.com/classic/guides/zg9joji1mzu0mduy-payment-failures
   """
 
+  @type status() :: :active | :past_due | :paused | :deleted
+
   defmacro __using__(_opts) do
     quote do
       require Plausible.Billing.Subscription.Status

@@ -57,12 +57,14 @@ defmodule PlausibleWeb.AuthView do
     :lists.reverse(list) ++ acc
   end
 
+  @spec present_subscription_status(Subscription.Status.status()) :: String.t()
   def present_subscription_status(Subscription.Status.active()), do: "Active"
   def present_subscription_status(Subscription.Status.past_due()), do: "Past due"
   def present_subscription_status(Subscription.Status.deleted()), do: "Cancelled"
   def present_subscription_status(Subscription.Status.paused()), do: "Paused"
   def present_subscription_status(status), do: status
 
+  @spec subscription_colors(Subscription.Status.status()) :: String.t()
   def subscription_colors(Subscription.Status.active()), do: "bg-green-100 text-green-800"
   def subscription_colors(Subscription.Status.past_due()), do: "bg-yellow-100 text-yellow-800"
   def subscription_colors(Subscription.Status.paused()), do: "bg-red-100 text-red-800"
