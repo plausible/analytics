@@ -1,17 +1,17 @@
-defmodule PlausibleWeb.Plugins.API.Schemas.SharedLink.ListResponse do
+defmodule PlausibleWeb.Plugins.API.Schemas.Goal.ListResponse do
   @moduledoc """
-  OpenAPI schema for SharedLink list response
+  OpenAPI schema for Goals list response
   """
   use PlausibleWeb, :open_api_schema
 
   OpenApiSpex.schema(%{
-    title: "SharedLink.ListResponse",
-    description: "Shared Links list response",
+    title: "Goal.ListResponse",
+    description: "Goals list response",
     type: :object,
-    required: [:shared_links, :meta],
+    required: [:goals, :meta],
     properties: %{
-      shared_links: %Schema{
-        items: Schemas.SharedLink,
+      goals: %Schema{
+        items: Schemas.Goal,
         type: :array
       },
       meta: %OpenApiSpex.Schema{

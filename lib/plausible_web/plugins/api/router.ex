@@ -21,6 +21,11 @@ defmodule PlausibleWeb.Plugins.API.Router do
 
     get("/shared_links", SharedLinks, :index)
     get("/shared_links/:id", SharedLinks, :get)
-    post("/shared_links", SharedLinks, :create)
+    put("/shared_links", SharedLinks, :create)
+
+    get("/goals", Goals, :index)
+    get("/goals/:id", Goals, :get)
+    put("/goals", Goals, :create)
+    delete("/goals/:id", Goals, :delete)
   end
 end

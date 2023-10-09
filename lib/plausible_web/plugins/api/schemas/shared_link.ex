@@ -7,9 +7,9 @@ defmodule PlausibleWeb.Plugins.API.Schemas.SharedLink do
   OpenApiSpex.schema(%{
     description: "Shared Link object",
     type: :object,
-    required: [:data],
+    required: [:shared_link],
     properties: %{
-      data: %Schema{
+      shared_link: %Schema{
         type: :object,
         required: [:id, :name, :password_protected, :href],
         properties: %{
@@ -21,6 +21,14 @@ defmodule PlausibleWeb.Plugins.API.Schemas.SharedLink do
           },
           href: %Schema{type: :string, description: "Shared Link URL"}
         }
+      }
+    },
+    example: %{
+      shared_link: %{
+        id: 1024,
+        name: "Public Dashboard",
+        password_protected: false,
+        href: "https://example.com"
       }
     }
   })

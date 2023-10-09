@@ -11,69 +11,76 @@ defmodule Plausible.Goals do
   If the created goal is a revenue goal, it sets site.updated_at to be
   refreshed by the sites cache, as revenue goals are used during ingestion.
   """
-  def create(site, params, now \\ DateTime.utc_now()) do
-    params = Map.merge(params, %{"site_id" => site.id})
+  def create(site, params, opts \\ []) do
+    now = Keyword.get(opts, :now, DateTime.utc_now())
+    upsert? = Keyword.get(opts, :upsert?, false)
 
-    Ecto.Multi.new()
-    |> Ecto.Multi.insert(:goal, Goal.changeset(%Goal{}, params))
-    |> Ecto.Multi.run(:site, fn repo, %{goal: goal} ->
-      if Goal.revenue?(goal) do
-        now =
-          now
-          |> DateTime.truncate(:second)
-          |> DateTime.to_naive()
+    Repo.transaction(fn ->
+      case insert_goal(site, params, upsert?) do
+        {:ok, :insert, goal} ->
+          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+          if Goal.revenue?(goal) do
+            Plausible.Site.Cache.touch_site!(site, now)
+          end
 
-        site
-        |> Ecto.Changeset.change(updated_at: now)
-        |> repo.update()
-      else
-        {:ok, site}
+          Repo.preload(goal, :site)
+
+        {:ok, :upsert, goal} ->
+          Repo.preload(goal, :site)
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
       end
     end)
-    |> Repo.transaction()
-    |> case do
-      {:ok, %{goal: goal}} -> {:ok, Repo.preload(goal, :site)}
-      {:error, _failed_operation, failed_value, _changes_so_far} -> {:error, failed_value}
+  end
+
+  def find_or_create(site, %{
+        "goal_type" => "event",
+        "event_name" => event_name,
+        "currency" => currency
+      })
+      when is_binary(event_name) and is_binary(currency) do
+    params = %{"event_name" => event_name, "currency" => currency}
+
+    with {:ok, goal} <- create(site, params, upsert?: true) do
+      if to_string(goal.currency) == currency do
+        {:ok, goal}
+      else
+        # we must disallow creation of the same goal name with different currency
+        changeset =
+          goal
+          |> Goal.changeset()
+          |> Ecto.Changeset.add_error(
+            :event_name,
+            "'#{goal.event_name}' (with currency: #{goal.currency}) has already been taken"
+          )
+
+        {:error, changeset}
+      end
     end
   end
 
-  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name}) do
-    query =
-      from g in Goal,
-        inner_join: assoc(g, :site),
-        where: g.site_id == ^site.id,
-        where: g.event_name == ^event_name,
-        preload: [:site]
-
-    goal = Repo.one(query)
-
-    case goal do
-      nil -> create(site, %{"event_name" => event_name})
-      goal -> {:ok, goal}
-    end
+  def find_or_create(site, %{"goal_type" => "event", "event_name" => event_name})
+      when is_binary(event_name) do
+    create(site, %{"event_name" => event_name}, upsert?: true)
   end
 
   def find_or_create(_, %{"goal_type" => "event"}), do: {:missing, "event_name"}
 
   def find_or_create(site, %{"goal_type" => "page", "page_path" => page_path}) do
-    query =
-      from g in Goal,
-        inner_join: assoc(g, :site),
-        where: g.site_id == ^site.id,
-        where: g.page_path == ^page_path,
-        preload: [:site]
-
-    goal = Repo.one(query)
-
-    case goal do
-      nil -> create(site, %{"page_path" => page_path})
-      goal -> {:ok, goal}
-    end
+    create(site, %{"page_path" => page_path}, upsert?: true)
   end
 
   def find_or_create(_, %{"goal_type" => "page"}), do: {:missing, "page_path"}
 
   def for_site(site, opts \\ []) do
+    site
+    |> for_site_query(opts)
+    |> Repo.all()
+    |> Enum.map(&maybe_trim/1)
+  end
+
+  def for_site_query(site, opts \\ []) do
     query =
       from g in Goal,
         inner_join: assoc(g, :site),
@@ -81,30 +88,15 @@ defmodule Plausible.Goals do
         order_by: [desc: g.id],
         preload: [:site]
 
-    query =
-      if opts[:preload_funnels?] do
-        from g in query,
-          left_join: assoc(g, :funnels),
-          group_by: g.id,
-          preload: [:funnels]
-      else
-        query
-      end
-
-    query =
-      if opts[:preload_funnels?] do
-        from(g in query,
-          left_join: assoc(g, :funnels),
-          group_by: g.id,
-          preload: [:funnels]
-        )
-      else
-        query
-      end
-
-    query
-    |> Repo.all()
-    |> Enum.map(&maybe_trim/1)
+    if opts[:preload_funnels?] do
+      from(g in query,
+        left_join: assoc(g, :funnels),
+        group_by: g.id,
+        preload: [:funnels]
+      )
+    else
+      query
+    end
   end
 
   @doc """
@@ -186,6 +178,35 @@ defmodule Plausible.Goals do
       ),
       :count
     )
+  end
+
+  defp insert_goal(site, params, upsert?) do
+    params = Map.delete(params, "site_id")
+
+    insert_opts =
+      if upsert? do
+        [on_conflict: :nothing]
+      else
+        []
+      end
+
+    changeset = Goal.changeset(%Goal{site_id: site.id}, params)
+
+    with {:ok, goal} <- Repo.insert(changeset, insert_opts) do
+      # Upsert with `on_conflict: :nothing` strategy
+      # will result in goal struct missing primary key field
+      # which is generated by the database.
+      if goal.id do
+        {:ok, :insert, goal}
+      else
+        get_params =
+          goal
+          |> Map.take([:site_id, :event_name, :page_path])
+          |> Enum.reject(fn {_, value} -> is_nil(value) end)
+
+        {:ok, :upsert, Repo.get_by!(Goal, get_params)}
+      end
+    end
   end
 
   defp maybe_trim(%Goal{} = goal) do

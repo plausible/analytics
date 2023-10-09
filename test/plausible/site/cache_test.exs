@@ -97,7 +97,10 @@ defmodule Plausible.Site.CacheTest do
       # the site was added yesterday so full refresh will pick it up
       %{id: site_id} = site = insert(:site, domain: "site1.example.com", updated_at: yesterday)
       # the goal was added yesterday so full refresh will pick it up
-      Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => :BRL}, yesterday)
+      Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => :BRL},
+        now: yesterday
+      )
+
       # this goal is added "just now"
       Plausible.Goals.create(site, %{"event_name" => "Add to Cart", "currency" => :USD})
       # and this one does not matter
@@ -110,7 +113,7 @@ defmodule Plausible.Site.CacheTest do
       Plausible.Goals.create(
         site,
         %{"event_name" => "Purchase2", "currency" => :BRL},
-        DateTime.add(DateTime.utc_now(), -70)
+        now: DateTime.add(DateTime.utc_now(), -70)
       )
 
       :ok = Cache.refresh_updated_recently(cache_name: test)

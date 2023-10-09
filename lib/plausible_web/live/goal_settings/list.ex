@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
                       <span :if={goal.page_path}>Pageview</span>
                       <span :if={goal.event_name && !goal.currency}>Custom Event</span>
                       <span :if={goal.currency}>
-                        Revenue Goal: <%= goal.currency %>
+                        Revenue Goal
                       </span>
                       <span :if={not Enum.empty?(goal.funnels)}> - belongs to funnel(s)</span>
                     </span>

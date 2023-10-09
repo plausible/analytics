@@ -1,6 +1,6 @@
-defmodule Plausible.Plugins.API.Context.SharedLinks do
+defmodule Plausible.Plugins.API.SharedLinks do
   @moduledoc """
-  Plugins API Context module for Shared Links.
+  Plugins API context module for Shared Links.
   All high level Shared Links operations should be implemented here.
   """
   import Ecto.Query
