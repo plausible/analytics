@@ -85,7 +85,7 @@ defmodule PlausibleWeb.Components.Billing do
 
         <.styled_link
           :if={@subscription.status == Subscription.Status.active()}
-          href={Routes.billing_path(@conn, :change_plan_form)}
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_form)}
           class="text-sm font-medium"
         >
           Change plan
@@ -100,7 +100,7 @@ defmodule PlausibleWeb.Components.Billing do
         </span>
       <% else %>
         <div class="py-2 text-xl font-medium dark:text-gray-100">Free trial</div>
-        <.styled_link href={Routes.billing_path(@conn, :upgrade)} class="text-sm font-medium">
+        <.styled_link href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)} class="text-sm font-medium">
           Upgrade
         </.styled_link>
       <% end %>
