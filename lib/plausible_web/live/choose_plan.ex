@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   """
   use Phoenix.LiveView
   use Phoenix.HTML
+  use Plausible.Billing.Subscription.Status
   alias Plausible.Users
   alias Plausible.Billing.{Plans, Plan, Quota}
 
@@ -327,7 +328,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <.change_plan_link
       plan_already_owned={@text == "Currently on this plan"}
       billing_details_expired={
-        @user.subscription && @user.subscription.status in ["past_due", "paused"]
+        @user.subscription &&
+          @user.subscription.status in [Subscription.Status.past_due(), Subscription.Status.paused()]
       }
       {assigns}
     />

@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
   alias Plausible.{Repo, Billing.Subscription}
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Billing.Subscription.Status
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
@@ -469,7 +470,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   defp create_past_due_subscription(%{user: user}) do
     create_subscription_for(user,
       paddle_plan_id: @v4_growth_200k_yearly_plan_id,
-      status: "past_due",
+      status: Subscription.Status.past_due(),
       update_url: "https://update.billing.details"
     )
   end
@@ -477,7 +478,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   defp create_paused_subscription(%{user: user}) do
     create_subscription_for(user,
       paddle_plan_id: @v4_growth_200k_yearly_plan_id,
-      status: "paused",
+      status: Subscription.Status.paused(),
       update_url: "https://update.billing.details"
     )
   end
@@ -485,7 +486,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   defp create_cancelled_subscription(%{user: user}) do
     create_subscription_for(user,
       paddle_plan_id: @v4_growth_200k_yearly_plan_id,
-      status: "deleted"
+      status: Subscription.Status.deleted()
     )
   end
 

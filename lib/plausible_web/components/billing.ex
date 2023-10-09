@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Components.Billing do
 
   use Phoenix.Component
   import PlausibleWeb.Components.Generic
+  use Plausible.Billing.Subscription.Status
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Billing.Subscription
 
@@ -83,7 +84,7 @@ defmodule PlausibleWeb.Components.Billing do
         </div>
 
         <.styled_link
-          :if={@subscription.status == "active"}
+          :if={@subscription.status == Subscription.Status.active()}
           href={Routes.billing_path(@conn, :change_plan_form)}
           class="text-sm font-medium"
         >
@@ -91,7 +92,7 @@ defmodule PlausibleWeb.Components.Billing do
         </.styled_link>
 
         <span
-          :if={@subscription.status == "past_due"}
+          :if={@subscription.status == Subscription.Status.past_due()}
           class="text-sm text-gray-600 dark:text-gray-400 font-medium"
           tooltip="Please update your billing details before changing plans"
         >
@@ -107,7 +108,9 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  def subscription_past_due_notice(%{subscription: %Subscription{status: "past_due"}} = assigns) do
+  def subscription_past_due_notice(
+        %{subscription: %Subscription{status: Subscription.Status.past_due()}} = assigns
+      ) do
     ~H"""
     <aside class={@class}>
       <div class="shadow-md dark:shadow-none rounded-lg bg-yellow-100 p-4">
@@ -148,7 +151,9 @@ defmodule PlausibleWeb.Components.Billing do
 
   def subscription_past_due_notice(assigns), do: ~H""
 
-  def subscription_paused_notice(%{subscription: %Subscription{status: "paused"}} = assigns) do
+  def subscription_paused_notice(
+        %{subscription: %Subscription{status: Subscription.Status.paused()}} = assigns
+      ) do
     ~H"""
     <aside class={@class}>
       <div class="shadow-md dark:shadow-none rounded-lg bg-red-100 p-4">
@@ -281,12 +286,18 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   defp change_plan_or_upgrade_text(nil), do: "Upgrade"
-  defp change_plan_or_upgrade_text(%Subscription{status: "deleted"}), do: "Upgrade"
+
+  defp change_plan_or_upgrade_text(%Subscription{status: Subscription.Status.deleted()}),
+    do: "Upgrade"
+
   defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
 
   defp show_upgrade_or_change_plan_link?(user, subscription) do
     is_enterprise? = Plausible.Auth.enterprise_configured?(user)
-    subscription_halted? = subscription && subscription.status in ["past_due", "paused"]
+
+    subscription_halted? =
+      subscription &&
+        subscription.status in [Subscription.Status.past_due(), Subscription.Status.paused()]
 
     !(is_enterprise? && subscription_halted?)
   end

@@ -2,6 +2,7 @@ defmodule PlausibleWeb.BillingController do
   alias Plausible.Billing.Plans
   use PlausibleWeb, :controller
   use Plausible.Repo
+  use Plausible.Billing.Subscription.Status
   alias Plausible.Billing
   require Logger
 
@@ -19,7 +20,7 @@ defmodule PlausibleWeb.BillingController do
       Plausible.Auth.enterprise_configured?(user) ->
         redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
 
-      user.subscription && user.subscription.status == "active" ->
+      user.subscription && user.subscription.status == Subscription.Status.active() ->
         redirect(conn, to: Routes.billing_path(conn, :change_plan_form))
 
       true ->
@@ -59,7 +60,11 @@ defmodule PlausibleWeb.BillingController do
           user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
 
       cond do
-        user.subscription && user.subscription.status in ["past_due", "paused"] ->
+        user.subscription &&
+            user.subscription.status in [
+              Subscription.Status.past_due(),
+              Subscription.Status.paused()
+            ] ->
           redirect(conn, to: Routes.auth_path(conn, :user_settings))
 
         subscribed_to_latest? ->

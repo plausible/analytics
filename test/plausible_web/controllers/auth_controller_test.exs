@@ -2,6 +2,7 @@ defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
   use Plausible.Repo
+  use Plausible.Billing.Subscription.Status
   import Plausible.Test.Support.HTML
 
   import Mox
@@ -533,7 +534,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       insert(:subscription,
         user: user,
-        status: "past_due",
+        status: Subscription.Status.past_due(),
         paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
       )
 
@@ -553,7 +554,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       insert(:subscription,
         user: user,
-        status: "paused",
+        status: Subscription.Status.paused(),
         paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
       )
 
@@ -724,8 +725,8 @@ defmodule PlausibleWeb.AuthControllerTest do
       ])
 
       insert(:google_auth, site: site, user: user)
-      insert(:subscription, user: user, status: "deleted")
-      insert(:subscription, user: user, status: "active")
+      insert(:subscription, user: user, status: Subscription.Status.deleted())
+      insert(:subscription, user: user, status: Subscription.Status.active())
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"

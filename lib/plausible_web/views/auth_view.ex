@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.AuthView do
   use PlausibleWeb, :view
+  use Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Plans
 
   def base_domain do
@@ -56,15 +57,15 @@ defmodule PlausibleWeb.AuthView do
     :lists.reverse(list) ++ acc
   end
 
-  def present_subscription_status("active"), do: "Active"
-  def present_subscription_status("past_due"), do: "Past due"
-  def present_subscription_status("deleted"), do: "Cancelled"
-  def present_subscription_status("paused"), do: "Paused"
+  def present_subscription_status(Subscription.Status.active()), do: "Active"
+  def present_subscription_status(Subscription.Status.past_due()), do: "Past due"
+  def present_subscription_status(Subscription.Status.deleted()), do: "Cancelled"
+  def present_subscription_status(Subscription.Status.paused()), do: "Paused"
   def present_subscription_status(status), do: status
 
-  def subscription_colors("active"), do: "bg-green-100 text-green-800"
-  def subscription_colors("past_due"), do: "bg-yellow-100 text-yellow-800"
-  def subscription_colors("paused"), do: "bg-red-100 text-red-800"
-  def subscription_colors("deleted"), do: "bg-red-100 text-red-800"
+  def subscription_colors(Subscription.Status.active()), do: "bg-green-100 text-green-800"
+  def subscription_colors(Subscription.Status.past_due()), do: "bg-yellow-100 text-yellow-800"
+  def subscription_colors(Subscription.Status.paused()), do: "bg-red-100 text-red-800"
+  def subscription_colors(Subscription.Status.deleted()), do: "bg-red-100 text-red-800"
   def subscription_colors(_), do: ""
 end

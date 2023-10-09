@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.BillingControllerTest do
   use PlausibleWeb.ConnCase, async: true
+  use Plausible.Billing.Subscription.Status
   import Plausible.Test.Support.HTML
 
   describe "GET /upgrade" do
@@ -220,13 +221,13 @@ defmodule PlausibleWeb.BillingControllerTest do
     setup [:create_user, :log_in, :configure_enterprise_plan]
 
     test "redirects to /settings when past_due", %{conn: conn} = context do
-      subscribe_enterprise(context, status: "past_due")
+      subscribe_enterprise(context, status: Subscription.Status.past_due())
       conn = get(conn, "/billing/upgrade-to-enterprise-plan")
       assert redirected_to(conn) == "/settings"
     end
 
     test "redirects to /settings when paused", %{conn: conn} = context do
-      subscribe_enterprise(context, status: "paused")
+      subscribe_enterprise(context, status: Subscription.Status.paused())
       conn = get(conn, "/billing/upgrade-to-enterprise-plan")
       assert redirected_to(conn) == "/settings"
     end
@@ -238,7 +239,7 @@ defmodule PlausibleWeb.BillingControllerTest do
     setup context do
       subscribe_enterprise(context,
         paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
-        status: "deleted"
+        status: Subscription.Status.deleted()
       )
 
       context
@@ -309,7 +310,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       opts
       |> Keyword.put(:user, user)
       |> Keyword.put_new(:paddle_plan_id, "321")
-      |> Keyword.put_new(:status, "active")
+      |> Keyword.put_new(:status, Subscription.Status.active())
 
     insert(:subscription, opts)
 

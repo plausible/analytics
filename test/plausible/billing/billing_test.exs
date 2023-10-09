@@ -1,6 +1,7 @@
 defmodule Plausible.BillingTest do
   use Plausible.DataCase
   use Bamboo.Test, shared: true
+  use Plausible.Billing.Subscription.Status
   alias Plausible.Billing
 
   describe "last_two_billing_cycles" do
@@ -152,7 +153,12 @@ defmodule Plausible.BillingTest do
 
     test "is false for a user with a cancelled subscription IF the billing cycle isn't completed yet" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
-      insert(:subscription, user: user, status: "deleted", next_bill_date: Timex.today())
+
+      insert(:subscription,
+        user: user,
+        status: Subscription.Status.deleted(),
+        next_bill_date: Timex.today()
+      )
 
       assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
     end
@@ -162,7 +168,7 @@ defmodule Plausible.BillingTest do
 
       insert(:subscription,
         user: user,
-        status: "deleted",
+        status: Subscription.Status.deleted(),
         next_bill_date: Timex.shift(Timex.today(), days: -1)
       )
 
@@ -171,7 +177,8 @@ defmodule Plausible.BillingTest do
 
     test "is true for a deleted subscription if no next_bill_date specified" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
-      insert(:subscription, user: user, status: "deleted", next_bill_date: nil)
+
+      insert(:subscription, user: user, status: Subscription.Status.deleted(), next_bill_date: nil)
 
       assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_active_subscription}
     end
@@ -311,7 +318,7 @@ defmodule Plausible.BillingTest do
 
     test "unlocks sites if subscription is changed from past_due to active" do
       user = insert(:user)
-      subscription = insert(:subscription, user: user, status: "past_due")
+      subscription = insert(:subscription, user: user, status: Subscription.Status.past_due())
       site = insert(:site, locked: true, members: [user])
 
       Billing.subscription_updated(%{
@@ -445,7 +452,7 @@ defmodule Plausible.BillingTest do
   describe "subscription_cancelled" do
     test "sets the status to deleted" do
       user = insert(:user)
-      subscription = insert(:subscription, status: "active", user: user)
+      subscription = insert(:subscription, status: Subscription.Status.active(), user: user)
 
       Billing.subscription_cancelled(%{
         "alert_name" => "subscription_cancelled",
@@ -454,7 +461,7 @@ defmodule Plausible.BillingTest do
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
-      assert subscription.status == "deleted"
+      assert subscription.status == Subscription.Status.deleted()
     end
 
     test "ignores if the subscription cannot be found" do
@@ -470,7 +477,7 @@ defmodule Plausible.BillingTest do
 
     test "sends an email to confirm cancellation" do
       user = insert(:user)
-      subscription = insert(:subscription, status: "active", user: user)
+      subscription = insert(:subscription, status: Subscription.Status.active(), user: user)
 
       Billing.subscription_cancelled(%{
         "alert_name" => "subscription_cancelled",
@@ -528,8 +535,8 @@ defmodule Plausible.BillingTest do
   end
 
   test "active_subscription_for/1 returns active subscription" do
-    active = insert(:subscription, user: insert(:user), status: "active")
-    paused = insert(:subscription, user: insert(:user), status: "paused")
+    active = insert(:subscription, user: insert(:user), status: Subscription.Status.active())
+    paused = insert(:subscription, user: insert(:user), status: Subscription.Status.paused())
     user_without_subscription = insert(:user)
 
     assert Billing.active_subscription_for(active.user_id).id == active.id
@@ -538,8 +545,8 @@ defmodule Plausible.BillingTest do
   end
 
   test "has_active_subscription?/1 returns whether the user has an active subscription" do
-    active = insert(:subscription, user: insert(:user), status: "active")
-    paused = insert(:subscription, user: insert(:user), status: "paused")
+    active = insert(:subscription, user: insert(:user), status: Subscription.Status.active())
+    paused = insert(:subscription, user: insert(:user), status: Subscription.Status.paused())
     user_without_subscription = insert(:user)
 
     assert Billing.has_active_subscription?(active.user_id)

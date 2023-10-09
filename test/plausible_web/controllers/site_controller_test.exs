@@ -3,6 +3,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   use Plausible.Repo
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
+  use Plausible.Billing.Subscription.Status
 
   import ExUnit.CaptureLog
   import Mox

@@ -1,5 +1,6 @@
 defmodule Plausible.Factory do
   use ExMachina.Ecto, repo: Plausible.Repo
+  use Plausible.Billing.Subscription.Status
 
   def user_factory(attrs) do
     pw = Map.get(attrs, :password, "password")
@@ -88,7 +89,7 @@ defmodule Plausible.Factory do
       paddle_plan_id: sequence(:paddle_plan_id, &"plan-#{&1}"),
       cancel_url: "cancel.com",
       update_url: "cancel.com",
-      status: "active",
+      status: Subscription.Status.active(),
       next_bill_amount: "6.00",
       next_bill_date: Timex.today(),
       last_bill_date: Timex.today(),
