@@ -100,7 +100,10 @@ defmodule PlausibleWeb.Components.Billing do
         </span>
       <% else %>
         <div class="py-2 text-xl font-medium dark:text-gray-100">Free trial</div>
-        <.styled_link href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)} class="text-sm font-medium">
+        <.styled_link
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}
+          class="text-sm font-medium"
+        >
           Upgrade
         </.styled_link>
       <% end %>
@@ -268,7 +271,7 @@ defmodule PlausibleWeb.Components.Billing do
   def upgrade_link(assigns) do
     ~H"""
     <.link
-      href="/billing/upgrade"
+      href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}
       class="inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
     >
       Upgrade

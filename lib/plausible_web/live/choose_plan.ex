@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   use Plausible.Billing.Subscription.Status
   alias Plausible.Users
   alias Plausible.Billing.{Plans, Plan, Quota}
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   import PlausibleWeb.Components.Billing
 
@@ -340,7 +341,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <.link
       id={"#{@kind}-checkout"}
-      href={"/billing/change-plan/preview/" <> @paddle_product_id}
+      href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_preview, @paddle_product_id)}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
         !(@plan_already_owned || @billing_details_expired) && "bg-indigo-600 hover:bg-indigo-500",

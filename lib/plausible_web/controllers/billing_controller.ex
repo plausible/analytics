@@ -136,7 +136,7 @@ defmodule PlausibleWeb.BillingController do
       )
     else
       _ ->
-        redirect(conn, to: "/billing/upgrade")
+        redirect(conn, to: Routes.billing_path(conn, :upgrade))
     end
   end
 

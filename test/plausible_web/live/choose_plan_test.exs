@@ -260,7 +260,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       growth_checkout_button = find(doc, @growth_checkout_button)
 
       assert text_of_attr(growth_checkout_button, "href") =~
-               "/billing/change-plan/preview/#{@v4_growth_200k_yearly_plan_id}"
+               Routes.billing_path(conn, :change_plan_preview, @v4_growth_200k_yearly_plan_id)
 
       element(lv, @slider_input) |> render_change(%{slider: 6})
       doc = element(lv, @monthly_interval_button) |> render_click()
@@ -268,7 +268,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       business_checkout_button = find(doc, @business_checkout_button)
 
       assert text_of_attr(business_checkout_button, "href") =~
-               "/billing/change-plan/preview/#{@v4_business_5m_monthly_plan_id}"
+               Routes.billing_path(conn, :change_plan_preview, @v4_business_5m_monthly_plan_id)
     end
   end
 
@@ -504,7 +504,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   defp get_liveview(conn) do
     conn = assign(conn, :live_module, PlausibleWeb.Live.ChoosePlan)
-    {:ok, _lv, _doc} = live(conn, "/billing/choose-plan")
+    {:ok, _lv, _doc} = live(conn, Routes.billing_path(conn, :choose_plan))
   end
 
   defp get_paddle_checkout_params(element) do
