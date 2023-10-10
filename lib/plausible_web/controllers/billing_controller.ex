@@ -34,7 +34,7 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def choose_plan(conn, _params) do
-    user = conn.assigns[:current_user]
+    user = conn.assigns.current_user
 
     if FunWithFlags.enabled?(:business_tier, for: user) do
       render(conn, "choose_plan.html",
@@ -49,7 +49,7 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def upgrade_to_enterprise_plan(conn, _params) do
-    user = Plausible.Users.with_subscription(conn.assigns[:current_user])
+    user = Plausible.Users.with_subscription(conn.assigns.current_user)
 
     if FunWithFlags.enabled?(:business_tier, for: user) do
       {latest_enterprise_plan, price} =
