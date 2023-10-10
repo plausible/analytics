@@ -3,8 +3,6 @@ defmodule Plausible.SitesTest do
   use Bamboo.Test
   alias Plausible.Sites
 
-  @v4_growth_plan_id "change-me-749342"
-
   describe "is_member?" do
     test "is true if user is a member of the site" do
       user = insert(:user)
@@ -322,40 +320,6 @@ defmodule Plausible.SitesTest do
 
       assert is_nil(Sites.get_for_user(user2.id, domain))
       assert %{id: ^site_id} = Sites.get_for_user(user2.id, domain, [:super_admin])
-    end
-  end
-
-  describe "toggle_feature/3" do
-    test "toggles the feature on and off" do
-      site = insert(:site, members: [build(:user)], conversions_enabled: false)
-
-      {:ok, site} = Plausible.Sites.toggle_feature(site, :conversions_enabled)
-      assert site.conversions_enabled
-
-      {:ok, site} = Plausible.Sites.toggle_feature(site, :conversions_enabled)
-      refute site.conversions_enabled
-    end
-
-    test "accepts an override option" do
-      site = insert(:site, members: [build(:user)], conversions_enabled: false)
-
-      {:ok, site} = Plausible.Sites.toggle_feature(site, :conversions_enabled, override: false)
-      refute site.conversions_enabled
-    end
-
-    test "errors when enabling a feature the site does not have" do
-      user_on_growth =
-        insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
-
-      site = insert(:site, members: [user_on_growth], funnels_enabled: true)
-
-      {:ok, site} = Plausible.Sites.toggle_feature(site, :funnels_enabled)
-      refute site.funnels_enabled
-
-      {:error, :upgrade_required} = Plausible.Sites.toggle_feature(site, :funnels_enabled)
-
-      {:error, :upgrade_required} =
-        Plausible.Sites.toggle_feature(site, :funnels_enabled, override: true)
     end
   end
 

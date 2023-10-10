@@ -34,17 +34,17 @@ defmodule PlausibleWeb.Api.InternalController do
     end
   end
 
-  @feature_toggle %{
-    "funnels" => :funnels_enabled,
-    "props" => :props_enabled,
-    "conversions" => :conversions_enabled
+  @features %{
+    "funnels" => Plausible.Billing.Feature.Funnels,
+    "props" => Plausible.Billing.Feature.Props,
+    "conversions" => Plausible.Billing.Feature.Goals
   }
   def disable_feature(conn, %{"domain" => domain, "feature" => feature}) do
     with %User{id: user_id} <- conn.assigns[:current_user],
          site <- Sites.get_by_domain(domain),
          true <- Sites.has_admin_access?(user_id, site) || Auth.is_super_admin?(user_id),
-         {:ok, property} <- Map.fetch(@feature_toggle, feature),
-         {:ok, _site} <- Plausible.Sites.toggle_feature(site, property, override: false) do
+         {:ok, mod} <- Map.fetch(@features, feature),
+         {:ok, _site} <- mod.toggle(site, override: false) do
       json(conn, "ok")
     else
       {:error, :upgrade_required} ->
@@ -56,7 +56,7 @@ defmodule PlausibleWeb.Api.InternalController do
       :error ->
         PlausibleWeb.Api.Helpers.bad_request(
           conn,
-          "The feature you tried to disable is not valid. Valid features are: #{@feature_toggle |> Map.keys() |> Enum.join(", ")}"
+          "The feature you tried to disable is not valid. Valid features are: #{@features |> Map.keys() |> Enum.join(", ")}"
         )
 
       _ ->

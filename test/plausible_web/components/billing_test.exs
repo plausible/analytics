@@ -13,9 +13,9 @@ defmodule PlausibleWeb.Components.BillingTest do
     assert render_component(&Billing.extra_feature_notice/1,
              site: site,
              current_user: me,
-             feature: :props
+             feature_mod: Plausible.Billing.Feature.Props
            ) =~
-             "Custom properties is part of the Plausible Business plan. You can access it during your trial"
+             "Custom Properties is part of the Plausible Business plan. You can access it during your trial"
   end
 
   test "extra_feature_notice/1 renders an upgrade link when user is the site owner and does not have access to the feature" do
@@ -26,10 +26,10 @@ defmodule PlausibleWeb.Components.BillingTest do
       render_component(&Billing.extra_feature_notice/1,
         site: site,
         current_user: me,
-        feature: :props
+        feature_mod: Plausible.Billing.Feature.Props
       )
 
-    assert rendered =~ "Custom properties is part of the Plausible Business plan."
+    assert rendered =~ "Custom Properties is part of the Plausible Business plan."
     assert rendered =~ "upgrade your subscription"
     assert rendered =~ "/billing/upgrade"
   end
@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Components.BillingTest do
       render_component(&Billing.extra_feature_notice/1,
         site: site,
         current_user: me,
-        feature: :funnels
+        feature_mod: Plausible.Billing.Feature.Funnels
       )
 
     assert rendered =~
@@ -69,7 +69,7 @@ defmodule PlausibleWeb.Components.BillingTest do
       render_component(&Billing.extra_feature_notice/1,
         site: site,
         current_user: me,
-        feature: :funnels
+        feature_mod: Plausible.Billing.Feature.Funnels
       )
 
     assert rendered == ""

@@ -24,14 +24,10 @@ defmodule Plausible.Props do
   data to be dropped or lost.
   """
   def allow(site, prop_or_props) do
-    case Plausible.Billing.Quota.check_feature_access(site, :props) do
-      :ok ->
-        site
-        |> allow_changeset(prop_or_props)
-        |> Plausible.Repo.update()
-
-      {:error, :upgrade_required} ->
-        {:error, :upgrade_required}
+    with :ok <- Plausible.Billing.Feature.Props.check_availability(site) do
+      site
+      |> allow_changeset(prop_or_props)
+      |> Plausible.Repo.update()
     end
   end
 

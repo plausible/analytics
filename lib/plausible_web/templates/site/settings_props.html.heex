@@ -2,7 +2,7 @@
   <PlausibleWeb.Components.Billing.extra_feature_notice
     site={@site}
     current_user={@current_user}
-    feature={:props}
+    feature_mod={Plausible.Billing.Feature.Props}
     grandfathered?
   />
 
@@ -45,10 +45,8 @@
     </header>
 
     <PlausibleWeb.Components.Site.Feature.toggle
+      feature_mod={Plausible.Billing.Feature.Props}
       site={@site}
-      setting={:props_enabled}
-      label="Show Properties in the Dashboard"
-      disabled?={not @has_access?}
       conn={@conn}
     >
       <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,

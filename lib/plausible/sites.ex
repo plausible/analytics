@@ -301,28 +301,4 @@ defmodule Plausible.Sites do
       where: sm.user_id == ^user.id
     )
   end
-
-  @togglable_features ~w[conversions_enabled funnels_enabled props_enabled]a
-  @spec toggle_feature(Plausible.Site.t(), atom(), Keyword.t()) ::
-          {:ok, Plausible.Site.t()} | {:error, :upgrade_required}
-  def toggle_feature(site, property, opts \\ []) when property in @togglable_features do
-    check_feature_access = fn
-      :funnels_enabled, true -> Plausible.Billing.Quota.check_feature_access(site, :funnels)
-      :props_enabled, true -> Plausible.Billing.Quota.check_feature_access(site, :props)
-      _property, _toggle -> :ok
-    end
-
-    override = Keyword.get(opts, :override)
-    toggle = if is_boolean(override), do: override, else: !Map.fetch!(site, property)
-
-    case check_feature_access.(property, toggle) do
-      :ok ->
-        site
-        |> Ecto.Changeset.change(%{property => toggle})
-        |> Repo.update()
-
-      {:error, :upgrade_required} ->
-        {:error, :upgrade_required}
-    end
-  end
 end

@@ -508,27 +508,4 @@ defmodule Plausible.Billing.QuotaTest do
       assert [:props, :revenue_goals, :funnels] == Quota.extra_features_limit(user)
     end
   end
-
-  describe "check_feature_access/2" do
-    test "returns :ok when site owner has access to the feature" do
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
-          subscription: build(:subscription, paddle_plan_id: "123321")
-        )
-
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
-
-      assert :ok == Quota.check_feature_access(user, :props)
-      assert :ok == Quota.check_feature_access(site, :props)
-    end
-
-    test "returns error when site owner does not have access to the feature" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
-
-      assert {:error, :upgrade_required} == Quota.check_feature_access(user, :revenue_goals)
-      assert {:error, :upgrade_required} == Quota.check_feature_access(site, :revenue_goals)
-    end
-  end
 end

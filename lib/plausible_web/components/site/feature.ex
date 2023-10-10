@@ -5,36 +5,39 @@ defmodule PlausibleWeb.Components.Site.Feature do
   """
   use PlausibleWeb, :view
 
-  attr :site, Plausible.Site, required: true
-  attr :setting, :atom, required: true
-  attr :label, :string, required: true
-  attr :conn, Plug.Conn, required: true
-  attr :disabled?, :boolean, default: false
-  slot :inner_block
+  attr(:site, Plausible.Site, required: true)
+  attr(:feature_mod, :atom, required: true, values: Plausible.Billing.Feature.list())
+  attr(:conn, Plug.Conn, required: true)
+  slot(:inner_block)
 
   def toggle(assigns) do
+    assigns =
+      assigns
+      |> assign(:current_setting, assigns.feature_mod.enabled?(assigns.site))
+      |> assign(:disabled?, assigns.feature_mod.check_availability(assigns.site) !== :ok)
+
     ~H"""
     <div>
       <div class="mt-4 mb-8 flex items-center">
         <.button
+          set_to={!@current_setting}
+          disabled?={@disabled?}
           conn={@conn}
           site={@site}
-          setting={@setting}
-          set_to={!Map.fetch!(@site, @setting)}
-          disabled?={@disabled?}
+          feature_mod={@feature_mod}
         />
 
         <span class={[
           "ml-2 text-sm font-medium leading-5 mb-1",
-          if(assigns.disabled?,
-            do: "text-gray-500 dark:text-gray-300",
-            else: "text-gray-900  dark:text-gray-100"
+          if(assigns.current_setting,
+            do: "text-gray-900 dark:text-gray-100",
+            else: "text-gray-500 dark:text-gray-300"
           )
         ]}>
-          <%= @label %>
+          Show <%= @feature_mod.display_name() %> in the Dashboard
         </span>
       </div>
-      <div :if={Map.fetch!(@site, @setting)}>
+      <div :if={@current_setting}>
         <%= render_slot(@inner_block) %>
       </div>
     </div>
@@ -48,7 +51,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
 
   defp button(assigns) do
     ~H"""
-    <.form action={target(@site, @setting, @conn, @set_to)} method="put" for={nil}>
+    <.form action={target(@site, @feature_mod.toggle_field(), @conn, @set_to)} method="put" for={nil}>
       <button
         type="submit"
         class={[

@@ -29,9 +29,8 @@
   </header>
 
   <PlausibleWeb.Components.Site.Feature.toggle
+    feature_mod={Plausible.Billing.Feature.Goals}
     site={@site}
-    setting={:conversions_enabled}
-    label="Show Goals in the Dashboard"
     conn={@conn}
   >
     <%= live_render(@conn, PlausibleWeb.Live.GoalSettings,

@@ -178,26 +178,6 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @spec check_feature_access(Plausible.Auth.User.t() | Plausible.Site.t(), atom()) ::
-          :ok | {:error, :upgrade_required}
-  @doc """
-  Checks whether the resource has access to the given extra feature.
-  """
-  def check_feature_access(site_or_user, feature)
-
-  def check_feature_access(%Plausible.Site{} = site, feature) do
-    site = Plausible.Repo.preload(site, :owner)
-    check_feature_access(site.owner, feature)
-  end
-
-  def check_feature_access(%Plausible.Auth.User{} = user, feature) do
-    if FunWithFlags.enabled?(:business_tier, for: user) do
-      if feature in extra_features_limit(user), do: :ok, else: {:error, :upgrade_required}
-    else
-      :ok
-    end
-  end
-
   defp owned_sites_query(user) do
     from sm in Plausible.Site.Membership,
       where: sm.role == :owner and sm.user_id == ^user.id,

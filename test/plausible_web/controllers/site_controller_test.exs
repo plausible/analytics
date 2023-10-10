@@ -636,7 +636,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     for {title, setting} <- %{
           "Goals" => :conversions_enabled,
           "Funnels" => :funnels_enabled,
-          "Properties" => :props_enabled
+          "Custom Properties" => :props_enabled
         } do
       test "can toggle #{title} with admin access", %{
         user: user,
