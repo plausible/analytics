@@ -121,7 +121,8 @@ defmodule Plausible.Auth do
   def enterprise_configured?(nil), do: false
 
   def enterprise_configured?(%Plausible.Auth.User{} = user) do
-    user = Repo.preload(user, :enterprise_plan)
-    user.enterprise_plan != nil
+    user
+    |> Ecto.assoc(:enterprise_plan)
+    |> Repo.exists?()
   end
 end
