@@ -31,14 +31,15 @@ defmodule Plausible.Billing.Subscription.Status do
     https://developer.paddle.com/classic/guides/zg9joji1mzu0mduy-payment-failures
   """
 
-  @type status() :: :active | :past_due | :paused | :deleted
+  @statuses [:active, :past_due, :paused, :deleted]
 
-  defmacro active(), do: :active
-  defmacro past_due(), do: :past_due
-  defmacro paused(), do: :paused
-  defmacro deleted(), do: :deleted
+  @type status() :: unquote(Enum.reduce(@statuses, &{:|, [], [&1, &2]}))
+
+  for status <- @statuses do
+    defmacro unquote(status)(), do: unquote(status)
+  end
 
   def valid_statuses() do
-    [active(), past_due(), paused(), deleted()]
+    @statuses
   end
 end
