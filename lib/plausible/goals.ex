@@ -5,6 +5,8 @@ defmodule Plausible.Goals do
 
   use Plausible.Funnel
 
+  @spec create(Plausible.Site.t(), map(), Keyword.t()) ::
+          {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
   @doc """
   Creates a Goal for a site.
 
@@ -28,8 +30,8 @@ defmodule Plausible.Goals do
         {:ok, :upsert, goal} ->
           Repo.preload(goal, :site)
 
-        {:error, changeset} ->
-          Repo.rollback(changeset)
+        {:error, cause} ->
+          Repo.rollback(cause)
       end
     end)
   end

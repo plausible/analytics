@@ -282,7 +282,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         send(socket.assigns.rendered_by, {:goal_added, Map.put(goal, :funnels, [])})
         {:noreply, socket}
 
-      {:error, changeset} ->
+      {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
