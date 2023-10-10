@@ -12,6 +12,15 @@ defmodule Plausible.Site.Memberships do
   defdelegate reject_invitation(invitation_id, user), to: Memberships.RejectInvitation
   defdelegate remove_invitation(invitation_id, site), to: Memberships.RemoveInvitation
 
+  @spec any?(String.t()) :: boolean()
+  def any?(user_id) do
+    Repo.exists?(
+      from(m in Plausible.Site.Membership,
+        where: m.user_id == ^user_id
+      )
+    )
+  end
+
   @spec has_any_invitations?(String.t()) :: boolean()
   def has_any_invitations?(email) do
     Repo.exists?(

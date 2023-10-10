@@ -82,7 +82,7 @@ defmodule PlausibleWeb.AuthController do
     render(conn, "activate.html",
       has_email_code?: Plausible.Users.has_email_code?(user.id),
       has_any_invitations?: Plausible.Site.Memberships.has_any_invitations?(user.email),
-      has_any_sites?: Plausible.Sites.has_any_sites?(user.id),
+      has_any_memberships?: Plausible.Site.Memberships.any?(user.id),
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
@@ -91,14 +91,14 @@ defmodule PlausibleWeb.AuthController do
     user = conn.assigns[:current_user]
 
     has_any_invitations? = Plausible.Site.Memberships.has_any_invitations?(user.email)
-    has_any_sites? = Plausible.Sites.has_any_sites?(user.id)
+    has_any_memberships? = Plausible.Site.Memberships.any?(user.id)
 
     {code, ""} = Integer.parse(code)
 
     case Auth.verify_email(user, code) do
       :ok ->
         cond do
-          has_any_sites? ->
+          has_any_memberships? ->
             conn
             |> put_flash(:success, "Email updated successfully")
             |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
@@ -115,7 +115,7 @@ defmodule PlausibleWeb.AuthController do
           error: "Incorrect activation code",
           has_email_code?: true,
           has_any_invitations?: has_any_invitations?,
-          has_any_sites?: has_any_sites?,
+          has_any_memberships?: has_any_memberships?,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
@@ -124,7 +124,7 @@ defmodule PlausibleWeb.AuthController do
           error: "Code is expired, please request another one",
           has_email_code?: false,
           has_any_invitations?: has_any_invitations?,
-          has_any_sites?: has_any_sites?,
+          has_any_memberships?: has_any_memberships?,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
