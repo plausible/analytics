@@ -10,6 +10,11 @@ defmodule Plausible.Repo.Migrations.FixBrokenGoals do
     """)
 
     execute("""
+    ALTER TABLE goals
+    DROP CONSTRAINT IF EXISTS check_event_name_or_page_path;
+    """)
+
+    execute("""
      ALTER TABLE goals
      ADD CONSTRAINT check_event_name_or_page_path
      CHECK (
@@ -23,7 +28,7 @@ defmodule Plausible.Repo.Migrations.FixBrokenGoals do
   def down do
     execute("""
     ALTER TABLE goals
-    DROP CONSTRAINT check_event_name_or_page_path;
+    DROP CONSTRAINT IF EXISTS check_event_name_or_page_path;
     """)
   end
 end
