@@ -392,7 +392,7 @@ defmodule Plausible.Billing.QuotaTest do
       assert [:funnels] == Quota.extra_features_usage(user)
     end
 
-    test "returns :revenue_goals when user uses funnels" do
+    test "returns :revenue_goals when user uses revenue goals" do
       user = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
@@ -431,7 +431,7 @@ defmodule Plausible.Billing.QuotaTest do
   end
 
   describe "extra_features_limit/1" do
-    test "returns an empty list when user is on an old plan" do
+    test "returns props when user is on an old plan" do
       user_on_v1 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
       user_on_v2 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
       user_on_v3 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v3_plan_id))
