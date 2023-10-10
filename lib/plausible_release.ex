@@ -25,6 +25,13 @@ defmodule Plausible.Release do
     IO.puts("Migrations successful!")
   end
 
+  def pending_migrations do
+    prepare()
+    IO.puts("Pending migrations")
+    IO.puts("")
+    Enum.each(repos(), &list_pending_migrations_for/1)
+  end
+
   def seed do
     prepare()
     # Run seed script
@@ -90,6 +97,28 @@ defmodule Plausible.Release do
   defp run_migrations_for(repo) do
     IO.puts("Running migrations for #{repo}")
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+  end
+
+  defp list_pending_migrations_for(repo) do
+    IO.puts("Listing pending migrations for #{repo}")
+    IO.puts("")
+
+    migration_directory = Ecto.Migrator.migrations_path(repo)
+
+    pending =
+      repo
+      |> Ecto.Migrator.migrations([migration_directory])
+      |> Enum.filter(fn {status, _version, _migration} -> status == :down end)
+
+    if pending == [] do
+      IO.puts("No pending migrations")
+    else
+      Enum.each(pending, fn {_, version, migration} ->
+        IO.puts("* #{version}_#{migration}")
+      end)
+    end
+
+    IO.puts("")
   end
 
   defp ensure_repo_created(repo) do
