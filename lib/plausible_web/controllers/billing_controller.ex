@@ -52,8 +52,7 @@ defmodule PlausibleWeb.BillingController do
     user = Plausible.Users.with_subscription(conn.assigns.current_user)
 
     if FunWithFlags.enabled?(:business_tier, for: user) do
-      {latest_enterprise_plan, price} =
-        Plans.latest_enterprise_plan_with_price(user)
+      {latest_enterprise_plan, price} = Plans.latest_enterprise_plan_with_price(user)
 
       subscription_resumable? = Plausible.Billing.Subscriptions.resumable?(user.subscription)
 
