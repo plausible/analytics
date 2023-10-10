@@ -7,13 +7,13 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Billing.Subscription — Plausible v0.0.1</title>
+    <title>Plausible.Billing.Subscription.Status — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-84164F7D.js"></script>
+    <script src="dist/sidebar_items-B129D5A5.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -102,12 +102,12 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription/status.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Billing.Subscription</span> 
+  <span translate="no">Plausible.Billing.Subscription.Status</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
@@ -146,7 +146,7 @@ they want to upgrade again, new billing details have to be provided.</p></li></u
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
+        <a href="#t:status/0" translate="no">status()</a>
 
       </div>
 
@@ -160,7 +160,7 @@ they want to upgrade again, new billing details have to be provided.</p></li></u
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#changeset/2" translate="no">changeset(model, attrs \\ %{})</a>
+        <a href="#active/0" translate="no">active()</a>
 
       </div>
 
@@ -168,7 +168,31 @@ they want to upgrade again, new billing details have to be provided.</p></li></u
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#free/1" translate="no">free(attrs \\ %{})</a>
+        <a href="#deleted/0" translate="no">deleted()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#past_due/0" translate="no">past_due()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#paused/0" translate="no">paused()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#valid_statuses/0" translate="no">valid_statuses()</a>
 
       </div>
 
@@ -187,16 +211,16 @@ Types
       </a>
     </h1>
     <div class="types-list">
-<section class="detail" id="t:t/0">
+<section class="detail" id="t:status/0">
 
   <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
+    <a href="#t:status/0" class="detail-link" title="Link to this type">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this type</span>
     </a>
-    <h1 class="signature" translate="no">t()</h1>
+    <h1 class="signature" translate="no">status()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription.ex#L37" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription/status.ex#L36" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -208,23 +232,7 @@ Types
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Billing.Subscription{
-  __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  cancel_url: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  currency_code: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  last_bill_date: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  next_bill_amount: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  next_bill_date: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  paddle_plan_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  paddle_subscription_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  status: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  update_url: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  updated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  user: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  user_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
-}</pre>
+          <pre translate="no"><span class="attribute">@type</span> status() :: :deleted | :paused | :past_due | :active</pre>
 
       </div>
 
@@ -243,22 +251,22 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="changeset/2">
-
-    <span id="changeset/1"></span>
+<section class="detail" id="active/0">
 
   <div class="detail-header">
-    <a href="#changeset/2" class="detail-link" title="Link to this function">
+    <a href="#active/0" class="detail-link" title="Link to this macro">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
+      <span class="sr-only">Link to this macro</span>
     </a>
-    <h1 class="signature" translate="no">changeset(model, attrs \\ %{})</h1>
+    <h1 class="signature" translate="no">active()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription.ex#L71" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription/status.ex#L39" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
 
+
+      <span class="note">(macro)</span>
 
   </div>
 
@@ -267,18 +275,88 @@ Functions
 
   </section>
 </section>
-<section class="detail" id="free/1">
-
-    <span id="free/0"></span>
+<section class="detail" id="deleted/0">
 
   <div class="detail-header">
-    <a href="#free/1" class="detail-link" title="Link to this function">
+    <a href="#deleted/0" class="detail-link" title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">deleted()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription/status.ex#L39" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="past_due/0">
+
+  <div class="detail-header">
+    <a href="#past_due/0" class="detail-link" title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">past_due()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription/status.ex#L39" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="paused/0">
+
+  <div class="detail-header">
+    <a href="#paused/0" class="detail-link" title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">paused()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription/status.ex#L39" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="valid_statuses/0">
+
+  <div class="detail-header">
+    <a href="#valid_statuses/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">free(attrs \\ %{})</h1>
+    <h1 class="signature" translate="no">valid_statuses()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription.ex#L79" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/subscription/status.ex#L42" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

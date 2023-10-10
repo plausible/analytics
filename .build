@@ -23,7 +23,7 @@ Plausible.Billing.PaddleApi.html
 Plausible.Billing.Plans.html
 Plausible.Billing.Quota.html
 Plausible.Billing.SiteLocker.html
-Plausible.Billing.Subscription.html
+Plausible.Billing.Subscription.Status.html
 Plausible.Billing.html
 Plausible.ChangesetHelpers.html
 Plausible.Cldr.AcceptLanguage.html
@@ -294,8 +294,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-47A8F760.js
-dist/sidebar_items-84164F7D.js
+dist/search_data-3B4CEC4E.js
+dist/sidebar_items-B129D5A5.js
 index.html
 readme.html
 search.html
