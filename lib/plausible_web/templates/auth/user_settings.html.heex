@@ -26,7 +26,9 @@
     <div class="my-4 border-b border-gray-400"></div>
 
     <div
-      :if={@subscription && @subscription.status == "deleted"}
+      :if={
+        @subscription && @subscription.status == Plausible.Billing.Subscription.Status.deleted()
+      }
       class="p-2 bg-red-100 rounded-lg sm:p-3"
     >
       <div class="flex flex-wrap items-center justify-between">
@@ -61,8 +63,8 @@
 
     <div class="flex flex-col items-center justify-between mt-8 sm:flex-row sm:items-start">
       <PlausibleWeb.Components.Billing.monthly_quota_box
+        user={@user}
         subscription={@subscription}
-        conn={@conn}
         business_tier={FunWithFlags.enabled?(:business_tier, for: @user)}
       />
       <div
@@ -70,7 +72,7 @@
         style="width: 11.75rem;"
       >
         <h4 class="font-black dark:text-gray-100">Next bill amount</h4>
-        <%= if @subscription && @subscription.status in ["active", "past_due"] do %>
+        <%= if @subscription && @subscription.status in [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()] do %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">
             <%= PlausibleWeb.BillingView.present_currency(@subscription.currency_code) %><%= @subscription.next_bill_amount %>
           </div>
@@ -90,7 +92,7 @@
       >
         <h4 class="font-black dark:text-gray-100">Next bill date</h4>
 
-        <%= if @subscription && @subscription.next_bill_date && @subscription.status in ["active", "past_due"] do %>
+        <%= if @subscription && @subscription.next_bill_date && @subscription.status in [Plausible.Billing.Subscription.Status.active(), Plausible.Billing.Subscription.Status.past_due()] do %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">
             <%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %>
           </div>
@@ -140,7 +142,7 @@
     </article>
 
     <%= cond do %>
-      <% @subscription && @subscription.status in ["active", "past_due", "paused"] && @subscription.cancel_url -> %>
+      <% Plausible.Billing.Subscriptions.resumable?(@subscription) && @subscription.cancel_url -> %>
         <div class="mt-8">
           <%= link("Cancel my subscription",
             to: @subscription.cancel_url,
@@ -150,15 +152,10 @@
         </div>
       <% true -> %>
         <div class="mt-8">
-          <%= link("Upgrade",
-            to:
-              if(FunWithFlags.enabled?(:business_tier, for: @user),
-                do: PlausibleWeb.Router.Helpers.billing_path(PlausibleWeb.Endpoint, :choose_plan),
-                else: "/billing/upgrade"
-              ),
-            class:
-              "inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
-          ) %>
+          <PlausibleWeb.Components.Billing.upgrade_link
+            user={@user}
+            business_tier={FunWithFlags.enabled?(:business_tier, for: @user)}
+          />
         </div>
     <% end %>
   </div>
@@ -344,7 +341,7 @@
     Deleting your account removes all sites and stats you've collected
   </p>
 
-  <%= if @subscription && @subscription.status == "active" do %>
+  <%= if @subscription && @subscription.status == Plausible.Billing.Subscription.Status.active() do %>
     <span class="mt-6 bg-gray-300 button dark:bg-gray-600 hover:shadow-none hover:bg-gray-300">
       Delete my account
     </span>

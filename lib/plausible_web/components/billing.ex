@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Components.Billing do
 
   use Phoenix.Component
   import PlausibleWeb.Components.Generic
+  require Plausible.Billing.Subscription.Status
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Billing.Subscription
 
@@ -50,6 +51,7 @@ defmodule PlausibleWeb.Components.Billing do
   def monthly_quota_box(%{business_tier: true} = assigns) do
     ~H"""
     <div
+      id="monthly-quota-box"
       class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900"
       style="width: 11.75rem;"
     >
@@ -57,8 +59,13 @@ defmodule PlausibleWeb.Components.Billing do
       <div class="py-2 text-xl font-medium dark:text-gray-100">
         <%= PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long) %>
       </div>
-      <.styled_link href={Routes.billing_path(@conn, :choose_plan)} class="text-sm font-medium">
-        <%= upgrade_link_text(@subscription) %>
+      <.styled_link
+        :if={show_upgrade_or_change_plan_link?(@user, @subscription)}
+        id="#upgrade-or-change-plan-link"
+        href={upgrade_link_href(@user)}
+        class="text-sm font-medium"
+      >
+        <%= change_plan_or_upgrade_text(@subscription) %>
       </.styled_link>
     </div>
     """
@@ -77,15 +84,15 @@ defmodule PlausibleWeb.Components.Billing do
         </div>
 
         <.styled_link
-          :if={@subscription.status == "active"}
-          href={Routes.billing_path(@conn, :change_plan_form)}
+          :if={@subscription.status == Subscription.Status.active()}
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_form)}
           class="text-sm font-medium"
         >
           Change plan
         </.styled_link>
 
         <span
-          :if={@subscription.status == "past_due"}
+          :if={@subscription.status == Subscription.Status.past_due()}
           class="text-sm text-gray-600 dark:text-gray-400 font-medium"
           tooltip="Please update your billing details before changing plans"
         >
@@ -93,7 +100,10 @@ defmodule PlausibleWeb.Components.Billing do
         </span>
       <% else %>
         <div class="py-2 text-xl font-medium dark:text-gray-100">Free trial</div>
-        <.styled_link href={Routes.billing_path(@conn, :upgrade)} class="text-sm font-medium">
+        <.styled_link
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}
+          class="text-sm font-medium"
+        >
           Upgrade
         </.styled_link>
       <% end %>
@@ -101,7 +111,9 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  def subscription_past_due_notice(%{subscription: %Subscription{status: "past_due"}} = assigns) do
+  def subscription_past_due_notice(
+        %{subscription: %Subscription{status: Subscription.Status.past_due()}} = assigns
+      ) do
     ~H"""
     <aside class={@class}>
       <div class="shadow-md dark:shadow-none rounded-lg bg-yellow-100 p-4">
@@ -142,7 +154,9 @@ defmodule PlausibleWeb.Components.Billing do
 
   def subscription_past_due_notice(assigns), do: ~H""
 
-  def subscription_paused_notice(%{subscription: %Subscription{status: "paused"}} = assigns) do
+  def subscription_paused_notice(
+        %{subscription: %Subscription{status: Subscription.Status.paused()}} = assigns
+      ) do
     ~H"""
     <aside class={@class}>
       <div class="shadow-md dark:shadow-none rounded-lg bg-red-100 p-4">
@@ -183,12 +197,111 @@ defmodule PlausibleWeb.Components.Billing do
 
   def subscription_paused_notice(assigns), do: ~H""
 
-  def format_price(%Money{} = money) do
+  def present_enterprise_plan(assigns) do
+    ~H"""
+    <ul class="w-full py-4">
+      <li>
+        Up to <b><%= present_limit(@plan, :monthly_pageview_limit) %></b> monthly pageviews
+      </li>
+      <li>
+        Up to <b><%= present_limit(@plan, :site_limit) %></b> sites
+      </li>
+      <li>
+        Up to <b><%= present_limit(@plan, :hourly_api_request_limit) %></b> hourly api requests
+      </li>
+    </ul>
+    """
+  end
+
+  defp present_limit(enterprise_plan, key) do
+    enterprise_plan
+    |> Map.fetch!(key)
+    |> PlausibleWeb.StatsView.large_number_format()
+  end
+
+  @spec format_price(Money.t(), Keyword.t()) :: String.t()
+  def format_price(money, opts \\ []) do
+    opts =
+      opts
+      |> Keyword.put_new(:format, :short)
+      |> Keyword.put_new(:fractional_digits, 2)
+
     money
-    |> Money.to_string!(format: :short, fractional_digits: 2)
+    |> Money.to_string!(opts)
     |> String.replace(".00", "")
   end
 
-  defp upgrade_link_text(nil), do: "Upgrade"
-  defp upgrade_link_text(_subscription), do: "Change plan"
+  def paddle_button(assigns) do
+    ~H"""
+    <button
+      id={@id}
+      onclick={"Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passthrough: @user.id, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})"}
+      class="w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-500"
+    >
+      <%= render_slot(@inner_block) %>
+    </button>
+    """
+  end
+
+  def paddle_script(assigns) do
+    ~H"""
+    <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js">
+    </script>
+    <script :if={Application.get_env(:plausible, :environment) == "dev"}>
+      Paddle.Environment.set('sandbox')
+    </script>
+    <script>
+      Paddle.Setup({vendor: <%= Application.get_env(:plausible, :paddle) |> Keyword.fetch!(:vendor_id) %> })
+    </script>
+    """
+  end
+
+  def upgrade_link(%{business_tier: true} = assigns) do
+    ~H"""
+    <.link
+      id="upgrade-link-2"
+      href={upgrade_link_href(@user)}
+      class="inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
+    >
+      Upgrade
+    </.link>
+    """
+  end
+
+  def upgrade_link(assigns) do
+    ~H"""
+    <.link
+      href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}
+      class="inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
+    >
+      Upgrade
+    </.link>
+    """
+  end
+
+  defp upgrade_link_href(user) do
+    action =
+      if Plausible.Auth.enterprise_configured?(user),
+        do: :upgrade_to_enterprise_plan,
+        else: :choose_plan
+
+    Routes.billing_path(PlausibleWeb.Endpoint, action)
+  end
+
+  defp change_plan_or_upgrade_text(nil), do: "Upgrade"
+
+  defp change_plan_or_upgrade_text(%Subscription{status: Subscription.Status.deleted()}),
+    do: "Upgrade"
+
+  defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
+
+  defp show_upgrade_or_change_plan_link?(user, subscription) do
+    is_enterprise? = Plausible.Auth.enterprise_configured?(user)
+
+    subscription_halted? =
+      subscription &&
+        subscription.status in [Subscription.Status.past_due(), Subscription.Status.paused()]
+
+    !(is_enterprise? && subscription_halted?)
+  end
 end

@@ -42,6 +42,7 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr :id, :any, default: nil
   attr :href, :string, required: true
   attr :new_tab, :boolean
   attr :class, :string, default: ""
@@ -53,6 +54,7 @@ defmodule PlausibleWeb.Components.Generic do
 
       ~H"""
       <.link
+        id={@id}
         class={[
           "inline-flex items-center gap-x-0.5 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600",
           @class

@@ -134,6 +134,19 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
+  def latest_enterprise_plan_with_price(user) do
+    enterprise_plan =
+      Repo.one!(
+        from(e in EnterprisePlan,
+          where: e.user_id == ^user.id,
+          order_by: [desc: e.inserted_at],
+          limit: 1
+        )
+      )
+
+    {enterprise_plan, get_price_for(enterprise_plan)}
+  end
+
   def subscription_interval(subscription) do
     case get_subscription_plan(subscription) do
       %EnterprisePlan{billing_interval: interval} ->
@@ -185,6 +198,13 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
+  def get_price_for(%EnterprisePlan{paddle_plan_id: product_id}) do
+    case Plausible.Billing.paddle_api().fetch_prices([product_id]) do
+      {:ok, prices} -> Map.fetch!(prices, product_id)
+      {:error, :api_error} -> nil
+    end
+  end
+
   defp get_enterprise_plan(%Subscription{} = subscription) do
     Repo.get_by(EnterprisePlan,
       user_id: subscription.user_id,
@@ -217,7 +237,7 @@ defmodule Plausible.Billing.Plans do
   def suggest(user, usage_during_cycle) do
     cond do
       usage_during_cycle > @enterprise_level_usage -> :enterprise
-      Plausible.Auth.enterprise?(user) -> :enterprise
+      Plausible.Auth.enterprise_configured?(user) -> :enterprise
       true -> suggest_by_usage(user, usage_during_cycle)
     end
   end

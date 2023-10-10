@@ -6,6 +6,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
   import ExUnit.CaptureLog
   import Mox
+
   setup :verify_on_exit!
 
   describe "GET /sites/new" do

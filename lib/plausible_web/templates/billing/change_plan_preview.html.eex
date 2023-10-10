@@ -66,12 +66,12 @@
 
     <div class="flex items-center justify-between mt-10">
       <span class="flex rounded-md shadow-sm">
-        <a href="/billing/change-plan" type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 dark:active:text-gray-200 active:bg-gray-50 transition ease-in-out duration-150">
+        <a href="<%= Routes.billing_path(@conn, :change_plan_form) %>" type="button" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-200 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 dark:active:text-gray-200 active:bg-gray-50 transition ease-in-out duration-150">
           Back
         </a>
       </span>
       <span class="flex space-betwee rounded-md shadow-sm">
-        <%= button("Confirm plan change", to: "/billing/change-plan/#{@preview_info["plan_id"]}", method: :post, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150") %>
+        <%= button("Confirm plan change", to: Routes.billing_path(@conn, :change_plan, @preview_info["plan_id"]), method: :post, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm leading-5 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150") %>
       </span>
     </div>
   </div>

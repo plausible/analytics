@@ -118,10 +118,11 @@ defmodule Plausible.Auth do
     user_id in Application.get_env(:plausible, :super_admin_user_ids)
   end
 
-  def enterprise?(nil), do: false
+  def enterprise_configured?(nil), do: false
 
-  def enterprise?(%Plausible.Auth.User{} = user) do
-    user = Repo.preload(user, :enterprise_plan)
-    user.enterprise_plan != nil
+  def enterprise_configured?(%Plausible.Auth.User{} = user) do
+    user
+    |> Ecto.assoc(:enterprise_plan)
+    |> Repo.exists?()
   end
 end

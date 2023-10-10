@@ -3,11 +3,18 @@ defmodule PlausibleWeb.AuthControllerTest do
   use Bamboo.Test
   use Plausible.Repo
 
+  import Plausible.Test.Support.HTML
   import Mox
 
+  require Plausible.Billing.Subscription.Status
+
   alias Plausible.Auth.User
+  alias Plausible.Billing.Subscription
 
   setup :verify_on_exit!
+
+  @v3_plan_id "749355"
+  @configured_enterprise_plan_paddle_plan_id "123"
 
   describe "GET /register" do
     test "shows the register form", %{conn: conn} do
@@ -460,15 +467,10 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "shows enterprise plan subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "123", user: user)
 
-      insert(:enterprise_plan,
-        paddle_plan_id: "123",
-        user: user,
-        monthly_pageview_limit: 10_000_000,
-        billing_interval: :yearly
-      )
+      configure_enterprise_plan(user)
 
       conn = get(conn, "/settings")
-      assert html_response(conn, 200) =~ "10M pageviews"
+      assert html_response(conn, 200) =~ "20M pageviews"
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
@@ -476,25 +478,137 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, paddle_plan_id: "123", user: user)
+      insert(:subscription, paddle_plan_id: @configured_enterprise_plan_paddle_plan_id, user: user)
 
       insert(:enterprise_plan,
-        paddle_plan_id: "123",
+        paddle_plan_id: "1234",
         user: user,
         monthly_pageview_limit: 10_000_000,
         billing_interval: :yearly
       )
 
-      insert(:enterprise_plan,
-        paddle_plan_id: "1234",
-        user: user,
-        monthly_pageview_limit: 20_000_000,
-        billing_interval: :yearly
-      )
+      configure_enterprise_plan(user)
 
       conn = get(conn, "/settings")
-      assert html_response(conn, 200) =~ "10M pageviews"
+      assert html_response(conn, 200) =~ "20M pageviews"
       assert html_response(conn, 200) =~ "yearly billing"
+    end
+
+    test "links to upgrade to a plan", %{conn: conn} do
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      upgrade_link_1 = find(doc, "#monthly-quota-box a")
+      upgrade_link_2 = find(doc, "#upgrade-link-2")
+
+      assert text(upgrade_link_1) == "Upgrade"
+      assert text_of_attr(upgrade_link_1, "href") == Routes.billing_path(conn, :choose_plan)
+
+      assert text(upgrade_link_2) == "Upgrade"
+      assert text_of_attr(upgrade_link_2, "href") == Routes.billing_path(conn, :choose_plan)
+    end
+
+    test "links to change existing plan", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
+
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-link-2")
+      assert doc =~ "Cancel my subscription"
+
+      change_plan_link = find(doc, "#monthly-quota-box a")
+
+      assert text(change_plan_link) == "Change plan"
+      assert text_of_attr(change_plan_link, "href") == Routes.billing_path(conn, :choose_plan)
+    end
+
+    test "upgrade_to_enterprise_plan link does not show up when subscription is past_due", %{
+      conn: conn,
+      user: user
+    } do
+      configure_enterprise_plan(user)
+
+      insert(:subscription,
+        user: user,
+        status: Subscription.Status.past_due(),
+        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
+      )
+
+      doc =
+        conn
+        |> get(Routes.auth_path(conn, :user_settings))
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-or-change-plan-link")
+    end
+
+    test "upgrade_to_enterprise_plan link does not show up when subscription is paused", %{
+      conn: conn,
+      user: user
+    } do
+      configure_enterprise_plan(user)
+
+      insert(:subscription,
+        user: user,
+        status: Subscription.Status.paused(),
+        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
+      )
+
+      doc =
+        conn
+        |> get(Routes.auth_path(conn, :user_settings))
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-or-change-plan-link")
+    end
+
+    test "links to upgrade to enterprise plan",
+         %{conn: conn, user: user} do
+      configure_enterprise_plan(user)
+
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      upgrade_link_1 = find(doc, "#monthly-quota-box a")
+      upgrade_link_2 = find(doc, "#upgrade-link-2")
+
+      assert text(upgrade_link_1) == "Upgrade"
+
+      assert text_of_attr(upgrade_link_1, "href") ==
+               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+
+      assert text(upgrade_link_2) == "Upgrade"
+
+      assert text_of_attr(upgrade_link_2, "href") ==
+               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+    end
+
+    test "links to change enterprise plan and cancel subscription",
+         %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
+
+      configure_enterprise_plan(user)
+
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-link-2")
+      assert doc =~ "Cancel my subscription"
+
+      change_plan_link = find(doc, "#monthly-quota-box a")
+
+      assert text(change_plan_link) == "Change plan"
+
+      assert text_of_attr(change_plan_link, "href") ==
+               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end
 
     test "shows invoices for subscribed user", %{conn: conn, user: user} do
@@ -613,8 +727,8 @@ defmodule PlausibleWeb.AuthControllerTest do
       ])
 
       insert(:google_auth, site: site, user: user)
-      insert(:subscription, user: user, status: "deleted")
-      insert(:subscription, user: user, status: "active")
+      insert(:subscription, user: user, status: Subscription.Status.deleted())
+      insert(:subscription, user: user, status: Subscription.Status.active())
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
@@ -758,6 +872,15 @@ defmodule PlausibleWeb.AuthControllerTest do
            body: %{"success" => success}
          }}
       end
+    )
+  end
+
+  defp configure_enterprise_plan(user) do
+    insert(:enterprise_plan,
+      paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
+      user: user,
+      monthly_pageview_limit: 20_000_000,
+      billing_interval: :yearly
     )
   end
 end
