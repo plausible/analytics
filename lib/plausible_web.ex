@@ -29,6 +29,22 @@ defmodule PlausibleWeb do
     end
   end
 
+  def live_view do
+    quote do
+      use Phoenix.LiveView
+
+      unquote(html_helpers())
+    end
+  end
+
+  def live_component do
+    quote do
+      use Phoenix.LiveComponent
+
+      unquote(html_helpers())
+    end
+  end
+
   def router do
     quote do
       use Phoenix.Router
@@ -77,6 +93,15 @@ defmodule PlausibleWeb do
       require OpenApiSpex
       alias OpenApiSpex.Schema
       alias PlausibleWeb.Plugins.API.Schemas
+    end
+  end
+
+  defp html_helpers do
+    quote do
+      import Phoenix.HTML
+      import PlausibleWeb.Components.Generic
+
+      alias PlausibleWeb.Router.Helpers, as: Routes
     end
   end
 

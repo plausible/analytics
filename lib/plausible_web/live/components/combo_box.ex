@@ -41,6 +41,20 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
 
   @default_suggestions_limit 15
 
+  def reset(id) do
+    send_update(__MODULE__, id: id, reset: true)
+  end
+
+  def update(%{reset: true}, socket) do
+    socket =
+      %{socket | assigns: Map.delete(socket.assigns, :options)}
+      |> assign(display_value: "", submit_value: "")
+      |> assign_options()
+      |> assign_suggestions()
+
+    {:ok, socket}
+  end
+
   def update(assigns, socket) do
     socket = assign(socket, assigns)
 
@@ -306,14 +320,18 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       |> assign(:display_value, display_value)
       |> assign(:submit_value, submit_value)
 
-    send(
-      self(),
-      {:selection_made,
-       %{
-         by: id,
-         submit_value: submit_value
-       }}
-    )
+    if socket.assigns[:on_select] do
+      socket.assigns[:on_select].(submit_value)
+    else
+      send(
+        self(),
+        {:selection_made,
+         %{
+           by: id,
+           submit_value: submit_value
+         }}
+      )
+    end
 
     socket
   end

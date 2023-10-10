@@ -222,7 +222,7 @@ defmodule PlausibleWeb.Live.Components.Form do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block font-medium dark:text-gray-100">
+    <label for={@for} class="block text-sm font-medium dark:text-gray-100">
       <%= render_slot(@inner_block) %>
     </label>
     """

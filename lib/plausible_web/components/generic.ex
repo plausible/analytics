@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Components.Generic do
   @moduledoc """
   Generic reusable components
   """
-  use Phoenix.Component
+  use Phoenix.Component, global_prefixes: ~w(phx-)
 
   attr :title, :string, default: "Notice"
   attr :class, :string, default: ""
@@ -86,5 +86,126 @@ defmodule PlausibleWeb.Components.Generic do
     else
       ["w-4 h-4"]
     end
+  end
+
+  alias Phoenix.LiveView.JS
+
+  attr :id, :string, required: true
+
+  slot :trigger
+  slot :title
+  slot :panel
+
+  def modal(assigns) do
+    ~H"""
+    <div phx-click={show_modal(@id)}>
+      <%= render_slot(@trigger) %>
+    </div>
+
+    <div id={@id} class="relative z-10 hidden" data-onclose={hide_modal(@id)}>
+      <div id={"#{@id}-bg"} class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+      <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 sm:items-center sm:p-0">
+          <div
+            id={"#{@id}-container"}
+            phx-window-keydown={hide_modal(@id)}
+            phx-key="escape"
+            phx-click-away={hide_modal(@id)}
+            class="relative transform overflow-hidden rounded-lg bg-white p-4 shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md sm:p-6"
+          >
+            <div>
+              <div class="hidden sm:flex justify-between">
+                <h3 class="text-lg font-semibold leading-6 text-gray-900">
+                  <%= render_slot(@title) %>
+                </h3>
+
+                <button
+                  phx-click={hide_modal(@id)}
+                  type="button"
+                  class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                  <Heroicons.x_mark class="h-6 w-6" />
+                </button>
+              </div>
+              <div class="mt-3 sm:mt-5">
+                <%= render_slot(@panel) %>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  def show(js \\ %JS{}, selector) do
+    JS.show(js,
+      to: selector,
+      transition:
+        {"transition-all transform ease-out duration-300",
+         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
+         "opacity-100 translate-y-0 sm:scale-100"}
+    )
+  end
+
+  def hide(js \\ %JS{}, selector) do
+    JS.hide(js,
+      to: selector,
+      time: 200,
+      transition:
+        {"transition-all transform ease-in duration-200",
+         "opacity-100 translate-y-0 sm:scale-100",
+         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
+    )
+  end
+
+  def show_modal(js \\ %JS{}, id) when is_binary(id) do
+    js
+    |> JS.show(to: "##{id}")
+    |> JS.show(
+      to: "##{id}-bg",
+      transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
+    )
+    |> show("##{id}-container")
+    |> JS.add_class("overflow-hidden", to: "body")
+    |> JS.focus_first(to: "##{id}-content")
+  end
+
+  def hide_modal(js \\ %JS{}, id) do
+    js
+    |> JS.hide(
+      to: "##{id}-bg",
+      transition: {"transition-all transform ease-in duration-200", "opacity-100", "opacity-0"}
+    )
+    |> hide("##{id}-container")
+    |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
+    |> JS.remove_class("overflow-hidden", to: "body")
+    |> JS.pop_focus()
+    |> JS.push("modal-closed")
+  end
+
+  attr :class, :string, default: ""
+  attr :type, :string, default: "button"
+  attr :rest, :global
+  slot :inner_block
+
+  def button(assigns) do
+    ~H"""
+    <button
+      type={@type}
+      class={[
+        "rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600",
+        @class
+      ]}
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %>
+    </button>
+    """
+  end
+
+  def modal_fade_out_duration() do
+    200
   end
 end

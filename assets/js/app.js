@@ -2,10 +2,17 @@ import "../css/app.css"
 import "flatpickr/dist/flatpickr.min.css"
 import "./polyfills/closest"
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
-import 'alpinejs'
-import "./liveview/live_socket"
+import Alpine from 'alpinejs'
+import liveSocket from "./liveview/live_socket"
 import "./liveview/suggestions_dropdown"
 import "./liveview/phx_events"
+
+Alpine.start()
+
+window.addEventListener("phx:close-modal", (e) => {
+  const el = document.getElementById(e.detail.id)
+  liveSocket.execJS(el, el.getAttribute("data-onclose"))
+})
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 

@@ -3,9 +3,9 @@ defmodule PlausibleWeb.Live.PropsSettings do
   LiveView allowing listing, allowing and disallowing custom event properties.
   """
 
-  use Phoenix.LiveView
-  use Phoenix.HTML
+  use PlausibleWeb, :live_view
   alias PlausibleWeb.Live.Components.ComboBox
+  alias PlausibleWeb.Live.PropsSettings.FormComponent
 
   def mount(
         _params,
@@ -29,61 +29,8 @@ defmodule PlausibleWeb.Live.PropsSettings do
        site_id: site_id,
        domain: domain,
        current_user_id: user_id,
-       add_prop?: false,
        filter_text: ""
      )}
-  end
-
-  def render(assigns) do
-    ~H"""
-    <section id="props-settings-main">
-      <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
-      <%= if @add_prop? do %>
-        <%= live_render(
-          @socket,
-          PlausibleWeb.Live.PropsSettings.Form,
-          id: "props-form",
-          session: %{
-            "current_user_id" => @current_user_id,
-            "domain" => @domain,
-            "site_id" => @site_id,
-            "rendered_by" => self()
-          }
-        ) %>
-      <% end %>
-
-      <.live_component
-        module={PlausibleWeb.Live.PropsSettings.List}
-        id="props-list"
-        props={@displayed_props}
-        domain={@domain}
-        filter_text={@filter_text}
-      />
-    </section>
-    """
-  end
-
-  def handle_event("allow", %{"prop" => prop}, socket) do
-    case Plausible.Props.allow(socket.assigns.site, prop) do
-      {:ok, site} ->
-        send_update(ComboBox, id: :prop_input, display_value: "", submit_value: "")
-
-        {:noreply,
-         assign(socket,
-           site: site,
-           form: new_form(site)
-         )}
-
-      {:error, changeset} ->
-        {:noreply,
-         assign(socket,
-           form: to_form(Map.put(changeset, :action, :validate))
-         )}
-    end
-  end
-
-  def handle_event("add-prop", _value, socket) do
-    {:noreply, assign(socket, add_prop?: true)}
   end
 
   def handle_event("filter", %{"filter-text" => filter_text}, socket) do
@@ -112,6 +59,8 @@ defmodule PlausibleWeb.Live.PropsSettings do
         site: site
       )
 
+    ComboBox.reset("prop_input")
+
     Process.send_after(self(), :clear_flash, 5000)
     {:noreply, socket}
   end
@@ -125,36 +74,24 @@ defmodule PlausibleWeb.Live.PropsSettings do
      )}
   end
 
-  def handle_info(:cancel_add_prop, socket) do
-    {:noreply, assign(socket, add_prop?: false)}
-  end
-
-  def handle_info({:props_allowed, props}, socket) when is_list(props) do
-    socket =
-      socket
-      |> assign(
-        add_prop?: false,
-        filter_text: "",
-        all_props: props,
-        displayed_props: props,
-        site: %{socket.assigns.site | allowed_event_props: props}
-      )
-      |> put_flash(:success, "Properties added successfully")
+  def handle_event("modal-closed", _param, socket) do
+    ComboBox.reset("prop_input")
 
     {:noreply, socket}
   end
 
   def handle_info(
-        {:prop_allowed, prop},
+        {FormComponent, {:prop_allowed, prop}},
         %{assigns: %{site: site}} = socket
       )
       when is_binary(prop) do
     allowed_event_props = [prop | site.allowed_event_props || []]
 
+    socket = push_event(socket, "close-modal", %{id: "add-prop"})
+
     socket =
       socket
       |> assign(
-        add_prop?: false,
         filter_text: "",
         all_props: allowed_event_props,
         displayed_props: allowed_event_props,
@@ -169,7 +106,13 @@ defmodule PlausibleWeb.Live.PropsSettings do
     {:noreply, clear_flash(socket)}
   end
 
-  defp new_form(site) do
-    to_form(Plausible.Props.allow_changeset(site, []))
+  defp delete_confirmation_text(prop) do
+    """
+    Are you sure you want to remove the following property:
+
+    #{prop}
+
+    This will just affect the UI, all of your analytics data will stay intact.
+    """
   end
 end
