@@ -367,7 +367,7 @@ defmodule Plausible.Billing.QuotaTest do
   describe "extra_features_usage/1" do
     test "returns an empty list" do
       user = insert(:user)
-      assert {:ok, []} == Quota.extra_features_usage(user)
+      assert [] == Quota.extra_features_usage(user)
     end
 
     test "returns :props when user uses custom props" do
@@ -378,7 +378,7 @@ defmodule Plausible.Billing.QuotaTest do
         memberships: [build(:site_membership, user: user, role: :owner)]
       )
 
-      assert {:ok, [:props]} == Quota.extra_features_usage(user)
+      assert [:props] == Quota.extra_features_usage(user)
     end
 
     test "returns :funnels when user uses funnels" do
@@ -389,7 +389,7 @@ defmodule Plausible.Billing.QuotaTest do
       steps = Enum.map(goals, &%{"goal_id" => &1.id})
       Plausible.Funnels.create(site, "dummy", steps)
 
-      assert {:ok, [:funnels]} == Quota.extra_features_usage(user)
+      assert [:funnels] == Quota.extra_features_usage(user)
     end
 
     test "returns :revenue_goals when user uses funnels" do
@@ -397,7 +397,7 @@ defmodule Plausible.Billing.QuotaTest do
       site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
-      assert {:ok, [:revenue_goals]} == Quota.extra_features_usage(user)
+      assert [:revenue_goals] == Quota.extra_features_usage(user)
     end
 
     test "returns multiple extra features" do
@@ -415,7 +415,7 @@ defmodule Plausible.Billing.QuotaTest do
       steps = Enum.map(goals, &%{"goal_id" => &1.id})
       Plausible.Funnels.create(site, "dummy", steps)
 
-      assert {:ok, [:revenue_goals, :funnels, :props]} == Quota.extra_features_usage(user)
+      assert [:revenue_goals, :funnels, :props] == Quota.extra_features_usage(user)
     end
 
     test "accounts only for sites the user owns" do
@@ -426,7 +426,7 @@ defmodule Plausible.Billing.QuotaTest do
         memberships: [build(:site_membership, user: user, role: :admin)]
       )
 
-      assert {:ok, []} == Quota.extra_features_usage(user)
+      assert [] == Quota.extra_features_usage(user)
     end
   end
 

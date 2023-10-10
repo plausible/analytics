@@ -157,13 +157,9 @@ defmodule Plausible.Billing.Quota do
       revenue_goals: revenue_goals_usage
     ]
 
-    Plausible.Repo.transaction(fn ->
-      Enum.reduce(queries, [], &check_extra_feature_usage/2)
+    Enum.reduce(queries, [], fn {feature, query}, acc ->
+      if Plausible.Repo.exists?(query), do: [feature | acc], else: acc
     end)
-  end
-
-  defp check_extra_feature_usage({feature, query}, acc) do
-    if Plausible.Repo.exists?(query), do: [feature | acc], else: acc
   end
 
   @all_features [:props, :revenue_goals, :funnels]
