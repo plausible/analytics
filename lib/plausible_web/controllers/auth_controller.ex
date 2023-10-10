@@ -366,9 +366,9 @@ defmodule PlausibleWeb.AuthController do
     changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
 
     case Repo.update(changeset) do
-      {:ok, _user} ->
+      {:ok, user} ->
         conn
-        |> put_flash(:success, "Email update cancelled")
+        |> put_flash(:success, "Email changed back to #{user.email}")
         |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
 
       {:error, _} ->
