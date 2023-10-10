@@ -396,8 +396,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
 
       other_user = insert(:user)
-      other_site = insert(:site)
-      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+
+      other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       my_conn = post(my_conn, "/sites/#{other_site.domain}/make-public")
       assert my_conn.status == 404
@@ -447,8 +448,10 @@ defmodule PlausibleWeb.SiteControllerTest do
       _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: :owner)])
 
       other_user = insert(:user)
-      other_site = insert(:site)
-      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+
+      other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
+
       insert(:google_auth, user: other_user, site: other_site)
       insert(:custom_domain, site: other_site)
       insert(:spike_notification, site: other_site)
@@ -639,9 +642,13 @@ defmodule PlausibleWeb.SiteControllerTest do
         user: user,
         conn: conn0
       } do
-        site = insert(:site)
-        insert(:site_membership, user: build(:user), site: site, role: :owner)
-        insert(:site_membership, user: user, site: site, role: :admin)
+        site =
+          insert(:site,
+            memberships: [
+              build(:site_membership, user: build(:user), role: :owner),
+              build(:site_membership, user: user, role: :admin)
+            ]
+          )
 
         conn =
           put(

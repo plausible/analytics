@@ -639,8 +639,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     import Ecto.Query
 
     test "can create an API key", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:site_membership, site: site, user: user, role: "owner")
+      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
 
       conn =
         post(conn, "/settings/api-keys", %{
@@ -657,8 +656,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "cannot create a duplicate API key", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:site_membership, site: site, user: user, role: "owner")
+      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
 
       conn =
         post(conn, "/settings/api-keys", %{
@@ -682,12 +680,12 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "can't create api key into another site", %{conn: conn, user: me} do
-      my_site = insert(:site)
-      insert(:site_membership, site: my_site, user: me, role: "owner")
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: "owner")])
 
       other_user = insert(:user)
-      other_site = insert(:site)
-      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+
+      _other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       conn =
         post(conn, "/settings/api-keys", %{
@@ -710,7 +708,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "can't delete api key that doesn't belong to me", %{conn: conn} do
       other_user = insert(:user)
-      insert(:site_membership, site: insert(:site), user: other_user, role: "owner")
+      insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       assert {:ok, %ApiKey{} = api_key} =
                %ApiKey{user_id: other_user.id}

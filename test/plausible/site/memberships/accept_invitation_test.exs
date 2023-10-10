@@ -34,9 +34,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     test "does not degrade role when trying to invite self as an owner" do
-      site = insert(:site)
       user = insert(:user)
-      membership = insert(:site_membership, user: user, site: site, role: :owner)
+
+      %{memberships: [membership]} =
+        site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
 
       invitation =
         insert(:invitation,

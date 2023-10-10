@@ -62,12 +62,12 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "fails to create invitation for a foreign site", %{conn: my_conn, user: me} do
-      my_site = insert(:site)
-      insert(:site_membership, site: my_site, user: me, role: "owner")
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: "owner")])
 
       other_user = insert(:user)
-      other_site = insert(:site)
-      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+
+      other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       my_conn =
         post(my_conn, "/sites/#{other_site.domain}/memberships/invite", %{

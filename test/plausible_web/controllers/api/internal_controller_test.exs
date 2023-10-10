@@ -91,9 +91,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
     end
 
     test "when the logged-in user is an owner of the site", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:site_membership, user: user, site: site, role: :owner)
-
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
       conn = put(conn, "/api/#{site.domain}/disable-feature", %{"feature" => "conversions"})
 
       assert json_response(conn, 200) == "ok"
