@@ -8,9 +8,9 @@ defmodule Mix.Tasks.CancelSubscription do
 
   use Mix.Task
   use Plausible.Repo
-  alias Plausible.{Repo, Billing.Subscription}
-  use Plausible.Billing.Subscription.Status
+  require Plausible.Billing.Subscription.Status
   require Logger
+  alias Plausible.{Repo, Billing.Subscription}
 
   def run([paddle_subscription_id]) do
     Mix.Task.run("app.start")

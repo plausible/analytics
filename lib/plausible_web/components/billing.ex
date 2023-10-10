@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Components.Billing do
 
   use Phoenix.Component
   import PlausibleWeb.Components.Generic
-  use Plausible.Billing.Subscription.Status
+  require Plausible.Billing.Subscription.Status
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Billing.Subscription
 

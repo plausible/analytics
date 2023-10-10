@@ -3,7 +3,8 @@ defmodule Plausible.Billing.Subscription do
 
   use Ecto.Schema
   import Ecto.Changeset
-  use Plausible.Billing.Subscription.Status
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Subscription
 
   @type t() :: %__MODULE__{}
 

@@ -1,10 +1,10 @@
 defmodule PlausibleWeb.BillingController do
-  alias Plausible.Billing.Plans
   use PlausibleWeb, :controller
   use Plausible.Repo
-  use Plausible.Billing.Subscription.Status
-  alias Plausible.Billing
   require Logger
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing
+  alias Plausible.Billing.{Plans, Subscription}
 
   plug PlausibleWeb.RequireAccountPlug
 

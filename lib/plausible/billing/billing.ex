@@ -1,6 +1,6 @@
 defmodule Plausible.Billing do
-  use Plausible.Billing.Subscription.Status
   use Plausible.Repo
+  require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
   @spec active_subscription_for(integer()) :: Subscription.t() | nil

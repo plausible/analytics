@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.AuthView do
   use PlausibleWeb, :view
-  use Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.Plans
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.{Plans, Subscription}
 
   def base_domain do
     PlausibleWeb.Endpoint.host()

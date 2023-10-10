@@ -2,12 +2,14 @@ defmodule PlausibleWeb.AuthControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Bamboo.Test
   use Plausible.Repo
-  use Plausible.Billing.Subscription.Status
-  import Plausible.Test.Support.HTML
 
+  import Plausible.Test.Support.HTML
   import Mox
 
+  require Plausible.Billing.Subscription.Status
+
   alias Plausible.Auth.User
+  alias Plausible.Billing.Subscription
 
   setup :verify_on_exit!
 

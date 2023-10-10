@@ -1,8 +1,9 @@
 defmodule Plausible.BillingTest do
   use Plausible.DataCase
   use Bamboo.Test, shared: true
-  use Plausible.Billing.Subscription.Status
+  require Plausible.Billing.Subscription.Status
   alias Plausible.Billing
+  alias Plausible.Billing.Subscription
 
   describe "last_two_billing_cycles" do
     test "billing on the 1st" do

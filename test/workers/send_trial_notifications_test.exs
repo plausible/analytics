@@ -1,9 +1,7 @@
 defmodule Plausible.Workers.SendTrialNotificationsTest do
   use Plausible.DataCase
   use Bamboo.Test
-  use Plausible.Billing.Subscription.Status
   use Oban.Testing, repo: Plausible.Repo
-
   alias Plausible.Workers.SendTrialNotifications
 
   test "does not send a notification if user didn't create a site" do

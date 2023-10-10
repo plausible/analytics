@@ -1,8 +1,9 @@
 defmodule Plausible.Workers.NotifyAnnualRenewal do
-  alias Money.Subscription
   use Plausible.Repo
-  use Plausible.Billing.Subscription.Status
   use Oban.Worker, queue: :notify_annual_renewal
+  require Plausible.Billing.Subscription.Status
+  alias Money.Subscription
+  alias Plausible.Billing.Subscription
 
   @yearly_plans Plausible.Billing.Plans.yearly_product_ids()
 

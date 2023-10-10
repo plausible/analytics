@@ -1,6 +1,7 @@
 defmodule Plausible.Auth.UserAdmin do
   use Plausible.Repo
-  use Plausible.Billing.Subscription.Status
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Subscription
 
   def custom_index_query(_conn, _schema, query) do
     subscripton_q = from(s in Plausible.Billing.Subscription, order_by: [desc: s.inserted_at])

@@ -1,8 +1,8 @@
 defmodule Plausible.Billing.Subscriptions do
   @moduledoc false
 
-  use Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.{Subscription}
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Subscription
 
   @spec expired?(Subscription.t()) :: boolean()
   @doc """

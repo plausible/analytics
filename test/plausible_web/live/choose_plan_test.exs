@@ -1,9 +1,9 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
-  alias Plausible.{Repo, Billing.Subscription}
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Billing.Subscription.Status
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.{Repo, Billing.Subscription}
 
   @v1_10k_yearly_plan_id "572810"
   @v4_growth_200k_yearly_plan_id "change-me-749347"

@@ -1,8 +1,8 @@
 defmodule Plausible.Billing.SiteLockerTest do
   use Plausible.DataCase
   use Bamboo.Test, shared: true
-  use Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.SiteLocker
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.{SiteLocker, Subscription}
 
   describe "update_sites_for/1" do
     test "does not lock sites if user is on trial" do

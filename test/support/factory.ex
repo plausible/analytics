@@ -1,6 +1,7 @@
 defmodule Plausible.Factory do
   use ExMachina.Ecto, repo: Plausible.Repo
-  use Plausible.Billing.Subscription.Status
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Subscription
 
   def user_factory(attrs) do
     pw = Map.get(attrs, :password, "password")

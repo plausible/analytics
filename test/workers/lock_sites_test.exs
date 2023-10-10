@@ -1,7 +1,8 @@
 defmodule Plausible.Workers.LockSitesTest do
   use Plausible.DataCase, async: true
-  use Plausible.Billing.Subscription.Status
+  require Plausible.Billing.Subscription.Status
   alias Plausible.Workers.LockSites
+  alias Plausible.Billing.Subscription
 
   test "does not lock enterprise site on grace period" do
     user =

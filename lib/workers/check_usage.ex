@@ -1,7 +1,8 @@
 defmodule Plausible.Workers.CheckUsage do
   use Plausible.Repo
-  use Plausible.Billing.Subscription.Status
   use Oban.Worker, queue: :check_usage
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Subscription
 
   defmacro yesterday() do
     quote do

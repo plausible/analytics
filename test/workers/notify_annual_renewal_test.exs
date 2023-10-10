@@ -1,9 +1,9 @@
 defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
-  use Plausible.Billing.Subscription.Status
-
+  require Plausible.Billing.Subscription.Status
   alias Plausible.Workers.NotifyAnnualRenewal
+  alias Plausible.Billing.Subscription
 
   setup [:create_user, :create_site]
   @monthly_plan "558018"

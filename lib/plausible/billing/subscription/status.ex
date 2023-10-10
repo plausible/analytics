@@ -33,13 +33,6 @@ defmodule Plausible.Billing.Subscription.Status do
 
   @type status() :: :active | :past_due | :paused | :deleted
 
-  defmacro __using__(_opts) do
-    quote do
-      require Plausible.Billing.Subscription.Status
-      alias Plausible.Billing.Subscription
-    end
-  end
-
   defmacro active(), do: :active
   defmacro past_due(), do: :past_due
   defmacro paused(), do: :paused

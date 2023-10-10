@@ -4,12 +4,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   """
   use Phoenix.LiveView
   use Phoenix.HTML
-  use Plausible.Billing.Subscription.Status
-  alias Plausible.Users
-  alias Plausible.Billing.{Plans, Plan, Quota}
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   import PlausibleWeb.Components.Billing
+
+  require Plausible.Billing.Subscription.Status
+
+  alias Plausible.Users
+  alias Plausible.Billing.{Plans, Plan, Quota, Subscription}
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"

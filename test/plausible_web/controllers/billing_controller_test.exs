@@ -1,7 +1,8 @@
 defmodule PlausibleWeb.BillingControllerTest do
   use PlausibleWeb.ConnCase, async: true
-  use Plausible.Billing.Subscription.Status
   import Plausible.Test.Support.HTML
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Subscription
 
   describe "GET /upgrade" do
     setup [:create_user, :log_in]
