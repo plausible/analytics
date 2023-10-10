@@ -134,7 +134,7 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def latest_enterprise_plan_for(user) do
+  def latest_enterprise_plan_with_price(user) do
     enterprise_plan =
       Repo.one!(
         from(e in EnterprisePlan,
@@ -144,8 +144,7 @@ defmodule Plausible.Billing.Plans do
         )
       )
 
-    enterprise_plan
-    |> Map.put(:price_per_interval, get_price_for(enterprise_plan))
+    {enterprise_plan, get_price_for(enterprise_plan)}
   end
 
   def subscription_interval(subscription) do

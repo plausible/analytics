@@ -62,7 +62,7 @@ defmodule Plausible.Billing.PlansTest do
              end)
     end
 
-    test "latest_enterprise_plan_for/1" do
+    test "latest_enterprise_plan_with_price/1" do
       user = insert(:user)
       insert(:enterprise_plan, user: user, paddle_plan_id: "123", inserted_at: Timex.now())
 
@@ -78,10 +78,10 @@ defmodule Plausible.Billing.PlansTest do
         inserted_at: Timex.shift(Timex.now(), minutes: -2)
       )
 
-      enterprise_plan = Plans.latest_enterprise_plan_for(user)
+      {enterprise_plan, price} = Plans.latest_enterprise_plan_with_price(user)
 
       assert enterprise_plan.paddle_plan_id == "123"
-      assert enterprise_plan.price_per_interval == Money.new(:EUR, "10.0")
+      assert price == Money.new(:EUR, "10.0")
     end
   end
 

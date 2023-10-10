@@ -21,7 +21,7 @@
       <span>
         The plan is priced at
         <b>
-          <%= case @latest_enterprise_plan.price_per_interval do
+          <%= case @price do
             %Money{} = money ->
               PlausibleWeb.Components.Billing.format_price(money, format: :standard)
 
