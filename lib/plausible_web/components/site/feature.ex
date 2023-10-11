@@ -29,9 +29,9 @@ defmodule PlausibleWeb.Components.Site.Feature do
 
         <span class={[
           "ml-2 text-sm font-medium leading-5 mb-1",
-          if(assigns.current_setting,
-            do: "text-gray-900 dark:text-gray-100",
-            else: "text-gray-500 dark:text-gray-300"
+          if(assigns.disabled?,
+            do: "text-gray-500 dark:text-gray-300",
+            else: "text-gray-900 dark:text-gray-100"
           )
         ]}>
           Show <%= @feature_mod.display_name() %> in the Dashboard
