@@ -214,7 +214,8 @@ defmodule Plausible.Goals do
 
   defp maybe_check_feature_access(site, changeset) do
     if Ecto.Changeset.get_field(changeset, :currency) do
-      Plausible.Billing.Feature.RevenueGoals.check_availability(site)
+      site = Plausible.Repo.preload(site, :owner)
+      Plausible.Billing.Feature.RevenueGoals.check_availability(site.owner)
     else
       :ok
     end

@@ -210,7 +210,9 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_goals(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = Repo.preload(conn.assigns[:site], [:custom_domain, :owner])
+    owner = Plausible.Users.with_subscription(site.owner)
+    site = Map.put(site, :owner, owner)
 
     conn
     |> render("settings_goals.html",

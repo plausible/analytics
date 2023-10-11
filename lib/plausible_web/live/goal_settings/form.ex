@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     site = Map.put(site, :owner, owner)
 
     has_access_to_revenue_goals? =
-      Plausible.Billing.Feature.RevenueGoals.check_availability(site) == :ok
+      Plausible.Billing.Feature.RevenueGoals.check_availability(owner) == :ok
 
     {:ok,
      assign(socket,
@@ -193,7 +193,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
           <span x-show="active">
             <PlausibleWeb.Components.Billing.extra_feature_notice
-              site={@site}
+              billable_user={@site.owner}
               current_user={@current_user}
               feature_mod={Plausible.Billing.Feature.RevenueGoals}
               size={:xs}

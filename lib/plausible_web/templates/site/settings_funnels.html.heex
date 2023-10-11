@@ -1,6 +1,6 @@
 <section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
   <PlausibleWeb.Components.Billing.extra_feature_notice
-    site={@site}
+    billable_user={@site.owner}
     current_user={@current_user}
     feature_mod={Plausible.Billing.Feature.Funnels}
   />

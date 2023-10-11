@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Components.Billing do
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Billing.Subscription
 
-  attr(:site, Plausible.Site, required: true)
+  attr(:billable_user, Plausible.Auth.User, required: true)
   attr(:current_user, Plausible.Auth.User, required: true)
   attr(:feature_mod, :atom, required: true, values: Plausible.Billing.Feature.list())
   attr(:grandfathered?, :boolean, default: false)
@@ -17,8 +17,8 @@ defmodule PlausibleWeb.Components.Billing do
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def extra_feature_notice(assigns) do
     private_preview? = not FunWithFlags.enabled?(:business_tier, for: assigns.current_user)
-    owner? = assigns.current_user.id == assigns.site.owner.id
-    has_access? = assigns.feature_mod.check_availability(assigns.site.owner) == :ok
+    display_upgrade_link? = assigns.current_user.id == assigns.billable_user.id
+    has_access? = assigns.feature_mod.check_availability(assigns.billable_user) == :ok
 
     message =
       cond do
@@ -28,10 +28,10 @@ defmodule PlausibleWeb.Components.Billing do
         private_preview? ->
           "#{assigns.feature_mod.display_name()} is an upcoming premium functionality that's free-to-use during the private preview. Pricing will be announced soon."
 
-        Plausible.Billing.on_trial?(assigns.site.owner) ->
+        Plausible.Billing.on_trial?(assigns.billable_user) ->
           "#{assigns.feature_mod.display_name()} is part of the Plausible Business plan. You can access it during your trial, but you'll need to subscribe to the Business plan to retain access after the trial ends."
 
-        not has_access? && owner? ->
+        not has_access? && display_upgrade_link? ->
           ~H"""
           <%= @feature_mod.display_name() %> is part of the Plausible Business plan. To get access to it, please
           <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Components.Billing do
           </.link> to the Business plan.
           """
 
-        not has_access? && not owner? ->
+        not has_access? && not display_upgrade_link? ->
           "#{assigns.feature_mod.display_name()} is part of the Plausible Business plan. To get access to it, please reach out to the site owner to upgrade your subscription to the Business plan."
 
         true ->
