@@ -31,7 +31,7 @@ defmodule Plausible.Billing.Plans do
   alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
   alias Plausible.Auth.User
 
-  @available_features ["props", "revenue_goals", "funnels"]
+  @available_features ["props", "revenue_goals", "funnels", "stats_api"]
 
   for f <- [
         :plans_v1,

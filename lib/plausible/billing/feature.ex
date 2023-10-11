@@ -47,8 +47,8 @@ defmodule Plausible.Billing.Feature do
   @doc """
   Checks whether the site owner or the user plan includes the given feature.
   """
-  @callback check_availability(Plausible.Site.t() | Plausible.Auth.User.t()) ::
-              :ok | {:error, :upgrade_required}
+  @callback check_availability(Plausible.Auth.User.t()) ::
+              :ok | {:error, :upgrade_required} | {:error, :not_implemented}
 
   @features [
     Plausible.Billing.Feature.Funnels,
@@ -77,22 +77,17 @@ defmodule Plausible.Billing.Feature do
       def toggle_field, do: Keyword.get(unquote(opts), :toggle_field)
 
       @impl true
-      def enabled?(site) do
+      def enabled?(%Plausible.Site{} = site) do
+        site = Plausible.Repo.preload(site, :owner)
+
         cond do
-          check_availability(site) !== :ok -> false
+          check_availability(site.owner) !== :ok -> false
           is_nil(toggle_field()) -> true
-          true -> Map.get(site, toggle_field())
+          true -> Map.fetch!(site, toggle_field())
         end
       end
 
       @impl true
-      def check_availability(site_or_user)
-
-      def check_availability(%Plausible.Site{} = site) do
-        site = Plausible.Repo.preload(site, :owner)
-        check_availability(site.owner)
-      end
-
       def check_availability(%Plausible.Auth.User{} = user) do
         extra_feature = Keyword.get(unquote(opts), :extra_feature)
 
@@ -105,9 +100,10 @@ defmodule Plausible.Billing.Feature do
       end
 
       @impl true
-      def toggle(site, opts \\ []) do
+      def toggle(%Plausible.Site{} = site, opts \\ []) do
         with key when not is_nil(key) <- toggle_field(),
-             :ok <- check_availability(site) do
+             site <- Plausible.Repo.preload(site, :owner),
+             :ok <- check_availability(site.owner) do
           override = Keyword.get(opts, :override)
           toggle = if is_boolean(override), do: override, else: !Map.fetch!(site, toggle_field())
 
@@ -119,8 +115,6 @@ defmodule Plausible.Billing.Feature do
           {:error, :upgrade_required} -> {:error, :upgrade_required}
         end
       end
-
-      defoverridable check_availability: 1, toggle: 1, toggle: 2
     end
   end
 end
@@ -153,4 +147,11 @@ defmodule Plausible.Billing.Feature.Props do
     display_name: "Custom Properties",
     toggle_field: :props_enabled,
     extra_feature: :props
+end
+
+defmodule Plausible.Billing.Feature.StatsAPI do
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    display_name: "Stats API",
+    extra_feature: :stats_api
 end

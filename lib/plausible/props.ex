@@ -24,7 +24,8 @@ defmodule Plausible.Props do
   data to be dropped or lost.
   """
   def allow(site, prop_or_props) do
-    with :ok <- Plausible.Billing.Feature.Props.check_availability(site) do
+    with site <- Plausible.Repo.preload(site, :owner),
+         :ok <- Plausible.Billing.Feature.Props.check_availability(site.owner) do
       site
       |> allow_changeset(prop_or_props)
       |> Plausible.Repo.update()

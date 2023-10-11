@@ -414,8 +414,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def new_api_key(conn, _params) do
-    key = :crypto.strong_rand_bytes(64) |> Base.url_encode64() |> binary_part(0, 64)
-    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, %{key: key})
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{})
 
     render(conn, "new_api_key.html",
       changeset: changeset,
@@ -423,12 +422,8 @@ defmodule PlausibleWeb.AuthController do
     )
   end
 
-  def create_api_key(conn, %{"api_key" => key_params}) do
-    api_key = %Auth.ApiKey{user_id: conn.assigns[:current_user].id}
-    key_params = Map.delete(key_params, "user_id")
-    changeset = Auth.ApiKey.changeset(api_key, key_params)
-
-    case Repo.insert(changeset) do
+  def create_api_key(conn, %{"api_key" => %{"name" => name, "key" => key}}) do
+    case Auth.create_api_key(conn.assigns.current_user, name, key) do
       {:ok, _api_key} ->
         conn
         |> put_flash(:success, "API key created successfully")
@@ -443,18 +438,17 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def delete_api_key(conn, %{"id" => id}) do
-    query =
-      from(k in Auth.ApiKey,
-        where: k.id == ^id and k.user_id == ^conn.assigns[:current_user].id
-      )
+    case Auth.delete_api_key(conn.assigns.current_user, id) do
+      :ok ->
+        conn
+        |> put_flash(:success, "API key revoked successfully")
+        |> redirect(to: "/settings#api-keys")
 
-    query
-    |> Repo.one!()
-    |> Repo.delete!()
-
-    conn
-    |> put_flash(:success, "API key revoked successfully")
-    |> redirect(to: "/settings#api-keys")
+      {:error, :not_found} ->
+        conn
+        |> put_flash(:error, "Could not find API Key to delete")
+        |> redirect(to: "/settings#api-keys")
+    end
   end
 
   def delete_me(conn, params) do

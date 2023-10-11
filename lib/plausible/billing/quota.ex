@@ -162,7 +162,7 @@ defmodule Plausible.Billing.Quota do
     end)
   end
 
-  @all_features [:props, :revenue_goals, :funnels]
+  @all_features [:props, :revenue_goals, :funnels, :stats_api]
   @doc """
   Returns a list of extra features the user can use. Trial users have the
   ability to use all features during their trial.

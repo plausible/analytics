@@ -13,45 +13,62 @@ defmodule Plausible.Billing.FeatureTest do
           subscription: build(:subscription, paddle_plan_id: "123321")
         )
 
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
-
       assert :ok == unquote(mod).check_availability(user)
-      assert :ok == unquote(mod).check_availability(site)
     end
 
     test "#{mod}.check_availability/1 returns :ok when site owner is on a business plan" do
       user =
         insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_business_plan_id))
 
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
-
       assert :ok == unquote(mod).check_availability(user)
-      assert :ok == unquote(mod).check_availability(site)
     end
 
     test "#{mod}.check_availability/1 returns error when site owner is on a growth plan" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
-
       assert {:error, :upgrade_required} == unquote(mod).check_availability(user)
-      assert {:error, :upgrade_required} == unquote(mod).check_availability(site)
     end
 
     test "#{mod}.check_availability/1 returns error when site owner is on an old plan" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
-
       assert {:error, :upgrade_required} == unquote(mod).check_availability(user)
-      assert {:error, :upgrade_required} == unquote(mod).check_availability(site)
     end
+  end
+
+  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on a business plan" do
+    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_business_plan_id))
+    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(user)
+  end
+
+  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on an old plan" do
+    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(user)
+  end
+
+  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on trial" do
+    user = insert(:user)
+    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(user)
+  end
+
+  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on an enterprise plan" do
+    user =
+      insert(:user,
+        enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
+        subscription: build(:subscription, paddle_plan_id: "123321")
+      )
+
+    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(user)
+  end
+
+  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns error when user is on a growth plan" do
+    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+
+    assert {:error, :upgrade_required} ==
+             Plausible.Billing.Feature.StatsAPI.check_availability(user)
   end
 
   test "Plausible.Billing.Feature.Props.check_availability/1 applies grandfathering to old plans" do
     user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
-    site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
-
     assert :ok == Plausible.Billing.Feature.Props.check_availability(user)
-    assert :ok == Plausible.Billing.Feature.Props.check_availability(site)
   end
 
   test "Plausible.Billing.Feature.Goals.check_availability/2 always returns :ok" do
