@@ -18,7 +18,7 @@ defmodule Plausible.Billing.Feature do
     file (see also Plausible.Billing.Plan). If `nil` or not set,
     `check_availability/1` silently returns `:ok`
 
-  Functions defined by `__using__` can be overriden if needed.
+  Functions defined by `__using__` can be overridden if needed.
   """
 
   @doc """
