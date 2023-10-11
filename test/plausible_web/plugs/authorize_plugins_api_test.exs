@@ -25,7 +25,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
     %{id: site_id} = site = insert(:site, domain: "pass.example.com")
     {:ok, _, raw} = Tokens.create(site, "Some token")
 
-    credentials = "Basic " <> Base.encode64(":#{raw}")
+    credentials = "Basic " <> Base.encode64(raw)
 
     conn =
       build_conn()
