@@ -125,4 +125,23 @@ defmodule Plausible.Auth do
     |> Ecto.assoc(:enterprise_plan)
     |> Repo.exists?()
   end
+
+  @spec create_api_key(Auth.User.t(), String.t(), String.t()) ::
+          {:ok, Auth.ApiKey.t()} | {:error, Ecto.Changeset.t()}
+  def create_api_key(user, name, key) do
+    params = %{name: name, user_id: user.id, key: key}
+    changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
+
+    Repo.insert(changeset)
+  end
+
+  @spec delete_api_key(Auth.User.t(), integer()) :: :ok | {:error, :not_found}
+  def delete_api_key(user, id) do
+    query = from(api_key in Auth.ApiKey, where: api_key.id == ^id and api_key.user_id == ^user.id)
+
+    case Repo.delete_all(query) do
+      {1, _} -> :ok
+      {0, _} -> {:error, :not_found}
+    end
+  end
 end

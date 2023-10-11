@@ -978,10 +978,8 @@ defmodule PlausibleWeb.AuthControllerTest do
                |> ApiKey.changeset(%{"name" => "other user's key"})
                |> Repo.insert()
 
-      assert_raise Ecto.NoResultsError, fn ->
-        delete(conn, "/settings/api-keys/#{api_key.id}")
-      end
-
+      conn = delete(conn, "/settings/api-keys/#{api_key.id}")
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find API Key to delete"
       assert Repo.get(ApiKey, api_key.id)
     end
   end
