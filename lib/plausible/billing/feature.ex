@@ -115,7 +115,7 @@ defmodule Plausible.Billing.Feature do
           |> Ecto.Changeset.change(%{toggle_field() => toggle})
           |> Plausible.Repo.update()
         else
-          nil = _feature_not_toggable -> :ok
+          nil = _feature_not_togglable -> :ok
           {:error, :upgrade_required} -> {:error, :upgrade_required}
         end
       end
