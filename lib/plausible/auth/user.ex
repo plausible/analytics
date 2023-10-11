@@ -28,6 +28,7 @@ defmodule Plausible.Auth.User do
     field :trial_expiry_date, :date
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
+    field :previous_email, :string
     embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 
     has_many :site_memberships, Plausible.Site.Membership
@@ -59,6 +60,31 @@ defmodule Plausible.Auth.User do
     |> cast(attrs, [:email, :name, :theme])
     |> validate_required([:email, :name, :theme])
     |> unique_constraint(:email)
+  end
+
+  def email_changeset(user, attrs \\ %{}) do
+    user
+    |> cast(attrs, [:email, :password])
+    |> validate_required([:email, :password])
+    |> validate_email_changed()
+    |> check_password()
+    |> unique_constraint(:email)
+    |> put_change(:email_verified, false)
+    |> put_change(:previous_email, user.email)
+  end
+
+  def cancel_email_changeset(user) do
+    if user.previous_email do
+      user
+      |> change()
+      |> unique_constraint(:email)
+      |> put_change(:email_verified, true)
+      |> put_change(:email, user.previous_email)
+      |> put_change(:previous_email, nil)
+    else
+      # It shouldn't happen under normal circumstances
+      raise "Previous email is empty for user #{user.id} (#{user.email}) when it shouldn't."
+    end
   end
 
   def changeset(user, attrs \\ %{}) do
@@ -125,6 +151,26 @@ defmodule Plausible.Auth.User do
   catch
     _kind, _value ->
       %{suggestions: [], warning: "", score: 3}
+  end
+
+  defp validate_email_changed(changeset) do
+    if !get_change(changeset, :email) && !changeset.errors[:email] do
+      add_error(changeset, :email, "can't be the same", validation: :different_email)
+    else
+      changeset
+    end
+  end
+
+  defp check_password(changeset) do
+    if password = get_change(changeset, :password) do
+      if Plausible.Auth.Password.match?(password, changeset.data.password_hash) do
+        changeset
+      else
+        add_error(changeset, :password, "is invalid", validation: :check_password)
+      end
+    else
+      changeset
+    end
   end
 
   defp validate_password_strength(changeset) do

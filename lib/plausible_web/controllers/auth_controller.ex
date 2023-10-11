@@ -7,6 +7,7 @@ defmodule PlausibleWeb.AuthController do
   plug(
     PlausibleWeb.RequireLoggedOutPlug
     when action in [
+           :register_form,
            :register,
            :register_from_invitation,
            :login_form,
@@ -19,8 +20,15 @@ defmodule PlausibleWeb.AuthController do
     when action in [
            :user_settings,
            :save_settings,
+           :update_email,
+           :cancel_update_email,
+           :new_api_key,
+           :create_api_key,
+           :delete_api_key,
            :delete_me,
-           :activate_form
+           :activate_form,
+           :activate,
+           :request_activation_code
          ]
   )
 
@@ -28,13 +36,6 @@ defmodule PlausibleWeb.AuthController do
 
   defp assign_is_selfhost(conn, _opts) do
     assign(conn, :is_selfhost, Plausible.Release.selfhost?())
-  end
-
-  def register_form(conn, _params) do
-    render(conn, "register_form.html",
-      connect_live_socket: true,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
   end
 
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
@@ -78,23 +79,10 @@ defmodule PlausibleWeb.AuthController do
   def activate_form(conn, _params) do
     user = conn.assigns[:current_user]
 
-    has_invitation =
-      Repo.exists?(
-        from(i in Plausible.Auth.Invitation,
-          where: i.email == ^user.email
-        )
-      )
-
-    has_code =
-      Repo.exists?(
-        from(c in "email_verification_codes",
-          where: c.user_id == ^user.id
-        )
-      )
-
     render(conn, "activate.html",
-      has_pin: has_code,
-      has_invitation: has_invitation,
+      has_email_code?: Plausible.Users.has_email_code?(user.id),
+      has_any_invitations?: Plausible.Site.Memberships.has_any_invitations?(user.email),
+      has_any_memberships?: Plausible.Site.Memberships.any?(user.id),
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
@@ -102,36 +90,41 @@ defmodule PlausibleWeb.AuthController do
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
 
-    has_invitation =
-      Repo.exists?(
-        from(i in Plausible.Auth.Invitation,
-          where: i.email == ^user.email
-        )
-      )
+    has_any_invitations? = Plausible.Site.Memberships.has_any_invitations?(user.email)
+    has_any_memberships? = Plausible.Site.Memberships.any?(user.id)
 
     {code, ""} = Integer.parse(code)
 
     case Auth.verify_email(user, code) do
       :ok ->
-        if has_invitation do
-          redirect(conn, to: Routes.site_path(conn, :index))
-        else
-          redirect(conn, to: Routes.site_path(conn, :new))
+        cond do
+          has_any_memberships? ->
+            conn
+            |> put_flash(:success, "Email updated successfully")
+            |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
+
+          has_any_invitations? ->
+            redirect(conn, to: Routes.site_path(conn, :index))
+
+          true ->
+            redirect(conn, to: Routes.site_path(conn, :new))
         end
 
       {:error, :incorrect} ->
         render(conn, "activate.html",
           error: "Incorrect activation code",
-          has_pin: true,
-          has_invitation: has_invitation,
+          has_email_code?: true,
+          has_any_invitations?: has_any_invitations?,
+          has_any_memberships?: has_any_memberships?,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
       {:error, :expired} ->
         render(conn, "activate.html",
           error: "Code is expired, please request another one",
-          has_pin: false,
-          has_invitation: has_invitation,
+          has_email_code?: false,
+          has_any_invitations?: has_any_invitations?,
+          has_any_memberships?: has_any_memberships?,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
@@ -331,8 +324,10 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def user_settings(conn, _params) do
-    changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
-    render_settings(conn, changeset)
+    settings_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
+    email_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
+
+    render_settings(conn, settings_changeset: settings_changeset, email_changeset: email_changeset)
   end
 
   def save_settings(conn, %{"user" => user_params}) do
@@ -345,17 +340,58 @@ defmodule PlausibleWeb.AuthController do
         |> redirect(to: Routes.auth_path(conn, :user_settings))
 
       {:error, changeset} ->
-        render_settings(conn, changeset)
+        email_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
+
+        render_settings(conn, settings_changeset: changeset, email_changeset: email_changeset)
     end
   end
 
-  defp render_settings(conn, changeset) do
+  def update_email(conn, %{"user" => user_params}) do
+    changes = Auth.User.email_changeset(conn.assigns[:current_user], user_params)
+
+    case Repo.update(changes) do
+      {:ok, user} ->
+        send_email_verification(user)
+
+        redirect(conn, to: Routes.auth_path(conn, :activate_form))
+
+      {:error, changeset} ->
+        settings_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
+
+        render_settings(conn, settings_changeset: settings_changeset, email_changeset: changeset)
+    end
+  end
+
+  def cancel_update_email(conn, _params) do
+    changeset = Auth.User.cancel_email_changeset(conn.assigns.current_user)
+
+    case Repo.update(changeset) do
+      {:ok, user} ->
+        conn
+        |> put_flash(:success, "Email changed back to #{user.email}")
+        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
+
+      {:error, _} ->
+        conn
+        |> put_flash(
+          :error,
+          "Could not cancel email update because previous email has already been taken"
+        )
+        |> redirect(to: Routes.auth_path(conn, :activate_form))
+    end
+  end
+
+  defp render_settings(conn, opts) do
+    settings_changeset = Keyword.fetch!(opts, :settings_changeset)
+    email_changeset = Keyword.fetch!(opts, :email_changeset)
+
     user = Plausible.Users.with_subscription(conn.assigns[:current_user])
     {pageview_usage, custom_event_usage} = Plausible.Billing.usage_breakdown(user)
 
     render(conn, "user_settings.html",
       user: user |> Repo.preload(:api_keys),
-      changeset: changeset,
+      settings_changeset: settings_changeset,
+      email_changeset: email_changeset,
       subscription: user.subscription,
       invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
       theme: user.theme || "system",

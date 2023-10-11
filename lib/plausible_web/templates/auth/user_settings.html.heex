@@ -222,7 +222,7 @@
 
   <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
 
-  <%= form_for @changeset, "/settings", [class: "max-w-sm"], fn f -> %>
+  <%= form_for @settings_changeset, "/settings", [class: "max-w-sm"], fn f -> %>
     <div class="col-span-4 sm:col-span-2">
       <%= label(f, :theme, "Theme Selection",
         class: "block text-sm font-medium leading-5 text-gray-700 dark:text-gray-300"
@@ -237,11 +237,13 @@
 </div>
 
 <div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 bg-white border-t-2 border-indigo-100 rounded rounded-t-none shadow-md dark:bg-gray-800 dark:border-indigo-500">
-  <h2 class="text-xl font-black dark:text-gray-100">Account settings</h2>
+  <h2 id="change-account-name" class="text-xl font-black dark:text-gray-100">
+    Change account name
+  </h2>
 
   <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
 
-  <%= form_for @changeset, "/settings", [class: "max-w-sm"], fn f -> %>
+  <%= form_for @settings_changeset, "/settings#change-account-name", [class: "max-w-sm"], fn f -> %>
     <div class="my-4">
       <%= label(f, :name, class: "block text-sm font-medium text-gray-700 dark:text-gray-300") %>
       <div class="mt-1">
@@ -252,17 +254,61 @@
         <%= error_tag(f, :name) %>
       </div>
     </div>
+    <%= submit("Save", class: "button mt-4") %>
+  <% end %>
+</div>
+
+<div class="max-w-2xl px-8 pt-6 pb-8 mx-auto mt-16 bg-white border-t-2 border-red-600 rounded rounded-t-none shadow-md dark:bg-gray-800">
+  <h2 id="change-email-address" class="text-xl font-black dark:text-gray-100">
+    Change email address
+  </h2>
+
+  <div class="my-4 border-b border-gray-300 dark:border-gray-500"></div>
+
+  <%= form_for @email_changeset, "/settings/email#change-email-address", [class: "max-w-sm"], fn f -> %>
     <div class="my-4">
-      <%= label(f, :email, class: "block text-sm font-medium text-gray-700 dark:text-gray-300") %>
+      <%= label(f, :password, "Account password",
+        class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
+      ) %>
+      <div class="mt-1">
+        <%= password_input(f, :password,
+          class:
+            "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+        ) %>
+        <%= error_tag(f, :password) %>
+      </div>
+    </div>
+    <div class="my-4">
+      <%= label(f, :current_email, "Current email",
+        class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
+      ) %>
+      <div class="mt-1">
+        <%= email_input(f, :current_email,
+          readonly: true,
+          value: f.data.email,
+          class:
+            "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800 bg-gray-100"
+        ) %>
+      </div>
+    </div>
+    <div class="my-4">
+      <%= label(f, :email, "New email",
+        class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
+      ) %>
       <div class="mt-1">
         <%= email_input(f, :email,
+          value: f.params["email"],
           class:
             "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md"
         ) %>
         <%= error_tag(f, :email) %>
       </div>
     </div>
-    <%= submit("Save changes", class: "button mt-4") %>
+
+    <%= submit("Change my email",
+      class:
+        "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150"
+    ) %>
   <% end %>
 </div>
 

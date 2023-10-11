@@ -52,7 +52,7 @@ seeded_token = Plausible.Plugins.API.Token.generate("seed-token")
 {:ok, goal2} = Plausible.Goals.create(site, %{"page_path" => "/register"})
 {:ok, goal3} = Plausible.Goals.create(site, %{"page_path" => "/login"})
 {:ok, goal4} = Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
-{:ok, goal5} = Plausible.Goals.create(site, %{"page_path" => Enum.random(long_random_paths)})
+{:ok, _goal5} = Plausible.Goals.create(site, %{"page_path" => Enum.random(long_random_paths)})
 {:ok, outbound} = Plausible.Goals.create(site, %{"event_name" => "Outbound Link: Click"})
 
 {:ok, _funnel} =

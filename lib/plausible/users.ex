@@ -26,6 +26,15 @@ defmodule Plausible.Users do
     )
   end
 
+  @spec has_email_code?(String.t()) :: boolean()
+  def has_email_code?(user_id) do
+    Repo.exists?(
+      from(c in "email_verification_codes",
+        where: c.user_id == ^user_id
+      )
+    )
+  end
+
   defp last_subscription_query(user_id) do
     from(subscription in Plausible.Billing.Subscription,
       where: subscription.user_id == ^user_id,
