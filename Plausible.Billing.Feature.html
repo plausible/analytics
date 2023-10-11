@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-920E5485.js"></script>
+    <script src="dist/sidebar_items-803524E3.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -138,7 +138,7 @@ file (see also Plausible.Billing.Plan). If <code class="inline">nil</code> or no
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:check_availability/1" translate="no">check_availability(arg1)</a>
+        <a href="#c:check_availability/1" translate="no">check_availability(t)</a>
 
       </div>
 
@@ -225,7 +225,7 @@ Callbacks
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this callback</span>
     </a>
-    <h1 class="signature" translate="no">check_availability(arg1)</h1>
+    <h1 class="signature" translate="no">check_availability(t)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L50" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -239,8 +239,8 @@ Callbacks
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@callback</span> check_availability(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
-  :ok | {:error, :upgrade_required}</pre>
+          <pre translate="no"><span class="attribute">@callback</span> check_availability(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
+  :ok | {:error, :upgrade_required} | {:error, :not_implemented}</pre>
 
       </div>
 
