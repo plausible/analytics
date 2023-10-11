@@ -56,6 +56,7 @@ defmodule Plausible.Billing.Feature do
     Plausible.Billing.Feature.Props,
     Plausible.Billing.Feature.RevenueGoals
   ]
+
   @doc """
   Lists all available feature modules.
   """
