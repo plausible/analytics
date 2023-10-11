@@ -6,7 +6,7 @@
     "yearly_product_id":"653232",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   },
   {
     "kind":"growth",
@@ -15,7 +15,7 @@
     "yearly_product_id":"653234",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   },
   {
     "kind":"growth",
@@ -24,7 +24,7 @@
     "yearly_product_id":"653236",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   },
   {
     "kind":"growth",
@@ -33,7 +33,7 @@
     "yearly_product_id":"653239",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   },
   {
     "kind":"growth",
@@ -42,7 +42,7 @@
     "yearly_product_id":"653242",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   },
   {
     "kind":"growth",
@@ -51,7 +51,7 @@
     "yearly_product_id":"653254",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   },
   {
     "kind":"growth",
@@ -60,7 +60,7 @@
     "yearly_product_id":"653256",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   },
   {
     "kind":"growth",
@@ -69,7 +69,7 @@
     "yearly_product_id":"653257",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   },
   {
     "kind":"growth",
@@ -78,7 +78,7 @@
     "yearly_product_id":"653258",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   },
   {
     "kind":"growth",
@@ -87,6 +87,6 @@
     "yearly_product_id":"653259",
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "extra_features":["props","stats_api"]
   }
 ]
