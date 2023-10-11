@@ -69,7 +69,7 @@ defmodule Plausible.Auth.User do
     |> validate_email_changed()
     |> check_password()
     |> unique_constraint(:email)
-    |> put_change(:email_verified, false)
+    |> set_email_verified()
     |> put_change(:previous_email, user.email)
   end
 

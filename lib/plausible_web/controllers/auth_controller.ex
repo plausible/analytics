@@ -99,9 +99,7 @@ defmodule PlausibleWeb.AuthController do
       :ok ->
         cond do
           has_any_memberships? ->
-            conn
-            |> put_flash(:success, "Email updated successfully")
-            |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
+            handle_email_updated(conn)
 
           has_any_invitations? ->
             redirect(conn, to: Routes.site_path(conn, :index))
@@ -351,9 +349,12 @@ defmodule PlausibleWeb.AuthController do
 
     case Repo.update(changes) do
       {:ok, user} ->
-        send_email_verification(user)
-
-        redirect(conn, to: Routes.auth_path(conn, :activate_form))
+        if user.email_verified do
+          handle_email_updated(conn)
+        else
+          send_email_verification(user)
+          redirect(conn, to: Routes.auth_path(conn, :activate_form))
+        end
 
       {:error, changeset} ->
         settings_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
@@ -379,6 +380,12 @@ defmodule PlausibleWeb.AuthController do
         )
         |> redirect(to: Routes.auth_path(conn, :activate_form))
     end
+  end
+
+  defp handle_email_updated(conn) do
+    conn
+    |> put_flash(:success, "Email updated successfully")
+    |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#change-email-address")
   end
 
   defp render_settings(conn, opts) do
