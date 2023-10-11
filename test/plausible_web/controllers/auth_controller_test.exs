@@ -749,6 +749,24 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert html_response(conn, 200) =~ "has already been taken"
     end
+
+    test "renders form with error when email is identical with the current one", %{
+      conn: conn,
+      user: user
+    } do
+      password = "very-long-very-secret-123"
+
+      user
+      |> User.set_password(password)
+      |> Repo.update!()
+
+      conn =
+        put(conn, "/settings/email", %{
+          "user" => %{"password" => password, "email" => user.email}
+        })
+
+      assert html_response(conn, 200) =~ "can&#39;t be the same"
+    end
   end
 
   describe "POST /settings/email/cancel" do
