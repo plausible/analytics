@@ -66,7 +66,7 @@ defmodule Plausible.Billing.Feature do
 
   @doc false
   defmacro __using__(opts \\ []) do
-    quote location: :keep, bind_quoted: [opts: opts] do
+    quote location: :keep do
       @behaviour Plausible.Billing.Feature
       alias Plausible.Billing.Quota
 
