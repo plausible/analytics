@@ -1,14 +1,9 @@
 <section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
-  <PlausibleWeb.Components.Generic.notice class="rounded-t-md rounded-b-none">
-    Funnels is an upcoming premium feature that's free-to-use
-    during the private preview. Pricing will be announced soon. See
-    examples and learn more in <a
-      class="font-medium text-yellow underline hover:text-yellow-600"
-      target="_blank"
-      rel="noreferrer"
-      href="https://plausible.io/docs/funnel-analysis"
-    >our docs</a>.
-  </PlausibleWeb.Components.Generic.notice>
+  <PlausibleWeb.Components.Billing.extra_feature_notice
+    site={@site}
+    current_user={@current_user}
+    feature_mod={Plausible.Billing.Feature.Funnels}
+  />
 
   <div class="py-6 px-4 sm:p-6">
     <header class="relative">
@@ -35,9 +30,8 @@
     </header>
 
     <PlausibleWeb.Components.Site.Feature.toggle
+      feature_mod={Plausible.Billing.Feature.Funnels}
       site={@site}
-      setting={:funnels_enabled}
-      label="Show Funnels in the Dashboard"
       conn={@conn}
     >
       <%= live_render(@conn, PlausibleWeb.Live.FunnelSettings,

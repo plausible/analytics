@@ -96,6 +96,7 @@ defmodule Plausible.Site.CacheTest do
 
       # the site was added yesterday so full refresh will pick it up
       %{id: site_id} = site = insert(:site, domain: "site1.example.com", updated_at: yesterday)
+
       # the goal was added yesterday so full refresh will pick it up
       Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => :BRL},
         now: yesterday

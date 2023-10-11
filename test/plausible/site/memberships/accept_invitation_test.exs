@@ -34,9 +34,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     test "does not degrade role when trying to invite self as an owner" do
-      site = insert(:site)
       user = insert(:user)
-      membership = insert(:site_membership, user: user, site: site, role: :owner)
+
+      %{memberships: [membership]} =
+        site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
 
       invitation =
         insert(:invitation,
@@ -93,7 +94,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   describe "ownership transfers" do
     for {label, opts} <- [{"cloud", []}, {"selfhosted", [selfhost?: true]}] do
       test "converts an ownership transfer into a membership on #{label} instance" do
-        site = insert(:site)
+        site = insert(:site, memberships: [])
         existing_owner = insert(:user)
 
         existing_membership =
@@ -136,37 +137,41 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
     for role <- [:viewer, :admin] do
       test "upgrades existing #{role} membership into an owner" do
-        site = insert(:site)
-        owner = insert(:user)
-        owner_membership = insert(:site_membership, user: owner, site: site, role: :owner)
+        existing_owner = insert(:user)
         new_owner = insert(:user)
 
-        new_owner_membership =
-          insert(:site_membership, user: new_owner, site: site, role: unquote(role))
+        site =
+          insert(:site,
+            memberships: [
+              build(:site_membership, user: existing_owner, role: :owner),
+              build(:site_membership, user: new_owner, role: unquote(role))
+            ]
+          )
 
         invitation =
           insert(:invitation,
             site_id: site.id,
-            inviter: owner,
+            inviter: existing_owner,
             email: new_owner.email,
             role: :owner
           )
 
-        assert {:ok, membership} =
+        assert {:ok, %{id: membership_id}} =
                  AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
 
-        assert membership.id == new_owner_membership.id
-        assert membership.role == :owner
+        assert %{role: :admin} =
+                 Plausible.Repo.get_by(Plausible.Site.Membership, user_id: existing_owner.id)
 
-        assert Repo.reload!(owner_membership).role == :admin
+        assert %{id: ^membership_id, role: :owner} =
+                 Plausible.Repo.get_by(Plausible.Site.Membership, user_id: new_owner.id)
+
         refute Repo.reload(invitation)
       end
     end
 
     test "does note degrade or alter trial when accepting ownership transfer by self" do
-      site = insert(:site)
       owner = insert(:user, trial_expiry_date: nil)
-      owner_membership = insert(:site_membership, user: owner, site: site, role: :owner)
+      site = insert(:site, memberships: [build(:site_membership, user: owner, role: :owner)])
 
       invitation =
         insert(:invitation,
@@ -176,21 +181,24 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
           role: :owner
         )
 
-      assert {:ok, membership} =
+      assert {:ok, %{id: membership_id}} =
                AcceptInvitation.accept_invitation(invitation.invitation_id, owner)
 
-      assert membership.id == owner_membership.id
-      assert membership.role == :owner
-      assert Repo.reload!(owner).trial_expiry_date == nil
+      assert %{id: ^membership_id, role: :owner} =
+               Plausible.Repo.get_by(Plausible.Site.Membership, user_id: owner.id)
 
+      assert Repo.reload!(owner).trial_expiry_date == nil
       refute Repo.reload(invitation)
     end
 
     test "locks the site if the new owner has no active subscription or trial" do
-      site = insert(:site, locked: false)
-
       existing_owner = insert(:user)
-      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      site =
+        insert(:site,
+          locked: false,
+          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
+        )
 
       new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
@@ -209,10 +217,13 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     test "does not lock the site or set trial expiry date if the instance is selfhosted" do
-      site = insert(:site, locked: false)
-
       existing_owner = insert(:user)
-      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      site =
+        insert(:site,
+          locked: false,
+          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
+        )
 
       new_owner = insert(:user, trial_expiry_date: nil)
 
@@ -234,10 +245,13 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     test "ends trial of the new owner immediately" do
-      site = insert(:site, locked: false)
-
       existing_owner = insert(:user)
-      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      site =
+        insert(:site,
+          locked: false,
+          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
+        )
 
       new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), 7))
 
@@ -257,10 +271,13 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     test "sets user's trial expiry date to yesterday if they don't have one" do
-      site = insert(:site, locked: false)
-
       existing_owner = insert(:user)
-      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      site =
+        insert(:site,
+          locked: false,
+          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
+        )
 
       new_owner = insert(:user, trial_expiry_date: nil)
 
@@ -280,10 +297,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     test "ends grace period and sends an email about it if new owner is past grace period" do
-      site = insert(:site, locked: false)
-
       existing_owner = insert(:user)
-      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      site =
+        insert(:site,
+          locked: false,
+          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
+        )
+
       new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
       insert(:subscription, user: new_owner, next_bill_date: Timex.today())
 

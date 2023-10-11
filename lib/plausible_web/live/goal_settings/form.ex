@@ -20,7 +20,16 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       ) do
     form = to_form(Plausible.Goal.changeset(%Plausible.Goal{}))
 
-    site = Plausible.Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
+    site =
+      user_id
+      |> Plausible.Sites.get_for_user!(domain, [:owner, :admin, :super_admin])
+      |> Repo.preload([:custom_domain, :owner])
+
+    owner = Plausible.Users.with_subscription(site.owner)
+    site = Map.put(site, :owner, owner)
+
+    has_access_to_revenue_goals? =
+      Plausible.Billing.Feature.RevenueGoals.check_availability(site) == :ok
 
     {:ok,
      assign(socket,
@@ -29,7 +38,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
        domain: domain,
        rendered_by: pid,
        tabs: %{custom_events: true, pageviews: false},
-       site: site
+       site: site,
+       has_access_to_revenue_goals?: has_access_to_revenue_goals?
      )}
   end
 
@@ -54,7 +64,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
 
           <.tabs tabs={@tabs} />
 
-          <.custom_event_fields :if={@tabs.custom_events} f={f} />
+          <.custom_event_fields
+            :if={@tabs.custom_events}
+            f={f}
+            current_user={@current_user}
+            site={@site}
+            has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+          />
           <.pageview_fields :if={@tabs.pageviews} f={f} site={@site} />
 
           <div class="py-4">
@@ -99,6 +115,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   end
 
   attr(:f, Phoenix.HTML.Form)
+  attr(:site, Plausible.Site)
+  attr(:current_user, Plausible.Auth.User)
+  attr(:has_access_to_revenue_goals?, :boolean)
 
   def custom_event_fields(assigns) do
     ~H"""
@@ -133,44 +152,54 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             })
           }
         >
-          <div
-            class="flex items-center w-max cursor-pointer"
+          <button
+            class={[
+              "flex items-center w-max mb-3",
+              if(assigns.has_access_to_revenue_goals?,
+                do: "cursor-pointer",
+                else: "cursor-not-allowed"
+              )
+            ]}
+            aria-labelledby="enable-revenue-tracking"
+            role="switch"
+            type="button"
             x-on:click="active = !active; currency = ''"
+            x-bind:aria-checked="active"
+            disabled={not @has_access_to_revenue_goals?}
           >
-            <button
+            <span
               class="relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
               x-bind:class="active ? 'bg-indigo-600' : 'dark:bg-gray-700 bg-gray-200'"
-              x-bind:aria-checked="active"
-              aria-labelledby="enable-revenue-tracking"
-              role="switch"
-              type="button"
             >
               <span
                 aria-hidden="true"
                 class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
                 x-bind:class="active ? 'dark:bg-gray-800 translate-x-5' : 'dark:bg-gray-800 translate-x-0'"
               />
-            </button>
+            </span>
             <span
-              class="ml-3 font-medium text-gray-900 dark:text-gray-200"
+              class={[
+                "ml-3 font-medium",
+                if(assigns.has_access_to_revenue_goals?,
+                  do: "text-gray-900  dark:text-gray-100",
+                  else: "text-gray-500 dark:text-gray-300"
+                )
+              ]}
               id="enable-revenue-tracking"
             >
               Enable Revenue Tracking
             </span>
-          </div>
+          </button>
 
-          <div class="rounded-md bg-yellow-50 dark:bg-yellow-900 p-4" x-show="active">
-            <p class="text-xs text-yellow-700 dark:text-yellow-50 text-justify">
-              Revenue Tracking is an upcoming premium feature that's free-to-use
-              during the private preview. Pricing will be announced soon. See
-              examples and learn more in <a
-                class="font-medium text-yellow underline hover:text-yellow-600"
-                target="_blank"
-                rel="noreferrer"
-                href="https://plausible.io/docs/ecommerce-revenue-tracking"
-              >our docs</a>.
-            </p>
-          </div>
+          <span x-show="active">
+            <PlausibleWeb.Components.Billing.extra_feature_notice
+              site={@site}
+              current_user={@current_user}
+              feature_mod={Plausible.Billing.Feature.RevenueGoals}
+              size={:xs}
+              class="rounded-b-md"
+            />
+          </span>
 
           <div x-show="active">
             <.live_component
@@ -253,7 +282,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         send(socket.assigns.rendered_by, {:goal_added, Map.put(goal, :funnels, [])})
         {:noreply, socket}
 
-      {:error, changeset} ->
+      {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end

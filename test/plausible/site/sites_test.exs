@@ -1,7 +1,6 @@
 defmodule Plausible.SitesTest do
   use Plausible.DataCase
   use Bamboo.Test
-
   alias Plausible.Sites
 
   describe "is_member?" do

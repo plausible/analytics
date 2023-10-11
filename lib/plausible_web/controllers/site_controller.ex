@@ -121,11 +121,6 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  @feature_titles %{
-    funnels_enabled: "Funnels",
-    conversions_enabled: "Goals",
-    props_enabled: "Properties"
-  }
   def update_feature_visibility(conn, %{
         "setting" => setting,
         "r" => "/" <> _ = redirect_path,
@@ -134,18 +129,18 @@ defmodule PlausibleWeb.SiteController do
       when setting in ~w[conversions_enabled funnels_enabled props_enabled] and
              value in ["true", "false"] do
     site = conn.assigns[:site]
+    toggle_field = String.to_existing_atom(setting)
 
-    setting = String.to_existing_atom(setting)
-    change = Plausible.Site.feature_toggle_change(site, setting, override: value == "true")
-    result = Repo.update(change)
+    feature_mod =
+      Enum.find(Plausible.Billing.Feature.list(), &(&1.toggle_field() == toggle_field))
 
-    case result do
+    case feature_mod.toggle(site, override: value == "true") do
       {:ok, updated_site} ->
         message =
-          if Map.fetch!(updated_site, setting) do
-            "#{@feature_titles[setting]} are now visible again on your dashboard"
+          if Map.fetch!(updated_site, toggle_field) do
+            "#{feature_mod.display_name()} are now visible again on your dashboard"
           else
-            "#{@feature_titles[setting]} are now hidden from your dashboard"
+            "#{feature_mod.display_name()} are now hidden from your dashboard"
           end
 
         conn
@@ -156,7 +151,7 @@ defmodule PlausibleWeb.SiteController do
         conn
         |> put_flash(
           :error,
-          "Something went wrong. Failed to toggle #{@feature_titles[setting]} on your dashboard."
+          "Something went wrong. Failed to toggle #{feature_mod.display_name()} on your dashboard."
         )
         |> redirect(to: redirect_path)
     end
@@ -227,7 +222,9 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_funnels(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = Repo.preload(conn.assigns[:site], [:custom_domain, :owner])
+    owner = Plausible.Users.with_subscription(site.owner)
+    site = Map.put(site, :owner, owner)
 
     conn
     |> render("settings_funnels.html",
@@ -239,7 +236,9 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_props(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = Repo.preload(conn.assigns[:site], [:custom_domain, :owner])
+    owner = Plausible.Users.with_subscription(site.owner)
+    site = Map.put(site, :owner, owner)
 
     conn
     |> render("settings_props.html",

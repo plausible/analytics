@@ -156,9 +156,9 @@ defmodule Plausible.Sites do
   end
 
   defp check_team_member_limit(site, _role) do
-    site_owner = owner_for(site)
-    limit = Quota.team_member_limit(site_owner)
-    usage = Quota.team_member_usage(site_owner)
+    site = Plausible.Repo.preload(site, :owner)
+    limit = Quota.team_member_limit(site.owner)
+    usage = Quota.team_member_usage(site.owner)
 
     if Quota.within_limit?(usage, limit),
       do: :ok,
@@ -299,17 +299,6 @@ defmodule Plausible.Sites do
       on: sm.site_id == s.id,
       where: sm.role == :owner,
       where: sm.user_id == ^user.id
-    )
-  end
-
-  def owner_for(site) do
-    Repo.one(
-      from(u in Plausible.Auth.User,
-        join: sm in Site.Membership,
-        on: sm.user_id == u.id,
-        where: sm.site_id == ^site.id,
-        where: sm.role == :owner
-      )
     )
   end
 end

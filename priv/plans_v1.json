@@ -5,7 +5,8 @@
     "monthly_product_id":"558018",
     "yearly_product_id":"572810",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   },
   {
     "kind":"growth",
@@ -13,7 +14,8 @@
     "monthly_product_id":"558745",
     "yearly_product_id":"590752",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   },
   {
     "kind":"growth",
@@ -21,7 +23,8 @@
     "monthly_product_id":"597485",
     "yearly_product_id":"597486",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   },
   {
     "kind":"growth",
@@ -29,7 +32,8 @@
     "monthly_product_id":"597487",
     "yearly_product_id":"597488",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   },
   {
     "kind":"growth",
@@ -37,7 +41,8 @@
     "monthly_product_id":"597642",
     "yearly_product_id":"597643",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   },
   {
     "kind":"growth",
@@ -45,7 +50,8 @@
     "monthly_product_id":"597309",
     "yearly_product_id":"597310",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   },
   {
     "kind":"growth",
@@ -53,7 +59,8 @@
     "monthly_product_id":"597311",
     "yearly_product_id":"597312",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   },
   {
     "kind":"growth",
@@ -61,7 +68,8 @@
     "monthly_product_id":"642352",
     "yearly_product_id":"642354",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   },
   {
     "kind":"growth",
@@ -69,7 +77,8 @@
     "monthly_product_id":"642355",
     "yearly_product_id":"642356",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   },
   {
     "kind":"growth",
@@ -77,6 +86,7 @@
     "monthly_product_id":"650652",
     "yearly_product_id":"650653",
     "site_limit":50,
-    "team_member_limit":"unlimited"
+    "team_member_limit":"unlimited",
+    "extra_features":["props"]
   }
 ]

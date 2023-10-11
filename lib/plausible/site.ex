@@ -41,6 +41,8 @@ defmodule Plausible.Site do
     has_one :monthly_report, Plausible.Site.MonthlyReport
     has_one :custom_domain, Plausible.Site.CustomDomain
     has_one :spike_notification, Plausible.Site.SpikeNotification
+    has_one :ownership, Plausible.Site.Membership, where: [role: :owner]
+    has_one :owner, through: [:ownership, :user]
 
     # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Cache`.
     # Use `Plausible.Repo.reload!(cached_site)` to pre-fill missing fields if
@@ -164,21 +166,6 @@ defmodule Plausible.Site do
         source: imported_source
       }
     )
-  end
-
-  @togglable_features ~w[conversions_enabled funnels_enabled props_enabled]a
-  def feature_toggle_change(site, property, opts \\ [])
-      when property in @togglable_features do
-    override = Keyword.get(opts, :override)
-
-    attrs =
-      if is_boolean(override) do
-        %{property => override}
-      else
-        %{property => !Map.fetch!(site, property)}
-      end
-
-    cast(site, attrs, @togglable_features)
   end
 
   def remove_imported_data(site) do

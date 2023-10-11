@@ -1,0 +1,125 @@
+defmodule Plausible.Billing.FeatureTest do
+  use Plausible.DataCase
+
+  @v1_plan_id "558018"
+  @v4_growth_plan_id "change-me-749342"
+  @v4_business_plan_id "change-me-b749342"
+
+  for mod <- [Plausible.Billing.Feature.Funnels, Plausible.Billing.Feature.RevenueGoals] do
+    test "#{mod}.check_availability/1 returns :ok when site owner is on a enterprise plan" do
+      user =
+        insert(:user,
+          enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
+          subscription: build(:subscription, paddle_plan_id: "123321")
+        )
+
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+
+      assert :ok == unquote(mod).check_availability(user)
+      assert :ok == unquote(mod).check_availability(site)
+    end
+
+    test "#{mod}.check_availability/1 returns :ok when site owner is on a business plan" do
+      user =
+        insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_business_plan_id))
+
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+
+      assert :ok == unquote(mod).check_availability(user)
+      assert :ok == unquote(mod).check_availability(site)
+    end
+
+    test "#{mod}.check_availability/1 returns error when site owner is on a growth plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+
+      assert {:error, :upgrade_required} == unquote(mod).check_availability(user)
+      assert {:error, :upgrade_required} == unquote(mod).check_availability(site)
+    end
+
+    test "#{mod}.check_availability/1 returns error when site owner is on an old plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+
+      assert {:error, :upgrade_required} == unquote(mod).check_availability(user)
+      assert {:error, :upgrade_required} == unquote(mod).check_availability(site)
+    end
+  end
+
+  test "Plausible.Billing.Feature.Props.check_availability/1 applies grandfathering to old plans" do
+    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+    site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+
+    assert :ok == Plausible.Billing.Feature.Props.check_availability(user)
+    assert :ok == Plausible.Billing.Feature.Props.check_availability(site)
+  end
+
+  test "Plausible.Billing.Feature.Goals.check_availability/2 always returns :ok" do
+    u1 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+    u2 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+    u3 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_business_plan_id))
+
+    u4 =
+      insert(:user,
+        enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
+        subscription: build(:subscription, paddle_plan_id: "123321")
+      )
+
+    assert :ok == Plausible.Billing.Feature.Goals.check_availability(u1)
+    assert :ok == Plausible.Billing.Feature.Goals.check_availability(u2)
+    assert :ok == Plausible.Billing.Feature.Goals.check_availability(u3)
+    assert :ok == Plausible.Billing.Feature.Goals.check_availability(u4)
+  end
+
+  for {mod, property} <- [
+        {Plausible.Billing.Feature.Funnels, :funnels_enabled},
+        {Plausible.Billing.Feature.Props, :props_enabled}
+      ] do
+    test "#{mod}.toggle/2 toggles #{property} on and off" do
+      site = insert(:site, [{:members, [build(:user)]}, {unquote(property), false}])
+
+      {:ok, site} = unquote(mod).toggle(site)
+      assert Map.get(site, unquote(property))
+      assert unquote(mod).enabled?(site)
+
+      {:ok, site} = unquote(mod).toggle(site)
+      refute Map.get(site, unquote(property))
+      refute unquote(mod).enabled?(site)
+    end
+
+    test "#{mod}.toggle/2 accepts an override option" do
+      site = insert(:site, [{:members, [build(:user)]}, {unquote(property), false}])
+
+      {:ok, site} = unquote(mod).toggle(site, override: false)
+      refute Map.get(site, unquote(property))
+      refute unquote(mod).enabled?(site)
+    end
+
+    test "#{mod}.toggle/2 errors when site owner does not have access to the feature" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+      site = insert(:site, [{:members, [user]}, {unquote(property), false}])
+      {:error, :upgrade_required} = unquote(mod).toggle(site)
+      refute unquote(mod).enabled?(site)
+    end
+  end
+
+  test "Plausible.Billing.Feature.Goals.toggle/2 toggles conversions_enabled on and off" do
+    site = insert(:site, [{:members, [build(:user)]}, {:conversions_enabled, false}])
+
+    {:ok, site} = Plausible.Billing.Feature.Goals.toggle(site)
+    assert Map.get(site, :conversions_enabled)
+    assert Plausible.Billing.Feature.Goals.enabled?(site)
+
+    {:ok, site} = Plausible.Billing.Feature.Goals.toggle(site)
+    refute Map.get(site, :conversions_enabled)
+    refute Plausible.Billing.Feature.Goals.enabled?(site)
+  end
+
+  for mod <- [Plausible.Billing.Feature.Funnels, Plausible.Billing.Feature.Props] do
+    test "#{mod}.enabled?/1 returns false when user does not have access to the feature even when enabled" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+      site = insert(:site, [{:members, [user]}, {unquote(mod).toggle_field(), true}])
+      refute unquote(mod).enabled?(site)
+    end
+  end
+end

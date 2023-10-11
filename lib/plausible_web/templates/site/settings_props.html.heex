@@ -1,15 +1,10 @@
 <section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
-  <PlausibleWeb.Components.Generic.notice class="rounded-t-md rounded-b-none">
-    Properties is an upcoming premium feature that's free-to-use during the
-    private preview. Pricing will be announced soon. Existing subscribers will
-    be grandfathered and will keep having access to custom properties without
-    any change to their plan. See examples and learn more in <.link
-      class="font-medium text-yellow underline hover:text-yellow-600"
-      href="https://plausible.io/docs/custom-props/introduction"
-      target="_blank"
-      rel="noreferrer"
-    >our docs</.link>.
-  </PlausibleWeb.Components.Generic.notice>
+  <PlausibleWeb.Components.Billing.extra_feature_notice
+    site={@site}
+    current_user={@current_user}
+    feature_mod={Plausible.Billing.Feature.Props}
+    grandfathered?
+  />
 
   <div class="py-6 px-4 sm:p-6">
     <header class="w-full flex">
@@ -50,9 +45,8 @@
     </header>
 
     <PlausibleWeb.Components.Site.Feature.toggle
+      feature_mod={Plausible.Billing.Feature.Props}
       site={@site}
-      setting={:props_enabled}
-      label="Show Properties in the Dashboard"
       conn={@conn}
     >
       <%= live_render(@conn, PlausibleWeb.Live.PropsSettings,

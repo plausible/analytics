@@ -106,13 +106,8 @@ defmodule Plausible.Billing.Quota do
   with the user's sites.
   """
   def team_member_usage(user) do
-    owned_sites_query =
-      from sm in Plausible.Site.Membership,
-        where: sm.role == :owner and sm.user_id == ^user.id,
-        select: %{site_id: sm.site_id}
-
     team_members_query =
-      from os in subquery(owned_sites_query),
+      from os in subquery(owned_sites_query(user)),
         inner_join: sm in Plausible.Site.Membership,
         on: sm.site_id == os.site_id,
         inner_join: u in assoc(sm, :user),
@@ -120,7 +115,7 @@ defmodule Plausible.Billing.Quota do
 
     invitations_and_team_members_query =
       from i in Plausible.Auth.Invitation,
-        inner_join: os in subquery(owned_sites_query),
+        inner_join: os in subquery(owned_sites_query(user)),
         on: i.site_id == os.site_id,
         where: i.role != :owner,
         select: %{email: i.email},
@@ -132,6 +127,61 @@ defmodule Plausible.Billing.Quota do
         select: count(itm.email, :distinct)
 
     Plausible.Repo.one(query)
+  end
+
+  @spec extra_features_usage(Plausible.Auth.User.t()) :: [atom()]
+  @doc """
+  Returns a list of extra features the given user's sites uses.
+  """
+  def extra_features_usage(user) do
+    props_usage_query =
+      from s in Plausible.Site,
+        inner_join: os in subquery(owned_sites_query(user)),
+        on: s.id == os.site_id,
+        where: fragment("cardinality(?) > 0", s.allowed_event_props)
+
+    funnels_usage_query =
+      from f in Plausible.Funnel,
+        inner_join: os in subquery(owned_sites_query(user)),
+        on: f.site_id == os.site_id
+
+    revenue_goals_usage =
+      from g in Plausible.Goal,
+        inner_join: os in subquery(owned_sites_query(user)),
+        on: g.site_id == os.site_id,
+        where: not is_nil(g.currency)
+
+    queries = [
+      props: props_usage_query,
+      funnels: funnels_usage_query,
+      revenue_goals: revenue_goals_usage
+    ]
+
+    Enum.reduce(queries, [], fn {feature, query}, acc ->
+      if Plausible.Repo.exists?(query), do: [feature | acc], else: acc
+    end)
+  end
+
+  @all_features [:props, :revenue_goals, :funnels]
+  @doc """
+  Returns a list of extra features the user can use. Trial users have the
+  ability to use all features during their trial.
+  """
+  def extra_features_limit(user) do
+    user = Plausible.Users.with_subscription(user)
+
+    case Plans.get_subscription_plan(user.subscription) do
+      %Plausible.Billing.EnterprisePlan{} -> @all_features
+      %Plausible.Billing.Plan{extra_features: extra_features} -> extra_features
+      :free_10k -> []
+      nil -> @all_features
+    end
+  end
+
+  defp owned_sites_query(user) do
+    from sm in Plausible.Site.Membership,
+      where: sm.role == :owner and sm.user_id == ^user.id,
+      select: %{site_id: sm.site_id}
   end
 
   @spec within_limit?(non_neg_integer(), non_neg_integer() | :unlimited) :: boolean()
