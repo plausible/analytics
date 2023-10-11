@@ -2,6 +2,8 @@ defmodule Plausible.Auth.ApiKey do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t() :: %__MODULE__{}
+
   @required [:user_id, :name]
   @optional [:key, :scopes, :hourly_request_limit]
   schema "api_keys" do

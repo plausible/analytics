@@ -148,3 +148,10 @@ defmodule Plausible.Billing.Feature.Props do
     toggle_field: :props_enabled,
     extra_feature: :props
 end
+
+defmodule Plausible.Billing.Feature.StatsAPI do
+  @moduledoc false
+  use Plausible.Billing.Feature,
+    display_name: "Stats API",
+    extra_feature: :stats_api
+end

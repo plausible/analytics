@@ -132,7 +132,8 @@ defmodule Plausible.Auth do
     params = %{name: name, user_id: user.id, key: key}
     changeset = Auth.ApiKey.changeset(%Auth.ApiKey{}, params)
 
-    Repo.insert(changeset)
+    with :ok <- Plausible.Billing.Feature.StatsAPI.check_availability(user),
+         do: Repo.insert(changeset)
   end
 
   @spec delete_api_key(Auth.User.t(), integer()) :: :ok | {:error, :not_found}
@@ -142,6 +143,24 @@ defmodule Plausible.Auth do
     case Repo.delete_all(query) do
       {1, _} -> :ok
       {0, _} -> {:error, :not_found}
+    end
+  end
+
+  @spec find_api_key(String.t()) :: {:ok, Auth.ApiKey.t()} | {:error, :invalid_api_key}
+  def find_api_key(raw_key) do
+    hashed_key = Auth.ApiKey.do_hash(raw_key)
+
+    query =
+      from(api_key in Auth.ApiKey,
+        join: user in assoc(api_key, :user),
+        where: api_key.key_hash == ^hashed_key,
+        preload: [user: user]
+      )
+
+    if found = Repo.one(query) do
+      {:ok, found}
+    else
+      {:error, :invalid_api_key}
     end
   end
 end
