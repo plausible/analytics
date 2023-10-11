@@ -49,6 +49,7 @@ defmodule PlausibleWeb.StatsController do
   plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
+    site = Plausible.Repo.preload(site, :owner)
     stats_start_date = Plausible.Sites.stats_start_date(site)
     can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
