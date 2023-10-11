@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-8E72A386.js"></script>
+    <script src="dist/sidebar_items-920E5485.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -318,7 +318,9 @@ Functions
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> allow(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), [<a href="#t:prop/0">prop</a>()] | <a href="#t:prop/0">prop</a>()) ::
-  {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
+  {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()}
+  | {:error, <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}
+  | {:error, :upgrade_required}</pre>
 
       </div>
 
@@ -336,7 +338,7 @@ data to be dropped or lost.</p>
     </a>
     <h1 class="signature" translate="no">allow_changeset(site, prop_or_props)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L32" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L34" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -358,7 +360,7 @@ data to be dropped or lost.</p>
     </a>
     <h1 class="signature" translate="no">allow_existing_props(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L75" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L78" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -370,7 +372,8 @@ data to be dropped or lost.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> allow_existing_props(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> allow_existing_props(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) ::
+  {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()} | {:error, :upgrade_required}</pre>
 
       </div>
 
@@ -387,7 +390,7 @@ the past 6 months.</p>
     </a>
     <h1 class="signature" translate="no">configured?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L128" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L131" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -409,7 +412,7 @@ the past 6 months.</p>
     </a>
     <h1 class="signature" translate="no">disallow(site, prop)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L46" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L48" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -440,7 +443,7 @@ ClickHouse data, nor affects ingestion.</p>
     </a>
     <h1 class="signature" translate="no">internal_keys()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L93" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L96" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -533,7 +536,7 @@ from the allow list, or to suggest users to add this prop key.</p>
     </a>
     <h1 class="signature" translate="no">suggest_keys_to_allow(site, limit \\ 300)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L101" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L104" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

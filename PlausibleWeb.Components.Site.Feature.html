@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-8E72A386.js"></script>
+    <script src="dist/sidebar_items-920E5485.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -143,22 +143,6 @@ capable of flipping booleans in <a href="Plausible.Site.html"><code class="inlin
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#button_active/1" translate="no">button_active(assigns)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#button_inactive/1" translate="no">button_inactive(assigns)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
         <a href="#render/2" translate="no">render(template, assigns \\ %{})</a>
 
       </div>
@@ -193,7 +177,7 @@ to render a particular template.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>) (required)</li><li><code class="inline">setting</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">conn</code> (<a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html"><code class="inline">Plug.Conn</code></a>) (required)</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code></li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>) (required)</li><li><code class="inline">feature_mod</code> (<code class="inline">:atom</code>) (required) - Must be one of <code class="inline">Plausible.Billing.Feature.Funnels</code>, <code class="inline">Plausible.Billing.Feature.Goals</code>, <code class="inline">Plausible.Billing.Feature.Props</code>, or <code class="inline">Plausible.Billing.Feature.RevenueGoals</code>.</li><li><code class="inline">conn</code> (<a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html"><code class="inline">Plug.Conn</code></a>) (required)</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code></li></ul></div>
 
     </div>
 
@@ -232,50 +216,6 @@ Functions
 <p>The resource name, as an atom, for this view</p>
   </section>
 </section>
-<section class="detail" id="button_active/1">
-
-  <div class="detail-header">
-    <a href="#button_active/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">button_active(assigns)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L39" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="button_inactive/1">
-
-  <div class="detail-header">
-    <a href="#button_inactive/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">button_inactive(assigns)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L48" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="render/2">
 
     <span id="render/1"></span>
@@ -309,7 +249,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">target(site, setting, conn, set_to)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L34" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/site/feature.ex#L47" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -377,7 +317,7 @@ to render a particular template.</p>
     Attributes
   </a>
 </h2>
-<ul><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>) (required)</li><li><code class="inline">setting</code> (<code class="inline">:atom</code>) (required)</li><li><code class="inline">label</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">conn</code> (<a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html"><code class="inline">Plug.Conn</code></a>) (required)</li></ul><h2 id="toggle/1-slots" class="section-heading">
+<ul><li><code class="inline">site</code> (<a href="Plausible.Site.html"><code class="inline">Plausible.Site</code></a>) (required)</li><li><code class="inline">feature_mod</code> (<code class="inline">:atom</code>) (required) - Must be one of <code class="inline">Plausible.Billing.Feature.Funnels</code>, <code class="inline">Plausible.Billing.Feature.Goals</code>, <code class="inline">Plausible.Billing.Feature.Props</code>, or <code class="inline">Plausible.Billing.Feature.RevenueGoals</code>.</li><li><code class="inline">conn</code> (<a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html"><code class="inline">Plug.Conn</code></a>) (required)</li></ul><h2 id="toggle/1-slots" class="section-heading">
   <a href="#toggle/1-slots">
     <i class="ri-link-m" aria-hidden="true"></i>
     Slots
