@@ -167,7 +167,7 @@ defmodule Plausible.Billing.Quota do
   Returns a list of extra features the user can use. Trial users have the
   ability to use all features during their trial.
   """
-  def extra_features_limit(user) do
+  def allowed_features_for(user) do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do

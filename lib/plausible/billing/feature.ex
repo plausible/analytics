@@ -32,7 +32,7 @@ defmodule Plausible.Billing.Feature do
   @callback toggle_field() :: atom()
 
   @doc """
-  Toggles the feature on and off for a site. Returns 
+  Toggles the feature on and off for a site. Returns
   `{:error, :upgrade_required}` when toggling a feature the site owner does not
   have access to.
   """
@@ -94,7 +94,7 @@ defmodule Plausible.Billing.Feature do
         cond do
           is_nil(extra_feature) -> :ok
           not FunWithFlags.enabled?(:business_tier, for: user) -> :ok
-          extra_feature in Quota.extra_features_limit(user) -> :ok
+          extra_feature in Quota.allowed_features_for(user) -> :ok
           true -> {:error, :upgrade_required}
         end
       end
