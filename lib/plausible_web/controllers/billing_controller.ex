@@ -51,42 +51,38 @@ defmodule PlausibleWeb.BillingController do
   def upgrade_to_enterprise_plan(conn, _params) do
     user = Plausible.Users.with_subscription(conn.assigns.current_user)
 
-    if FunWithFlags.enabled?(:business_tier, for: user) do
-      {latest_enterprise_plan, price} = Plans.latest_enterprise_plan_with_price(user)
+    {latest_enterprise_plan, price} = Plans.latest_enterprise_plan_with_price(user)
 
-      subscription_resumable? = Plausible.Billing.Subscriptions.resumable?(user.subscription)
+    subscription_resumable? = Plausible.Billing.Subscriptions.resumable?(user.subscription)
 
-      subscribed_to_latest? =
-        subscription_resumable? &&
-          user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
+    subscribed_to_latest? =
+      subscription_resumable? &&
+        user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
 
-      cond do
-        user.subscription &&
-            user.subscription.status in [
-              Subscription.Status.past_due(),
-              Subscription.Status.paused()
-            ] ->
-          redirect(conn, to: Routes.auth_path(conn, :user_settings))
+    cond do
+      user.subscription &&
+          user.subscription.status in [
+            Subscription.Status.past_due(),
+            Subscription.Status.paused()
+          ] ->
+        redirect(conn, to: Routes.auth_path(conn, :user_settings))
 
-        subscribed_to_latest? ->
-          render(conn, "change_enterprise_plan_contact_us.html",
-            skip_plausible_tracking: true,
-            layout: {PlausibleWeb.LayoutView, "focus.html"}
-          )
+      subscribed_to_latest? ->
+        render(conn, "change_enterprise_plan_contact_us.html",
+          skip_plausible_tracking: true,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
 
-        true ->
-          render(conn, "upgrade_to_enterprise_plan.html",
-            user: user,
-            latest_enterprise_plan: latest_enterprise_plan,
-            price: price,
-            subscription_resumable: subscription_resumable?,
-            contact_link: "https://plausible.io/contact",
-            skip_plausible_tracking: true,
-            layout: {PlausibleWeb.LayoutView, "focus.html"}
-          )
-      end
-    else
-      render_error(conn, 404)
+      true ->
+        render(conn, "upgrade_to_enterprise_plan.html",
+          user: user,
+          latest_enterprise_plan: latest_enterprise_plan,
+          price: price,
+          subscription_resumable: subscription_resumable?,
+          contact_link: "https://plausible.io/contact",
+          skip_plausible_tracking: true,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
     end
   end
 
