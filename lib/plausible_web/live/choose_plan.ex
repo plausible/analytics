@@ -67,15 +67,15 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <.subscription_past_due_notice class="pb-2" subscription={@user.subscription} />
         <.subscription_paused_notice class="pb-2" subscription={@user.subscription} />
         <div class="mx-auto max-w-4xl text-center">
-          <p class="text-4xl font-bold tracking-tight sm:text-5xl">
+          <p class="text-4xl font-bold tracking-tight lg:text-5xl">
             <%= if @owned_plan,
               do: "Change subscription plan",
               else: "Upgrade your account" %>
           </p>
         </div>
-        <div class="mt-12 max-w-md lg:max-w-none mx-auto lg:flex flex-row justify-between">
-          <.slider selected_volume={@selected_volume} available_volumes={@available_volumes} />
+        <div class="mt-12 max-w-md lg:max-w-none mx-auto flex flex-col  lg:flex-row-reverse justify-between">
           <.interval_picker selected_interval={@selected_interval} />
+          <.slider selected_volume={@selected_volume} available_volumes={@available_volumes} />
         </div>
         <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <.plan_box
@@ -165,7 +165,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp interval_picker(assigns) do
     ~H"""
-    <div class="mt-4 lg:flex justify-center self-end">
+    <div class="mt-4 lg:flex justify-center self-start lg:self-end">
       <div class="relative ">
         <.two_months_free />
         <fieldset class="grid grid-cols-2 gap-x-1 rounded-full bg-white dark:bg-gray-700 p-1 text-center text-sm font-semibold leading-5 shadow dark:ring-gray-600">
@@ -193,7 +193,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def two_months_free(assigns) do
     ~H"""
-    <span class="absolute -right-4 lg:-right-16 -top-3 whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-yellow-100 border border-yellow-300 text-yellow-700">
+    <span class="absolute -right-16 -top-3 whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-yellow-100 border border-yellow-300 text-yellow-700">
       2 months free
     </span>
     """
@@ -201,7 +201,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp slider(assigns) do
     ~H"""
-    <form class="w-full lg:w-2/5">
+    <form class="w-full lg:w-2/5 mt-4 ">
       <p class="font-medium leading-6 text-gray-600 dark:text-gray-200">
         <b id="slider-value" class="text-xl text-gray-900 dark:text-gray-100">
           <%= slider_value(@selected_volume, @available_volumes) %>
