@@ -167,7 +167,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <div class="mt-4 lg:flex justify-center self-end">
       <div class="relative ">
-        <.two_months_free active={@selected_interval == :yearly} />
+        <.two_months_free />
         <fieldset class="grid grid-cols-2 gap-x-1 rounded-full bg-white p-1 text-center text-sm font-semibold leading-5 shadow dark:ring-gray-600">
           <label
             class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval == :monthly, do: "bg-indigo-600 text-white"}"}
