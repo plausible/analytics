@@ -47,6 +47,21 @@ defmodule Plausible.Sites do
     end
   end
 
+  @spec bulk_transfer_ownership_direct([Site.t()], Plausible.Auth.User.t()) ::
+          {:ok, [Plausible.Site.Membership.t()]} | {:error, invite_error()}
+  def bulk_transfer_ownership_direct(sites, new_owner) do
+    Repo.transaction(fn ->
+      for site <- sites do
+        with :ok <- ensure_transfer_valid(site, new_owner, :owner),
+             {:ok, membership} <- Site.Memberships.transfer_ownership(site, new_owner) do
+          membership
+        else
+          {:error, error} -> Repo.rollback(error)
+        end
+      end
+    end)
+  end
+
   @spec bulk_transfer_ownership(
           [Site.t()],
           Plausible.Auth.User.t(),
