@@ -2,6 +2,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
   import Plausible.Test.Support.HTML
+  @v4_growth_plan_id "change-me-749342"
 
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
@@ -152,6 +153,20 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert 'utm_mediums.csv' in zip
       assert 'utm_sources.csv' in zip
       assert 'utm_terms.csv' in zip
+    end
+
+    test "does not export custom properties when site owner is on a growth plan", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan_id)
+      response = conn |> get("/" <> site.domain <> "/export") |> response(200)
+
+      {:ok, zip} = :zip.unzip(response, [:memory])
+      files = Map.new(zip)
+
+      refute Map.has_key?(files, 'custom_props.csv')
     end
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do

@@ -1214,13 +1214,23 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def custom_prop_values(conn, params) do
-    site = conn.assigns[:site]
-    props = breakdown_custom_prop_values(site, params)
-    json(conn, props)
+    site = Plausible.Repo.preload(conn.assigns.site, :owner)
+
+    case Plausible.Billing.Feature.Props.check_availability(site.owner) do
+      :ok ->
+        props = breakdown_custom_prop_values(site, params)
+        json(conn, props)
+
+      {:error, :upgrade_required} ->
+        H.payment_required(
+          conn,
+          "#{Plausible.Billing.Feature.Props.display_name()} is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+        )
+    end
   end
 
   def all_custom_prop_values(conn, params) do
-    site = conn.assigns[:site]
+    site = conn.assigns.site
     query = Query.from(site, params) |> Filters.add_prefix()
 
     prop_names = Plausible.Stats.CustomProps.fetch_prop_names(site, query)
