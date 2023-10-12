@@ -1,7 +1,8 @@
 defmodule Plausible.Billing.SiteLockerTest do
   use Plausible.DataCase
   use Bamboo.Test, shared: true
-  alias Plausible.Billing.SiteLocker
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.{SiteLocker, Subscription}
 
   describe "update_sites_for/1" do
     test "does not lock sites if user is on trial" do
@@ -22,7 +23,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "does not lock if user has an active subscription" do
       user = insert(:user)
-      insert(:subscription, status: "active", user: user)
+      insert(:subscription, status: Subscription.Status.active(), user: user)
 
       site =
         insert(:site,
@@ -39,7 +40,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "does not lock user who is past due" do
       user = insert(:user)
-      insert(:subscription, status: "past_due", user: user)
+      insert(:subscription, status: Subscription.Status.past_due(), user: user)
 
       site =
         insert(:site,
@@ -55,7 +56,7 @@ defmodule Plausible.Billing.SiteLockerTest do
 
     test "does not lock user who cancelled subscription but it hasn't expired yet" do
       user = insert(:user)
-      insert(:subscription, status: "deleted", user: user)
+      insert(:subscription, status: Subscription.Status.deleted(), user: user)
 
       site =
         insert(:site,
@@ -78,7 +79,7 @@ defmodule Plausible.Billing.SiteLockerTest do
           }
         )
 
-      insert(:subscription, status: "active", user: user)
+      insert(:subscription, status: Subscription.Status.active(), user: user)
 
       site =
         insert(:site,
@@ -96,7 +97,7 @@ defmodule Plausible.Billing.SiteLockerTest do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
 
       insert(:subscription,
-        status: "deleted",
+        status: Subscription.Status.deleted(),
         next_bill_date: Timex.today() |> Timex.shift(days: -1),
         user: user
       )
@@ -122,7 +123,7 @@ defmodule Plausible.Billing.SiteLockerTest do
           }
         )
 
-      insert(:subscription, status: "active", user: user)
+      insert(:subscription, status: Subscription.Status.active(), user: user)
 
       site =
         insert(:site,
@@ -145,7 +146,7 @@ defmodule Plausible.Billing.SiteLockerTest do
           }
         )
 
-      insert(:subscription, status: "active", user: user)
+      insert(:subscription, status: Subscription.Status.active(), user: user)
 
       insert(:site,
         memberships: [
@@ -171,7 +172,7 @@ defmodule Plausible.Billing.SiteLockerTest do
           }
         )
 
-      insert(:subscription, status: "active", user: user)
+      insert(:subscription, status: Subscription.Status.active(), user: user)
 
       insert(:site,
         memberships: [

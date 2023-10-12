@@ -1,8 +1,9 @@
 defmodule Plausible.Workers.NotifyAnnualRenewalTest do
   use Plausible.DataCase, async: true
   use Bamboo.Test
-
+  require Plausible.Billing.Subscription.Status
   alias Plausible.Workers.NotifyAnnualRenewal
+  alias Plausible.Billing.Subscription
 
   setup [:create_user, :create_site]
   @monthly_plan "558018"
@@ -185,7 +186,7 @@ defmodule Plausible.Workers.NotifyAnnualRenewalTest do
         user: user,
         paddle_plan_id: @yearly_plan,
         next_bill_date: Timex.shift(Timex.today(), days: 7),
-        status: "deleted"
+        status: Subscription.Status.deleted()
       )
 
       NotifyAnnualRenewal.perform(nil)

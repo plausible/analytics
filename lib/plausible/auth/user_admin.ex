@@ -1,5 +1,7 @@
 defmodule Plausible.Auth.UserAdmin do
   use Plausible.Repo
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Subscription
 
   def custom_index_query(_conn, _schema, query) do
     subscripton_q = from(s in Plausible.Billing.Subscription, order_by: [desc: s.inserted_at])
@@ -10,6 +12,7 @@ defmodule Plausible.Auth.UserAdmin do
     [
       name: nil,
       email: nil,
+      previous_email: nil,
       trial_expiry_date: nil
     ]
   end
@@ -83,7 +86,7 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp subscription_plan(user) do
-    if user.subscription && user.subscription.status == "active" &&
+    if user.subscription && user.subscription.status == Subscription.Status.active() &&
          user.subscription.paddle_subscription_id do
       quota = PlausibleWeb.AuthView.subscription_quota(user.subscription)
       interval = PlausibleWeb.AuthView.subscription_interval(user.subscription)

@@ -1,7 +1,8 @@
 defmodule Plausible.GoalsTest do
   use Plausible.DataCase
-
   alias Plausible.Goals
+
+  @v4_growth_plan_id "change-me-749342"
 
   test "create/2 creates goals and trims input" do
     site = insert(:site)
@@ -50,6 +51,7 @@ defmodule Plausible.GoalsTest do
 
   test "create/2 sets site.updated_at for revenue goal" do
     site_1 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
+
     {:ok, _goal_1} = Goals.create(site_1, %{"event_name" => "Checkout", "currency" => "BRL"})
 
     assert NaiveDateTime.compare(site_1.updated_at, Plausible.Repo.reload!(site_1).updated_at) ==
@@ -68,6 +70,14 @@ defmodule Plausible.GoalsTest do
     assert goal.event_name == "Purchase"
     assert goal.page_path == nil
     assert goal.currency == :EUR
+  end
+
+  test "create/2 returns error when site does not have access to revenue goals" do
+    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+    site = insert(:site, members: [user])
+
+    {:error, :upgrade_required} =
+      Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
   end
 
   test "create/2 fails for unknown currency code" do

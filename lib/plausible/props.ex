@@ -17,16 +17,19 @@ defmodule Plausible.Props do
   def max_prop_value_length, do: @max_prop_value_length
 
   @spec allow(Plausible.Site.t(), [prop()] | prop()) ::
-          {:ok, Plausible.Site.t()} | {:error, Ecto.Changeset.t()}
+          {:ok, Plausible.Site.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
   @doc """
   Allows a prop key or a list of props keys to be included in ClickHouse
   queries. Allowing prop keys does not affect ingestion, as we don't want any
   data to be dropped or lost.
   """
   def allow(site, prop_or_props) do
-    site
-    |> allow_changeset(prop_or_props)
-    |> Plausible.Repo.update()
+    with site <- Plausible.Repo.preload(site, :owner),
+         :ok <- Plausible.Billing.Feature.Props.check_availability(site.owner) do
+      site
+      |> allow_changeset(prop_or_props)
+      |> Plausible.Repo.update()
+    end
   end
 
   def allow_changeset(site, prop_or_props) do
@@ -67,7 +70,8 @@ defmodule Plausible.Props do
     end)
   end
 
-  @spec allow_existing_props(Plausible.Site.t()) :: {:ok, Plausible.Site.t()}
+  @spec allow_existing_props(Plausible.Site.t()) ::
+          {:ok, Plausible.Site.t()} | {:error, :upgrade_required}
   @doc """
   Allows the #{@max_props} most frequent props keys for a specific site over
   the past 6 months.

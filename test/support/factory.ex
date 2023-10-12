@@ -1,5 +1,7 @@
 defmodule Plausible.Factory do
   use ExMachina.Ecto, repo: Plausible.Repo
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Subscription
 
   def user_factory(attrs) do
     pw = Map.get(attrs, :password, "password")
@@ -21,14 +23,23 @@ defmodule Plausible.Factory do
     }
   end
 
-  def site_factory do
+  def site_factory(attrs) do
     domain = sequence(:domain, &"example-#{&1}.com")
 
-    %Plausible.Site{
+    defined_memberships? =
+      Map.has_key?(attrs, :memberships) ||
+        Map.has_key?(attrs, :members) ||
+        Map.has_key?(attrs, :owner)
+
+    attrs = if defined_memberships?, do: attrs, else: Map.put_new(attrs, :members, [build(:user)])
+
+    site = %Plausible.Site{
       native_stats_start_at: ~N[2000-01-01 00:00:00],
       domain: domain,
       timezone: "UTC"
     }
+
+    merge_attributes(site, attrs)
   end
 
   def site_membership_factory do
@@ -88,7 +99,7 @@ defmodule Plausible.Factory do
       paddle_plan_id: sequence(:paddle_plan_id, &"plan-#{&1}"),
       cancel_url: "cancel.com",
       update_url: "cancel.com",
-      status: "active",
+      status: Subscription.Status.active(),
       next_bill_amount: "6.00",
       next_bill_date: Timex.today(),
       last_bill_date: Timex.today(),

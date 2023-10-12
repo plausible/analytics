@@ -8,16 +8,17 @@ defmodule Mix.Tasks.CancelSubscription do
 
   use Mix.Task
   use Plausible.Repo
-  alias Plausible.{Repo, Billing.Subscription}
+  require Plausible.Billing.Subscription.Status
   require Logger
+  alias Plausible.{Repo, Billing.Subscription}
 
   def run([paddle_subscription_id]) do
     Mix.Task.run("app.start")
 
     Repo.get_by!(Subscription, paddle_subscription_id: paddle_subscription_id)
-    |> Subscription.changeset(%{status: "deleted"})
+    |> Subscription.changeset(%{status: Subscription.Status.deleted()})
     |> Repo.update!()
 
-    Logger.info("Successfully set the subscription status to 'deleted'.")
+    Logger.info("Successfully set the subscription status to #{Subscription.Status.deleted()}")
   end
 end

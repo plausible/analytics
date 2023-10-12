@@ -40,7 +40,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
       case Repo.transaction(multi) do
         {:ok, changes} ->
           if changes[:site_locker] == {:locked, :grace_period_ended_now} do
-            Billing.SiteLocker.send_grace_period_end_email(changes.user)
+            user = Plausible.Users.with_subscription(changes.user)
+            Billing.SiteLocker.send_grace_period_end_email(user)
           end
 
           notify_invitation_accepted(invitation)

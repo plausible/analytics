@@ -100,7 +100,7 @@
         <div class="text-sm font-medium dark:text-gray-100">Due today: <template x-if="localizedPlans"><b x-text="selectedPlanPrice()"></b></template></div>
         <div class="mb-4 text-xs font-medium dark:text-gray-100">+ VAT if applicable</div>
         <span class="inline-flex rounded-md shadow-sm">
-          <button type="button" data-theme="none" :data-product="selectedPlanProductId()" data-email="<%= @conn.assigns[:current_user].email %>" data-disable-logout="true" data-passthrough="<%= @conn.assigns[:current_user].id %>" data-success="/billing/upgrade-success" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent paddle_button leading-5 rounded-md hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150">
+          <button type="button" data-theme="none" :data-product="selectedPlanProductId()" data-email="<%= @conn.assigns[:current_user].email %>" data-disable-logout="true" data-passthrough="<%= @conn.assigns[:current_user].id %>" data-success="<%= Routes.billing_path(@conn, :upgrade_success) %>" class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent paddle_button leading-5 rounded-md hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150">
             <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
             Pay securely via Paddle
           </button>

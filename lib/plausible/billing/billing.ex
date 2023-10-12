@@ -1,5 +1,6 @@
 defmodule Plausible.Billing do
   use Plausible.Repo
+  require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
   @spec active_subscription_for(integer()) :: Subscription.t() | nil
@@ -92,10 +93,12 @@ defmodule Plausible.Billing do
     end
   end
 
-  defp subscription_is_active?(%Subscription{status: "active"}), do: true
-  defp subscription_is_active?(%Subscription{status: "past_due"}), do: true
+  defp subscription_is_active?(%Subscription{status: Subscription.Status.active()}), do: true
+  defp subscription_is_active?(%Subscription{status: Subscription.Status.past_due()}), do: true
 
-  defp subscription_is_active?(%Subscription{status: "deleted"} = subscription) do
+  defp subscription_is_active?(
+         %Subscription{status: Subscription.Status.deleted()} = subscription
+       ) do
     subscription.next_bill_date && !Timex.before?(subscription.next_bill_date, Timex.today())
   end
 
@@ -269,7 +272,7 @@ defmodule Plausible.Billing do
 
   defp active_subscription_query(user_id) do
     from(s in Subscription,
-      where: s.user_id == ^user_id and s.status == "active",
+      where: s.user_id == ^user_id and s.status == ^Subscription.Status.active(),
       order_by: [desc: s.inserted_at],
       limit: 1
     )

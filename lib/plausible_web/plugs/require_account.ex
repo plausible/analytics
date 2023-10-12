@@ -1,6 +1,13 @@
 defmodule PlausibleWeb.RequireAccountPlug do
   import Plug.Conn
 
+  @unverified_email_exceptions [
+    ["settings", "email", "cancel"],
+    ["activate"],
+    ["activate", "request-code"],
+    ["me"]
+  ]
+
   def init(options) do
     options
   end
@@ -14,7 +21,8 @@ defmodule PlausibleWeb.RequireAccountPlug do
         |> Phoenix.Controller.redirect(to: "/login")
         |> halt
 
-      not user.email_verified and conn.path_info not in [["activate"], ["me"]] ->
+      not user.email_verified and
+          conn.path_info not in @unverified_email_exceptions ->
         conn
         |> Phoenix.Controller.redirect(to: "/activate")
         |> halt

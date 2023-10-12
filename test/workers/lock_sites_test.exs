@@ -1,6 +1,8 @@
 defmodule Plausible.Workers.LockSitesTest do
   use Plausible.DataCase, async: true
+  require Plausible.Billing.Subscription.Status
   alias Plausible.Workers.LockSites
+  alias Plausible.Billing.Subscription
 
   test "does not lock enterprise site on grace period" do
     user =
@@ -36,7 +38,7 @@ defmodule Plausible.Workers.LockSitesTest do
 
   test "does not lock active subsriber's sites" do
     user = insert(:user)
-    insert(:subscription, status: "active", user: user)
+    insert(:subscription, status: Subscription.Status.active(), user: user)
     site = insert(:site, members: [user])
 
     LockSites.perform(nil)
@@ -46,7 +48,7 @@ defmodule Plausible.Workers.LockSitesTest do
 
   test "does not lock user who is past due" do
     user = insert(:user)
-    insert(:subscription, status: "past_due", user: user)
+    insert(:subscription, status: Subscription.Status.past_due(), user: user)
     site = insert(:site, members: [user])
 
     LockSites.perform(nil)
@@ -56,7 +58,7 @@ defmodule Plausible.Workers.LockSitesTest do
 
   test "does not lock user who cancelled subscription but it hasn't expired yet" do
     user = insert(:user)
-    insert(:subscription, status: "deleted", user: user)
+    insert(:subscription, status: Subscription.Status.deleted(), user: user)
     site = insert(:site, members: [user])
 
     LockSites.perform(nil)
@@ -68,7 +70,7 @@ defmodule Plausible.Workers.LockSitesTest do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
 
     insert(:subscription,
-      status: "deleted",
+      status: Subscription.Status.deleted(),
       next_bill_date: Timex.today() |> Timex.shift(days: -1),
       user: user
     )
@@ -84,13 +86,13 @@ defmodule Plausible.Workers.LockSitesTest do
     user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: -1))
 
     insert(:subscription,
-      status: "deleted",
+      status: Subscription.Status.deleted(),
       next_bill_date: Timex.today() |> Timex.shift(days: -1),
       user: user,
       inserted_at: Timex.now() |> Timex.shift(days: -1)
     )
 
-    insert(:subscription, status: "active", user: user)
+    insert(:subscription, status: Subscription.Status.active(), user: user)
 
     site = insert(:site, members: [user])
 
