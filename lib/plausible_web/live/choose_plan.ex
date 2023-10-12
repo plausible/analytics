@@ -168,9 +168,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <div class="mt-4 lg:flex justify-center self-end">
       <div class="relative ">
         <.two_months_free />
-        <fieldset class="grid grid-cols-2 gap-x-1 rounded-full bg-white p-1 text-center text-sm font-semibold leading-5 shadow dark:ring-gray-600">
+        <fieldset class="grid grid-cols-2 gap-x-1 rounded-full bg-white dark:bg-gray-700 p-1 text-center text-sm font-semibold leading-5 shadow dark:ring-gray-600">
           <label
-            class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval == :monthly, do: "bg-indigo-600 text-white"}"}
+            class={"cursor-pointer rounded-full px-2.5 py-1 text-gray-900 dark:text-white #{if @selected_interval == :monthly, do: "bg-indigo-600 text-white"}"}
             phx-click="set_interval"
             phx-value-interval="monthly"
           >
@@ -178,7 +178,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             <span>Monthly</span>
           </label>
           <label
-            class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval == :yearly, do: "bg-indigo-600 text-white"}"}
+            class={"cursor-pointer rounded-full px-2.5 py-1 text-gray-900 dark:text-white #{if @selected_interval == :yearly, do: "bg-indigo-600 text-white"}"}
             phx-click="set_interval"
             phx-value-interval="yearly"
           >
@@ -193,7 +193,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def two_months_free(assigns) do
     ~H"""
-    <span class="absolute -right-4 lg:-right-16 -top-3 whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-yellow-100 border border-yellow-300 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200">
+    <span class="absolute -right-4 lg:-right-16 -top-3 whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-yellow-100 border border-yellow-300 text-yellow-700">
       2 months free
     </span>
     """
@@ -202,8 +202,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp slider(assigns) do
     ~H"""
     <form class="w-full lg:w-2/5">
-      <p class="font-medium leading-6 text-gray-600 dark:text-gray-500">
-        <b id="slider-value" class="text-xl text-gray-900">
+      <p class="font-medium leading-6 text-gray-600 dark:text-gray-200">
+        <b id="slider-value" class="text-xl text-gray-900 dark:text-gray-100">
           <%= slider_value(@selected_volume, @available_volumes) %>
         </b>
         monthly pageviews
@@ -231,14 +231,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       class={[
         "shadow-lg bg-white rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
         !@owned && "dark:ring-gray-600",
-        @owned && "ring-2 ring-indigo-600"
+        @owned && "ring-2 ring-indigo-600 dark:ring-indigo-300"
       ]}
     >
       <div class="flex items-center justify-between gap-x-4">
         <h3 class={[
           "text-lg font-semibold leading-8",
           !@owned && "text-gray-900 dark:text-gray-100",
-          @owned && "text-indigo-600"
+          @owned && "text-indigo-600 dark:text-indigo-300"
         ]}>
           <%= String.capitalize(to_string(@kind)) %>
         </h3>
@@ -416,7 +416,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <div class="flex items-center justify-between gap-x-4">
       <p
         id="current-label"
-        class="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600 dark:ring-1 dark:ring-indigo-600/40"
+        class="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600 dark:text-indigo-300 dark:ring-1 dark:ring-indigo-300/50"
       >
         Current
       </p>
