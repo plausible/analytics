@@ -4,7 +4,8 @@ defmodule Plausible.Billing.Quota do
   """
 
   import Ecto.Query
-  alias Plausible.Billing.Plans
+  alias Plausible.Billing
+  alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan}
 
   @limit_sites_since ~D[2021-05-05]
   @spec site_limit(Plausible.Auth.User.t()) :: non_neg_integer() | :unlimited
@@ -28,8 +29,8 @@ defmodule Plausible.Billing.Quota do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %Plausible.Billing.EnterprisePlan{} -> :unlimited
-      %Plausible.Billing.Plan{site_limit: site_limit} -> site_limit
+      %EnterprisePlan{} -> :unlimited
+      %Plan{site_limit: site_limit} -> site_limit
       :free_10k -> @site_limit_for_free_10k
       nil -> @site_limit_for_trials
     end
@@ -46,17 +47,17 @@ defmodule Plausible.Billing.Quota do
   @monthly_pageview_limit_for_free_10k 10_000
   @monthly_pageview_limit_for_trials :unlimited
 
-  @spec monthly_pageview_limit(Plausible.Billing.Subscription.t()) ::
+  @spec monthly_pageview_limit(Subscription.t()) ::
           non_neg_integer() | :unlimited
   @doc """
   Returns the limit of pageviews for a subscription.
   """
   def monthly_pageview_limit(subscription) do
     case Plans.get_subscription_plan(subscription) do
-      %Plausible.Billing.EnterprisePlan{monthly_pageview_limit: limit} ->
+      %EnterprisePlan{monthly_pageview_limit: limit} ->
         limit
 
-      %Plausible.Billing.Plan{monthly_pageview_limit: limit} ->
+      %Plan{monthly_pageview_limit: limit} ->
         limit
 
       :free_10k ->
@@ -80,7 +81,7 @@ defmodule Plausible.Billing.Quota do
   """
   def monthly_pageview_usage(user) do
     user
-    |> Plausible.Billing.usage_breakdown()
+    |> Billing.usage_breakdown()
     |> Tuple.sum()
   end
 
@@ -93,8 +94,8 @@ defmodule Plausible.Billing.Quota do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %Plausible.Billing.EnterprisePlan{} -> :unlimited
-      %Plausible.Billing.Plan{team_member_limit: limit} -> limit
+      %EnterprisePlan{} -> :unlimited
+      %Plan{team_member_limit: limit} -> limit
       :free_10k -> :unlimited
       nil -> @team_member_limit_for_trials
     end
@@ -171,8 +172,8 @@ defmodule Plausible.Billing.Quota do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %Plausible.Billing.EnterprisePlan{} -> @all_features
-      %Plausible.Billing.Plan{extra_features: extra_features} -> extra_features
+      %EnterprisePlan{} -> @all_features
+      %Plan{extra_features: extra_features} -> extra_features
       :free_10k -> []
       nil -> @all_features
     end
