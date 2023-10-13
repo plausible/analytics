@@ -1,6 +1,8 @@
 defmodule Plausible.Stats.QueryTest do
   use Plausible.DataCase, async: true
   alias Plausible.Stats.Query
+  @v4_growth_plan_id "change-me-749342"
+  @v4_business_plan_id "change-me-b749342"
 
   setup do
     user = insert(:user)
@@ -181,6 +183,22 @@ defmodule Plausible.Stats.QueryTest do
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
       assert q.filters["source"] == "Twitter"
+    end
+
+    test "allows prop filters when site owner is on a business plan", %{site: site, user: user} do
+      insert(:subscription, user: user, paddle_plan_id: @v4_business_plan_id)
+      filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
+      query = Query.from(site, %{"period" => "6mo", "filters" => filters})
+
+      assert Map.has_key?(query.filters, "props")
+    end
+
+    test "drops prop filter when site owner is on a growth plan", %{site: site, user: user} do
+      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan_id)
+      filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
+      query = Query.from(site, %{"period" => "6mo", "filters" => filters})
+
+      refute Map.has_key?(query.filters, "props")
     end
   end
 end

@@ -19,6 +19,7 @@ defmodule Plausible.Stats.Query do
     |> put_parsed_filters(params)
     |> put_imported_opts(site, params)
     |> put_sample_threshold(params)
+    |> maybe_drop_prop_filter(site)
   end
 
   defp query_by_period(site, %{"period" => "realtime"}) do
@@ -226,6 +227,19 @@ defmodule Plausible.Stats.Query do
     query
     |> Map.put(:imported_data_requested, requested?)
     |> Map.put(:include_imported, include_imported?(query, site, requested?))
+  end
+
+  defp maybe_drop_prop_filter(query, site) do
+    prop_filter? = Map.has_key?(query.filters, "props")
+
+    props_available? = fn ->
+      site = Plausible.Repo.preload(site, :owner)
+      Plausible.Billing.Feature.Props.check_availability(site.owner) == :ok
+    end
+
+    if prop_filter? && !props_available?.(),
+      do: %__MODULE__{query | filters: Map.drop(query.filters, ["props"])},
+      else: query
   end
 
   @spec include_imported?(t(), Plausible.Site.t(), boolean()) :: boolean()
