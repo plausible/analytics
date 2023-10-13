@@ -6,7 +6,7 @@
     "yearly_product_id":"change-me-749343",
     "site_limit":10,
     "team_member_limit":5,
-    "extra_features":[]
+    "features":["goals"]
   },
   {
     "kind":"growth",
@@ -15,7 +15,7 @@
     "yearly_product_id":"change-me-749345",
     "site_limit":10,
     "team_member_limit":5,
-    "extra_features":[]
+    "features":["goals"]
   },
   {
     "kind":"growth",
@@ -24,7 +24,7 @@
     "yearly_product_id":"change-me-749347",
     "site_limit":10,
     "team_member_limit":5,
-    "extra_features":[]
+    "features":["goals"]
   },
   {
     "kind":"growth",
@@ -33,7 +33,7 @@
     "yearly_product_id":"change-me-749349",
     "site_limit":10,
     "team_member_limit":5,
-    "extra_features":[]
+    "features":["goals"]
   },
   {
     "kind":"growth",
@@ -42,7 +42,7 @@
     "yearly_product_id":"change-me-749352",
     "site_limit":10,
     "team_member_limit":5,
-    "extra_features":[]
+    "features":["goals"]
   },
   {
     "kind":"growth",
@@ -51,7 +51,7 @@
     "yearly_product_id":"change-me-749355",
     "site_limit":10,
     "team_member_limit":5,
-    "extra_features":[]
+    "features":["goals"]
   },
   {
     "kind":"growth",
@@ -60,7 +60,7 @@
     "yearly_product_id":"change-me-749357",
     "site_limit":10,
     "team_member_limit":5,
-    "extra_features":[]
+    "features":["goals"]
   },
   {
     "kind":"growth",
@@ -69,7 +69,7 @@
     "yearly_product_id":"change-me-749359",
     "site_limit":10,
     "team_member_limit":5,
-    "extra_features":[]
+    "features":["goals"]
   },
   {
     "kind":"business",
@@ -78,7 +78,7 @@
     "yearly_product_id":"change-me-b749343",
     "site_limit":50,
     "team_member_limit":50,
-    "extra_features":["props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api"]
   },
   {
     "kind":"business",
@@ -87,7 +87,7 @@
     "yearly_product_id":"change-me-b749345",
     "site_limit":50,
     "team_member_limit":50,
-    "extra_features":["props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api"]
   },
   {
     "kind":"business",
@@ -96,7 +96,7 @@
     "yearly_product_id":"change-me-b749347",
     "site_limit":50,
     "team_member_limit":50,
-    "extra_features":["props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api"]
   },
   {
     "kind":"business",
@@ -105,7 +105,7 @@
     "yearly_product_id":"change-me-b749349",
     "site_limit":50,
     "team_member_limit":50,
-    "extra_features":["props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api"]
   },
   {
     "kind":"business",
@@ -114,7 +114,7 @@
     "yearly_product_id":"change-me-b749352",
     "site_limit":50,
     "team_member_limit":50,
-    "extra_features":["props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api"]
   },
   {
     "kind":"business",
@@ -123,7 +123,7 @@
     "yearly_product_id":"change-me-b749355",
     "site_limit":50,
     "team_member_limit":50,
-    "extra_features":["props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api"]
   },
   {
     "kind":"business",
@@ -132,7 +132,7 @@
     "yearly_product_id":"change-me-b749357",
     "site_limit":50,
     "team_member_limit":50,
-    "extra_features":["props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api"]
   },
   {
     "kind":"business",
@@ -141,6 +141,6 @@
     "yearly_product_id":"change-me-b749359",
     "site_limit":50,
     "team_member_limit":50,
-    "extra_features":["props","revenue_goals","funnels","stats_api"]
+    "features":["goals","props","revenue_goals","funnels","stats_api"]
   }
 ]

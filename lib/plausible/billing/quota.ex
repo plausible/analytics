@@ -5,7 +5,8 @@ defmodule Plausible.Billing.Quota do
 
   import Ecto.Query
   alias Plausible.Billing
-  alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan}
+  alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
+  alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props}
 
   @limit_sites_since ~D[2021-05-05]
   @spec site_limit(Plausible.Auth.User.t()) :: non_neg_integer() | :unlimited
@@ -132,7 +133,9 @@ defmodule Plausible.Billing.Quota do
 
   @spec features_usage(Plausible.Auth.User.t()) :: [atom()]
   @doc """
-  Returns a list of extra features the given user's sites uses.
+  Returns a list of features the given user is using. At the
+  current stage, the only features that we need to know the
+  usage for are `Props`, `Funnels`, and `RevenueGoals`
   """
   def features_usage(user) do
     props_usage_query =
@@ -153,9 +156,9 @@ defmodule Plausible.Billing.Quota do
         where: not is_nil(g.currency)
 
     queries = [
-      props: props_usage_query,
-      funnels: funnels_usage_query,
-      revenue_goals: revenue_goals_usage
+      {Props, props_usage_query},
+      {Funnels, funnels_usage_query},
+      {RevenueGoals, revenue_goals_usage}
     ]
 
     Enum.reduce(queries, [], fn {feature, query}, acc ->
@@ -163,19 +166,18 @@ defmodule Plausible.Billing.Quota do
     end)
   end
 
-  @all_features [:props, :revenue_goals, :funnels, :stats_api]
   @doc """
-  Returns a list of extra features the user can use. Trial users have the
+  Returns a list of features the user can use. Trial users have the
   ability to use all features during their trial.
   """
   def allowed_features_for(user) do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{} -> @all_features
-      %Plan{extra_features: extra_features} -> extra_features
-      :free_10k -> []
-      nil -> @all_features
+      %EnterprisePlan{} -> Feature.list()
+      %Plan{features: features} -> features
+      :free_10k -> [Goals]
+      nil -> Feature.list()
     end
   end
 
