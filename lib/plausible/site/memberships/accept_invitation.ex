@@ -22,6 +22,29 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   require Logger
 
+  @spec transfer_ownership(Site.t(), Auth.User.t(), Keyword.t()) ::
+          {:ok, Site.Membership.t()} | {:error, Ecto.Changeset.t()}
+  def transfer_ownership(site, user, opts \\ []) do
+    selfhost? = Keyword.get(opts, :selfhost?, Plausible.Release.selfhost?())
+    membership = get_or_create_owner_membership(site, user)
+    multi = add_and_transfer_ownership(site, membership, user, selfhost?)
+
+    case Repo.transaction(multi) do
+      {:ok, changes} ->
+        if changes[:site_locker] == {:locked, :grace_period_ended_now} do
+          user = Plausible.Users.with_subscription(changes.user)
+          Billing.SiteLocker.send_grace_period_end_email(user)
+        end
+
+        membership = Repo.preload(changes.membership, [:site, :user])
+
+        {:ok, membership}
+
+      {:error, _operation, error, _changes} ->
+        {:error, error}
+    end
+  end
+
   @spec accept_invitation(String.t(), Auth.User.t(), Keyword.t()) ::
           {:ok, Site.Membership.t()} | {:error, :invitation_not_found | Ecto.Changeset.t()}
   def accept_invitation(invitation_id, user, opts \\ []) do
@@ -32,7 +55,9 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
       multi =
         if invitation.role == :owner do
-          add_and_transfer_ownership(invitation, membership, user, selfhost?)
+          invitation.site
+          |> add_and_transfer_ownership(membership, user, selfhost?)
+          |> Multi.delete(:invitation, invitation)
         else
           add(invitation, membership, user)
         end
@@ -56,13 +81,12 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  defp add_and_transfer_ownership(invitation, membership, user, selfhost?) do
+  defp add_and_transfer_ownership(site, membership, user, selfhost?) do
     multi =
       Multi.new()
-      |> downgrade_previous_owner(invitation.site, user)
+      |> downgrade_previous_owner(site, user)
       |> maybe_end_trial_of_new_owner(user, selfhost?)
       |> Multi.insert_or_update(:membership, membership)
-      |> Multi.delete(:invitation, invitation)
 
     if selfhost? do
       multi
@@ -93,6 +117,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
       membership -> membership
     end
     |> Site.Membership.set_role(invitation.role)
+  end
+
+  defp get_or_create_owner_membership(site, user) do
+    case Repo.get_by(Site.Membership, user_id: user.id, site_id: site.id) do
+      nil -> Site.Membership.new(site, user)
+      membership -> membership
+    end
+    |> Site.Membership.set_role(:owner)
   end
 
   # If the new owner is the same as old owner, we do not downgrade them
