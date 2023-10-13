@@ -130,11 +130,11 @@ defmodule Plausible.Billing.Quota do
     Plausible.Repo.one(query)
   end
 
-  @spec extra_features_usage(Plausible.Auth.User.t()) :: [atom()]
+  @spec features_usage(Plausible.Auth.User.t()) :: [atom()]
   @doc """
   Returns a list of extra features the given user's sites uses.
   """
-  def extra_features_usage(user) do
+  def features_usage(user) do
     props_usage_query =
       from s in Plausible.Site,
         inner_join: os in subquery(owned_sites_query(user)),
