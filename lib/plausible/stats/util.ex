@@ -29,8 +29,8 @@ defmodule Plausible.Stats.Util do
           {atom() | nil, [atom()]}
   @doc """
   Returns the common currency for the goal filters in a query. If there are no
-  goal filters, or multiple currencies, `nil` is returned and revenue metrics
-  are dropped.
+  goal filters, multiple currencies or the site owner does not have access to
+  revenue goals, `nil` is returned and revenue metrics are dropped.
 
   Aggregating revenue data works only for same currency goals. If the query is
   filtered by goals with different currencies, for example, one USD and other
@@ -44,7 +44,15 @@ defmodule Plausible.Stats.Util do
         _any -> []
       end
 
-    if Enum.any?(metrics, &(&1 in @revenue_metrics)) && Enum.any?(goal_filters) do
+    requested_revenue_metrics? = Enum.any?(metrics, &(&1 in @revenue_metrics))
+    filtering_by_goal? = Enum.any?(goal_filters)
+
+    revenue_goals_available? = fn ->
+      site = Plausible.Repo.preload(site, :owner)
+      Plausible.Billing.Feature.RevenueGoals.check_availability(site.owner) == :ok
+    end
+
+    if requested_revenue_metrics? && filtering_by_goal? && revenue_goals_available?.() do
       revenue_goals_currencies =
         Plausible.Repo.all(
           from rg in Ecto.assoc(site, :revenue_goals),
