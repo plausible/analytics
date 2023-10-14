@@ -14,6 +14,13 @@ for (const trigger of triggers) {
     e.stopPropagation()
     e.currentTarget.nextElementSibling.classList.remove('hidden')
   })
+
+  trigger.addEventListener('keydown', function(e) {
+    e.stopPropagation()
+    if (e.key === 'Enter') {
+      e.currentTarget.nextElementSibling.classList.remove('hidden')
+    }
+  })
 }
 
 if (triggers.length > 0) {

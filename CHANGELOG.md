@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - Update bot detection (matomo 6.1.4, ua_inspector 3.4.0)
 - Improved the Goal Settings page (search, autcompletion etc.)
 - Log mailer errors plausible/analytics#3336
+- Fix user button in header menu to be accessible via keyboard shortcuts [A11y keyboard navigation](https://github.com/plausible/analytics/issues/2338)
 
 ## v2.0.0 - 2023-07-12
 
