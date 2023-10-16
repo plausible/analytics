@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Components.Google do
+  @moduledoc """
+  Google-related components
+  """
   use Phoenix.Component
   use Phoenix.HTML
 
