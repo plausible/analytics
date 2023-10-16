@@ -211,7 +211,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert code = Repo.get_by(Auth.EmailActivationCode, user_id: user.id)
 
       assert code.user_id == user.id
-      assert Timex.after?(code.issued_at, Timex.now() |> Timex.shift(seconds: -10))
+      refute Plausible.Auth.EmailVerification.expired?(code)
     end
 
     test "regenerates an activation pin even if there's one already", %{conn: conn, user: user} do

@@ -75,7 +75,7 @@ defmodule Plausible.Auth.EmailVerification do
       is_nil(verification) ->
         {:error, :incorrect}
 
-      expired?(verification.issued_at) ->
+      expired?(verification) ->
         {:error, :expired}
 
       true ->
@@ -83,8 +83,9 @@ defmodule Plausible.Auth.EmailVerification do
     end
   end
 
-  defp expired?(issued_at) do
+  @spec expired?(EmailActivationCode.t()) :: boolean()
+  def expired?(verification) do
     expiration_time = Timex.shift(NaiveDateTime.utc_now(), hours: -1 * @expiration_hours)
-    Timex.before?(issued_at, expiration_time)
+    Timex.before?(verification.issued_at, expiration_time)
   end
 end
