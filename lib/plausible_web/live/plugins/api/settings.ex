@@ -31,10 +31,10 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
      )}
   end
 
-  # TODO: add flashes
-  # TODO: legacy url redirects
   def render(assigns) do
     ~H"""
+    <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
+
     <%= if @add_token? do %>
       <%= live_render(
         @socket,
@@ -128,11 +128,19 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
   def handle_info({:token_added, token}, socket) do
     displayed_tokens = [token | socket.assigns.displayed_tokens]
 
+    socket = put_flash(socket, :success, "Plugins API Token created succesfully")
+
+    Process.send_after(self(), :clear_flash, 5000)
+
     {:noreply,
      assign(socket,
        displayed_tokens: displayed_tokens,
        add_token?: false,
        token_description: ""
      )}
+  end
+
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
   end
 end
