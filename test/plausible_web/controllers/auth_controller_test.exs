@@ -6,8 +6,10 @@ defmodule PlausibleWeb.AuthControllerTest do
   import Plausible.Test.Support.HTML
   import Mox
 
+  require Logger
   require Plausible.Billing.Subscription.Status
 
+  alias Plausible.Auth
   alias Plausible.Auth.User
   alias Plausible.Billing.Subscription
 
@@ -203,18 +205,40 @@ defmodule PlausibleWeb.AuthControllerTest do
   describe "POST /activate/request-code" do
     setup [:create_user, :log_in]
 
-    test "associates an activation pin with the user account", %{conn: conn, user: user} do
+    test "generates an activation pin for user account", %{conn: conn, user: user} do
       post(conn, "/activate/request-code")
 
-      code =
-        Repo.one(
-          from c in "email_verification_codes",
-            where: c.user_id == ^user.id,
-            select: %{user_id: c.user_id, issued_at: c.issued_at}
-        )
+      assert code = Repo.get_by(Auth.EmailActivationCode, user_id: user.id)
 
-      assert code[:user_id] == user.id
-      assert Timex.after?(code[:issued_at], Timex.now() |> Timex.shift(seconds: -10))
+      assert code.user_id == user.id
+      refute Plausible.Auth.EmailVerification.expired?(code)
+    end
+
+    test "regenerates an activation pin even if there's one already", %{conn: conn, user: user} do
+      five_minutes_ago =
+        NaiveDateTime.utc_now()
+        |> Timex.shift(minutes: -5)
+        |> NaiveDateTime.truncate(:second)
+
+      {:ok, verification} = Auth.EmailVerification.issue_code(user, five_minutes_ago)
+
+      post(conn, "/activate/request-code")
+
+      assert new_verification = Repo.get_by(Auth.EmailActivationCode, user_id: user.id)
+
+      assert verification.id == new_verification.id
+      assert verification.user_id == new_verification.user_id
+      # this actually has a chance to fail 1 in 8999 runs
+      # but at the same time it's good to have a confirmation
+      # that it indeed generates a new code
+      if verification.code == new_verification.code do
+        Logger.warn(
+          "Congratulations! You you have hit 1 in 8999 chance of the same " <>
+            "email verification code repeating twice in a row!"
+        )
+      end
+
+      assert NaiveDateTime.compare(verification.issued_at, new_verification.issued_at) == :lt
     end
 
     test "sends activation email to user", %{conn: conn, user: user} do
@@ -225,7 +249,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert subject =~ "is your Plausible email verification code"
     end
 
-    test "redirets user to /activate", %{conn: conn} do
+    test "redirects user to /activate", %{conn: conn} do
       conn = post(conn, "/activate/request-code")
 
       assert redirected_to(conn, 302) == "/activate"
@@ -242,15 +266,14 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "with expired pin - reloads the form with error", %{conn: conn, user: user} do
-      Repo.insert_all("email_verification_codes", [
-        %{
-          code: 1234,
-          user_id: user.id,
-          issued_at: Timex.shift(Timex.now(), days: -1)
-        }
-      ])
+      one_day_ago =
+        NaiveDateTime.utc_now()
+        |> Timex.shift(days: -1)
+        |> NaiveDateTime.truncate(:second)
 
-      conn = post(conn, "/activate", %{code: "1234"})
+      {:ok, verification} = Auth.EmailVerification.issue_code(user, one_day_ago)
+
+      conn = post(conn, "/activate", %{code: verification.code})
 
       assert html_response(conn, 200) =~ "Code is expired, please request another one"
     end
@@ -259,13 +282,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
       post(conn, "/activate/request-code")
 
-      code =
-        Repo.one(
-          from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code
-        )
-        |> Integer.to_string()
+      verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
 
-      conn = post(conn, "/activate", %{code: code})
+      conn = post(conn, "/activate", %{code: verification.code})
       user = Repo.get_by(Plausible.Auth.User, id: user.id)
 
       assert user.email_verified
@@ -278,30 +297,22 @@ defmodule PlausibleWeb.AuthControllerTest do
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
       post(conn, "/activate/request-code")
 
-      code =
-        Repo.one(
-          from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code
-        )
-        |> Integer.to_string()
+      verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
 
-      conn = post(conn, "/activate", %{code: code})
+      conn = post(conn, "/activate", %{code: verification.code})
 
       assert redirected_to(conn) == "/sites"
     end
 
-    test "removes the user association from the verification code", %{conn: conn, user: user} do
+    test "removes used up verification code", %{conn: conn, user: user} do
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
       post(conn, "/activate/request-code")
 
-      code =
-        Repo.one(
-          from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code
-        )
-        |> Integer.to_string()
+      verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
 
-      post(conn, "/activate", %{code: code})
+      post(conn, "/activate", %{code: verification.code})
 
-      refute Repo.exists?(from c in "email_verification_codes", where: c.user_id == ^user.id)
+      refute Repo.get_by(Auth.EmailActivationCode, user_id: user.id)
     end
   end
 

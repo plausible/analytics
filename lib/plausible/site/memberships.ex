@@ -5,6 +5,7 @@ defmodule Plausible.Site.Memberships do
 
   import Ecto.Query, only: [from: 2]
 
+  alias Plausible.Auth
   alias Plausible.Repo
   alias Plausible.Site.Memberships
 
@@ -13,13 +14,11 @@ defmodule Plausible.Site.Memberships do
   defdelegate reject_invitation(invitation_id, user), to: Memberships.RejectInvitation
   defdelegate remove_invitation(invitation_id, site), to: Memberships.RemoveInvitation
 
-  @spec any?(String.t()) :: boolean()
-  def any?(user_id) do
-    Repo.exists?(
-      from(m in Plausible.Site.Membership,
-        where: m.user_id == ^user_id
-      )
-    )
+  @spec any?(Auth.User.t()) :: boolean()
+  def any?(user) do
+    user
+    |> Ecto.assoc(:site_memberships)
+    |> Repo.exists?()
   end
 
   @spec has_any_invitations?(String.t()) :: boolean()
