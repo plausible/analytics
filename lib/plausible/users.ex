@@ -5,17 +5,17 @@ defmodule Plausible.Users do
 
   import Ecto.Query
 
-  alias Plausible.Auth.User
+  alias Plausible.Auth
   alias Plausible.Billing.Subscription
   alias Plausible.Repo
 
-  def with_subscription(%User{id: user_id} = user) do
+  def with_subscription(%Auth.User{id: user_id} = user) do
     Repo.preload(user, subscription: last_subscription_query(user_id))
   end
 
   def with_subscription(user_id) when is_integer(user_id) do
     Repo.one(
-      from(user in User,
+      from(user in Auth.User,
         left_join: last_subscription in subquery(last_subscription_query(user_id)),
         on: last_subscription.user_id == user.id,
         left_join: subscription in Subscription,
@@ -26,13 +26,9 @@ defmodule Plausible.Users do
     )
   end
 
-  @spec has_email_code?(String.t()) :: boolean()
-  def has_email_code?(user_id) do
-    Repo.exists?(
-      from(c in "email_verification_codes",
-        where: c.user_id == ^user_id
-      )
-    )
+  @spec has_email_code?(Auth.User.t()) :: boolean()
+  def has_email_code?(user) do
+    Auth.EmailVerification.any?(user)
   end
 
   defp last_subscription_query(user_id) do
