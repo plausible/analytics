@@ -166,17 +166,9 @@ defmodule PlausibleWeb.SiteController do
       conn.assigns[:site]
       |> Repo.preload([:custom_domain])
 
-    imported_pageviews =
-      if site.imported_data do
-        Plausible.Stats.Clickhouse.imported_pageview_count(site)
-      else
-        0
-      end
-
     conn
     |> render("settings_general.html",
       site: site,
-      imported_pageviews: imported_pageviews,
       changeset: Plausible.Site.changeset(site, %{}),
       dogfood_page_path: "/:dashboard/settings/general",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
