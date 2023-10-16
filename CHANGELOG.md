@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - Improve password validation in registration and password reset forms
 - Adds Gravatar profile image to navbar
 - Enforce email reverification on update
+- Add Plugins API Tokens provisioning UI
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
@@ -20,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Limit the number of Goal Conversions shown on the dashboard and render a "Details" link when there are more entries to show
 - Show Outbound Links / File Downloads / 404 Pages / Cloaked Links instead of Goal Conversions when filtering by the corresponding goal
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
+- GA/SC sections moved to new settings: Integrations
 
 ### Fixed
 - Only return `(none)` values in custom property breakdown for the first page (pagination) of results
