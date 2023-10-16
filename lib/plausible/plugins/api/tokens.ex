@@ -18,15 +18,14 @@ defmodule Plausible.Plugins.API.Tokens do
     end
   end
 
-  @spec find(String.t(), String.t()) :: {:ok, Token.t()} | {:error, :not_found}
-  def find(domain, raw) do
+  @spec find(String.t()) :: {:ok, Token.t()} | {:error, :not_found}
+  def find(raw) do
     found =
       Repo.one(
         from(t in Token,
           inner_join: s in Site,
           on: s.id == t.site_id,
           where: t.token_hash == ^Token.hash(raw),
-          where: s.domain == ^domain or s.domain_changed_from == ^domain,
           preload: [:site]
         )
       )
