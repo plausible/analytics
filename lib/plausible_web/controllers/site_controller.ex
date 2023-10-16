@@ -320,7 +320,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Google integration saved successfully")
-    |> redirect(to: Routes.site_path(conn, :settings_search_console, site.domain))
+    |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def delete_google_auth(conn, _params) do
@@ -332,19 +332,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn = put_flash(conn, :success, "Google account unlinked from Plausible")
 
-    panel =
-      conn.path_info
-      |> List.last()
-      |> String.split("-")
-      |> List.last()
-
-    case panel do
-      "search" ->
-        redirect(conn, to: Routes.site_path(conn, :settings_search_console, site.domain))
-
-      "import" ->
-        redirect(conn, to: Routes.site_path(conn, :settings_general, site.domain))
-    end
+    redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def update_settings(conn, %{"site" => site_params}) do
