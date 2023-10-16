@@ -6,9 +6,8 @@
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
       You can integrate with Google Search Console to get all of your important search results stats such as keyword phrases people find your site with.
     </p>
-    <%= link(to: "https://plausible.io/docs/google-search-console-integration", target: "_blank", rel: "noreferrer") do %>
-      <Heroicons.information_circle class="w-6 h-6 absolute top-0 right-0 text-gray-400" />
-    <% end %>
+
+    <PlausibleWeb.Components.Generic.docs_info slug="google-search-console-integration" />
   </header>
 
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>

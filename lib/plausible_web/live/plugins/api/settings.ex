@@ -31,10 +31,8 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
      )}
   end
 
-  # TODO: replace all information circles
   # TODO: add flashes
   # TODO: legacy url redirects
-  # TODO: docs links
   def render(assigns) do
     ~H"""
     <%= if @add_token? do %>

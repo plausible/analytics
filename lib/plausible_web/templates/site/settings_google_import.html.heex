@@ -6,9 +6,7 @@
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
       Import existing data from your Google Analytics account.
     </p>
-    <%= link(to: "https://plausible.io/docs/google-analytics-import", target: "_blank", rel: "noreferrer") do %>
-      <Heroicons.information_circle class="w-6 h-6 absolute top-0 right-0 text-gray-400" />
-    <% end %>
+    <PlausibleWeb.Components.Generic.docs_info slug="google-analytics-import" />
   </header>
 
   <%= if Keyword.get(Application.get_env(:plausible, :google), :client_id) do %>
