@@ -281,6 +281,37 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  def settings_integrations(conn, _params) do
+    site =
+      conn.assigns[:site]
+      |> Repo.preload([:google_auth, :custom_domain])
+
+    search_console_domains =
+      if site.google_auth do
+        Plausible.Google.Api.fetch_verified_properties(site.google_auth)
+      end
+
+    imported_pageviews =
+      if site.imported_data do
+        Plausible.Stats.Clickhouse.imported_pageview_count(site)
+      else
+        0
+      end
+
+    has_plugins_tokens? = Plausible.Plugins.API.Tokens.any?(site)
+
+    conn
+    |> render("settings_integrations.html",
+      site: site,
+      imported_pageviews: imported_pageviews,
+      has_plugins_tokens?: has_plugins_tokens?,
+      search_console_domains: search_console_domains,
+      dogfood_page_path: "/:dashboard/settings/integrations",
+      connect_live_socket: true,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
   def update_google_auth(conn, %{"google_auth" => attrs}) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
