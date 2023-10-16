@@ -877,12 +877,12 @@ defmodule PlausibleWeb.SiteController do
 
         conn
         |> put_flash(:success, "Imported data has been cleared")
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
 
       true ->
         conn
         |> put_flash(:error, "No data has been imported")
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
     end
   end
 
