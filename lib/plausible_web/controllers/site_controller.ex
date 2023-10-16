@@ -243,25 +243,6 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_search_console(conn, _params) do
-    site =
-      conn.assigns[:site]
-      |> Repo.preload([:google_auth, :custom_domain])
-
-    search_console_domains =
-      if site.google_auth do
-        Plausible.Google.Api.fetch_verified_properties(site.google_auth)
-      end
-
-    conn
-    |> render("settings_search_console.html",
-      site: site,
-      search_console_domains: search_console_domains,
-      dogfood_page_path: "/:dashboard/settings/search-console",
-      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-    )
-  end
-
   def settings_email_reports(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
