@@ -3,7 +3,7 @@ defmodule Plausible.Repo.Migrations.AddEmailActivationCodes do
 
   def change do
     create table(:email_activation_codes) do
-      add :code, :integer, null: false
+      add :code, :text, null: false
       add :user_id, references(:users, on_delete: :delete_all), null: false
 
       add :issued_at, :naive_datetime, null: false
