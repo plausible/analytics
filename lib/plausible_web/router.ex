@@ -287,6 +287,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
     get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
+    get "/:website/settings/integrations", SiteController, :settings_integrations
 
     put "/:website/settings/features/visibility/:setting",
         SiteController,
