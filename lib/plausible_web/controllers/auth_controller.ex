@@ -81,8 +81,6 @@ defmodule PlausibleWeb.AuthController do
     has_any_invitations? = Plausible.Site.Memberships.has_any_invitations?(user.email)
     has_any_memberships? = Plausible.Site.Memberships.any?(user)
 
-    {code, ""} = Integer.parse(code)
-
     case Auth.EmailVerification.verify_code(user, code) do
       :ok ->
         cond do

@@ -273,9 +273,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       {:ok, verification} = Auth.EmailVerification.issue_code(user, one_day_ago)
 
-      code = Integer.to_string(verification.code)
-
-      conn = post(conn, "/activate", %{code: code})
+      conn = post(conn, "/activate", %{code: verification.code})
 
       assert html_response(conn, 200) =~ "Code is expired, please request another one"
     end
@@ -285,9 +283,8 @@ defmodule PlausibleWeb.AuthControllerTest do
       post(conn, "/activate/request-code")
 
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
-      code = Integer.to_string(verification.code)
 
-      conn = post(conn, "/activate", %{code: code})
+      conn = post(conn, "/activate", %{code: verification.code})
       user = Repo.get_by(Plausible.Auth.User, id: user.id)
 
       assert user.email_verified
@@ -301,9 +298,8 @@ defmodule PlausibleWeb.AuthControllerTest do
       post(conn, "/activate/request-code")
 
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
-      code = Integer.to_string(verification.code)
 
-      conn = post(conn, "/activate", %{code: code})
+      conn = post(conn, "/activate", %{code: verification.code})
 
       assert redirected_to(conn) == "/sites"
     end
@@ -313,9 +309,8 @@ defmodule PlausibleWeb.AuthControllerTest do
       post(conn, "/activate/request-code")
 
       verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
-      code = Integer.to_string(verification.code)
 
-      post(conn, "/activate", %{code: code})
+      post(conn, "/activate", %{code: verification.code})
 
       refute Repo.get_by(Auth.EmailActivationCode, user_id: user.id)
     end

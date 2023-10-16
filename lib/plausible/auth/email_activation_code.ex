@@ -11,7 +11,7 @@ defmodule Plausible.Auth.EmailActivationCode do
   @type t() :: %__MODULE__{}
 
   schema "email_activation_codes" do
-    field :code, :integer
+    field :code, :string
     field :issued_at, :naive_datetime
 
     belongs_to :user, User
@@ -26,8 +26,10 @@ defmodule Plausible.Auth.EmailActivationCode do
     |> put_assoc(:user, user)
   end
 
-  @spec generate_code() :: non_neg_integer()
+  @spec generate_code() :: String.t()
   def generate_code do
-    Enum.random(1000..9999)
+    1000..9999
+    |> Enum.random()
+    |> Integer.to_string()
   end
 end
