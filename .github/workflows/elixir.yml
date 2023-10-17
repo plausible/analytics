@@ -63,7 +63,7 @@ jobs:
             _build
             priv/plts
           key: ${{ runner.os }}-mix-v5-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-v500-
+          restore-keys: ${{ runner.os }}-mix-v5-
       - name: Install dependencies
         run: mix deps.get && npm install --prefix ./tracker
       - name: Check Formatting
