@@ -64,7 +64,7 @@ defmodule PlausibleWeb.Endpoint do
   plug(Plug.MethodOverride)
   plug(Plug.Head)
 
-  plug :runtime_session
+  plug(:runtime_session)
 
   plug(CORSPlug)
   plug(PlausibleWeb.Router)
@@ -75,11 +75,11 @@ defmodule PlausibleWeb.Endpoint do
     config!(:websocket_url)
   end
 
-  defp runtime_session(conn, _opts) do
+  def runtime_session(conn, _opts) do
     Plug.run(conn, [{Plug.Session, runtime_session_opts()}])
   end
 
-  defp runtime_session_opts() do
+  def runtime_session_opts() do
     # `host()` provided by Phoenix.Endpoint's compilation hooks
     # is used to inject the domain - this way we can authenticate
     # websocket requests within single root domain, in case websocket_url()
