@@ -56,14 +56,14 @@ jobs:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
       - name: Restore dependencies cache
-        uses: buildjet/cache@v300
+        uses: buildjet/cache@v3
         with:
           path: |
             deps
             _build
             priv/plts
           key: ${{ runner.os }}-mix-v5-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-v5-
+          restore-keys: ${{ runner.os }}-mix-v500-
       - name: Install dependencies
         run: mix deps.get && npm install --prefix ./tracker
       - name: Check Formatting
