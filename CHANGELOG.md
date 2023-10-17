@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Add `custom_props.csv` to CSV export (almost the same as the old `prop_breakdown.csv`, but has different column headers, and includes props for pageviews too, not only custom events)
 - Add `referrers.csv` to CSV export
 - Improve password validation in registration and password reset forms
+- Adds Gravatar profile image to navbar
 - Enforce email reverification on update
 
 ### Removed

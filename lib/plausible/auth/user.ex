@@ -153,6 +153,17 @@ defmodule Plausible.Auth.User do
       %{suggestions: [], warning: "", score: 3}
   end
 
+  def profile_img_url(%__MODULE__{email: email}) do
+    hash =
+      email
+      |> String.trim()
+      |> String.downcase()
+      |> :erlang.md5()
+      |> Base.encode16(case: :lower)
+
+    Path.join(PlausibleWeb.Endpoint.url(), ["avatar/", hash])
+  end
+  
   defp validate_email_changed(changeset) do
     if !get_change(changeset, :email) && !changeset.errors[:email] do
       add_error(changeset, :email, "can't be the same", validation: :different_email)
