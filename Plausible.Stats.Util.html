@@ -145,8 +145,8 @@ Plausible
       </div>
 
         <div class="summary-synopsis"><p>Returns the common currency for the goal filters in a query. If there are no
-goal filters, or multiple currencies, <code class="inline">nil</code> is returned and revenue metrics
-are dropped.</p></div>
+goal filters, multiple currencies or the site owner does not have access to
+revenue goals, <code class="inline">nil</code> is returned and revenue metrics are dropped.</p></div>
 
     </div>
 
@@ -192,7 +192,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">cast_revenue_metrics_to_money(results, revenue_goals)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L64" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L72" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -234,8 +234,8 @@ Functions
       </div>
 
 <p>Returns the common currency for the goal filters in a query. If there are no
-goal filters, or multiple currencies, <code class="inline">nil</code> is returned and revenue metrics
-are dropped.</p><p>Aggregating revenue data works only for same currency goals. If the query is
+goal filters, multiple currencies or the site owner does not have access to
+revenue goals, <code class="inline">nil</code> is returned and revenue metrics are dropped.</p><p>Aggregating revenue data works only for same currency goals. If the query is
 filtered by goals with different currencies, for example, one USD and other
 EUR, revenue metrics are dropped.</p>
   </section>
