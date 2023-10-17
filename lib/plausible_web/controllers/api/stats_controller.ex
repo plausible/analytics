@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plug.ErrorHandler
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Filters, Comparisons}
+  alias PlausibleWeb.Api.Helpers, as: H
 
   require Logger
 
@@ -513,9 +514,10 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def funnel(conn, %{"id" => funnel_id} = params) do
-    site = conn.assigns[:site]
+    site = Plausible.Repo.preload(conn.assigns.site, :owner)
 
-    with :ok <- validate_params(site, params),
+    with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.owner),
+         :ok <- validate_params(site, params),
          query <- Query.from(site, params) |> Filters.add_prefix(),
          :ok <- validate_funnel_query(query),
          {funnel_id, ""} <- Integer.parse(funnel_id),
@@ -536,6 +538,12 @@ defmodule PlausibleWeb.Api.StatsController do
         |> put_status(404)
         |> json(%{error: "Funnel not found"})
         |> halt()
+
+      {:error, :upgrade_required} ->
+        H.payment_required(
+          conn,
+          "#{Plausible.Billing.Feature.Funnels.display_name()} is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+        )
 
       _ ->
         bad_request(conn, "There was an error with your request")
@@ -1206,13 +1214,23 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   def custom_prop_values(conn, params) do
-    site = conn.assigns[:site]
-    props = breakdown_custom_prop_values(site, params)
-    json(conn, props)
+    site = Plausible.Repo.preload(conn.assigns.site, :owner)
+
+    case Plausible.Billing.Feature.Props.check_availability(site.owner) do
+      :ok ->
+        props = breakdown_custom_prop_values(site, params)
+        json(conn, props)
+
+      {:error, :upgrade_required} ->
+        H.payment_required(
+          conn,
+          "#{Plausible.Billing.Feature.Props.display_name()} is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+        )
+    end
   end
 
   def all_custom_prop_values(conn, params) do
-    site = conn.assigns[:site]
+    site = conn.assigns.site
     query = Query.from(site, params) |> Filters.add_prefix()
 
     prop_names = Plausible.Stats.CustomProps.fetch_prop_names(site, query)

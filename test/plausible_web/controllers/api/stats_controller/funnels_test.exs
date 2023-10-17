@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
   @user_id 123
   @other_user_id 456
+  @v4_growth_plan_id "change-me-749342"
 
   @build_funnel_with [
     {"page_path", "/blog/announcement"},
@@ -218,6 +219,25 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                  }
                ]
              } = resp
+    end
+
+    test "returns HTTP 402 when site owner is on a growth plan", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan_id)
+      {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+
+      resp =
+        conn
+        |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day")
+        |> json_response(402)
+
+      assert %{
+               "error" =>
+                 "Funnels is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+             } == resp
     end
   end
 
