@@ -4,11 +4,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   """
   use Phoenix.LiveView
   use Phoenix.HTML
-  alias Plausible.Users
-  alias Plausible.Billing.{Plans, Plan, Quota}
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   import PlausibleWeb.Components.Billing
+
+  require Plausible.Billing.Subscription.Status
+
+  alias Plausible.Users
+  alias Plausible.Billing.{Plans, Plan, Quota, Subscription}
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
@@ -255,7 +258,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <%= cond do %>
           <% !@available -> %>
             <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
-          <% @owned_plan && @user.subscription && @user.subscription.status in ["active", "past_due", "paused"] -> %>
+          <% @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) -> %>
             <.render_change_plan_link
               paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
               text={
@@ -270,9 +273,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             />
           <% true -> %>
             <.paddle_button
+              id={"#{@kind}-checkout"}
               paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
               {assigns}
-            />
+            >
+              Upgrade
+            </.paddle_button>
         <% end %>
       </div>
       <ul
@@ -325,7 +331,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <.change_plan_link
       plan_already_owned={@text == "Currently on this plan"}
       billing_details_expired={
-        @user.subscription && @user.subscription.status in ["past_due", "paused"]
+        @user.subscription &&
+          @user.subscription.status in [Subscription.Status.past_due(), Subscription.Status.paused()]
       }
       {assigns}
     />
@@ -336,7 +343,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <.link
       id={"#{@kind}-checkout"}
-      href={"/billing/change-plan/preview/" <> @paddle_product_id}
+      href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_preview, @paddle_product_id)}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
         !(@plan_already_owned || @billing_details_expired) && "bg-indigo-600 hover:bg-indigo-500",
@@ -352,18 +359,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     >
       Please update your billing details first
     </p>
-    """
-  end
-
-  defp paddle_button(assigns) do
-    ~H"""
-    <button
-      id={"#{@kind}-checkout"}
-      onclick={"Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passthrough: @user.id, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})"}
-      class="w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white bg-indigo-600 hover:bg-indigo-500"
-    >
-      Upgrade
-    </button>
     """
   end
 
@@ -516,19 +511,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <span id={"#{@kind}-price-tag-interval"} class="text-sm font-semibold leading-6 text-gray-600">
       /year
     </span>
-    """
-  end
-
-  defp paddle_script(assigns) do
-    ~H"""
-    <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js">
-    </script>
-    <script :if={Application.get_env(:plausible, :environment) == "dev"}>
-      Paddle.Environment.set('sandbox')
-    </script>
-    <script>
-      Paddle.Setup({vendor: <%= Application.get_env(:plausible, :paddle) |> Keyword.fetch!(:vendor_id) %> })
-    </script>
     """
   end
 

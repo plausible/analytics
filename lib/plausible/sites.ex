@@ -47,6 +47,21 @@ defmodule Plausible.Sites do
     end
   end
 
+  @spec bulk_transfer_ownership_direct([Site.t()], Plausible.Auth.User.t()) ::
+          {:ok, [Plausible.Site.Membership.t()]} | {:error, invite_error()}
+  def bulk_transfer_ownership_direct(sites, new_owner) do
+    Repo.transaction(fn ->
+      for site <- sites do
+        with :ok <- ensure_transfer_valid(site, new_owner, :owner),
+             {:ok, membership} <- Site.Memberships.transfer_ownership(site, new_owner) do
+          membership
+        else
+          {:error, error} -> Repo.rollback(error)
+        end
+      end
+    end)
+  end
+
   @spec bulk_transfer_ownership(
           [Site.t()],
           Plausible.Auth.User.t(),
@@ -156,9 +171,9 @@ defmodule Plausible.Sites do
   end
 
   defp check_team_member_limit(site, _role) do
-    site_owner = owner_for(site)
-    limit = Quota.team_member_limit(site_owner)
-    usage = Quota.team_member_usage(site_owner)
+    site = Plausible.Repo.preload(site, :owner)
+    limit = Quota.team_member_limit(site.owner)
+    usage = Quota.team_member_usage(site.owner)
 
     if Quota.within_limit?(usage, limit),
       do: :ok,
@@ -299,17 +314,6 @@ defmodule Plausible.Sites do
       on: sm.site_id == s.id,
       where: sm.role == :owner,
       where: sm.user_id == ^user.id
-    )
-  end
-
-  def owner_for(site) do
-    Repo.one(
-      from(u in Plausible.Auth.User,
-        join: sm in Site.Membership,
-        on: sm.user_id == u.id,
-        where: sm.site_id == ^site.id,
-        where: sm.role == :owner
-      )
     )
   end
 end

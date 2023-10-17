@@ -52,7 +52,8 @@ defmodule PlausibleWeb do
 
       alias PlausibleWeb.Plugins.API.Schemas
       alias PlausibleWeb.Plugins.API.Views
-      alias Plausible.Plugins.API.Context
+      alias PlausibleWeb.Plugins.API.Errors
+      alias Plausible.Plugins.API
 
       plug(OpenApiSpex.Plug.CastAndValidate, json_render_error_v2: true, replace_params: false)
 

@@ -1,6 +1,9 @@
 defmodule Plausible.Workers.NotifyAnnualRenewal do
   use Plausible.Repo
   use Oban.Worker, queue: :notify_annual_renewal
+  require Plausible.Billing.Subscription.Status
+  alias Money.Subscription
+  alias Plausible.Billing.Subscription
 
   @yearly_plans Plausible.Billing.Plans.yearly_product_ids()
 
@@ -44,11 +47,11 @@ defmodule Plausible.Workers.NotifyAnnualRenewal do
 
     for user <- users do
       case user.subscription.status do
-        "active" ->
+        Subscription.Status.active() ->
           template = PlausibleWeb.Email.yearly_renewal_notification(user)
           Plausible.Mailer.send(template)
 
-        "deleted" ->
+        Subscription.Status.deleted() ->
           template = PlausibleWeb.Email.yearly_expiration_notification(user)
           Plausible.Mailer.send(template)
 

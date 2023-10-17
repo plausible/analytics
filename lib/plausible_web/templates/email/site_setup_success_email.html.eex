@@ -3,7 +3,7 @@ Congrats! The Plausible script has been installed correctly on <%= link(@site.do
 <%= link("Check your stats", to: "#{plausible_url()}/#{URI.encode_www_form(@site.domain)}") %>
 <br /><br />
 <%= if Plausible.Billing.on_trial?(@user) do %>
-  You're on a 30-day unlimited-use free trial with no obligations so do take your time to explore your simple and privacy-friendly website analytics dashboard.
+  You're on a 30-day free trial with no obligations so do take your time to explore your simple and privacy-friendly website analytics dashboard.
   <br /><br />
 <% end %>
 PS: You can import your historical Google Analytics (Universal Analytics) stats into your Plausible dashboard. <%= link("Learn how our GA importer works", to: "https://plausible.io/docs/google-analytics-import") %>.

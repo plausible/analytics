@@ -1,0 +1,91 @@
+<div class="mx-auto mt-6 text-center">
+  <h1 class="text-3xl font-black text-black dark:text-gray-100">
+    <%= if @subscription_resumable,
+      do: "Change subscription plan",
+      else: "Upgrade to Enterprise" %>
+  </h1>
+</div>
+<div class="w-full max-w-lg px-4 mx-auto mt-4 text-gray-900 dark:text-gray-100">
+  <div class="flex-1 p-8 mt-8 rounded bg-white shadow-md dark:bg-gray-800 dark:shadow-none">
+    <div class="w-full pb-4">
+      <span>
+        <%= if @subscription_resumable,
+          do:
+            "We've prepared your account for an upgrade to custom limits outside the listed plans:",
+          else:
+            "We've prepared a custom enterprise plan for your account with the following limits:" %>
+      </span>
+    </div>
+    <PlausibleWeb.Components.Billing.present_enterprise_plan plan={@latest_enterprise_plan} />
+    <ul class="w-full py-4">
+      <span>
+        The plan is priced at
+        <b>
+          <%= case @price do
+            %Money{} = money ->
+              PlausibleWeb.Components.Billing.format_price(money, format: :standard)
+
+            nil ->
+              "N/A"
+          end %>
+        </b>
+      </span>
+      <span>
+        per <%= if @latest_enterprise_plan.billing_interval == :yearly,
+          do: "year",
+          else: "month" %> + VAT if applicable. <%= if @subscription_resumable,
+          do:
+            "On the next page, our payment provider will calculate the prorated amount that your card will be charged if you decide to upgrade now.",
+          else: "Click the button below to upgrade." %>
+      </span>
+    </ul>
+    <div class="w-max">
+      <%= if @subscription_resumable do %>
+        <span class="inline-flex w-full rounded-md shadow-sm">
+          <.link
+            id="preview-changes"
+            href={
+              Routes.billing_path(
+                @conn,
+                :change_plan_preview,
+                @latest_enterprise_plan.paddle_plan_id
+              )
+            }
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent leading-5 rounded-md hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
+          >
+            <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+              <path
+                fill-rule="evenodd"
+                d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                clip-rule="evenodd"
+              >
+              </path>
+            </svg>
+            Preview changes
+          </.link>
+        </span>
+      <% else %>
+        <PlausibleWeb.Components.Billing.paddle_button
+          id="paddle-button"
+          paddle_product_id={@latest_enterprise_plan.paddle_plan_id}
+          user={@user}
+        >
+          <svg fill="currentColor" viewBox="0 0 20 20" class="inline w-4 h-4 mr-2">
+            <path
+              fill-rule="evenodd"
+              d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+              clip-rule="evenodd"
+            >
+            </path>
+          </svg>
+          Pay securely via Paddle
+        </PlausibleWeb.Components.Billing.paddle_button>
+      <% end %>
+    </div>
+  </div>
+</div>
+<div class="mt-8 text-center text-gray-900 dark:text-gray-100">
+  Questions? <a class="text-indigo-600" href={@contact_link}>Contact us</a>
+</div>
+<PlausibleWeb.Components.Billing.paddle_script />

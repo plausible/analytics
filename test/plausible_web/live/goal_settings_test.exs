@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       assert resp =~ to_string(g2)
       assert resp =~ "Custom Event"
       assert resp =~ to_string(g3)
-      assert resp =~ "Revenue Goal: EUR"
+      assert resp =~ "Revenue Goal"
     end
 
     test "lists goals with delete actions", %{conn: conn, site: site} do

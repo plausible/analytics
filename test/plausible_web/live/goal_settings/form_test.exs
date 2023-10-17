@@ -75,8 +75,8 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       refute render(parent) =~ "Foo"
       lv |> element("form") |> render_submit(%{goal: %{event_name: "Foo", currency: "EUR"}})
       parent_html = render(parent)
-      assert parent_html =~ "Foo"
-      assert parent_html =~ "Revenue Goal: EUR"
+      assert parent_html =~ "Foo (EUR)"
+      assert parent_html =~ "Revenue Goal"
     end
 
     test "creates a pageview goal", %{conn: conn, site: site} do

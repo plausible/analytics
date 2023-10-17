@@ -17,10 +17,12 @@ defmodule PlausibleWeb.PluginsAPICase do
       import Phoenix.ConnTest
       import PlausibleWeb.Plugins.API, only: [base_uri: 0]
       import PlausibleWeb.Plugins.API.Spec, only: [spec: 0]
-      alias PlausibleWeb.Plugins.API.Router.Helpers, as: Routes
       import Plausible.Factory
 
       import OpenApiSpex.TestAssertions
+
+      alias PlausibleWeb.Plugins.API.Router.Helpers, as: Routes
+      alias PlausibleWeb.Plugins.API.Schemas
 
       def authenticate(conn, domain, raw_token) do
         conn
@@ -32,7 +34,8 @@ defmodule PlausibleWeb.PluginsAPICase do
     end
   end
 
-  setup tags do
+  setup %{test: test} = tags do
+    import Plausible.Factory
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Plausible.Repo)
 
     unless tags[:async] do
@@ -41,6 +44,9 @@ defmodule PlausibleWeb.PluginsAPICase do
 
     conn = Phoenix.ConnTest.build_conn()
 
-    {:ok, conn: conn}
+    site = insert(:site)
+    {:ok, _token, raw_token} = Plausible.Plugins.API.Tokens.create(site, Atom.to_string(test))
+
+    {:ok, conn: conn, site: site, token: raw_token}
   end
 end

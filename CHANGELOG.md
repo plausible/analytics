@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 - Add `referrers.csv` to CSV export
 - Improve password validation in registration and password reset forms
 - Adds Gravatar profile image to navbar
+- Enforce email reverification on update
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions

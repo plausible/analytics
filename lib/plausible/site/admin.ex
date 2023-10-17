@@ -61,6 +61,13 @@ defmodule Plausible.SiteAdmin do
           %{name: "email", title: "New Owner Email", default: nil}
         ],
         action: fn conn, sites, params -> transfer_ownership(conn, sites, params) end
+      },
+      transfer_ownership_direct: %{
+        name: "Transfer ownership without invite",
+        inputs: [
+          %{name: "email", title: "New Owner Email", default: nil}
+        ],
+        action: fn conn, sites, params -> transfer_ownership_direct(conn, sites, params) end
       }
     ]
   end
@@ -80,6 +87,23 @@ defmodule Plausible.SiteAdmin do
         )
 
       :ok
+    else
+      {:error, "User could not be found"}
+    end
+  end
+
+  defp transfer_ownership_direct(_conn, [], _params) do
+    {:error, "Please select at least one site from the list"}
+  end
+
+  defp transfer_ownership_direct(_conn, sites, %{"email" => email}) do
+    new_owner = Plausible.Auth.find_user_by(email: email)
+
+    if new_owner do
+      case Plausible.Sites.bulk_transfer_ownership_direct(sites, new_owner) do
+        {:ok, _} -> :ok
+        {:error, :transfer_to_self} -> {:error, "User is already an owner of one of the sites"}
+      end
     else
       {:error, "User could not be found"}
     end

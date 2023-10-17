@@ -1,6 +1,16 @@
 defmodule Plausible.PropsTest do
   use Plausible.DataCase
 
+  @v4_growth_plan_id "change-me-749342"
+
+  test "allow/2 returns error when user plan does not include props" do
+    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+    site = insert(:site, members: [user])
+
+    assert {:error, :upgrade_required} = Plausible.Props.allow(site, "my-prop-1")
+    assert %Plausible.Site{allowed_event_props: nil} = Plausible.Repo.reload!(site)
+  end
+
   test "allow/2 adds props to the array" do
     site = insert(:site)
 
@@ -81,6 +91,32 @@ defmodule Plausible.PropsTest do
     assert {:ok, site} = Plausible.Props.allow(site, "my-prop-1")
     assert {:ok, site} = Plausible.Props.disallow(site, "my-prop-2")
     assert %Plausible.Site{allowed_event_props: ["my-prop-1"]} = Plausible.Repo.reload!(site)
+  end
+
+  test "allow_existing_props/2 returns error when user plan does not include props" do
+    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+    site = insert(:site, members: [user])
+
+    populate_stats(site, [
+      build(:event,
+        name: "Payment",
+        "meta.key": ["amount"],
+        "meta.value": ["500"]
+      ),
+      build(:event,
+        name: "Payment",
+        "meta.key": ["amount", "logged_in"],
+        "meta.value": ["100", "false"]
+      ),
+      build(:event,
+        name: "Payment",
+        "meta.key": ["amount", "is_customer"],
+        "meta.value": ["100", "false"]
+      )
+    ])
+
+    assert {:error, :upgrade_required} = Plausible.Props.allow_existing_props(site)
+    assert %Plausible.Site{allowed_event_props: nil} = Plausible.Repo.reload!(site)
   end
 
   test "allow_existing_props/1 saves the most frequent prop keys" do

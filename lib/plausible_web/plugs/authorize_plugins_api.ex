@@ -6,18 +6,19 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPI do
 
   alias PlausibleWeb.Plugins.API.Errors
   alias Plausible.Plugins.API.Tokens
+  import Plug.Conn
 
   def init(opts), do: opts
 
   def call(conn, _opts \\ []) do
-    with {:ok, domain, token} <- extract_token(conn),
-         {:ok, conn} <- authorize(conn, domain, token) do
+    with {:ok, token} <- extract_token(conn),
+         {:ok, conn} <- authorize(conn, token) do
       conn
     end
   end
 
-  defp authorize(conn, domain, token_value) do
-    case Tokens.find(domain, token_value) do
+  defp authorize(conn, token_value) do
+    case Tokens.find(token_value) do
       {:ok, token} ->
         {:ok, Plug.Conn.assign(conn, :authorized_site, token.site)}
 
@@ -27,11 +28,14 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPI do
   end
 
   defp extract_token(conn) do
-    case Plug.BasicAuth.parse_basic_auth(conn) do
-      {token_identifier, token_value} ->
-        {:ok, token_identifier, token_value}
-
-      :error ->
+    with ["Basic " <> encoded_user_and_pass] <- get_req_header(conn, "authorization"),
+         {:ok, decoded_user_and_pass} <- Base.decode64(encoded_user_and_pass) do
+      case :binary.split(decoded_user_and_pass, ":") do
+        [_user, token_value] -> {:ok, token_value}
+        [token_value] -> {:ok, token_value}
+      end
+    else
+      _ ->
         Errors.unauthorized(conn)
     end
   end

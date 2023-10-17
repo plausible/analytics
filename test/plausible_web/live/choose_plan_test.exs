@@ -1,8 +1,9 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
-  alias Plausible.{Repo, Billing.Subscription}
   use PlausibleWeb.ConnCase, async: true
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
+  require Plausible.Billing.Subscription.Status
+  alias Plausible.{Repo, Billing.Subscription}
 
   @v1_10k_yearly_plan_id "572810"
   @v4_growth_200k_yearly_plan_id "change-me-749347"
@@ -259,7 +260,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       growth_checkout_button = find(doc, @growth_checkout_button)
 
       assert text_of_attr(growth_checkout_button, "href") =~
-               "/billing/change-plan/preview/#{@v4_growth_200k_yearly_plan_id}"
+               Routes.billing_path(conn, :change_plan_preview, @v4_growth_200k_yearly_plan_id)
 
       element(lv, @slider_input) |> render_change(%{slider: 6})
       doc = element(lv, @monthly_interval_button) |> render_click()
@@ -267,7 +268,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       business_checkout_button = find(doc, @business_checkout_button)
 
       assert text_of_attr(business_checkout_button, "href") =~
-               "/billing/change-plan/preview/#{@v4_business_5m_monthly_plan_id}"
+               Routes.billing_path(conn, :change_plan_preview, @v4_business_5m_monthly_plan_id)
     end
   end
 
@@ -469,7 +470,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   defp create_past_due_subscription(%{user: user}) do
     create_subscription_for(user,
       paddle_plan_id: @v4_growth_200k_yearly_plan_id,
-      status: "past_due",
+      status: Subscription.Status.past_due(),
       update_url: "https://update.billing.details"
     )
   end
@@ -477,7 +478,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   defp create_paused_subscription(%{user: user}) do
     create_subscription_for(user,
       paddle_plan_id: @v4_growth_200k_yearly_plan_id,
-      status: "paused",
+      status: Subscription.Status.paused(),
       update_url: "https://update.billing.details"
     )
   end
@@ -485,7 +486,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   defp create_cancelled_subscription(%{user: user}) do
     create_subscription_for(user,
       paddle_plan_id: @v4_growth_200k_yearly_plan_id,
-      status: "deleted"
+      status: Subscription.Status.deleted()
     )
   end
 
@@ -503,7 +504,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   defp get_liveview(conn) do
     conn = assign(conn, :live_module, PlausibleWeb.Live.ChoosePlan)
-    {:ok, _lv, _doc} = live(conn, "/billing/choose-plan")
+    {:ok, _lv, _doc} = live(conn, Routes.billing_path(conn, :choose_plan))
   end
 
   defp get_paddle_checkout_params(element) do

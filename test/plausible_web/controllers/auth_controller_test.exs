@@ -3,11 +3,20 @@ defmodule PlausibleWeb.AuthControllerTest do
   use Bamboo.Test
   use Plausible.Repo
 
+  import Plausible.Test.Support.HTML
   import Mox
 
+  require Logger
+  require Plausible.Billing.Subscription.Status
+
+  alias Plausible.Auth
   alias Plausible.Auth.User
+  alias Plausible.Billing.Subscription
 
   setup :verify_on_exit!
+
+  @v3_plan_id "749355"
+  @configured_enterprise_plan_paddle_plan_id "123"
 
   describe "GET /register" do
     test "shows the register form", %{conn: conn} do
@@ -196,18 +205,40 @@ defmodule PlausibleWeb.AuthControllerTest do
   describe "POST /activate/request-code" do
     setup [:create_user, :log_in]
 
-    test "associates an activation pin with the user account", %{conn: conn, user: user} do
+    test "generates an activation pin for user account", %{conn: conn, user: user} do
       post(conn, "/activate/request-code")
 
-      code =
-        Repo.one(
-          from c in "email_verification_codes",
-            where: c.user_id == ^user.id,
-            select: %{user_id: c.user_id, issued_at: c.issued_at}
-        )
+      assert code = Repo.get_by(Auth.EmailActivationCode, user_id: user.id)
 
-      assert code[:user_id] == user.id
-      assert Timex.after?(code[:issued_at], Timex.now() |> Timex.shift(seconds: -10))
+      assert code.user_id == user.id
+      refute Plausible.Auth.EmailVerification.expired?(code)
+    end
+
+    test "regenerates an activation pin even if there's one already", %{conn: conn, user: user} do
+      five_minutes_ago =
+        NaiveDateTime.utc_now()
+        |> Timex.shift(minutes: -5)
+        |> NaiveDateTime.truncate(:second)
+
+      {:ok, verification} = Auth.EmailVerification.issue_code(user, five_minutes_ago)
+
+      post(conn, "/activate/request-code")
+
+      assert new_verification = Repo.get_by(Auth.EmailActivationCode, user_id: user.id)
+
+      assert verification.id == new_verification.id
+      assert verification.user_id == new_verification.user_id
+      # this actually has a chance to fail 1 in 8999 runs
+      # but at the same time it's good to have a confirmation
+      # that it indeed generates a new code
+      if verification.code == new_verification.code do
+        Logger.warn(
+          "Congratulations! You you have hit 1 in 8999 chance of the same " <>
+            "email verification code repeating twice in a row!"
+        )
+      end
+
+      assert NaiveDateTime.compare(verification.issued_at, new_verification.issued_at) == :lt
     end
 
     test "sends activation email to user", %{conn: conn, user: user} do
@@ -218,7 +249,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert subject =~ "is your Plausible email verification code"
     end
 
-    test "redirets user to /activate", %{conn: conn} do
+    test "redirects user to /activate", %{conn: conn} do
       conn = post(conn, "/activate/request-code")
 
       assert redirected_to(conn, 302) == "/activate"
@@ -235,15 +266,14 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "with expired pin - reloads the form with error", %{conn: conn, user: user} do
-      Repo.insert_all("email_verification_codes", [
-        %{
-          code: 1234,
-          user_id: user.id,
-          issued_at: Timex.shift(Timex.now(), days: -1)
-        }
-      ])
+      one_day_ago =
+        NaiveDateTime.utc_now()
+        |> Timex.shift(days: -1)
+        |> NaiveDateTime.truncate(:second)
 
-      conn = post(conn, "/activate", %{code: "1234"})
+      {:ok, verification} = Auth.EmailVerification.issue_code(user, one_day_ago)
+
+      conn = post(conn, "/activate", %{code: verification.code})
 
       assert html_response(conn, 200) =~ "Code is expired, please request another one"
     end
@@ -252,13 +282,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
       post(conn, "/activate/request-code")
 
-      code =
-        Repo.one(
-          from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code
-        )
-        |> Integer.to_string()
+      verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
 
-      conn = post(conn, "/activate", %{code: code})
+      conn = post(conn, "/activate", %{code: verification.code})
       user = Repo.get_by(Plausible.Auth.User, id: user.id)
 
       assert user.email_verified
@@ -271,30 +297,22 @@ defmodule PlausibleWeb.AuthControllerTest do
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
       post(conn, "/activate/request-code")
 
-      code =
-        Repo.one(
-          from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code
-        )
-        |> Integer.to_string()
+      verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
 
-      conn = post(conn, "/activate", %{code: code})
+      conn = post(conn, "/activate", %{code: verification.code})
 
       assert redirected_to(conn) == "/sites"
     end
 
-    test "removes the user association from the verification code", %{conn: conn, user: user} do
+    test "removes used up verification code", %{conn: conn, user: user} do
       Repo.update!(Plausible.Auth.User.changeset(user, %{email_verified: false}))
       post(conn, "/activate/request-code")
 
-      code =
-        Repo.one(
-          from c in "email_verification_codes", where: c.user_id == ^user.id, select: c.code
-        )
-        |> Integer.to_string()
+      verification = Repo.get_by!(Auth.EmailActivationCode, user_id: user.id)
 
-      post(conn, "/activate", %{code: code})
+      post(conn, "/activate", %{code: verification.code})
 
-      refute Repo.exists?(from c in "email_verification_codes", where: c.user_id == ^user.id)
+      refute Repo.get_by(Auth.EmailActivationCode, user_id: user.id)
     end
   end
 
@@ -433,7 +451,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "shows the form", %{conn: conn} do
       conn = get(conn, "/settings")
-      assert html_response(conn, 200) =~ "Account settings"
+      assert resp = html_response(conn, 200)
+      assert resp =~ "Change account name"
+      assert resp =~ "Change email address"
     end
 
     test "shows subscription", %{conn: conn, user: user} do
@@ -460,15 +480,10 @@ defmodule PlausibleWeb.AuthControllerTest do
     test "shows enterprise plan subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "123", user: user)
 
-      insert(:enterprise_plan,
-        paddle_plan_id: "123",
-        user: user,
-        monthly_pageview_limit: 10_000_000,
-        billing_interval: :yearly
-      )
+      configure_enterprise_plan(user)
 
       conn = get(conn, "/settings")
-      assert html_response(conn, 200) =~ "10M pageviews"
+      assert html_response(conn, 200) =~ "20M pageviews"
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
@@ -476,25 +491,137 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, paddle_plan_id: "123", user: user)
+      insert(:subscription, paddle_plan_id: @configured_enterprise_plan_paddle_plan_id, user: user)
 
       insert(:enterprise_plan,
-        paddle_plan_id: "123",
+        paddle_plan_id: "1234",
         user: user,
         monthly_pageview_limit: 10_000_000,
         billing_interval: :yearly
       )
 
-      insert(:enterprise_plan,
-        paddle_plan_id: "1234",
-        user: user,
-        monthly_pageview_limit: 20_000_000,
-        billing_interval: :yearly
-      )
+      configure_enterprise_plan(user)
 
       conn = get(conn, "/settings")
-      assert html_response(conn, 200) =~ "10M pageviews"
+      assert html_response(conn, 200) =~ "20M pageviews"
       assert html_response(conn, 200) =~ "yearly billing"
+    end
+
+    test "links to upgrade to a plan", %{conn: conn} do
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      upgrade_link_1 = find(doc, "#monthly-quota-box a")
+      upgrade_link_2 = find(doc, "#upgrade-link-2")
+
+      assert text(upgrade_link_1) == "Upgrade"
+      assert text_of_attr(upgrade_link_1, "href") == Routes.billing_path(conn, :choose_plan)
+
+      assert text(upgrade_link_2) == "Upgrade"
+      assert text_of_attr(upgrade_link_2, "href") == Routes.billing_path(conn, :choose_plan)
+    end
+
+    test "links to change existing plan", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
+
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-link-2")
+      assert doc =~ "Cancel my subscription"
+
+      change_plan_link = find(doc, "#monthly-quota-box a")
+
+      assert text(change_plan_link) == "Change plan"
+      assert text_of_attr(change_plan_link, "href") == Routes.billing_path(conn, :choose_plan)
+    end
+
+    test "upgrade_to_enterprise_plan link does not show up when subscription is past_due", %{
+      conn: conn,
+      user: user
+    } do
+      configure_enterprise_plan(user)
+
+      insert(:subscription,
+        user: user,
+        status: Subscription.Status.past_due(),
+        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
+      )
+
+      doc =
+        conn
+        |> get(Routes.auth_path(conn, :user_settings))
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-or-change-plan-link")
+    end
+
+    test "upgrade_to_enterprise_plan link does not show up when subscription is paused", %{
+      conn: conn,
+      user: user
+    } do
+      configure_enterprise_plan(user)
+
+      insert(:subscription,
+        user: user,
+        status: Subscription.Status.paused(),
+        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id
+      )
+
+      doc =
+        conn
+        |> get(Routes.auth_path(conn, :user_settings))
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-or-change-plan-link")
+    end
+
+    test "links to upgrade to enterprise plan",
+         %{conn: conn, user: user} do
+      configure_enterprise_plan(user)
+
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      upgrade_link_1 = find(doc, "#monthly-quota-box a")
+      upgrade_link_2 = find(doc, "#upgrade-link-2")
+
+      assert text(upgrade_link_1) == "Upgrade"
+
+      assert text_of_attr(upgrade_link_1, "href") ==
+               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+
+      assert text(upgrade_link_2) == "Upgrade"
+
+      assert text_of_attr(upgrade_link_2, "href") ==
+               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+    end
+
+    test "links to change enterprise plan and cancel subscription",
+         %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
+
+      configure_enterprise_plan(user)
+
+      doc =
+        get(conn, "/settings")
+        |> html_response(200)
+
+      refute element_exists?(doc, "#upgrade-link-2")
+      assert doc =~ "Cancel my subscription"
+
+      change_plan_link = find(doc, "#monthly-quota-box a")
+
+      assert text(change_plan_link) == "Change plan"
+
+      assert text_of_attr(change_plan_link, "href") ==
+               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end
 
     test "shows invoices for subscribed user", %{conn: conn, user: user} do
@@ -572,6 +699,153 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  describe "PUT /settings/email" do
+    setup [:create_user, :log_in]
+
+    test "updates email and forces reverification", %{conn: conn, user: user} do
+      password = "very-long-very-secret-123"
+
+      user
+      |> User.set_password(password)
+      |> Repo.update!()
+
+      assert user.email_verified
+
+      conn =
+        put(conn, "/settings/email", %{
+          "user" => %{"email" => "new" <> user.email, "password" => password}
+        })
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :activate)
+
+      updated_user = Repo.reload!(user)
+
+      assert updated_user.email == "new" <> user.email
+      assert updated_user.previous_email == user.email
+      refute updated_user.email_verified
+
+      assert_delivered_email_matches(%{to: [{_, user_email}], subject: subject})
+      assert user_email == updated_user.email
+      assert subject =~ "is your Plausible email verification code"
+    end
+
+    test "renders form with error on no fields filled", %{conn: conn} do
+      conn = put(conn, "/settings/email", %{"user" => %{}})
+
+      assert html_response(conn, 200) =~ "can&#39;t be blank"
+    end
+
+    test "renders form with error on invalid password", %{conn: conn, user: user} do
+      conn =
+        put(conn, "/settings/email", %{
+          "user" => %{"password" => "invalid", "email" => "new" <> user.email}
+        })
+
+      assert html_response(conn, 200) =~ "is invalid"
+    end
+
+    test "renders form with error on already taken email", %{conn: conn, user: user} do
+      other_user = insert(:user)
+
+      password = "very-long-very-secret-123"
+
+      user
+      |> User.set_password(password)
+      |> Repo.update!()
+
+      conn =
+        put(conn, "/settings/email", %{
+          "user" => %{"password" => password, "email" => other_user.email}
+        })
+
+      assert html_response(conn, 200) =~ "has already been taken"
+    end
+
+    test "renders form with error when email is identical with the current one", %{
+      conn: conn,
+      user: user
+    } do
+      password = "very-long-very-secret-123"
+
+      user
+      |> User.set_password(password)
+      |> Repo.update!()
+
+      conn =
+        put(conn, "/settings/email", %{
+          "user" => %{"password" => password, "email" => user.email}
+        })
+
+      assert html_response(conn, 200) =~ "can&#39;t be the same"
+    end
+  end
+
+  describe "POST /settings/email/cancel" do
+    setup [:create_user, :log_in]
+
+    test "cancels email reverification in progress", %{conn: conn, user: user} do
+      user =
+        user
+        |> Ecto.Changeset.change(
+          email_verified: false,
+          email: "new" <> user.email,
+          previous_email: user.email
+        )
+        |> Repo.update!()
+
+      conn = post(conn, "/settings/email/cancel")
+
+      assert redirected_to(conn, 302) ==
+               Routes.auth_path(conn, :user_settings) <> "#change-email-address"
+
+      updated_user = Repo.reload!(user)
+
+      assert updated_user.email_verified
+      assert updated_user.email == user.previous_email
+      refute updated_user.previous_email
+    end
+
+    test "fails to cancel reverification when previous email is already retaken", %{
+      conn: conn,
+      user: user
+    } do
+      user =
+        user
+        |> Ecto.Changeset.change(
+          email_verified: false,
+          email: "new" <> user.email,
+          previous_email: user.email
+        )
+        |> Repo.update!()
+
+      _other_user = insert(:user, email: user.previous_email)
+
+      conn = post(conn, "/settings/email/cancel")
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :activate_form)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Could not cancel email update"
+    end
+
+    test "crashes when previous email is empty on cancel (should not happen)", %{
+      conn: conn,
+      user: user
+    } do
+      user
+      |> Ecto.Changeset.change(
+        email_verified: false,
+        email: "new" <> user.email,
+        previous_email: nil
+      )
+      |> Repo.update!()
+
+      assert_raise RuntimeError, ~r/Previous email is empty for user/, fn ->
+        post(conn, "/settings/email/cancel")
+      end
+    end
+  end
+
   describe "DELETE /me" do
     setup [:create_user, :log_in, :create_new_site]
     use Plausible.Repo
@@ -613,8 +887,8 @@ defmodule PlausibleWeb.AuthControllerTest do
       ])
 
       insert(:google_auth, site: site, user: user)
-      insert(:subscription, user: user, status: "deleted")
-      insert(:subscription, user: user, status: "active")
+      insert(:subscription, user: user, status: Subscription.Status.deleted())
+      insert(:subscription, user: user, status: Subscription.Status.active())
 
       conn = delete(conn, "/me")
       assert redirected_to(conn) == "/"
@@ -639,8 +913,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     import Ecto.Query
 
     test "can create an API key", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:site_membership, site: site, user: user, role: "owner")
+      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
 
       conn =
         post(conn, "/settings/api-keys", %{
@@ -657,8 +930,7 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "cannot create a duplicate API key", %{conn: conn, user: user} do
-      site = insert(:site)
-      insert(:site_membership, site: site, user: user, role: "owner")
+      insert(:site, memberships: [build(:site_membership, user: user, role: "owner")])
 
       conn =
         post(conn, "/settings/api-keys", %{
@@ -682,12 +954,12 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "can't create api key into another site", %{conn: conn, user: me} do
-      my_site = insert(:site)
-      insert(:site_membership, site: my_site, user: me, role: "owner")
+      _my_site = insert(:site, memberships: [build(:site_membership, user: me, role: "owner")])
 
       other_user = insert(:user)
-      other_site = insert(:site)
-      insert(:site_membership, site: other_site, user: other_user, role: "owner")
+
+      _other_site =
+        insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       conn =
         post(conn, "/settings/api-keys", %{
@@ -710,17 +982,15 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "can't delete api key that doesn't belong to me", %{conn: conn} do
       other_user = insert(:user)
-      insert(:site_membership, site: insert(:site), user: other_user, role: "owner")
+      insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       assert {:ok, %ApiKey{} = api_key} =
                %ApiKey{user_id: other_user.id}
                |> ApiKey.changeset(%{"name" => "other user's key"})
                |> Repo.insert()
 
-      assert_raise Ecto.NoResultsError, fn ->
-        delete(conn, "/settings/api-keys/#{api_key.id}")
-      end
-
+      conn = delete(conn, "/settings/api-keys/#{api_key.id}")
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find API Key to delete"
       assert Repo.get(ApiKey, api_key.id)
     end
   end
@@ -758,6 +1028,15 @@ defmodule PlausibleWeb.AuthControllerTest do
            body: %{"success" => success}
          }}
       end
+    )
+  end
+
+  defp configure_enterprise_plan(user) do
+    insert(:enterprise_plan,
+      paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
+      user: user,
+      monthly_pageview_limit: 20_000_000,
+      billing_interval: :yearly
     )
   end
 end
