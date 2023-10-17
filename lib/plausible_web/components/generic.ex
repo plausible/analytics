@@ -127,6 +127,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :href, :string, required: true
   attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
+  attr :id, :any, default: nil
   slot :inner_block
 
   def unstyled_link(assigns) do

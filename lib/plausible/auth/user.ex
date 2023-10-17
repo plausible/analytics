@@ -163,7 +163,7 @@ defmodule Plausible.Auth.User do
 
     Path.join(PlausibleWeb.Endpoint.url(), ["avatar/", hash])
   end
-  
+
   defp validate_email_changed(changeset) do
     if !get_change(changeset, :email) && !changeset.errors[:email] do
       add_error(changeset, :email, "can't be the same", validation: :different_email)
