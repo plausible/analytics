@@ -2,14 +2,14 @@ defmodule Plausible.IngestRepo.Migrations.DisableDeduplicationWindowForImports d
   use Ecto.Migration
 
   @import_tables ~w(
-    imported_visitors 
-    imported_sources 
-    imported_pages 
-    imported_entry_pages 
-    imported_exit_pages 
-    imported_locations 
-    imported_devices 
-    imported_browsers 
+    imported_visitors
+    imported_sources
+    imported_pages
+    imported_entry_pages
+    imported_exit_pages
+    imported_locations
+    imported_devices
+    imported_browsers
     imported_operating_systems
   )
 
@@ -17,7 +17,7 @@ defmodule Plausible.IngestRepo.Migrations.DisableDeduplicationWindowForImports d
     cluster_query = "SELECT 1 FROM system.replicas WHERE table = 'imported_visitors'"
 
     cluster? =
-      case Ecto.Adapters.SQL.query(Plausible.IngestRepo, cluster_query) |> IO.inspect() do
+      case Ecto.Adapters.SQL.query(Plausible.IngestRepo, cluster_query) do
         {:ok, %{rows: []}} -> false
         {:ok, _} -> true
       end
