@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @yearly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="yearly"]/
   @interval_button_active_class "bg-indigo-600 text-white"
   @slider_input ~s/input[name="slider"]/
-  @two_months_free "#two-months-free"
+  @slider_value "#slider-value"
 
   @growth_plan_box "#growth-plan-box"
   @growth_price_tag_amount "#growth-price-tag-amount"
@@ -41,18 +41,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "+ VAT if applicable"
     end
 
-    test "changing billing interval changes two months free colour", %{conn: conn} do
-      {:ok, lv, doc} = get_liveview(conn)
-
-      assert class_of_element(doc, @two_months_free) =~ "text-gray-500"
-      refute class_of_element(doc, @two_months_free) =~ "text-yellow-700"
-
-      doc = element(lv, @yearly_interval_button) |> render_click()
-
-      refute class_of_element(doc, @two_months_free) =~ "text-gray-500"
-      assert class_of_element(doc, @two_months_free) =~ "text-yellow-700"
-    end
-
     test "default billing interval is monthly, and can switch to yearly", %{conn: conn} do
       {:ok, lv, doc} = get_liveview(conn)
 
@@ -67,7 +55,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "default pageview limit is 10k", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert doc =~ "Monthly pageviews: <b>10k</b"
+      assert text_of_element(doc, @slider_value) == "10k"
       assert text_of_element(doc, @growth_price_tag_amount) == "€10"
       assert text_of_element(doc, @business_price_tag_amount) == "€90"
     end
@@ -76,37 +64,37 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
-      assert doc =~ "Monthly pageviews: <b>100k</b"
+      assert text_of_element(doc, @slider_value) == "100k"
       assert text_of_element(doc, @growth_price_tag_amount) == "€20"
       assert text_of_element(doc, @business_price_tag_amount) == "€100"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 2})
-      assert doc =~ "Monthly pageviews: <b>200k</b"
+      assert text_of_element(doc, @slider_value) == "200k"
       assert text_of_element(doc, @growth_price_tag_amount) == "€30"
       assert text_of_element(doc, @business_price_tag_amount) == "€110"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 3})
-      assert doc =~ "Monthly pageviews: <b>500k</b"
+      assert text_of_element(doc, @slider_value) == "500k"
       assert text_of_element(doc, @growth_price_tag_amount) == "€40"
       assert text_of_element(doc, @business_price_tag_amount) == "€120"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 4})
-      assert doc =~ "Monthly pageviews: <b>1M</b"
+      assert text_of_element(doc, @slider_value) == "1M"
       assert text_of_element(doc, @growth_price_tag_amount) == "€50"
       assert text_of_element(doc, @business_price_tag_amount) == "€130"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 5})
-      assert doc =~ "Monthly pageviews: <b>2M</b"
+      assert text_of_element(doc, @slider_value) == "2M"
       assert text_of_element(doc, @growth_price_tag_amount) == "€60"
       assert text_of_element(doc, @business_price_tag_amount) == "€140"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 6})
-      assert doc =~ "Monthly pageviews: <b>5M</b"
+      assert text_of_element(doc, @slider_value) == "5M"
       assert text_of_element(doc, @growth_price_tag_amount) == "€70"
       assert text_of_element(doc, @business_price_tag_amount) == "€150"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
-      assert doc =~ "Monthly pageviews: <b>10M</b"
+      assert text_of_element(doc, @slider_value) == "10M"
       assert text_of_element(doc, @growth_price_tag_amount) == "€80"
       assert text_of_element(doc, @business_price_tag_amount) == "€160"
     end
@@ -206,17 +194,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "gets default pageview limit from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert doc =~ "Monthly pageviews: <b>200k</b"
+      assert text_of_element(doc, @slider_value) == "200k"
     end
 
     test "pageview slider changes selected volume", %{conn: conn} do
       {:ok, lv, _doc} = get_liveview(conn)
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
-      assert doc =~ "Monthly pageviews: <b>100k</b"
+      assert text_of_element(doc, @slider_value) == "100k"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 0})
-      assert doc =~ "Monthly pageviews: <b>10k</b"
+      assert text_of_element(doc, @slider_value) == "10k"
     end
 
     test "makes it clear that the user is currently on a growth tier", %{conn: conn} do
@@ -277,7 +265,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "gets default pageview limit from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert doc =~ "Monthly pageviews: <b>5M</b"
+      assert text_of_element(doc, @slider_value) == "5M"
     end
 
     test "makes it clear that the user is currently on a business tier", %{conn: conn} do
@@ -410,24 +398,24 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, lv, _doc} = get_liveview(conn)
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 8})
-      assert doc =~ "Monthly pageviews: <b>20M</b"
+      assert text_of_element(doc, @slider_value) == "20M"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_price_tag_amount) == "€900"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 9})
-      assert doc =~ "Monthly pageviews: <b>50M</b"
+      assert text_of_element(doc, @slider_value) == "50M"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_price_tag_amount) == "€1K"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 10})
-      assert doc =~ "Monthly pageviews: <b>50M+</b"
+      assert text_of_element(doc, @slider_value) == "50M+"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
-      assert doc =~ "Monthly pageviews: <b>10M</b"
+      assert text_of_element(doc, @slider_value) == "10M"
       refute text_of_element(doc, @business_plan_box) =~ "Contact us"
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
     end

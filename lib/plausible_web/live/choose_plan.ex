@@ -66,18 +66,20 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   def render(assigns) do
     ~H"""
     <div class="bg-gray-100 dark:bg-gray-900 pt-1 pb-12 sm:pb-16 text-gray-900 dark:text-gray-100">
-      <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="mx-auto max-w-7xl px-6 lg:px-20">
         <.subscription_past_due_notice class="pb-2" subscription={@user.subscription} />
         <.subscription_paused_notice class="pb-2" subscription={@user.subscription} />
         <div class="mx-auto max-w-4xl text-center">
-          <p class="text-4xl font-bold tracking-tight sm:text-5xl">
+          <p class="text-4xl font-bold tracking-tight lg:text-5xl">
             <%= if @owned_plan,
               do: "Change subscription plan",
               else: "Upgrade your account" %>
           </p>
         </div>
-        <.interval_picker selected_interval={@selected_interval} />
-        <.slider selected_volume={@selected_volume} available_volumes={@available_volumes} />
+        <div class="mt-12 max-w-md lg:max-w-none mx-auto flex flex-col  lg:flex-row-reverse justify-between">
+          <.interval_picker selected_interval={@selected_interval} />
+          <.slider selected_volume={@selected_volume} available_volumes={@available_volumes} />
+        </div>
         <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <.plan_box
             kind={:growth}
@@ -103,7 +105,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           />
           <.enterprise_plan_box />
         </div>
-        <p class="mx-auto mt-2 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
+        <p class="mx-auto mt-8 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
           <.usage usage={@usage} />
         </p>
         <.pageview_limit_notice :if={!@owned_plan} />
@@ -166,12 +168,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp interval_picker(assigns) do
     ~H"""
-    <div class="mt-6 flex justify-center">
-      <div class="flex flex-col">
-        <.two_months_free active={@selected_interval == :yearly} />
-        <fieldset class="grid grid-cols-2 gap-x-1 rounded-full p-1 text-center text-xs font-semibold leading-5 ring-1 ring-inset ring-gray-300 dark:ring-gray-600">
+    <div class="mt-4 lg:flex justify-center self-start lg:self-end">
+      <div class="relative ">
+        <.two_months_free />
+        <fieldset class="grid grid-cols-2 gap-x-1 rounded-full bg-white dark:bg-gray-700 p-1 text-center text-sm font-semibold leading-5 shadow dark:ring-gray-600">
           <label
-            class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval == :monthly, do: "bg-indigo-600 text-white"}"}
+            class={"cursor-pointer rounded-full px-2.5 py-1 text-gray-900 dark:text-white #{if @selected_interval == :monthly, do: "bg-indigo-600 text-white"}"}
             phx-click="set_interval"
             phx-value-interval="monthly"
           >
@@ -179,7 +181,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             <span>Monthly</span>
           </label>
           <label
-            class={"cursor-pointer rounded-full px-2.5 py-1 #{if @selected_interval == :yearly, do: "bg-indigo-600 text-white"}"}
+            class={"cursor-pointer rounded-full px-2.5 py-1 text-gray-900 dark:text-white #{if @selected_interval == :yearly, do: "bg-indigo-600 text-white"}"}
             phx-click="set_interval"
             phx-value-interval="yearly"
           >
@@ -194,33 +196,25 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def two_months_free(assigns) do
     ~H"""
-    <div class="grid grid-cols-2 gap-x-1">
-      <div></div>
-      <span
-        id="two-months-free"
-        class={[
-          "mb-1 block whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 ring-1",
-          @active &&
-            "bg-yellow-100 ring-yellow-700 text-yellow-700 dark:text-yellow-200 dark:bg-inherit dark:ring-1 dark:ring-yellow-200",
-          !@active && "text-gray-500 ring-gray-300 dark:text-gray-400 dark:ring-gray-600"
-        ]}
-      >
-        2 months free
-      </span>
-    </div>
+    <span class="absolute -right-16 -top-3 whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-yellow-100 border border-yellow-300 text-yellow-700">
+      2 months free
+    </span>
     """
   end
 
   defp slider(assigns) do
     ~H"""
-    <form class="mt-4 max-w-2xl mx-auto">
-      <p class="text-xl text-gray-600 dark:text-gray-400 text-center">
-        Monthly pageviews: <b><%= slider_value(@selected_volume, @available_volumes) %></b>
+    <form class="w-full lg:w-2/5 mt-4 ">
+      <p class="font-medium leading-6 text-gray-600 dark:text-gray-200">
+        <b id="slider-value" class="text-xl text-gray-900 dark:text-gray-100">
+          <%= slider_value(@selected_volume, @available_volumes) %>
+        </b>
+        monthly pageviews
       </p>
       <input
         phx-change="slide"
         name="slider"
-        class="shadow-md border border-gray-200 dark:bg-gray-600 dark:border-none"
+        class="mt-4 shadow dark:bg-gray-600 dark:border-none"
         type="range"
         min="0"
         max={length(@available_volumes)}
@@ -238,16 +232,16 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <div
       id={"#{@kind}-plan-box"}
       class={[
-        "rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
-        !@owned && "ring-1 ring-gray-300 dark:ring-gray-600",
-        @owned && "ring-2 ring-indigo-600"
+        "shadow-lg bg-white rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
+        !@owned && "dark:ring-gray-600",
+        @owned && "ring-2 ring-indigo-600 dark:ring-indigo-300"
       ]}
     >
       <div class="flex items-center justify-between gap-x-4">
         <h3 class={[
           "text-lg font-semibold leading-8",
           !@owned && "text-gray-900 dark:text-gray-100",
-          @owned && "text-indigo-600"
+          @owned && "text-indigo-600 dark:text-indigo-300"
         ]}>
           <%= String.capitalize(to_string(@kind)) %>
         </h3>
@@ -378,7 +372,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp enterprise_plan_box(assigns) do
     ~H"""
-    <div class="rounded-3xl px-6 sm:px-8 py-4 sm:py-6 ring-1 bg-gray-900 ring-gray-900 dark:bg-gray-800 dark:ring-gray-600">
+    <div class="rounded-3xl px-6 sm:px-8 py-4 sm:py-6 bg-gray-900 shadow-xl dark:bg-gray-800 dark:ring-gray-600">
       <h3 class="text-lg font-semibold leading-8 text-white dark:text-gray-100">Enterprise</h3>
       <p class="mt-6 flex items-baseline gap-x-1">
         <span class="text-4xl font-bold tracking-tight text-white dark:text-gray-100">
@@ -417,7 +411,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <div class="flex items-center justify-between gap-x-4">
       <p
         id="current-label"
-        class="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600 dark:ring-1 dark:ring-indigo-600/40"
+        class="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600 dark:text-indigo-300 dark:ring-1 dark:ring-indigo-300/50"
       >
         Current
       </p>
@@ -524,8 +518,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         border-radius: 3px;
         height: 6px;
         width: 100%;
-        margin-top: 25px;
-        margin-bottom: 15px;
+        margin-bottom: 9px;
         outline: none;
       }
 
@@ -539,8 +532,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         border: 0;
         border-radius: 50%;
         cursor: pointer;
-        height: 36px;
-        width: 36px;
+        height: 28px;
+        width: 28px;
       }
 
       input[type="range"]::-moz-range-thumb {
@@ -552,8 +545,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         border: none;
         border-radius: 50%;
         cursor: pointer;
-        height: 36px;
-        width: 36px;
+        height: 28px;
+        width: 28px;
       }
 
       input[type="range"]::-ms-thumb {
@@ -564,8 +557,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         border: 0;
         border-radius: 50%;
         cursor: pointer;
-        height: 36px;
-        width: 36px;
+        height: 28px;
+        width: 28px;
       }
 
       input[type="range"]::-moz-focus-outer {
