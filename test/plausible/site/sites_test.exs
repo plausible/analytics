@@ -308,6 +308,70 @@ defmodule Plausible.SitesTest do
     end
   end
 
+  describe "bulk_transfer_ownership_direct/2" do
+    test "transfers ownership for multiple sites in one action" do
+      current_owner = insert(:user)
+      new_owner = insert(:user)
+
+      site1 =
+        insert(:site, memberships: [build(:site_membership, user: current_owner, role: :owner)])
+
+      site2 =
+        insert(:site, memberships: [build(:site_membership, user: current_owner, role: :owner)])
+
+      assert {:ok, _} = Sites.bulk_transfer_ownership_direct([site1, site2], new_owner)
+
+      assert Repo.get_by(Plausible.Site.Membership,
+               site_id: site1.id,
+               user_id: new_owner.id,
+               role: :owner
+             )
+
+      assert Repo.get_by(Plausible.Site.Membership,
+               site_id: site2.id,
+               user_id: new_owner.id,
+               role: :owner
+             )
+
+      assert Repo.get_by(Plausible.Site.Membership,
+               site_id: site1.id,
+               user_id: current_owner.id,
+               role: :admin
+             )
+
+      assert Repo.get_by(Plausible.Site.Membership,
+               site_id: site2.id,
+               user_id: current_owner.id,
+               role: :admin
+             )
+    end
+
+    test "returns error when user is already an owner for one of the sites" do
+      current_owner = insert(:user)
+      new_owner = insert(:user)
+
+      site1 =
+        insert(:site, memberships: [build(:site_membership, user: current_owner, role: :owner)])
+
+      site2 = insert(:site, memberships: [build(:site_membership, user: new_owner, role: :owner)])
+
+      assert {:error, :transfer_to_self} =
+               Sites.bulk_transfer_ownership_direct([site1, site2], new_owner)
+
+      assert Repo.get_by(Plausible.Site.Membership,
+               site_id: site1.id,
+               user_id: current_owner.id,
+               role: :owner
+             )
+
+      assert Repo.get_by(Plausible.Site.Membership,
+               site_id: site2.id,
+               user_id: new_owner.id,
+               role: :owner
+             )
+    end
+  end
+
   describe "get_for_user/2" do
     test "get site for super_admin" do
       user1 = insert(:user)

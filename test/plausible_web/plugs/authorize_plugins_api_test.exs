@@ -21,6 +21,21 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
     assert %Plausible.Site{id: ^site_id} = conn.assigns.authorized_site
   end
 
+  test "plug passes when a token is found, no domain provided" do
+    %{id: site_id} = site = insert(:site, domain: "pass.example.com")
+    {:ok, _, raw} = Tokens.create(site, "Some token")
+
+    credentials = "Basic " <> Base.encode64(raw)
+
+    conn =
+      build_conn()
+      |> put_req_header("authorization", credentials)
+      |> AuthorizePluginsAPI.call()
+
+    refute conn.halted
+    assert %Plausible.Site{id: ^site_id} = conn.assigns.authorized_site
+  end
+
   test "plug halts when a token is not found" do
     site = insert(:site, domain: "pass.example.com")
 

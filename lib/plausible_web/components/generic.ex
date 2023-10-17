@@ -47,11 +47,89 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr :id, :any, default: nil
   attr :href, :string, required: true
-  attr :new_tab, :boolean
+  attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
   slot :inner_block
 
   def styled_link(assigns) do
+    ~H"""
+    <.unstyled_link
+      new_tab={@new_tab}
+      href={@href}
+      class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600"
+    >
+      <%= render_slot(@inner_block) %>
+    </.unstyled_link>
+    """
+  end
+
+  slot :button, required: true do
+    attr :class, :string
+  end
+
+  slot :panel, required: true do
+    attr :class, :string
+  end
+
+  def dropdown(assigns) do
+    ~H"""
+    <div class="flex justify-center">
+      <div
+        x-data="dropdown"
+        x-on:keydown.escape.prevent.stop="close($refs.button)"
+        x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
+        x-id="['dropdown-button']"
+        class="relative"
+      >
+        <button
+          x-ref="button"
+          x-on:click="toggle()"
+          x-bind:aria-expanded="open"
+          x-bind:aria-controls="$id('dropdown-button')"
+          type="button"
+          class={List.first(@button).class}
+        >
+          <%= render_slot(List.first(@button)) %>
+        </button>
+        <div
+          x-ref="panel"
+          x-show="open"
+          x-transition.origin.top.left
+          x-on:click.outside="close($refs.button)"
+          x-on:click="onPanelClick"
+          x-bind:id="$id('dropdown-button')"
+          style="display: none;"
+          class={List.first(@panel).class}
+        >
+          <%= render_slot(List.first(@panel)) %>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  attr :href, :string, required: true
+  attr :new_tab, :boolean, default: false
+  slot :inner_block, required: true
+
+  def dropdown_link(assigns) do
+    ~H"""
+    <.unstyled_link
+      new_tab={@new_tab}
+      href={@href}
+      class="w-full justify-between text-gray-700 dark:text-gray-300 block px-3.5 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+    >
+      <%= render_slot(@inner_block) %>
+    </.unstyled_link>
+    """
+  end
+
+  attr :href, :string, required: true
+  attr :new_tab, :boolean, default: false
+  attr :class, :string, default: ""
+  slot :inner_block
+
+  def unstyled_link(assigns) do
     if assigns[:new_tab] do
       assigns = assign(assigns, :icon_class, icon_class(assigns))
 
@@ -59,7 +137,7 @@ defmodule PlausibleWeb.Components.Generic do
       <.link
         id={@id}
         class={[
-          "inline-flex items-center gap-x-0.5 text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600",
+          "inline-flex items-center gap-x-0.5",
           @class
         ]}
         href={@href}
@@ -67,18 +145,12 @@ defmodule PlausibleWeb.Components.Generic do
         rel="noopener noreferrer"
       >
         <%= render_slot(@inner_block) %>
-        <Heroicons.arrow_top_right_on_square class={@icon_class} />
+        <Heroicons.arrow_top_right_on_square class={["opacity-60", @icon_class]} />
       </.link>
       """
     else
       ~H"""
-      <.link
-        class={[
-          "text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600",
-          @class
-        ]}
-        href={@href}
-      >
+      <.link class={@class} href={@href}>
         <%= render_slot(@inner_block) %>
       </.link>
       """

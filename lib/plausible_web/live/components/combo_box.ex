@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     <div
       id={"input-picker-main-#{@id}"}
       class={@class}
-      x-data={"window.suggestionsDropdown('#{@id}')"}
+      x-data={"comboBox('#{@id}')"}
       x-on:keydown.arrow-up.prevent="focusPrev"
       x-on:keydown.arrow-down.prevent="focusNext"
       x-on:keydown.enter.prevent="select"

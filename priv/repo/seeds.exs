@@ -39,7 +39,14 @@ site =
   Plausible.Factory.insert(:site,
     domain: "dummy.site",
     native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
-    stats_start_date: NaiveDateTime.new!(imported_stats_range.first, ~T[00:00:00])
+    stats_start_date: NaiveDateTime.new!(imported_stats_range.first, ~T[00:00:00]),
+    memberships: [
+      Plausible.Factory.build(:site_membership, user: user, role: :owner),
+      Plausible.Factory.build(:site_membership,
+        user: Plausible.Factory.build(:user, name: "Arnold Wallaby"),
+        role: :viewer
+      )
+    ]
   )
 
 # Plugins API: on dev environment, use "plausible-plugin-dev-seed-token" for "dummy.site" to authenticate
@@ -61,8 +68,6 @@ seeded_token = Plausible.Plugins.API.Token.generate("seed-token")
     %{"goal_id" => goal2.id},
     %{"goal_id" => goal3.id}
   ])
-
-_membership = Plausible.Factory.insert(:site_membership, user: user, site: site, role: :owner)
 
 put_random_time = fn
   date, 0 ->

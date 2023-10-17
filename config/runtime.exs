@@ -440,8 +440,6 @@ base_cron = [
   {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
   # Every 15 minutes
   {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
-  # Every day at midnight
-  {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes},
   # Every day at 1am
   {"0 1 * * *", Plausible.Workers.CleanInvitations},
   # Every 2 hours
@@ -468,7 +466,6 @@ base_queues = [
   spike_notifications: 1,
   check_stats_emails: 1,
   site_setup_emails: 1,
-  clean_email_verification_codes: 1,
   clean_invitations: 1,
   google_analytics_imports: 1,
   domain_change_transition: 1
@@ -511,6 +508,9 @@ end
 config :plausible, :hcaptcha,
   sitekey: hcaptcha_sitekey,
   secret: hcaptcha_secret
+
+nolt_sso_secret = get_var_from_path_or_env(config_dir, "NOLT_SSO_SECRET")
+config :joken, default_signer: nolt_sso_secret
 
 config :plausible, Plausible.Sentry.Client,
   finch_request_opts: [

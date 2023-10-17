@@ -45,7 +45,7 @@ defmodule PlausibleWeb.AuthController do
       if user.email_verified do
         redirect(conn, to: Routes.site_path(conn, :new))
       else
-        send_email_verification(user)
+        Auth.EmailVerification.issue_code(user)
         redirect(conn, to: Routes.auth_path(conn, :activate_form))
       end
     end
@@ -58,31 +58,19 @@ defmodule PlausibleWeb.AuthController do
       if user.email_verified do
         redirect(conn, to: Routes.site_path(conn, :index))
       else
-        send_email_verification(user)
+        Auth.EmailVerification.issue_code(user)
         redirect(conn, to: Routes.auth_path(conn, :activate_form))
       end
     end
   end
 
-  defp send_email_verification(user) do
-    code = Auth.issue_email_verification(user)
-    email_template = PlausibleWeb.Email.activation_email(user, code)
-    result = Plausible.Mailer.send(email_template)
-
-    Logger.debug(
-      "E-mail verification e-mail sent. In dev environment GET /sent-emails for details."
-    )
-
-    result
-  end
-
   def activate_form(conn, _params) do
-    user = conn.assigns[:current_user]
+    user = conn.assigns.current_user
 
     render(conn, "activate.html",
-      has_email_code?: Plausible.Users.has_email_code?(user.id),
+      has_email_code?: Plausible.Users.has_email_code?(user),
       has_any_invitations?: Plausible.Site.Memberships.has_any_invitations?(user.email),
-      has_any_memberships?: Plausible.Site.Memberships.any?(user.id),
+      has_any_memberships?: Plausible.Site.Memberships.any?(user),
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
@@ -91,11 +79,9 @@ defmodule PlausibleWeb.AuthController do
     user = conn.assigns[:current_user]
 
     has_any_invitations? = Plausible.Site.Memberships.has_any_invitations?(user.email)
-    has_any_memberships? = Plausible.Site.Memberships.any?(user.id)
+    has_any_memberships? = Plausible.Site.Memberships.any?(user)
 
-    {code, ""} = Integer.parse(code)
-
-    case Auth.verify_email(user, code) do
+    case Auth.EmailVerification.verify_code(user, code) do
       :ok ->
         cond do
           has_any_memberships? ->
@@ -129,11 +115,8 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def request_activation_code(conn, _params) do
-    user = conn.assigns[:current_user]
-    code = Auth.issue_email_verification(user)
-
-    email_template = PlausibleWeb.Email.activation_email(user, code)
-    Plausible.Mailer.send(email_template)
+    user = conn.assigns.current_user
+    Auth.EmailVerification.issue_code(user)
 
     conn
     |> put_flash(:success, "Activation code was sent to #{user.email}")
@@ -352,7 +335,7 @@ defmodule PlausibleWeb.AuthController do
         if user.email_verified do
           handle_email_updated(conn)
         else
-          send_email_verification(user)
+          Auth.EmailVerification.issue_code(user)
           redirect(conn, to: Routes.auth_path(conn, :activate_form))
         end
 
