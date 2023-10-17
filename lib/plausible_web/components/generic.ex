@@ -57,7 +57,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr :id, :any, default: nil
   attr :href, :string, required: true
-  attr :new_tab, :boolean
+  attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
   slot :inner_block
 
