@@ -854,7 +854,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
-    |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def forget_imported(conn, _params) do
