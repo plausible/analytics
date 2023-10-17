@@ -49,6 +49,13 @@ site =
     ]
   )
 
+Plausible.Factory.insert(:google_auth,
+  user: user,
+  site: site,
+  property: "sc-domain:dummy.test",
+  expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
+)
+
 # Plugins API: on dev environment, use "plausible-plugin-dev-seed-token" for "dummy.site" to authenticate
 seeded_token = Plausible.Plugins.API.Token.generate("seed-token")
 
