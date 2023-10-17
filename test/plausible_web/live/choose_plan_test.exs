@@ -6,8 +6,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   alias Plausible.{Repo, Billing.Subscription}
 
   @v1_10k_yearly_plan_id "572810"
-  @v4_growth_200k_yearly_plan_id "change-me-749347"
-  @v4_business_5m_monthly_plan_id "change-me-b749356"
+  @v4_growth_200k_yearly_plan_id "857081"
+  @v4_business_5m_monthly_plan_id "857111"
 
   @monthly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="monthly"]/
   @yearly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="yearly"]/

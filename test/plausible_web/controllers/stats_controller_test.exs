@@ -2,7 +2,6 @@ defmodule PlausibleWeb.StatsControllerTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
   import Plausible.Test.Support.HTML
-  @v4_growth_plan_id "change-me-749342"
 
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
@@ -160,7 +159,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       site: site,
       user: user
     } do
-      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan_id)
+      insert(:growth_subscription, user: user)
       response = conn |> get("/" <> site.domain <> "/export") |> response(200)
 
       {:ok, zip} = :zip.unzip(response, [:memory])

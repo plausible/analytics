@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
   use PlausibleWeb.ConnCase
-  @v4_growth_plan_id "change-me-749342"
 
   setup [:create_user, :create_api_key]
 
@@ -155,7 +154,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     user: user,
     api_key: api_key
   } do
-    insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan_id)
+    insert(:growth_subscription, user: user)
     site = insert(:site, members: [user])
 
     conn

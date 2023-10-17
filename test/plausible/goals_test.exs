@@ -2,8 +2,6 @@ defmodule Plausible.GoalsTest do
   use Plausible.DataCase
   alias Plausible.Goals
 
-  @v4_growth_plan_id "change-me-749342"
-
   test "create/2 creates goals and trims input" do
     site = insert(:site)
     {:ok, goal} = Goals.create(site, %{"page_path" => "/foo bar "})
@@ -73,7 +71,7 @@ defmodule Plausible.GoalsTest do
   end
 
   test "create/2 returns error when site does not have access to revenue goals" do
-    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+    user = insert(:user, subscription: build(:growth_subscription))
     site = insert(:site, members: [user])
 
     {:error, :upgrade_required} =

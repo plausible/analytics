@@ -1,10 +1,8 @@
 defmodule Plausible.PropsTest do
   use Plausible.DataCase
 
-  @v4_growth_plan_id "change-me-749342"
-
   test "allow/2 returns error when user plan does not include props" do
-    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+    user = insert(:user, subscription: build(:growth_subscription))
     site = insert(:site, members: [user])
 
     assert {:error, :upgrade_required} = Plausible.Props.allow(site, "my-prop-1")
@@ -94,7 +92,7 @@ defmodule Plausible.PropsTest do
   end
 
   test "allow_existing_props/2 returns error when user plan does not include props" do
-    user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+    user = insert(:user, subscription: build(:growth_subscription))
     site = insert(:site, members: [user])
 
     populate_stats(site, [

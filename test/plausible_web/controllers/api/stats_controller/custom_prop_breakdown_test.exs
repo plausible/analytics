@@ -1,6 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
   use PlausibleWeb.ConnCase
-  @v4_growth_plan_id "change-me-749342"
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
@@ -180,7 +179,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
     end
 
     test "errors when site owner is on a growth plan", %{conn: conn, site: site, user: user} do
-      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan_id)
+      insert(:growth_subscription, user: user)
 
       conn = get(conn, "/api/stats/#{site.domain}/custom-prop-values/prop?period=day")
 

@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
 
   @user_id 123
   @other_user_id 456
-  @v4_growth_plan_id "change-me-749342"
 
   @build_funnel_with [
     {"page_path", "/blog/announcement"},
@@ -226,7 +225,7 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
       user: user,
       site: site
     } do
-      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan_id)
+      insert(:growth_subscription, user: user)
       {:ok, funnel} = setup_funnel(site, @build_funnel_with)
 
       resp =
