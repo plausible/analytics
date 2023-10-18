@@ -41,7 +41,7 @@ defmodule Plausible.Plugins.API.TokensTest do
     end
   end
 
-  describe "any/2" do
+  describe "any?/2" do
     test "returns if a site has any tokens" do
       site1 = insert(:site, domain: "foo1.example.com")
       site2 = insert(:site, domain: "foo2.example.com")
