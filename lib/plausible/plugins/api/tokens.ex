@@ -58,9 +58,9 @@ defmodule Plausible.Plugins.API.Tokens do
   @spec update_last_seen(Token.t(), NaiveDateTime.t()) :: {:ok, Token.t()}
   def update_last_seen(token, now \\ NaiveDateTime.utc_now()) do
     now = NaiveDateTime.truncate(now, :second)
-    last_seen = token.last_used_at
+    last_used = token.last_used_at
 
-    if is_nil(last_seen) or Timex.diff(now, last_seen, :minutes) > 5 do
+    if is_nil(last_used) or Timex.diff(now, last_used, :minutes) > 5 do
       token
       |> Ecto.Changeset.change(%{last_used_at: now})
       |> Repo.update()
