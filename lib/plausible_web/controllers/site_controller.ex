@@ -283,7 +283,7 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_integrations(conn, _params) do
     site =
-      conn.assigns[:site]
+      conn.assigns.site
       |> Repo.preload([:google_auth, :custom_domain])
 
     search_console_domains =
