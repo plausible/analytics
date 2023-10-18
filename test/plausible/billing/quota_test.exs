@@ -356,8 +356,8 @@ defmodule Plausible.Billing.QuotaTest do
 
       user_on_business = insert(:user, subscription: build(:business_subscription))
 
-      assert 5 == Quota.team_member_limit(user_on_growth)
-      assert 50 == Quota.team_member_limit(user_on_business)
+      assert 3 == Quota.team_member_limit(user_on_growth)
+      assert 10 == Quota.team_member_limit(user_on_business)
     end
   end
 
