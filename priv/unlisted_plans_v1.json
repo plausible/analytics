@@ -6,6 +6,6 @@
     "monthly_product_id":null,
     "site_limit":50,
     "team_member_limit":"unlimited",
-    "extra_features":["props"]
+    "features":["goals","props"]
   }
 ]
