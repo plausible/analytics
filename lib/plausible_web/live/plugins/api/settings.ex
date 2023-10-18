@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
   def handle_info({:token_added, token}, socket) do
     displayed_tokens = [token | socket.assigns.displayed_tokens]
 
-    socket = put_flash(socket, :success, "Plugins API Token created succesfully")
+    socket = put_flash(socket, :success, "Plugins API Token created successfully")
 
     Process.send_after(self(), :clear_flash, 5000)
 
