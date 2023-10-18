@@ -192,7 +192,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           </button>
 
           <span x-show="active">
-            <PlausibleWeb.Components.Billing.extra_feature_notice
+            <PlausibleWeb.Components.Billing.premium_feature_notice
               billable_user={@site.owner}
               current_user={@current_user}
               feature_mod={Plausible.Billing.Feature.RevenueGoals}

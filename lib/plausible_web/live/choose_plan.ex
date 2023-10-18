@@ -381,7 +381,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       </p>
       <p class="h-4 mt-1"></p>
       <.contact_button class="" />
-      <ul role="list" class="mt-8 space-y-3 text-sm leading-6 xl:mt-10 text-gray-300">
+      <ul
+        role="list"
+        class="mt-8 space-y-3 text-sm leading-6 xl:mt-10 text-gray-300 dark:text-gray-100"
+      >
         <li class="flex gap-x-3">
           <.check_icon class="text-white dark:text-green-600" /> Unlimited products
         </li>
