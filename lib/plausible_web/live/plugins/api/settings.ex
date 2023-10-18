@@ -77,6 +77,12 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
               >
                 Hint
               </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-100"
+              >
+                Last seen
+              </th>
               <th scope="col" class="relative px-6 py-3">
                 <span class="sr-only">Revoke</span>
               </th>
@@ -90,6 +96,9 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-100 whitespace-nowrap font-mono">
                   **********<%= token.hint %>
+                </td>
+                <td class="px-6 py-4 text-sm font-normal whitespace-nowrap">
+                  <%= Plausible.Plugins.API.Token.last_seen_humanize(token) %>
                 </td>
                 <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
                   <button
