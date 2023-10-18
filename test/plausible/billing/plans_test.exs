@@ -21,12 +21,6 @@ defmodule Plausible.Billing.PlansTest do
       assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v2_plan_id
     end
 
-    test "growth_plans_for/1 shows v2 pricing for users who signed up in 2021" do
-      user = insert(:user, inserted_at: ~N[2021-12-31 00:00:00])
-
-      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v2_plan_id
-    end
-
     test "growth_plans_for/1 shows v4 pricing for everyone else" do
       user = insert(:user)
 

@@ -44,9 +44,7 @@ defmodule Plausible.Billing.Plans do
       find(owned_plan_id, @plans_v1) -> @plans_v1
       find(owned_plan_id, @plans_v2) -> @plans_v2
       find(owned_plan_id, @plans_v3) -> @plans_v3
-      find(owned_plan_id, plans_sandbox()) -> plans_sandbox()
       Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
-      Timex.before?(user.inserted_at, ~D[2022-01-01]) -> @plans_v2
       v4_available -> Enum.filter(@plans_v4, &(&1.kind == :growth))
       true -> @plans_v3
     end
