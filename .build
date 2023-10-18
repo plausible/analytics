@@ -238,6 +238,7 @@ PlausibleWeb.Plugins.API.Schemas.Goal.html
 PlausibleWeb.Plugins.API.Schemas.Link.html
 PlausibleWeb.Plugins.API.Schemas.NotFound.html
 PlausibleWeb.Plugins.API.Schemas.PaginationMetadata.html
+PlausibleWeb.Plugins.API.Schemas.PaymentRequired.html
 PlausibleWeb.Plugins.API.Schemas.SharedLink.CreateRequest.html
 PlausibleWeb.Plugins.API.Schemas.SharedLink.ListResponse.html
 PlausibleWeb.Plugins.API.Schemas.SharedLink.html
@@ -300,8 +301,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-97D3E1D4.js
-dist/sidebar_items-AC72219D.js
+dist/search_data-9E614FF5.js
+dist/sidebar_items-CC1EC5EE.js
 index.html
 readme.html
 search.html
