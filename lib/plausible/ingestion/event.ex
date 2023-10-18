@@ -433,6 +433,13 @@ defmodule Plausible.Ingestion.Event do
       true ->
         user_agent = request.user_agent || ""
         root_domain = get_root_domain(hostname)
+        domainatrex_domain = get_root_domain2(hostname)
+
+        if root_domain != domainatrex_domain and Enum.random(1000) > 900 do
+          Sentry.capture_message("Root domain mismatch test case",
+            extra: %{public_suffix: root_domain, domainatrex: domainatrex_domain}
+          )
+        end
 
         SipHash.hash!(salt, user_agent <> request.remote_ip <> domain <> root_domain)
     end
@@ -444,6 +451,18 @@ defmodule Plausible.Ingestion.Event do
     case PublicSuffix.registrable_domain(hostname) do
       domain when is_binary(domain) -> domain
       _any -> hostname
+    end
+  end
+
+  defp get_root_domain2(nil), do: "(none)"
+
+  defp get_root_domain2(hostname) do
+    case Domainatrex.parse(hostname) do
+      {:ok, %{domain: domain, tld: tld}} when is_binary(domain) and is_binary(tld) ->
+        Enum.join([domain, tld], ".")
+
+      _any ->
+        hostname
     end
   end
 

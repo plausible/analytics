@@ -125,7 +125,8 @@ defmodule Plausible.MixProject do
       {:zxcvbn, git: "https://github.com/techgaun/zxcvbn-elixir.git"},
       {:open_api_spex, "~> 3.18"},
       {:joken, "~> 2.5"},
-      {:paginator, git: "https://github.com/duffelhq/paginator.git"}
+      {:paginator, git: "https://github.com/duffelhq/paginator.git"},
+      {:domainatrex, "~> 3.0"}
     ]
   end
 
