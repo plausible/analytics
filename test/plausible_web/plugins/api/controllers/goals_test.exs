@@ -52,8 +52,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     } do
       site = Plausible.Repo.preload(site, :owner)
       FunWithFlags.enable(:business_tier, for_actor: site.owner)
-
-      insert(:subscription, paddle_plan_id: "free_10k", user: site.owner)
+      insert(:growth_subscription, user: site.owner)
 
       url = Routes.goals_url(base_uri(), :create)
 
@@ -79,8 +78,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     } do
       site = Plausible.Repo.preload(site, :owner)
       FunWithFlags.enable(:business_tier, for_actor: site.owner)
-
-      insert(:subscription, paddle_plan_id: "free_10k", user: site.owner)
+      insert(:growth_subscription, user: site.owner)
 
       url = Routes.goals_url(base_uri(), :create)
 
