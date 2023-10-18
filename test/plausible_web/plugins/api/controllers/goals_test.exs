@@ -44,6 +44,70 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
   end
 
+  describe "business tier" do
+    test "fails on revenue goal creation attempt with insufficient plan", %{
+      site: site,
+      token: token,
+      conn: conn
+    } do
+      site = Plausible.Repo.preload(site, :owner)
+      FunWithFlags.enable(:business_tier, for_actor: site.owner)
+      insert(:growth_subscription, user: site.owner)
+
+      url = Routes.goals_url(base_uri(), :create)
+
+      payload = %{
+        goal_type: "Goal.Revenue",
+        goal: %{event_name: "Purchase", currency: "EUR"}
+      }
+
+      assert_request_schema(payload, "Goal.CreateRequest.Revenue", spec())
+
+      conn
+      |> authenticate(site.domain, token)
+      |> put_req_header("content-type", "application/json")
+      |> put(url, payload)
+      |> json_response(402)
+      |> assert_schema("PaymentRequiredError", spec())
+    end
+
+    test "fails on bulk revenue goal creation attempt with insufficient plan", %{
+      site: site,
+      token: token,
+      conn: conn
+    } do
+      site = Plausible.Repo.preload(site, :owner)
+      FunWithFlags.enable(:business_tier, for_actor: site.owner)
+      insert(:growth_subscription, user: site.owner)
+
+      url = Routes.goals_url(base_uri(), :create)
+
+      payload = %{
+        goals: [
+          %{
+            goal_type: "Goal.CustomEvent",
+            goal: %{event_name: "Signup"}
+          },
+          %{
+            goal_type: "Goal.Revenue",
+            goal: %{event_name: "Purchase", currency: "EUR"}
+          },
+          %{
+            goal_type: "Goal.Pageview",
+            goal: %{path: "/checkout"}
+          }
+        ]
+      }
+
+      conn
+      |> authenticate(site.domain, token)
+      |> put_req_header("content-type", "application/json")
+      |> put(url, payload)
+      |> json_response(402)
+      |> assert_schema("PaymentRequiredError", spec())
+    end
+  end
+
   describe "put /goals - create a single goal" do
     test "validates input according to the schema", %{conn: conn, token: token, site: site} do
       url = Routes.goals_url(base_uri(), :create)

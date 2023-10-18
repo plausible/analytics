@@ -36,6 +36,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
            oneOf: [Schemas.Goal.ListResponse, Schemas.Goal]
          }},
       unauthorized: {"Unauthorized", "application/json", Schemas.Unauthorized},
+      payment_required: {"Payment required", "application/json", Schemas.PaymentRequired},
       unprocessable_entity:
         {"Unprocessable entity", "application/json", Schemas.UnprocessableEntity}
     }
@@ -55,6 +56,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
         |> put_status(:created)
         |> put_resp_header("location", goals_url(base_uri(), :get, goal.id))
         |> render("goal.json", goal: goal, authorized_site: site)
+
+      {:error, :upgrade_required} ->
+        payment_required(conn)
 
       {:error, changeset} ->
         Errors.error(conn, 422, changeset)
@@ -76,6 +80,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
         |> put_view(Views.Goal)
         |> put_status(:created)
         |> render("index.json", goals: goals, authorized_site: site)
+
+      {:error, :upgrade_required} ->
+        payment_required(conn)
 
       {:error, changeset} ->
         Errors.error(conn, 422, changeset)
@@ -156,5 +163,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
       {:error, :not_found} ->
         send_resp(conn, :no_content, "")
     end
+  end
+
+  defp payment_required(conn) do
+    Errors.error(
+      conn,
+      402,
+      "#{Plausible.Billing.Feature.RevenueGoals.display_name()} is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+    )
   end
 end
