@@ -181,6 +181,8 @@ PlausibleWeb.BillingView.html
 PlausibleWeb.CRMAuthPlug.html
 PlausibleWeb.Captcha.html
 PlausibleWeb.Components.Generic.html
+PlausibleWeb.Components.Google.html
+PlausibleWeb.Components.Settings.html
 PlausibleWeb.Components.Site.Feature.html
 PlausibleWeb.ConnCase.html
 PlausibleWeb.ControllerHelpers.html
@@ -208,6 +210,8 @@ PlausibleWeb.Live.FunnelSettings.html
 PlausibleWeb.Live.GoalSettings.Form.html
 PlausibleWeb.Live.GoalSettings.List.html
 PlausibleWeb.Live.GoalSettings.html
+PlausibleWeb.Live.Plugins.API.Settings.html
+PlausibleWeb.Live.Plugins.API.TokenForm.html
 PlausibleWeb.Live.PropsSettings.Form.html
 PlausibleWeb.Live.PropsSettings.List.html
 PlausibleWeb.Live.PropsSettings.html
@@ -296,8 +300,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-D7C6E5A2.js
-dist/sidebar_items-1898302E.js
+dist/search_data-97D3E1D4.js
+dist/sidebar_items-AC72219D.js
 index.html
 readme.html
 search.html
