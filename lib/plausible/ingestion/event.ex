@@ -435,7 +435,7 @@ defmodule Plausible.Ingestion.Event do
         root_domain = get_root_domain(hostname)
         domainatrex_domain = get_root_domain2(hostname)
 
-        if root_domain != domainatrex_domain and Enum.random(1000) > 900 do
+        if root_domain != domainatrex_domain do
           Sentry.capture_message("Root domain mismatch test case",
             extra: %{public_suffix: root_domain, domainatrex: domainatrex_domain}
           )
