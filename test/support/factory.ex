@@ -127,7 +127,7 @@ defmodule Plausible.Factory do
 
   def google_auth_factory do
     %Plausible.Site.GoogleAuth{
-      email: sequence(:google_auth_email, &"email-#{&1}@email.com"),
+      email: sequence(:google_auth_email, &"email-#{&1}@example.com"),
       refresh_token: "123",
       access_token: "123",
       expires: Timex.now() |> Timex.shift(days: 1)

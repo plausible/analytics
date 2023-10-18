@@ -76,6 +76,40 @@ defmodule PlausibleWeb.Live.Components.Form do
     """
   end
 
+  attr(:rest, :global)
+  attr(:id, :string, required: true)
+  attr(:class, :string, default: "")
+  attr(:name, :string, required: true)
+  attr(:label, :string, required: true)
+  attr(:value, :string, default: "")
+
+  def input_with_clipboard(assigns) do
+    ~H"""
+    <div class="my-4">
+      <div class="relative mt-1">
+        <.input
+          id={@id}
+          name={@name}
+          label={@label}
+          value={@value}
+          type="text"
+          readonly="readonly"
+          class={[@class, "pr-20"]}
+          {@rest}
+        />
+        <a
+          onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"}
+          href="javascript:void(0)"
+          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline"
+          style="top: 42px; right: 12px;"
+        >
+          <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />COPY
+        </a>
+      </div>
+    </div>
+    """
+  end
+
   attr(:id, :any, default: nil)
   attr(:label, :string, default: nil)
 

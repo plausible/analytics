@@ -36,4 +36,20 @@ defmodule Plausible.Plugins.API.Tokens do
       {:error, :not_found}
     end
   end
+
+  @spec delete(Site.t(), String.t()) :: :ok
+  def delete(site, token_id) do
+    Repo.delete_all(from t in Token, where: t.site_id == ^site.id and t.id == ^token_id)
+    :ok
+  end
+
+  @spec list(Site.t()) :: {:ok, [Token.t()]}
+  def list(site) do
+    Repo.all(from t in Token, where: t.site_id == ^site.id, order_by: [desc: t.id])
+  end
+
+  @spec any?(Site.t()) :: boolean()
+  def any?(site) do
+    Repo.exists?(from(t in Token, where: t.site_id == ^site.id))
+  end
 end

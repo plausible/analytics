@@ -516,7 +516,7 @@ defmodule PlausibleWeb.AuthController do
 
         site = Repo.get(Plausible.Site, site_id)
 
-        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/#{redirect_to}")
+        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/integrations")
     end
   end
 end

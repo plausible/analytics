@@ -4,10 +4,20 @@ defmodule PlausibleWeb.Components.Generic do
   """
   use Phoenix.Component
 
-  attr :title, :string, default: "Notice"
-  attr :size, :atom, default: :sm
-  attr :rest, :global
-  slot :inner_block
+  attr(:slug, :string, required: true)
+
+  def docs_info(assigns) do
+    ~H"""
+    <a href={"https://plausible.io/docs/#{@slug}"} rel="noreferrer" target="_blank">
+      <Heroicons.information_circle class="text-gray-400 w-6 h-6 absolute top-0 right-0 text-gray-400" />
+    </a>
+    """
+  end
+
+  attr(:title, :string, default: "Notice")
+  attr(:size, :atom, default: :sm)
+  attr(:rest, :global)
+  slot(:inner_block)
 
   def notice(assigns) do
     ~H"""

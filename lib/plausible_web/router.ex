@@ -284,10 +284,10 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/properties", SiteController, :settings_props
     get "/:website/settings/funnels", SiteController, :settings_funnels
 
-    get "/:website/settings/search-console", SiteController, :settings_search_console
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
     get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
+    get "/:website/settings/integrations", SiteController, :settings_integrations
 
     put "/:website/settings/features/visibility/:setting",
         SiteController,

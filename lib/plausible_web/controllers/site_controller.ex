@@ -166,17 +166,9 @@ defmodule PlausibleWeb.SiteController do
       conn.assigns[:site]
       |> Repo.preload([:custom_domain])
 
-    imported_pageviews =
-      if site.imported_data do
-        Plausible.Stats.Clickhouse.imported_pageview_count(site)
-      else
-        0
-      end
-
     conn
     |> render("settings_general.html",
       site: site,
-      imported_pageviews: imported_pageviews,
       changeset: Plausible.Site.changeset(site, %{}),
       dogfood_page_path: "/:dashboard/settings/general",
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
@@ -251,25 +243,6 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_search_console(conn, _params) do
-    site =
-      conn.assigns[:site]
-      |> Repo.preload([:google_auth, :custom_domain])
-
-    search_console_domains =
-      if site.google_auth do
-        Plausible.Google.Api.fetch_verified_properties(site.google_auth)
-      end
-
-    conn
-    |> render("settings_search_console.html",
-      site: site,
-      search_console_domains: search_console_domains,
-      dogfood_page_path: "/:dashboard/settings/search-console",
-      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-    )
-  end
-
   def settings_email_reports(conn, _params) do
     site = conn.assigns[:site] |> Repo.preload(:custom_domain)
 
@@ -308,6 +281,37 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  def settings_integrations(conn, _params) do
+    site =
+      conn.assigns.site
+      |> Repo.preload([:google_auth, :custom_domain])
+
+    search_console_domains =
+      if site.google_auth do
+        Plausible.Google.Api.fetch_verified_properties(site.google_auth)
+      end
+
+    imported_pageviews =
+      if site.imported_data do
+        Plausible.Stats.Clickhouse.imported_pageview_count(site)
+      else
+        0
+      end
+
+    has_plugins_tokens? = Plausible.Plugins.API.Tokens.any?(site)
+
+    conn
+    |> render("settings_integrations.html",
+      site: site,
+      imported_pageviews: imported_pageviews,
+      has_plugins_tokens?: has_plugins_tokens?,
+      search_console_domains: search_console_domains,
+      dogfood_page_path: "/:dashboard/settings/integrations",
+      connect_live_socket: true,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
   def update_google_auth(conn, %{"google_auth" => attrs}) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
@@ -316,7 +320,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Google integration saved successfully")
-    |> redirect(to: Routes.site_path(conn, :settings_search_console, site.domain))
+    |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def delete_google_auth(conn, _params) do
@@ -328,19 +332,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn = put_flash(conn, :success, "Google account unlinked from Plausible")
 
-    panel =
-      conn.path_info
-      |> List.last()
-      |> String.split("-")
-      |> List.last()
-
-    case panel do
-      "search" ->
-        redirect(conn, to: Routes.site_path(conn, :settings_search_console, site.domain))
-
-      "import" ->
-        redirect(conn, to: Routes.site_path(conn, :settings_general, site.domain))
-    end
+    redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def update_settings(conn, %{"site" => site_params}) do
@@ -862,7 +854,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
-    |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+    |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def forget_imported(conn, _params) do
@@ -885,12 +877,12 @@ defmodule PlausibleWeb.SiteController do
 
         conn
         |> put_flash(:success, "Imported data has been cleared")
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
 
       true ->
         conn
         |> put_flash(:error, "No data has been imported")
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
     end
   end
 

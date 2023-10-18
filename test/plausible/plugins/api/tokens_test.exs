@@ -40,4 +40,37 @@ defmodule Plausible.Plugins.API.TokensTest do
       assert {:error, :not_found} = Tokens.find("non-existing")
     end
   end
+
+  describe "any?/2" do
+    test "returns if a site has any tokens" do
+      site1 = insert(:site, domain: "foo1.example.com")
+      site2 = insert(:site, domain: "foo2.example.com")
+      assert Tokens.any?(site1) == false
+      assert Tokens.any?(site2) == false
+      assert {:ok, _, _} = Tokens.create(site1, "My test token")
+      assert Tokens.any?(site1) == true
+      assert Tokens.any?(site2) == false
+    end
+  end
+
+  describe "delete/2" do
+    test "deletes a token" do
+      site1 = insert(:site, domain: "foo1.example.com")
+      site2 = insert(:site, domain: "foo2.example.com")
+
+      assert {:ok, t1, _} = Tokens.create(site1, "My test token")
+      assert {:ok, t2, _} = Tokens.create(site1, "My test token")
+      assert {:ok, _, _} = Tokens.create(site2, "My test token")
+
+      :ok = Tokens.delete(site1, t1.id)
+      # idempotent
+      :ok = Tokens.delete(site1, t1.id)
+
+      assert Tokens.any?(site1)
+      :ok = Tokens.delete(site1, t2.id)
+      refute Tokens.any?(site1)
+
+      assert Tokens.any?(site2)
+    end
+  end
 end
