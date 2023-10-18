@@ -86,7 +86,7 @@ defmodule Plausible.Plugins.API.TokenTest do
     assert last_seen.(hours: -1) == "An hour ago"
     assert last_seen.(hours: -7) == "Hours ago"
     assert last_seen.(days: -1) == "Yesterday"
-    assert last_seen.(days: -3) == "Some time this week"
+    assert last_seen.(days: -3) == "Sometime this week"
     assert last_seen.(months: -1) == "Long time ago"
   end
 end
