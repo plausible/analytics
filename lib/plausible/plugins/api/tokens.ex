@@ -50,6 +50,6 @@ defmodule Plausible.Plugins.API.Tokens do
 
   @spec any?(Site.t()) :: boolean()
   def any?(site) do
-    Repo.aggregate(from(t in Token, where: t.site_id == ^site.id), :count) > 0
+    Repo.exists?(from(t in Token, where: t.site_id == ^site.id))
   end
 end
