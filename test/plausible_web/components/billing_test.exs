@@ -3,9 +3,6 @@ defmodule PlausibleWeb.Components.BillingTest do
   import Phoenix.LiveViewTest
   alias PlausibleWeb.Components.Billing
 
-  @v4_growth_plan_id "change-me-749342"
-  @v4_business_plan_id "change-me-b749342"
-
   test "premium_feature_notice/1 renders a message when user is on trial" do
     me = insert(:user)
 
@@ -18,7 +15,7 @@ defmodule PlausibleWeb.Components.BillingTest do
   end
 
   test "premium_feature_notice/1 renders an upgrade link when user is the site owner and does not have access to the feature" do
-    me = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+    me = insert(:user, subscription: build(:growth_subscription))
 
     rendered =
       render_component(&Billing.premium_feature_notice/1,
@@ -34,7 +31,7 @@ defmodule PlausibleWeb.Components.BillingTest do
 
   test "premium_feature_notice/1 does not render an upgrade link when user is not the site owner" do
     me = insert(:user)
-    owner = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+    owner = insert(:user, subscription: build(:growth_subscription))
 
     rendered =
       render_component(&Billing.premium_feature_notice/1,
@@ -50,7 +47,7 @@ defmodule PlausibleWeb.Components.BillingTest do
   end
 
   test "premium_feature_notice/1 does not render a notice when the user has access to the feature" do
-    me = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_business_plan_id))
+    me = insert(:user, subscription: build(:business_subscription))
 
     rendered =
       render_component(&Billing.premium_feature_notice/1,

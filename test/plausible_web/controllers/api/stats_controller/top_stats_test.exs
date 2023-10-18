@@ -1,7 +1,6 @@
 defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   use PlausibleWeb.ConnCase
 
-  @v4_growth_plan_id "change-me-749342"
   @user_id 123
 
   describe "GET /api/stats/top-stats - default" do
@@ -829,7 +828,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "does not return average and total when site owner is on a growth plan",
          %{conn: conn, site: site, user: user} do
-      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan_id)
+      insert(:growth_subscription, user: user)
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
 
       populate_stats(site, [
