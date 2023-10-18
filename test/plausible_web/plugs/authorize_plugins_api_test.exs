@@ -75,7 +75,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
     {:ok, token, raw} = Tokens.create(site, "Some token")
 
     refute token.last_used_at
-    assert Token.last_seen_humanize(token) == "Not yet"
+    assert Token.last_used_humanize(token) == "Not yet"
 
     credentials = "Basic " <> Base.encode64(raw)
 
@@ -85,6 +85,6 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
 
     token = Repo.reload!(token)
     assert token.last_used_at
-    assert Token.last_seen_humanize(token) == "Just recently"
+    assert Token.last_used_humanize(token) == "Just recently"
   end
 end

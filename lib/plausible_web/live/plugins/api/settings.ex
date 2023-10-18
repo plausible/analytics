@@ -100,7 +100,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
                   **********<%= token.hint %>
                 </td>
                 <td class="px-6 py-4 text-sm font-normal whitespace-nowrap">
-                  <%= Plausible.Plugins.API.Token.last_seen_humanize(token) %>
+                  <%= Plausible.Plugins.API.Token.last_used_humanize(token) %>
                 </td>
                 <td class="px-6 py-4 text-sm font-medium text-right">
                   <button

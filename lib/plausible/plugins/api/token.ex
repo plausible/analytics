@@ -70,8 +70,8 @@ defmodule Plausible.Plugins.API.Token do
     end
   end
 
-  @spec last_seen_humanize(t()) :: String.t()
-  def last_seen_humanize(token) do
+  @spec last_used_humanize(t()) :: String.t()
+  def last_used_humanize(token) do
     diff =
       if token.last_used_at do
         now = NaiveDateTime.utc_now()
