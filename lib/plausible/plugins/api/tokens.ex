@@ -39,13 +39,13 @@ defmodule Plausible.Plugins.API.Tokens do
 
   @spec delete(Site.t(), String.t()) :: :ok
   def delete(site, token_id) do
-    Repo.delete_all(from t in Token, where: t.site_id == ^site.id and t.id == ^token_id)
+    Repo.delete_all(from(t in Token, where: t.site_id == ^site.id and t.id == ^token_id))
     :ok
   end
 
   @spec list(Site.t()) :: {:ok, [Token.t()]}
   def list(site) do
-    Repo.all(from t in Token, where: t.site_id == ^site.id, order_by: [desc: t.id])
+    Repo.all(from(t in Token, where: t.site_id == ^site.id, order_by: [desc: t.inserted_at]))
   end
 
   @spec any?(Site.t()) :: boolean()
