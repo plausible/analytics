@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
   end
 
-  describe "buisness tier" do
+  describe "business tier" do
     test "fails on revenue goal creation attempt with insufficient plan", %{
       site: site,
       token: token,
