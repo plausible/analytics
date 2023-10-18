@@ -4,7 +4,9 @@ defmodule Plausible.Billing.Quota do
   """
 
   import Ecto.Query
-  alias Plausible.Billing.Plans
+  alias Plausible.Billing
+  alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
+  alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props}
 
   @limit_sites_since ~D[2021-05-05]
   @spec site_limit(Plausible.Auth.User.t()) :: non_neg_integer() | :unlimited
@@ -28,8 +30,8 @@ defmodule Plausible.Billing.Quota do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %Plausible.Billing.EnterprisePlan{} -> :unlimited
-      %Plausible.Billing.Plan{site_limit: site_limit} -> site_limit
+      %EnterprisePlan{} -> :unlimited
+      %Plan{site_limit: site_limit} -> site_limit
       :free_10k -> @site_limit_for_free_10k
       nil -> @site_limit_for_trials
     end
@@ -46,17 +48,17 @@ defmodule Plausible.Billing.Quota do
   @monthly_pageview_limit_for_free_10k 10_000
   @monthly_pageview_limit_for_trials :unlimited
 
-  @spec monthly_pageview_limit(Plausible.Billing.Subscription.t()) ::
+  @spec monthly_pageview_limit(Subscription.t()) ::
           non_neg_integer() | :unlimited
   @doc """
   Returns the limit of pageviews for a subscription.
   """
   def monthly_pageview_limit(subscription) do
     case Plans.get_subscription_plan(subscription) do
-      %Plausible.Billing.EnterprisePlan{monthly_pageview_limit: limit} ->
+      %EnterprisePlan{monthly_pageview_limit: limit} ->
         limit
 
-      %Plausible.Billing.Plan{monthly_pageview_limit: limit} ->
+      %Plan{monthly_pageview_limit: limit} ->
         limit
 
       :free_10k ->
@@ -80,7 +82,7 @@ defmodule Plausible.Billing.Quota do
   """
   def monthly_pageview_usage(user) do
     user
-    |> Plausible.Billing.usage_breakdown()
+    |> Billing.usage_breakdown()
     |> Tuple.sum()
   end
 
@@ -93,8 +95,8 @@ defmodule Plausible.Billing.Quota do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %Plausible.Billing.EnterprisePlan{} -> :unlimited
-      %Plausible.Billing.Plan{team_member_limit: limit} -> limit
+      %EnterprisePlan{} -> :unlimited
+      %Plan{team_member_limit: limit} -> limit
       :free_10k -> :unlimited
       nil -> @team_member_limit_for_trials
     end
@@ -129,11 +131,13 @@ defmodule Plausible.Billing.Quota do
     Plausible.Repo.one(query)
   end
 
-  @spec extra_features_usage(Plausible.Auth.User.t()) :: [atom()]
+  @spec features_usage(Plausible.Auth.User.t()) :: [atom()]
   @doc """
-  Returns a list of extra features the given user's sites uses.
+  Returns a list of features the given user is using. At the
+  current stage, the only features that we need to know the
+  usage for are `Props`, `Funnels`, and `RevenueGoals`
   """
-  def extra_features_usage(user) do
+  def features_usage(user) do
     props_usage_query =
       from s in Plausible.Site,
         inner_join: os in subquery(owned_sites_query(user)),
@@ -152,9 +156,9 @@ defmodule Plausible.Billing.Quota do
         where: not is_nil(g.currency)
 
     queries = [
-      props: props_usage_query,
-      funnels: funnels_usage_query,
-      revenue_goals: revenue_goals_usage
+      {Props, props_usage_query},
+      {Funnels, funnels_usage_query},
+      {RevenueGoals, revenue_goals_usage}
     ]
 
     Enum.reduce(queries, [], fn {feature, query}, acc ->
@@ -162,19 +166,18 @@ defmodule Plausible.Billing.Quota do
     end)
   end
 
-  @all_features [:props, :revenue_goals, :funnels, :stats_api]
   @doc """
-  Returns a list of extra features the user can use. Trial users have the
+  Returns a list of features the user can use. Trial users have the
   ability to use all features during their trial.
   """
-  def extra_features_limit(user) do
+  def allowed_features_for(user) do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %Plausible.Billing.EnterprisePlan{} -> @all_features
-      %Plausible.Billing.Plan{extra_features: extra_features} -> extra_features
-      :free_10k -> []
-      nil -> @all_features
+      %EnterprisePlan{} -> Feature.list()
+      %Plan{features: features} -> features
+      :free_10k -> [Goals]
+      nil -> Feature.list()
     end
   end
 

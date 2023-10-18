@@ -49,6 +49,7 @@ defmodule PlausibleWeb.StatsController do
   plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
+    site = Plausible.Repo.preload(site, :owner)
     stats_start_date = Plausible.Sites.stats_start_date(site)
     can_see_stats? = not Sites.locked?(site) or conn.assigns[:current_user_role] == :super_admin
     demo = site.domain == PlausibleWeb.Endpoint.host()
@@ -95,7 +96,7 @@ defmodule PlausibleWeb.StatsController do
   """
   def csv_export(conn, params) do
     if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
-      site = conn.assigns[:site]
+      site = Plausible.Repo.preload(conn.assigns.site, :owner)
       query = Query.from(site, params) |> Filters.add_prefix()
 
       metrics =
@@ -144,9 +145,17 @@ defmodule PlausibleWeb.StatsController do
         'operating_systems.csv' => fn -> Api.StatsController.operating_systems(conn, params) end,
         'devices.csv' => fn -> Api.StatsController.screen_sizes(conn, params) end,
         'conversions.csv' => fn -> Api.StatsController.conversions(conn, params) end,
-        'referrers.csv' => fn -> Api.StatsController.referrers(conn, params) end,
-        'custom_props.csv' => fn -> Api.StatsController.all_custom_prop_values(conn, params) end
+        'referrers.csv' => fn -> Api.StatsController.referrers(conn, params) end
       }
+
+      csvs =
+        if Plausible.Billing.Feature.Props.enabled?(site) do
+          Map.put(csvs, 'custom_props.csv', fn ->
+            Api.StatsController.all_custom_prop_values(conn, params)
+          end)
+        else
+          csvs
+        end
 
       csv_values =
         Map.values(csvs)

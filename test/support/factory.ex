@@ -107,6 +107,14 @@ defmodule Plausible.Factory do
     }
   end
 
+  def growth_subscription_factory do
+    build(:subscription, paddle_plan_id: "857097")
+  end
+
+  def business_subscription_factory do
+    build(:subscription, paddle_plan_id: "857087")
+  end
+
   def enterprise_plan_factory do
     %Plausible.Billing.EnterprisePlan{
       paddle_plan_id: sequence(:paddle_plan_id, &"plan-#{&1}"),

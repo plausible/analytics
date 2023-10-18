@@ -154,6 +154,20 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert 'utm_terms.csv' in zip
     end
 
+    test "does not export custom properties when site owner is on a growth plan", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      insert(:growth_subscription, user: user)
+      response = conn |> get("/" <> site.domain <> "/export") |> response(200)
+
+      {:ok, zip} = :zip.unzip(response, [:memory])
+      files = Map.new(zip)
+
+      refute Map.has_key?(files, 'custom_props.csv')
+    end
+
     test "exports data in zipped csvs", %{conn: conn, site: site} do
       populate_exported_stats(site)
       conn = get(conn, "/" <> site.domain <> "/export?date=2021-10-20")

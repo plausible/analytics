@@ -219,6 +219,25 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
                ]
              } = resp
     end
+
+    test "returns HTTP 402 when site owner is on a growth plan", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      insert(:growth_subscription, user: user)
+      {:ok, funnel} = setup_funnel(site, @build_funnel_with)
+
+      resp =
+        conn
+        |> get("/api/stats/#{site.domain}/funnels/#{funnel.id}/?period=day")
+        |> json_response(402)
+
+      assert %{
+               "error" =>
+                 "Funnels is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+             } == resp
+    end
   end
 
   describe "GET /api/stats/funnel - disallowed filters" do

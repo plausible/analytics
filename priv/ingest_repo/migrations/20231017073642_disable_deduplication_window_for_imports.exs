@@ -13,7 +13,7 @@ defmodule Plausible.IngestRepo.Migrations.DisableDeduplicationWindowForImports d
     imported_operating_systems
   )
 
-  def change do
+  def up do
     cluster_query = "SELECT 1 FROM system.replicas WHERE table = 'imported_visitors'"
 
     cluster? =
@@ -24,11 +24,12 @@ defmodule Plausible.IngestRepo.Migrations.DisableDeduplicationWindowForImports d
 
     for table <- @import_tables do
       execute """
-              ALTER TABLE #{table} #{if cluster?, do: "ON CLUSTER '{cluster}'"}  MODIFY SETTING replicated_deduplication_window = 0
-              """,
-              """
-              ALTER TABLE #{table} #{if cluster?, do: "ON CLUSTER '{cluster}'"} MODIFY SETTING replicated_deduplication_window = 100
-              """
+      ALTER TABLE #{table} #{if cluster?, do: "ON CLUSTER '{cluster}'"}  MODIFY SETTING replicated_deduplication_window = 0
+      """
     end
+  end
+
+  def down do
+    raise "Irreversible"
   end
 end

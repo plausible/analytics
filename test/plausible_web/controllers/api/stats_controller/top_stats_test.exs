@@ -825,6 +825,28 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       refute "Average revenue" in metrics
       refute "Total revenue" in metrics
     end
+
+    test "does not return average and total when site owner is on a growth plan",
+         %{conn: conn, site: site, user: user} do
+      insert(:growth_subscription, user: user)
+      insert(:goal, site: site, event_name: "Payment", currency: "USD")
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new(13_29),
+          revenue_reporting_currency: "USD"
+        )
+      ])
+
+      filters = Jason.encode!(%{goal: "Payment"})
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=all&filters=#{filters}")
+      assert %{"top_stats" => top_stats} = json_response(conn, 200)
+
+      metrics = Enum.map(top_stats, & &1["name"])
+      refute "Average revenue" in metrics
+      refute "Total revenue" in metrics
+    end
   end
 
   describe "GET /api/stats/top-stats - with comparisons" do

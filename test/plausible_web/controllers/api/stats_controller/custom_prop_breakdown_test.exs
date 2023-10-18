@@ -177,6 +177,17 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                }
              ]
     end
+
+    test "errors when site owner is on a growth plan", %{conn: conn, site: site, user: user} do
+      insert(:growth_subscription, user: user)
+
+      conn = get(conn, "/api/stats/#{site.domain}/custom-prop-values/prop?period=day")
+
+      assert json_response(conn, 402) == %{
+               "error" =>
+                 "Custom Properties is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+             }
+    end
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - with goal filter" do

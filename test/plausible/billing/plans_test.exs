@@ -4,8 +4,8 @@ defmodule Plausible.Billing.PlansTest do
 
   @v1_plan_id "558018"
   @v2_plan_id "654177"
-  @v4_plan_id "change-me-749342"
-  @v4_business_plan_id "change-me-b749342"
+  @v4_plan_id "857097"
+  @v4_business_plan_id "857105"
 
   describe "getting subscription plans for user" do
     test "growth_plans_for/1 shows v1 pricing for users who are already on v1 pricing" do
@@ -177,22 +177,22 @@ defmodule Plausible.Billing.PlansTest do
                "749355",
                "749357",
                "749359",
-               "change-me-749343",
-               "change-me-749345",
-               "change-me-749347",
-               "change-me-749349",
-               "change-me-749352",
-               "change-me-749355",
-               "change-me-749357",
-               "change-me-749359",
-               "change-me-b749343",
-               "change-me-b749345",
-               "change-me-b749347",
-               "change-me-b749349",
-               "change-me-b749352",
-               "change-me-b749355",
-               "change-me-b749357",
-               "change-me-b749359"
+               "857079",
+               "857080",
+               "857081",
+               "857082",
+               "857083",
+               "857084",
+               "857085",
+               "857086",
+               "857087",
+               "857088",
+               "857089",
+               "857090",
+               "857091",
+               "857092",
+               "857093",
+               "857094"
              ] == Plans.yearly_product_ids()
     end
   end

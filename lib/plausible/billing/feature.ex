@@ -9,17 +9,24 @@ defmodule Plausible.Billing.Feature do
   When defining new features, the following options are expected by the
   `__using__` macro:
 
+    * `:name` - an atom representing the feature name in the plan JSON
+    file (see also Plausible.Billing.Plan).
+
     * `:display_name` - human-readable display name of the feature
 
     * `:toggle_field` - the field in the %Plausible.Site{} schema that toggles
     the feature. If `nil` or not set, toggle/2 silently returns `:ok`
 
-    * `:extra_feature` - an atom representing the feature name in the plan JSON
-    file (see also Plausible.Billing.Plan). If `nil` or not set,
-    `check_availability/1` silently returns `:ok`
+    * `:free` - if set to `true`, makes the `check_availability/1` function
+    always return `:ok` (no matter the user's subscription status)
 
   Functions defined by `__using__` can be overridden if needed.
   """
+
+  @doc """
+  Returns the atom representing the feature name in the plan JSON file.
+  """
+  @callback name() :: atom()
 
   @doc """
   Returns the human-readable display name of the feature.
@@ -32,7 +39,7 @@ defmodule Plausible.Billing.Feature do
   @callback toggle_field() :: atom()
 
   @doc """
-  Toggles the feature on and off for a site. Returns 
+  Toggles the feature on and off for a site. Returns
   `{:error, :upgrade_required}` when toggling a feature the site owner does not
   have access to.
   """
@@ -51,9 +58,10 @@ defmodule Plausible.Billing.Feature do
               :ok | {:error, :upgrade_required} | {:error, :not_implemented}
 
   @features [
-    Plausible.Billing.Feature.Funnels,
     Plausible.Billing.Feature.Goals,
+    Plausible.Billing.Feature.StatsAPI,
     Plausible.Billing.Feature.Props,
+    Plausible.Billing.Feature.Funnels,
     Plausible.Billing.Feature.RevenueGoals
   ]
 
@@ -69,6 +77,9 @@ defmodule Plausible.Billing.Feature do
     quote location: :keep do
       @behaviour Plausible.Billing.Feature
       alias Plausible.Billing.Quota
+
+      @impl true
+      def name, do: Keyword.get(unquote(opts), :name)
 
       @impl true
       def display_name, do: Keyword.get(unquote(opts), :display_name)
@@ -89,12 +100,10 @@ defmodule Plausible.Billing.Feature do
 
       @impl true
       def check_availability(%Plausible.Auth.User{} = user) do
-        extra_feature = Keyword.get(unquote(opts), :extra_feature)
-
         cond do
-          is_nil(extra_feature) -> :ok
           not FunWithFlags.enabled?(:business_tier, for: user) -> :ok
-          extra_feature in Quota.extra_features_limit(user) -> :ok
+          Keyword.get(unquote(opts), :free) -> :ok
+          __MODULE__ in Quota.allowed_features_for(user) -> :ok
           true -> {:error, :upgrade_required}
         end
       end
@@ -122,36 +131,38 @@ end
 defmodule Plausible.Billing.Feature.Funnels do
   @moduledoc false
   use Plausible.Billing.Feature,
+    name: :funnels,
     display_name: "Funnels",
-    toggle_field: :funnels_enabled,
-    extra_feature: :funnels
+    toggle_field: :funnels_enabled
 end
 
 defmodule Plausible.Billing.Feature.RevenueGoals do
   @moduledoc false
   use Plausible.Billing.Feature,
-    display_name: "Revenue Goals",
-    extra_feature: :revenue_goals
+    name: :revenue_goals,
+    display_name: "Revenue Goals"
 end
 
 defmodule Plausible.Billing.Feature.Goals do
   @moduledoc false
   use Plausible.Billing.Feature,
+    name: :goals,
     display_name: "Goals",
-    toggle_field: :conversions_enabled
+    toggle_field: :conversions_enabled,
+    free: true
 end
 
 defmodule Plausible.Billing.Feature.Props do
   @moduledoc false
   use Plausible.Billing.Feature,
+    name: :props,
     display_name: "Custom Properties",
-    toggle_field: :props_enabled,
-    extra_feature: :props
+    toggle_field: :props_enabled
 end
 
 defmodule Plausible.Billing.Feature.StatsAPI do
   @moduledoc false
   use Plausible.Billing.Feature,
-    display_name: "Stats API",
-    extra_feature: :stats_api
+    name: :stats_api,
+    display_name: "Stats API"
 end

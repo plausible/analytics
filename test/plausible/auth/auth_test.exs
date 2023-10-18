@@ -2,8 +2,6 @@ defmodule Plausible.AuthTest do
   use Plausible.DataCase, async: true
   alias Plausible.Auth
 
-  @v4_growth_plan_id "change-me-749342"
-
   describe "user_completed_setup?" do
     test "is false if user does not have any sites" do
       user = insert(:user)
@@ -72,7 +70,7 @@ defmodule Plausible.AuthTest do
     end
 
     test "returns error when user is on a growth plan" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
+      user = insert(:user, subscription: build(:growth_subscription))
 
       assert {:error, :upgrade_required} =
                Auth.create_api_key(user, "my new key", Ecto.UUID.generate())
