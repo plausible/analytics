@@ -85,7 +85,7 @@ defmodule Plausible.Plugins.API.Token do
       diff < 70 -> "An hour ago"
       diff < 24 * 60 -> "Hours ago"
       diff < 24 * 60 * 2 -> "Yesterday"
-      diff < 24 * 60 * 7 -> "Some time this week"
+      diff < 24 * 60 * 7 -> "Sometime this week"
       true -> "Long time ago"
     end
   end
