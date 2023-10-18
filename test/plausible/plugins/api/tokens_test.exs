@@ -73,4 +73,22 @@ defmodule Plausible.Plugins.API.TokensTest do
       assert Tokens.any?(site2)
     end
   end
+
+  describe "update_last_seen/1" do
+    test "updates in 5m window" do
+      site = insert(:site)
+      assert {:ok, token0, _} = Tokens.create(site, "My test token")
+
+      now = NaiveDateTime.utc_now()
+
+      {:ok, token1} = Tokens.update_last_seen(token0, now)
+      {:ok, token2} = Tokens.update_last_seen(token1, Timex.shift(now, minutes: 2))
+
+      assert token1.last_used_at == token2.last_used_at
+
+      {:ok, token3} = Tokens.update_last_seen(token2, Timex.shift(now, minutes: 6))
+
+      assert NaiveDateTime.compare(token3.last_used_at, token2.last_used_at) == :gt
+    end
+  end
 end

@@ -39,17 +39,36 @@ defmodule Plausible.Plugins.API.Tokens do
 
   @spec delete(Site.t(), String.t()) :: :ok
   def delete(site, token_id) do
-    Repo.delete_all(from t in Token, where: t.site_id == ^site.id and t.id == ^token_id)
+    Repo.delete_all(from(t in Token, where: t.site_id == ^site.id and t.id == ^token_id))
     :ok
   end
 
   @spec list(Site.t()) :: {:ok, [Token.t()]}
   def list(site) do
-    Repo.all(from t in Token, where: t.site_id == ^site.id, order_by: [desc: t.id])
+    Repo.all(
+      from(t in Token, where: t.site_id == ^site.id, order_by: [desc: t.inserted_at, desc: t.id])
+    )
   end
 
   @spec any?(Site.t()) :: boolean()
   def any?(site) do
     Repo.exists?(from(t in Token, where: t.site_id == ^site.id))
+  end
+
+  @spec update_last_seen(Token.t(), NaiveDateTime.t()) :: {:ok, Token.t()}
+  def update_last_seen(token, now \\ NaiveDateTime.utc_now()) do
+    # we don't need very precise timestamp tracking, and to spare postgres we only
+    # update that timestamp in 5m windows - this is mostly to help users reason
+    # about what token they have, in case of rotations
+    now = NaiveDateTime.truncate(now, :second)
+    last_used = token.last_used_at
+
+    if is_nil(last_used) or Timex.diff(now, last_used, :minutes) > 5 do
+      token
+      |> Ecto.Changeset.change(%{last_used_at: now})
+      |> Repo.update()
+    else
+      {:ok, token}
+    end
   end
 end

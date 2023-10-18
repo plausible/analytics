@@ -67,17 +67,23 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
             <tr>
               <th
                 scope="col"
-                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-100"
+                class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
               >
                 Description
               </th>
               <th
                 scope="col"
-                class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase dark:text-gray-100"
+                class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
               >
                 Hint
               </th>
-              <th scope="col" class="relative px-6 py-3">
+              <th
+                scope="col"
+                class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
+              >
+                Last used
+              </th>
+              <th scope="col" class="px-6 py-3">
                 <span class="sr-only">Revoke</span>
               </th>
             </tr>
@@ -85,13 +91,18 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
           <tbody>
             <%= for token <- @displayed_tokens do %>
               <tr class="bg-white dark:bg-gray-800">
-                <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">
-                  <span class="token-description"><%= token.description %></span>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <span class="token-description">
+                    <%= token.description %>
+                  </span>
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-100 whitespace-nowrap font-mono">
+                <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-100 font-mono">
                   **********<%= token.hint %>
                 </td>
-                <td class="px-6 py-4 text-sm font-medium text-right whitespace-nowrap">
+                <td class="px-6 py-4 text-sm font-normal whitespace-nowrap">
+                  <%= Plausible.Plugins.API.Token.last_used_humanize(token) %>
+                </td>
+                <td class="px-6 py-4 text-sm font-medium text-right">
                   <button
                     id={"revoke-token-#{token.id}"}
                     phx-click="revoke-token"

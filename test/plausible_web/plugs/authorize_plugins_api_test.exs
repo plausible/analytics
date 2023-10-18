@@ -1,8 +1,9 @@
 defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
   use PlausibleWeb.ConnCase, async: true
 
-  alias Plausible.Plugins.API.Tokens
+  alias Plausible.Plugins.API.{Token, Tokens}
   alias PlausibleWeb.Plugs.AuthorizePluginsAPI
+  alias Plausible.Repo
 
   import Plug.Conn
 
@@ -67,5 +68,23 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
                %{"detail" => "Plugins API: unauthorized"}
              ]
            }
+  end
+
+  test "plug updates last seen timestamp" do
+    site = insert(:site, domain: "pass.example.com")
+    {:ok, token, raw} = Tokens.create(site, "Some token")
+
+    refute token.last_used_at
+    assert Token.last_used_humanize(token) == "Not yet"
+
+    credentials = "Basic " <> Base.encode64(raw)
+
+    build_conn()
+    |> put_req_header("authorization", credentials)
+    |> AuthorizePluginsAPI.call()
+
+    token = Repo.reload!(token)
+    assert token.last_used_at
+    assert Token.last_used_humanize(token) == "Just recently"
   end
 end
