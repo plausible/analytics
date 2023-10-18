@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-7ADC1E66.js"></script>
+    <script src="dist/sidebar_items-991683BA.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -132,22 +132,24 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#extra_features_limit/1" translate="no">extra_features_limit(user)</a>
+        <a href="#allowed_features_for/1" translate="no">allowed_features_for(user)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns a list of extra features the user can use. Trial users have the
+        <div class="summary-synopsis"><p>Returns a list of features the user can use. Trial users have the
 ability to use all features during their trial.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#extra_features_usage/1" translate="no">extra_features_usage(user)</a>
+        <a href="#features_usage/1" translate="no">features_usage(user)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns a list of extra features the given user's sites uses.</p></div>
+        <div class="summary-synopsis"><p>Returns a list of features the given user is using. At the
+current stage, the only features that we need to know the
+usage for are <code class="inline">Props</code>, <code class="inline">Funnels</code>, and <code class="inline">RevenueGoals</code></p></div>
 
     </div>
 
@@ -236,16 +238,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="extra_features_limit/1">
+<section class="detail" id="allowed_features_for/1">
 
   <div class="detail-header">
-    <a href="#extra_features_limit/1" class="detail-link" title="Link to this function">
+    <a href="#allowed_features_for/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">extra_features_limit(user)</h1>
+    <h1 class="signature" translate="no">allowed_features_for(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L170" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L173" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -255,20 +257,20 @@ Functions
 
   <section class="docstring">
 
-<p>Returns a list of extra features the user can use. Trial users have the
+<p>Returns a list of features the user can use. Trial users have the
 ability to use all features during their trial.</p>
   </section>
 </section>
-<section class="detail" id="extra_features_usage/1">
+<section class="detail" id="features_usage/1">
 
   <div class="detail-header">
-    <a href="#extra_features_usage/1" class="detail-link" title="Link to this function">
+    <a href="#features_usage/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">extra_features_usage(user)</h1>
+    <h1 class="signature" translate="no">features_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L136" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L140" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -280,11 +282,13 @@ ability to use all features during their trial.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> extra_features_usage(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> features_usage(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()]</pre>
 
       </div>
 
-<p>Returns a list of extra features the given user's sites uses.</p>
+<p>Returns a list of features the given user is using. At the
+current stage, the only features that we need to know the
+usage for are <code class="inline">Props</code>, <code class="inline">Funnels</code>, and <code class="inline">RevenueGoals</code></p>
   </section>
 </section>
 <section class="detail" id="monthly_pageview_limit/1">
@@ -296,7 +300,7 @@ ability to use all features during their trial.</p>
     </a>
     <h1 class="signature" translate="no">monthly_pageview_limit(subscription)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L54" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L56" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -325,7 +329,7 @@ ability to use all features during their trial.</p>
     </a>
     <h1 class="signature" translate="no">monthly_pageview_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L81" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L83" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -354,7 +358,7 @@ sent by the sites the user owns in last 30 days.</p>
     </a>
     <h1 class="signature" translate="no">site_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L17" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L19" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -383,7 +387,7 @@ background job so as to avoid service disruption.</p>
     </a>
     <h1 class="signature" translate="no">site_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L42" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L44" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -411,7 +415,7 @@ background job so as to avoid service disruption.</p>
     </a>
     <h1 class="signature" translate="no">team_member_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L92" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L94" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -439,7 +443,7 @@ background job so as to avoid service disruption.</p>
     </a>
     <h1 class="signature" translate="no">team_member_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L108" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L110" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -468,7 +472,7 @@ with the user's sites.</p>
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L191" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L194" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

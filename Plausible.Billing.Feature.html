@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-7ADC1E66.js"></script>
+    <script src="dist/sidebar_items-991683BA.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -117,10 +117,10 @@ Plausible
 <p>This module provides an interface for managing features, e.g. Revenue Goals,
 Funnels and Custom Properties.</p><p>Feature modules have functions for toggling the feature on/off and checking
 whether the feature is available for a site/user.</p><p>When defining new features, the following options are expected by the
-<code class="inline">__using__</code> macro:</p><ul><li><p><code class="inline">:display_name</code> - human-readable display name of the feature</p></li><li><p><code class="inline">:toggle_field</code> - the field in the %Plausible.Site{} schema that toggles
-the feature. If <code class="inline">nil</code> or not set, toggle/2 silently returns <code class="inline">:ok</code></p></li><li><p><code class="inline">:extra_feature</code> - an atom representing the feature name in the plan JSON
-file (see also Plausible.Billing.Plan). If <code class="inline">nil</code> or not set,
-<code class="inline">check_availability/1</code> silently returns <code class="inline">:ok</code></p></li></ul><p>Functions defined by <code class="inline">__using__</code> can be overridden if needed.</p>
+<code class="inline">__using__</code> macro:</p><ul><li><p><code class="inline">:name</code> - an atom representing the feature name in the plan JSON
+file (see also Plausible.Billing.Plan).</p></li><li><p><code class="inline">:display_name</code> - human-readable display name of the feature</p></li><li><p><code class="inline">:toggle_field</code> - the field in the %Plausible.Site{} schema that toggles
+the feature. If <code class="inline">nil</code> or not set, toggle/2 silently returns <code class="inline">:ok</code></p></li><li><p><code class="inline">:free</code> - if set to <code class="inline">true</code>, makes the <code class="inline">check_availability/1</code> function
+always return <code class="inline">:ok</code> (no matter the user's subscription status)</p></li></ul><p>Functions defined by <code class="inline">__using__</code> can be overridden if needed.</p>
   </section>
 
 
@@ -169,11 +169,21 @@ disabled or the user does not have access to it.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#c:name/0" translate="no">name()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the atom representing the feature name in the plan JSON file.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#c:toggle/2" translate="no">toggle(t, t)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Toggles the feature on and off for a site. Returns 
+        <div class="summary-synopsis"><p>Toggles the feature on and off for a site. Returns
 <code class="inline">{:error, :upgrade_required}</code> when toggling a feature the site owner does not
 have access to.</p></div>
 
@@ -227,7 +237,7 @@ Callbacks
     </a>
     <h1 class="signature" translate="no">check_availability(t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L50" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L57" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -256,7 +266,7 @@ Callbacks
     </a>
     <h1 class="signature" translate="no">display_name()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L27" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L34" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -284,7 +294,7 @@ Callbacks
     </a>
     <h1 class="signature" translate="no">enabled?(t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L45" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L52" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -304,6 +314,34 @@ Callbacks
 disabled or the user does not have access to it.</p>
   </section>
 </section>
+<section class="detail" id="c:name/0">
+
+  <div class="detail-header">
+    <a href="#c:name/0" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">name()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L29" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> name() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+<p>Returns the atom representing the feature name in the plan JSON file.</p>
+  </section>
+</section>
 <section class="detail" id="c:toggle/2">
 
   <div class="detail-header">
@@ -313,7 +351,7 @@ disabled or the user does not have access to it.</p>
     </a>
     <h1 class="signature" translate="no">toggle(t, t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L39" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L46" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -329,7 +367,7 @@ disabled or the user does not have access to it.</p>
 
       </div>
 
-<p>Toggles the feature on and off for a site. Returns 
+<p>Toggles the feature on and off for a site. Returns
 <code class="inline">{:error, :upgrade_required}</code> when toggling a feature the site owner does not
 have access to.</p>
   </section>
@@ -343,7 +381,7 @@ have access to.</p>
     </a>
     <h1 class="signature" translate="no">toggle_field()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L32" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L39" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -383,7 +421,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">list()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L63" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L71" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
