@@ -18,7 +18,10 @@ defmodule Plausible.Plugins.API.Goals do
   @spec create(
           Plausible.Site.t(),
           create_request() | list(create_request())
-        ) :: {:ok, list(Plausible.Goal.t())} | {:error, Ecto.Changeset.t()}
+        ) ::
+          {:ok, list(Plausible.Goal.t())}
+          | {:error, Ecto.Changeset.t()}
+          | {:error, :upgrade_required}
   def create(site, goal_or_goals) do
     Repo.transaction(fn -> find_or_create(site, goal_or_goals) end)
   end
