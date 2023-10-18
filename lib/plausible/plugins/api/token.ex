@@ -23,7 +23,7 @@ defmodule Plausible.Plugins.API.Token do
     field(:token_hash, :binary)
     field(:description, :string)
     field(:hint, :string)
-    field(:last_seen_at, :naive_datetime)
+    field(:last_used_at, :naive_datetime)
 
     belongs_to(:site, Site)
   end
@@ -73,9 +73,9 @@ defmodule Plausible.Plugins.API.Token do
   @spec last_seen_humanize(t()) :: String.t()
   def last_seen_humanize(token) do
     diff =
-      if token.last_seen_at do
+      if token.last_used_at do
         now = NaiveDateTime.utc_now()
-        Timex.diff(now, token.last_seen_at, :minutes)
+        Timex.diff(now, token.last_used_at, :minutes)
       end
 
     cond do

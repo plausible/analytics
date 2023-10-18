@@ -3,7 +3,7 @@ defmodule Plausible.Repo.Migrations.AddLastUsedAtToPluginsApiTokens do
 
   def change do
     alter table("plugins_api_tokens") do
-      add(:last_seen_at, :naive_datetime)
+      add(:last_used_at, :naive_datetime)
     end
   end
 end

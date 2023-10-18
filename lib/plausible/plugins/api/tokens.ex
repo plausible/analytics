@@ -45,7 +45,9 @@ defmodule Plausible.Plugins.API.Tokens do
 
   @spec list(Site.t()) :: {:ok, [Token.t()]}
   def list(site) do
-    Repo.all(from(t in Token, where: t.site_id == ^site.id, order_by: [desc: t.inserted_at, desc: t.id]))
+    Repo.all(
+      from(t in Token, where: t.site_id == ^site.id, order_by: [desc: t.inserted_at, desc: t.id])
+    )
   end
 
   @spec any?(Site.t()) :: boolean()
@@ -56,11 +58,11 @@ defmodule Plausible.Plugins.API.Tokens do
   @spec update_last_seen(Token.t(), NaiveDateTime.t()) :: {:ok, Token.t()}
   def update_last_seen(token, now \\ NaiveDateTime.utc_now()) do
     now = NaiveDateTime.truncate(now, :second)
-    last_seen = token.last_seen_at
+    last_seen = token.last_used_at
 
     if is_nil(last_seen) or Timex.diff(now, last_seen, :minutes) > 5 do
       token
-      |> Ecto.Changeset.change(%{last_seen_at: now})
+      |> Ecto.Changeset.change(%{last_used_at: now})
       |> Repo.update()
     else
       {:ok, token}
