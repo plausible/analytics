@@ -115,7 +115,24 @@ Plausible
 
   <section id="moduledoc">
 <p>Deletes data from a site.</p><p>Stats are stored on Clickhouse, and unlike other databases data deletion is
-done asynchronously.</p><ul><li><a href="https://clickhouse.com/docs/en/sql-reference/statements/alter/delete">Clickhouse <code class="inline">ALTER TABLE ... DELETE</code> Statement</a></li><li><a href="https://clickhouse.com/docs/en/sql-reference/statements/alter/#synchronicity-of-alter-queries">Synchronicity of <code class="inline">ALTER</code> Queries</a></li></ul>
+done asynchronously.</p><p>All import tables have MergeTree's deduplication mechanism <em>disabled</em> by setting
+<code class="inline">replicated_deduplication_window</code> from default 100 to 0. When enabled, every insert
+into a given table is compared against hashes of 100 previous inserts (as complete
+parts, not concrete rows) and ignored when match is found. The prupose of that
+mechanism is making inserts of exact same batches idempotent when retrying them
+shortly after - for instance due to timeout, when the client can't easily tell if
+previous insert succeeded or not. Deduplication, however, only considers inserts,
+not mutations. Deletions do not affect stored hashes, so further inserts of parts
+that were deleted will still be treated as duplicates. That's why this feature
+is disabled for import tables.</p><p>Although deletions are asynchronous, the parts to delete are &quot;remembered&quot;, so there's
+no risk of overlapping deletion causing problems with import following right after it.</p><p>IMPORTANT: Deletion requires revision if/when import tables get moved to sharded CH
+cluster setup. Mutation queries, which have to be run with <code class="inline">ON CLUSTER</code> in such setup,
+dispatch independent queries across shards and those queries can start at different
+times. This in turn means risk of deletions corrupting data of follow-up inserts
+in some edge cases. Ideally, imported entries should be unique for a given import</p><ul><li><p>an extra <code class="inline">import_id</code> column can be introduced, holding identifier.  Last processed
+import identifier should be stored with other site data and should be used for scoping
+imported stats queries. No longer used imports can then be safely removed fully
+asynchronously.</p></li><li><p><a href="https://clickhouse.com/docs/en/sql-reference/statements/alter/delete">Clickhouse <code class="inline">ALTER TABLE ... DELETE</code> Statement</a></p></li><li><p><a href="https://clickhouse.com/docs/en/sql-reference/statements/alter/#synchronicity-of-alter-queries">Synchronicity of <code class="inline">ALTER</code> Queries</a></p></li></ul>
   </section>
 
 
@@ -182,7 +199,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">delete_imported_stats!(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L17" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L41" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -211,7 +228,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">delete_native_stats!(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L32" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L56" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -239,7 +256,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">reset!(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L38" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L62" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
