@@ -23,6 +23,7 @@ defmodule Plausible.Plugins.API.Token do
     field(:token_hash, :binary)
     field(:description, :string)
     field(:hint, :string)
+    field(:last_seen_at, :naive_datetime)
 
     belongs_to(:site, Site)
   end
@@ -66,6 +67,26 @@ defmodule Plausible.Plugins.API.Token do
       {true, _} -> "plausible-plugin-selfhost"
       {false, "prod"} -> "plausible-plugin"
       {false, env} -> "plausible-plugin-#{env}"
+    end
+  end
+
+  @spec last_seen_humanize(t()) :: String.t()
+  def last_seen_humanize(token) do
+    diff =
+      if token.last_seen_at do
+        now = NaiveDateTime.utc_now()
+        Timex.diff(now, token.last_seen_at, :minutes)
+      end
+
+    cond do
+      is_nil(diff) -> "Not yet"
+      diff < 5 -> "Just recently"
+      diff < 30 -> "Several minutes ago"
+      diff < 70 -> "An hour ago"
+      diff < 24 * 60 -> "Hours ago"
+      diff < 24 * 60 * 2 -> "Yesterday"
+      diff < 24 * 60 * 7 -> "Some time this week"
+      true -> "Long time ago"
     end
   end
 

@@ -20,6 +20,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPI do
   defp authorize(conn, token_value) do
     case Tokens.find(token_value) do
       {:ok, token} ->
+        {:ok, token} = Tokens.update_last_seen(token)
         {:ok, Plug.Conn.assign(conn, :authorized_site, token.site)}
 
       {:error, :not_found} ->
