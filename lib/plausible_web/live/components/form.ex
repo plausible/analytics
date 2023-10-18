@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Live.Components.Form do
           {@rest}
         />
         <a
-          onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy');"}
+          onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"}
           href="javascript:void(0)"
           class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline"
           style="top: 42px; right: 12px;"
