@@ -20,8 +20,61 @@ defmodule Plausible.Billing.Plan do
           }
           | :enterprise
 
-  def new(params) when is_map(params) do
+  def new(params, file_name) when is_map(params) do
+    params =
+      params
+      |> put_kind()
+      |> put_volume()
+      |> put_team_member_limit(file_name)
+      |> put_features(file_name)
+
     struct!(__MODULE__, params)
+  end
+
+  defp put_kind(params) do
+    Map.put(params, :kind, String.to_atom(params.kind))
+  end
+
+  defp put_volume(params) do
+    volume =
+      params.monthly_pageview_limit
+      |> PlausibleWeb.StatsView.large_number_format()
+
+    Map.put(params, :volume, volume)
+  end
+
+  defp put_team_member_limit(params, file_name) do
+    team_member_limit =
+      case params.team_member_limit do
+        number when is_integer(number) ->
+          number
+
+        "unlimited" ->
+          :unlimited
+
+        other ->
+          raise ArgumentError,
+                "Failed to parse team member limit #{inspect(other)} from #{file_name}.json"
+      end
+
+    Map.put(params, :team_member_limit, team_member_limit)
+  end
+
+  defp put_features(params, file_name) do
+    features =
+      Plausible.Billing.Feature.list()
+      |> Enum.filter(fn module ->
+        to_string(module.name()) in params.features
+      end)
+
+    if length(features) == length(params.features) do
+      Map.put(params, :features, features)
+    else
+      raise(
+        ArgumentError,
+        "Unrecognized feature(s) in #{inspect(params.features)} (#{file_name}.json)"
+      )
+    end
   end
 end
 
@@ -46,36 +99,7 @@ defmodule Plausible.Billing.Plans do
       path
       |> File.read!()
       |> Jason.decode!(keys: :atoms!)
-      |> Enum.map(fn raw ->
-        team_member_limit =
-          case raw.team_member_limit do
-            number when is_integer(number) -> number
-            "unlimited" -> :unlimited
-            _any -> raise ArgumentError, "Failed to parse team member limit from plan JSON files"
-          end
-
-        features =
-          Plausible.Billing.Feature.list()
-          |> Enum.filter(fn module ->
-            to_string(module.name()) in raw.features
-          end)
-
-        if length(features) != length(raw.features),
-          do:
-            raise(
-              ArgumentError,
-              "Unrecognized feature(s) in #{inspect(raw.features)} (#{f}.json)"
-            )
-
-        volume = PlausibleWeb.StatsView.large_number_format(raw.monthly_pageview_limit)
-
-        raw
-        |> Map.put(:volume, volume)
-        |> Map.put(:kind, String.to_atom(raw.kind))
-        |> Map.put(:team_member_limit, team_member_limit)
-        |> Map.put(:features, features)
-        |> Plan.new()
-      end)
+      |> Enum.map(&Plan.new(&1, f))
 
     Module.put_attribute(__MODULE__, f, plans_list)
 
