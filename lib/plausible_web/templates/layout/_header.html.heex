@@ -1,0 +1,121 @@
+<nav class="relative z-20 py-8">
+  <div class="container">
+    <nav class="relative flex items-center justify-between sm:h-10 md:justify-center">
+      <div class="flex items-center flex-1 md:absolute md:inset-y-0 md:left-0">
+        <a href={home_dest(@conn)}>
+          <%= img_tag(
+            PlausibleWeb.Router.Helpers.static_path(
+              @conn,
+              "/images/icon/plausible_logo_dark.png"
+            ),
+            class: "h-8 w-auto sm:h-10 -mt-2 hidden dark:inline",
+            alt: "Plausible logo",
+            loading: "lazy"
+          ) %>
+          <%= img_tag(
+            PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"),
+            class: "h-8 w-auto sm:h-10 -mt-2 inline dark:hidden",
+            alt: "Plausible logo",
+            loading: "lazy"
+          ) %>
+        </a>
+      </div>
+      <div class="absolute inset-y-0 right-0 flex items-center justify-end">
+        <%= cond do %>
+          <% @conn.assigns[:current_user] -> %>
+            <ul class="flex items-center w-full sm:w-auto">
+              <%= if Plausible.Billing.on_trial?(@conn.assigns[:current_user]) && !Application.get_env(:plausible, :is_selfhost) do %>
+                <li class="hidden mr-6 sm:block">
+                  <%= link(trial_notificaton(@conn.assigns[:current_user]),
+                    to: "/settings",
+                    class:
+                      "text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
+                  ) %>
+                </li>
+              <% end %>
+              <li class="w-full sm:w-auto">
+                <.dropdown>
+                  <:button class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <span class="font-medium truncate dark:text-gray-100">
+                      <%= @conn.assigns[:current_user].name %>
+                    </span>
+                    <%= img_tag(Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user]),
+                      class: "w-7 rounded-full"
+                    ) %>
+                  </:button>
+                  <:panel class="absolute right-0 z-10 mt-2 w-60 origin-top-right divide-y divide-gray-100 dark:divide-gray-400 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div class="px-3.5 py-3" role="none">
+                      <p class="block text-sm text-gray-500 dark:text-gray-400" role="none">
+                        Signed in as
+                      </p>
+                      <p class="truncate font-medium text-gray-900 dark:text-gray-100" role="none">
+                        <%= @conn.assigns[:current_user].email %>
+                      </p>
+                    </div>
+                    <div class="py-1.5" role="none">
+                      <.dropdown_link href="/settings">Account Settings</.dropdown_link>
+                      <.dropdown_link new_tab href="https://plausible.io/docs">
+                        Help Center
+                      </.dropdown_link>
+                      <%= if Application.get_env(:plausible, :is_selfhost) do %>
+                        <.dropdown_link new_tab href="https://github.com/plausible/analytics">
+                          Github Repo
+                        </.dropdown_link>
+                      <% else %>
+                        <.dropdown_link new_tab href="https://plausible.io/contact">
+                          Contact Support
+                        </.dropdown_link>
+                        <.dropdown_link new_tab href="https://feedback.plausible.io">
+                          Feature Requests
+                        </.dropdown_link>
+                      <% end %>
+                    </div>
+                    <div class="py-1.5" role="none">
+                      <.dropdown_link href="/logout">Log Out</.dropdown_link>
+                    </div>
+                  </:panel>
+                </.dropdown>
+              </li>
+              <%= if @conn.assigns[:current_user] && !Application.get_env(:plausible, :is_selfhost) do %>
+                <li id="changelog-notification" class="relative py-2"></li>
+              <% end %>
+            </ul>
+          <% Keyword.fetch!(Application.get_env(:plausible, :selfhost), :disable_registration) != false -> %>
+            <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
+              <li>
+                <div class="inline-flex">
+                  <a
+                    href="/login"
+                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out"
+                  >
+                    Login
+                  </a>
+                </div>
+              </li>
+            </ul>
+          <% true -> %>
+            <ul class="flex" x-show="!document.cookie.includes('logged_in=true')">
+              <li>
+                <div class="inline-flex">
+                  <a
+                    href="/login"
+                    class="font-medium text-gray-500 dark:text-gray-200 hover:text-gray-900 focus:outline-none focus:text-gray-900 transition duration-150 ease-in-out"
+                  >
+                    Login
+                  </a>
+                </div>
+                <div class="inline-flex ml-6 rounded shadow">
+                  <a
+                    href="/register"
+                    class="inline-flex items-center justify-center px-5 py-2 text-base font-medium text-white bg-indigo-600 border border-transparent leading-6 rounded-md hover:bg-indigo-500 focus:outline-none focus:ring transition duration-150 ease-in-out"
+                  >
+                    Sign up
+                  </a>
+                </div>
+              </li>
+            </ul>
+        <% end %>
+      </div>
+    </nav>
+  </div>
+</nav>

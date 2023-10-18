@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Components.Billing do
   attr(:rest, :global)
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-  def extra_feature_notice(assigns) do
+  def premium_feature_notice(assigns) do
     private_preview? = not FunWithFlags.enabled?(:business_tier, for: assigns.current_user)
     display_upgrade_link? = assigns.current_user.id == assigns.billable_user.id
     has_access? = assigns.feature_mod.check_availability(assigns.billable_user) == :ok

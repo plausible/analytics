@@ -1,4 +1,5 @@
 import "phoenix_html"
+import Alpine from 'alpinejs'
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 
@@ -13,7 +14,7 @@ if (csrfToken && websocketUrl) {
           this.pushEvent("send-metrics-after", {event_name, params})
         }
         setTimeout(afterMetrics, 5000)
-        params.callback = afterMetrics 
+        params.callback = afterMetrics
         window.plausible(event_name, params)
       })
     }
@@ -26,8 +27,8 @@ if (csrfToken && websocketUrl) {
     params: { _csrf_token: token }, hooks: Hooks, dom: {
       // for alpinejs integration
       onBeforeElUpdated(from, to) {
-        if (from.__x) {
-          window.Alpine.clone(from.__x, to);
+        if (from._x_dataStack) {
+          Alpine.clone(from, to);
         }
       },
     }

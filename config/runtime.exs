@@ -509,6 +509,9 @@ config :plausible, :hcaptcha,
   sitekey: hcaptcha_sitekey,
   secret: hcaptcha_secret
 
+nolt_sso_secret = get_var_from_path_or_env(config_dir, "NOLT_SSO_SECRET")
+config :joken, default_signer: nolt_sso_secret
+
 config :plausible, Plausible.Sentry.Client,
   finch_request_opts: [
     pool_timeout: get_int_from_path_or_env(config_dir, "SENTRY_FINCH_POOL_TIMEOUT", 5000),

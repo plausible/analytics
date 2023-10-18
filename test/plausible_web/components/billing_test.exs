@@ -6,10 +6,10 @@ defmodule PlausibleWeb.Components.BillingTest do
   @v4_growth_plan_id "change-me-749342"
   @v4_business_plan_id "change-me-b749342"
 
-  test "extra_feature_notice/1 renders a message when user is on trial" do
+  test "premium_feature_notice/1 renders a message when user is on trial" do
     me = insert(:user)
 
-    assert render_component(&Billing.extra_feature_notice/1,
+    assert render_component(&Billing.premium_feature_notice/1,
              billable_user: me,
              current_user: me,
              feature_mod: Plausible.Billing.Feature.Props
@@ -17,11 +17,11 @@ defmodule PlausibleWeb.Components.BillingTest do
              "Custom Properties is part of the Plausible Business plan. You can access it during your trial"
   end
 
-  test "extra_feature_notice/1 renders an upgrade link when user is the site owner and does not have access to the feature" do
+  test "premium_feature_notice/1 renders an upgrade link when user is the site owner and does not have access to the feature" do
     me = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
 
     rendered =
-      render_component(&Billing.extra_feature_notice/1,
+      render_component(&Billing.premium_feature_notice/1,
         billable_user: me,
         current_user: me,
         feature_mod: Plausible.Billing.Feature.Props
@@ -32,12 +32,12 @@ defmodule PlausibleWeb.Components.BillingTest do
     assert rendered =~ "/billing/upgrade"
   end
 
-  test "extra_feature_notice/1 does not render an upgrade link when user is not the site owner" do
+  test "premium_feature_notice/1 does not render an upgrade link when user is not the site owner" do
     me = insert(:user)
     owner = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_growth_plan_id))
 
     rendered =
-      render_component(&Billing.extra_feature_notice/1,
+      render_component(&Billing.premium_feature_notice/1,
         billable_user: owner,
         current_user: me,
         feature_mod: Plausible.Billing.Feature.Funnels
@@ -49,11 +49,11 @@ defmodule PlausibleWeb.Components.BillingTest do
     refute rendered =~ "/billing/upgrade"
   end
 
-  test "extra_feature_notice/1 does not render a notice when the user has access to the feature" do
+  test "premium_feature_notice/1 does not render a notice when the user has access to the feature" do
     me = insert(:user, subscription: build(:subscription, paddle_plan_id: @v4_business_plan_id))
 
     rendered =
-      render_component(&Billing.extra_feature_notice/1,
+      render_component(&Billing.premium_feature_notice/1,
         billable_user: me,
         current_user: me,
         feature_mod: Plausible.Billing.Feature.Funnels
