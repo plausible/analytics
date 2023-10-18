@@ -5,6 +5,7 @@ defmodule Plausible.Billing.PlansTest do
   @v1_plan_id "558018"
   @v2_plan_id "654177"
   @v4_plan_id "857097"
+  @v3_business_plan_id "change-me-1"
   @v4_business_plan_id "857105"
 
   describe "getting subscription plans for user" do
@@ -41,11 +42,21 @@ defmodule Plausible.Billing.PlansTest do
       end)
     end
 
-    test "business_plans/0 returns only v4 business plans" do
-      Plans.business_plans()
-      |> Enum.each(fn plan ->
-        assert plan.kind == :business
-      end)
+    test "business_plans_for/1 returns v3 business plans for a legacy subscriber" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
+
+      business_plans = Plans.business_plans_for(user)
+
+      assert Enum.all?(business_plans, &(&1.kind == :business))
+      assert List.first(business_plans).monthly_product_id == @v3_business_plan_id
+    end
+
+    test "business_plans_for/1 returns v4 business plans for everyone else" do
+      user = insert(:user)
+      business_plans = Plans.business_plans_for(user)
+
+      assert Enum.all?(business_plans, &(&1.kind == :business))
+      assert List.first(business_plans).monthly_product_id == @v4_business_plan_id
     end
 
     test "available_plans_with_prices/1" do
@@ -58,7 +69,7 @@ defmodule Plausible.Billing.PlansTest do
              end)
 
       assert Enum.find(business_plans, fn plan ->
-               (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v4_business_plan_id
+               (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v3_business_plan_id
              end)
     end
 
@@ -177,6 +188,14 @@ defmodule Plausible.Billing.PlansTest do
                "749355",
                "749357",
                "749359",
+               "change-me-2",
+               "change-me-4",
+               "change-me-6",
+               "change-me-8",
+               "change-me-10",
+               "change-me-12",
+               "change-me-14",
+               "change-me-16",
                "857079",
                "857080",
                "857081",

@@ -108,12 +108,21 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  def business_plans() do
-    Enum.filter(@plans_v4, &(&1.kind == :business))
+  def business_plans_for(%User{} = user) do
+    user = Plausible.Users.with_subscription(user)
+    owned_plan_id = user.subscription && user.subscription.paddle_plan_id
+
+    cond do
+      find(owned_plan_id, @plans_v1) -> @plans_v3
+      find(owned_plan_id, @plans_v2) -> @plans_v3
+      find(owned_plan_id, @plans_v3) -> @plans_v3
+      true -> @plans_v4
+    end
+    |> Enum.filter(&(&1.kind == :business))
   end
 
   def available_plans_with_prices(%User{} = user) do
-    (growth_plans_for(user) ++ business_plans())
+    (growth_plans_for(user) ++ business_plans_for(user))
     |> with_prices()
     |> Enum.group_by(& &1.kind)
   end
@@ -261,7 +270,7 @@ defmodule Plausible.Billing.Plans do
 
     available_plans =
       if business_tier?(user.subscription),
-        do: business_plans(),
+        do: business_plans_for(user),
         else: growth_plans_for(user)
 
     Enum.find(available_plans, &(usage_during_cycle < &1.monthly_pageview_limit))
