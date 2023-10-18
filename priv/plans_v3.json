@@ -1,6 +1,7 @@
 [
   {
     "kind":"growth",
+    "generation":3,
     "monthly_pageview_limit":10000,
     "monthly_product_id":"749342",
     "yearly_product_id":"749343",
@@ -10,6 +11,7 @@
   },
   {
     "kind":"growth",
+    "generation":3,
     "monthly_pageview_limit":100000,
     "monthly_product_id":"749344",
     "yearly_product_id":"749345",
@@ -19,6 +21,7 @@
   },
   {
     "kind":"growth",
+    "generation":3,
     "monthly_pageview_limit":200000,
     "monthly_product_id":"749346",
     "yearly_product_id":"749347",
@@ -28,6 +31,7 @@
   },
   {
     "kind":"growth",
+    "generation":3,
     "monthly_pageview_limit":500000,
     "monthly_product_id":"749348",
     "yearly_product_id":"749349",
@@ -37,6 +41,7 @@
   },
   {
     "kind":"growth",
+    "generation":3,
     "monthly_pageview_limit":1000000,
     "monthly_product_id":"749350",
     "yearly_product_id":"749352",
@@ -46,6 +51,7 @@
   },
   {
     "kind":"growth",
+    "generation":3,
     "monthly_pageview_limit":2000000,
     "monthly_product_id":"749353",
     "yearly_product_id":"749355",
@@ -55,6 +61,7 @@
   },
   {
     "kind":"growth",
+    "generation":3,
     "monthly_pageview_limit":5000000,
     "monthly_product_id":"749356",
     "yearly_product_id":"749357",
@@ -64,6 +71,7 @@
   },
   {
     "kind":"growth",
+    "generation":3,
     "monthly_pageview_limit":10000000,
     "monthly_product_id":"749358",
     "yearly_product_id":"749359",
@@ -73,6 +81,7 @@
   },
   {
     "kind":"business",
+    "generation":3,
     "monthly_pageview_limit":10000,
     "monthly_product_id":"change-me-1",
     "yearly_product_id":"change-me-2",
@@ -82,6 +91,7 @@
   },
   {
     "kind":"business",
+    "generation":3,
     "monthly_pageview_limit":100000,
     "monthly_product_id":"change-me-3",
     "yearly_product_id":"change-me-4",
@@ -91,6 +101,7 @@
   },
   {
     "kind":"business",
+    "generation":3,
     "monthly_pageview_limit":200000,
     "monthly_product_id":"change-me-5",
     "yearly_product_id":"change-me-6",
@@ -100,6 +111,7 @@
   },
   {
     "kind":"business",
+    "generation":3,
     "monthly_pageview_limit":500000,
     "monthly_product_id":"change-me-7",
     "yearly_product_id":"change-me-8",
@@ -109,6 +121,7 @@
   },
   {
     "kind":"business",
+    "generation":3,
     "monthly_pageview_limit":1000000,
     "monthly_product_id":"change-me-9",
     "yearly_product_id":"change-me-10",
@@ -118,6 +131,7 @@
   },
   {
     "kind":"business",
+    "generation":3,
     "monthly_pageview_limit":2000000,
     "monthly_product_id":"change-me-11",
     "yearly_product_id":"change-me-12",
@@ -127,6 +141,7 @@
   },
   {
     "kind":"business",
+    "generation":3,
     "monthly_pageview_limit":5000000,
     "monthly_product_id":"change-me-13",
     "yearly_product_id":"change-me-14",
@@ -136,6 +151,7 @@
   },
   {
     "kind":"business",
+    "generation":3,
     "monthly_pageview_limit":10000000,
     "monthly_product_id":"change-me-15",
     "yearly_product_id":"change-me-16",

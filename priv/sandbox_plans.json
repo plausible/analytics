@@ -1,6 +1,7 @@
 [
   {
     "kind":"growth",
+    "generation":1,
     "monthly_pageview_limit":10000,
     "monthly_product_id":"63842",
     "yearly_product_id":"63859",
@@ -10,6 +11,7 @@
   },
   {
     "kind":"growth",
+    "generation":2,
     "monthly_pageview_limit":100000,
     "monthly_product_id":"63843",
     "yearly_product_id":"63860",
@@ -19,6 +21,7 @@
   },
   {
     "kind":"growth",
+    "generation":3,
     "monthly_pageview_limit":200000,
     "monthly_product_id":"63844",
     "yearly_product_id":"63861",
@@ -28,6 +31,7 @@
   },
   {
     "kind":"growth",
+    "generation":4,
     "monthly_pageview_limit":500000,
     "monthly_product_id":"63845",
     "yearly_product_id":"63862",
@@ -37,6 +41,7 @@
   },
   {
     "kind":"growth",
+    "generation":4,
     "monthly_pageview_limit":1000000,
     "monthly_product_id":"63846",
     "yearly_product_id":"63863",
@@ -46,6 +51,7 @@
   },
   {
     "kind":"growth",
+    "generation":4,
     "monthly_pageview_limit":2000000,
     "monthly_product_id":"63847",
     "yearly_product_id":"63864",
@@ -55,6 +61,7 @@
   },
   {
     "kind":"growth",
+    "generation":4,
     "monthly_pageview_limit":5000000,
     "monthly_product_id":"63848",
     "yearly_product_id":"63865",
@@ -64,6 +71,7 @@
   },
   {
     "kind":"growth",
+    "generation":4,
     "monthly_pageview_limit":10000000,
     "monthly_product_id":"63849",
     "yearly_product_id":"63866",
@@ -73,6 +81,7 @@
   },
   {
     "kind":"business",
+    "generation":3,
     "monthly_pageview_limit":10000,
     "monthly_product_id":"63850",
     "yearly_product_id":"63867",
@@ -82,6 +91,7 @@
   },
   {
     "kind":"business",
+    "generation":4,
     "monthly_pageview_limit":100000,
     "monthly_product_id":"63851",
     "yearly_product_id":"63868",
@@ -91,6 +101,7 @@
   },
   {
     "kind":"business",
+    "generation":4,
     "monthly_pageview_limit":200000,
     "monthly_product_id":"63852",
     "yearly_product_id":"63869",
@@ -100,6 +111,7 @@
   },
   {
     "kind":"business",
+    "generation":4,
     "monthly_pageview_limit":500000,
     "monthly_product_id":"63853",
     "yearly_product_id":"63870",
@@ -109,6 +121,7 @@
   },
   {
     "kind":"business",
+    "generation":4,
     "monthly_pageview_limit":1000000,
     "monthly_product_id":"63854",
     "yearly_product_id":"63871",
@@ -118,6 +131,7 @@
   },
   {
     "kind":"business",
+    "generation":4,
     "monthly_pageview_limit":2000000,
     "monthly_product_id":"63855",
     "yearly_product_id":"63872",
@@ -127,6 +141,7 @@
   },
   {
     "kind":"business",
+    "generation":4,
     "monthly_pageview_limit":5000000,
     "monthly_product_id":"63856",
     "yearly_product_id":"63873",
@@ -136,6 +151,7 @@
   },
   {
     "kind":"business",
+    "generation":4,
     "monthly_pageview_limit":10000000,
     "monthly_product_id":"63857",
     "yearly_product_id":"63874",

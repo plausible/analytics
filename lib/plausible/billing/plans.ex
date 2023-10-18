@@ -38,26 +38,26 @@ defmodule Plausible.Billing.Plans do
   def growth_plans_for(%User{} = user) do
     user = Plausible.Users.with_subscription(user)
     v4_available = FunWithFlags.enabled?(:business_tier, for: user)
-    owned_plan_id = user.subscription && user.subscription.paddle_plan_id
+    owned_plan = get_regular_plan(user.subscription)
 
     cond do
-      find(owned_plan_id, @plans_v1) -> @plans_v1
-      find(owned_plan_id, @plans_v2) -> @plans_v2
-      find(owned_plan_id, @plans_v3) -> @plans_v3
       Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
-      v4_available -> Enum.filter(@plans_v4, &(&1.kind == :growth))
-      true -> @plans_v3
+      !owned_plan -> if v4_available, do: @plans_v4, else: @plans_v3
+      owned_plan.generation == 1 -> @plans_v1
+      owned_plan.generation == 2 -> @plans_v2
+      owned_plan.generation == 3 -> @plans_v3
+      owned_plan.generation == 4 -> @plans_v4
     end
+    |> Enum.filter(&(&1.kind == :growth))
   end
 
   def business_plans_for(%User{} = user) do
     user = Plausible.Users.with_subscription(user)
-    owned_plan_id = user.subscription && user.subscription.paddle_plan_id
+    owned_plan = get_regular_plan(user.subscription)
 
     cond do
-      find(owned_plan_id, @plans_v1) -> @plans_v3
-      find(owned_plan_id, @plans_v2) -> @plans_v3
-      find(owned_plan_id, @plans_v3) -> @plans_v3
+      Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
+      owned_plan && owned_plan.generation < 4 -> @plans_v3
       true -> @plans_v4
     end
     |> Enum.filter(&(&1.kind == :business))

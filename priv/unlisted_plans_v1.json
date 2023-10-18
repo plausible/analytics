@@ -1,6 +1,7 @@
 [
   {
     "kind":"growth",
+    "generation":1,
     "monthly_pageview_limit":150000000,
     "yearly_product_id":"648089", 
     "monthly_product_id":null,
