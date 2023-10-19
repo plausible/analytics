@@ -236,6 +236,31 @@ defmodule Plausible.SitesTest do
       assert {:ok, %Plausible.Auth.Invitation{}} =
                Sites.invite(site, inviter, "vini@plausible.test", :admin)
     end
+
+    test "does not allow transferring ownership when site does not fit the new owner subscription" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      site_with_too_many_team_members =
+        insert(:site,
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(6, :site_membership, role: :admin)
+        )
+
+      site_using_premium_features =
+        insert(:site,
+          memberships: [build(:site_membership, user: old_owner, role: :owner)],
+          props_enabled: true,
+          funnels_enabled: true
+        )
+
+      assert {:error, :upgrade_required} =
+               Sites.invite(site_with_too_many_team_members, old_owner, new_owner.email, :owner)
+
+      assert {:error, :upgrade_required} =
+               Sites.invite(site_using_premium_features, old_owner, new_owner.email, :owner)
+    end
   end
 
   describe "bulk_transfer_ownership/4" do

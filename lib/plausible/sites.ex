@@ -9,6 +9,7 @@ defmodule Plausible.Sites do
           | :transfer_to_self
           | {:over_limit, non_neg_integer()}
           | :forbidden
+          | :upgrade_required
 
   def get_by_domain(domain) do
     Repo.get_by(Site, domain: domain)
@@ -52,7 +53,8 @@ defmodule Plausible.Sites do
   def bulk_transfer_ownership_direct(sites, new_owner) do
     Repo.transaction(fn ->
       for site <- sites do
-        with :ok <- ensure_transfer_valid(site, new_owner, :owner),
+        with site <- Plausible.Repo.preload(site, :owner),
+             :ok <- ensure_transfer_valid(site, new_owner, :owner),
              {:ok, membership} <- Site.Memberships.transfer_ownership(site, new_owner) do
           membership
         else
@@ -98,7 +100,8 @@ defmodule Plausible.Sites do
   defp do_invite(site, inviter, invitee_email, role, opts \\ []) do
     attrs = %{email: invitee_email, role: role, site_id: site.id, inviter_id: inviter.id}
 
-    with :ok <- check_invitation_permissions(site, inviter, role, opts),
+    with site <- Plausible.Repo.preload(site, :owner),
+         :ok <- check_invitation_permissions(site, inviter, role, opts),
          :ok <- check_team_member_limit(site, role),
          invitee <- Plausible.Auth.find_user_by(email: invitee_email),
          :ok <- ensure_transfer_valid(site, invitee, role),
@@ -142,11 +145,42 @@ defmodule Plausible.Sites do
     Plausible.Mailer.send(email)
   end
 
-  defp ensure_transfer_valid(site, invitee, :owner) do
-    if invitee && role(invitee.id, site) == :owner do
-      {:error, :transfer_to_self}
-    else
-      :ok
+  defp within_team_member_limit_after_transfer?(site, new_owner) do
+    limit = Quota.team_member_limit(new_owner)
+
+    current_usage = Quota.team_member_usage(new_owner)
+    site_usage = Repo.aggregate(Quota.team_member_usage_query(site.owner, site), :count)
+    usage_after_transfer = current_usage + site_usage
+
+    Quota.within_limit?(usage_after_transfer, limit)
+  end
+
+  defp within_site_limit_after_transfer?(new_owner) do
+    limit = Quota.site_limit(new_owner)
+    usage_after_transfer = Quota.site_usage(new_owner) + 1
+
+    Quota.within_limit?(usage_after_transfer, limit)
+  end
+
+  defp has_access_to_site_features?(site, new_owner) do
+    features_to_check = [
+      Plausible.Billing.Feature.Props,
+      Plausible.Billing.Feature.RevenueGoals,
+      Plausible.Billing.Feature.Funnels
+    ]
+
+    Enum.all?(features_to_check, fn feature ->
+      if feature.enabled?(site), do: feature.check_availability(new_owner) == :ok, else: true
+    end)
+  end
+
+  defp ensure_transfer_valid(%Site{} = site, %User{} = new_owner, :owner) do
+    cond do
+      role(new_owner.id, site) == :owner -> {:error, :transfer_to_self}
+      not within_team_member_limit_after_transfer?(site, new_owner) -> {:error, :upgrade_required}
+      not within_site_limit_after_transfer?(new_owner) -> {:error, :upgrade_required}
+      not has_access_to_site_features?(site, new_owner) -> {:error, :upgrade_required}
+      true -> :ok
     end
   end
 
