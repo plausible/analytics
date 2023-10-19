@@ -272,7 +272,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert html = html_response(conn, 200)
       assert html =~ "Upgrade required"
-      assert html =~ "Your account is limited to 50 sites"
+      assert html =~ "Your account is limited to 10 sites"
       assert html =~ "Please contact support"
       refute Repo.get_by(Plausible.Site, domain: "over-limit.example.com")
     end

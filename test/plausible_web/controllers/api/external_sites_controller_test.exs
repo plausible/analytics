@@ -70,9 +70,9 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           "timezone" => "Europe/Tallinn"
         })
 
-      assert json_response(conn, 403) == %{
+      assert json_response(conn, 402) == %{
                "error" =>
-                 "Your account has reached the limit of 50 sites per account. Please contact hello@plausible.io to unlock more sites."
+                 "Your account has reached the limit of 10 sites. To unlock more sites, please upgrade your subscription."
              }
     end
 

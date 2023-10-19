@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
         })
 
       assert html_response(conn, 200) =~
-               "Your account is limited to 5 team members. You can upgrade your plan to increase this limit."
+               "Your account is limited to 3 team members. You can upgrade your plan to increase this limit."
     end
 
     test "fails to create invitation with insufficient permissions", %{conn: conn, user: user} do

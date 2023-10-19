@@ -43,7 +43,7 @@ defmodule Plausible.Billing.QuotaTest do
 
     test "returns 50 when user in on trial" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: 7))
-      assert 50 == Quota.site_limit(user)
+      assert 10 == Quota.site_limit(user)
     end
 
     test "returns the subscription limit for enterprise users who have not paid yet" do
@@ -56,14 +56,14 @@ defmodule Plausible.Billing.QuotaTest do
       assert 50 == Quota.site_limit(user)
     end
 
-    test "returns 50 for enterprise users who have not upgraded yet and are on trial" do
+    test "returns 10 for enterprise users who have not upgraded yet and are on trial" do
       user =
         insert(:user,
           enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
           subscription: nil
         )
 
-      assert 50 == Quota.site_limit(user)
+      assert 10 == Quota.site_limit(user)
     end
 
     test "is unlimited for enterprise customers" do
@@ -372,7 +372,7 @@ defmodule Plausible.Billing.QuotaTest do
 
     test "returns 5 when user in on trial" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: 7))
-      assert 5 == Quota.team_member_limit(user)
+      assert 3 == Quota.team_member_limit(user)
     end
 
     test "is unlimited for enterprise customers" do

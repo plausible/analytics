@@ -39,7 +39,7 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @site_limit_for_trials 50
+  @site_limit_for_trials 10
   @site_limit_for_free_10k 50
   defp get_site_limit_from_plan(user) do
     user = Plausible.Users.with_subscription(user)
@@ -101,7 +101,7 @@ defmodule Plausible.Billing.Quota do
     |> Tuple.sum()
   end
 
-  @team_member_limit_for_trials 5
+  @team_member_limit_for_trials 3
   @spec team_member_limit(Plausible.Auth.User.t()) :: non_neg_integer()
   @doc """
   Returns the limit of team members a user can have in their sites.
