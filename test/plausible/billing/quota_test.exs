@@ -6,7 +6,7 @@ defmodule Plausible.Billing.QuotaTest do
   @v1_plan_id "558018"
   @v2_plan_id "654177"
   @v3_plan_id "749342"
-  @v3_business_plan_id "change-me-1"
+  @v3_business_plan_id "857481"
 
   describe "site_limit/1" do
     test "returns 50 when user is on an old plan" do

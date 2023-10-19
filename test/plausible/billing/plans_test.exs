@@ -5,7 +5,7 @@ defmodule Plausible.Billing.PlansTest do
   @v1_plan_id "558018"
   @v2_plan_id "654177"
   @v4_plan_id "857097"
-  @v3_business_plan_id "change-me-1"
+  @v3_business_plan_id "857481"
   @v4_business_plan_id "857105"
 
   describe "getting subscription plans for user" do
@@ -186,14 +186,14 @@ defmodule Plausible.Billing.PlansTest do
                "749355",
                "749357",
                "749359",
-               "change-me-2",
-               "change-me-4",
-               "change-me-6",
-               "change-me-8",
-               "change-me-10",
-               "change-me-12",
-               "change-me-14",
-               "change-me-16",
+               "857482",
+               "857484",
+               "857487",
+               "857491",
+               "857494",
+               "857496",
+               "857500",
+               "857502",
                "857079",
                "857080",
                "857081",
