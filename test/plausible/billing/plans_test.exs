@@ -9,21 +9,18 @@ defmodule Plausible.Billing.PlansTest do
   @v4_business_plan_id "857105"
 
   describe "getting subscription plans for user" do
-    test "growth_plans_for/1 shows v1 pricing for users who are already on v1 pricing" do
+    test "growth_plans_for/1 returns v1 plans for users who are already on v1 pricing" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
-
       assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v1_plan_id
     end
 
-    test "growth_plans_for/1 shows v2 pricing for users who are already on v2 pricing" do
+    test "growth_plans_for/1 returns v2 plans for users who are already on v2 pricing" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
-
       assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v2_plan_id
     end
 
-    test "growth_plans_for/1 shows v4 pricing for everyone else" do
+    test "growth_plans_for/1 returns v4 plans for everyone else" do
       user = insert(:user)
-
       assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v4_plan_id
     end
 
@@ -34,6 +31,13 @@ defmodule Plausible.Billing.PlansTest do
       |> Enum.each(fn plan ->
         assert plan.kind != :business
       end)
+    end
+
+    test "growth_plans_for/1 returns the latest generation of growth plans for a user with a business subscription" do
+      user =
+        insert(:user, subscription: build(:subscription, paddle_plan_id: @v3_business_plan_id))
+
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v4_plan_id
     end
 
     test "business_plans_for/1 returns v3 business plans for a legacy subscriber" do

@@ -287,13 +287,25 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             </.paddle_button>
         <% end %>
       </div>
-      <ul
-        role="list"
-        class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-100 xl:mt-10"
-      >
-        <.plan_benefit :for={benefit <- @benefits}><%= benefit %></.plan_benefit>
-      </ul>
+      <%= if @kind == :growth && @plan_to_render.generation < 4 do %>
+        <.growth_grandfathering_notice />
+      <% else %>
+        <ul
+          role="list"
+          class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-100 xl:mt-10"
+        >
+          <.plan_benefit :for={benefit <- @benefits}><%= benefit %></.plan_benefit>
+        </ul>
+      <% end %>
     </div>
+    """
+  end
+
+  defp growth_grandfathering_notice(assigns) do
+    ~H"""
+    <ul class="mt-8 space-y-3 text-sm leading-6 text-gray-600 text-justify dark:text-gray-100 xl:mt-10">
+      Your subscription has been grandfathered in at the same rate and terms as when you first joined. If you don't need the "Business" features, you're welcome to stay on this plan. You can adjust the pageview limit or change the billing frequency of this grandfathered plan. If you're interested in business features, you can upgrade to the new "Business" plan.
+    </ul>
     """
   end
 

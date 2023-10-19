@@ -541,6 +541,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
     end
 
+    test "displays grandfathering notice in the Growth box instead of benefits", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      growth_box = text_of_element(doc, @growth_plan_box)
+      assert growth_box =~ "Your subscription has been grandfathered"
+      refute growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
+    end
+
     test "displays business and enterprise plan benefits", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
 

@@ -43,6 +43,7 @@ defmodule Plausible.Billing.Plans do
     cond do
       Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
       !owned_plan -> if v4_available, do: @plans_v4, else: @plans_v3
+      owned_plan.kind == :business -> @plans_v4
       owned_plan.generation == 1 -> @plans_v1
       owned_plan.generation == 2 -> @plans_v2
       owned_plan.generation == 3 -> @plans_v3
