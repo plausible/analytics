@@ -483,7 +483,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp price_tag(%{plan_to_render: %Plan{monthly_cost: nil}} = assigns) do
     ~H"""
-    <span class="text-4xl font-bold tracking-tight text-gray-900">
+    <span class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
       N/A
     </span>
     """
