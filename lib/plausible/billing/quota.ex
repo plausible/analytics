@@ -108,27 +108,36 @@ defmodule Plausible.Billing.Quota do
   with the user's sites.
   """
   def team_member_usage(user) do
+    Plausible.Repo.aggregate(team_member_usage_query(user), :count)
+  end
+
+  @doc false
+  def team_member_usage_query(user, site \\ nil) do
     team_members_query =
       from os in subquery(owned_sites_query(user)),
         inner_join: sm in Plausible.Site.Membership,
         on: sm.site_id == os.site_id,
         inner_join: u in assoc(sm, :user),
-        select: %{email: u.email}
+        select: %{email: u.email, site_id: os.site_id, role: sm.role}
 
-    invitations_and_team_members_query =
+    team_members_and_invitations_query =
       from i in Plausible.Auth.Invitation,
         inner_join: os in subquery(owned_sites_query(user)),
         on: i.site_id == os.site_id,
-        where: i.role != :owner,
-        select: %{email: i.email},
+        select: %{email: i.email, site_id: i.site_id, role: i.role},
         union: ^team_members_query
 
     query =
-      from itm in subquery(invitations_and_team_members_query),
-        where: itm.email != ^user.email,
-        select: count(itm.email, :distinct)
+      from itm in subquery(team_members_and_invitations_query),
+        where: itm.role != :owner,
+        select: %{email: itm.email, site_id: itm.site_id, role: itm.role},
+        distinct: itm.email
 
-    Plausible.Repo.one(query)
+    if site do
+      where(query, [itm], itm.site_id == ^site.id)
+    else
+      query
+    end
   end
 
   @spec features_usage(Plausible.Auth.User.t()) :: [atom()]
