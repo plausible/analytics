@@ -138,7 +138,7 @@ defmodule Plausible.SitesTest do
         ] ++ build_list(4, :site_membership)
 
       site = insert(:site, memberships: memberships)
-      assert {:error, {:over_limit, 5}} = Sites.invite(site, inviter, invitee.email, :viewer)
+      assert {:error, {:over_limit, 3}} = Sites.invite(site, inviter, invitee.email, :viewer)
     end
 
     test "sends ownership transfer email when inviter role is owner" do

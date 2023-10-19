@@ -15,10 +15,10 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
 
       {:error, :limit, limit, _} ->
         conn
-        |> put_status(403)
+        |> put_status(402)
         |> json(%{
           error:
-            "Your account has reached the limit of #{limit} sites per account. Please contact hello@plausible.io to unlock more sites."
+            "Your account has reached the limit of #{limit} sites. To unlock more sites, please upgrade your subscription."
         })
 
       {:error, _, changeset, _} ->
