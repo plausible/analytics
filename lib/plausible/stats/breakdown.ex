@@ -215,7 +215,9 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp breakdown_time_on_page(site, query, pages) do
-    windowed_q =
+    import Ecto.Query
+
+    windowed_pages_q =
       from e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
         windows: [
           next: [
@@ -230,15 +232,10 @@ defmodule Plausible.Stats.Breakdown do
           pathname: e.pathname
         }
 
-    timed_q =
-      from e in Ecto.Query.subquery(windowed_q),
+    timed_pages_q =
+      from e in subquery(windowed_pages_q),
         group_by: e.pathname,
-        where: e.pathname in ^pages,
-        select:
-          {e.pathname,
-           fragment("sumIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)}
-
-    timed_pages = Map.new(Plausible.ClickhouseRepo.all(timed_q))
+        where: e.pathname in ^pages
 
     if query.include_imported do
       # Imported page views have pre-calculated values
@@ -248,12 +245,37 @@ defmodule Plausible.Stats.Breakdown do
           where: i.site_id == ^site.id,
           where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
           where: i.page in ^pages,
-          select: {i.page, sum(i.time_on_page) / (sum(i.pageviews) - sum(i.exits))}
+          select: %{
+            page: i.page,
+            time_on_page: sum(i.time_on_page) / (sum(i.pageviews) - sum(i.exits))
+          }
 
-      imported_timed_pages = Map.new(Plausible.ClickhouseRepo.all(imported_timed_pages_q))
-      Map.merge(timed_pages, imported_timed_pages, fn _k, t1, t2 -> t1 + t2 end)
+      timed_pages_q =
+        select(timed_pages_q, [e], %{
+          page: e.pathname,
+          time_on_page:
+            fragment("sumIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)
+        })
+
+      "timed_pages"
+      |> with_cte("timed_pages", as: ^timed_pages_q)
+      |> with_cte("imported_timed_pages", as: ^imported_timed_pages_q)
+      |> join(:full, [t], i in "imported_timed_pages", on: t.page == i.page)
+      |> select(
+        [t, i],
+        {coalesce(t.page, i.page), coalesce(t.time_on_page, 0) + coalesce(i.time_on_page, 0)}
+      )
+      |> Plausible.ClickhouseRepo.all()
+      |> Map.new()
     else
-      timed_pages
+      timed_pages_q
+      |> select(
+        [e],
+        {e.pathname,
+         fragment("sumIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)}
+      )
+      |> Plausible.ClickhouseRepo.all()
+      |> Map.new()
     end
   end
 
