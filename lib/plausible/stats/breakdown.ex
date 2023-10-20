@@ -215,30 +215,46 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp breakdown_time_on_page(site, query, pages) do
-    import Ecto.Query
+    windowed_q =
+      from e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
+        windows: [
+          next: [
+            partition_by: e.session_id,
+            order_by: e.timestamp,
+            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+          ]
+        ],
+        select: %{
+          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :next),
+          timestamp: e.timestamp,
+          pathname: e.pathname
+        }
 
-    base_event_query(site, Query.remove_event_filters(query, [:page, :props]))
-    |> windows([e],
-      next: [
-        partition_by: e.session_id,
-        order_by: e.timestamp,
-        frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-      ]
-    )
-    |> select([e], %{
-      next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :next),
-      timestamp: e.timestamp,
-      pathname: e.pathname
-    })
-    |> subquery()
-    |> select(
-      [e],
-      {e.pathname, fragment("sumIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)}
-    )
-    |> group_by([e], e.pathname)
-    |> where([e], e.pathname in ^pages)
-    |> Plausible.ClickhouseRepo.all()
-    |> Map.new()
+    timed_q =
+      from e in Ecto.Query.subquery(windowed_q),
+        group_by: e.pathname,
+        where: e.pathname in ^pages,
+        select:
+          {e.pathname,
+           fragment("sumIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)}
+
+    timed_pages = Map.new(Plausible.ClickhouseRepo.all(timed_q))
+
+    if query.include_imported do
+      # Imported page views have pre-calculated values
+      imported_timed_pages_q =
+        from i in "imported_pages",
+          group_by: i.page,
+          where: i.site_id == ^site.id,
+          where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+          where: i.page in ^pages,
+          select: {i.page, sum(i.time_on_page) / (sum(i.pageviews) - sum(i.exits))}
+
+      imported_timed_pages = Map.new(Plausible.ClickhouseRepo.all(imported_timed_pages_q))
+      Map.merge(timed_pages, imported_timed_pages, fn _k, t1, t2 -> t1 + t2 end)
+    else
+      timed_pages
+    end
   end
 
   defp joins_table?(ecto_q, table) do
