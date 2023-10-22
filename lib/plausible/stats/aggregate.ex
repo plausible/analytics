@@ -65,15 +65,13 @@ defmodule Plausible.Stats.Aggregate do
              query
              | filters: Map.delete(query.filters, "event:page")
            }),
-           windows: [
-             next: [
-               partition_by: e.session_id,
-               order_by: e.timestamp,
-               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-             ]
-           ],
            select: %{
-             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :next),
+             next_timestamp:
+               over(fragment("leadInFrame(?)", e.timestamp),
+                 partition_by: e.session_id,
+                 order_by: e.timestamp,
+                 frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+               ),
              timestamp: e.timestamp,
              pathname: e.pathname
            }

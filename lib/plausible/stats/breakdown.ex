@@ -219,15 +219,13 @@ defmodule Plausible.Stats.Breakdown do
 
     windowed_pages_q =
       from e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
-        windows: [
-          next: [
-            partition_by: e.session_id,
-            order_by: e.timestamp,
-            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-          ]
-        ],
         select: %{
-          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :next),
+          next_timestamp:
+            over(fragment("leadInFrame(?)", e.timestamp),
+              partition_by: e.session_id,
+              order_by: e.timestamp,
+              frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+            ),
           timestamp: e.timestamp,
           pathname: e.pathname
         }
