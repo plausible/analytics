@@ -122,73 +122,74 @@ defmodule Plausible.Stats.Base do
           q
       end
 
-    q =
-      case Query.get_filter_by_prefix(query, "event:props") do
-        {"event:props:" <> prop_name, {:is, value}} ->
-          if value == "(none)" do
-            from(
-              e in q,
-              where: fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
-            )
-          else
-            from(
-              e in q,
-              array_join: meta in "meta",
-              as: :meta,
-              where: meta.key == ^prop_name and meta.value == ^value
-            )
-          end
+    apply_event_props_filter(q, query)
+  end
 
-        {"event:props:" <> prop_name, {:is_not, value}} ->
-          if value == "(none)" do
-            from(
-              e in q,
-              where: fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name)
-            )
-          else
-            from(
-              e in q,
-              left_array_join: meta in "meta",
-              as: :meta,
-              where:
-                (meta.key == ^prop_name and meta.value != ^value) or
-                  fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
-            )
-          end
-
-        {"event:props:" <> prop_name, {:member, values}} ->
-          none_value_included = Enum.member?(values, "(none)")
-
+  def apply_event_props_filter(ecto_query, plausible_query) do
+    case Query.get_filter_by_prefix(plausible_query, "event:props") do
+      {"event:props:" <> prop_name, {:is, value}} ->
+        if value == "(none)" do
           from(
-            e in q,
+            e in ecto_query,
+            where: fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
+          )
+        else
+          from(
+            e in ecto_query,
+            array_join: meta in "meta",
+            as: :meta,
+            where: meta.key == ^prop_name and meta.value == ^value
+          )
+        end
+
+      {"event:props:" <> prop_name, {:is_not, value}} ->
+        if value == "(none)" do
+          from(
+            e in ecto_query,
+            where: fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name)
+          )
+        else
+          from(
+            e in ecto_query,
             left_array_join: meta in "meta",
             as: :meta,
             where:
-              (meta.key == ^prop_name and meta.value in ^values) or
-                (^none_value_included and
-                   fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
+              (meta.key == ^prop_name and meta.value != ^value) or
+                fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
           )
+        end
 
-        {"event:props:" <> prop_name, {:not_member, values}} ->
-          none_value_included = Enum.member?(values, "(none)")
+      {"event:props:" <> prop_name, {:member, values}} ->
+        none_value_included = Enum.member?(values, "(none)")
 
-          from(
-            e in q,
-            left_array_join: meta in "meta",
-            as: :meta,
-            where:
-              (meta.key == ^prop_name and meta.value not in ^values) or
-                (^none_value_included and fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name) and
-                   meta.value not in ^values) or
-                (not (^none_value_included) and
-                   fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
-          )
+        from(
+          e in ecto_query,
+          left_array_join: meta in "meta",
+          as: :meta,
+          where:
+            (meta.key == ^prop_name and meta.value in ^values) or
+              (^none_value_included and
+                 fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
+        )
 
-        _ ->
-          q
-      end
+      {"event:props:" <> prop_name, {:not_member, values}} ->
+        none_value_included = Enum.member?(values, "(none)")
 
-    q
+        from(
+          e in ecto_query,
+          left_array_join: meta in "meta",
+          as: :meta,
+          where:
+            (meta.key == ^prop_name and meta.value not in ^values) or
+              (^none_value_included and fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name) and
+                 meta.value not in ^values) or
+              (not (^none_value_included) and
+                 fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
+        )
+
+      _ ->
+        ecto_query
+    end
   end
 
   @api_prop_name_to_db %{

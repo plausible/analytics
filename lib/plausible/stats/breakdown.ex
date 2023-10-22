@@ -232,10 +232,27 @@ defmodule Plausible.Stats.Breakdown do
           pathname: e.pathname
         }
 
+    # has_props_filter? =
+    #   Enum.any?(query.filters, fn {k, _} -> String.starts_with?(k, "event:props:") end)
+
+    # windowed_pages_q =
+    #   if has_props_filter? do
+    #     select_merge(windowed_pages_q, [e], map(e, [:"meta.key", :"meta.value"]))
+    #   else
+    #     windowed_pages_q
+    #   end
+
     timed_pages_q =
       from e in subquery(windowed_pages_q),
         group_by: e.pathname,
         where: e.pathname in ^pages
+
+    # timed_pages_q =
+    #   if has_props_filter? do
+    #     Plausible.Stats.Base.apply_event_props_filter(timed_pages_q, query)
+    #   else
+    #     timed_pages_q
+    #   end
 
     if query.include_imported do
       # Imported page views have pre-calculated values
@@ -253,8 +270,7 @@ defmodule Plausible.Stats.Breakdown do
       timed_pages_q =
         select(timed_pages_q, [e], %{
           page: e.pathname,
-          time_on_page:
-            fragment("sumIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)
+          time_on_page: fragment("sum(greatest(?,0))", e.next_timestamp - e.timestamp)
         })
 
       "timed_pages"
@@ -269,11 +285,7 @@ defmodule Plausible.Stats.Breakdown do
       |> Map.new()
     else
       timed_pages_q
-      |> select(
-        [e],
-        {e.pathname,
-         fragment("sumIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)}
-      )
+      |> select([e], {e.pathname, fragment("sum(greatest(?,0))", e.next_timestamp - e.timestamp)})
       |> Plausible.ClickhouseRepo.all()
       |> Map.new()
     end
