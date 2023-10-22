@@ -58,82 +58,60 @@ defmodule Plausible.Stats.Aggregate do
   end
 
   defp aggregate_time_on_page(site, query) do
-    q =
-      from(
-        e in base_event_query(site, %Query{
-          query
-          | filters: Map.delete(query.filters, "event:page")
-        }),
-        select: {
-          fragment("? as p", e.pathname),
-          fragment("? as t", e.timestamp),
-          fragment("? as s", e.session_id)
-        },
-        order_by: [e.session_id, e.timestamp]
-      )
+    import Ecto.Query
 
-    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
-    where_param_idx = length(base_query_raw_params)
+    windowed_pages_q =
+      from e in base_event_query(site, %Query{
+             query
+             | filters: Map.delete(query.filters, "event:page")
+           }),
+           windows: [
+             next: [
+               partition_by: e.session_id,
+               order_by: e.timestamp,
+               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+             ]
+           ],
+           select: %{
+             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :next),
+             timestamp: e.timestamp,
+             pathname: e.pathname
+           }
 
-    {where_clause, where_arg} =
+    timed_pages_q =
+      from e in subquery(windowed_pages_q),
+        select: fragment("avgIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)
+
+    timed_filtered_pages_q =
       case query.filters["event:page"] do
         {:is, page} ->
-          {"p = {$#{where_param_idx}:String}", page}
+          where(timed_pages_q, pathname: ^page)
 
         {:is_not, page} ->
-          {"p != {$#{where_param_idx}:String}", page}
+          where(timed_pages_q, [e], e.pathname != ^page)
 
-        {:member, page} ->
-          {"p IN {$#{where_param_idx}:Array(String)}", page}
+        {:member, pages} ->
+          where(timed_pages_q, [e], e.pathname in ^pages)
 
-        {:not_member, page} ->
-          {"p NOT IN {$#{where_param_idx}:Array(String)}", page}
+        {:not_member, pages} ->
+          where(timed_pages_q, [e], e.pathname not in ^pages)
 
         {:matches, expr} ->
-          regex = page_regex(expr)
-          {"match(p, {$#{where_param_idx}:String})", regex}
+          where(timed_pages_q, [e], fragment("match(?,?)", e.pathname, ^page_regex(expr)))
 
         {:matches_member, exprs} ->
           page_regexes = Enum.map(exprs, &page_regex/1)
-          {"multiMatchAny(p, {$#{where_param_idx}:Array(String)})", page_regexes}
+          where(timed_pages_q, [e], fragment("multiMatchAny(?,?)", e.pathname, ^page_regexes))
 
         {:not_matches_member, exprs} ->
           page_regexes = Enum.map(exprs, &page_regex/1)
-          {"not(multiMatchAny(p, {$#{where_param_idx}:Array(String)}))", page_regexes}
+          where(timed_pages_q, [e], not fragment("multiMatchAny(?,?)", e.pathname, ^page_regexes))
 
         {:does_not_match, expr} ->
-          regex = page_regex(expr)
-          {"not(match(p, {$#{where_param_idx}:String}))", regex}
+          where(timed_pages_q, [e], not fragment("match(?,?)", e.pathname, ^page_regex(expr)))
       end
 
-    params = base_query_raw_params ++ [where_arg]
-
-    time_query = "
-      SELECT
-        avg(ifNotFinite(avgTime, null))
-      FROM
-        (SELECT
-          p,
-          sum(td)/count(case when p2 != p then 1 end) as avgTime
-        FROM
-          (SELECT
-            p,
-            p2,
-            sum(t2-t) as td
-          FROM
-            (SELECT
-            *,
-              neighbor(t, 1) as t2,
-              neighbor(p, 1) as p2,
-              neighbor(s, 1) as s2
-            FROM (#{base_query_raw}))
-          WHERE s=s2 AND #{where_clause}
-          GROUP BY p,p2,s)
-        GROUP BY p)"
-
-    {:ok, res} = ClickhouseRepo.query(time_query, params)
-    [[time_on_page]] = res.rows
-    %{time_on_page: time_on_page}
+    %{time_on_page: ClickhouseRepo.one(timed_filtered_pages_q)}
   end
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]
