@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @v1_10k_yearly_plan_id "572810"
   @v4_growth_200k_yearly_plan_id "857081"
   @v4_business_5m_monthly_plan_id "857111"
+  @v3_business_10k_monthly_plan_id "857481"
 
   @monthly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="monthly"]/
   @yearly_interval_button ~s/label[phx-click="set_interval"][phx-value-interval="yearly"]/
@@ -27,6 +28,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @business_current_label "#{@business_plan_box} #current-label"
   @business_checkout_button "#business-checkout"
 
+  @enterprise_plan_box "#enterprise-plan-box"
+
   describe "for a user with no subscription" do
     setup [:create_user, :log_in]
 
@@ -39,6 +42,41 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "What happens if I go over my page views limit?"
       assert doc =~ "Enterprise"
       assert doc =~ "+ VAT if applicable"
+    end
+
+    test "displays plan benefits", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      growth_box = text_of_element(doc, @growth_plan_box)
+      business_box = text_of_element(doc, @business_plan_box)
+      enterprise_box = text_of_element(doc, @enterprise_plan_box)
+
+      assert growth_box =~ "Up to 3 team members"
+      assert growth_box =~ "Up to 10 sites"
+      assert growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
+      assert growth_box =~ "Email/Slack reports"
+      assert growth_box =~ "Google Analytics import"
+      assert growth_box =~ "Goals and custom events"
+
+      assert business_box =~ "Everything in Growth"
+      assert business_box =~ "Up to 10 team members"
+      assert business_box =~ "Up to 50 sites"
+      assert business_box =~ "Stats API"
+      assert business_box =~ "Custom Properties"
+      assert business_box =~ "Funnels"
+      assert business_box =~ "Ecommerce revenue attribution"
+      assert business_box =~ "Priority support"
+
+      refute business_box =~ "Goals and custom events"
+
+      assert enterprise_box =~ "Everything in Business"
+      assert enterprise_box =~ "10+ team members"
+      assert enterprise_box =~ "50+ sites"
+      assert enterprise_box =~ "Sites API access for"
+      assert enterprise_box =~ "Technical onboarding"
+
+      assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
+               "https://plausible.io/white-label-web-analytics"
     end
 
     test "default billing interval is monthly, and can switch to yearly", %{conn: conn} do
@@ -107,16 +145,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 8})
 
-      assert text_of_element(doc, @growth_plan_box) =~ "Custom"
+      assert text_of_element(doc, "#growth-custom-price") =~ "Custom"
       assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
-      assert text_of_element(doc, @business_plan_box) =~ "Custom"
+      assert text_of_element(doc, "#business-custom-price") =~ "Custom"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
 
-      refute text_of_element(doc, @growth_plan_box) =~ "Custom"
+      refute text_of_element(doc, "#growth-custom-price") =~ "Custom"
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
-      refute text_of_element(doc, @business_plan_box) =~ "Custom"
+      refute text_of_element(doc, "#business-custom-price") =~ "Custom"
       refute text_of_element(doc, @business_plan_box) =~ "Contact us"
     end
 
@@ -173,6 +211,41 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert doc =~ "Change subscription plan"
       assert doc =~ "Questions?"
       refute doc =~ "What happens if I go over my page views limit?"
+    end
+
+    test "displays plan benefits", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      growth_box = text_of_element(doc, @growth_plan_box)
+      business_box = text_of_element(doc, @business_plan_box)
+      enterprise_box = text_of_element(doc, @enterprise_plan_box)
+
+      assert growth_box =~ "Up to 3 team members"
+      assert growth_box =~ "Up to 10 sites"
+      assert growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
+      assert growth_box =~ "Email/Slack reports"
+      assert growth_box =~ "Google Analytics import"
+      assert growth_box =~ "Goals and custom events"
+
+      assert business_box =~ "Everything in Growth"
+      assert business_box =~ "Up to 10 team members"
+      assert business_box =~ "Up to 50 sites"
+      assert business_box =~ "Stats API"
+      assert business_box =~ "Custom Properties"
+      assert business_box =~ "Funnels"
+      assert business_box =~ "Ecommerce revenue attribution"
+      assert business_box =~ "Priority support"
+
+      refute business_box =~ "Goals and custom events"
+
+      assert enterprise_box =~ "Everything in Business"
+      assert enterprise_box =~ "10+ team members"
+      assert enterprise_box =~ "50+ sites"
+      assert enterprise_box =~ "Sites API access for"
+      assert enterprise_box =~ "Technical onboarding"
+
+      assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
+               "https://plausible.io/white-label-web-analytics"
     end
 
     test "displays usage", %{conn: conn, user: user} do
@@ -302,6 +375,51 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
+  describe "for a user with a v3 business (unlimited team members) subscription plan" do
+    setup [:create_user, :log_in]
+
+    setup %{user: user} = context do
+      create_subscription_for(user, paddle_plan_id: @v3_business_10k_monthly_plan_id)
+      {:ok, context}
+    end
+
+    test "displays plan benefits", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      growth_box = text_of_element(doc, @growth_plan_box)
+      business_box = text_of_element(doc, @business_plan_box)
+      enterprise_box = text_of_element(doc, @enterprise_plan_box)
+
+      assert growth_box =~ "Up to 3 team members"
+      assert growth_box =~ "Up to 10 sites"
+      assert growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
+      assert growth_box =~ "Email/Slack reports"
+      assert growth_box =~ "Google Analytics import"
+      assert growth_box =~ "Goals and custom events"
+
+      assert business_box =~ "Everything in Growth"
+      assert business_box =~ "Unlimited team members"
+      assert business_box =~ "Up to 50 sites"
+      assert business_box =~ "Stats API"
+      assert business_box =~ "Custom Properties"
+      assert business_box =~ "Funnels"
+      assert business_box =~ "Ecommerce revenue attribution"
+      assert business_box =~ "Priority support"
+
+      refute business_box =~ "Goals and custom events"
+
+      assert enterprise_box =~ "Everything in Business"
+      assert enterprise_box =~ "50+ sites"
+      assert enterprise_box =~ "Sites API access for"
+      assert enterprise_box =~ "Technical onboarding"
+
+      refute enterprise_box =~ "team members"
+
+      assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
+               "https://plausible.io/white-label-web-analytics"
+    end
+  end
+
   describe "for a user with a past_due subscription" do
     setup [:create_user, :log_in, :create_past_due_subscription]
 
@@ -391,10 +509,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   describe "for a grandfathered user" do
     setup [:create_user, :log_in]
 
-    test "on a v1 plan, Growth tiers are available at 20M, 50M, 50M+, but Business tiers are not",
-         %{conn: conn, user: user} do
+    setup %{user: user} = context do
       create_subscription_for(user, paddle_plan_id: @v1_10k_yearly_plan_id)
+      {:ok, context}
+    end
 
+    test "on a v1 plan, Growth tiers are available at 20M, 50M, 50M+, but Business tiers are not",
+         %{conn: conn} do
       {:ok, lv, _doc} = get_liveview(conn)
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 8})
@@ -418,6 +539,42 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @slider_value) == "10M"
       refute text_of_element(doc, @business_plan_box) =~ "Contact us"
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
+    end
+
+    test "displays grandfathering notice in the Growth box instead of benefits", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      growth_box = text_of_element(doc, @growth_plan_box)
+      assert growth_box =~ "Your subscription has been grandfathered"
+      refute growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
+    end
+
+    test "displays business and enterprise plan benefits", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      business_box = text_of_element(doc, @business_plan_box)
+      enterprise_box = text_of_element(doc, @enterprise_plan_box)
+
+      assert business_box =~ "Everything in Growth"
+      assert business_box =~ "Funnels"
+      assert business_box =~ "Ecommerce revenue attribution"
+      assert business_box =~ "Priority support"
+
+      refute business_box =~ "Goals and custom events"
+      refute business_box =~ "Unlimited team members"
+      refute business_box =~ "Up to 50 sites"
+      refute business_box =~ "Stats API"
+      refute business_box =~ "Custom Properties"
+
+      assert enterprise_box =~ "Everything in Business"
+      assert enterprise_box =~ "50+ sites"
+      assert enterprise_box =~ "Sites API access for"
+      assert enterprise_box =~ "Technical onboarding"
+
+      assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
+               "https://plausible.io/white-label-web-analytics"
+
+      refute enterprise_box =~ "10+ team members"
+      refute enterprise_box =~ "Unlimited team members"
     end
   end
 
