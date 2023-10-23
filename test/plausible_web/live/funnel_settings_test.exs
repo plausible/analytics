@@ -255,6 +255,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
       refute element_exists?(doc, save_inactive)
     end
 
+    @tag :slow
     test "funnel gets evaluated on every select, assuming a second has passed between selections",
          %{
            conn: conn,

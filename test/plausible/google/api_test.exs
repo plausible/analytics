@@ -65,6 +65,7 @@ defmodule Plausible.Google.ApiTest do
       {:ok, buffer: pid}
     end
 
+    @tag :slow
     test "will fetch and persist import data from Google Analytics", %{site: site, buffer: buffer} do
       request = %Plausible.Google.ReportRequest{
         dataset: "imported_exit_pages",

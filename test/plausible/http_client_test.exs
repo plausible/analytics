@@ -102,6 +102,7 @@ defmodule Plausible.HTTPClientTest do
              HTTPClient.post(bypass_url(bypass, path: "/any"), headers_no_content_type, params)
   end
 
+  @tag :slow
   test "post/4 accepts finch request opts", %{bypass: bypass} do
     Bypass.expect_once(bypass, "POST", "/timeout", fn conn ->
       Process.sleep(500)
