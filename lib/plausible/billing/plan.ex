@@ -34,7 +34,7 @@ defmodule Plausible.Billing.Plan do
   end
 
   defp put_kind(params) do
-    Map.put(params, :kind, String.to_atom(params.kind))
+    Map.put(params, :kind, String.to_existing_atom(params.kind))
   end
 
   # Due to grandfathering, we sometimes need to check the "generation"
