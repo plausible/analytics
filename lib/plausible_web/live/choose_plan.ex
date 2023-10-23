@@ -240,6 +240,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   defp plan_box(assigns) do
+    paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
+    assigns = assign(assigns, :paddle_product_id, paddle_product_id)
+
     ~H"""
     <div
       id={"#{@kind}-plan-box"}
@@ -266,7 +269,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
           <% @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) -> %>
             <.render_change_plan_link
-              paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
               text={
                 change_plan_link_text(
                   @owned_plan,
@@ -278,13 +280,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
               {assigns}
             />
           <% true -> %>
-            <.paddle_button
-              id={"#{@kind}-checkout"}
-              paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
-              {assigns}
-            >
-              Upgrade
-            </.paddle_button>
+            <.paddle_button id={"#{@kind}-checkout"} {assigns}>Upgrade</.paddle_button>
         <% end %>
       </div>
       <%= if @kind == :growth && @plan_to_render.generation < 4 do %>
