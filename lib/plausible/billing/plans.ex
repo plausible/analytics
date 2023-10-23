@@ -19,7 +19,7 @@ defmodule Plausible.Billing.Plans do
       path
       |> File.read!()
       |> Jason.decode!(keys: :atoms!)
-      |> Enum.map(&Plan.build(&1, f))
+      |> Enum.map(&Plan.build!(&1, f))
 
     Module.put_attribute(__MODULE__, f, plans_list)
 

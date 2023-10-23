@@ -21,17 +21,17 @@ defmodule Plausible.Billing.Plan do
           }
           | :enterprise
 
-  def build(raw_params, file_name) when is_map(raw_params) do
+  def build!(raw_params, file_name) when is_map(raw_params) do
     raw_params
     |> put_kind()
     |> put_generation()
     |> put_volume()
-    |> put_team_member_limit(file_name)
-    |> put_features(file_name)
-    |> new()
+    |> put_team_member_limit!(file_name)
+    |> put_features!(file_name)
+    |> new!()
   end
 
-  defp new(params) do
+  defp new!(params) do
     struct!(__MODULE__, params)
   end
 
@@ -59,7 +59,7 @@ defmodule Plausible.Billing.Plan do
     Map.put(params, :volume, volume)
   end
 
-  defp put_team_member_limit(params, file_name) do
+  defp put_team_member_limit!(params, file_name) do
     team_member_limit =
       case params.team_member_limit do
         number when is_integer(number) ->
@@ -76,7 +76,7 @@ defmodule Plausible.Billing.Plan do
     Map.put(params, :team_member_limit, team_member_limit)
   end
 
-  defp put_features(params, file_name) do
+  defp put_features!(params, file_name) do
     features =
       Plausible.Billing.Feature.list()
       |> Enum.filter(fn module ->
