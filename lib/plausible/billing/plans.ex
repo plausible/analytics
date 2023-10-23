@@ -5,12 +5,11 @@ defmodule Plausible.Billing.Plans do
   alias Plausible.Auth.User
 
   for f <- [
+        :legacy_plans,
         :plans_v1,
         :plans_v2,
         :plans_v3,
         :plans_v4,
-        :unlisted_plans_v1,
-        :unlisted_plans_v2,
         :sandbox_plans
       ] do
     path = Application.app_dir(:plausible, ["priv", "#{f}.json"])
@@ -220,9 +219,7 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all() do
-    @plans_v1 ++
-      @unlisted_plans_v1 ++
-      @plans_v2 ++ @unlisted_plans_v2 ++ @plans_v3 ++ @plans_v4 ++ plans_sandbox()
+    @legacy_plans ++ @plans_v1 ++ @plans_v2 ++ @plans_v3 ++ @plans_v4 ++ plans_sandbox()
   end
 
   defp plans_sandbox() do
