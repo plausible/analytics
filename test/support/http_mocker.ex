@@ -1,4 +1,9 @@
 defmodule Plausible.Test.Support.HTTPMocker do
+  @moduledoc """
+  Currently only supports post request, it's a drop-in replacement
+  for our exvcr usage that wasn't ever needed (e.g. we had no way to
+  re-record the cassettes anyway).
+  """
   defmacro __using__(_) do
     quote do
       import Mox
