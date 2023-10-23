@@ -441,9 +441,12 @@ defmodule Plausible.Ingestion.Event do
   defp get_root_domain(nil), do: "(none)"
 
   defp get_root_domain(hostname) do
-    case PublicSuffix.registrable_domain(hostname) do
-      domain when is_binary(domain) -> domain
-      _any -> hostname
+    case :inet.parse_ipv4_address(String.to_charlist(hostname)) do
+      {:ok, _} ->
+        hostname
+
+      {:error, :einval} ->
+        PublicSuffix.registrable_domain(hostname) || hostname
     end
   end
 
