@@ -362,7 +362,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     </.link>
     <p
       :if={@billing_details_expired && !@plan_already_owned}
-      class="text-center text-sm text-red-700 dark:text-red-500"
+      class="h-0 text-center text-sm text-red-700 dark:text-red-500"
     >
       Please update your billing details first
     </p>
