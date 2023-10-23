@@ -119,13 +119,13 @@ build_metadata =
     {:error, error} ->
       error = Exception.format(:error, error)
 
-      Logger.warn("""
+      Logger.warning("""
       failed to parse $BUILD_METADATA: #{error}
 
           $BUILD_METADATA is set to #{build_metadata_raw}\
       """)
 
-      Logger.warn("falling back to empty build metadata, as if $BUILD_METADATA was set to {}")
+      Logger.warning("falling back to empty build metadata, as if $BUILD_METADATA was set to {}")
 
       _fallback = %{}
   end
@@ -167,7 +167,7 @@ maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLi
 
 if System.get_env("DISABLE_AUTH") do
   require Logger
-  Logger.warn("DISABLE_AUTH env var is no longer supported")
+  Logger.warning("DISABLE_AUTH env var is no longer supported")
 end
 
 enable_email_verification =

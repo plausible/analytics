@@ -4,7 +4,7 @@ alias Plausible.{Site, Sites, Goal, Goals, Stats}
 import_if_available(Ecto.Query)
 import_if_available(Plausible.Factory)
 
-Logger.configure(level: :warn)
+Logger.configure(level: :warning)
 
 IO.puts(
   IO.ANSI.cyan() <>

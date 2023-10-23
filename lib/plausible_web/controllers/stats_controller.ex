@@ -123,34 +123,34 @@ defmodule PlausibleWeb.StatsController do
         |> Enum.join()
 
       filename =
-        'Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip'
+        ~c"Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
 
       params = Map.merge(params, %{"limit" => "300", "csv" => "True", "detailed" => "True"})
       limited_params = Map.merge(params, %{"limit" => "100"})
 
       csvs = %{
-        'sources.csv' => fn -> Api.StatsController.sources(conn, params) end,
-        'utm_mediums.csv' => fn -> Api.StatsController.utm_mediums(conn, params) end,
-        'utm_sources.csv' => fn -> Api.StatsController.utm_sources(conn, params) end,
-        'utm_campaigns.csv' => fn -> Api.StatsController.utm_campaigns(conn, params) end,
-        'utm_contents.csv' => fn -> Api.StatsController.utm_contents(conn, params) end,
-        'utm_terms.csv' => fn -> Api.StatsController.utm_terms(conn, params) end,
-        'pages.csv' => fn -> Api.StatsController.pages(conn, limited_params) end,
-        'entry_pages.csv' => fn -> Api.StatsController.entry_pages(conn, params) end,
-        'exit_pages.csv' => fn -> Api.StatsController.exit_pages(conn, limited_params) end,
-        'countries.csv' => fn -> Api.StatsController.countries(conn, params) end,
-        'regions.csv' => fn -> Api.StatsController.regions(conn, params) end,
-        'cities.csv' => fn -> Api.StatsController.cities(conn, params) end,
-        'browsers.csv' => fn -> Api.StatsController.browsers(conn, params) end,
-        'operating_systems.csv' => fn -> Api.StatsController.operating_systems(conn, params) end,
-        'devices.csv' => fn -> Api.StatsController.screen_sizes(conn, params) end,
-        'conversions.csv' => fn -> Api.StatsController.conversions(conn, params) end,
-        'referrers.csv' => fn -> Api.StatsController.referrers(conn, params) end
+        ~c"sources.csv" => fn -> Api.StatsController.sources(conn, params) end,
+        ~c"utm_mediums.csv" => fn -> Api.StatsController.utm_mediums(conn, params) end,
+        ~c"utm_sources.csv" => fn -> Api.StatsController.utm_sources(conn, params) end,
+        ~c"utm_campaigns.csv" => fn -> Api.StatsController.utm_campaigns(conn, params) end,
+        ~c"utm_contents.csv" => fn -> Api.StatsController.utm_contents(conn, params) end,
+        ~c"utm_terms.csv" => fn -> Api.StatsController.utm_terms(conn, params) end,
+        ~c"pages.csv" => fn -> Api.StatsController.pages(conn, limited_params) end,
+        ~c"entry_pages.csv" => fn -> Api.StatsController.entry_pages(conn, params) end,
+        ~c"exit_pages.csv" => fn -> Api.StatsController.exit_pages(conn, limited_params) end,
+        ~c"countries.csv" => fn -> Api.StatsController.countries(conn, params) end,
+        ~c"regions.csv" => fn -> Api.StatsController.regions(conn, params) end,
+        ~c"cities.csv" => fn -> Api.StatsController.cities(conn, params) end,
+        ~c"browsers.csv" => fn -> Api.StatsController.browsers(conn, params) end,
+        ~c"operating_systems.csv" => fn -> Api.StatsController.operating_systems(conn, params) end,
+        ~c"devices.csv" => fn -> Api.StatsController.screen_sizes(conn, params) end,
+        ~c"conversions.csv" => fn -> Api.StatsController.conversions(conn, params) end,
+        ~c"referrers.csv" => fn -> Api.StatsController.referrers(conn, params) end
       }
 
       csvs =
         if Plausible.Billing.Feature.Props.enabled?(site) do
-          Map.put(csvs, 'custom_props.csv', fn ->
+          Map.put(csvs, ~c"custom_props.csv", fn ->
             Api.StatsController.all_custom_prop_values(conn, params)
           end)
         else
@@ -165,7 +165,7 @@ defmodule PlausibleWeb.StatsController do
         Map.keys(csvs)
         |> Enum.zip(csv_values)
 
-      csvs = [{'visitors.csv', visitors} | csvs]
+      csvs = [{~c"visitors.csv", visitors} | csvs]
 
       {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
 

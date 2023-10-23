@@ -232,7 +232,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       # but at the same time it's good to have a confirmation
       # that it indeed generates a new code
       if verification.code == new_verification.code do
-        Logger.warn(
+        Logger.warning(
           "Congratulations! You you have hit 1 in 8999 chance of the same " <>
             "email verification code repeating twice in a row!"
         )
@@ -491,7 +491,10 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn: conn,
       user: user
     } do
-      insert(:subscription, paddle_plan_id: @configured_enterprise_plan_paddle_plan_id, user: user)
+      insert(:subscription,
+        paddle_plan_id: @configured_enterprise_plan_paddle_plan_id,
+        user: user
+      )
 
       insert(:enterprise_plan,
         paddle_plan_id: "1234",
