@@ -63,25 +63,29 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
     test "creates a custom event", %{conn: conn, site: site} do
       {parent, lv} = get_liveview(conn, site, with_parent?: true)
-      refute render(parent) =~ "Foo"
-      lv |> element("form") |> render_submit(%{goal: %{event_name: "Foo"}})
+      refute render(parent) =~ "SampleCustomEvent"
+      lv |> element("form") |> render_submit(%{goal: %{event_name: "SampleCustomEvent"}})
       parent_html = render(parent)
-      assert parent_html =~ "Foo"
+      assert parent_html =~ "SampleCustomEvent"
       assert parent_html =~ "Custom Event"
     end
 
     test "creates a revenue goal", %{conn: conn, site: site} do
       {parent, lv} = get_liveview(conn, site, with_parent?: true)
-      refute render(parent) =~ "Foo"
-      lv |> element("form") |> render_submit(%{goal: %{event_name: "Foo", currency: "EUR"}})
+      refute render(parent) =~ "SampleRevenueGoal"
+
+      lv
+      |> element("form")
+      |> render_submit(%{goal: %{event_name: "SampleRevenueGoal", currency: "EUR"}})
+
       parent_html = render(parent)
-      assert parent_html =~ "Foo (EUR)"
+      assert parent_html =~ "SampleRevenueGoal (EUR)"
       assert parent_html =~ "Revenue Goal"
     end
 
     test "creates a pageview goal", %{conn: conn, site: site} do
       {parent, lv} = get_liveview(conn, site, with_parent?: true)
-      refute render(parent) =~ "Foo"
+      refute render(parent) =~ "Visit /page/**"
       lv |> element("form") |> render_submit(%{goal: %{page_path: "/page/**"}})
       parent_html = render(parent)
       assert parent_html =~ "Visit /page/**"

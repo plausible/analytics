@@ -6,7 +6,10 @@ defmodule PlausibleWeb.ErrorViewTest do
     layout = Application.get_env(:plausible, PlausibleWeb.Endpoint)[:render_errors][:layout]
 
     error_html =
-      Phoenix.View.render_to_string(PlausibleWeb.ErrorView, "500.html", conn: conn, layout: layout)
+      Phoenix.View.render_to_string(PlausibleWeb.ErrorView, "500.html",
+        conn: conn,
+        layout: layout
+      )
 
     refute error_html =~ "data-domain="
   end

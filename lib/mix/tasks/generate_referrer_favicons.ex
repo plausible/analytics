@@ -16,7 +16,7 @@ defmodule Mix.Tasks.GenerateReferrerFavicons do
     domains =
       Enum.reduce(entries, %{}, fn {key, val}, domains ->
         domain =
-          Enum.into(val, %{})['domains']
+          Enum.into(val, %{})[~c"domains"]
           |> List.first()
 
         Map.put_new(domains, List.to_string(key), List.to_string(domain))

@@ -94,7 +94,9 @@ defmodule Plausible.Application do
       google_conf[:client_id] && google_conf[:client_secret] ->
         pool_config
         |> Map.put(google_conf[:api_url], conn_opts: [transport_opts: [timeout: 15_000]])
-        |> Map.put(google_conf[:reporting_api_url], conn_opts: [transport_opts: [timeout: 15_000]])
+        |> Map.put(google_conf[:reporting_api_url],
+          conn_opts: [transport_opts: [timeout: 15_000]]
+        )
 
       true ->
         pool_config
