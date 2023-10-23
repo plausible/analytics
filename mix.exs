@@ -74,7 +74,6 @@ defmodule Plausible.MixProject do
       {:envy, "~> 1.1.1"},
       {:ex_machina, "~> 2.3", only: [:dev, :test]},
       {:excoveralls, "~> 0.10", only: :test},
-      {:exvcr, "~> 0.11", only: [:test]},
       {:finch, "~> 0.16.0"},
       {:floki, "~> 0.34.3", only: [:dev, :test]},
       {:fun_with_flags, "~> 1.9.0"},
