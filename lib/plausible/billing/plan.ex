@@ -41,10 +41,7 @@ defmodule Plausible.Billing.Plan do
   # (e.g. v1, v2, etc...) of a user's subscription plan. For instance,
   # on prod, the users subscribed to a v2 plan are only supposed to
   # see v2 plans when they go to the upgrade page.
-
-  # For all production plans, the `generation` field is equivalent to
-  # the integer following the letter `v` in the JSON file name.
-
+  #
   # In the `dev` environment though, "sandbox" plans are used, which
   # unlike production plans, contain multiple generations of plans in
   # the same file for testing purposes.
