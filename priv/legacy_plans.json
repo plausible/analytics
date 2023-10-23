@@ -12,16 +12,6 @@
   {
     "kind":"growth",
     "generation": 1,
-    "monthly_pageview_limit":10000000,
-    "monthly_product_id":"655350",
-    "yearly_product_id":null,
-    "site_limit":50,
-    "team_member_limit":"unlimited",
-    "features":["goals","props","stats_api"]
-  },
-  {
-    "kind":"growth",
-    "generation": 1,
     "monthly_pageview_limit":150000000,
     "yearly_product_id":"648089", 
     "monthly_product_id":null,
