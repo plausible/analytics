@@ -40,7 +40,7 @@ defmodule Plausible.Billing.Plans do
     owned_plan = get_regular_plan(user.subscription)
 
     cond do
-      Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
+      Application.get_env(:plausible, :environment) == "dev" -> @sandbox_plans
       !owned_plan -> if v4_available, do: @plans_v4, else: @plans_v3
       owned_plan.kind == :business -> @plans_v4
       owned_plan.generation == 1 -> @plans_v1
@@ -56,7 +56,7 @@ defmodule Plausible.Billing.Plans do
     owned_plan = get_regular_plan(user.subscription)
 
     cond do
-      Application.get_env(:plausible, :environment) == "dev" -> plans_sandbox()
+      Application.get_env(:plausible, :environment) == "dev" -> @sandbox_plans
       owned_plan && owned_plan.generation < 4 -> @plans_v3
       true -> @plans_v4
     end
@@ -219,13 +219,6 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all() do
-    @legacy_plans ++ @plans_v1 ++ @plans_v2 ++ @plans_v3 ++ @plans_v4 ++ plans_sandbox()
-  end
-
-  defp plans_sandbox() do
-    case Application.get_env(:plausible, :environment) do
-      "dev" -> @sandbox_plans
-      _ -> []
-    end
+    @legacy_plans ++ @plans_v1 ++ @plans_v2 ++ @plans_v3 ++ @plans_v4
   end
 end
