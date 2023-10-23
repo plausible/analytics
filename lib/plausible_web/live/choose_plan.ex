@@ -268,17 +268,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <% !@available -> %>
             <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
           <% @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) -> %>
-            <.render_change_plan_link
-              text={
-                change_plan_link_text(
-                  @owned_plan,
-                  @plan_to_render,
-                  @current_interval,
-                  @selected_interval
-                )
-              }
-              {assigns}
-            />
+            <.change_plan_link {assigns} />
           <% true -> %>
             <.paddle_button id={"#{@kind}-checkout"} {assigns}>Upgrade</.paddle_button>
         <% end %>
@@ -329,20 +319,21 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  defp render_change_plan_link(assigns) do
-    ~H"""
-    <.change_plan_link
-      plan_already_owned={@text == "Currently on this plan"}
-      billing_details_expired={
-        @user.subscription &&
-          @user.subscription.status in [Subscription.Status.past_due(), Subscription.Status.paused()]
-      }
-      {assigns}
-    />
-    """
-  end
-
   defp change_plan_link(assigns) do
+    text = change_plan_link_text(assigns)
+
+    billing_details_expired =
+      assigns.user.subscription.status in [
+        Subscription.Status.paused(),
+        Subscription.Status.past_due()
+      ]
+
+    assigns =
+      assigns
+      |> assign(:text, text)
+      |> assign(:plan_already_owned, text == "Currently on this plan")
+      |> assign(:billing_details_expired, billing_details_expired)
+
     ~H"""
     <.link
       id={"#{@kind}-checkout"}
@@ -581,10 +572,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp change_plan_link_text(
-         %Plan{kind: from_kind, monthly_pageview_limit: from_volume},
-         %Plan{kind: to_kind, monthly_pageview_limit: to_volume},
-         from_interval,
-         to_interval
+         %{
+           owned_plan: %Plan{kind: from_kind, monthly_pageview_limit: from_volume},
+           plan_to_render: %Plan{kind: to_kind, monthly_pageview_limit: to_volume},
+           current_interval: from_interval,
+           selected_interval: to_interval
+         } = _assigns
        ) do
     cond do
       from_kind == :business && to_kind == :growth ->
