@@ -1,4 +1,4 @@
-defmodule Plausible.Google.Api.VCRTest do
+defmodule Plausible.Google.Api.ImportIntegrationTest do
   use Plausible.DataCase, async: false
   use Plausible.Test.Support.HTTPMocker
 
