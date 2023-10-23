@@ -42,11 +42,9 @@ defmodule Plausible.Google.HTTP do
     else
       {:error, %{reason: %{status: status, body: body}}} ->
         Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
-        IO.inspect(body, label: :wrong_body)
         {:error, :request_failed}
 
-      {:error, reason} ->
-        IO.inspect(reason, label: :reason)
+      {:error, _reason} ->
         {:error, :request_failed}
     end
   end

@@ -1,8 +1,8 @@
 defmodule Plausible.Google.ApiTest do
   use Plausible.DataCase, async: false
-  alias Plausible.Google.Api
+  use Plausible.Test.Support.HTTPMocker
 
-  alias Plausible.Test.Support.HTTPMocker
+  alias Plausible.Google.Api
 
   import ExUnit.CaptureLog
   import Mox
@@ -267,7 +267,7 @@ defmodule Plausible.Google.ApiTest do
 
   describe "fetch_stats/3 with VCR cassetes" do
     test "returns name and visitor count", %{user: user, site: site} do
-      HTTPMocker.stub_with("google_analytics_stats.json")
+      mock_http_with("google_analytics_stats.json")
 
       insert(:google_auth,
         user: user,
@@ -286,7 +286,7 @@ defmodule Plausible.Google.ApiTest do
     end
 
     test "returns next page when page argument is set", %{user: user, site: site} do
-      HTTPMocker.stub_with("google_analytics_stats#with_page.json")
+      mock_http_with("google_analytics_stats#with_page.json")
 
       insert(:google_auth,
         user: user,
@@ -308,7 +308,7 @@ defmodule Plausible.Google.ApiTest do
     end
 
     test "defaults first page when page argument is not set", %{user: user, site: site} do
-      HTTPMocker.stub_with("google_analytics_stats#without_page.json")
+      mock_http_with("google_analytics_stats#without_page.json")
 
       insert(:google_auth,
         user: user,
@@ -327,7 +327,7 @@ defmodule Plausible.Google.ApiTest do
     end
 
     test "returns error when token refresh fails", %{user: user, site: site} do
-      HTTPMocker.stub_with("google_analytics_auth#invalid_grant.json")
+      mock_http_with("google_analytics_auth#invalid_grant.json")
 
       insert(:google_auth,
         user: user,
