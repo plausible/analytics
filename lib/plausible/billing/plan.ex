@@ -21,15 +21,17 @@ defmodule Plausible.Billing.Plan do
           }
           | :enterprise
 
-  def new(params, file_name) when is_map(params) do
-    params =
-      params
-      |> put_kind()
-      |> put_generation()
-      |> put_volume()
-      |> put_team_member_limit(file_name)
-      |> put_features(file_name)
+  def build(raw_params, file_name) when is_map(raw_params) do
+    raw_params
+    |> put_kind()
+    |> put_generation()
+    |> put_volume()
+    |> put_team_member_limit(file_name)
+    |> put_features(file_name)
+    |> new()
+  end
 
+  defp new(params) do
     struct!(__MODULE__, params)
   end
 
