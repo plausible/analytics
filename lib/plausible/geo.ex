@@ -47,7 +47,8 @@ defmodule Plausible.Geo do
           :ok =
             :locus.start_loader(@db, {:maxmind, edition},
               license_key: license_key,
-              database_cache_file: Path.join(opts[:cache_dir], edition <> ".mmdb.gz")
+              database_cache_file:
+                String.to_charlist(Path.join(opts[:cache_dir], edition <> ".mmdb.gz"))
             )
         else
           :ok = :locus.start_loader(@db, {:maxmind, edition}, license_key: license_key)
