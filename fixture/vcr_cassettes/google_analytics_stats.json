@@ -1,7 +1,7 @@
 [
   {
     "request": {
-      "body": "{\"dimensionFilterGroups\":{},\"dimensions\":[\"query\"],\"endDate\":\"2022-01-05\",\"rowLimit\":5,\"startDate\":\"2022-01-01\"}",
+      "body": "{\"dimensions\":[\"query\"],\"endDate\":\"2022-01-05\",\"startDate\":\"2022-01-01\",\"dimensionFilterGroups\":{},\"rowLimit\":5}",
       "headers": {
         "Authorization": "Bearer 123"
       },

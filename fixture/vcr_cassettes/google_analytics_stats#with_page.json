@@ -1,7 +1,7 @@
 [
   {
     "request": {
-      "body": "{\"dimensionFilterGroups\":[{\"filters\":[{\"dimension\":\"page\",\"expression\":\"https://sc-domain%3Adummy.test5\"}]}],\"dimensions\":[\"query\"],\"endDate\":\"2022-01-05\",\"rowLimit\":5,\"startDate\":\"2022-01-01\"}",
+      "body": "{\"dimensions\":[\"query\"],\"endDate\":\"2022-01-05\",\"startDate\":\"2022-01-01\",\"dimensionFilterGroups\":[{\"filters\":[{\"expression\":\"https://sc-domain%3Adummy.test5\",\"dimension\":\"page\"}]}],\"rowLimit\":5}",
       "headers": {
         "Authorization": "Bearer 123"
       },
