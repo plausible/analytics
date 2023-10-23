@@ -168,6 +168,7 @@ defmodule Plausible.Billing.PlansTest do
   describe "yearly_product_ids/0" do
     test "lists yearly plan ids" do
       assert [
+               "590753",
                "648089",
                "572810",
                "590752",
