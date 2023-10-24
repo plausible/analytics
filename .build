@@ -144,6 +144,7 @@ Plausible.Stats.Timeseries.html
 Plausible.Stats.Util.html
 Plausible.Stats.html
 Plausible.Test.Support.HTML.html
+Plausible.Test.Support.HTTPMocker.html
 Plausible.TestUtils.html
 Plausible.Themes.html
 Plausible.Timezones.html
@@ -301,8 +302,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-78373A3A.js
-dist/sidebar_items-AE11D5D4.js
+dist/search_data-B61F8F8A.js
+dist/sidebar_items-2C588244.js
 index.html
 readme.html
 search.html
