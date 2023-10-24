@@ -502,7 +502,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
           company_id: 10,
           job_id: 12,
           page_id: 15,
-          product_id: "vendor-11",
+          product_id: "vendor-6a01cfb6-717a-11ee-b962-0242ac120002",
           site_id: 9,
           careers_application_form_uuid: "313a26c2-741c-421c-9a6b-f39c02c8d35c"
         }
@@ -514,11 +514,42 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       event = get_event("special-props-test.com")
 
       assert Map.get(event, :campaign_id) == "vendor-8"
-      assert Map.get(event, :product_id) == "vendor-11"
+      assert Map.get(event, :product_id) == "vendor-6a01cfb6-717a-11ee-b962-0242ac120002"
       assert Map.get(event, :company_id) == 10
       assert Map.get(event, :job_id) == 12
       assert Map.get(event, :page_id) == 15
       assert Map.get(event, :site_id) == 9
+
+      assert Map.get(event, :careers_application_form_uuid) ==
+               "313a26c2-741c-421c-9a6b-f39c02c8d35c"
+
+      assert Map.get(event, :"meta.key") == []
+      assert Map.get(event, :"meta.value") == []
+    end
+
+    test "casts special props, invalidates specific params", %{conn: conn} do
+      params = %{
+        name: "Signup",
+        url: "http://gigride.live/",
+        domain: "special-props-validation-test.com",
+        props: %{
+          campaign_id: "12345",
+          company_id: 10,
+          page_id: 15,
+          product_id: "incorrect-product-id",
+          careers_application_form_uuid: "313a26c2-741c-421c-9a6b-f39c02c8d35c"
+        }
+      }
+
+      conn
+      |> post("/api/event", params)
+
+      event = get_event("special-props-validation-test.com")
+
+      assert Map.get(event, :campaign_id) == ""
+      assert Map.get(event, :product_id) == ""
+      assert Map.get(event, :company_id) == 10
+      assert Map.get(event, :page_id) == 15
 
       assert Map.get(event, :careers_application_form_uuid) ==
                "313a26c2-741c-421c-9a6b-f39c02c8d35c"

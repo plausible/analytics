@@ -1,6 +1,9 @@
 defmodule Plausible.ClickhouseEvent do
   use Ecto.Schema
+
   import Ecto.Changeset
+
+  alias Plausible.ValueHelpers
 
   @primary_key false
   schema "events" do
@@ -89,5 +92,27 @@ defmodule Plausible.ClickhouseEvent do
       empty_values: [nil, ""]
     )
     |> validate_required([:name, :domain, :hostname, :pathname, :event_id, :user_id, :timestamp])
+    |> validate_campaign_id()
+    |> validate_product_id()
+  end
+
+  defp validate_campaign_id(changeset) do
+    campaign_id = get_field(changeset, :campaign_id)
+
+    if ValueHelpers.validate(campaign_id, type: :prefixed_id) do
+      changeset
+    else
+      delete_change(changeset, :campaign_id)
+    end
+  end
+
+  defp validate_product_id(changeset) do
+    product_id = get_field(changeset, :product_id)
+
+    if ValueHelpers.validate(product_id, type: :prefixed_id) do
+      changeset
+    else
+      delete_change(changeset, :product_id)
+    end
   end
 end
