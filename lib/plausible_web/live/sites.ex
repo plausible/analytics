@@ -36,6 +36,8 @@ defmodule PlausibleWeb.Live.Sites do
       @keydown.escape.window="invitationOpen = false"
       class="container pt-6"
     >
+
+      <PlausibleWeb.Live.Components.Visitors.gradient_defs />
       <%= if @needs_to_upgrade == {:needs_to_upgrade, :no_active_subscription} do %>
         <div class="rounded-md bg-yellow-100 p-4">
           <div class="flex">
@@ -126,12 +128,12 @@ defmodule PlausibleWeb.Live.Sites do
           </div>
         <% end %>
 
-        <%= for site <- @sites.entries do %>
-          <div class="relative">
-            <%= link(to: "/" <> URI.encode_www_form(site.domain)) do %>
-              <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
-                <div class="w-full flex items-center justify-between space-x-4">
-                  <.favicon domain={site.domain} />
+            <%= for site <- @sites.entries do %>
+              <div class="relative">
+                <%= link(to: "/" <> URI.encode_www_form(site.domain)) do %>
+                  <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
+                    <div class="w-full flex items-center justify-between space-x-4">
+                      <.favicon domain={site.domain} />
                   <div class="flex-1 -mt-px w-full">
                     <h3
                       class="text-gray-900 font-medium text-lg truncate dark:text-gray-100"

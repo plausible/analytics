@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Live.Components.Visitors do
 
   attr :site, Plausible.Site, required: true
   attr :height, :integer, default: 50
+  attr :tick, :integer, default: 20
 
   def chart(assigns) do
     site = assigns.site
@@ -17,14 +18,16 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       site
       |> Plausible.Stats.timeseries(q, [:visitors])
       |> scale(assigns.height)
-      |> Enum.with_index(fn scaled_value, index -> "#{(index - 1) * 20},#{scaled_value}" end)
+      |> Enum.with_index(fn scaled_value, index -> 
+        "#{(index - 1) * assigns.tick},#{scaled_value}" 
+      end)
 
     clip_points =
       List.flatten([
-        "-20,#{assigns.height + 1}",
+        "-#{assigns.tick},#{assigns.height + 1}",
         points,
-        "#{(length(points) - 2) * 20},#{assigns.height + 1}",
-        "-20,#{assigns.height + 1}"
+        "#{(length(points) - 2) * assigns.tick},#{assigns.height + 1}",
+        "-#{assigns.tick},#{assigns.height + 1}"
       ])
 
     assigns =
@@ -36,10 +39,6 @@ defmodule PlausibleWeb.Live.Components.Visitors do
     ~H"""
     <svg viewBox={"0 0 #{24 * 20} #{@height + 1}"} class="chart w-full mb-2">
       <defs>
-        <linearGradient id={"chart-gradient-#{@id}"} x1="0" x2="0" y1="0" , y2="1">
-          <stop offset="0%" stop-color="lightblue" />
-          <stop offset="100%" stop-color="white" />
-        </linearGradient>
         <clipPath id={"gradient-cut-off-#{@id}"}>
           <polyline points={@clip_points} />
         </clipPath>
@@ -49,10 +48,23 @@ defmodule PlausibleWeb.Live.Components.Visitors do
         y="0"
         width={24 * 20}
         height={@height + 1}
-        fill={"url(#chart-gradient-#{@id})"}
+        fill="url(#chart-gradient-cut-off)"
         clip-path={"url(#gradient-cut-off-#{@id})"}
       />
       <polyline fill="none" stroke="#6366f1" stroke-width="3" points={@points} />
+    </svg>
+    """
+  end
+
+  def gradient_defs(assigns) do
+    ~H"""
+    <svg class="inline-block">
+      <defs>
+        <linearGradient id="chart-gradient-cut-off" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#C5CAE9" />
+          <stop offset="100%" stop-color="white" />
+        </linearGradient>
+      </defs>
     </svg>
     """
   end
