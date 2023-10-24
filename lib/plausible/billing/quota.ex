@@ -113,31 +113,30 @@ defmodule Plausible.Billing.Quota do
 
   @doc false
   def team_member_usage_query(user, site \\ nil) do
+    owned_sites_query = owned_sites_query(user)
+
+    owned_sites_query =
+      if site do
+        where(owned_sites_query, [os], os.site_id == ^site.id)
+      else
+        owned_sites_query
+      end
+
     team_members_query =
-      from os in subquery(owned_sites_query(user)),
+      from os in subquery(owned_sites_query),
         inner_join: sm in Plausible.Site.Membership,
         on: sm.site_id == os.site_id,
         inner_join: u in assoc(sm, :user),
-        select: %{email: u.email, site_id: os.site_id, role: sm.role}
+        where: sm.role != :owner,
+        select: u.email
 
-    team_members_and_invitations_query =
-      from i in Plausible.Auth.Invitation,
-        inner_join: os in subquery(owned_sites_query(user)),
-        on: i.site_id == os.site_id,
-        select: %{email: i.email, site_id: i.site_id, role: i.role},
-        union: ^team_members_query
-
-    query =
-      from itm in subquery(team_members_and_invitations_query),
-        where: itm.role != :owner,
-        select: %{email: itm.email, site_id: itm.site_id, role: itm.role},
-        distinct: itm.email
-
-    if site do
-      where(query, [itm], itm.site_id == ^site.id)
-    else
-      query
-    end
+    from i in Plausible.Auth.Invitation,
+      inner_join: os in subquery(owned_sites_query),
+      on: i.site_id == os.site_id,
+      where: i.role != :owner,
+      select: i.email,
+      union: ^team_members_query,
+      distinct: true
   end
 
   @spec features_usage(Plausible.Auth.User.t()) :: [atom()]
