@@ -119,13 +119,13 @@ build_metadata =
     {:error, error} ->
       error = Exception.format(:error, error)
 
-      Logger.warn("""
+      Logger.warning("""
       failed to parse $BUILD_METADATA: #{error}
 
           $BUILD_METADATA is set to #{build_metadata_raw}\
       """)
 
-      Logger.warn("falling back to empty build metadata, as if $BUILD_METADATA was set to {}")
+      Logger.warning("falling back to empty build metadata, as if $BUILD_METADATA was set to {}")
 
       _fallback = %{}
   end
@@ -164,10 +164,11 @@ ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", ge
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
+maxmind_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
 if System.get_env("DISABLE_AUTH") do
   require Logger
-  Logger.warn("DISABLE_AUTH env var is no longer supported")
+  Logger.warning("DISABLE_AUTH env var is no longer supported")
 end
 
 enable_email_verification =
@@ -560,6 +561,7 @@ geo_opts =
       [
         license_key: maxmind_license_key,
         edition: maxmind_edition,
+        cache_dir: maxmind_cache_dir,
         async: true
       ]
 

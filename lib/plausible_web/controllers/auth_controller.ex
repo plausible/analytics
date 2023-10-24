@@ -308,7 +308,10 @@ defmodule PlausibleWeb.AuthController do
     settings_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
     email_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
 
-    render_settings(conn, settings_changeset: settings_changeset, email_changeset: email_changeset)
+    render_settings(conn,
+      settings_changeset: settings_changeset,
+      email_changeset: email_changeset
+    )
   end
 
   def save_settings(conn, %{"user" => user_params}) do

@@ -60,14 +60,16 @@ defmodule PlausibleWeb.Plugins.API.ErrorsTest do
     test "formats changeset errors" do
       changeset = Example.changeset(%Example{}, %{email: "foo", age: 101})
 
-      assert Plug.Test.conn(:get, "/")
-             |> Errors.error(:bad_request, changeset)
-             |> json_response(400)
-             |> Map.fetch!("errors") == [
-               %{"detail" => "age: is invalid"},
-               %{"detail" => "email: has invalid format"},
-               %{"detail" => "name: can't be blank"}
-             ]
+      errors =
+        Plug.Test.conn(:get, "/")
+        |> Errors.error(:bad_request, changeset)
+        |> json_response(400)
+        |> Map.fetch!("errors")
+
+      assert Enum.count(errors) == 3
+      assert %{"detail" => "age: is invalid"} in errors
+      assert %{"detail" => "email: has invalid format"} in errors
+      assert %{"detail" => "name: can't be blank"} in errors
     end
   end
 end

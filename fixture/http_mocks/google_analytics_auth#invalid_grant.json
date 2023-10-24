@@ -1,0 +1,18 @@
+[
+  {
+    "status": 400,
+    "url": "https://www.googleapis.com/oauth2/v4/token",
+    "method": "post",
+    "request_body": {
+      "client_id": "fake_client_id",
+      "client_secret": "fake_client_secret",
+      "grant_type": "refresh_token",
+      "redirect_uri": "http://localhost:8000/auth/google/callback",
+      "refresh_token": "*****"
+    },
+    "response_body": {
+      "error": "invalid_grant",
+      "error_description": "Bad Request"
+    }
+  }
+]

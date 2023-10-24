@@ -42,7 +42,17 @@ defmodule Plausible.Geo do
     cond do
       license_key = opts[:license_key] ->
         edition = opts[:edition] || "GeoLite2-City"
-        :ok = :locus.start_loader(@db, {:maxmind, edition}, license_key: license_key)
+
+        if is_binary(opts[:cache_dir]) do
+          :ok =
+            :locus.start_loader(@db, {:maxmind, edition},
+              license_key: license_key,
+              database_cache_file:
+                String.to_charlist(Path.join(opts[:cache_dir], edition <> ".mmdb.gz"))
+            )
+        else
+          :ok = :locus.start_loader(@db, {:maxmind, edition}, license_key: license_key)
+        end
 
       path = opts[:path] ->
         :ok = :locus.start_loader(@db, path)
