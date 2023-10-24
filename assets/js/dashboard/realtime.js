@@ -10,7 +10,7 @@ import Locations from './stats/locations'
 import Devices from './stats/devices'
 import Behaviours from './stats/behaviours'
 import { withPinnedHeader } from './pinned-header-hoc';
-import { statsBoxClass } from '.';
+import { statsBoxClass } from './index';
 
 class Realtime extends React.Component {
   render() {

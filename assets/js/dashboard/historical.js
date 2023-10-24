@@ -12,7 +12,7 @@ import Devices from './stats/devices'
 import Behaviours from './stats/behaviours'
 import ComparisonInput from './comparison-input'
 import { withPinnedHeader } from './pinned-header-hoc';
-import { statsBoxClass } from '.';
+import { statsBoxClass } from './index';
 
 function Historical(props) {
   const tooltipBoundary = React.useRef(null)

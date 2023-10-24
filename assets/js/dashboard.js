@@ -2,10 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import 'url-search-params-polyfill';
 
-import Router from './router'
-import ErrorBoundary from './error-boundary'
-import * as api from './api'
-import * as timer from './util/realtime-update-timer'
+import Router from './dashboard/router'
+import ErrorBoundary from './dashboard/error-boundary'
+import * as api from './dashboard/api'
+import * as timer from './dashboard/util/realtime-update-timer'
 
 timer.start()
 
