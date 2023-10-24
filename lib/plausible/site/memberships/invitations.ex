@@ -1,18 +1,32 @@
 defmodule Plausible.Site.Memberships.Invitations do
   @moduledoc false
 
-  import Ecto.Query, only: [from: 2]
+  import Ecto.Query, only: [from: 2, where: 3]
 
   alias Plausible.Auth
   alias Plausible.Repo
 
   @spec list_for_email(String.t()) :: [Auth.Invitation.t()]
-  def list_for_email(email) do
+  def list_for_email(email, opts \\ []) do
+    domain_filter = Keyword.get(opts, :filter_by_domain)
+
     Repo.all(
-      from i in Auth.Invitation,
-        where: i.email == ^email
+      from(i in Auth.Invitation,
+        inner_join: s in assoc(i, :site),
+        where: i.email == ^email,
+        preload: [site: s]
+      )
+      |> maybe_filter_by_domain(domain_filter)
     )
-    |> Repo.preload(:site)
+  end
+
+  defp maybe_filter_by_domain(query, domain)
+       when byte_size(domain) >= 3 and byte_size(domain) <= 64 do
+    where(query, [_, s], ilike(s.domain, ^"%#{domain}%"))
+  end
+
+  defp maybe_filter_by_domain(query, _) do
+    query
   end
 
   @spec find_for_user(String.t(), Auth.User.t()) ::

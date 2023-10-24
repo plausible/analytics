@@ -11,22 +11,33 @@ defmodule Plausible.Sites do
   end
 
   @spec list(User.t(), map(), [non_neg_integer()]) :: %{entries: [Site.t()], pagination: map()}
-  def list(user, pagination_params, exclude_ids \\ []) do
-    {sites, pagination} =
-      Repo.paginate(
-        from(s in Plausible.Site,
-          join: sm in Plausible.Site.Membership,
-          on: sm.site_id == s.id,
-          where: sm.user_id == ^user.id,
-          where: s.id not in ^exclude_ids,
-          order_by: s.domain,
-          preload: [memberships: sm]
-        ),
-        pagination_params
+  def list(user, pagination_params, opts \\ []) do
+    exclude_ids = Keyword.get(opts, :exclude_ids, [])
+    domain_filter = Keyword.get(opts, :filter_by_domain)
+
+    sites_query =
+      from(s in Plausible.Site,
+        join: sm in Plausible.Site.Membership,
+        on: sm.site_id == s.id,
+        where: sm.user_id == ^user.id,
+        where: s.id not in ^exclude_ids,
+        order_by: s.domain,
+        preload: [memberships: sm]
       )
+      |> maybe_filter_by_domain(domain_filter)
+
+    {sites, pagination} =
+      Repo.paginate(sites_query, pagination_params)
 
     %{entries: sites, pagination: pagination}
   end
+
+  defp maybe_filter_by_domain(query, domain)
+       when byte_size(domain) >= 3 and byte_size(domain) <= 64 do
+    where(query, [s], ilike(s.domain, ^"%#{domain}%"))
+  end
+
+  defp maybe_filter_by_domain(query, _), do: query
 
   def create(user, params) do
     site_changeset = Site.changeset(%Site{}, params)

@@ -14,17 +14,10 @@ defmodule PlausibleWeb.Live.Sites do
   def mount(params, %{"current_user_id" => user_id}, socket) do
     socket =
       socket
+      |> assign_new(:filter_text, fn -> "" end)
+      |> assign_new(:params, fn -> params end)
       |> assign_new(:user, fn -> Repo.get!(Auth.User, user_id) end)
-      |> assign_new(:invitations, fn %{user: user} ->
-        Invitations.list_for_email(user.email)
-      end)
-      |> assign_new(:sites, fn %{user: user, invitations: invitations} ->
-        excluded_site_ids = Enum.map(invitations, & &1.site_id)
-        Sites.list(user, params, excluded_site_ids)
-      end)
-      |> assign_new(:visitors, fn %{sites: sites} ->
-        Plausible.Stats.Clickhouse.last_24h_visitors(sites.entries)
-      end)
+      |> load_sites()
       |> assign_new(:needs_to_upgrade, fn %{user: user, sites: sites} ->
         user_owns_sites =
           Enum.any?(sites.entries, fn site -> List.first(site.memberships).role == :owner end) ||
@@ -83,8 +76,9 @@ defmodule PlausibleWeb.Live.Sites do
         <h2 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100 sm:text-3xl sm:leading-9 sm:truncate flex-shrink-0">
           My Sites
         </h2>
-        <a href="/sites/new" class="button my-2 sm:my-0 w-auto">+ Add Website</a>
       </div>
+
+      <.search_form filter_text={@filter_text} />
 
       <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <%= if Enum.empty?(@sites.entries ++ @invitations) do %>
@@ -329,6 +323,44 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
+  attr :filter_text, :string, default: ""
+
+  def search_form(assigns) do
+    ~H"""
+    <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
+      <form id="filter-form" phx-change="filter">
+        <div class="text-gray-800 text-sm inline-flex items-center">
+          <div class="relative rounded-md shadow-sm flex">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
+            </div>
+            <input
+              type="text"
+              name="filter-text"
+              id="filter-text"
+              class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+              placeholder="Search Sites"
+              value={@filter_text}
+            />
+          </div>
+
+          <Heroicons.backspace
+            :if={String.trim(@filter_text) != ""}
+            class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
+            phx-click="reset-filter-text"
+            id="reset-filter"
+          />
+        </div>
+      </form>
+      <div class="mt-4 flex sm:ml-4 sm:mt-0">
+        <a href="/sites/new" class="button">
+          + Add Website
+        </a>
+      </div>
+    </div>
+    """
+  end
+
   def favicon(assigns) do
     src = "/favicon/sources/#{assigns.domain}"
     assigns = assign(assigns, :src, src)
@@ -336,5 +368,53 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <img src={@src} class="w-4 h-4 flex-shrink-0 mt-px" />
     """
+  end
+
+  def handle_event("filter", %{"filter-text" => filter_text}, socket) do
+    socket =
+      socket
+      |> assign(:filter_text, filter_text)
+      |> load_sites(force_refresh?: true)
+
+    {:noreply, socket}
+  end
+
+  def handle_event("reset-filter-text", _params, socket) do
+    socket =
+      socket
+      |> assign(:filter_text, "")
+      |> load_sites(force_refresh?: true)
+
+    {:noreply, socket}
+  end
+
+  defp load_sites(socket, opts \\ []) do
+    assign_fn =
+      if Keyword.get(opts, :force_refresh?, false) do
+        fn socket, param, value_fn ->
+          assign(socket, param, value_fn.(socket.assigns))
+        end
+      else
+        &assign_new/3
+      end
+
+    socket
+    |> assign_fn.(:invitations, fn %{filter_text: filter_text, user: user} ->
+      Invitations.list_for_email(user.email, filter_by_domain: filter_text)
+    end)
+    |> assign_fn.(:sites, fn %{
+                               user: user,
+                               params: params,
+                               invitations: invitations,
+                               filter_text: filter_text
+                             } ->
+      excluded_site_ids = Enum.map(invitations, & &1.site_id)
+      Sites.list(user, params, excluded_ids: excluded_site_ids, filter_by_domain: filter_text)
+    end)
+    |> assign_fn.(:visitors, fn %{sites: sites, invitations: invitations} ->
+      Plausible.Stats.Clickhouse.last_24h_visitors(
+        sites.entries ++ Enum.map(invitations, & &1.site)
+      )
+    end)
   end
 end
