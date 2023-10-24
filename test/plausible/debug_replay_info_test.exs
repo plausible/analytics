@@ -11,6 +11,7 @@ defmodule Plausible.DebugReplayInfoTest do
     end
   end
 
+  @tag :slow
   test "adds replayable sentry context" do
     site = insert(:site)
     query = Plausible.Stats.Query.from(site, %{"period" => "day"})

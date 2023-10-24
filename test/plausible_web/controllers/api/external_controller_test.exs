@@ -91,6 +91,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert NaiveDateTime.compare(e1.timestamp, e2.timestamp) == :eq
     end
 
+    @tag :slow
     test "timestamps differ when two events sent in a row", %{conn: conn, site: site} do
       params = %{
         domain: site.domain,

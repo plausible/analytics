@@ -1,6 +1,7 @@
 defmodule Plausible.Google.ApiTest do
-  use Plausible.DataCase, async: false
-  use ExVCR.Mock, adapter: ExVCR.Adapter.Finch
+  use Plausible.DataCase, async: true
+  use Plausible.Test.Support.HTTPMocker
+
   alias Plausible.Google.Api
 
   import ExUnit.CaptureLog
@@ -24,6 +25,20 @@ defmodule Plausible.Google.ApiTest do
                     ]
                     |> Enum.map(&File.read!/1)
                     |> Enum.map(&Jason.decode!/1)
+
+  @tag :slow
+  test "imports page views from Google Analytics", %{site: site} do
+    mock_http_with("google_analytics_import#1.json")
+
+    view_id = "54297898"
+    date_range = Date.range(~D[2011-01-01], ~D[2022-07-19])
+
+    future = DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_iso8601()
+    auth = {"***", "refresh_token", future}
+
+    assert :ok == Plausible.Google.Api.import_analytics(site, date_range, view_id, auth)
+    assert 1_495_150 == Plausible.Stats.Clickhouse.imported_pageview_count(site)
+  end
 
   @tag :slow
   test "import_analytics/4 refreshes OAuth token when needed", %{site: site} do
@@ -64,6 +79,7 @@ defmodule Plausible.Google.ApiTest do
       {:ok, buffer: pid}
     end
 
+    @tag :slow
     test "will fetch and persist import data from Google Analytics", %{site: site, buffer: buffer} do
       request = %Plausible.Google.ReportRequest{
         dataset: "imported_exit_pages",
@@ -265,84 +281,81 @@ defmodule Plausible.Google.ApiTest do
   end
 
   describe "fetch_stats/3 with VCR cassetes" do
-    # We need real HTTP Client for VCR tests
-    setup_patch_env(:http_impl, Plausible.HTTPClient)
-
     test "returns name and visitor count", %{user: user, site: site} do
-      use_cassette "google_analytics_stats", match_requests_on: [:request_body] do
-        insert(:google_auth,
-          user: user,
-          site: site,
-          property: "sc-domain:dummy.test",
-          expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
-        )
+      mock_http_with("google_analytics_stats.json")
 
-        query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+      insert(:google_auth,
+        user: user,
+        site: site,
+        property: "sc-domain:dummy.test",
+        expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
+      )
 
-        assert {:ok,
-                [
-                  %{name: ["keyword1", "keyword2"], visitors: 25},
-                  %{name: ["keyword3", "keyword4"], visitors: 15}
-                ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
-      end
+      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+
+      assert {:ok,
+              [
+                %{name: ["keyword1", "keyword2"], visitors: 25},
+                %{name: ["keyword3", "keyword4"], visitors: 15}
+              ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
     end
 
     test "returns next page when page argument is set", %{user: user, site: site} do
-      use_cassette "google_analytics_stats#with_page", match_requests_on: [:request_body] do
-        insert(:google_auth,
-          user: user,
-          site: site,
-          property: "sc-domain:dummy.test",
-          expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
-        )
+      mock_http_with("google_analytics_stats#with_page.json")
 
-        query = %Plausible.Stats.Query{
-          filters: %{"page" => 5},
-          date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])
-        }
+      insert(:google_auth,
+        user: user,
+        site: site,
+        property: "sc-domain:dummy.test",
+        expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
+      )
 
-        assert {:ok,
-                [
-                  %{name: ["keyword1", "keyword2"], visitors: 25},
-                  %{name: ["keyword3", "keyword4"], visitors: 15}
-                ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
-      end
+      query = %Plausible.Stats.Query{
+        filters: %{"page" => 5},
+        date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])
+      }
+
+      assert {:ok,
+              [
+                %{name: ["keyword1", "keyword2"], visitors: 25},
+                %{name: ["keyword3", "keyword4"], visitors: 15}
+              ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
     end
 
     test "defaults first page when page argument is not set", %{user: user, site: site} do
-      use_cassette "google_analytics_stats#without_page", match_requests_on: [:request_body] do
-        insert(:google_auth,
-          user: user,
-          site: site,
-          property: "sc-domain:dummy.test",
-          expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
-        )
+      mock_http_with("google_analytics_stats#without_page.json")
 
-        query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+      insert(:google_auth,
+        user: user,
+        site: site,
+        property: "sc-domain:dummy.test",
+        expires: NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
+      )
 
-        assert {:ok,
-                [
-                  %{name: ["keyword1", "keyword2"], visitors: 25},
-                  %{name: ["keyword3", "keyword4"], visitors: 15}
-                ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
-      end
+      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+
+      assert {:ok,
+              [
+                %{name: ["keyword1", "keyword2"], visitors: 25},
+                %{name: ["keyword3", "keyword4"], visitors: 15}
+              ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
     end
 
     test "returns error when token refresh fails", %{user: user, site: site} do
-      use_cassette "google_analytics_auth#invalid_grant" do
-        insert(:google_auth,
-          user: user,
-          site: site,
-          property: "sc-domain:dummy.test",
-          access_token: "*****",
-          refresh_token: "*****",
-          expires: NaiveDateTime.add(NaiveDateTime.utc_now(), -3600)
-        )
+      mock_http_with("google_analytics_auth#invalid_grant.json")
 
-        query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+      insert(:google_auth,
+        user: user,
+        site: site,
+        property: "sc-domain:dummy.test",
+        access_token: "*****",
+        refresh_token: "*****",
+        expires: NaiveDateTime.add(NaiveDateTime.utc_now(), -3600)
+      )
 
-        assert {:error, "invalid_grant"} = Plausible.Google.Api.fetch_stats(site, query, 5)
-      end
+      query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
+
+      assert {:error, "invalid_grant"} = Plausible.Google.Api.fetch_stats(site, query, 5)
     end
   end
 

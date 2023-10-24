@@ -42,6 +42,7 @@ defmodule Plausible.Site.GateKeeperTest do
     assert {:deny, :throttle} = GateKeeper.check(domain, opts)
   end
 
+  @tag :slow
   test "rate limiting works with scale window", %{test: test, opts: opts} do
     domain = "site1.example.com"
 

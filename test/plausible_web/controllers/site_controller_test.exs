@@ -506,6 +506,12 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "GET /:website/settings/integrations for self-hosting" do
     setup [:create_user, :log_in, :create_site]
 
+    setup_patch_env(:google,
+      client_id: nil,
+      client_secret: nil,
+      api_url: "https://www.googleapis.com"
+    )
+
     test "display search console settings", %{conn: conn, site: site} do
       conn = get(conn, "/#{site.domain}/settings/integrations")
       resp = html_response(conn, 200)

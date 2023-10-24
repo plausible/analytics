@@ -155,6 +155,7 @@ defmodule PlausibleWeb.Live.Components.FormTest do
       refute text(p_hint) =~ "Test suggestion 2."
     end
 
+    @tag :slow
     test "favors hint warning over suggestion when both present" do
       doc =
         render_component(&Form.strength_meter/1,
