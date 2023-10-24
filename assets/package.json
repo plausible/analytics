@@ -19,6 +19,7 @@
     "@tailwindcss/typography": "^0.4.1",
     "abortcontroller-polyfill": "^1.7.3",
     "alpinejs": "^3.13.1",
+    "autoprefixer": "^10.4.15",
     "chart.js": "^3.3.2",
     "chartjs-plugin-datalabels": "^2.2.0",
     "classnames": "^2.3.1",
