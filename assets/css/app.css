@@ -1,13 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-
-/* import "flatpickr/dist/flatpickr.min.css" */
+@import "tailwindcss/base";
+@import "flatpickr/dist/flatpickr.min.css";
 @import "./modal.css";
 @import "./loader.css";
 @import "./tooltip.css";
 @import "./flatpickr.css";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 [x-cloak] { display: none; }
 
