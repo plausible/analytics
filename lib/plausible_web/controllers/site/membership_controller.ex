@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Site.MembershipController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Sites
-  alias Plausible.Site.Membership
+  alias Plausible.Site.{Membership, Memberships}
 
   @only_owner_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
 
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
 
-    case Sites.invite(site, conn.assigns.current_user, email, role) do
+    case Memberships.CreateInvitation.invite(site, conn.assigns.current_user, email, role) do
       {:ok, invitation} ->
         conn
         |> put_flash(
@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
 
-    case Sites.invite(site, conn.assigns.current_user, email, :owner) do
+    case Memberships.CreateInvitation.invite(site, conn.assigns.current_user, email, :owner) do
       {:ok, _invitation} ->
         conn
         |> put_flash(:success, "Site transfer request has been sent to #{email}")
