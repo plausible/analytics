@@ -241,7 +241,33 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp plan_box(assigns) do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
-    assigns = assign(assigns, :paddle_product_id, paddle_product_id)
+    change_plan_link_text = change_plan_link_text(assigns)
+
+    billing_details_expired =
+      assigns.user.subscription &&
+        assigns.user.subscription.status in [
+          Subscription.Status.paused(),
+          Subscription.Status.past_due()
+        ]
+
+    {checkout_disabled, disabled_message} =
+      cond do
+        change_plan_link_text == "Currently on this plan" ->
+          {true, nil}
+
+        billing_details_expired ->
+          {true, "Please update your billing details first"}
+
+        true ->
+          {false, nil}
+      end
+
+    assigns =
+      assigns
+      |> assign(:paddle_product_id, paddle_product_id)
+      |> assign(:change_plan_link_text, change_plan_link_text)
+      |> assign(:checkout_disabled, checkout_disabled)
+      |> assign(:disabled_message, disabled_message)
 
     ~H"""
     <div
@@ -272,6 +298,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <% true -> %>
             <.paddle_button id={"#{@kind}-checkout"} {assigns}>Upgrade</.paddle_button>
         <% end %>
+        <p :if={@disabled_message} class="h-0 text-center text-sm text-red-700 dark:text-red-500">
+          <%= @disabled_message %>
+        </p>
       </div>
       <%= if @kind == :growth && @plan_to_render.generation < 4 do %>
         <.growth_grandfathering_notice />
@@ -320,39 +349,18 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   defp change_plan_link(assigns) do
-    text = change_plan_link_text(assigns)
-
-    billing_details_expired =
-      assigns.user.subscription.status in [
-        Subscription.Status.paused(),
-        Subscription.Status.past_due()
-      ]
-
-    assigns =
-      assigns
-      |> assign(:text, text)
-      |> assign(:plan_already_owned, text == "Currently on this plan")
-      |> assign(:billing_details_expired, billing_details_expired)
-
     ~H"""
     <.link
       id={"#{@kind}-checkout"}
       href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_preview, @paddle_product_id)}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
-        !(@plan_already_owned || @billing_details_expired) && "bg-indigo-600 hover:bg-indigo-500",
-        (@plan_already_owned || @billing_details_expired) &&
-          "pointer-events-none bg-gray-400 dark:bg-gray-600"
+        !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
+        @checkout_disabled && "pointer-events-none bg-gray-400 dark:bg-gray-600"
       ]}
     >
-      <%= @text %>
+      <%= @change_plan_link_text %>
     </.link>
-    <p
-      :if={@billing_details_expired && !@plan_already_owned}
-      class="h-0 text-center text-sm text-red-700 dark:text-red-500"
-    >
-      Please update your billing details first
-    </p>
     """
   end
 
@@ -599,6 +607,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         "Upgrade"
     end
   end
+
+  defp change_plan_link_text(_), do: nil
 
   defp get_available_volumes(%{business: business_plans, growth: growth_plans}) do
     growth_volumes = Enum.map(growth_plans, & &1.monthly_pageview_limit)
