@@ -65,7 +65,7 @@
                         <.dropdown_link new_tab href="https://plausible.io/contact">
                           Contact Support
                         </.dropdown_link>
-                        <.dropdown_link new_tab href="https://feedback.plausible.io">
+                        <.dropdown_link new_tab href={feedback_link(@conn.assigns[:current_user])}>
                           Feature Requests
                         </.dropdown_link>
                       <% end %>
