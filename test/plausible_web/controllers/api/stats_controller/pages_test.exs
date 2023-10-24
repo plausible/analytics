@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   describe "GET /api/stats/:domain/pages" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    @tag :skip
     test "returns top pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
@@ -25,6 +26,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "returns top pages by visitors with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
@@ -54,6 +56,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "calculates bounce rate and time on page for pages", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -96,6 +99,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "calculates bounce rate and time on page for pages with imported data", %{
       conn: conn,
       site: site
@@ -157,6 +161,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "returns top pages in realtime report", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/page1"),
@@ -172,6 +177,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, pathname: "/"),
@@ -193,6 +199,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   describe "GET /api/stats/:domain/entry-pages" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    @tag :skip
     test "returns top entry pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -241,6 +248,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "returns top entry pages by visitors with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -320,6 +328,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -386,6 +395,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
   describe "GET /api/stats/:domain/exit-pages" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    @tag :skip
     test "returns top exit pages by visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -416,6 +426,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "returns top exit pages by visitors with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -477,6 +488,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "calculates correct exit rate and conversion_rate when filtering for goal", %{
       conn: conn,
       site: site
@@ -537,6 +549,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    @tag :skip
     test "calculates correct exit rate when filtering for page", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

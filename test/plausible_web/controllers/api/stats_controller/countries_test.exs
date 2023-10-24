@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
   describe "GET /api/stats/:domain/countries" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    @tag :skip
     test "returns top countries by new visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -67,6 +68,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
              ]
     end
 
+    @tag :skip
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

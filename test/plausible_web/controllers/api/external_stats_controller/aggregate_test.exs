@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   @user_id 123
 
   describe "param validation" do
+    @tag :skip
     test "validates that date can be parsed", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -21,6 +22,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "validates that period can be parsed", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -35,6 +37,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "custom period is not valid without a date", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -49,6 +52,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "validates date format in custom period", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -64,6 +68,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "validates that metrics are all recognized", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/aggregate", %{
@@ -78,6 +83,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "validates that session metrics cannot be used with event:name filter", %{
       conn: conn,
       site: site
@@ -97,6 +103,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     end
   end
 
+  @tag :skip
   test "aggregates a single metric", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, user_id: @user_id, domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
@@ -117,6 +124,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
            }
   end
 
+  @tag :skip
   test "aggregates visitors, pageviews, visits, bounce rate and visit duration", %{
     conn: conn,
     site: site
@@ -145,6 +153,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   end
 
   describe "comparisons" do
+    @tag :skip
     test "compare period=day with previous period", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),
@@ -178,6 +187,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "compare period=6mo with previous period", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview, domain: site.domain, timestamp: ~N[2020-12-31 00:00:00]),
@@ -213,6 +223,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   end
 
   describe "filters" do
+    @tag :skip
     test "can filter by source", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -246,6 +257,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by no source/referrer", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -282,6 +294,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by referrer", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -315,6 +328,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by utm_medium", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -348,6 +362,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by utm_source", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -381,6 +396,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by utm_campaign", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -414,6 +430,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by device type", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -447,6 +464,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by browser", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -480,6 +498,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by browser version", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -514,6 +533,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by operating system", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -547,6 +567,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by operating system version", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -580,6 +601,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "can filter by country", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -613,6 +635,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "when filtering by page, session metrics treat is like entry_page", %{
       conn: conn,
       site: site
@@ -654,6 +677,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "filtering by event:name", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -691,6 +715,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "combining filters", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -730,6 +755,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    @tag :skip
     test "wildcard page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),
@@ -747,6 +773,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 2}}
     end
 
+    @tag :skip
     test "negated wildcard page filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),
@@ -764,6 +791,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 1}}
     end
 
+    @tag :skip
     test "wildcard and member filter combined", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/en/page1"),

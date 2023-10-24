@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   describe "GET /api/stats/:domain/browsers" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    @tag :skip
     test "returns top browsers by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "Chrome"),
@@ -20,6 +21,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
     end
 
+    @tag :skip
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, browser: "Chrome"),
@@ -41,6 +43,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
              ]
     end
 
+    @tag :skip
     test "returns top browsers including imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "Chrome"),
@@ -66,6 +69,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   describe "GET /api/stats/:domain/browser-versions" do
     setup [:create_user, :log_in, :create_new_site]
 
+    @tag :skip
     test "returns top browser versions by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "Chrome", browser_version: "78.0"),

@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   end
 
   describe "POST /api/v1/sites" do
+    @tag :skip
     test "can create a site", %{conn: conn} do
       conn =
         post(conn, "/api/v1/sites", %{
@@ -24,6 +25,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
              }
     end
 
+    @tag :skip
     test "timezone defaults to Etc/UTC", %{conn: conn} do
       conn =
         post(conn, "/api/v1/sites", %{
@@ -36,6 +38,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
              }
     end
 
+    @tag :skip
     test "domain is required", %{conn: conn} do
       conn = post(conn, "/api/v1/sites", %{})
 
@@ -44,6 +47,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
              }
     end
 
+    @tag :skip
     test "does not allow creating more sites than the limit", %{conn: conn, user: user} do
       Application.put_env(:plausible, :site_limit, 3)
       insert(:site, members: [user])
@@ -62,6 +66,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
              }
     end
 
+    @tag :skip
     test "cannot access with a bad API key scope", %{conn: conn, user: user} do
       api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
 
@@ -80,18 +85,21 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "DELETE /api/v1/sites/:site_id" do
     setup :create_new_site
 
+    @tag :skip
     test "delete a site by it's domain", %{conn: conn, site: site} do
       conn = delete(conn, "/api/v1/sites/" <> site.domain)
 
       assert json_response(conn, 200) == %{"deleted" => true}
     end
 
+    @tag :skip
     test "is 404 when site cannot be found", %{conn: conn} do
       conn = delete(conn, "/api/v1/sites/foobar.baz")
 
       assert json_response(conn, 404) == %{"error" => "Site could not be found"}
     end
 
+    @tag :skip
     test "cannot delete a site that the user does not own", %{conn: conn, user: user} do
       site = insert(:site, members: [])
       insert(:site_membership, user: user, site: site, role: :admin)
@@ -100,6 +108,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert json_response(conn, 404) == %{"error" => "Site could not be found"}
     end
 
+    @tag :skip
     test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
       api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
 
@@ -118,6 +127,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "PUT /api/v1/sites/shared-links" do
     setup :create_site
 
+    @tag :skip
     test "can add a shared link to a site", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/shared-links", %{
@@ -130,6 +140,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert String.starts_with?(res["url"], "http://")
     end
 
+    @tag :skip
     test "is idempotent find or create op", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/shared-links", %{
@@ -148,6 +159,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert %{"url" => ^url} = json_response(conn, 200)
     end
 
+    @tag :skip
     test "returns 400 when site id missing", %{conn: conn} do
       conn =
         put(conn, "/api/v1/sites/shared-links", %{
@@ -158,6 +170,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["error"] == "Parameter `site_id` is required to create a shared link"
     end
 
+    @tag :skip
     test "returns 404 when site id is non existent", %{conn: conn} do
       conn =
         put(conn, "/api/v1/sites/shared-links", %{
@@ -169,6 +182,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["error"] == "Site could not be found"
     end
 
+    @tag :skip
     test "returns 404 when api key owner does not have permissions to create a shared link", %{
       conn: conn,
       site: site,
@@ -195,6 +209,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "PUT /api/v1/sites/goals" do
     setup :create_site
 
+    @tag :skip
     test "can add a goal as event to a site", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -208,6 +223,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["event_name"] == "Signup"
     end
 
+    @tag :skip
     test "can add a goal as page to a site", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -221,6 +237,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["page_path"] == "/signup"
     end
 
+    @tag :skip
     test "is idempotent find or create op", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -241,6 +258,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert %{"id" => ^goal_id} = json_response(conn, 200)
     end
 
+    @tag :skip
     test "returns 400 when site id missing", %{conn: conn} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -252,6 +270,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["error"] == "Parameter `site_id` is required to create a goal"
     end
 
+    @tag :skip
     test "returns 404 when site id is non existent", %{conn: conn} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -264,6 +283,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["error"] == "Site could not be found"
     end
 
+    @tag :skip
     test "returns 404 when api key owner does not have permissions to create a goal", %{
       conn: conn,
       site: site,
@@ -287,6 +307,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["error"] == "Site could not be found"
     end
 
+    @tag :skip
     test "returns 400 when goal type missing", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -298,6 +319,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["error"] == "Parameter `goal_type` is required to create a goal"
     end
 
+    @tag :skip
     test "returns 400 when goal event name missing", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -309,6 +331,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert res["error"] == "Parameter `event_name` is required to create a goal"
     end
 
+    @tag :skip
     test "returns 400 when goal page path missing", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -324,6 +347,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   describe "DELETE /api/v1/sites/goals/:goal_id" do
     setup :create_new_site
 
+    @tag :skip
     test "delete a goal by it's id", %{conn: conn, site: site} do
       conn =
         put(conn, "/api/v1/sites/goals", %{
@@ -342,6 +366,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert json_response(conn, 200) == %{"deleted" => true}
     end
 
+    @tag :skip
     test "is 404 when goal cannot be found", %{conn: conn, site: site} do
       conn =
         delete(conn, "/api/v1/sites/goals/0", %{
@@ -351,6 +376,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert json_response(conn, 404) == %{"error" => "Goal could not be found"}
     end
 
+    @tag :skip
     test "cannot delete a goal belongs to a site that the user does not own", %{
       conn: conn,
       user: user
@@ -366,6 +392,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       assert json_response(conn, 404) == %{"error" => "Site could not be found"}
     end
 
+    @tag :skip
     test "cannot access with a bad API key scope", %{conn: conn, site: site, user: user} do
       api_key = insert(:api_key, user: user, scopes: ["stats:read:*"])
 

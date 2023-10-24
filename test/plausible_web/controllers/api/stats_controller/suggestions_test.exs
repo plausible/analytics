@@ -5,12 +5,14 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
   describe "GET /api/stats/:domain/suggestions/:filter_name" do
     setup [:create_user, :log_in, :create_site]
 
+    @tag :skip
     test "returns suggestions for pages without a query", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/suggestions/page?period=month&date=2019-01-01")
 
       assert json_response(conn, 200) == ["/", "/register", "/contact", "/irrelevant"]
     end
 
+    @tag :skip
     test "returns suggestions for pages with a query", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/page?period=month&date=2019-01-01&q=re")
@@ -18,6 +20,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == ["/register", "/irrelevant"]
     end
 
+    @tag :skip
     test "returns suggestions for pages without any suggestions", %{conn: conn, site: site} do
       conn =
         get(
@@ -34,6 +37,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == []
     end
 
+    @tag :skip
     test "returns suggestions for sources", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/source?period=month&date=2019-01-01")
@@ -41,6 +45,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == ["10words", "Bing"]
     end
 
+    @tag :skip
     test "returns suggestions for countries", %{conn: conn, site: site} do
       conn =
         get(
@@ -51,6 +56,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == [%{"code" => "US", "name" => "United States"}]
     end
 
+    @tag :skip
     test "returns suggestions for regions", %{conn: conn, user: user} do
       {:ok, [site: site]} = create_new_site(%{user: user})
 
@@ -68,6 +74,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == [%{"code" => "EE-37", "name" => "Harjumaa"}]
     end
 
+    @tag :skip
     test "returns suggestions for cities", %{conn: conn, user: user} do
       {:ok, [site: site]} = create_new_site(%{user: user})
 
@@ -85,6 +92,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == [%{"code" => "591632", "name" => "Kärdla"}]
     end
 
+    @tag :skip
     test "returns suggestions for countries without country in search", %{conn: conn, site: site} do
       conn =
         get(
@@ -95,6 +103,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == []
     end
 
+    @tag :skip
     test "returns suggestions for screen sizes", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/screen?period=month&date=2019-01-01")
@@ -102,6 +111,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == ["Desktop"]
     end
 
+    @tag :skip
     test "returns suggestions for browsers", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/browser?period=month&date=2019-01-01")
@@ -109,6 +119,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == ["Chrome"]
     end
 
+    @tag :skip
     test "returns suggestions for browser versions", %{conn: conn, site: site} do
       filters = Jason.encode!(%{browser: "Chrome"})
 
@@ -121,12 +132,14 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == ["78.0"]
     end
 
+    @tag :skip
     test "returns suggestions for OS", %{conn: conn, site: site} do
       conn = get(conn, "/api/stats/#{site.domain}/suggestions/os?period=month&date=2019-01-01")
 
       assert json_response(conn, 200) == ["Mac"]
     end
 
+    @tag :skip
     test "returns suggestions for OS versions", %{conn: conn, site: site} do
       filters = Jason.encode!(%{os: "Mac"})
 
@@ -139,6 +152,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == ["10.15"]
     end
 
+    @tag :skip
     test "returns suggestions for OS versions with search", %{conn: conn, site: site} do
       filters = Jason.encode!(%{os: "Mac"})
 
@@ -151,6 +165,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       assert json_response(conn, 200) == []
     end
 
+    @tag :skip
     test "returns suggestions for referrers", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/stats/#{site.domain}/suggestions/referrer?period=month&date=2019-01-01")

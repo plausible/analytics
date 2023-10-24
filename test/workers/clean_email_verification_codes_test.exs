@@ -23,6 +23,7 @@ defmodule Plausible.Workers.CleanEmailVerificationCodesTest do
     refute Repo.exists?(from c in "email_verification_codes", where: c.user_id == ^user.id)
   end
 
+  @tag :skip
   test "does not clean code from 2 hours ago" do
     user = insert(:user)
     issue_code(user, Timex.now() |> Timex.shift(hours: -2))

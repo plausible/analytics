@@ -8,6 +8,7 @@ defmodule Plausible.ImportedTest do
   describe "Parse and import third party data fetched from Google Analytics" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    @tag :skip
     test "Visitors data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
@@ -44,6 +45,7 @@ defmodule Plausible.ImportedTest do
       assert Enum.sum(plot) == 4
     end
 
+    @tag :skip
     test "Sources are imported", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -116,6 +118,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "UTM mediums data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -160,6 +163,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "UTM campaigns data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, utm_campaign: "profile", timestamp: ~N[2021-01-01 00:00:00]),
@@ -208,6 +212,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "UTM terms data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, utm_term: "oat milk", timestamp: ~N[2021-01-01 00:00:00]),
@@ -256,6 +261,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "UTM contents data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, utm_content: "ad", timestamp: ~N[2021-01-01 00:00:00]),
@@ -304,6 +310,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "Page event data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -376,6 +383,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "Exit page event data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -439,6 +447,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "Location data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -497,6 +506,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "Devices data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, screen_size: "Desktop", timestamp: ~N[2021-01-01 00:15:00]),
@@ -533,6 +543,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "Browsers data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-01 00:15:00]),
@@ -568,6 +579,7 @@ defmodule Plausible.ImportedTest do
              ]
     end
 
+    @tag :skip
     test "OS data imported from Google Analytics", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),

@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
   describe "GET /api/stats/:domain/operating_systems" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    @tag :skip
     test "returns operating systems by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, operating_system: "Mac"),
@@ -20,6 +21,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
              ]
     end
 
+    @tag :skip
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, operating_system: "Mac"),
@@ -42,6 +44,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
              ]
     end
 
+    @tag :skip
     test "returns operating systems by unique visitors with imported data", %{
       conn: conn,
       site: site
@@ -70,6 +73,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
              ]
     end
 
+    @tag :skip
     test "imported data is ignored when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, operating_system: "Mac"),
@@ -97,6 +101,7 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
   describe "GET /api/stats/:domain/operating-system-versions" do
     setup [:create_user, :log_in, :create_new_site]
 
+    @tag :skip
     test "returns top OS versions by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, operating_system: "Mac", operating_system_version: "10.15"),

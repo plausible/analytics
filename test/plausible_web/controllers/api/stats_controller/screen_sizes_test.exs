@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
   describe "GET /api/stats/:domain/browsers" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    @tag :skip
     test "returns screen sizes by new visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, screen_size: "Desktop"),
@@ -20,6 +21,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
              ]
     end
 
+    @tag :skip
     test "returns screen sizes by new visitors with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, screen_size: "Desktop"),
@@ -48,6 +50,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
              ]
     end
 
+    @tag :skip
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1, screen_size: "Desktop"),

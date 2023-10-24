@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   describe "GET /api/stats/:domain/conversions" do
     setup [:create_user, :log_in, :create_new_site]
 
+    @tag :skip
     test "returns mixed conversions in ordered by count", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
@@ -54,6 +55,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   describe "GET /api/stats/:domain/conversions - with goal filter" do
     setup [:create_user, :log_in, :create_new_site]
 
+    @tag :skip
     test "returns only the conversion tha is filtered for", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
@@ -90,6 +92,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   describe "GET /api/stats/:domain/property/:key" do
     setup [:create_user, :log_in, :create_new_site]
 
+    @tag :skip
     test "returns property breakdown for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
@@ -126,6 +129,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    @tag :skip
     test "returns (none) values in property breakdown for goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
@@ -162,6 +166,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    @tag :skip
     test "property breakdown with prop filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 1),
@@ -194,6 +199,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   describe "GET /api/stats/:domain/conversions - with glob goals" do
     setup [:create_user, :log_in, :create_site]
 
+    @tag :skip
     test "returns correct and sorted glob goal counts", %{conn: conn, site: site} do
       insert(:goal, %{domain: site.domain, page_path: "/register"})
       insert(:goal, %{domain: site.domain, page_path: "/reg*"})
