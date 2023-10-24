@@ -6,6 +6,15 @@ defmodule Plausible.Site.Memberships.Invitations do
   alias Plausible.Auth
   alias Plausible.Repo
 
+  @spec list_for_email(String.t()) :: [Auth.Invitation.t()]
+  def list_for_email(email) do
+    Repo.all(
+      from i in Auth.Invitation,
+        where: i.email == ^email
+    )
+    |> Repo.preload(:site)
+  end
+
   @spec find_for_user(String.t(), Auth.User.t()) ::
           {:ok, Auth.Invitation.t()} | {:error, :invitation_not_found}
   def find_for_user(invitation_id, user) do
