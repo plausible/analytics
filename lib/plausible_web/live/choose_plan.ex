@@ -25,7 +25,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:usage, fn %{user: user} ->
         %{
           monthly_pageviews: Quota.monthly_pageview_usage(user),
-          team_members: Quota.team_member_usage(user)
+          team_members: Quota.team_member_usage(user),
+          sites: Quota.site_usage(user)
         }
       end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
@@ -259,7 +260,13 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         assigns.plan_to_render.team_member_limit
       )
 
-    exceeds_some_limit = exceeds_pageview_limit || exceeds_team_member_limit
+    exceeds_site_limit =
+      !Quota.within_limit?(
+        assigns.usage.sites,
+        assigns.plan_to_render.site_limit
+      )
+
+    exceeds_some_limit = exceeds_pageview_limit || exceeds_team_member_limit || exceeds_site_limit
 
     billing_details_expired =
       assigns.user.subscription &&

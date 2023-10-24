@@ -413,6 +413,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
     end
+
+    test "checkout is disabled when sites usage exceeds rendered plan limit", %{
+      conn: conn,
+      user: user
+    } do
+      for _ <- 1..11, do: insert(:site, members: [user])
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+    end
   end
 
   describe "for a user with a v3 business (unlimited team members) subscription plan" do
