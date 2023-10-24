@@ -25,6 +25,7 @@ defmodule Plausible.Google.BufferTest do
     |> Enum.map(&Map.drop(&1, [:table]))
   end
 
+  @tag :slow
   test "insert_many/3 flushes when buffer reaches limit", %{site: site} do
     {:ok, pid} = Buffer.start_link()
 

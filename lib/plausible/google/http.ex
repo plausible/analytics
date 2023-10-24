@@ -44,7 +44,7 @@ defmodule Plausible.Google.HTTP do
         Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
         {:error, :request_failed}
 
-      {:error, _} ->
+      {:error, _reason} ->
         {:error, :request_failed}
     end
   end

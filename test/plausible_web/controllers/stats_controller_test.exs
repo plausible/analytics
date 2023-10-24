@@ -134,24 +134,24 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       zip = Enum.map(zip, fn {filename, _} -> filename end)
 
-      assert 'visitors.csv' in zip
-      assert 'browsers.csv' in zip
-      assert 'cities.csv' in zip
-      assert 'conversions.csv' in zip
-      assert 'countries.csv' in zip
-      assert 'custom_props.csv' in zip
-      assert 'devices.csv' in zip
-      assert 'entry_pages.csv' in zip
-      assert 'exit_pages.csv' in zip
-      assert 'operating_systems.csv' in zip
-      assert 'pages.csv' in zip
-      assert 'regions.csv' in zip
-      assert 'sources.csv' in zip
-      assert 'utm_campaigns.csv' in zip
-      assert 'utm_contents.csv' in zip
-      assert 'utm_mediums.csv' in zip
-      assert 'utm_sources.csv' in zip
-      assert 'utm_terms.csv' in zip
+      assert ~c"visitors.csv" in zip
+      assert ~c"browsers.csv" in zip
+      assert ~c"cities.csv" in zip
+      assert ~c"conversions.csv" in zip
+      assert ~c"countries.csv" in zip
+      assert ~c"custom_props.csv" in zip
+      assert ~c"devices.csv" in zip
+      assert ~c"entry_pages.csv" in zip
+      assert ~c"exit_pages.csv" in zip
+      assert ~c"operating_systems.csv" in zip
+      assert ~c"pages.csv" in zip
+      assert ~c"regions.csv" in zip
+      assert ~c"sources.csv" in zip
+      assert ~c"utm_campaigns.csv" in zip
+      assert ~c"utm_contents.csv" in zip
+      assert ~c"utm_mediums.csv" in zip
+      assert ~c"utm_sources.csv" in zip
+      assert ~c"utm_terms.csv" in zip
     end
 
     test "does not export custom properties when site owner is on a growth plan", %{
@@ -165,7 +165,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       {:ok, zip} = :zip.unzip(response, [:memory])
       files = Map.new(zip)
 
-      refute Map.has_key?(files, 'custom_props.csv')
+      refute Map.has_key?(files, ~c"custom_props.csv")
     end
 
     test "exports data in zipped csvs", %{conn: conn, site: site} do
@@ -201,7 +201,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       {:ok, zip} = :zip.unzip(response, [:memory])
 
       {_filename, result} =
-        Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
+        Enum.find(zip, fn {filename, _data} -> filename == ~c"custom_props.csv" end)
 
       assert parse_csv(result) == [
                ["property", "value", "visitors", "events", "percentage"],
@@ -222,7 +222,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       {:ok, zip} = :zip.unzip(response, [:memory])
 
       {_filename, visitors} =
-        Enum.find(zip, fn {filename, _data} -> filename == 'visitors.csv' end)
+        Enum.find(zip, fn {filename, _data} -> filename == ~c"visitors.csv" end)
 
       assert parse_csv(visitors) == [
                [
@@ -304,7 +304,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
 
       {_filename, result} =
-        Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
+        Enum.find(zip, fn {filename, _data} -> filename == ~c"custom_props.csv" end)
 
       assert parse_csv(result) == [
                ["property", "value", "visitors", "events", "percentage"],
@@ -423,7 +423,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       {:ok, zip} = :zip.unzip(response(conn, 200), [:memory])
 
       {_filename, result} =
-        Enum.find(zip, fn {filename, _data} -> filename == 'custom_props.csv' end)
+        Enum.find(zip, fn {filename, _data} -> filename == ~c"custom_props.csv" end)
 
       assert parse_csv(result) == [
                ["property", "value", "visitors", "events", "conversion_rate"],
@@ -545,7 +545,10 @@ defmodule PlausibleWeb.StatsControllerTest do
         insert(:shared_link, site: site, password_hash: Plausible.Auth.Password.hash("password"))
 
       link2 =
-        insert(:shared_link, site: site2, password_hash: Plausible.Auth.Password.hash("password1"))
+        insert(:shared_link,
+          site: site2,
+          password_hash: Plausible.Auth.Password.hash("password1")
+        )
 
       conn = post(conn, "/share/#{link.slug}/authenticate", %{password: "password"})
       assert redirected_to(conn, 302) == "/share/#{site.domain}?auth=#{link.slug}"

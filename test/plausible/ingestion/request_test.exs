@@ -43,6 +43,7 @@ defmodule Plausible.Ingestion.RequestTest do
     assert request.props == %{}
   end
 
+  @tag :slow
   test "requests include moving timestamp" do
     payload = %{
       name: "pageview",

@@ -319,6 +319,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       refute element_exists?(doc, "#dropdown-test-component-option-1")
     end
 
+    @tag :slow
     test "pre-fills the suggestions asynchronously", %{conn: conn} do
       {:ok, lv, doc} = live_isolated(conn, SampleViewAsync, session: %{})
       refute element_exists?(doc, "#dropdown-test-component-option-1")
@@ -329,6 +330,7 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
       assert text_of_element(doc, "#dropdown-test-component-option-3") == "Three"
     end
 
+    @tag :slow
     test "uses the suggestions function asynchronously", %{conn: conn} do
       {:ok, lv, _html} = live_isolated(conn, SampleViewAsync, session: %{})
       doc = type_into_combo(lv, "test-component", "Echo me")
