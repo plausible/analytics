@@ -18,12 +18,40 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       |> Plausible.Stats.timeseries(q, [:visitors])
       |> scale(assigns.height)
       |> Enum.with_index(fn scaled_value, index -> "#{(index - 1) * 20},#{scaled_value}" end)
-      |> Enum.join(" ")
 
-    assigns = assign(assigns, :points, points)
+    clip_points =
+      List.flatten([
+        "-20,#{assigns.height + 1}",
+        points,
+        "#{(length(points) - 2) * 20},#{assigns.height + 1}",
+        "-20,#{assigns.height + 1}"
+      ])
+
+    assigns =
+      assigns
+      |> assign(:points, Enum.join(points, " "))
+      |> assign(:clip_points, Enum.join(clip_points, " "))
+      |> assign(:id, Ecto.UUID.generate())
 
     ~H"""
     <svg viewBox={"0 0 #{24 * 20} #{@height + 1}"} class="chart w-full mb-2">
+      <defs>
+        <linearGradient id={"chart-gradient-#{@id}"} x1="0" x2="0" y1="0" , y2="1">
+          <stop offset="0%" stop-color="lightblue" />
+          <stop offset="100%" stop-color="white" />
+        </linearGradient>
+        <clipPath id={"gradient-cut-off-#{@id}"}>
+          <polyline points={@clip_points} />
+        </clipPath>
+      </defs>
+      <rect
+        x="-20"
+        y="0"
+        width={24 * 20}
+        height={@height + 1}
+        fill={"url(#chart-gradient-#{@id})"}
+        clip-path={"url(#gradient-cut-off-#{@id})"}
+      />
       <polyline fill="none" stroke="#6366f1" stroke-width="3" points={@points} />
     </svg>
     """
