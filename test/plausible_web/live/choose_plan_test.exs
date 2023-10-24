@@ -37,7 +37,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert doc =~ "Upgrade your account"
-      assert doc =~ "You have used <b>0</b>\nbillable pageviews in the last 30 days"
+      assert doc =~ "You have used"
+      assert doc =~ "<b>0</b>"
+      assert doc =~ "billable pageviews in the last 30 days"
       assert doc =~ "Questions?"
       assert doc =~ "What happens if I go over my page views limit?"
       assert doc =~ "Enterprise"
@@ -274,7 +276,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       ])
 
       {:ok, _lv, doc} = get_liveview(conn)
-      assert doc =~ "You have used <b>2</b>\nbillable pageviews in the last 30 days"
+      assert doc =~ "You have used"
+      assert doc =~ "<b>2</b>"
+      assert doc =~ "billable pageviews in the last 30 days"
     end
 
     test "gets default selected interval from current subscription plan", %{conn: conn} do
@@ -389,6 +393,25 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, @business_checkout_button) == "Downgrade"
       assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
+    end
+
+    test "checkout is disabled when team member usage exceeds rendered plan limit", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:site,
+        memberships: [
+          build(:site_membership, user: user, role: :owner),
+          build(:site_membership, user: build(:user)),
+          build(:site_membership, user: build(:user)),
+          build(:site_membership, user: build(:user))
+        ]
+      )
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
     end
   end
 
