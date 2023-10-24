@@ -144,6 +144,7 @@ defmodule PlausibleWeb.Live.Sites do
                 <div class="pl-8 mt-2 flex items-center justify-between">
                   <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
                     <span class="text-gray-800 dark:text-gray-200">
+                      <PlausibleWeb.Live.Components.Visitors.chart site={site} />
                       <b>
                         <%= PlausibleWeb.StatsView.large_number_format(
                           Map.get(@visitors, site.domain, 0)
