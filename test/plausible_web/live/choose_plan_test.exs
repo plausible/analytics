@@ -200,6 +200,23 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert get_paddle_checkout_params(find(doc, @business_checkout_button))["product"] ==
                @v4_business_5m_monthly_plan_id
     end
+
+    test "checkout is disabled when pageview usage exceeds rendered plan limit", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+      generate_usage_for(site, 10_001)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 0})
+
+      assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert text_of_element(doc, @business_plan_box) =~ "Your usage exceeds this plan"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
   end
 
   describe "for a user with a v4 growth subscription plan" do

@@ -243,6 +243,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
+    exceeds_pageview_limit =
+      assigns.available &&
+        !Quota.within_limit?(assigns.usage, assigns.plan_to_render.monthly_pageview_limit)
+
     billing_details_expired =
       assigns.user.subscription &&
         assigns.user.subscription.status in [
@@ -254,6 +258,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       cond do
         change_plan_link_text == "Currently on this plan" ->
           {true, nil}
+
+        exceeds_pageview_limit ->
+          {true, "Your usage exceeds this plan"}
 
         billing_details_expired ->
           {true, "Please update your billing details first"}
