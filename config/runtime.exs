@@ -230,7 +230,7 @@ ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", ge
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
-maxmind_database_cache_file = get_var_from_path_or_env(config_dir, "MAXMIND_DATABASE_CACHE_FILE", Path.join(storage_dir, "/locus-#{maxmind_edition}.mmdb")
+maxmind_database_cache_file = get_var_from_path_or_env(config_dir, "MAXMIND_DATABASE_CACHE_FILE")
 
 if System.get_env("DISABLE_AUTH") do
   Logger.warning("DISABLE_AUTH env var is no longer supported")
