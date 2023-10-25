@@ -213,6 +213,74 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.into(%{})
   end
 
+  def last_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now())
+  def last_24h_visitors_hourly_intervals([], _), do: %{}
+
+  def last_24h_visitors_hourly_intervals(sites, now) do
+    site_id_to_domain_mapping = for site <- sites, do: {site.id, site.domain}, into: %{}
+    now = now |> NaiveDateTime.truncate(:second)
+
+    placeholder =
+      sites
+      |> Enum.map(fn site ->
+        {site.domain,
+         %{
+           intervals: empty_24h_intervals(now),
+           visitors: 0
+         }}
+      end)
+      |> Map.new()
+
+    query =
+      from(e in "events_v2",
+        hints: [sample: 20_000_000],
+        where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
+        where: e.timestamp >= ^NaiveDateTime.add(now, -24, :hour),
+        where: e.timestamp <= ^now,
+        select: %{
+          site_id: e.site_id,
+          interval: fragment("toStartOfHour(timestamp)"),
+          visitors: fragment("toUInt64(round(uniq(user_id) * any(_sample_factor)))")
+        },
+        group_by: [e.site_id, fragment("toStartOfHour(timestamp)")],
+        order_by: [e.site_id, fragment("toStartOfHour(timestamp)")]
+      )
+
+    result =
+      query
+      |> ClickhouseRepo.all()
+      |> Enum.group_by(& &1.site_id)
+      |> Enum.map(fn {site_id, entries} ->
+        visitors =
+          Enum.reduce(entries, 0, fn entry, acc ->
+            entry.visitors + acc
+          end)
+
+        full_entries =
+          (entries ++ empty_24h_intervals(now))
+          |> Enum.uniq_by(& &1.interval)
+          |> Enum.sort_by(& &1.interval, NaiveDateTime)
+
+        {site_id_to_domain_mapping[site_id], %{intervals: full_entries, visitors: visitors}}
+      end)
+      |> Map.new()
+
+    Map.merge(placeholder, result)
+  end
+
+  defp empty_24h_intervals(now) do
+    first = NaiveDateTime.add(now, -23, :hour)
+    {:ok, time} = Time.new(first.hour, 0, 0)
+    first = NaiveDateTime.new!(NaiveDateTime.to_date(first), time)
+
+    for offset <- 0..24 do
+      %{
+        interval: NaiveDateTime.add(first, offset, :hour),
+        visitors: 0
+      }
+    end
+  end
+
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp base_session_query(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
