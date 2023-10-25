@@ -262,28 +262,35 @@ defmodule Plausible.Stats.Breakdown do
           where: i.page in ^pages,
           select: %{
             page: i.page,
-            time_on_page: sum(i.time_on_page) / (sum(i.pageviews) - sum(i.exits))
+            time_on_page: sum(i.time_on_page),
+            visits: sum(i.pageviews) - sum(i.exits)
           }
 
       timed_pages_q =
         select(timed_pages_q, [e], %{
           page: e.pathname,
-          time_on_page: fragment("avg(greatest(?,0))", e.next_timestamp - e.timestamp)
+          time_on_page: fragment("sum(greatest(?,0))", e.next_timestamp - e.timestamp),
+          visits: fragment("countIf(?,?)", e.pathname, e.next_timestamp != 0)
         })
 
       "timed_pages"
       |> with_cte("timed_pages", as: ^timed_pages_q)
       |> with_cte("imported_timed_pages", as: ^imported_timed_pages_q)
       |> join(:full, [t], i in "imported_timed_pages", on: t.page == i.page)
+      |> where([t, i], t.visits + i.visits > 0)
       |> select(
         [t, i],
-        {coalesce(t.page, i.page), coalesce(t.time_on_page, 0) + coalesce(i.time_on_page, 0)}
+        {coalesce(t.page, i.page), (t.time_on_page + i.time_on_page) / (t.visits + i.visits)}
       )
       |> Plausible.ClickhouseRepo.all()
       |> Map.new()
     else
       timed_pages_q
-      |> select([e], {e.pathname, fragment("avg(greatest(?,0))", e.next_timestamp - e.timestamp)})
+      |> select(
+        [e],
+        {e.pathname,
+         fragment("avgIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)}
+      )
       |> Plausible.ClickhouseRepo.all()
       |> Map.new()
     end
