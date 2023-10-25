@@ -219,6 +219,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @business_plan_box) =~ "Your usage exceeds this plan"
       assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
     end
+
+    test "warns about losing access to a feature", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+      Plausible.Props.allow(site, ["author"])
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
+               "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {Paddle.Checkout.open"
+    end
   end
 
   describe "for a user with a v4 growth subscription plan" do
@@ -424,6 +434,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "warns about losing access to a feature", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+      Plausible.Props.allow(site, ["author"])
+
+      insert(:goal, currency: :USD, site: site, event_name: "Purchase")
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
+               "if (!confirm(\"This plan does not support Custom Properties and Revenue Goals, which you are currently using. Please note that by subscribing to this plan you will lose access to these features.\")) {e.preventDefault()}"
     end
   end
 

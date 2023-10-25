@@ -26,7 +26,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         %{
           monthly_pageviews: Quota.monthly_pageview_usage(user),
           team_members: Quota.team_member_usage(user),
-          sites: Quota.site_usage(user)
+          sites: Quota.site_usage(user),
+          features: Quota.features_usage(user)
         }
       end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
@@ -332,12 +333,15 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           {false, nil}
       end
 
+    features_to_lose = assigns.usage.features -- assigns.plan_to_render.features
+
     assigns =
       assigns
       |> assign(:paddle_product_id, paddle_product_id)
       |> assign(:change_plan_link_text, change_plan_link_text)
       |> assign(:checkout_disabled, checkout_disabled)
       |> assign(:disabled_message, disabled_message)
+      |> assign(:confirm_message, losing_features_message(features_to_lose))
 
     ~H"""
     <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) do %>
@@ -349,6 +353,17 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <%= @disabled_message %>
     </p>
     """
+  end
+
+  defp losing_features_message([]), do: nil
+
+  defp losing_features_message(features_to_lose) do
+    features_list_str =
+      features_to_lose
+      |> Enum.map(& &1.display_name)
+      |> PlausibleWeb.TextHelpers.pretty_join()
+
+    "This plan does not support #{features_list_str}, which you are currently using. Please note that by subscribing to this plan you will lose access to #{if length(features_to_lose) == 1, do: "this feature", else: "these features"}."
   end
 
   defp growth_grandfathering_notice(assigns) do
@@ -387,6 +402,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <.link
       id={"#{@kind}-checkout"}
+      onclick={if @confirm_message, do: "if (!confirm(\"#{@confirm_message}\")) {e.preventDefault()}"}
       href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_preview, @paddle_product_id)}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",

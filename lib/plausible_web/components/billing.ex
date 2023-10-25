@@ -283,13 +283,19 @@ defmodule PlausibleWeb.Components.Billing do
   attr :paddle_product_id, :string, required: true
   attr :checkout_disabled, :boolean, default: false
   attr :user, :any, required: true
+  attr :confirm_message, :any, default: nil
   slot :inner_block, required: true
 
   def paddle_button(assigns) do
+    confirmed =
+      if assigns.confirm_message, do: "confirm(\"#{assigns.confirm_message}\")", else: "true"
+
+    assigns = assign(assigns, :confirmed, confirmed)
+
     ~H"""
     <button
       id={@id}
-      onclick={"Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passthrough: @user.id, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})"}
+      onclick={"if (#{@confirmed}) {Paddle.Checkout.open(#{Jason.encode!(%{product: @paddle_product_id, email: @user.email, disableLogout: true, passthrough: @user.id, success: Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success), theme: "none"})})}"}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
         !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
