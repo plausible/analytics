@@ -135,8 +135,7 @@ defmodule Plausible.Billing.Quota do
       on: i.site_id == os.site_id,
       where: i.role != :owner,
       select: i.email,
-      union: ^team_members_query,
-      distinct: true
+      union: ^team_members_query
   end
 
   @spec features_usage(Plausible.Auth.User.t()) :: [atom()]
