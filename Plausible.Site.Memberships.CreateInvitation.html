@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Workers.ScheduleEmailReports — Plausible v0.0.1</title>
+    <title>Plausible.Site.Memberships.CreateInvitation — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,16 +102,21 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/workers/schedule_email_reports.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Workers.ScheduleEmailReports</span> 
+  <span translate="no">Plausible.Site.Memberships.CreateInvitation</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>Service for inviting new or existing users to a sites, including ownershhip
+transfers.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -121,6 +126,20 @@ Plausible
         Summary
       </a>
     </h1>
+<div class="summary-types summary">
+  <h2>
+    <a href="#types">Types</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:invite_error/0" translate="no">invite_error()</a>
+
+      </div>
+
+    </div>
+
+</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -128,7 +147,7 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#first_of_month_9am/1" translate="no">first_of_month_9am(timezone)</a>
+        <a href="#bulk_create_invitation/5" translate="no">bulk_create_invitation(sites, inviter, invitee_email, role, opts \\ [])</a>
 
       </div>
 
@@ -136,7 +155,7 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#monday_9am/1" translate="no">monday_9am(timezone)</a>
+        <a href="#bulk_transfer_ownership_direct/2" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</a>
 
       </div>
 
@@ -144,13 +163,13 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#perform/1" translate="no">perform(job)</a>
+        <a href="#create_invitation/4" translate="no">create_invitation(site, inviter, invitee_email, role)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>  Email reports should be sent on Monday at 9am according to the timezone
-of a site. This job runs every day at midnight to ensure that all sites
-have a scheduled job for email reports.</p></div>
+        <div class="summary-synopsis"><p>Invites a new team member to the given site. Returns a
+%Plausible.Auth.Invitation{} struct and sends the invitee an email to accept
+this invitation.</p></div>
 
     </div>
 
@@ -158,6 +177,52 @@ have a scheduled job for email reports.</p></div>
 
   </section>
 
+
+  <section id="types" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+Types
+      </a>
+    </h1>
+    <div class="types-list">
+<section class="detail" id="t:invite_error/0">
+
+  <div class="detail-header">
+    <a href="#t:invite_error/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">invite_error()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L12" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> invite_error() ::
+  <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
+  | :already_a_member
+  | :transfer_to_self
+  | {:over_limit, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}
+  | :forbidden
+  | :upgrade_required</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -167,16 +232,18 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="first_of_month_9am/1">
+<section class="detail" id="bulk_create_invitation/5">
+
+    <span id="bulk_create_invitation/4"></span>
 
   <div class="detail-header">
-    <a href="#first_of_month_9am/1" class="detail-link" title="Link to this function">
+    <a href="#bulk_create_invitation/5" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">first_of_month_9am(timezone)</h1>
+    <h1 class="signature" translate="no">bulk_create_invitation(sites, inviter, invitee_email, role, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/schedule_email_reports.ex#L91" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L57" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -185,20 +252,32 @@ Functions
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> bulk_create_invitation(
+  [<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()],
+  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(),
+  <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()
+) :: {:ok, [<a href="Plausible.Auth.Invitation.html#t:t/0">Plausible.Auth.Invitation.t</a>()]} | {:error, <a href="#t:invite_error/0">invite_error</a>()}</pre>
+
+      </div>
 
 
   </section>
 </section>
-<section class="detail" id="monday_9am/1">
+<section class="detail" id="bulk_transfer_ownership_direct/2">
 
   <div class="detail-header">
-    <a href="#monday_9am/1" class="detail-link" title="Link to this function">
+    <a href="#bulk_transfer_ownership_direct/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">monday_9am(timezone)</h1>
+    <h1 class="signature" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/schedule_email_reports.ex#L51" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L41" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -207,20 +286,27 @@ Functions
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> bulk_transfer_ownership_direct([<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()], <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
+  {:ok, [<a href="Plausible.Site.Membership.html#t:t/0">Plausible.Site.Membership.t</a>()]} | {:error, <a href="#t:invite_error/0">invite_error</a>()}</pre>
+
+      </div>
 
 
   </section>
 </section>
-<section class="detail" id="perform/1">
+<section class="detail" id="create_invitation/4">
 
   <div class="detail-header">
-    <a href="#perform/1" class="detail-link" title="Link to this function">
+    <a href="#create_invitation/4" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">perform(job)</h1>
+    <h1 class="signature" translate="no">create_invitation(site, inviter, invitee_email, role)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/schedule_email_reports.ex#L13" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L33" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -230,9 +316,23 @@ Functions
 
   <section class="docstring">
 
-<p>  Email reports should be sent on Monday at 9am according to the timezone
-of a site. This job runs every day at midnight to ensure that all sites
-have a scheduled job for email reports.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> create_invitation(
+  <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(),
+  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()
+) ::
+  {:ok, <a href="Plausible.Auth.Invitation.html#t:t/0">Plausible.Auth.Invitation.t</a>()} | {:error, <a href="#t:invite_error/0">invite_error</a>()}</pre>
+
+      </div>
+
+<p>Invites a new team member to the given site. Returns a
+%Plausible.Auth.Invitation{} struct and sends the invitee an email to accept
+this invitation.</p><p>The inviter must have enough permissions to invite the new team member,
+otherwise this function returns <code class="inline">{:error, :forbidden}</code>.</p><p>If the new team member role is <code class="inline">:owner</code>, this function handles the invitation
+as an ownership transfer and requires the inviter to be the owner of the site.</p>
   </section>
 </section>
 

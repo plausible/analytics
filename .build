@@ -112,6 +112,7 @@ Plausible.Site.GoogleAuth.html
 Plausible.Site.ImportedData.html
 Plausible.Site.Membership.html
 Plausible.Site.Memberships.AcceptInvitation.html
+Plausible.Site.Memberships.CreateInvitation.html
 Plausible.Site.Memberships.RejectInvitation.html
 Plausible.Site.Memberships.RemoveInvitation.html
 Plausible.Site.Memberships.html
@@ -302,8 +303,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-B61F8F8A.js
-dist/sidebar_items-2C588244.js
+dist/search_data-35B6031A.js
+dist/sidebar_items-8CC1E49E.js
 index.html
 readme.html
 search.html
