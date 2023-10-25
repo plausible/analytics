@@ -351,7 +351,10 @@ defmodule Plausible.Stats.Breakdown do
       |> where([t, i], t.visits + i.visits > 0)
       |> select(
         [t, i],
-        {coalesce(t.page, i.page), (t.time_on_page + i.time_on_page) / (t.visits + i.visits)}
+        {
+          fragment("if(empty(?),?,?)", t.page, i.page, t.page),
+          (t.time_on_page + i.time_on_page) / (t.visits + i.visits)
+        }
       )
       |> Plausible.ClickhouseRepo.all()
       |> Map.new()
