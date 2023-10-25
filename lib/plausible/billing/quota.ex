@@ -166,6 +166,17 @@ defmodule Plausible.Billing.Quota do
     end)
   end
 
+  def exceeded_limits(usage, %Plan{} = plan) do
+    for {usage_field, limit_field} <- [
+          {:monthly_pageviews, :monthly_pageview_limit},
+          {:team_members, :team_member_limit},
+          {:sites, :site_limit}
+        ],
+        !within_limit?(Map.get(usage, usage_field), Map.get(plan, limit_field)) do
+      limit_field
+    end
+  end
+
   @doc """
   Returns a list of features the user can use. Trial users have the
   ability to use all features during their trial.

@@ -291,25 +291,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
-    exceeds_pageview_limit =
-      !Quota.within_limit?(
-        assigns.usage.monthly_pageviews,
-        assigns.plan_to_render.monthly_pageview_limit
-      )
-
-    exceeds_team_member_limit =
-      !Quota.within_limit?(
-        assigns.usage.team_members,
-        assigns.plan_to_render.team_member_limit
-      )
-
-    exceeds_site_limit =
-      !Quota.within_limit?(
-        assigns.usage.sites,
-        assigns.plan_to_render.site_limit
-      )
-
-    exceeds_some_limit = exceeds_pageview_limit || exceeds_team_member_limit || exceeds_site_limit
+    exceeds_some_limit = Quota.exceeded_limits(assigns.usage, assigns.plan_to_render) != []
 
     billing_details_expired =
       assigns.user.subscription &&
