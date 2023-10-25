@@ -117,27 +117,27 @@ defmodule Plausible.Stats.Aggregate do
     params = base_query_raw_params ++ [where_arg]
 
     time_query = "
-    SELECT
-      avg(ifNotFinite(avgTime, null))
-    FROM
-      (SELECT
-        p,
-        sum(td)/count(case when p2 != p then 1 end) as avgTime
+      SELECT
+        avg(ifNotFinite(avgTime, null))
       FROM
         (SELECT
           p,
-          p2,
-          sum(t2-t) as td
+          sum(td)/count(case when p2 != p then 1 end) as avgTime
         FROM
           (SELECT
-          *,
-            neighbor(t, 1) as t2,
-            neighbor(p, 1) as p2,
-            neighbor(s, 1) as s2
-          FROM (#{base_query_raw}))
-        WHERE s=s2 AND #{where_clause}
-        GROUP BY p,p2,s)
-      GROUP BY p)"
+            p,
+            p2,
+            sum(t2-t) as td
+          FROM
+            (SELECT
+            *,
+              neighbor(t, 1) as t2,
+              neighbor(p, 1) as p2,
+              neighbor(s, 1) as s2
+            FROM (#{base_query_raw}))
+          WHERE s=s2 AND #{where_clause}
+          GROUP BY p,p2,s)
+        GROUP BY p)"
 
     {:ok, res} = ClickhouseRepo.query(time_query, params)
     [[time_on_page]] = res.rows
