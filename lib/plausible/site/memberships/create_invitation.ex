@@ -17,7 +17,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           | :forbidden
           | :upgrade_required
 
-  @spec invite(Site.t(), User.t(), String.t(), atom()) ::
+  @spec create_invitation(Site.t(), User.t(), String.t(), atom()) ::
           {:ok, Invitation.t()} | {:error, invite_error()}
   @doc """
   Invites a new team member to the given site. Returns a
@@ -30,7 +30,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   If the new team member role is `:owner`, this function handles the invitation
   as an ownership transfer and requires the inviter to be the owner of the site.
   """
-  def invite(site, inviter, invitee_email, role) do
+  def create_invitation(site, inviter, invitee_email, role) do
     Plausible.Repo.transaction(fn ->
       do_invite(site, inviter, invitee_email, role)
     end)
@@ -52,12 +52,12 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     end)
   end
 
-  @spec bulk_transfer_ownership([Site.t()], User.t(), String.t(), Keyword.t()) ::
+  @spec bulk_create_invitation([Site.t()], User.t(), String.t(), atom(), Keyword.t()) ::
           {:ok, [Invitation.t()]} | {:error, invite_error()}
-  def bulk_transfer_ownership(sites, inviter, invitee_email, opts \\ []) do
+  def bulk_create_invitation(sites, inviter, invitee_email, role, opts \\ []) do
     Plausible.Repo.transaction(fn ->
       for site <- sites do
-        do_invite(site, inviter, invitee_email, :owner, opts)
+        do_invite(site, inviter, invitee_email, role, opts)
       end
     end)
   end

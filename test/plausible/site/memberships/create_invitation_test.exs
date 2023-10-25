@@ -3,21 +3,21 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
   use Plausible.DataCase
   use Bamboo.Test
 
-  describe "invite/4" do
+  describe "create_invitation/4" do
     test "creates an invitation" do
       inviter = insert(:user)
       invitee = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.invite(site, inviter, invitee.email, :viewer)
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
     end
 
     test "returns validation errors" do
       inviter = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
-      assert {:error, changeset} = CreateInvitation.invite(site, inviter, "", :viewer)
+      assert {:error, changeset} = CreateInvitation.create_invitation(site, inviter, "", :viewer)
       assert {"can't be blank", _} = changeset.errors[:email]
     end
 
@@ -34,10 +34,10 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         )
 
       assert {:error, :already_a_member} =
-               CreateInvitation.invite(site, inviter, invitee.email, :viewer)
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
 
       assert {:error, :already_a_member} =
-               CreateInvitation.invite(site, inviter, inviter.email, :viewer)
+               CreateInvitation.create_invitation(site, inviter, inviter.email, :viewer)
     end
 
     test "sends invitation email for existing users" do
@@ -45,7 +45,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.invite(site, inviter, invitee.email, :viewer)
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
 
       assert_email_delivered_with(
         to: [nil: invitee.email],
@@ -58,7 +58,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.invite(site, inviter, "vini@plausible.test", :viewer)
+               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
@@ -78,7 +78,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site = insert(:site, memberships: memberships)
 
       assert {:error, {:over_limit, 5}} =
-               CreateInvitation.invite(site, inviter, invitee.email, :viewer)
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
     end
 
     test "sends ownership transfer email when inviter role is owner" do
@@ -86,7 +86,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.invite(site, inviter, "vini@plausible.test", :owner)
+               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
 
       assert_email_delivered_with(
         to: [nil: "vini@plausible.test"],
@@ -106,7 +106,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         )
 
       assert {:error, :forbidden} =
-               CreateInvitation.invite(site, inviter, "vini@plausible.test", :owner)
+               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
     end
 
     test "allows ownership transfer to existing site members" do
@@ -122,7 +122,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         )
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.invite(site, inviter, invitee.email, :owner)
+               CreateInvitation.create_invitation(site, inviter, invitee.email, :owner)
     end
 
     test "does not allow transferring ownership to existing owner" do
@@ -136,7 +136,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         )
 
       assert {:error, :transfer_to_self} =
-               CreateInvitation.invite(site, inviter, "vini@plausible.test", :owner)
+               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
     end
 
     test "does not check for limits when transferring ownership" do
@@ -148,7 +148,12 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site = insert(:site, memberships: memberships)
 
       assert {:ok, _invitation} =
-               CreateInvitation.invite(site, inviter, "newowner@plausible.test", :owner)
+               CreateInvitation.create_invitation(
+                 site,
+                 inviter,
+                 "newowner@plausible.test",
+                 :owner
+               )
     end
 
     test "does not allow viewers to invite users" do
@@ -163,7 +168,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         )
 
       assert {:error, :forbidden} =
-               CreateInvitation.invite(site, inviter, "vini@plausible.test", :viewer)
+               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :viewer)
     end
 
     test "allows admins to invite other admins" do
@@ -178,7 +183,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         )
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
-               CreateInvitation.invite(site, inviter, "vini@plausible.test", :admin)
+               CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :admin)
     end
 
     test "does not allow transferring ownership when site does not fit the new owner subscription" do
@@ -200,7 +205,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         )
 
       assert {:error, :upgrade_required} =
-               CreateInvitation.invite(
+               CreateInvitation.create_invitation(
                  site_with_too_many_team_members,
                  old_owner,
                  new_owner.email,
@@ -208,7 +213,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                )
 
       assert {:error, :upgrade_required} =
-               CreateInvitation.invite(
+               CreateInvitation.create_invitation(
                  site_using_premium_features,
                  old_owner,
                  new_owner.email,
@@ -217,7 +222,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     end
   end
 
-  describe "bulk_transfer_ownership/4" do
+  describe "bulk_create_invitation/5" do
     test "initiates ownership transfer for multiple sites in one action" do
       admin_user = insert(:user)
       new_owner = insert(:user)
@@ -229,10 +234,11 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         insert(:site, memberships: [build(:site_membership, user: admin_user, role: :owner)])
 
       assert {:ok, _} =
-               CreateInvitation.bulk_transfer_ownership(
+               CreateInvitation.bulk_create_invitation(
                  [site1, site2],
                  admin_user,
-                 new_owner.email
+                 new_owner.email,
+                 :owner
                )
 
       assert_email_delivered_with(
@@ -265,10 +271,11 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       site2 = insert(:site)
 
       assert {:ok, _} =
-               CreateInvitation.bulk_transfer_ownership(
+               CreateInvitation.bulk_create_invitation(
                  [site1, site2],
                  superadmin_user,
                  new_owner.email,
+                 :owner,
                  check_permissions: false
                )
 
