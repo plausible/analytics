@@ -427,7 +427,7 @@ defmodule Plausible.Billing.QuotaTest do
       steps = Enum.map(goals, &%{"goal_id" => &1.id})
       Plausible.Funnels.create(site, "dummy", steps)
 
-      assert [RevenueGoals, Funnels, Props] == Quota.features_usage(user)
+      assert [Props, Funnels, RevenueGoals] == Quota.features_usage(user)
     end
 
     test "accounts only for sites the user owns" do

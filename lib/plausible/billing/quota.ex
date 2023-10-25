@@ -162,7 +162,7 @@ defmodule Plausible.Billing.Quota do
     ]
 
     Enum.reduce(queries, [], fn {feature, query}, acc ->
-      if Plausible.Repo.exists?(query), do: [feature | acc], else: acc
+      if Plausible.Repo.exists?(query), do: acc ++ [feature], else: acc
     end)
   end
 
