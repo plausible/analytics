@@ -187,7 +187,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 2,
                  "bounce_rate" => 0,
-                 "time_on_page" => 120
+                 "time_on_page" => 120.0
                },
                %{
                  "name" => "/blog/other-post",
@@ -757,7 +757,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert json_response(conn, 200) == [
                %{
                  "bounce_rate" => 50.0,
-                 "time_on_page" => 900,
+                 "time_on_page" => 900.0,
                  "visitors" => 2,
                  "pageviews" => 2,
                  "name" => "/"
