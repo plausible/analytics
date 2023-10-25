@@ -245,6 +245,48 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   defp plan_box(assigns) do
+    ~H"""
+    <div
+      id={"#{@kind}-plan-box"}
+      class={[
+        "shadow-lg bg-white rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
+        !@owned && "dark:ring-gray-600",
+        @owned && "ring-2 ring-indigo-600 dark:ring-indigo-300"
+      ]}
+    >
+      <div class="flex items-center justify-between gap-x-4">
+        <h3 class={[
+          "text-lg font-semibold leading-8",
+          !@owned && "text-gray-900 dark:text-gray-100",
+          @owned && "text-indigo-600 dark:text-indigo-300"
+        ]}>
+          <%= String.capitalize(to_string(@kind)) %>
+        </h3>
+        <.current_label :if={@owned} />
+      </div>
+      <div>
+        <.render_price_info available={@available} {assigns} />
+        <%= if @available do %>
+          <.checkout id={"#{@kind}-checkout"} {assigns} />
+        <% else %>
+          <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
+        <% end %>
+      </div>
+      <%= if @kind == :growth && @plan_to_render.generation < 4 do %>
+        <.growth_grandfathering_notice />
+      <% else %>
+        <ul
+          role="list"
+          class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-100 xl:mt-10"
+        >
+          <.plan_benefit :for={benefit <- @benefits}><%= benefit %></.plan_benefit>
+        </ul>
+      <% end %>
+    </div>
+    """
+  end
+
+  defp checkout(assigns) do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
@@ -298,49 +340,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign(:disabled_message, disabled_message)
 
     ~H"""
-    <div
-      id={"#{@kind}-plan-box"}
-      class={[
-        "shadow-lg bg-white rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
-        !@owned && "dark:ring-gray-600",
-        @owned && "ring-2 ring-indigo-600 dark:ring-indigo-300"
-      ]}
-    >
-      <div class="flex items-center justify-between gap-x-4">
-        <h3 class={[
-          "text-lg font-semibold leading-8",
-          !@owned && "text-gray-900 dark:text-gray-100",
-          @owned && "text-indigo-600 dark:text-indigo-300"
-        ]}>
-          <%= String.capitalize(to_string(@kind)) %>
-        </h3>
-        <.current_label :if={@owned} />
-      </div>
-      <div>
-        <.render_price_info available={@available} {assigns} />
-        <%= cond do %>
-          <% !@available -> %>
-            <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
-          <% @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) -> %>
-            <.change_plan_link {assigns} />
-          <% true -> %>
-            <.paddle_button id={"#{@kind}-checkout"} {assigns}>Upgrade</.paddle_button>
-        <% end %>
-        <p :if={@disabled_message} class="h-0 text-center text-sm text-red-700 dark:text-red-500">
-          <%= @disabled_message %>
-        </p>
-      </div>
-      <%= if @kind == :growth && @plan_to_render.generation < 4 do %>
-        <.growth_grandfathering_notice />
-      <% else %>
-        <ul
-          role="list"
-          class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-100 xl:mt-10"
-        >
-          <.plan_benefit :for={benefit <- @benefits}><%= benefit %></.plan_benefit>
-        </ul>
-      <% end %>
-    </div>
+    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) do %>
+      <.change_plan_link {assigns} />
+    <% else %>
+      <.paddle_button {assigns}>Upgrade</.paddle_button>
+    <% end %>
+    <p :if={@disabled_message} class="h-0 text-center text-sm text-red-700 dark:text-red-500">
+      <%= @disabled_message %>
+    </p>
     """
   end
 
