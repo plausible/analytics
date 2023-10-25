@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.Live.Components.Visitors do
+  @moduledoc """
+  Component rendering mini-graph of site's visitors over the last 24 hours.
+  """
+
   use Phoenix.Component
 
   # Proof of concept, TODOs:
