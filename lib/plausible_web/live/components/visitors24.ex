@@ -10,17 +10,13 @@ defmodule PlausibleWeb.Live.Components.Visitors do
   # - move under Live.Components or .Components depending on how it turns out,
   # - make it render once per site - currently both mounts call it
 
-  attr :site, Plausible.Site, required: true
+  attr :intervals, :list, required: true
   attr :height, :integer, default: 50
   attr :tick, :integer, default: 20
 
   def chart(assigns) do
-    site = assigns.site
-    q = Plausible.Stats.Query.from(site, %{"period" => "day", "interval" => "hour"})
-
     points =
-      site
-      |> Plausible.Stats.timeseries(q, [:visitors])
+      assigns.intervals
       |> scale(assigns.height)
       |> Enum.with_index(fn scaled_value, index ->
         "#{(index - 1) * assigns.tick},#{scaled_value}"

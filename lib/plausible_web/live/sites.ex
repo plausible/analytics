@@ -55,14 +55,11 @@ defmodule PlausibleWeb.Live.Sites do
         </p>
 
         <%= for invitation <- @invitations do %>
-          <.invitation
-            invitation={invitation}
-            visitors={Map.get(@visitors, invitation.site.domain, 0)}
-          />
+          <.invitation invitation={invitation} hourly_stats={@hourly_stats[invitation.site.domain]} />
         <% end %>
 
         <%= for site <- @sites.entries do %>
-          <.site site={site} visitors={Map.get(@visitors, site.domain, 0)} />
+          <.site site={site} hourly_stats={@hourly_stats[site.domain]} />
         <% end %>
       </ul>
 
@@ -110,7 +107,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr :invitation, Plausible.Auth.Invitation, required: true
-  attr :visitors, :integer, required: true
+  attr :hourly_stats, :map, required: true
 
   def invitation(assigns) do
     ~H"""
@@ -137,12 +134,12 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
         <div class="pl-8 mt-2 flex items-center justify-between">
           <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
-            <PlausibleWeb.Live.Components.Visitors.chart site={@invitation.site} />
+            <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
             <span class="text-gray-800 dark:text-gray-200">
               <b>
-                <%= PlausibleWeb.StatsView.large_number_format(@visitors) %>
+                <%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %>
               </b>
-              visitor<span :if={@visitors != 1}>s</span> in last 24h
+              visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
             </span>
           </span>
         </div>
@@ -152,7 +149,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr :site, Plausible.Site, required: true
-  attr :visitors, :integer, required: true
+  attr :hourly_stats, :map, required: true
 
   def site(assigns) do
     ~H"""
@@ -172,12 +169,12 @@ defmodule PlausibleWeb.Live.Sites do
           </div>
           <div class="pl-8 mt-2 flex items-center justify-between">
             <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
-              <PlausibleWeb.Live.Components.Visitors.chart site={@site} />
+              <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
               <span class="text-gray-800 dark:text-gray-200">
                 <b>
-                  <%= PlausibleWeb.StatsView.large_number_format(@visitors) %>
+                  <%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %>
                 </b>
-                visitor<span :if={@visitors != 1}>s</span> in last 24h
+                visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
               </span>
             </span>
           </div>
@@ -417,8 +414,8 @@ defmodule PlausibleWeb.Live.Sites do
       excluded_site_ids = Enum.map(invitations, & &1.site_id)
       Sites.list(user, params, exclude_ids: excluded_site_ids, filter_by_domain: filter_text)
     end)
-    |> assign_fn.(:visitors, fn %{sites: sites, invitations: invitations} ->
-      Plausible.Stats.Clickhouse.last_24h_visitors(
+    |> assign_fn.(:hourly_stats, fn %{sites: sites, invitations: invitations} ->
+      Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(
         sites.entries ++ Enum.map(invitations, & &1.site)
       )
     end)
