@@ -12,7 +12,7 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
-  @spec list(User.t(), map(), [list_opt()]) :: %{entries: [Site.t()], pagination: map()}
+  @spec list(User.t(), map(), [list_opt()]) :: Paginator.Page.t()
   def list(user, pagination_params, opts \\ []) do
     exclude_ids = Keyword.get(opts, :exclude_ids, [])
     domain_filter = Keyword.get(opts, :filter_by_domain)
@@ -28,10 +28,11 @@ defmodule Plausible.Sites do
       )
       |> maybe_filter_by_domain(domain_filter)
 
-    {sites, pagination} =
-      Repo.paginate(sites_query, pagination_params)
-
-    %{entries: sites, pagination: pagination}
+    Plausible.Pagination.paginate(sites_query, pagination_params,
+      include_total_count: true,
+      cursor_fields: [{:domain, :asc}],
+      limit: 1
+    )
   end
 
   defp maybe_filter_by_domain(query, domain)

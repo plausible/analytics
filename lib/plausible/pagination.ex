@@ -34,6 +34,9 @@ defmodule Plausible.Pagination do
         else
           acc
         end
+
+      _, acc ->
+        acc
     end)
   end
 

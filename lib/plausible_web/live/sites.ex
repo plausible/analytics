@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Live.Sites do
   use Phoenix.HTML
 
   import PlausibleWeb.Components.Generic
+  import PlausibleWeb.Live.Components.Pagination
 
   alias Plausible.Auth
   alias Plausible.Repo
@@ -14,9 +15,14 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Sites
 
   def mount(params, %{"current_user_id" => user_id}, socket) do
+    uri =
+      ("/sites_new?" <> URI.encode_query(Map.take(params, ["filter_text"])))
+      |> URI.new!()
+
     socket =
       socket
-      |> assign_new(:filter_text, fn -> "" end)
+      |> assign(:uri, uri)
+      |> assign_new(:filter_text, fn -> params["filter_text"] || "" end)
       |> assign_new(:params, fn -> params end)
       |> assign_new(:user, fn -> Repo.get!(Auth.User, user_id) end)
       |> load_sites()
@@ -62,6 +68,14 @@ defmodule PlausibleWeb.Live.Sites do
           <.site site={site} hourly_stats={@hourly_stats[site.domain]} />
         <% end %>
       </ul>
+
+      <.pagination
+        :if={@sites.metadata.before || @sites.metadata.after}
+        uri={@uri}
+        subject="sites"
+        page={@sites}
+        extra_count={length(@invitations)}
+      />
 
       <.invitation_modal :if={not Enum.empty?(@invitations)} user={@user} />
     </div>
@@ -401,23 +415,32 @@ defmodule PlausibleWeb.Live.Sites do
         &assign_new/3
       end
 
-    socket
-    |> assign_fn.(:invitations, fn %{filter_text: filter_text, user: user} ->
-      Invitations.list_for_email(user.email, filter_by_domain: filter_text)
-    end)
-    |> assign_fn.(:sites, fn %{
-                               user: user,
-                               params: params,
-                               invitations: invitations,
-                               filter_text: filter_text
-                             } ->
-      excluded_site_ids = Enum.map(invitations, & &1.site_id)
-      Sites.list(user, params, exclude_ids: excluded_site_ids, filter_by_domain: filter_text)
-    end)
-    |> assign_fn.(:hourly_stats, fn %{sites: sites, invitations: invitations} ->
-      Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(
-        sites.entries ++ Enum.map(invitations, & &1.site)
-      )
-    end)
+    socket =
+      socket
+      |> assign_fn.(:invitations_pre, fn %{filter_text: filter_text, user: user} ->
+        Invitations.list_for_email(user.email, filter_by_domain: filter_text)
+      end)
+      |> assign_fn.(:sites, fn %{
+                                 user: user,
+                                 params: params,
+                                 invitations_pre: invitations,
+                                 filter_text: filter_text
+                               } ->
+        excluded_site_ids = Enum.map(invitations, & &1.site_id)
+        Sites.list(user, params, exclude_ids: excluded_site_ids, filter_by_domain: filter_text)
+      end)
+      |> assign_fn.(:hourly_stats, fn %{sites: sites, invitations_pre: invitations} ->
+        Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(
+          sites.entries ++ Enum.map(invitations, & &1.site)
+        )
+      end)
+
+    first_page? = is_nil(socket.assigns.sites.metadata.before)
+
+    if first_page? do
+      assign(socket, :invitations, socket.assigns.invitations_pre)
+    else
+      assign(socket, :invitations, [])
+    end
   end
 end
