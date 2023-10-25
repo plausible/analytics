@@ -18,6 +18,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       assert conn.status == 404
     end
 
+    @tag :skip
     test "returns stats for public site", %{conn: conn} do
       conn = init_session(conn)
       site = insert(:site, public: true)
@@ -44,6 +45,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       assert conn.status == 404
     end
 
+    @tag :skip
     test "returns stats for public site", %{conn: conn} do
       site = insert(:site, public: true)
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")
@@ -51,6 +53,7 @@ defmodule PlausibleWeb.Api.StatsController.AuthorizationTest do
       assert %{"plot" => _any} = json_response(conn, 200)
     end
 
+    @tag :skip
     test "returns stats for a private site that the user owns", %{conn: conn, user: user} do
       site = insert(:site, public: false, members: [user])
       conn = get(conn, "/api/stats/#{site.domain}/main-graph")

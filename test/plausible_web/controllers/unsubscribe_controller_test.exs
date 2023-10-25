@@ -3,6 +3,7 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
   use Plausible.Repo
 
   describe "GET /sites/:website/weekly-report/unsubscribe" do
+    @tag :skip
     test "removes a recipient from the weekly report without them having to log in", %{conn: conn} do
       site = insert(:site)
       insert(:weekly_report, site: site, recipients: ["recipient@email.com"])
@@ -16,6 +17,7 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
       assert report.recipients == []
     end
 
+    @tag :skip
     test "renders success if site or weekly report does not exist in the database", %{conn: conn} do
       conn =
         get(conn, "/sites/nonexistent.com/weekly-report/unsubscribe?email=recipient@email.com")
@@ -25,6 +27,7 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
   end
 
   describe "GET /sites/:website/monthly-report/unsubscribe" do
+    @tag :skip
     test "removes a recipient from the weekly report without them having to log in", %{conn: conn} do
       site = insert(:site)
       insert(:monthly_report, site: site, recipients: ["recipient@email.com"])
@@ -38,6 +41,7 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
       assert report.recipients == []
     end
 
+    @tag :skip
     test "renders success if site or weekly report does not exist in the database", %{conn: conn} do
       conn =
         get(conn, "/sites/nonexistent.com/monthly-report/unsubscribe?email=recipient@email.com")

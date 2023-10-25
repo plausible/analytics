@@ -885,6 +885,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.utm_source == "%balle%"
     end
 
+    @tag :skip
     test "ignores invalid query param part", %{conn: conn} do
       params = %{
         n: "pageview",

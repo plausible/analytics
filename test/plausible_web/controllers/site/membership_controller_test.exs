@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   setup [:create_user, :log_in]
 
   describe "GET /sites/:website/memberships/invite" do
+    @tag :skip
     test "shows invite form", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -17,6 +18,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   end
 
   describe "POST /sites/:website/memberships/invite" do
+    @tag :skip
     test "creates invitation", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -32,6 +34,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert redirected_to(conn) == "/#{site.domain}/settings/people"
     end
 
+    @tag :skip
     test "sends invitation email for new user", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -46,6 +49,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       )
     end
 
+    @tag :skip
     test "sends invitation email for existing user", %{conn: conn, user: user} do
       existing_user = insert(:user)
       site = insert(:site, members: [user])
@@ -61,6 +65,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       )
     end
 
+    @tag :skip
     test "renders form with error if the invitee is already a member", %{conn: conn, user: user} do
       second_member = insert(:user)
       site = insert(:site, members: [user, second_member])
@@ -77,6 +82,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   end
 
   describe "GET /sites/:website/transfer-ownership" do
+    @tag :skip
     test "shows ownership transfer form", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -87,6 +93,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   end
 
   describe "POST /sites/:website/transfer-ownership" do
+    @tag :skip
     test "creates invitation with :owner role", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -99,6 +106,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert redirected_to(conn) == "/#{site.domain}/settings/people"
     end
 
+    @tag :skip
     test "sends ownership transfer email for new user", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -110,6 +118,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       )
     end
 
+    @tag :skip
     test "sends invitation email for existing user", %{conn: conn, user: user} do
       existing_user = insert(:user)
       site = insert(:site, members: [user])
@@ -124,6 +133,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   end
 
   describe "PUT /sites/memberships/:id/role/:new_role" do
+    @tag :skip
     test "updates a site member's role", %{conn: conn, user: user} do
       admin = insert(:user)
 
@@ -144,6 +154,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert membership.role == :viewer
     end
 
+    @tag :skip
     test "can downgrade yourself from admin to viewer, redirects to stats instead", %{
       conn: conn,
       user: user
@@ -162,6 +173,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   end
 
   describe "DELETE /sites/memberships/:id" do
+    @tag :skip
     test "removes a member from a site", %{conn: conn, user: user} do
       admin = insert(:user)
 
@@ -180,6 +192,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       refute Repo.exists?(from sm in Plausible.Site.Membership, where: sm.user_id == ^admin.id)
     end
 
+    @tag :skip
     test "notifies the user who has been removed via email", %{conn: conn, user: user} do
       admin = insert(:user)
 

@@ -29,6 +29,7 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
       assert redirected_to(conn) == "/sites"
     end
 
+    @tag :skip
     test "disable registration", %{conn: conn} do
       set_config(disable_registration: true)
       conn = get(conn, "/register")

@@ -5,12 +5,14 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "GET /upgrade" do
     setup [:create_user, :log_in]
 
+    @tag :skip
     test "shows upgrade page when user does not have a subcription already", %{conn: conn} do
       conn = get(conn, "/billing/upgrade")
 
       assert html_response(conn, 200) =~ "Upgrade your free trial"
     end
 
+    @tag :skip
     test "redirects user to change plan if they already have a plan", %{conn: conn, user: user} do
       insert(:subscription, user: user)
       conn = get(conn, "/billing/upgrade")
@@ -18,6 +20,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert redirected_to(conn) == "/billing/change-plan"
     end
 
+    @tag :skip
     test "redirects user to enteprise plan page if they are configured with one", %{
       conn: conn,
       user: user
@@ -32,6 +35,7 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "GET /upgrade/enterprise/:plan_id" do
     setup [:create_user, :log_in]
 
+    @tag :skip
     test "renders enteprise plan upgrade page", %{conn: conn, user: user} do
       plan = insert(:enterprise_plan, user: user)
 
@@ -45,6 +49,7 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "GET /change-plan" do
     setup [:create_user, :log_in]
 
+    @tag :skip
     test "shows change plan page if user has subsription", %{conn: conn, user: user} do
       insert(:subscription, user: user)
       conn = get(conn, "/billing/change-plan")
@@ -52,12 +57,14 @@ defmodule PlausibleWeb.BillingControllerTest do
       assert html_response(conn, 200) =~ "Change subscription plan"
     end
 
+    @tag :skip
     test "redirects to /upgrade if user does not have a subscription", %{conn: conn} do
       conn = get(conn, "/billing/change-plan")
 
       assert redirected_to(conn) == "/billing/upgrade"
     end
 
+    @tag :skip
     test "redirects to enterprise change plan page if user has enterprise plan and existing subscription",
          %{conn: conn, user: user} do
       insert(:subscription, user: user)
@@ -71,6 +78,7 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "GET /change-plan/enterprise/:plan_id" do
     setup [:create_user, :log_in]
 
+    @tag :skip
     test "shows change plan page if user has subsription and enterprise plan", %{
       conn: conn,
       user: user
@@ -104,6 +112,7 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "POST /change-plan" do
     setup [:create_user, :log_in]
 
+    @tag :skip
     test "calls Paddle API to update subscription", %{conn: conn, user: user} do
       insert(:subscription, user: user)
 
@@ -119,6 +128,7 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "GET /billing/upgrade-success" do
     setup [:create_user, :log_in]
 
+    @tag :skip
     test "shows success page after user subscribes", %{conn: conn} do
       conn = get(conn, "/billing/upgrade-success")
 

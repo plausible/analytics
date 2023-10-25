@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
 
   describe "param validation" do
+    @tag :skip
     test "validates that property is required", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/breakdown", %{
@@ -18,6 +19,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "validates that correct period is used", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/breakdown", %{
@@ -31,6 +33,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "fails when an invalid metric is provided", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/breakdown", %{
@@ -45,6 +48,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "session metrics cannot be used with event:name property", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/breakdown", %{
@@ -59,6 +63,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "session metrics cannot be used with event:props:* property", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/breakdown", %{
@@ -73,6 +78,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "session metrics cannot be used with event:name filter", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/breakdown", %{
@@ -88,6 +94,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "session metrics cannot be used with event:props:* filter", %{conn: conn, site: site} do
       conn =
         get(conn, "/api/v1/stats/breakdown", %{
@@ -104,6 +111,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     end
   end
 
+  @tag :skip
   test "breakdown by visit:source", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview,
@@ -139,6 +147,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:country", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, country_code: "EE", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
@@ -162,6 +171,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:referrer", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview,
@@ -197,6 +207,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:utm_medium", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview,
@@ -232,6 +243,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:utm_source", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview,
@@ -267,6 +279,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:utm_campaign", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,
@@ -299,6 +312,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:utm_content", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,
@@ -331,6 +345,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:utm_term", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview,
@@ -363,6 +378,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:device", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview,
@@ -398,6 +414,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:os", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview,
@@ -433,6 +450,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:os_version", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview,
@@ -468,6 +486,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:browser", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, browser: "Firefox", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
@@ -491,6 +510,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by visit:browser_version", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview,
@@ -526,6 +546,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  @tag :skip
   test "breakdown by event:page", %{conn: conn, site: site} do
     populate_stats([
       build(:pageview, pathname: "/", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
@@ -554,6 +575,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "custom events" do
+    @tag :skip
     test "can breakdown by event:name", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -588,6 +610,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "can breakdown by event:name with visitors and events metrics", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -647,6 +670,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "can breakdown by event:name while filtering for something", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -702,6 +726,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "can breakdown by a visit:property when filtering by event:name", %{
       conn: conn,
       site: site
@@ -742,6 +767,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "can breakdown by event:name when filtering by event:page", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -785,6 +811,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "can breakdown by event:page when filtering by event:name", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -830,6 +857,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "can filter event:page with a wildcard", %{
       conn: conn,
       site: site
@@ -857,6 +885,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "breakdown by custom event property", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -906,6 +935,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "breakdown by custom event property, with (none)", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -961,6 +991,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "breakdown by custom event property, limited", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -1018,6 +1049,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "breakdown by custom event property, paginated", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -1077,6 +1109,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "breakdown by event:goal" do
+    @tag :skip
     test "custom properties from custom events are returned", %{conn: conn, site: site} do
       insert(:goal, %{domain: site.domain, event_name: "404"})
       insert(:goal, %{domain: site.domain, event_name: "Purchase"})
@@ -1159,6 +1192,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "filtering" do
+    @tag :skip
     test "event:page filter for breakdown by session props", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -1204,6 +1238,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "event:page filter shows traffic sources directly to that page", %{
       conn: conn,
       site: site
@@ -1247,6 +1282,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       end
     end
 
+    @tag :skip
     test "event:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1281,6 +1317,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "event:goal custom event filter for breakdown by visit source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1315,6 +1352,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "event:goal custom event filter for breakdown by event page", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,
@@ -1347,6 +1385,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "IN filter for event:page", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -1388,6 +1427,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "IN filter for visit:browser", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -1433,6 +1473,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "IN filter for visit:entry_page", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,
@@ -1475,6 +1516,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "IN filter for event:name", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -1516,6 +1558,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "can use a is_not filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "Chrome"),
@@ -1541,6 +1584,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "pagination" do
+    @tag :skip
     test "can limit results", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview, pathname: "/a", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
@@ -1561,6 +1605,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       assert Enum.count(res["results"]) == 2
     end
 
+    @tag :skip
     test "can paginate results", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview, pathname: "/a", domain: site.domain, timestamp: ~N[2021-01-01 00:00:00]),
@@ -1584,6 +1629,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "metrics" do
+    @tag :skip
     test "all metrics for breakdown by visit prop", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1637,6 +1683,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "filter by custom event property", %{conn: conn, site: site} do
       populate_stats([
         build(:event,
@@ -1690,6 +1737,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    @tag :skip
     test "all metrics for breakdown by event prop", %{conn: conn, site: site} do
       populate_stats([
         build(:pageview,

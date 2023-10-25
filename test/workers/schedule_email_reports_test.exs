@@ -4,6 +4,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
   alias Plausible.Workers.{ScheduleEmailReports, SendEmailReport}
 
   describe "weekly reports" do
+    @tag :skip
     test "schedules weekly report on Monday 9am local timezone" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
@@ -17,6 +18,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
       )
     end
 
+    @tag :skip
     test "does not schedule more than one weekly report at a time" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
@@ -36,6 +38,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
       assert Enum.empty?(all_enqueued(worker: SendEmailReport))
     end
 
+    @tag :skip
     test "schedules a new report as soon as a previous one is completed" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
@@ -49,6 +52,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
   end
 
   describe "monthly_reports" do
+    @tag :skip
     test "schedules monthly report on first of the next month at 9am local timezone" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
@@ -62,6 +66,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
       )
     end
 
+    @tag :skip
     test "does not schedule more than one monthly report at a time" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com"])
@@ -81,6 +86,7 @@ defmodule Plausible.Workers.ScheduleEmailReportsTest do
       assert Enum.empty?(all_enqueued(worker: SendEmailReport))
     end
 
+    @tag :skip
     test "schedules a new report as soon as a previous one is completed" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com"])

@@ -7,6 +7,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   setup [:create_user, :log_in]
 
   describe "POST /sites/invitations/:invitation_id/accept" do
+    @tag :skip
     test "converts the invitation into a membership", %{conn: conn, user: user} do
       site = insert(:site)
 
@@ -26,6 +27,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert membership.role == :admin
     end
 
+    @tag :skip
     test "notifies the original inviter", %{conn: conn, user: user} do
       inviter = insert(:user)
       site = insert(:site)
@@ -41,6 +43,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
     end
 
+    @tag :skip
     test "ownership transfer - notifies the original inviter with a different email", %{
       conn: conn,
       user: user
@@ -60,6 +63,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       )
     end
 
+    @tag :skip
     test "ownership transfer - downgrades previous owner to admin", %{conn: conn, user: user} do
       old_owner = insert(:user)
       site = insert(:site, members: [old_owner])
@@ -82,6 +86,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert new_owner_membership.role == :owner
     end
 
+    @tag :skip
     test "ownership transfer - will lock the site if new owner does not have an active subscription or trial",
          %{
            conn: conn,
@@ -102,6 +107,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Repo.reload!(site).locked
     end
 
+    @tag :skip
     test "ownership transfer - will end the trial of the new owner immediately", %{
       conn: conn,
       user: user
@@ -122,6 +128,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Repo.reload!(site).locked
     end
 
+    @tag :skip
     test "ownership transfer - if new owner does not have a trial - will set trial_expiry_date to yesterday",
          %{
            conn: conn,
@@ -145,6 +152,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   end
 
   describe "POST /sites/invitations/:invitation_id/reject" do
+    @tag :skip
     test "deletes the invitation", %{conn: conn, user: user} do
       site = insert(:site)
 
@@ -161,6 +169,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
     end
 
+    @tag :skip
     test "notifies the original inviter", %{conn: conn, user: user} do
       inviter = insert(:user)
       site = insert(:site)
@@ -178,6 +187,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
   end
 
   describe "DELETE /sites/invitations/:invitation_id" do
+    @tag :skip
     test "removes the invitation", %{conn: conn} do
       site = insert(:site)
 

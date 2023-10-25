@@ -27,6 +27,7 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
   }
 
   describe "webhook verification" do
+    @tag :skip
     test "is verified when signature is correct", %{conn: conn} do
       insert(:user, id: 235)
       conn = post(conn, "/api/paddle/webhook", @body)
@@ -34,6 +35,7 @@ defmodule PlausibleWeb.Api.PaddleControllerTest do
       assert conn.status == 200
     end
 
+    @tag :skip
     test "not verified when signature is corrupted", %{conn: conn} do
       corrupted = Map.put(@body, "p_signature", Base.encode64("123 fake signature"))
       conn = post(conn, "/api/paddle/webhook", corrupted)

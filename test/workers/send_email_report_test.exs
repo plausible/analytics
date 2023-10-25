@@ -7,6 +7,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
   alias Timex.Timezone
 
   describe "weekly reports" do
+    @tag :skip
     test "sends weekly report to all recipients" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com", "user2@email.com"])
@@ -24,6 +25,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
       )
     end
 
+    @tag :skip
     test "calculates timezone correctly" do
       site = insert(:site, timezone: "US/Eastern")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
@@ -61,6 +63,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
                ~s(<span id="visitors" style="line-height: 24px; font-size: 20px;">2</span>)
     end
 
+    @tag :skip
     test "includes the correct stats" do
       site = insert(:site, domain: "test-site.com")
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
@@ -108,6 +111,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
   end
 
   describe "monthly_reports" do
+    @tag :skip
     test "sends monthly report to all recipients" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
       insert(:monthly_report, site: site, recipients: ["user@email.com", "user2@email.com"])

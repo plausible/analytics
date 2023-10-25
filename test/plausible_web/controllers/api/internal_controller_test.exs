@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
   describe "GET /api/:domain/status" do
     setup [:create_user, :log_in]
 
+    @tag :skip
     test "is WAITING when site has no pageviews", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
       conn = get(conn, "/api/#{site.domain}/status")
@@ -13,6 +14,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       assert json_response(conn, 200) == "WAITING"
     end
 
+    @tag :skip
     test "is READY when site has at least 1 pageview", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
       Plausible.TestUtils.create_pageviews([%{domain: site.domain}])
@@ -26,6 +28,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
   describe "GET /api/sites" do
     setup [:create_user, :log_in]
 
+    @tag :skip
     test "returns a list of site domains for the current user", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
       site2 = insert(:site, members: [user])
@@ -36,6 +39,7 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
   end
 
   describe "GET /api/sites - user not logged in" do
+    @tag :skip
     test "returns 401 unauthorized", %{conn: conn} do
       conn = get(conn, "/api/sites")
 

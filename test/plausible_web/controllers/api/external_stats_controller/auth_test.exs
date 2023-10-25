@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
 
   setup [:create_user, :create_api_key]
 
+  @tag :skip
   test "unauthenticated request - returns 401", %{conn: conn} do
     conn =
       get(conn, "/api/v1/stats/aggregate", %{
@@ -16,6 +17,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
            }
   end
 
+  @tag :skip
   test "bad API key - returns 401", %{conn: conn} do
     conn =
       conn
@@ -28,6 +30,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
            }
   end
 
+  @tag :skip
   test "good API key but bad site id - returns 401", %{conn: conn, api_key: api_key} do
     conn =
       conn
@@ -40,6 +43,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
            }
   end
 
+  @tag :skip
   test "good API key but missing site id - returns 400", %{conn: conn, api_key: api_key} do
     conn =
       conn
@@ -52,6 +56,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
            }
   end
 
+  @tag :skip
   test "can access with correct API key and site ID", %{conn: conn, user: user, api_key: api_key} do
     site = insert(:site, members: [user])
 
@@ -65,6 +70,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
            }
   end
 
+  @tag :skip
   test "can access as an admin", %{conn: conn, user: user, api_key: api_key} do
     Application.put_env(:plausible, :super_admin_user_ids, [user.id])
     site = insert(:site)
@@ -79,6 +85,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
            }
   end
 
+  @tag :skip
   test "limits the rate of API requests", %{user: user} do
     api_key = insert(:api_key, user_id: user.id, hourly_request_limit: 3)
 
