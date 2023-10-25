@@ -1,7 +1,6 @@
-defmodule Plausible.Plugins.API.Pagination do
+defmodule Plausible.Pagination do
   @moduledoc """
-  Cursor-based pagination for the Plugins API.
-  Can be moved to another namespace in case used elsewhere.
+  Cursor-based pagination.
   """
 
   @limit 10

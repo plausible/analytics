@@ -5,7 +5,7 @@ defmodule Plausible.Plugins.API.Goals do
   """
 
   import Ecto.Query
-  import Plausible.Plugins.API.Pagination
+  import Plausible.Pagination
 
   alias Plausible.Repo
   alias PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest

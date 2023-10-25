@@ -411,7 +411,7 @@ defmodule PlausibleWeb.Live.Sites do
                                filter_text: filter_text
                              } ->
       excluded_site_ids = Enum.map(invitations, & &1.site_id)
-      Sites.list(user, params, excluded_ids: excluded_site_ids, filter_by_domain: filter_text)
+      Sites.list(user, params, exclude_ids: excluded_site_ids, filter_by_domain: filter_text)
     end)
     |> assign_fn.(:visitors, fn %{sites: sites, invitations: invitations} ->
       Plausible.Stats.Clickhouse.last_24h_visitors(
