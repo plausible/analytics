@@ -284,66 +284,73 @@ config :plausible, PlausibleWeb.Firewall,
     |> String.split(",")
     |> Enum.map(&String.trim/1)
 
-if config_env() == :prod && !disable_cron do
-  base_cron = [
-    # Daily at midnight
-    {"0 0 * * *", Plausible.Workers.RotateSalts},
-    #  hourly
-    {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
-    # hourly
-    {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
-    # Daily at midday
-    {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
-    # Every 15 minutes
-    {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
-    # Every day at midnight
-    {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes},
-    # Every day at 1am
-    {"0 1 * * *", Plausible.Workers.CleanInvitations}
-  ]
+cond do
+  config_env() == :prod && !disable_cron ->
+    base_cron = [
+      # Daily at midnight
+      {"0 0 * * *", Plausible.Workers.RotateSalts},
+      #  hourly
+      {"0 * * * *", Plausible.Workers.ScheduleEmailReports},
+      # hourly
+      {"0 * * * *", Plausible.Workers.SendSiteSetupEmails},
+      # Daily at midday
+      {"0 12 * * *", Plausible.Workers.SendCheckStatsEmails},
+      # Every 15 minutes
+      {"*/15 * * * *", Plausible.Workers.SpikeNotifier},
+      # Every day at midnight
+      {"0 0 * * *", Plausible.Workers.CleanEmailVerificationCodes},
+      # Every day at 1am
+      {"0 1 * * *", Plausible.Workers.CleanInvitations}
+    ]
 
-  extra_cron = [
-    # Daily at midday
-    {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
-    # Daily at 14
-    {"0 14 * * *", Plausible.Workers.CheckUsage},
-    # Daily at 15
-    {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
-    # Every midnight
-    {"0 0 * * *", Plausible.Workers.LockSites}
-  ]
+    extra_cron = [
+      # Daily at midday
+      {"0 12 * * *", Plausible.Workers.SendTrialNotifications},
+      # Daily at 14
+      {"0 14 * * *", Plausible.Workers.CheckUsage},
+      # Daily at 15
+      {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
+      # Every midnight
+      {"0 0 * * *", Plausible.Workers.LockSites}
+    ]
 
-  base_queues = [
-    rotate_salts: 1,
-    schedule_email_reports: 1,
-    send_email_reports: 1,
-    spike_notifications: 1,
-    check_stats_emails: 1,
-    site_setup_emails: 1,
-    clean_email_verification_codes: 1,
-    clean_invitations: 1,
-    google_analytics_imports: 1
-  ]
+    base_queues = [
+      rotate_salts: 1,
+      schedule_email_reports: 1,
+      send_email_reports: 1,
+      spike_notifications: 1,
+      check_stats_emails: 1,
+      site_setup_emails: 1,
+      clean_email_verification_codes: 1,
+      clean_invitations: 1,
+      google_analytics_imports: 1
+    ]
 
-  extra_queues = [
-    provision_ssl_certificates: 1,
-    trial_notification_emails: 1,
-    check_usage: 1,
-    notify_annual_renewal: 1,
-    lock_sites: 1
-  ]
+    extra_queues = [
+      provision_ssl_certificates: 1,
+      trial_notification_emails: 1,
+      check_usage: 1,
+      notify_annual_renewal: 1,
+      lock_sites: 1
+    ]
 
-  # Keep 30 days history
-  config :plausible, Oban,
-    repo: Plausible.Repo,
-    plugins: [{Oban.Plugins.Pruner, max_age: 2_592_000}],
-    queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
-    crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
-else
-  config :plausible, Oban,
-    repo: Plausible.Repo,
-    queues: [google_analytics_imports: 1],
-    plugins: false
+    # Keep 30 days history
+    config :plausible, Oban,
+      repo: Plausible.Repo,
+      plugins: [{Oban.Plugins.Pruner, max_age: 2_592_000}],
+      queues: if(is_selfhost, do: base_queues, else: base_queues ++ extra_queues),
+      crontab: if(is_selfhost, do: base_cron, else: base_cron ++ extra_cron)
+
+  config_env() == :test ->
+    config :plausible, Oban,
+      repo: Plausible.Repo,
+      testing: :inline
+
+  true ->
+    config :plausible, Oban,
+      repo: Plausible.Repo,
+      queues: [google_analytics_imports: 1],
+      plugins: []
 end
 
 config :plausible, :hcaptcha,
