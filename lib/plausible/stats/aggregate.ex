@@ -58,6 +58,93 @@ defmodule Plausible.Stats.Aggregate do
   end
 
   defp aggregate_time_on_page(site, query) do
+    if FunWithFlags.enabled?(:window_time_on_page) do
+      window_aggregate_time_on_page(site, query)
+    else
+      neighbor_aggregate_time_on_page(site, query)
+    end
+  end
+
+  defp neighbor_aggregate_time_on_page(site, query) do
+    q =
+      from(
+        e in base_event_query(site, %Query{
+          query
+          | filters: Map.delete(query.filters, "event:page")
+        }),
+        select: {
+          fragment("? as p", e.pathname),
+          fragment("? as t", e.timestamp),
+          fragment("? as s", e.session_id)
+        },
+        order_by: [e.session_id, e.timestamp]
+      )
+
+    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
+    where_param_idx = length(base_query_raw_params)
+
+    {where_clause, where_arg} =
+      case query.filters["event:page"] do
+        {:is, page} ->
+          {"p = {$#{where_param_idx}:String}", page}
+
+        {:is_not, page} ->
+          {"p != {$#{where_param_idx}:String}", page}
+
+        {:member, page} ->
+          {"p IN {$#{where_param_idx}:Array(String)}", page}
+
+        {:not_member, page} ->
+          {"p NOT IN {$#{where_param_idx}:Array(String)}", page}
+
+        {:matches, expr} ->
+          regex = page_regex(expr)
+          {"match(p, {$#{where_param_idx}:String})", regex}
+
+        {:matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+          {"multiMatchAny(p, {$#{where_param_idx}:Array(String)})", page_regexes}
+
+        {:not_matches_member, exprs} ->
+          page_regexes = Enum.map(exprs, &page_regex/1)
+          {"not(multiMatchAny(p, {$#{where_param_idx}:Array(String)}))", page_regexes}
+
+        {:does_not_match, expr} ->
+          regex = page_regex(expr)
+          {"not(match(p, {$#{where_param_idx}:String}))", regex}
+      end
+
+    params = base_query_raw_params ++ [where_arg]
+
+    time_query = "
+      SELECT
+        avg(ifNotFinite(avgTime, null))
+      FROM
+        (SELECT
+          p,
+          sum(td)/count(case when p2 != p then 1 end) as avgTime
+        FROM
+          (SELECT
+            p,
+            p2,
+            sum(t2-t) as td
+          FROM
+            (SELECT
+            *,
+              neighbor(t, 1) as t2,
+              neighbor(p, 1) as p2,
+              neighbor(s, 1) as s2
+            FROM (#{base_query_raw}))
+          WHERE s=s2 AND #{where_clause}
+          GROUP BY p,p2,s)
+        GROUP BY p)"
+
+    {:ok, res} = ClickhouseRepo.query(time_query, params)
+    [[time_on_page]] = res.rows
+    %{time_on_page: time_on_page}
+  end
+
+  defp window_aggregate_time_on_page(site, query) do
     import Ecto.Query
 
     windowed_pages_q =

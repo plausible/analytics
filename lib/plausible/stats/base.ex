@@ -122,20 +122,16 @@ defmodule Plausible.Stats.Base do
           q
       end
 
-    apply_event_props_filter(q, query)
-  end
-
-  def apply_event_props_filter(ecto_query, plausible_query) do
-    case Query.get_filter_by_prefix(plausible_query, "event:props") do
+    case Query.get_filter_by_prefix(query, "event:props") do
       {"event:props:" <> prop_name, {:is, value}} ->
         if value == "(none)" do
           from(
-            e in ecto_query,
+            e in q,
             where: fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
           )
         else
           from(
-            e in ecto_query,
+            e in q,
             array_join: meta in "meta",
             as: :meta,
             where: meta.key == ^prop_name and meta.value == ^value
@@ -145,12 +141,12 @@ defmodule Plausible.Stats.Base do
       {"event:props:" <> prop_name, {:is_not, value}} ->
         if value == "(none)" do
           from(
-            e in ecto_query,
+            e in q,
             where: fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name)
           )
         else
           from(
-            e in ecto_query,
+            e in q,
             left_array_join: meta in "meta",
             as: :meta,
             where:
@@ -163,7 +159,7 @@ defmodule Plausible.Stats.Base do
         none_value_included = Enum.member?(values, "(none)")
 
         from(
-          e in ecto_query,
+          e in q,
           left_array_join: meta in "meta",
           as: :meta,
           where:
@@ -176,7 +172,7 @@ defmodule Plausible.Stats.Base do
         none_value_included = Enum.member?(values, "(none)")
 
         from(
-          e in ecto_query,
+          e in q,
           left_array_join: meta in "meta",
           as: :meta,
           where:
@@ -188,8 +184,10 @@ defmodule Plausible.Stats.Base do
         )
 
       _ ->
-        ecto_query
+        q
     end
+
+    q
   end
 
   @api_prop_name_to_db %{

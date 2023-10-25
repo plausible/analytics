@@ -215,6 +215,94 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp breakdown_time_on_page(site, query, pages) do
+    if FunWithFlags.enabled?(:window_time_on_page) do
+      window_breakdown_time_on_page(site, query, pages)
+    else
+      neighbor_breakdown_time_on_page(site, query, pages)
+    end
+  end
+
+  defp neighbor_breakdown_time_on_page(site, query, pages) do
+    q =
+      from(
+        e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
+        select: {
+          fragment("? as p", e.pathname),
+          fragment("? as t", e.timestamp),
+          fragment("? as s", e.session_id)
+        },
+        order_by: [e.session_id, e.timestamp]
+      )
+
+    {base_query_raw, base_query_raw_params} = ClickhouseRepo.to_sql(:all, q)
+
+    select =
+      if query.include_imported do
+        "sum(td), count(case when p2 != p then 1 end)"
+      else
+        "round(sum(td)/count(case when p2 != p then 1 end))"
+      end
+
+    pages_idx = length(base_query_raw_params)
+    params = base_query_raw_params ++ [pages]
+
+    time_query = "
+       SELECT
+         p,
+         #{select}
+       FROM
+         (SELECT
+           p,
+           p2,
+           sum(t2-t) as td
+         FROM
+           (SELECT
+             *,
+             neighbor(t, 1) as t2,
+             neighbor(p, 1) as p2,
+             neighbor(s, 1) as s2
+           FROM (#{base_query_raw}))
+         WHERE s=s2 AND p IN {$#{pages_idx}:Array(String)}
+         GROUP BY p,p2,s)
+       GROUP BY p"
+
+    {:ok, res} = ClickhouseRepo.query(time_query, params)
+
+    if query.include_imported do
+      # Imported page views have pre-calculated values
+      res =
+        res.rows
+        |> Enum.map(fn [page, time, visits] -> {page, {time, visits}} end)
+        |> Enum.into(%{})
+
+      from(
+        i in "imported_pages",
+        group_by: i.page,
+        where: i.site_id == ^site.id,
+        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+        where: i.page in ^pages,
+        select: %{
+          page: i.page,
+          pageviews: fragment("sum(?) - sum(?)", i.pageviews, i.exits),
+          time_on_page: sum(i.time_on_page)
+        }
+      )
+      |> ClickhouseRepo.all()
+      |> Enum.reduce(res, fn %{page: page, pageviews: pageviews, time_on_page: time}, res ->
+        {restime, resviews} = Map.get(res, page, {0, 0})
+        Map.put(res, page, {restime + time, resviews + pageviews})
+      end)
+      |> Enum.map(fn
+        {page, {_, 0}} -> {page, nil}
+        {page, {time, pageviews}} -> {page, time / pageviews}
+      end)
+      |> Enum.into(%{})
+    else
+      res.rows |> Enum.map(fn [page, time] -> {page, time} end) |> Enum.into(%{})
+    end
+  end
+
+  defp window_breakdown_time_on_page(site, query, pages) do
     import Ecto.Query
 
     windowed_pages_q =
