@@ -2,6 +2,8 @@ defmodule Plausible.Sites do
   alias Plausible.{Repo, Site, Site.SharedLink, Billing.Quota}
   import Ecto.Query
 
+  @type list_opt() :: {:exclude_ids, [non_neg_integer()]} | {:filter_by_domain, String.t()}
+
   def get_by_domain(domain) do
     Repo.get_by(Site, domain: domain)
   end
@@ -10,7 +12,7 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
-  @spec list(User.t(), map(), [non_neg_integer()]) :: %{entries: [Site.t()], pagination: map()}
+  @spec list(User.t(), map(), [list_opt()]) :: %{entries: [Site.t()], pagination: map()}
   def list(user, pagination_params, opts \\ []) do
     exclude_ids = Keyword.get(opts, :exclude_ids, [])
     domain_filter = Keyword.get(opts, :filter_by_domain)
