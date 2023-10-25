@@ -268,7 +268,7 @@ defmodule Plausible.Stats.Breakdown do
       timed_pages_q =
         select(timed_pages_q, [e], %{
           page: e.pathname,
-          time_on_page: fragment("sum(greatest(?,0))", e.next_timestamp - e.timestamp)
+          time_on_page: fragment("avg(greatest(?,0))", e.next_timestamp - e.timestamp)
         })
 
       "timed_pages"
@@ -283,7 +283,7 @@ defmodule Plausible.Stats.Breakdown do
       |> Map.new()
     else
       timed_pages_q
-      |> select([e], {e.pathname, fragment("sum(greatest(?,0))", e.next_timestamp - e.timestamp)})
+      |> select([e], {e.pathname, fragment("avg(greatest(?,0))", e.next_timestamp - e.timestamp)})
       |> Plausible.ClickhouseRepo.all()
       |> Map.new()
     end

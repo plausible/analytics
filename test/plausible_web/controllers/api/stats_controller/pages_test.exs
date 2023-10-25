@@ -187,7 +187,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "visitors" => 2,
                  "pageviews" => 2,
                  "bounce_rate" => 0,
-                 "time_on_page" => 240
+                 "time_on_page" => 120
                },
                %{
                  "name" => "/blog/other-post",
