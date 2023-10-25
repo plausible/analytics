@@ -79,7 +79,7 @@ defmodule Plausible.Stats.Aggregate do
     time_on_page_q =
       from e in subquery(windowed_pages_q),
         select: fragment("avgIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0),
-        where: ^Plausible.Stats.Base.dynamic_filter_condition(query, :page, "pathname")
+        where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname)
 
     %{time_on_page: ClickhouseRepo.one(time_on_page_q)}
   end
