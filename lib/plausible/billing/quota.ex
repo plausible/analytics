@@ -166,6 +166,21 @@ defmodule Plausible.Billing.Quota do
     end)
   end
 
+  def ensure_can_subscribe_to_plan(user, %Plan{} = plan) do
+    usage = %{
+      monthly_pageviews: monthly_pageview_usage(user),
+      team_members: team_member_usage(user),
+      sites: site_usage(user)
+    }
+
+    case exceeded_limits(usage, plan) do
+      [] -> :ok
+      exceeded_limits -> {:error, %{exceeded_limits: exceeded_limits}}
+    end
+  end
+
+  def ensure_can_subscribe_to_plan(_user, nil), do: :ok
+
   def exceeded_limits(usage, %Plan{} = plan) do
     for {usage_field, limit_field} <- [
           {:monthly_pageviews, :monthly_pageview_limit},
