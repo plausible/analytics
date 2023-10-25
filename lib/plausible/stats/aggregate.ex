@@ -76,40 +76,12 @@ defmodule Plausible.Stats.Aggregate do
              pathname: e.pathname
            }
 
-    timed_pages_q =
+    time_on_page_q =
       from e in subquery(windowed_pages_q),
-        select: fragment("avgIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0)
+        select: fragment("avgIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0),
+        where: ^Plausible.Stats.Base.dynamic_filter_condition(query, :page, "pathname")
 
-    timed_filtered_pages_q =
-      case query.filters["event:page"] do
-        {:is, page} ->
-          where(timed_pages_q, pathname: ^page)
-
-        {:is_not, page} ->
-          where(timed_pages_q, [e], e.pathname != ^page)
-
-        {:member, pages} ->
-          where(timed_pages_q, [e], e.pathname in ^pages)
-
-        {:not_member, pages} ->
-          where(timed_pages_q, [e], e.pathname not in ^pages)
-
-        {:matches, expr} ->
-          where(timed_pages_q, [e], fragment("match(?,?)", e.pathname, ^page_regex(expr)))
-
-        {:matches_member, exprs} ->
-          page_regexes = Enum.map(exprs, &page_regex/1)
-          where(timed_pages_q, [e], fragment("multiMatchAny(?,?)", e.pathname, ^page_regexes))
-
-        {:not_matches_member, exprs} ->
-          page_regexes = Enum.map(exprs, &page_regex/1)
-          where(timed_pages_q, [e], not fragment("multiMatchAny(?,?)", e.pathname, ^page_regexes))
-
-        {:does_not_match, expr} ->
-          where(timed_pages_q, [e], not fragment("match(?,?)", e.pathname, ^page_regex(expr)))
-      end
-
-    %{time_on_page: ClickhouseRepo.one(timed_filtered_pages_q)}
+    %{time_on_page: ClickhouseRepo.one(time_on_page_q)}
   end
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]
