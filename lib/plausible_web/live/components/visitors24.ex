@@ -18,8 +18,8 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       site
       |> Plausible.Stats.timeseries(q, [:visitors])
       |> scale(assigns.height)
-      |> Enum.with_index(fn scaled_value, index -> 
-        "#{(index - 1) * assigns.tick},#{scaled_value}" 
+      |> Enum.with_index(fn scaled_value, index ->
+        "#{(index - 1) * assigns.tick},#{scaled_value}"
       end)
 
     clip_points =
