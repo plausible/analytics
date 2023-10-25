@@ -126,7 +126,15 @@ defmodule PlausibleWeb.BillingController do
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
     with {:ok, {subscription, preview_info}} <-
            preview_subscription(conn.assigns.current_user, new_plan_id) do
+      back_action =
+        if FunWithFlags.enabled?(:business_tier, for: conn.assigns.current_user) do
+          :choose_plan
+        else
+          :change_plan_form
+        end
+
       render(conn, "change_plan_preview.html",
+        back_link: Routes.billing_path(conn, back_action),
         skip_plausible_tracking: true,
         subscription: subscription,
         preview_info: preview_info,
