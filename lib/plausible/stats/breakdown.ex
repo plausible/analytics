@@ -247,24 +247,24 @@ defmodule Plausible.Stats.Breakdown do
     params = base_query_raw_params ++ [pages]
 
     time_query = "
-       SELECT
-         p,
-         #{select}
-       FROM
-         (SELECT
-           p,
-           p2,
-           sum(t2-t) as td
-         FROM
-           (SELECT
-             *,
-             neighbor(t, 1) as t2,
-             neighbor(p, 1) as p2,
-             neighbor(s, 1) as s2
-           FROM (#{base_query_raw}))
-         WHERE s=s2 AND p IN {$#{pages_idx}:Array(String)}
-         GROUP BY p,p2,s)
-       GROUP BY p"
+      SELECT
+        p,
+        #{select}
+      FROM
+        (SELECT
+          p,
+          p2,
+          sum(t2-t) as td
+        FROM
+          (SELECT
+            *,
+            neighbor(t, 1) as t2,
+            neighbor(p, 1) as p2,
+            neighbor(s, 1) as s2
+          FROM (#{base_query_raw}))
+        WHERE s=s2 AND p IN {$#{pages_idx}:Array(String)}
+        GROUP BY p,p2,s)
+      GROUP BY p"
 
     {:ok, res} = ClickhouseRepo.query(time_query, params)
 
