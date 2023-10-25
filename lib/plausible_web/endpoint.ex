@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Endpoint do
     at: "/",
     from: :plausible,
     gzip: false,
-    only: ~w(assets images favicon.ico robots.txt)
+    only: ~w(css js images favicon.ico robots.txt)
   )
 
   plug(Plug.Static,

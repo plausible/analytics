@@ -33,6 +33,6 @@
       © <%= DateTime.utc_now().year() %> Plausible Analytics. All rights reserved.
     </p>
 
-    <script type="text/javascript" data-pref="<%= @conn.assigns[:theme] || (@conn.assigns[:current_user] && @conn.assigns[:current_user].theme) %>"  src="<%= Routes.static_path(@conn, "/assets/app.js") %>"></script>
+    <script type="text/javascript" data-pref="<%= @conn.assigns[:theme] || (@conn.assigns[:current_user] && @conn.assigns[:current_user].theme) %>"  src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>

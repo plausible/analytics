@@ -3,10 +3,10 @@
   "reportOutput": ["github"],
   "files": [
     {
-      "path": "static/assets/*.js"
+      "path": "static/js/*.js"
     },
     {
-      "path": "static/assets/app.css"
+      "path": "static/css/app.css"
     },
     {
       "path": "tracker/js/plausible.js"

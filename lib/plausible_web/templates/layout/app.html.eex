@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="<%= PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png") %>">
     <link rel="apple-touch-icon" href="/images/icon/apple-touch-icon.png">
     <title><%= assigns[:title] || "Plausible · Simple, privacy-friendly alternative to Google Analytics" %></title>
-    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/assets/app.css") %>"/>
+    <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <%= render("_tracking.html", assigns) %>
   </head>
   <body class="flex flex-col bg-gray-50 dark:bg-gray-850" style="<%= if !@conn.assigns[:embedded], do: "height: 100%;" %> <%= if @conn.assigns[:background], do: "background-color: #{@conn.assigns[:background]}" %>">
@@ -32,6 +32,6 @@
     <% else %>
       <%= render("_footer.html", assigns) %>
     <% end %>
-    <script type="text/javascript" data-pref="<%= @conn.assigns[:theme] || (@conn.assigns[:current_user] && @conn.assigns[:current_user].theme) %>"  src="<%= Routes.static_path(@conn, "/assets/app.js") %>"></script>
+    <script type="text/javascript" data-pref="<%= @conn.assigns[:theme] || (@conn.assigns[:current_user] && @conn.assigns[:current_user].theme) %>"  src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>
