@@ -68,13 +68,12 @@ ENV LISTEN_IP=0.0.0.0
 
 WORKDIR /app
 
-RUN adduser -u 1000 -s /bin/sh -D plausibleuser && \
-  chown plausibleuser /app
+RUN adduser -u 1000 -s /bin/sh -D plausibleuser
 
 RUN apk upgrade --no-cache && \
   apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
-COPY --from=buildcontainer --chown=plausibleuser:plausibleuser /app/_build/prod/rel/plausible /app
+COPY --from=buildcontainer --chmod=a+rX /app/_build/prod/rel/plausible /app
 COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
 USER plausibleuser
