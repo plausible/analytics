@@ -35,7 +35,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <div
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
-      @keydown.escape.window="invitationOpen = false"
+      x-on:keydown.escape.window="invitationOpen = false"
       class="container pt-6"
     >
       <PlausibleWeb.Live.Components.Visitors.gradient_defs />
@@ -113,7 +113,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <div
       class="group cursor-pointer"
-      @click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
+      x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
       <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
         <div class="w-full flex items-center justify-between space-x-4">
@@ -215,7 +215,7 @@ defmodule PlausibleWeb.Live.Sites do
           x-transition:leave-end="opacity-0"
           class="fixed inset-0 bg-gray-500 dark:bg-gray-800 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
           aria-hidden="true"
-          @click="invitationOpen = false"
+          x-on:click="invitationOpen = false"
         >
         </div>
         <!-- This element is to trick the browser into centering the modal contents. -->
@@ -236,7 +236,7 @@ defmodule PlausibleWeb.Live.Sites do
           <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
               <button
-                @click="invitationOpen = false"
+                x-on:click="invitationOpen = false"
                 class="bg-white dark:bg-gray-800 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               >
                 <span class="sr-only">Close</span>
