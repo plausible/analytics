@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       </defs>
       <rect
         x="-20"
-        y="2"
+        y="1"
         width={25 * 20}
         height={@height}
         fill="url(#chart-gradient-cut-off)"
