@@ -12,7 +12,7 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
-  @spec list(User.t(), map(), [list_opt()]) :: Paginator.Page.t()
+  @spec list(Plausible.Auth.User.t(), map(), [list_opt()]) :: Paginator.Page.t()
   def list(user, pagination_params, opts \\ []) do
     exclude_ids = Keyword.get(opts, :exclude_ids, [])
     domain_filter = Keyword.get(opts, :filter_by_domain)
