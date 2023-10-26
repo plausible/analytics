@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.Sites do
         </h2>
       </div>
 
-      <.search_form filter_text={@filter_text} />
+      <.search_form filter_text={@filter_text} uri={@uri} />
 
       <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <p :if={Enum.empty?(@sites.entries ++ @invitations)} class="dark:text-gray-100">
@@ -341,11 +341,12 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr :filter_text, :string, default: ""
+  attr :uri, URI, required: true
 
   def search_form(assigns) do
     ~H"""
     <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
-      <form id="filter-form" phx-change="filter">
+      <form id="filter-form" phx-change="filter" action={@uri} method="GET">
         <div class="text-gray-800 text-sm inline-flex items-center">
           <div class="relative rounded-md shadow-sm flex">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -353,7 +354,7 @@ defmodule PlausibleWeb.Live.Sites do
             </div>
             <input
               type="text"
-              name="filter-text"
+              name="filter_text"
               id="filter-text"
               class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
               placeholder="Search Sites"
@@ -387,10 +388,11 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  def handle_event("filter", %{"filter-text" => filter_text}, socket) do
+  def handle_event("filter", %{"filter_text" => filter_text}, socket) do
     socket =
       socket
-      |> assign(:filter_text, filter_text)
+      |> set_filter_text(filter_text)
+      |> reset_pagination()
       |> load_sites(force_refresh?: true)
 
     {:noreply, socket}
@@ -399,7 +401,8 @@ defmodule PlausibleWeb.Live.Sites do
   def handle_event("reset-filter-text", _params, socket) do
     socket =
       socket
-      |> assign(:filter_text, "")
+      |> set_filter_text("")
+      |> reset_pagination()
       |> load_sites(force_refresh?: true)
 
     {:noreply, socket}
@@ -442,5 +445,35 @@ defmodule PlausibleWeb.Live.Sites do
     else
       assign(socket, :invitations, [])
     end
+  end
+
+  defp set_filter_text(socket, filter_text) do
+    uri = socket.assigns.uri
+
+    uri_params =
+      uri.query
+      |> URI.decode_query()
+      |> Map.put("filter_text", filter_text)
+      |> URI.encode_query()
+
+    socket
+    |> assign(:filter_text, filter_text)
+    |> assign(:uri, %{uri | query: uri_params})
+  end
+
+  defp reset_pagination(socket) do
+    pagination_fields = ["before", "after"]
+    uri = socket.assigns.uri
+
+    uri_params =
+      uri.query
+      |> URI.decode_query()
+      |> Map.drop(pagination_fields)
+      |> URI.encode_query()
+
+    assign(socket,
+      uri: %{uri | query: uri_params},
+      params: Map.drop(socket.assigns.params, pagination_fields)
+    )
   end
 end
