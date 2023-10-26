@@ -214,12 +214,10 @@ defmodule PlausibleWeb.Router do
     get "/billing/upgrade-success", BillingController, :upgrade_success
     get "/billing/subscription/ping", BillingController, :ping_subscription
 
-    get "/sites", SiteController, :index
-
     scope alias: Live, assigns: %{connect_live_socket: true} do
-      pipe_through [:app_layout]
+      pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
 
-      live "/sites_new", Sites, :index_new, as: :site
+      live "/sites", Sites, :index, as: :site
     end
 
     get "/sites/new", SiteController, :new

@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   def mount(params, %{"current_user_id" => user_id}, socket) do
     uri =
-      ("/sites_new?" <> URI.encode_query(Map.take(params, ["filter_text"])))
+      ("/sites?" <> URI.encode_query(Map.take(params, ["filter_text"])))
       |> URI.new!()
 
     socket =
@@ -62,24 +62,26 @@ defmodule PlausibleWeb.Live.Sites do
           You don't have any sites yet
         </p>
 
-        <%= for invitation <- @invitations do %>
-          <.invitation invitation={invitation} hourly_stats={@hourly_stats[invitation.site.domain]} />
-        <% end %>
+        <div :if={not Enum.empty?(@sites.entries ++ @invitations)}>
+          <%= for invitation <- @invitations do %>
+            <.invitation invitation={invitation} hourly_stats={@hourly_stats[invitation.site.domain]} />
+          <% end %>
 
-        <%= for site <- @sites.entries do %>
-          <.site site={site} hourly_stats={@hourly_stats[site.domain]} />
-        <% end %>
+          <%= for site <- @sites.entries do %>
+            <.site site={site} hourly_stats={@hourly_stats[site.domain]} />
+          <% end %>
+        </div>
+
+        <.pagination :if={@sites.metadata.before || @sites.metadata.after} uri={@uri} page={@sites}>
+          Total of <span class="font-medium"><%= @sites.metadata.total_count %></span>
+          sites
+          <span :if={@invitation_count > 0} class="font-medium">
+            (+ <%= @invitation_count %> invitations)
+          </span>
+        </.pagination>
+
+        <.invitation_modal :if={not Enum.empty?(@invitations)} user={@user} />
       </ul>
-
-      <.pagination :if={@sites.metadata.before || @sites.metadata.after} uri={@uri} page={@sites}>
-        Total of <span class="font-medium"><%= @sites.metadata.total_count %></span>
-        sites
-        <span :if={@invitation_count > 0} class="font-medium">
-          (+ <%= @invitation_count %> invitations)
-        </span>
-      </.pagination>
-
-      <.invitation_modal :if={not Enum.empty?(@invitations)} user={@user} />
     </div>
     """
   end
@@ -159,7 +161,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site(assigns) do
     ~H"""
-    <div class="relative">
+    <div class="relative" data-domain={@site.domain}>
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
         <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
@@ -196,9 +198,7 @@ defmodule PlausibleWeb.Live.Sites do
       <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
         <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
         <span class="text-gray-800 dark:text-gray-200">
-          <b>
-            <%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %>
-          </b>
+          <b><%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %></b>
           visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
         </span>
       </span>

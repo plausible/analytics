@@ -31,7 +31,7 @@ defmodule Plausible.Sites do
     Plausible.Pagination.paginate(sites_query, pagination_params,
       include_total_count: true,
       cursor_fields: [{:domain, :asc}],
-      limit: 1
+      limit: 24
     )
   end
 
