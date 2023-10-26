@@ -32,12 +32,13 @@ defmodule PlausibleWeb.Live.Components.Visitors do
 
     assigns =
       assigns
+      |> assign(:points_len, length(points))
       |> assign(:points, Enum.join(points, " "))
       |> assign(:clip_points, Enum.join(clip_points, " "))
       |> assign(:id, Ecto.UUID.generate())
 
     ~H"""
-    <svg viewBox={"0 0 #{24 * 20} #{@height + 1}"} class="chart w-full mb-2">
+    <svg viewBox={"0 0 #{@points_len * @tick} #{@height + 1}"} class="chart w-full mb-2">
       <defs>
         <clipPath id={"gradient-cut-off-#{@id}"}>
           <polyline points={@clip_points} />
@@ -46,7 +47,7 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       <rect
         x="-20"
         y="1"
-        width={25 * 20}
+        width={(@points_len + 1) * @tick}
         height={@height}
         fill="url(#chart-gradient-cut-off)"
         clip-path={"url(#gradient-cut-off-#{@id})"}
