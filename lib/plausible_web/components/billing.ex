@@ -282,7 +282,7 @@ defmodule PlausibleWeb.Components.Billing do
   attr :id, :string, required: true
   attr :paddle_product_id, :string, required: true
   attr :checkout_disabled, :boolean, default: false
-  attr :user, :any, required: true
+  attr :user, :map, required: true
   attr :confirm_message, :any, default: nil
   slot :inner_block, required: true
 
