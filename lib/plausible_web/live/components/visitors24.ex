@@ -46,7 +46,7 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       <rect
         x="-20"
         y="0"
-        width={24 * 20}
+        width={25 * 20}
         height={@height + 1}
         fill="url(#chart-gradient-cut-off)"
         clip-path={"url(#gradient-cut-off-#{@id})"}
@@ -73,10 +73,10 @@ defmodule PlausibleWeb.Live.Components.Visitors do
     max_value = Enum.max_by(data, fn %{visitors: visitors} -> visitors end)
 
     scaling_factor =
-      if max_value.visitors > 0, do: div(target_range, max_value.visitors), else: 0
+      if max_value.visitors > 0, do: target_range / max_value.visitors, else: 0
 
     Enum.map(data, fn %{visitors: visitors} ->
-      target_range - visitors * scaling_factor
+      round(target_range - visitors * scaling_factor)
     end)
   end
 end
