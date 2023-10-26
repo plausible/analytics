@@ -8,6 +8,21 @@ defmodule Plausible.Billing.Quota do
   alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props}
 
+  def usage(user, opts \\ []) do
+    basic_usage = %{
+      monthly_pageviews: monthly_pageview_usage(user),
+      team_members: team_member_usage(user),
+      sites: site_usage(user)
+    }
+
+    if Keyword.get(opts, :with_features) == true do
+      basic_usage
+      |> Map.put(:features, features_usage(user))
+    else
+      basic_usage
+    end
+  end
+
   @limit_sites_since ~D[2021-05-05]
   @spec site_limit(Plausible.Auth.User.t()) :: non_neg_integer() | :unlimited
   @doc """
@@ -167,13 +182,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   def ensure_can_subscribe_to_plan(user, %Plan{} = plan) do
-    usage = %{
-      monthly_pageviews: monthly_pageview_usage(user),
-      team_members: team_member_usage(user),
-      sites: site_usage(user)
-    }
-
-    case exceeded_limits(usage, plan) do
+    case exceeded_limits(usage(user), plan) do
       [] -> :ok
       exceeded_limits -> {:error, %{exceeded_limits: exceeded_limits}}
     end

@@ -42,7 +42,7 @@ defmodule Plausible.Billing do
     plan = Plans.find(new_plan_id)
 
     with :ok <- Quota.ensure_can_subscribe_to_plan(user, plan),
-      do: do_change_plan(subscription, new_plan_id)
+         do: do_change_plan(subscription, new_plan_id)
   end
 
   defp do_change_plan(subscription, new_plan_id) do

@@ -23,12 +23,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         Users.with_subscription(user_id)
       end)
       |> assign_new(:usage, fn %{user: user} ->
-        %{
-          monthly_pageviews: Quota.monthly_pageview_usage(user),
-          team_members: Quota.team_member_usage(user),
-          sites: Quota.site_usage(user),
-          features: Quota.features_usage(user)
-        }
+        Quota.usage(user, with_features: true)
       end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)
