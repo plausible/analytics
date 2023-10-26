@@ -59,10 +59,10 @@ defmodule PlausibleWeb.Live.Components.Visitors do
   def gradient_defs(assigns) do
     ~H"""
     <svg width="0" height="0">
-      <defs>
+      <defs class="text-white dark:text-indigo-800">
         <linearGradient id="chart-gradient-cut-off" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stop-color="#C5CAE9" />
-          <stop offset="100%" stop-color="white" />
+          <stop offset="0%" stop-color="#6574cd" />
+          <stop offset="90%" stop-color="currentColor" />
         </linearGradient>
       </defs>
     </svg>

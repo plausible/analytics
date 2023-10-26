@@ -74,7 +74,8 @@ defmodule PlausibleWeb.Live.Sites do
       <.pagination :if={@sites.metadata.before || @sites.metadata.after} uri={@uri} page={@sites}>
         Total of <span class="font-medium"><%= @sites.metadata.total_count %></span>
         sites
-        <span :if={@invitation_count > 0} class="font-medium"> (+ <%= @invitation_count %> invitations)
+        <span :if={@invitation_count > 0} class="font-medium">
+          (+ <%= @invitation_count %> invitations)
         </span>
       </.pagination>
 
@@ -180,7 +181,7 @@ defmodule PlausibleWeb.Live.Sites do
           href={"/#{URI.encode_www_form(@site.domain)}/settings"}
           class="absolute top-0 right-0 p-4 mt-1"
         >
-          <Heroicons.cog_8_tooth class="w-4 h-4" />
+          <Heroicons.cog_8_tooth class="w-4 h-4 text-gray-400" />
         </.unstyled_link>
       <% end %>
     </div>

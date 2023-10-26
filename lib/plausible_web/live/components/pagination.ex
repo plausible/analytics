@@ -17,11 +17,21 @@ defmodule PlausibleWeb.Live.Components.Pagination do
       </div>
       <div class="flex-1 flex justify-between sm:justify-end">
         <.pagination_link uri={@uri} cursor={{"before", @page.metadata.before}} label="← Previous" />
-        <.pagination_link uri={@uri} cursor={{"after", @page.metadata.after}} label="Next →" />
+        <.pagination_link
+          class="ml-4"
+          uri={@uri}
+          cursor={{"after", @page.metadata.after}}
+          label="Next →"
+        />
       </div>
     </nav>
     """
   end
+
+  attr :class, :string, default: nil
+  attr :uri, URI, required: true
+  attr :cursor, :any, required: true
+  attr :label, :string, required: true
 
   defp pagination_link(assigns) do
     {field, cursor} = assigns.cursor
@@ -35,12 +45,13 @@ defmodule PlausibleWeb.Live.Components.Pagination do
     <a
       href={@uri}
       class={[
-        "pagination-link relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md bg-white dark:bg-gray-100",
+        "pagination-link relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md",
         if @active? do
-          "border-gray-300 text-gray-700 hover:bg-gray-50"
+          "button "
         else
-          "border-gray-300 text-gray-300 dark:bg-gray-600 hover:shadow-none hover:bg-gray-300 cursor-not-allowed"
-        end
+          "border-gray-300 text-gray-300 dark:border-gray-500 dark:bg-gray-800 dark:text-gray-600 hover:shadow-none hover:bg-gray-300 cursor-not-allowed"
+        end,
+        @class
       ]}
     >
       <%= @label %>
