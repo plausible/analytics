@@ -39,11 +39,10 @@ defmodule Plausible.Billing do
 
   def change_plan(user, new_plan_id) do
     subscription = active_subscription_for(user.id)
+    plan = Plans.find(new_plan_id)
 
-    case Quota.ensure_can_subscribe_to_plan(user, Plans.find(new_plan_id)) do
-      :ok -> do_change_plan(subscription, new_plan_id)
-      error -> error
-    end
+    with :ok <- Quota.ensure_can_subscribe_to_plan(user, plan),
+      do: do_change_plan(subscription, new_plan_id)
   end
 
   defp do_change_plan(subscription, new_plan_id) do
