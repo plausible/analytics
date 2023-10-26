@@ -38,7 +38,11 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    assigns = assign(assigns, :invitation_count, Enum.count(assigns.invitations))
+    assigns =
+      assign(assigns,
+        invitation_count: Enum.count(assigns.invitations),
+        has_sites?: not Enum.empty?(assigns.sites.entries ++ assigns.invitations)
+      )
 
     ~H"""
     <div
@@ -55,14 +59,20 @@ defmodule PlausibleWeb.Live.Sites do
         </h2>
       </div>
 
-      <.search_form filter_text={@filter_text} uri={@uri} />
-
-      <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <p :if={Enum.empty?(@sites.entries ++ @invitations)} class="dark:text-gray-100">
+      <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
+        <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
+        <p :if={not @has_sites?} class="dark:text-gray-100">
           You don't have any sites yet
         </p>
+        <div class="mt-4 flex sm:ml-4 sm:mt-0">
+          <a href="/sites/new" class="button">
+            + Add Website
+          </a>
+        </div>
+      </div>
 
-        <div :if={not Enum.empty?(@sites.entries ++ @invitations)}>
+      <div :if={@has_sites?}>
+        <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <%= for invitation <- @invitations do %>
             <.invitation invitation={invitation} hourly_stats={@hourly_stats[invitation.site.domain]} />
           <% end %>
@@ -70,7 +80,7 @@ defmodule PlausibleWeb.Live.Sites do
           <%= for site <- @sites.entries do %>
             <.site site={site} hourly_stats={@hourly_stats[site.domain]} />
           <% end %>
-        </div>
+        </ul>
 
         <.pagination :if={@sites.metadata.before || @sites.metadata.after} uri={@uri} page={@sites}>
           Total of <span class="font-medium"><%= @sites.metadata.total_count %></span>
@@ -79,9 +89,8 @@ defmodule PlausibleWeb.Live.Sites do
             (+ <%= @invitation_count %> invitations)
           </span>
         </.pagination>
-
         <.invitation_modal :if={not Enum.empty?(@invitations)} user={@user} />
-      </ul>
+      </div>
     </div>
     """
   end
@@ -183,7 +192,7 @@ defmodule PlausibleWeb.Live.Sites do
           href={"/#{URI.encode_www_form(@site.domain)}/settings"}
           class="absolute top-0 right-0 p-4 mt-1"
         >
-          <Heroicons.cog_8_tooth class="w-4 h-4 text-gray-400" />
+          <Heroicons.cog_8_tooth class="w-4 h-4 text-gray-800 dark:text-gray-400" />
         </.unstyled_link>
       <% end %>
     </div>
@@ -345,38 +354,31 @@ defmodule PlausibleWeb.Live.Sites do
 
   def search_form(assigns) do
     ~H"""
-    <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
-      <form id="filter-form" phx-change="filter" action={@uri} method="GET">
-        <div class="text-gray-800 text-sm inline-flex items-center">
-          <div class="relative rounded-md shadow-sm flex">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
-            </div>
-            <input
-              type="text"
-              name="filter_text"
-              id="filter-text"
-              phx-debounce={200}
-              class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
-              placeholder="Search Sites"
-              value={@filter_text}
-            />
+    <form id="filter-form" phx-change="filter" action={@uri} method="GET">
+      <div class="text-gray-800 text-sm inline-flex items-center">
+        <div class="relative rounded-md shadow-sm flex">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
           </div>
-
-          <Heroicons.backspace
-            :if={String.trim(@filter_text) != ""}
-            class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
-            phx-click="reset-filter-text"
-            id="reset-filter"
+          <input
+            type="text"
+            name="filter_text"
+            id="filter-text"
+            phx-debounce={200}
+            class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+            placeholder="Search Sites"
+            value={@filter_text}
           />
         </div>
-      </form>
-      <div class="mt-4 flex sm:ml-4 sm:mt-0">
-        <a href="/sites/new" class="button">
-          + Add Website
-        </a>
+
+        <Heroicons.backspace
+          :if={String.trim(@filter_text) != ""}
+          class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
+          phx-click="reset-filter-text"
+          id="reset-filter"
+        />
       </div>
-    </div>
+    </form>
     """
   end
 
