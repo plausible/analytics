@@ -38,6 +38,8 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
+    assigns = assign(assigns, :invitation_count, Enum.count(assigns.invitations))
+
     ~H"""
     <div
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
@@ -69,13 +71,12 @@ defmodule PlausibleWeb.Live.Sites do
         <% end %>
       </ul>
 
-      <.pagination
-        :if={@sites.metadata.before || @sites.metadata.after}
-        uri={@uri}
-        subject="sites"
-        page={@sites}
-        extra_count={length(@invitations)}
-      />
+      <.pagination :if={@sites.metadata.before || @sites.metadata.after} uri={@uri} page={@sites}>
+        Total of <span class="font-medium"><%= @sites.metadata.total_count %></span>
+        sites
+        <span :if={@invitation_count > 0} class="font-medium"> (+ <%= @invitation_count %> invitations)
+        </span>
+      </.pagination>
 
       <.invitation_modal :if={not Enum.empty?(@invitations)} user={@user} />
     </div>
