@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Site.MembershipController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Sites
-  alias Plausible.Site.Membership
+  alias Plausible.Site.{Membership, Memberships}
 
   @only_owner_is_allowed_to [:transfer_ownership_form, :transfer_ownership]
 
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
 
-    case Sites.invite(site, conn.assigns.current_user, email, role) do
+    case Memberships.create_invitation(site, conn.assigns.current_user, email, role) do
       {:ok, invitation} ->
         conn
         |> put_flash(
@@ -98,7 +98,7 @@ defmodule PlausibleWeb.Site.MembershipController do
     site_domain = conn.assigns[:site].domain
     site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
 
-    case Sites.invite(site, conn.assigns.current_user, email, :owner) do
+    case Memberships.create_invitation(site, conn.assigns.current_user, email, :owner) do
       {:ok, _invitation} ->
         conn
         |> put_flash(:success, "Site transfer request has been sent to #{email}")
@@ -109,6 +109,16 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> put_flash(:ttl, :timer.seconds(5))
         |> put_flash(:error_title, "Transfer error")
         |> put_flash(:error, "Can't transfer ownership to existing owner")
+        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+
+      {:error, :upgrade_required} ->
+        conn
+        |> put_flash(:ttl, :timer.seconds(5))
+        |> put_flash(:error_title, "Transfer error")
+        |> put_flash(
+          :error,
+          "The site you're trying to transfer exceeds the invitee's subscription plan. To proceed, please contact us at hello@plausible.io for further assistance."
+        )
         |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
 
       {:error, changeset} ->

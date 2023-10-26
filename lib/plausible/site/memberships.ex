@@ -14,6 +14,14 @@ defmodule Plausible.Site.Memberships do
   defdelegate reject_invitation(invitation_id, user), to: Memberships.RejectInvitation
   defdelegate remove_invitation(invitation_id, site), to: Memberships.RemoveInvitation
 
+  defdelegate create_invitation(site, inviter, invitee_email, role),
+    to: Memberships.CreateInvitation
+
+  defdelegate bulk_create_invitation(sites, inviter, invitee_email, role, opts),
+    to: Memberships.CreateInvitation
+
+  defdelegate bulk_transfer_ownership_direct(sites, new_owner), to: Memberships.CreateInvitation
+
   @spec any?(Auth.User.t()) :: boolean()
   def any?(user) do
     user

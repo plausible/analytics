@@ -82,7 +82,11 @@ defmodule Plausible.SiteAdmin do
 
     if new_owner do
       {:ok, _} =
-        Plausible.Sites.bulk_transfer_ownership(sites, inviter, new_owner.email,
+        Plausible.Site.Memberships.bulk_create_invitation(
+          sites,
+          inviter,
+          new_owner.email,
+          :owner,
           check_permissions: false
         )
 
@@ -100,7 +104,7 @@ defmodule Plausible.SiteAdmin do
     new_owner = Plausible.Auth.find_user_by(email: email)
 
     if new_owner do
-      case Plausible.Sites.bulk_transfer_ownership_direct(sites, new_owner) do
+      case Plausible.Site.Memberships.bulk_transfer_ownership_direct(sites, new_owner) do
         {:ok, _} -> :ok
         {:error, :transfer_to_self} -> {:error, "User is already an owner of one of the sites"}
       end

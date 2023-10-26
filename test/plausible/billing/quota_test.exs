@@ -3,6 +3,7 @@ defmodule Plausible.Billing.QuotaTest do
   alias Plausible.Billing.Quota
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
+  @legacy_plan_id "558746"
   @v1_plan_id "558018"
   @v2_plan_id "654177"
   @v3_plan_id "749342"
@@ -115,6 +116,12 @@ defmodule Plausible.Billing.QuotaTest do
   end
 
   describe "monthly_pageview_limit/1" do
+    test "is based on the plan if user is on a legacy plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @legacy_plan_id))
+
+      assert Quota.monthly_pageview_limit(user.subscription) == 1_000_000
+    end
+
     test "is based on the plan if user is on a standard plan" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
 

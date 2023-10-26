@@ -2,6 +2,7 @@ defmodule Plausible.Billing.PlansTest do
   use Plausible.DataCase, async: true
   alias Plausible.Billing.Plans
 
+  @legacy_plan_id "558746"
   @v1_plan_id "558018"
   @v2_plan_id "654177"
   @v4_plan_id "857097"
@@ -9,6 +10,11 @@ defmodule Plausible.Billing.PlansTest do
   @v4_business_plan_id "857105"
 
   describe "getting subscription plans for user" do
+    test "growth_plans_for/1 returns v1 plans for a user on a legacy plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @legacy_plan_id))
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v1_plan_id
+    end
+
     test "growth_plans_for/1 returns v1 plans for users who are already on v1 pricing" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
       assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v1_plan_id
@@ -40,7 +46,12 @@ defmodule Plausible.Billing.PlansTest do
       assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v4_plan_id
     end
 
-    test "business_plans_for/1 returns v3 business plans for a legacy subscriber" do
+    test "business_plans_for/1 returns v3 business plans for a user on a legacy plan" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @legacy_plan_id))
+      assert List.first(Plans.business_plans_for(user)).monthly_product_id == @v3_business_plan_id
+    end
+
+    test "business_plans_for/1 returns v3 business plans for a v2 subscriber" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
 
       business_plans = Plans.business_plans_for(user)
@@ -157,6 +168,8 @@ defmodule Plausible.Billing.PlansTest do
   describe "yearly_product_ids/0" do
     test "lists yearly plan ids" do
       assert [
+               "590753",
+               "648089",
                "572810",
                "590752",
                "597486",
@@ -167,7 +180,6 @@ defmodule Plausible.Billing.PlansTest do
                "642354",
                "642356",
                "650653",
-               "648089",
                "653232",
                "653234",
                "653236",
