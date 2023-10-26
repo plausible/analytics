@@ -146,17 +146,7 @@ defmodule PlausibleWeb.Live.Sites do
             Pending invitation
           </span>
         </div>
-        <div class="pl-8 mt-2 flex items-center justify-between">
-          <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
-            <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
-            <span class="text-gray-800 dark:text-gray-200">
-              <b>
-                <%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %>
-              </b>
-              visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
-            </span>
-          </span>
-        </div>
+        <.site_stats hourly_stats={@hourly_stats} />
       </li>
     </div>
     """
@@ -181,17 +171,7 @@ defmodule PlausibleWeb.Live.Sites do
               </h3>
             </div>
           </div>
-          <div class="pl-8 mt-2 flex items-center justify-between">
-            <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
-              <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
-              <span class="text-gray-800 dark:text-gray-200">
-                <b>
-                  <%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %>
-                </b>
-                visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
-              </span>
-            </span>
-          </div>
+          <.site_stats hourly_stats={@hourly_stats} />
         </li>
       </.unstyled_link>
       <%= if List.first(@site.memberships).role != :viewer do %>
@@ -202,6 +182,24 @@ defmodule PlausibleWeb.Live.Sites do
           <Heroicons.cog_8_tooth class="w-4 h-4" />
         </.unstyled_link>
       <% end %>
+    </div>
+    """
+  end
+
+  attr :hourly_stats, :map, required: true
+
+  def site_stats(assigns) do
+    ~H"""
+    <div class="pl-8 mt-2 flex items-center justify-between">
+      <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
+        <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
+        <span class="text-gray-800 dark:text-gray-200">
+          <b>
+            <%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %>
+          </b>
+          visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
+        </span>
+      </span>
     </div>
     """
   end
