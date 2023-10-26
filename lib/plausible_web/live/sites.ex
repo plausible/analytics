@@ -26,6 +26,12 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign_new(:params, fn -> params end)
       |> assign_new(:user, fn -> Repo.get!(Auth.User, user_id) end)
       |> load_sites()
+      |> assign_new(:has_sites?, fn %{sites: sites} ->
+        Enum.count(sites.entries) > 0
+      end)
+      |> assign_new(:invitation_count, fn %{invitations_pre: invitations} ->
+        Enum.count(invitations)
+      end)
       |> assign_new(:needs_to_upgrade, fn %{user: user, sites: sites} ->
         user_owns_sites =
           Enum.any?(sites.entries, fn site -> List.first(site.memberships).role == :owner end) ||
@@ -38,12 +44,6 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    assigns =
-      assign(assigns,
-        invitation_count: Enum.count(assigns.invitations),
-        has_sites?: not Enum.empty?(assigns.sites.entries ++ assigns.invitations)
-      )
-
     ~H"""
     <div
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
@@ -361,6 +361,7 @@ defmodule PlausibleWeb.Live.Sites do
             <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
           </div>
           <input
+            autofocus
             type="text"
             name="filter_text"
             id="filter-text"
