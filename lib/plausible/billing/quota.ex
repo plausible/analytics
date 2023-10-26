@@ -8,6 +8,8 @@ defmodule Plausible.Billing.Quota do
   alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
+  @business_tier_launch ~D[2023-10-30]
+
   def usage(user, opts \\ []) do
     basic_usage = %{
       monthly_pageviews: monthly_pageview_usage(user),
@@ -40,15 +42,27 @@ defmodule Plausible.Billing.Quota do
   end
 
   @site_limit_for_trials 10
+  @site_limit_for_legacy_trials 50
   @site_limit_for_free_10k 50
   defp get_site_limit_from_plan(user) do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{} -> :unlimited
-      %Plan{site_limit: site_limit} -> site_limit
-      :free_10k -> @site_limit_for_free_10k
-      nil -> @site_limit_for_trials
+      %EnterprisePlan{} ->
+        :unlimited
+
+      %Plan{site_limit: site_limit} ->
+        site_limit
+
+      :free_10k ->
+        @site_limit_for_free_10k
+
+      nil ->
+        if Timex.before?(user.inserted_at, @business_tier_launch) do
+          @site_limit_for_legacy_trials
+        else
+          @site_limit_for_trials
+        end
     end
   end
 
@@ -102,6 +116,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   @team_member_limit_for_trials 3
+  @team_member_limit_for_legacy_trials :unlimited
   @spec team_member_limit(Plausible.Auth.User.t()) :: non_neg_integer()
   @doc """
   Returns the limit of team members a user can have in their sites.
@@ -110,10 +125,21 @@ defmodule Plausible.Billing.Quota do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{} -> :unlimited
-      %Plan{team_member_limit: limit} -> limit
-      :free_10k -> :unlimited
-      nil -> @team_member_limit_for_trials
+      %EnterprisePlan{} ->
+        :unlimited
+
+      %Plan{team_member_limit: limit} ->
+        limit
+
+      :free_10k ->
+        :unlimited
+
+      nil ->
+        if Timex.before?(user.inserted_at, @business_tier_launch) do
+          @team_member_limit_for_legacy_trials
+        else
+          @team_member_limit_for_trials
+        end
     end
   end
 
