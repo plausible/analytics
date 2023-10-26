@@ -1,7 +1,7 @@
 defmodule Plausible.Billing do
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing.{Subscription, Plans, Quota}
 
   @spec active_subscription_for(integer()) :: Subscription.t() | nil
   def active_subscription_for(user_id) do
@@ -39,7 +39,13 @@ defmodule Plausible.Billing do
 
   def change_plan(user, new_plan_id) do
     subscription = active_subscription_for(user.id)
+    plan = Plans.find(new_plan_id)
 
+    with :ok <- Quota.ensure_can_subscribe_to_plan(user, plan),
+         do: do_change_plan(subscription, new_plan_id)
+  end
+
+  defp do_change_plan(subscription, new_plan_id) do
     res =
       paddle_api().update_subscription(subscription.paddle_subscription_id, %{
         plan_id: new_plan_id

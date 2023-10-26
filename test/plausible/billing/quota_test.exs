@@ -1,6 +1,6 @@
 defmodule Plausible.Billing.QuotaTest do
   use Plausible.DataCase, async: true
-  alias Plausible.Billing.Quota
+  alias Plausible.Billing.{Quota, Plans}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
   @legacy_plan_id "558746"
@@ -112,6 +112,20 @@ defmodule Plausible.Billing.QuotaTest do
 
     test "returns false when usage exceeds the limit" do
       refute Quota.within_limit?(10, 3)
+    end
+  end
+
+  describe "exceeded_limits/2" do
+    test "returns limits that are exceeded" do
+      usage = %{
+        monthly_pageviews: 10_001,
+        team_members: 2,
+        sites: 51
+      }
+
+      plan = Plans.find(@v3_plan_id)
+
+      assert Quota.exceeded_limits(usage, plan) == [:monthly_pageview_limit, :site_limit]
     end
   end
 
@@ -427,7 +441,7 @@ defmodule Plausible.Billing.QuotaTest do
       steps = Enum.map(goals, &%{"goal_id" => &1.id})
       Plausible.Funnels.create(site, "dummy", steps)
 
-      assert [RevenueGoals, Funnels, Props] == Quota.features_usage(user)
+      assert [Props, Funnels, RevenueGoals] == Quota.features_usage(user)
     end
 
     test "accounts only for sites the user owns" do

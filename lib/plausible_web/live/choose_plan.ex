@@ -23,7 +23,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         Users.with_subscription(user_id)
       end)
       |> assign_new(:usage, fn %{user: user} ->
-        Quota.monthly_pageview_usage(user)
+        Quota.usage(user, with_features: true)
       end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)
@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
                                            usage: usage,
                                            available_volumes: available_volumes
                                          } ->
-        default_selected_volume(owned_plan, usage, available_volumes)
+        default_selected_volume(owned_plan, usage.monthly_pageviews, available_volumes)
       end)
       |> assign_new(:selected_interval, fn %{current_interval: current_interval} ->
         current_interval || :monthly
@@ -118,7 +118,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <.enterprise_plan_box benefits={@enterprise_benefits} />
         </div>
         <p class="mx-auto mt-8 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
-          <.usage usage={@usage} />
+          You have used <b><%= PlausibleWeb.AuthView.delimit_integer(@usage.monthly_pageviews) %></b>
+          billable pageviews in the last 30 days
         </p>
         <.pageview_limit_notice :if={!@owned_plan} />
         <.help_links />
@@ -160,8 +161,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp default_selected_volume(%Plan{monthly_pageview_limit: limit}, _, _), do: limit
 
-  defp default_selected_volume(_, usage, available_volumes) do
-    Enum.find(available_volumes, &(usage < &1)) || :enterprise
+  defp default_selected_volume(_, pageview_usage, available_volumes) do
+    Enum.find(available_volumes, &(pageview_usage < &1)) || :enterprise
   end
 
   defp current_user_subscription_interval(subscription) do
@@ -261,30 +262,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       </div>
       <div>
         <.render_price_info available={@available} {assigns} />
-        <%= cond do %>
-          <% !@available -> %>
-            <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
-          <% @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) -> %>
-            <.render_change_plan_link
-              paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
-              text={
-                change_plan_link_text(
-                  @owned_plan,
-                  @plan_to_render,
-                  @current_interval,
-                  @selected_interval
-                )
-              }
-              {assigns}
-            />
-          <% true -> %>
-            <.paddle_button
-              id={"#{@kind}-checkout"}
-              paddle_product_id={get_paddle_product_id(@plan_to_render, @selected_interval)}
-              {assigns}
-            >
-              Upgrade
-            </.paddle_button>
+        <%= if @available do %>
+          <.checkout id={"#{@kind}-checkout"} {assigns} />
+        <% else %>
+          <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
         <% end %>
       </div>
       <%= if @kind == :growth && @plan_to_render.generation < 4 do %>
@@ -299,6 +280,67 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <% end %>
     </div>
     """
+  end
+
+  defp checkout(assigns) do
+    paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
+    change_plan_link_text = change_plan_link_text(assigns)
+
+    exceeds_some_limit = Quota.exceeded_limits(assigns.usage, assigns.plan_to_render) != []
+
+    billing_details_expired =
+      assigns.user.subscription &&
+        assigns.user.subscription.status in [
+          Subscription.Status.paused(),
+          Subscription.Status.past_due()
+        ]
+
+    {checkout_disabled, disabled_message} =
+      cond do
+        change_plan_link_text == "Currently on this plan" ->
+          {true, nil}
+
+        assigns.available && exceeds_some_limit ->
+          {true, "Your usage exceeds this plan"}
+
+        billing_details_expired ->
+          {true, "Please update your billing details first"}
+
+        true ->
+          {false, nil}
+      end
+
+    features_to_lose = assigns.usage.features -- assigns.plan_to_render.features
+
+    assigns =
+      assigns
+      |> assign(:paddle_product_id, paddle_product_id)
+      |> assign(:change_plan_link_text, change_plan_link_text)
+      |> assign(:checkout_disabled, checkout_disabled)
+      |> assign(:disabled_message, disabled_message)
+      |> assign(:confirm_message, losing_features_message(features_to_lose))
+
+    ~H"""
+    <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) do %>
+      <.change_plan_link {assigns} />
+    <% else %>
+      <.paddle_button {assigns}>Upgrade</.paddle_button>
+    <% end %>
+    <p :if={@disabled_message} class="h-0 text-center text-sm text-red-700 dark:text-red-500">
+      <%= @disabled_message %>
+    </p>
+    """
+  end
+
+  defp losing_features_message([]), do: nil
+
+  defp losing_features_message(features_to_lose) do
+    features_list_str =
+      features_to_lose
+      |> Enum.map(& &1.display_name)
+      |> PlausibleWeb.TextHelpers.pretty_join()
+
+    "This plan does not support #{features_list_str}, which you are currently using. Please note that by subscribing to this plan you will lose access to #{if length(features_to_lose) == 1, do: "this feature", else: "these features"}."
   end
 
   defp growth_grandfathering_notice(assigns) do
@@ -333,39 +375,20 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  defp render_change_plan_link(assigns) do
-    ~H"""
-    <.change_plan_link
-      plan_already_owned={@text == "Currently on this plan"}
-      billing_details_expired={
-        @user.subscription &&
-          @user.subscription.status in [Subscription.Status.past_due(), Subscription.Status.paused()]
-      }
-      {assigns}
-    />
-    """
-  end
-
   defp change_plan_link(assigns) do
     ~H"""
     <.link
       id={"#{@kind}-checkout"}
+      onclick={if @confirm_message, do: "if (!confirm(\"#{@confirm_message}\")) {e.preventDefault()}"}
       href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_preview, @paddle_product_id)}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
-        !(@plan_already_owned || @billing_details_expired) && "bg-indigo-600 hover:bg-indigo-500",
-        (@plan_already_owned || @billing_details_expired) &&
-          "pointer-events-none bg-gray-400 dark:bg-gray-600"
+        !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
+        @checkout_disabled && "pointer-events-none bg-gray-400 dark:bg-gray-600"
       ]}
     >
-      <%= @text %>
+      <%= @change_plan_link_text %>
     </.link>
-    <p
-      :if={@billing_details_expired && !@plan_already_owned}
-      class="text-center text-sm text-red-700 dark:text-red-500"
-    >
-      Please update your billing details first
-    </p>
     """
   end
 
@@ -443,13 +466,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         clip-rule="evenodd"
       />
     </svg>
-    """
-  end
-
-  defp usage(assigns) do
-    ~H"""
-    You have used <b><%= PlausibleWeb.AuthView.delimit_integer(@usage) %></b>
-    billable pageviews in the last 30 days
     """
   end
 
@@ -585,10 +601,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp change_plan_link_text(
-         %Plan{kind: from_kind, monthly_pageview_limit: from_volume},
-         %Plan{kind: to_kind, monthly_pageview_limit: to_volume},
-         from_interval,
-         to_interval
+         %{
+           owned_plan: %Plan{kind: from_kind, monthly_pageview_limit: from_volume},
+           plan_to_render: %Plan{kind: to_kind, monthly_pageview_limit: to_volume},
+           current_interval: from_interval,
+           selected_interval: to_interval
+         } = _assigns
        ) do
     cond do
       from_kind == :business && to_kind == :growth ->
@@ -610,6 +628,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         "Upgrade"
     end
   end
+
+  defp change_plan_link_text(_), do: nil
 
   defp get_available_volumes(%{business: business_plans, growth: growth_plans}) do
     growth_volumes = Enum.map(growth_plans, & &1.monthly_pageview_limit)
