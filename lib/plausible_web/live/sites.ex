@@ -11,7 +11,6 @@ defmodule PlausibleWeb.Live.Sites do
 
   alias Plausible.Auth
   alias Plausible.Repo
-  alias Plausible.Site.Memberships.Invitations
   alias Plausible.Sites
 
   def mount(params, %{"current_user_id" => user_id}, socket) do
@@ -29,12 +28,11 @@ defmodule PlausibleWeb.Live.Sites do
       |> assign_new(:has_sites?, fn %{sites: sites} ->
         Enum.count(sites.entries) > 0
       end)
-      |> assign_new(:invitation_count, fn %{invitations_pre: invitations} ->
-        Enum.count(invitations)
-      end)
       |> assign_new(:needs_to_upgrade, fn %{user: user, sites: sites} ->
         user_owns_sites =
-          Enum.any?(sites.entries, fn site -> List.first(site.memberships).role == :owner end) ||
+          Enum.any?(sites.entries, fn site ->
+            List.first(site.memberships ++ site.invitations).role == :owner
+          end) ||
             Auth.user_owns_sites?(user)
 
         user_owns_sites && Plausible.Billing.check_needs_to_upgrade(user)
@@ -44,6 +42,13 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
+    invitations =
+      assigns.sites.entries
+      |> Enum.filter(&(&1.list_type == "invitation"))
+      |> Enum.flat_map(& &1.invitations)
+
+    assigns = assign(assigns, :invitations, invitations)
+
     ~H"""
     <div
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
@@ -73,23 +78,28 @@ defmodule PlausibleWeb.Live.Sites do
 
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <%= for invitation <- @invitations do %>
-            <.invitation invitation={invitation} hourly_stats={@hourly_stats[invitation.site.domain]} />
-          <% end %>
-
           <%= for site <- @sites.entries do %>
-            <.site site={site} hourly_stats={@hourly_stats[site.domain]} />
+            <.site
+              :if={site.list_type == "site"}
+              site={site}
+              hourly_stats={@hourly_stats[site.domain]}
+            />
+            <.invitation
+              :if={site.list_type == "invitation"}
+              site={site}
+              invitation={hd(site.invitations)}
+              hourly_stats={@hourly_stats[site.domain]}
+            />
           <% end %>
         </ul>
 
         <.pagination :if={@sites.metadata.before || @sites.metadata.after} uri={@uri} page={@sites}>
-          Total of <span class="font-medium"><%= @sites.metadata.total_count %></span>
-          sites
-          <span :if={@invitation_count > 0} class="font-medium">
-            (+ <%= @invitation_count %> invitations)
-          </span>
+          Total of <span class="font-medium"><%= @sites.metadata.total_count %></span> sites
         </.pagination>
-        <.invitation_modal :if={not Enum.empty?(@invitations)} user={@user} />
+        <.invitation_modal
+          :if={not Enum.any?(@sites.entries, &(&1.list_type == "invitation"))}
+          user={@user}
+        />
       </div>
     </div>
     """
@@ -133,6 +143,7 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
+  attr :site, Plausible.Site, required: true
   attr :invitation, Plausible.Auth.Invitation, required: true
   attr :hourly_stats, :map, required: true
 
@@ -145,13 +156,13 @@ defmodule PlausibleWeb.Live.Sites do
       <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
         <div class="w-full flex items-center justify-between space-x-4">
           <img
-            src={"/favicon/sources/#{@invitation.site.domain}"}
+            src={"/favicon/sources/#{@site.domain}"}
             onerror="this.onerror=null; this.src='/favicon/sources/placeholder';"
             class="w-4 h-4 flex-shrink-0 mt-px"
           />
           <div class="flex-1 truncate -mt-px">
             <h3 class="text-gray-900 font-medium text-lg truncate dark:text-gray-100">
-              <%= @invitation.site.domain %>
+              <%= @site.domain %>
             </h3>
           </div>
 
@@ -422,33 +433,17 @@ defmodule PlausibleWeb.Live.Sites do
         &assign_new/3
       end
 
-    socket =
-      socket
-      |> assign_fn.(:invitations_pre, fn %{filter_text: filter_text, user: user} ->
-        Invitations.list_for_email(user.email, filter_by_domain: filter_text)
-      end)
-      |> assign_fn.(:sites, fn %{
-                                 user: user,
-                                 params: params,
-                                 invitations_pre: invitations,
-                                 filter_text: filter_text
-                               } ->
-        excluded_site_ids = Enum.map(invitations, & &1.site_id)
-        Sites.list(user, params, exclude_ids: excluded_site_ids, filter_by_domain: filter_text)
-      end)
-      |> assign_fn.(:hourly_stats, fn %{sites: sites, invitations_pre: invitations} ->
-        Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(
-          sites.entries ++ Enum.map(invitations, & &1.site)
-        )
-      end)
-
-    first_page? = is_nil(socket.assigns.sites.metadata.before)
-
-    if first_page? do
-      assign(socket, :invitations, socket.assigns.invitations_pre)
-    else
-      assign(socket, :invitations, [])
-    end
+    socket
+    |> assign_fn.(:sites, fn %{
+                               user: user,
+                               params: params,
+                               filter_text: filter_text
+                             } ->
+      Sites.list(user, params, filter_by_domain: filter_text)
+    end)
+    |> assign_fn.(:hourly_stats, fn %{sites: sites} ->
+      Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
+    end)
   end
 
   defp set_filter_text(socket, filter_text) do

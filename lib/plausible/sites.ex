@@ -14,25 +14,77 @@ defmodule Plausible.Sites do
 
   @spec list(Plausible.Auth.User.t(), map(), [list_opt()]) :: Paginator.Page.t()
   def list(user, pagination_params, opts \\ []) do
-    exclude_ids = Keyword.get(opts, :exclude_ids, [])
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
-    sites_query =
+    base_query =
       from(s in Plausible.Site,
-        join: sm in Plausible.Site.Membership,
+        left_join: sm in Plausible.Site.Membership,
         on: sm.site_id == s.id,
-        where: sm.user_id == ^user.id,
-        where: s.id not in ^exclude_ids,
-        order_by: s.domain,
-        preload: [memberships: sm]
+        left_join: i in Plausible.Auth.Invitation,
+        on: i.site_id == s.id,
+        left_join: p in Plausible.Site.SitePin,
+        on: p.site_id == s.id,
+        where: sm.user_id == ^user.id or i.email == ^user.email or p.user_id == ^user.id,
+        select: %{
+          s
+          | is_pinned: not is_nil(p.id),
+            list_type:
+              fragment(
+                """
+                  CASE WHEN ? IS NOT NULL THEN 'invitation'
+                       ELSE 'site'
+                  END
+                """,
+                i.id
+              )
+        }
+      )
+
+    memberships_query =
+      from sm in Plausible.Site.Membership,
+        where: sm.user_id == ^user.id
+
+    invitations_query =
+      from i in Plausible.Auth.Invitation,
+        where: i.email == ^user.email
+
+    sites_query =
+      from(s in subquery(base_query),
+        order_by: [desc: s.is_pinned, asc: s.list_type, asc: s.domain],
+        preload: [
+          memberships: ^memberships_query,
+          invitations: ^invitations_query
+        ]
       )
       |> maybe_filter_by_domain(domain_filter)
 
-    Plausible.Pagination.paginate(sites_query, pagination_params,
-      include_total_count: true,
-      cursor_fields: [{:domain, :asc}],
-      limit: 24
-    )
+    total_count =
+      sites_query
+      |> Ecto.Query.exclude(:preload)
+      |> Ecto.Query.exclude(:order_by)
+      |> Ecto.Query.exclude(:select)
+      |> Repo.aggregate(:count)
+
+    result =
+      Plausible.Pagination.paginate(sites_query, pagination_params,
+        cursor_fields: [is_pinned: :desc, list_type: :asc, domain: :asc],
+        limit: 24
+      )
+
+    metadata = %{result.metadata | total_count: total_count}
+
+    entries =
+      Enum.map(result.entries, fn
+        %{invitations: [invitation]} = site ->
+          site = %{site | invitations: [], memberships: []}
+          invitation = %{invitation | site: site}
+          %{site | invitations: [invitation]}
+
+        site ->
+          site
+      end)
+
+    %{result | entries: entries, metadata: metadata}
   end
 
   defp maybe_filter_by_domain(query, domain)
