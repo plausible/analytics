@@ -29,6 +29,8 @@ defmodule PlausibleWeb.Live.Sites do
         Enum.count(sites.entries) > 0
       end)
       |> assign_new(:needs_to_upgrade, fn %{user: user, sites: sites} ->
+        # FIXME: this should check if user is owner of _any_ site,
+        # not just the first one in the list
         user_owns_sites =
           Enum.any?(sites.entries, fn site ->
             List.first(site.memberships ++ site.invitations).role == :owner
