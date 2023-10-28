@@ -278,8 +278,15 @@ defmodule PlausibleWeb.Live.RegisterForm do
 
       user =
         case invitation.role do
-          :owner -> user
-          _ -> Plausible.Auth.User.remove_trial_expiry(user)
+          :owner ->
+            user
+
+          _ ->
+            if socket.assigns.is_selfhost do
+              user
+            else
+              Plausible.Auth.User.remove_trial_expiry(user)
+            end
         end
 
       add_user(socket, user)
