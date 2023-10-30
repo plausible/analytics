@@ -151,6 +151,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       class="group cursor-pointer"
+      data-domain={@site.domain}
       x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
       <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">

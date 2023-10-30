@@ -50,7 +50,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert resp = html_response(conn, 200)
 
-      site_card = text_of_element(resp, "div[data-domain=\"#{site.domain}\"]")
+      site_card = text_of_element(resp, "li[data-domain=\"#{site.domain}\"]")
 
       assert site_card =~ "3 visitors in last 24h"
       assert site_card =~ site.domain
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       for i <- 1..24 do
         assert element_exists?(
                  resp,
-                 "div[data-domain=\"paginated-site#{String.pad_leading("#{i}", 2, "0")}.example.com\"]"
+                 "li[data-domain=\"paginated-site#{String.pad_leading("#{i}", 2, "0")}.example.com\"]"
                )
       end
 
@@ -103,7 +103,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert element_exists?(
                next_page,
-               "div[data-domain=\"paginated-site25.example.com\"]"
+               "li[data-domain=\"paginated-site25.example.com\"]"
              )
 
       prev_page_link = text_of_attr(next_page, ".pagination-link.active", "href")
@@ -111,12 +111,12 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert element_exists?(
                prev_page,
-               "div[data-domain=\"paginated-site04.example.com\"]"
+               "li[data-domain=\"paginated-site04.example.com\"]"
              )
 
       refute element_exists?(
                prev_page,
-               "div[data-domain=\"paginated-site25.example.com\"]"
+               "li[data-domain=\"paginated-site25.example.com\"]"
              )
     end
 
