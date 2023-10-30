@@ -22,12 +22,13 @@ defmodule Plausible.Sites do
         on: sm.user_id == ^user.id,
         left_join: i in assoc(s, :invitations),
         on: i.email == ^user.email,
-        left_join: p in Plausible.Site.SitePin,
+        left_join: p in Plausible.Site.Preference,
         on: p.site_id == s.id and p.user_id == ^user.id,
         where: not is_nil(i.id) or not is_nil(sm.id),
         select: %{
           s
-          | is_pinned: not is_nil(p.id),
+          # TODO: work out a proper (GIN?) index for this
+          | is_pinned: type(p.preferences["is_pinned"], :boolean),
             list_type:
               fragment(
                 """
