@@ -1,14 +1,14 @@
 defmodule PlausibleWeb.Live.Components.Visitors do
   @moduledoc """
   Component rendering mini-graph of site's visitors over the last 24 hours.
+
+  The `gradient_defs` component should be rendered once before using `chart`
+  one or more times.
+
+  Accepts input generated via `Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals/2`.
   """
 
   use Phoenix.Component
-
-  # Proof of concept, TODOs:
-  # - make it asynchronous,
-  # - move under Live.Components or .Components depending on how it turns out,
-  # - make it render once per site - currently both mounts call it
 
   attr :intervals, :list, required: true
   attr :height, :integer, default: 50
