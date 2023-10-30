@@ -181,7 +181,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site(assigns) do
     ~H"""
-    <div class="relative" data-domain={@site.domain}>
+    <div class="group relative" data-domain={@site.domain}>
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
         <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
