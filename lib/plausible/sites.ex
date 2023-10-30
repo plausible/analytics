@@ -18,10 +18,8 @@ defmodule Plausible.Sites do
 
     base_query =
       from(s in Plausible.Site,
-        left_join: sm in Plausible.Site.Membership,
-        on: sm.site_id == s.id,
-        left_join: i in Plausible.Auth.Invitation,
-        on: i.site_id == s.id,
+        left_join: sm in assoc(s, :memberships),
+        left_join: i in assoc(s, :invitations),
         where: sm.user_id == ^user.id or i.email == ^user.email,
         select: %{
           s
