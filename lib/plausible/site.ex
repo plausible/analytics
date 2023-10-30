@@ -53,6 +53,7 @@ defmodule Plausible.Site do
     # user's membership state. Currently it can be either "invitation"
     # or "site", where invitations are first.
     field :list_type, :string, virtual: true
+    field :is_pinned, :boolean, virtual: true
 
     timestamps()
   end
