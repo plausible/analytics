@@ -119,6 +119,51 @@ defmodule PlausibleWeb.SiteControllerTest do
                "div[data-domain=\"paginated-site25.example.com\"]"
              )
     end
+
+    test "shows upgrade nag message to expired trial user without subscription", %{
+      conn: initial_conn,
+      user: user
+    } do
+      insert(:site, members: [user])
+
+      conn = get(initial_conn, "/sites")
+      resp = html_response(conn, 200)
+
+      nag_message =
+        "To access the sites you own, you need to subscribe to a monthly or yearly payment plan."
+
+      refute resp =~ nag_message
+
+      user
+      |> Plausible.Auth.User.end_trial()
+      |> Repo.update!()
+
+      conn = get(initial_conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert resp =~ nag_message
+    end
+
+    test "filters by domain", %{conn: conn, user: user} do
+      _site1 = insert(:site, domain: "first.example.com", members: [user])
+      _site2 = insert(:site, domain: "second.example.com", members: [user])
+      _rogue_site = insert(:site)
+
+      _site3 =
+        insert(:site,
+          domain: "first-another.example.com",
+          invitations: [
+            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+          ]
+        )
+
+      conn = get(conn, "/sites", filter_text: "first")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "first.example.com"
+      assert resp =~ "first-another.example.com"
+      refute resp =~ "second.example.com"
+    end
   end
 
   describe "POST /sites" do
