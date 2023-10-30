@@ -53,6 +53,9 @@ defmodule Plausible.Sites do
       )
       |> maybe_filter_by_domain(domain_filter)
 
+    # We compute total ourselves because paginator
+    # does not handle counting total when the query
+    # selects from a subquery.
     total_count =
       sites_query
       |> Ecto.Query.exclude(:preload)
