@@ -79,9 +79,9 @@ defmodule Plausible.Billing.Plans do
         do: yearly_product_id
   end
 
-  defp find(nil), do: nil
+  def find(nil), do: nil
 
-  defp find(product_id) do
+  def find(product_id) do
     Enum.find(all(), fn plan ->
       product_id in [plan.monthly_product_id, plan.yearly_product_id]
     end)

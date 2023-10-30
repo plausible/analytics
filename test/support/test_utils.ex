@@ -139,6 +139,12 @@ defmodule Plausible.TestUtils do
     |> Plug.Conn.fetch_session()
   end
 
+  def generate_usage_for(site, i) do
+    events = for _i <- 1..i, do: Factory.build(:pageview)
+    populate_stats(site, events)
+    :ok
+  end
+
   def populate_stats(site, events) do
     Enum.map(events, fn event ->
       case event do

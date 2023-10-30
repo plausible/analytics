@@ -37,7 +37,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert doc =~ "Upgrade your account"
-      assert doc =~ "You have used <b>0</b>\nbillable pageviews in the last 30 days"
+      assert doc =~ "You have used"
+      assert doc =~ "<b>0</b>"
+      assert doc =~ "billable pageviews in the last 30 days"
       assert doc =~ "Questions?"
       assert doc =~ "What happens if I go over my page views limit?"
       assert doc =~ "Enterprise"
@@ -200,6 +202,33 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert get_paddle_checkout_params(find(doc, @business_checkout_button))["product"] ==
                @v4_business_5m_monthly_plan_id
     end
+
+    test "checkout is disabled when pageview usage exceeds rendered plan limit", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+      generate_usage_for(site, 10_001)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = lv |> element(@slider_input) |> render_change(%{slider: 0})
+
+      assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert text_of_element(doc, @business_plan_box) =~ "Your usage exceeds this plan"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "warns about losing access to a feature", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+      Plausible.Props.allow(site, ["author"])
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
+               "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {Paddle.Checkout.open"
+    end
   end
 
   describe "for a user with a v4 growth subscription plan" do
@@ -257,7 +286,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       ])
 
       {:ok, _lv, doc} = get_liveview(conn)
-      assert doc =~ "You have used <b>2</b>\nbillable pageviews in the last 30 days"
+      assert doc =~ "You have used"
+      assert doc =~ "<b>2</b>"
+      assert doc =~ "billable pageviews in the last 30 days"
     end
 
     test "gets default selected interval from current subscription plan", %{conn: conn} do
@@ -372,6 +403,49 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert text_of_element(doc, @business_checkout_button) == "Downgrade"
       assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
+    end
+
+    test "checkout is disabled when team member usage exceeds rendered plan limit", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:site,
+        memberships: [
+          build(:site_membership, user: user, role: :owner),
+          build(:site_membership, user: build(:user)),
+          build(:site_membership, user: build(:user)),
+          build(:site_membership, user: build(:user))
+        ]
+      )
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "checkout is disabled when sites usage exceeds rendered plan limit", %{
+      conn: conn,
+      user: user
+    } do
+      for _ <- 1..11, do: insert(:site, members: [user])
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "warns about losing access to a feature", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+      Plausible.Props.allow(site, ["author"])
+
+      insert(:goal, currency: :USD, site: site, event_name: "Purchase")
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
+               "if (!confirm(\"This plan does not support Custom Properties and Revenue Goals, which you are currently using. Please note that by subscribing to this plan you will lose access to these features.\")) {e.preventDefault()}"
     end
   end
 

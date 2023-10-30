@@ -126,7 +126,15 @@ defmodule PlausibleWeb.BillingController do
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
     with {:ok, {subscription, preview_info}} <-
            preview_subscription(conn.assigns.current_user, new_plan_id) do
+      back_action =
+        if FunWithFlags.enabled?(:business_tier, for: conn.assigns.current_user) do
+          :choose_plan
+        else
+          :change_plan_form
+        end
+
       render(conn, "change_plan_preview.html",
+        back_link: Routes.billing_path(conn, back_action),
         skip_plausible_tracking: true,
         subscription: subscription,
         preview_info: preview_info,
@@ -139,17 +147,20 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_plan(conn, %{"new_plan_id" => new_plan_id}) do
-    case Billing.change_plan(conn.assigns[:current_user], new_plan_id) do
+    case Billing.change_plan(conn.assigns.current_user, new_plan_id) do
       {:ok, _subscription} ->
         conn
         |> put_flash(:success, "Plan changed successfully")
         |> redirect(to: "/settings")
 
       {:error, e} ->
-        # https://developer.paddle.com/api-reference/intro/api-error-codes
         msg =
           case e do
+            %{exceeded_limits: exceeded_limits} ->
+              "Unable to subscribe to this plan because the following limits are exceeded: #{inspect(exceeded_limits)}"
+
             %{"code" => 147} ->
+              # https://developer.paddle.com/api-reference/intro/api-error-codes
               "We were unable to charge your card. Click 'update billing info' to update your payment details and try again."
 
             %{"message" => msg} when not is_nil(msg) ->

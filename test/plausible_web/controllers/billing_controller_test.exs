@@ -4,6 +4,8 @@ defmodule PlausibleWeb.BillingControllerTest do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
+  @v4_growth_plan "857097"
+
   describe "GET /upgrade" do
     setup [:create_user, :log_in]
 
@@ -74,6 +76,25 @@ defmodule PlausibleWeb.BillingControllerTest do
 
   describe "POST /change-plan" do
     setup [:create_user, :log_in]
+
+    test "errors if usage exceeds some limit on the new plan", %{conn: conn, user: user} do
+      insert(:subscription, user: user, paddle_plan_id: "123123")
+
+      insert(:site,
+        memberships: [
+          build(:site_membership, user: user, role: :owner),
+          build(:site_membership, user: build(:user)),
+          build(:site_membership, user: build(:user)),
+          build(:site_membership, user: build(:user)),
+          build(:site_membership, user: build(:user))
+        ]
+      )
+
+      conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Unable to subscribe to this plan because the following limits are exceeded: [:team_member_limit]"
+    end
 
     test "calls Paddle API to update subscription", %{conn: conn, user: user} do
       insert(:subscription, user: user)
