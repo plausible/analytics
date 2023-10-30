@@ -397,16 +397,21 @@ defmodule PlausibleWeb.Live.Sites do
             placeholder="Type / to search sites"
             value={@filter_text}
             x-ref="filter_text"
-            x-on:keydown.prevent.slash.window="$nextTick(() => { $refs.filter_text.focus(); })"
+            x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
+            x-on:keydown.prevent.slash.window="$refs.filter_text.focus();"
           />
         </div>
 
-        <Heroicons.backspace
+        <button
           :if={String.trim(@filter_text) != ""}
-          class="feather ml-2 cursor-pointer hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500"
+          class="ml-2"
           phx-click="reset-filter-text"
           id="reset-filter"
-        />
+          x-on:click.prevent
+          x-ref="reset_filter"
+        >
+          <Heroicons.backspace class="feather hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500" />
+        </button>
       </div>
     </form>
     """
