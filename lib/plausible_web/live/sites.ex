@@ -389,14 +389,15 @@ defmodule PlausibleWeb.Live.Sites do
             <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
           </div>
           <input
-            autofocus
             type="text"
             name="filter_text"
             id="filter-text"
             phx-debounce={200}
             class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
-            placeholder="Search Sites"
+            placeholder="Type / to search sites"
             value={@filter_text}
+            x-ref="filter_text"
+            x-on:keydown.prevent.slash.window="$nextTick(() => { $refs.filter_text.focus(); })"
           />
         </div>
 
