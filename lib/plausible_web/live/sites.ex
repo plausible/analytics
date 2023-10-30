@@ -149,11 +149,11 @@ defmodule PlausibleWeb.Live.Sites do
 
   def invitation(assigns) do
     ~H"""
-    <div
+    <li
       class="group cursor-pointer"
       x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
-      <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
+      <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
         <div class="w-full flex items-center justify-between space-x-4">
           <img
             src={"/favicon/sources/#{@site.domain}"}
@@ -171,8 +171,8 @@ defmodule PlausibleWeb.Live.Sites do
           </span>
         </div>
         <.site_stats hourly_stats={@hourly_stats} />
-      </li>
-    </div>
+      </div>
+    </li>
     """
   end
 
@@ -181,9 +181,9 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site(assigns) do
     ~H"""
-    <div class="group relative" data-domain={@site.domain}>
+    <li class="group relative" data-domain={@site.domain}>
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
-        <li class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
+        <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
             <.favicon domain={@site.domain} />
             <div class="flex-1 -mt-px w-full">
@@ -196,7 +196,7 @@ defmodule PlausibleWeb.Live.Sites do
             </div>
           </div>
           <.site_stats hourly_stats={@hourly_stats} />
-        </li>
+        </div>
       </.unstyled_link>
       <%= if List.first(@site.memberships).role != :viewer do %>
         <.unstyled_link
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Live.Sites do
           <Heroicons.cog_8_tooth class="w-4 h-4 text-gray-800 dark:text-gray-400" />
         </.unstyled_link>
       <% end %>
-    </div>
+    </li>
     """
   end
 
