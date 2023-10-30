@@ -86,7 +86,7 @@ defmodule Plausible.Sites do
   end
 
   defp maybe_filter_by_domain(query, domain)
-       when byte_size(domain) >= 3 and byte_size(domain) <= 64 do
+       when byte_size(domain) >= 1 and byte_size(domain) <= 64 do
     where(query, [s], ilike(s.domain, ^"%#{domain}%"))
   end
 
