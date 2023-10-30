@@ -384,7 +384,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <form id="filter-form" phx-change="filter" action={@uri} method="GET">
       <div class="text-gray-800 text-sm inline-flex items-center">
-        <div class="relative rounded-md shadow-sm flex">
+        <div class="relative rounded-md flex">
           <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <Heroicons.magnifying_glass class="feather mr-1 dark:text-gray-300" />
           </div>
@@ -393,7 +393,7 @@ defmodule PlausibleWeb.Live.Sites do
             name="filter_text"
             id="filter-text"
             phx-debounce={200}
-            class="pl-8 shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+            class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
             placeholder="Type / to search sites"
             value={@filter_text}
             x-ref="filter_text"
