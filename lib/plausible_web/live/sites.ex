@@ -236,7 +236,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   def percentage_change(assigns) do
     ~H"""
-    <p :if={@change != 0}>
+    <p :if={@change != 0} class="font-bold">
       <span :if={@change > 0} class="text-green-500">↑ <%= @change %>%</span>
       <span :if={@change < 0} class="text-red-500">↓ <%= @change %>%</span>
     </p>
