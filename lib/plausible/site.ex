@@ -50,7 +50,6 @@ defmodule Plausible.Site do
     field :from_cache?, :boolean, virtual: true, default: false
 
     field :list_type, :string, virtual: true
-    field :is_pinned, :boolean, virtual: true
 
     timestamps()
   end

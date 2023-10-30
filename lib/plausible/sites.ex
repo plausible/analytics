@@ -22,13 +22,10 @@ defmodule Plausible.Sites do
         on: sm.site_id == s.id,
         left_join: i in Plausible.Auth.Invitation,
         on: i.site_id == s.id,
-        left_join: p in Plausible.Site.SitePin,
-        on: p.site_id == s.id,
-        where: sm.user_id == ^user.id or i.email == ^user.email or p.user_id == ^user.id,
+        where: sm.user_id == ^user.id or i.email == ^user.email,
         select: %{
           s
-          | is_pinned: not is_nil(p.id),
-            list_type:
+          | list_type:
               fragment(
                 """
                   CASE WHEN ? IS NOT NULL THEN 'invitation'
@@ -50,7 +47,7 @@ defmodule Plausible.Sites do
 
     sites_query =
       from(s in subquery(base_query),
-        order_by: [desc: s.is_pinned, asc: s.list_type, asc: s.domain],
+        order_by: [asc: s.list_type, asc: s.domain],
         preload: [
           memberships: ^memberships_query,
           invitations: ^invitations_query
@@ -67,7 +64,7 @@ defmodule Plausible.Sites do
 
     result =
       Plausible.Pagination.paginate(sites_query, pagination_params,
-        cursor_fields: [is_pinned: :desc, list_type: :asc, domain: :asc],
+        cursor_fields: [list_type: :asc, domain: :asc],
         limit: 24
       )
 
