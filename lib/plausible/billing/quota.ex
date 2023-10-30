@@ -190,8 +190,17 @@ defmodule Plausible.Billing.Quota do
 
   def ensure_can_subscribe_to_plan(user, %Plan{} = plan) do
     case exceeded_limits(usage(user), plan) do
-      [] -> :ok
-      exceeded_limits -> {:error, %{exceeded_limits: exceeded_limits}}
+      [] ->
+        :ok
+
+      [:monthly_pageview_limit] ->
+        # This is a quick fix. Need to figure out how to handle this case. Only
+        # checking the last 30 days usage is not accurate enough. Needs to be
+        # in sync with the actual locking system.
+        :ok
+
+      exceeded_limits ->
+        {:error, %{exceeded_limits: exceeded_limits}}
     end
   end
 
