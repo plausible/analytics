@@ -21,9 +21,9 @@ defmodule PlausibleWeb.Live.Sites do
     socket =
       socket
       |> assign(:uri, uri)
-      |> assign_new(:filter_text, fn -> params["filter_text"] || "" end)
-      |> assign_new(:params, fn -> params end)
-      |> assign_new(:user, fn -> Repo.get!(Auth.User, user_id) end)
+      |> assign(:filter_text, params["filter_text"] || "")
+      |> assign(:params, params)
+      |> assign(:user, Repo.get!(Auth.User, user_id))
       |> load_sites()
       |> assign_new(:has_sites?, fn %{sites: sites} ->
         Enum.count(sites.entries) > 0
