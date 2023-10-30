@@ -1,8 +1,10 @@
 defmodule Plausible.Stats.Clickhouse do
   use Plausible.Repo
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.Query
   use Plausible.Stats.Fragments
+
+  alias Plausible.Stats.Query
+
   @no_ref "Direct / None"
 
   @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
@@ -213,6 +215,7 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.into(%{})
   end
 
+  @spec last_24h_visitors_hourly_intervals([Plausible.Site.t()], NaiveDateTime.t()) :: map()
   def last_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now())
   def last_24h_visitors_hourly_intervals([], _), do: %{}
 
