@@ -2,7 +2,7 @@ defmodule Plausible.Sites do
   alias Plausible.{Repo, Site, Site.SharedLink, Billing.Quota}
   import Ecto.Query
 
-  @type list_opt() :: {:exclude_ids, [non_neg_integer()]} | {:filter_by_domain, String.t()}
+  @type list_opt() :: {:filter_by_domain, String.t()}
 
   def get_by_domain(domain) do
     Repo.get_by(Site, domain: domain)
