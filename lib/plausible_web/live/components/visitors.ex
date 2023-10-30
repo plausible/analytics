@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.Components.Visitors do
         fill="url(#chart-gradient-cut-off)"
         clip-path={"url(#gradient-cut-off-#{@id})"}
       />
-      <polyline fill="none" stroke="#6366f1" stroke-width="3" points={@points} />
+      <polyline fill="none" stroke="rgba(101,116,205)" stroke-width="2.6" points={@points} />
     </svg>
     """
   end
@@ -62,8 +62,8 @@ defmodule PlausibleWeb.Live.Components.Visitors do
     <svg width="0" height="0">
       <defs class="text-white dark:text-indigo-800">
         <linearGradient id="chart-gradient-cut-off" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stop-color="#6366f1" />
-          <stop offset="100%" stop-color="currentColor" />
+          <stop offset="0%" stop-color="rgba(101,116,205,0.2)" />
+          <stop offset="100%" stop-color="rgba(101,116,205,0)" />
         </linearGradient>
       </defs>
     </svg>
