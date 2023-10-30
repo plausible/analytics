@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Live.Sites do
           Total of <span class="font-medium"><%= @sites.metadata.total_count %></span> sites
         </.pagination>
         <.invitation_modal
-          :if={not Enum.any?(@sites.entries, &(&1.list_type == "invitation"))}
+          :if={Enum.any?(@sites.entries, &(&1.list_type == "invitation"))}
           user={@user}
         />
       </div>
