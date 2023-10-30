@@ -425,7 +425,7 @@ defmodule PlausibleWeb.Live.Sites do
       socket
       |> set_filter_text(filter_text)
       |> reset_pagination()
-      |> load_sites(force_refresh?: true)
+      |> load_sites()
 
     {:noreply, socket}
   end
@@ -435,32 +435,19 @@ defmodule PlausibleWeb.Live.Sites do
       socket
       |> set_filter_text("")
       |> reset_pagination()
-      |> load_sites(force_refresh?: true)
+      |> load_sites()
 
     {:noreply, socket}
   end
 
-  defp load_sites(socket, opts \\ []) do
-    assign_fn =
-      if Keyword.get(opts, :force_refresh?, false) do
-        fn socket, param, value_fn ->
-          assign(socket, param, value_fn.(socket.assigns))
-        end
-      else
-        &assign_new/3
-      end
+  defp load_sites(%{assigns: assigns} = socket) do
+    sites = Sites.list(assigns.user, assigns.params, filter_by_domain: assigns.filter_text)
 
-    socket
-    |> assign_fn.(:sites, fn %{
-                               user: user,
-                               params: params,
-                               filter_text: filter_text
-                             } ->
-      Sites.list(user, params, filter_by_domain: filter_text)
-    end)
-    |> assign_fn.(:hourly_stats, fn %{sites: sites} ->
-      Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
-    end)
+    assign(
+      socket,
+      sites: sites,
+      hourly_stats: Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
+    )
   end
 
   defp set_filter_text(socket, filter_text) do
