@@ -226,12 +226,32 @@ defmodule Plausible.Stats.Clickhouse do
         {site.domain,
          %{
            intervals: empty_24h_intervals(now),
-           visitors: 0
+           visitors: 0,
+           change: 0
          }}
       end)
       |> Map.new()
 
-    query =
+    previous_query =
+      from(e in "events_v2",
+        hints: [sample: 20_000_000],
+        where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
+        where: e.timestamp >= ^NaiveDateTime.add(now, -48, :hour),
+        where: e.timestamp <= ^NaiveDateTime.add(now, -24, :hour),
+        select: {
+          e.site_id,
+          fragment("toUInt64(round(uniq(user_id) * any(_sample_factor)))")
+        },
+        group_by: [e.site_id],
+        order_by: [e.site_id]
+      )
+
+    previous_result =
+      previous_query
+      |> ClickhouseRepo.all()
+      |> Map.new()
+
+    current_query =
       from(e in "events_v2",
         hints: [sample: 20_000_000],
         where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
@@ -247,7 +267,7 @@ defmodule Plausible.Stats.Clickhouse do
       )
 
     result =
-      query
+      current_query
       |> ClickhouseRepo.all()
       |> Enum.group_by(& &1.site_id)
       |> Enum.map(fn {site_id, entries} ->
@@ -261,7 +281,10 @@ defmodule Plausible.Stats.Clickhouse do
           |> Enum.uniq_by(& &1.interval)
           |> Enum.sort_by(& &1.interval, NaiveDateTime)
 
-        {site_id_to_domain_mapping[site_id], %{intervals: full_entries, visitors: visitors}}
+        change = Plausible.Stats.Compare.percent_change(previous_result[site_id], visitors) || 100
+
+        {site_id_to_domain_mapping[site_id],
+         %{intervals: full_entries, visitors: visitors, change: change}}
       end)
       |> Map.new()
 

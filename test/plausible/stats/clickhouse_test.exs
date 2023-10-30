@@ -19,6 +19,7 @@ defmodule Plausible.Stats.ClickhouseTest do
              ) ==
                %{
                  domain => %{
+                   change: 0,
                    visitors: 0,
                    intervals: [
                      %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
@@ -65,6 +66,7 @@ defmodule Plausible.Stats.ClickhouseTest do
       ])
 
       %{
+        change: 100,
         visitors: 3,
         intervals: [
           %{interval: ~N[2023-10-25 11:00:00], visitors: 0},
@@ -122,8 +124,11 @@ defmodule Plausible.Stats.ClickhouseTest do
                Clickhouse.last_24h_visitors_hourly_intervals([site1, site2, site3], fixed_now)
 
       assert result[site1.domain].visitors == 3
+      assert result[site1.domain].change == 100
       assert result[site2.domain].visitors == 3
+      assert result[site2.domain].change == 100
       assert result[site3.domain].visitors == 0
+      assert result[site3.domain].change == 0
 
       find_interval = fn result, domain, interval ->
         Enum.find(result[domain].intervals, &(&1.interval == interval))
@@ -134,5 +139,23 @@ defmodule Plausible.Stats.ClickhouseTest do
       assert find_interval.(result, site2.domain, ~N[2023-10-25 13:00:00]).visitors == 2
       assert find_interval.(result, site2.domain, ~N[2023-10-25 15:00:00]).visitors == 1
     end
+  end
+
+  test "returns calculated change" do
+    fixed_now = ~N[2023-10-26 10:00:15]
+    site = insert(:site)
+
+    populate_stats(site, [
+      build(:pageview, timestamp: ~N[2023-10-24 11:58:00]),
+      build(:pageview, timestamp: ~N[2023-10-24 12:59:00]),
+      build(:pageview, timestamp: ~N[2023-10-25 13:59:00]),
+      build(:pageview, timestamp: ~N[2023-10-25 13:58:00]),
+      build(:pageview, timestamp: ~N[2023-10-25 13:59:00])
+    ])
+
+    %{
+      change: 50,
+      visitors: 3
+    } = Clickhouse.last_24h_visitors_hourly_intervals([site], fixed_now)[site.domain]
   end
 end

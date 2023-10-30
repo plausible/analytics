@@ -19,15 +19,15 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       assigns.intervals
       |> scale(assigns.height)
       |> Enum.with_index(fn scaled_value, index ->
-        "#{(index - 1) * assigns.tick},#{scaled_value}"
+        "#{index * assigns.tick},#{scaled_value}"
       end)
 
     clip_points =
       List.flatten([
-        "-#{assigns.tick},#{assigns.height + 1}",
+        "0,#{assigns.height + 1}",
         points,
-        "#{(length(points) - 2) * assigns.tick},#{assigns.height + 1}",
-        "-#{assigns.tick},#{assigns.height + 1}"
+        "#{(length(points) - 1) * assigns.tick},#{assigns.height + 1}",
+        "0,#{assigns.height + 1}"
       ])
 
     assigns =
@@ -38,16 +38,16 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       |> assign(:id, Ecto.UUID.generate())
 
     ~H"""
-    <svg viewBox={"0 0 #{@points_len * @tick} #{@height + 1}"} class="chart w-full mb-2">
+    <svg viewBox={"0 0 #{(@points_len - 1) * @tick} #{@height + 1}"} class="chart w-full mb-2">
       <defs>
         <clipPath id={"gradient-cut-off-#{@id}"}>
           <polyline points={@clip_points} />
         </clipPath>
       </defs>
       <rect
-        x="-20"
+        x="0"
         y="1"
-        width={(@points_len + 1) * @tick}
+        width={@points_len * @tick}
         height={@height}
         fill="url(#chart-gradient-cut-off)"
         clip-path={"url(#gradient-cut-off-#{@id})"}

@@ -454,33 +454,12 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp calculate_change(:bounce_rate, old_count, new_count) do
+  def calculate_change(:bounce_rate, old_count, new_count) do
     if old_count > 0, do: new_count - old_count
   end
 
-  defp calculate_change(_metric, old_count, new_count) do
-    percent_change(old_count, new_count)
-  end
-
-  defp percent_change(nil, _new_count), do: nil
-
-  defp percent_change(%Money{} = old_count, %Money{} = new_count) do
-    old_count = old_count |> Money.to_decimal() |> Decimal.to_float()
-    new_count = new_count |> Money.to_decimal() |> Decimal.to_float()
-    percent_change(old_count, new_count)
-  end
-
-  defp percent_change(old_count, new_count) do
-    cond do
-      old_count == 0 and new_count > 0 ->
-        100
-
-      old_count == 0 and new_count == 0 ->
-        0
-
-      true ->
-        round((new_count - old_count) / old_count * 100)
-    end
+  def calculate_change(_metric, old_count, new_count) do
+    Stats.Compare.percent_change(old_count, new_count)
   end
 
   def sources(conn, params) do
@@ -1361,8 +1340,8 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Query.put_filter(filter_name, {:member, items})
       |> Query.remove_event_filters([:goal, :props])
 
-    # Here, we're always only interested in the first page of results 
-    # - the :member filter makes sure that the results always match with 
+    # Here, we're always only interested in the first page of results
+    # - the :member filter makes sure that the results always match with
     # the items in the given breakdown_results list
     pagination = {elem(pagination, 0), 1}
 

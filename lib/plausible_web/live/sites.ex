@@ -217,12 +217,29 @@ defmodule PlausibleWeb.Live.Sites do
     <div class="pl-8 mt-2 flex items-center justify-between">
       <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
         <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
-        <span class="text-gray-800 dark:text-gray-200">
-          <b><%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %></b>
-          visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
-        </span>
+        <div class="flex justify-between items-center">
+          <p>
+            <span class="text-gray-800 dark:text-gray-200">
+              <b><%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %></b>
+              visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
+            </span>
+          </p>
+
+          <.percentage_change change={@hourly_stats.change} />
+        </div>
       </span>
     </div>
+    """
+  end
+
+  attr :change, :integer, required: true
+
+  def percentage_change(assigns) do
+    ~H"""
+    <p :if={@change != 0}>
+      <span :if={@change > 0} class="text-green-500">↑ <%= @change %>%</span>
+      <span :if={@change < 0} class="text-red-500">↓ <%= @change %>%</span>
+    </p>
     """
   end
 
