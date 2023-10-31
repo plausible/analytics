@@ -260,7 +260,7 @@ defmodule PlausibleWeb.Live.Sites do
     <p :if={@change != 0} class="dark:text-gray-100">
       <span :if={@change > 0} class="font-semibold text-green-500">↑</span>
       <span :if={@change < 0} class="font-semibold text-red-400">↓</span>
-      <%= @change %>%
+      <%= abs(@change) %>%
     </p>
     """
   end
