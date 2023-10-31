@@ -6,7 +6,7 @@ defmodule Plausible.Billing.Quota do
   import Ecto.Query
   alias Plausible.Billing
   alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
-  alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props}
+  alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
   def usage(user, opts \\ []) do
     basic_usage = %{
@@ -177,10 +177,13 @@ defmodule Plausible.Billing.Quota do
         on: g.site_id == os.site_id,
         where: not is_nil(g.currency)
 
+    stats_api_usage = from a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id
+
     queries = [
       {Props, props_usage_query},
       {Funnels, funnels_usage_query},
-      {RevenueGoals, revenue_goals_usage}
+      {RevenueGoals, revenue_goals_usage},
+      {StatsAPI, stats_api_usage}
     ]
 
     Enum.reduce(queries, [], fn {feature, query}, acc ->
