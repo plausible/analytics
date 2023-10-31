@@ -196,25 +196,6 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def last_24h_visitors([]), do: %{}
-
-  def last_24h_visitors(sites) do
-    site_id_to_domain_mapping = for site <- sites, do: {site.id, site.domain}, into: %{}
-
-    ClickhouseRepo.all(
-      from(e in "events_v2",
-        group_by: e.site_id,
-        where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
-        where: e.timestamp > fragment("now() - INTERVAL 24 HOUR"),
-        select: {e.site_id, fragment("uniq(user_id)")}
-      )
-    )
-    |> Enum.map(fn {site_id, user_id} ->
-      {site_id_to_domain_mapping[site_id], user_id}
-    end)
-    |> Enum.into(%{})
-  end
-
   @spec last_24h_visitors_hourly_intervals([Plausible.Site.t()], NaiveDateTime.t()) :: map()
   def last_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now())
   def last_24h_visitors_hourly_intervals([], _), do: %{}
