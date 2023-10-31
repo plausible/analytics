@@ -7,7 +7,6 @@ defmodule PlausibleWeb.AuthController do
   plug(
     PlausibleWeb.RequireLoggedOutPlug
     when action in [
-           :register_form,
            :register,
            :register_from_invitation,
            :login_form,
