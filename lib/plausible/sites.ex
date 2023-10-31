@@ -12,6 +12,17 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
+  @spec toggle_pin(Plausible.Auth.User.t(), Plausible.Site.t()) :: Plausible.Site.Preference.t()
+  def toggle_pin(user, site) do
+    user
+    |> Plausible.Site.Preference.changeset(site, %{is_pinned: !site.is_pinned})
+    |> Repo.insert!(
+      conflict_target: [:user_id, :site_id],
+      on_conflict: {:replace, [:preferences]},
+      returning: true
+    )
+  end
+
   @spec list(Plausible.Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
