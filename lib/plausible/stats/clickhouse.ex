@@ -3,6 +3,8 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.Fragments
 
+  import Ecto.Query, only: [from: 2, subquery: 1]
+
   alias Plausible.Stats.Query
 
   @no_ref "Direct / None"
@@ -235,12 +237,23 @@ defmodule Plausible.Stats.Clickhouse do
       |> ClickhouseRepo.all()
       |> Map.new()
 
-    current_query =
+    current_base_query =
       from(e in "events_v2",
         hints: [sample: 20_000_000],
         where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
         where: e.timestamp >= ^NaiveDateTime.add(now, -24, :hour),
         where: e.timestamp <= ^now,
+        select: %{
+          site_id: e.site_id,
+          user_id: e.user_id,
+          timestamp: min(e.timestamp),
+          _sample_factor: e._sample_factor
+        },
+        group_by: [e.site_id, e.user_id, e._sample_factor]
+      )
+
+    current_query =
+      from(e in subquery(current_base_query),
         select: %{
           site_id: e.site_id,
           interval: fragment("toStartOfHour(timestamp)"),
