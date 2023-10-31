@@ -249,7 +249,6 @@ defmodule Plausible.Stats.Clickhouse do
           timestamp: min(e.timestamp),
           _sample_factor: e._sample_factor
         },
-        order_by: [e.site_id, e.user_id],
         group_by: [e.site_id, e.user_id, e._sample_factor]
       )
 
