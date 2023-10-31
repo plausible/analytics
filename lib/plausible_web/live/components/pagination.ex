@@ -39,11 +39,11 @@ defmodule PlausibleWeb.Live.Components.Pagination do
     params = URI.decode_query(assigns.uri.query, %{field => cursor})
     uri = %{assigns.uri | query: URI.encode_query(params)}
 
-    assigns = assign(assigns, uri: active? && uri, active?: active?)
+    assigns = assign(assigns, uri: active? && URI.to_string(uri), active?: active?)
 
     ~H"""
-    <a
-      href={@uri}
+    <.link
+      navigate={@uri}
       class={[
         "pagination-link relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md",
         if @active? do
@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.Components.Pagination do
       ]}
     >
       <%= @label %>
-    </a>
+    </.link>
     """
   end
 end

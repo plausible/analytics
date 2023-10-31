@@ -108,7 +108,12 @@ defmodule PlausibleWeb.Live.Sites do
           <% end %>
         </ul>
 
-        <.pagination :if={@sites.metadata.before || @sites.metadata.after} uri={@uri} page={@sites}>
+        <.pagination
+          :if={@sites.metadata.before || @sites.metadata.after}
+          id="sites-pagination"
+          uri={@uri}
+          page={@sites}
+        >
           Total of <span class="font-medium"><%= @sites.metadata.total_count %></span> sites
         </.pagination>
         <.invitation_modal
