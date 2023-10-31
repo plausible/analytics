@@ -426,6 +426,13 @@ defmodule Plausible.Billing.QuotaTest do
       assert [RevenueGoals] == Quota.features_usage(user)
     end
 
+    test "returns [StatsAPI] when user uses revenue goals" do
+      user = insert(:user)
+      insert(:api_key, user: user)
+
+      assert [StatsAPI] == Quota.features_usage(user)
+    end
+
     test "returns multiple features" do
       user = insert(:user)
 
