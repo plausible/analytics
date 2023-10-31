@@ -58,6 +58,7 @@ defmodule PlausibleWeb.Live.Sites do
     assigns = assign(assigns, :invitations, invitations)
 
     ~H"""
+    <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
     <div
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
       x-on:keydown.escape.window="invitationOpen = false"
@@ -263,7 +264,7 @@ defmodule PlausibleWeb.Live.Sites do
           <.unstyled_link
             :if={List.first(@site.memberships).role != :viewer}
             href={"/#{URI.encode_www_form(@site.domain)}/settings"}
-            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900"
+            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
             role="menuitem"
             tabindex="-1"
             id={"menu-#{@index}-item-0"}
@@ -272,27 +273,43 @@ defmodule PlausibleWeb.Live.Sites do
             <span>Settings</span>
           </.unstyled_link>
 
-          <.unstyled_link
-            :if={List.first(@site.memberships).role != :viewer}
-            href={"/#{URI.encode_www_form(@site.domain)}/settings"}
-            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900"
+          <a
+            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
             role="menuitem"
             tabindex="-1"
             id={"menu-#{@index}-item-1"}
+            phx-click="pin-toggle"
+            phx-value-domain={@site.domain}
           >
-            <Heroicons.star
+            <.icon_pin
               :if={@site.is_pinned}
-              solid
-              class="mr-3 h-5 w-5 text-yellow-400 stroke-yellow-500 dark:text-yellow-600 dark:stroke-yellow-700"
+              class="pt-1 mr-3 h-5 w-5 text-red-400 stroke-red-500 dark:text-yellow-600 dark:stroke-yellow-700"
             />
             <span :if={@site.is_pinned}>Unpin Site</span>
 
-            <Heroicons.star :if={!@site.is_pinned} class="mr-3 h-5 w-5" />
+            <.icon_pin :if={!@site.is_pinned} class="pt-1 mr-3 h-5 w-5" />
             <span :if={!@site.is_pinned}>Pin Site</span>
-          </.unstyled_link>
+          </a>
         </div>
       </div>
     </div>
+    """
+  end
+
+  attr :rest, :global
+
+  def icon_pin(assigns) do
+    ~H"""
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      fill="currentColor"
+      viewBox="0 0 16 16"
+      {@rest}
+    >
+      <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a5.927 5.927 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707-.195-.195.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a5.922 5.922 0 0 1 1.013.16l3.134-3.133a2.772 2.772 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146z" />
+    </svg>
     """
   end
 
@@ -536,6 +553,33 @@ defmodule PlausibleWeb.Live.Sites do
       </path>
     </svg>
     """
+  end
+
+  def handle_event("pin-toggle", %{"domain" => domain}, socket) do
+    site = Enum.find(socket.assigns.sites.entries, &(&1.domain == domain))
+    preference = Sites.toggle_pin(socket.assigns.user, site)
+
+    entries =
+      socket.assigns.sites.entries
+      |> Enum.map(fn
+        %{domain: ^domain} = site ->
+          %{site | is_pinned: preference.preferences.is_pinned}
+
+        site ->
+          site
+      end)
+
+    sites = %{socket.assigns.sites | entries: entries}
+
+    flash_message =
+      if preference.preferences.is_pinned do
+        "Site pinned"
+      else
+        "Site unpinned"
+      end
+
+    socket = put_flash(socket, :success, flash_message)
+    {:noreply, assign(socket, sites: sites)}
   end
 
   def handle_event(
