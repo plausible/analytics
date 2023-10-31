@@ -93,10 +93,11 @@ defmodule PlausibleWeb.Live.Sites do
 
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <%= for site <- @sites.entries do %>
+          <%= for {site, index} <- Enum.with_index(@sites.entries) do %>
             <.site
               :if={site.list_type == "site"}
               site={site}
+              index={index}
               hourly_stats={@hourly_stats[site.domain]}
             />
             <.invitation
@@ -199,6 +200,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr :site, Plausible.Site, required: true
+  attr :index, :integer, required: true
   attr :hourly_stats, :map, required: true
 
   def site(assigns) do
@@ -220,15 +222,77 @@ defmodule PlausibleWeb.Live.Sites do
           <.site_stats hourly_stats={@hourly_stats} />
         </div>
       </.unstyled_link>
-      <%= if List.first(@site.memberships).role != :viewer do %>
-        <.unstyled_link
-          href={"/#{URI.encode_www_form(@site.domain)}/settings"}
-          class="absolute top-0 right-0 p-4 mt-1"
-        >
-          <Heroicons.cog_8_tooth class="w-4 h-4 text-gray-800 dark:text-gray-400" />
-        </.unstyled_link>
-      <% end %>
+
+      <.ellipsis_menu site={@site} index={@index} />
     </li>
+    """
+  end
+
+  def ellipsis_menu(assigns) do
+    ~H"""
+    <div x-data="dropdown">
+      <a
+        x-on:click="toggle()"
+        x-ref="button"
+        x-bind:aria-expanded="open"
+        x-bind:aria-controls="$id('dropdown-button')"
+        class="absolute top-0 right-0 h-10 w-10 hover:cursor-pointer"
+      >
+        <Heroicons.ellipsis_vertical
+          class="absolute top-4 right-3 w-4 h-4 text-gray-800 dark:text-gray-400"
+          aria-expanded="false"
+          aria-haspopup="true"
+        />
+      </a>
+
+      <div
+        x-ref="panel"
+        x-show="open"
+        x-bind:id="$id('dropdown-button')"
+        x-on:click.outside="close($refs.button)"
+        x-on:click="onPanelClick"
+        x-transition.origin.top.right
+        x-transition.duration.100ms
+        class="absolute top-7 right-3 z-10 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+        role="menu"
+        aria-orientation="vertical"
+        aria-labelledby={"menu-#{@index}-button"}
+        tabindex="-1"
+      >
+        <div class="py-1 text-sm" role="none">
+          <.unstyled_link
+            :if={List.first(@site.memberships).role != :viewer}
+            href={"/#{URI.encode_www_form(@site.domain)}/settings"}
+            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900"
+            role="menuitem"
+            tabindex="-1"
+            id={"menu-#{@index}-item-0"}
+          >
+            <Heroicons.cog_6_tooth class="mr-3 h-5 w-5" />
+            <span>Settings</span>
+          </.unstyled_link>
+
+          <.unstyled_link
+            :if={List.first(@site.memberships).role != :viewer}
+            href={"/#{URI.encode_www_form(@site.domain)}/settings"}
+            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900"
+            role="menuitem"
+            tabindex="-1"
+            id={"menu-#{@index}-item-1"}
+          >
+            <Heroicons.star
+              :if={@site.is_pinned}
+              solid
+              class="mr-3 h-5 w-5 text-yellow-400 stroke-yellow-500 dark:text-yellow-600 dark:stroke-yellow-700"
+            />
+            <span :if={@site.is_pinned}>Unpin Site</span>
+
+            <Heroicons.star :if={!@site.is_pinned} class="mr-3 h-5 w-5" />
+            <span :if={!@site.is_pinned}>Pin Site</span>
+          </.unstyled_link>
+        </div>
+      </div>
+    </div>
     """
   end
 

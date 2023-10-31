@@ -182,6 +182,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
   attr :id, :any, default: nil
+  attr :rest, :global
   slot :inner_block
 
   def unstyled_link(assigns) do
@@ -198,6 +199,7 @@ defmodule PlausibleWeb.Components.Generic do
         href={@href}
         target="_blank"
         rel="noopener noreferrer"
+        {@rest}
       >
         <%= render_slot(@inner_block) %>
         <Heroicons.arrow_top_right_on_square class={["opacity-60", @icon_class]} />
