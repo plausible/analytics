@@ -36,10 +36,11 @@ defmodule Plausible.Sites do
         left_join: p in Plausible.Site.Preference,
         on: p.site_id == s.id and p.user_id == ^user.id,
         where: not is_nil(i.id) or not is_nil(sm.id),
+        distinct: true,
         select: %{
           s
-          # TODO: work out a proper (GIN?) index for this
-          | is_pinned: type(p.preferences["is_pinned"], :boolean),
+          | # TODO: work out a proper (GIN?) index for this
+            is_pinned: fragment("coalesce(?, false)", type(p.preferences["is_pinned"], :boolean)),
             list_type:
               fragment(
                 """
