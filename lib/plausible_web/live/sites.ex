@@ -481,10 +481,17 @@ defmodule PlausibleWeb.Live.Sites do
   defp load_sites(%{assigns: assigns} = socket) do
     sites = Sites.list(assigns.user, assigns.params, filter_by_domain: assigns.filter_text)
 
+    hourly_stats =
+      if connected?(socket) do
+        Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
+      else
+        Plausible.Stats.Clickhouse.empty_24h_visitors_hourly_intervals(sites.entries)
+      end
+
     assign(
       socket,
       sites: sites,
-      hourly_stats: Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
+      hourly_stats: hourly_stats
     )
   end
 

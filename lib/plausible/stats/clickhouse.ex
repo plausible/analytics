@@ -198,6 +198,20 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
+  @spec empty_24h_visitors_hourly_intervals([Plausible.Site.t()], NaiveDateTime.t()) :: map()
+  def empty_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now()) do
+    sites
+    |> Enum.map(fn site ->
+      {site.domain,
+       %{
+         intervals: empty_24h_intervals(now),
+         visitors: 0,
+         change: 0
+       }}
+    end)
+    |> Map.new()
+  end
+
   @spec last_24h_visitors_hourly_intervals([Plausible.Site.t()], NaiveDateTime.t()) :: map()
   def last_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now())
   def last_24h_visitors_hourly_intervals([], _), do: %{}
@@ -206,17 +220,7 @@ defmodule Plausible.Stats.Clickhouse do
     site_id_to_domain_mapping = for site <- sites, do: {site.id, site.domain}, into: %{}
     now = now |> NaiveDateTime.truncate(:second)
 
-    placeholder =
-      sites
-      |> Enum.map(fn site ->
-        {site.domain,
-         %{
-           intervals: empty_24h_intervals(now),
-           visitors: 0,
-           change: 0
-         }}
-      end)
-      |> Map.new()
+    placeholder = empty_24h_visitors_hourly_intervals(sites, now)
 
     previous_query =
       from(e in "events_v2",

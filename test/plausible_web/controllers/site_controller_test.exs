@@ -42,17 +42,21 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "You don't have any sites yet"
     end
 
-    test "lists all of your sites with last 24h visitors", %{conn: conn, user: user} do
+    test "lists all of your sites with last 24h visitors (defaulting to 0 on first mount)", %{
+      conn: conn,
+      user: user
+    } do
       site = insert(:site, members: [user])
 
-      populate_stats(site, [build(:pageview), build(:pageview), build(:pageview)])
+      # will be skipped
+      populate_stats(site, [build(:pageview)])
       conn = get(conn, "/sites")
 
       assert resp = html_response(conn, 200)
 
       site_card = text_of_element(resp, "li[data-domain=\"#{site.domain}\"]")
 
-      assert site_card =~ "3 visitors in last 24h"
+      assert site_card =~ "0 visitors in last 24h"
       assert site_card =~ site.domain
     end
 

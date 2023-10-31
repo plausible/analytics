@@ -13,6 +13,18 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text(html) =~ "You don't have any sites yet"
     end
 
+    test "renders 24h visitors correctly", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [build(:pageview), build(:pageview), build(:pageview)])
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      site_card = text_of_element(html, "li[data-domain=\"#{site.domain}\"]")
+      assert site_card =~ "3 visitors in last 24h"
+      assert site_card =~ site.domain
+    end
+
     test "filters by domain", %{conn: conn, user: user} do
       _site1 = insert(:site, domain: "first.example.com", members: [user])
       _site2 = insert(:site, domain: "second.example.com", members: [user])
