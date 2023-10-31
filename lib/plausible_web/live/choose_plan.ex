@@ -32,7 +32,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         current_user_subscription_interval(user.subscription)
       end)
       |> assign_new(:available_plans, fn %{user: user} ->
-        Plans.available_plans_with_prices(user)
+        Plans.available_plans_for(user, with_prices: true)
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)

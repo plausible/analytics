@@ -68,10 +68,10 @@ defmodule Plausible.Billing.PlansTest do
       assert List.first(business_plans).monthly_product_id == @v4_business_plan_id
     end
 
-    test "available_plans_with_prices/1" do
+    test "available_plans returns all plans for user with prices when asked for" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
 
-      %{growth: growth_plans, business: business_plans} = Plans.available_plans_with_prices(user)
+      %{growth: growth_plans, business: business_plans} = Plans.available_plans_for(user, with_prices: true)
 
       assert Enum.find(growth_plans, fn plan ->
                (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v2_plan_id
@@ -80,6 +80,12 @@ defmodule Plausible.Billing.PlansTest do
       assert Enum.find(business_plans, fn plan ->
                (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v3_business_plan_id
              end)
+    end
+
+    test "available_plans returns all plans without prices by default" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
+
+      assert %{growth: [_ | _], business: [_ | _]} = Plans.available_plans_for(user)
     end
 
     test "latest_enterprise_plan_with_price/1" do

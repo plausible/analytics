@@ -63,9 +63,9 @@ defmodule Plausible.Billing.Plans do
     |> Enum.filter(&(&1.kind == :business))
   end
 
-  def available_plans_with_prices(%User{} = user) do
+  def available_plans_for(%User{} = user, opts \\ []) do
     (growth_plans_for(user) ++ business_plans_for(user))
-    |> with_prices()
+    |> then(fn all -> if opts[:with_prices], do: with_prices(all), else: all end)
     |> Enum.group_by(& &1.kind)
   end
 
