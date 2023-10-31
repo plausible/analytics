@@ -164,6 +164,20 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert resp =~ "first-another.example.com"
       refute resp =~ "second.example.com"
     end
+
+    test "does not show empty state when filter returns empty but there are sites", %{
+      conn: conn,
+      user: user
+    } do
+      _site1 = insert(:site, domain: "example.com", members: [user])
+
+      conn = get(conn, "/sites", filter_text: "none")
+      resp = html_response(conn, 200)
+
+      refute resp =~ "second.example.com"
+      assert html_response(conn, 200) =~ "No sites found. Please search for something else."
+      refute html_response(conn, 200) =~ "You don't have any sites yet."
+    end
   end
 
   describe "POST /sites" do

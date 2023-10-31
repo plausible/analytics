@@ -11,6 +11,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   alias Plausible.Auth
   alias Plausible.Repo
+  alias Plausible.Site
   alias Plausible.Sites
 
   def mount(params, %{"current_user_id" => user_id}, socket) do
@@ -22,11 +23,18 @@ defmodule PlausibleWeb.Live.Sites do
       socket
       |> assign(:uri, uri)
       |> assign(:filter_text, params["filter_text"] || "")
-      |> assign(:params, params)
       |> assign(:user, Repo.get!(Auth.User, user_id))
+
+    {:ok, socket}
+  end
+
+  def handle_params(params, _uri, socket) do
+    socket =
+      socket
+      |> assign(:params, params)
       |> load_sites()
-      |> assign_new(:has_sites?, fn %{sites: sites} ->
-        Enum.count(sites.entries) > 0
+      |> assign_new(:has_sites?, fn %{user: user} ->
+        Site.Memberships.any_or_pending?(user)
       end)
       |> assign_new(:needs_to_upgrade, fn %{user: user, sites: sites} ->
         user_owns_sites =
@@ -38,7 +46,7 @@ defmodule PlausibleWeb.Live.Sites do
         user_owns_sites && Plausible.Billing.check_needs_to_upgrade(user)
       end)
 
-    {:ok, socket}
+    {:noreply, socket}
   end
 
   def render(assigns) do
@@ -67,7 +75,7 @@ defmodule PlausibleWeb.Live.Sites do
       <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
         <.search_form :if={@has_sites?} filter_text={@filter_text} uri={@uri} />
         <p :if={not @has_sites?} class="dark:text-gray-100">
-          You don't have any sites yet
+          You don't have any sites yet.
         </p>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
           <a href="/sites/new" class="button">
@@ -75,6 +83,13 @@ defmodule PlausibleWeb.Live.Sites do
           </a>
         </div>
       </div>
+
+      <p
+        :if={String.trim(@filter_text) != "" and @sites.entries == []}
+        class="mt-4 dark:text-gray-100"
+      >
+        No sites found. Please search for something else.
+      </p>
 
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -396,21 +411,24 @@ defmodule PlausibleWeb.Live.Sites do
             id="filter-text"
             phx-debounce={200}
             class="pl-8 dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
-            placeholder="Type / to search sites"
+            placeholder="Press / to search sites"
+            autocomplete="off"
             value={@filter_text}
             x-ref="filter_text"
-            x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
+            x-on:keydown.escape="$refs.filter_text.blur(); $refs.reset_filter?.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));"
             x-on:keydown.prevent.slash.window="$refs.filter_text.focus();"
+            x-on:blur="$refs.filter_text.placeholder = 'Press / to search sites';"
+            x-on:focus="$refs.filter_text.placeholder = 'Search sites';"
           />
         </div>
 
         <button
           :if={String.trim(@filter_text) != ""}
-          class="ml-2"
+          class="ml-2 cursor-pointer"
           phx-click="reset-filter-text"
           id="reset-filter"
-          x-on:click.prevent
           x-ref="reset_filter"
+          type="button"
         >
           <Heroicons.backspace class="feather hover:text-red-500 dark:text-gray-300 dark:hover:text-red-500" />
         </button>
@@ -431,9 +449,8 @@ defmodule PlausibleWeb.Live.Sites do
   def handle_event("filter", %{"filter_text" => filter_text}, socket) do
     socket =
       socket
-      |> set_filter_text(filter_text)
       |> reset_pagination()
-      |> load_sites()
+      |> set_filter_text(filter_text)
 
     {:noreply, socket}
   end
@@ -441,9 +458,8 @@ defmodule PlausibleWeb.Live.Sites do
   def handle_event("reset-filter-text", _params, socket) do
     socket =
       socket
-      |> set_filter_text("")
       |> reset_pagination()
-      |> load_sites()
+      |> set_filter_text("")
 
     {:noreply, socket}
   end
@@ -467,9 +483,12 @@ defmodule PlausibleWeb.Live.Sites do
       |> Map.put("filter_text", filter_text)
       |> URI.encode_query()
 
+    uri = %{uri | query: uri_params}
+
     socket
     |> assign(:filter_text, filter_text)
-    |> assign(:uri, %{uri | query: uri_params})
+    |> assign(:uri, uri)
+    |> push_patch(to: URI.to_string(uri), replace: true)
   end
 
   defp reset_pagination(socket) do
