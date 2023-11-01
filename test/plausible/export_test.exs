@@ -4,6 +4,16 @@ defmodule Plausible.ExportTest do
   test "it works" do
     site = insert(:site)
 
+    tmp_path =
+      Path.join(
+        System.tmp_dir!(),
+        "export_#{:os.system_time(:second)}_#{System.unique_integer([:positive])}.zip"
+      )
+
+    File.touch!(tmp_path)
+    on_exit(fn -> File.rm!(tmp_path) end)
+    {:ok, fd} = File.open(tmp_path, [:binary, :raw, :append])
+
     populate_stats(site, [
       build(:pageview,
         user_id: 123,
@@ -25,135 +35,59 @@ defmodule Plausible.ExportTest do
       )
     ])
 
-    export = Plausible.Export.export(site.id)
+    queries = Plausible.Export.export_queries(site.id)
 
-    assert Map.keys(export) == [
-             :browsers,
-             :devices,
-             :entry_pages,
-             :exit_pages,
-             :locations,
-             :operating_systems,
-             :pages,
-             :sources,
-             :visitors
+    raw_queries =
+      Enum.map(queries, fn {name, query} ->
+        {sql, params} = Plausible.ClickhouseRepo.to_sql(:all, query)
+        {Atom.to_string(name) <> ".csv", sql, params}
+      end)
+
+    config = Plausible.ClickhouseRepo.config()
+    {:ok, conn} = Ch.start_link(Keyword.put(config, :pool_size, 1))
+
+    :ok =
+      Plausible.Export.export_archive(
+        conn,
+        raw_queries,
+        fn data -> :file.write(fd, data) end,
+        format: "CSVWithNames"
+      )
+
+    :ok = File.close(fd)
+
+    assert {:ok, files} = :zip.unzip(to_charlist(tmp_path), cwd: System.tmp_dir!())
+    on_exit(fn -> Enum.each(files, &File.rm!/1) end)
+
+    assert Enum.map(files, &Path.basename/1) == [
+             "sources.csv",
+             "visitors.csv",
+             "devices.csv",
+             "browsers.csv",
+             "entry_pages.csv",
+             "exit_pages.csv",
+             "locations.csv",
+             "operating_systems.csv",
+             "pages.csv"
            ]
 
-    assert export.browsers == [
-             %{
-               bounces: 0,
-               browser: "",
-               date: ~D[2023-10-20],
-               visit_duration: 200,
-               visitors: 1,
-               visits: 1
-             }
-           ]
+    read_csv = fn file ->
+      NimbleCSV.RFC4180.parse_string(File.read!(file), skip_headers: false)
+    end
 
-    assert export.devices == [
-             %{
-               bounces: 0,
-               date: ~D[2023-10-20],
-               device: "",
-               visit_duration: 200,
-               visitors: 1,
-               visits: 1
-             }
-           ]
-
-    assert export.entry_pages == [
-             %{
-               bounces: 0,
-               date: ~D[2023-10-20],
-               entrances: 1,
-               entry_page: "/",
-               visit_duration: 200,
-               visitors: 1
-             }
-           ]
-
-    assert export.exit_pages == [
-             %{date: ~D[2023-10-20], exit_page: "/signup", exits: 1, visitors: 1}
-           ]
-
-    # TODO region "" or nil
-    assert export.locations == [
-             %{
-               bounces: 0,
-               city: 0,
-               country: "\0\0",
-               date: ~D[2023-10-20],
-               region: "-",
-               visit_duration: 200,
-               visitors: 1,
-               visits: 1
-             }
-           ]
-
-    assert export.operating_systems == [
-             %{
-               bounces: 0,
-               date: ~D[2023-10-20],
-               operating_system: "",
-               visit_duration: 200,
-               visitors: 1,
-               visits: 1
-             }
-           ]
-
-    assert export.pages == [
-             %{
-               date: ~D[2023-10-20],
-               exits: 1,
-               hostname: "export.dummy.site",
-               pageviews: 1,
-               path: "/signup",
-               time_on_page: 0,
-               visitors: 1
-             },
-             %{
-               date: ~D[2023-10-20],
-               exits: 0,
-               hostname: "export.dummy.site",
-               pageviews: 1,
-               path: "/",
-               time_on_page: 60,
-               visitors: 1
-             },
-             %{
-               date: ~D[2023-10-20],
-               exits: 0,
-               hostname: "export.dummy.site",
-               pageviews: 1,
-               path: "/about",
-               time_on_page: 140,
-               visitors: 1
-             }
-           ]
-
-    assert export.sources == [
-             %{
-               bounces: 0,
-               date: ~D[2023-10-20],
-               source: "",
-               utm_campaign: "",
-               utm_content: "",
-               utm_term: "",
-               visit_duration: 200,
-               visitors: 1,
-               visits: 1
-             }
-           ]
-
-    assert export.visitors == [
-             %{
-               bounces: 0,
-               date: ~D[2023-10-20],
-               pageviews: 3,
-               visit_duration: 200,
-               visitors: 1,
-               visits: 1
-             }
+    assert read_csv.("sources.csv") == [
+             [
+               "date",
+               "utm_source",
+               "utm_campaign",
+               "utm_content",
+               "utm_term",
+               "uniq(user_id)",
+               "sum(sign)",
+               "toUInt32(round(divide(sum(multiply(duration, sign)), sum(sign))))",
+               "sum(multiply(is_bounce, sign))"
+             ],
+             ["2023-10-20", "", "", "", "", "1", "1", "200", "0"]
            ]
   end
 end
