@@ -109,12 +109,13 @@ defmodule PlausibleWeb.Live.Sites do
         </ul>
 
         <.pagination
-          :if={@sites.metadata.before || @sites.metadata.after}
+          :if={@sites.total_pages > 1}
           id="sites-pagination"
           uri={@uri}
-          page={@sites}
+          page_number={@sites.page_number}
+          total_pages={@sites.total_pages}
         >
-          Total of <span class="font-medium"><%= @sites.metadata.total_count %></span> sites
+          Total of <span class="font-medium"><%= @sites.total_entries %></span> sites
         </.pagination>
         <.invitation_modal
           :if={Enum.any?(@sites.entries, &(&1.list_type == "invitation"))}
@@ -513,7 +514,7 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp reset_pagination(socket) do
-    pagination_fields = ["before", "after"]
+    pagination_fields = ["page"]
     uri = socket.assigns.uri
 
     uri_params =

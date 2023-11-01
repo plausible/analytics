@@ -45,13 +45,13 @@ defmodule PlausibleWeb.Live.SitesTest do
       _site2 = insert(:site, domain: "second.example.com", members: [user])
       _site3 = insert(:site, domain: "third.another.example.com", members: [user])
 
-      {:ok, lv, html} = live(conn, "/sites?limit=2")
+      {:ok, lv, html} = live(conn, "/sites?page_size=2")
 
       assert html =~ "first.another.example.com"
       assert html =~ "second.example.com"
       refute html =~ "third.another.example.com"
-      assert html =~ "after="
-      refute html =~ "before="
+      assert html =~ "page=2"
+      refute html =~ "page=1"
 
       type_into_input(lv, "filter_text", "anot")
       html = render(lv)
@@ -59,8 +59,8 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert html =~ "first.another.example.com"
       refute html =~ "second.example.com"
       assert html =~ "third.another.example.com"
-      refute html =~ "after="
-      refute html =~ "before="
+      refute html =~ "page=1"
+      refute html =~ "page=2"
     end
   end
 

@@ -12,7 +12,7 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
-  @spec list(Plausible.Auth.User.t(), map(), [list_opt()]) :: Paginator.Page.t()
+  @spec list(Plausible.Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
@@ -53,23 +53,8 @@ defmodule Plausible.Sites do
       )
       |> maybe_filter_by_domain(domain_filter)
 
-    # We compute total ourselves because paginator
-    # does not handle counting total when the query
-    # selects from a subquery.
-    total_count =
-      sites_query
-      |> Ecto.Query.exclude(:preload)
-      |> Ecto.Query.exclude(:order_by)
-      |> Ecto.Query.exclude(:select)
-      |> Repo.aggregate(:count)
-
     result =
-      Plausible.Pagination.paginate(sites_query, pagination_params,
-        cursor_fields: [list_type: :asc, domain: :asc],
-        limit: 24
-      )
-
-    metadata = %{result.metadata | total_count: total_count}
+      Repo.paginate(sites_query, pagination_params)
 
     entries =
       Enum.map(result.entries, fn
@@ -82,7 +67,7 @@ defmodule Plausible.Sites do
           site
       end)
 
-    %{result | entries: entries, metadata: metadata}
+    %{result | entries: entries}
   end
 
   defp maybe_filter_by_domain(query, domain)

@@ -87,7 +87,14 @@ defmodule Plausible.SitesTest do
       user = insert(:user)
       _rogue_site = insert(:site)
 
-      assert %{entries: [], metadata: %{before: nil, after: nil}} = Sites.list(user, %{})
+      assert %{
+               entries: [],
+               page_size: 24,
+               page_number: 1,
+               total_entries: 0,
+               total_pages: 1
+             } =
+               Sites.list(user, %{})
     end
 
     test "returns invitations and sites" do
@@ -153,27 +160,32 @@ defmodule Plausible.SitesTest do
                  %{id: ^site_id3},
                  %{id: ^site_id1}
                ],
-               metadata: %{before: nil, after: after_cursor}
-             } = Sites.list(user, %{"limit" => 2})
-
-      assert after_cursor
+               page_number: 1,
+               page_size: 2,
+               total_entries: 3,
+               total_pages: 2
+             } = Sites.list(user, %{"page_size" => 2})
 
       assert %{
                entries: [
                  %{id: ^site_id2}
                ],
-               metadata: %{before: before_cursor, after: nil}
-             } = Sites.list(user, %{"after" => after_cursor, "limit" => 2})
-
-      assert before_cursor
+               page_number: 2,
+               page_size: 2,
+               total_entries: 3,
+               total_pages: 2
+             } = Sites.list(user, %{"page" => 2, "page_size" => 2})
 
       assert %{
                entries: [
                  %{id: ^site_id3},
                  %{id: ^site_id1}
                ],
-               metadata: %{before: nil, after: ^after_cursor}
-             } = Sites.list(user, %{"before" => before_cursor, "limit" => 2})
+               page_number: 1,
+               page_size: 2,
+               total_entries: 3,
+               total_pages: 2
+             } = Sites.list(user, %{"page" => 1, "page_size" => 2})
     end
   end
 end

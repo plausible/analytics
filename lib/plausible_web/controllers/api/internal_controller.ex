@@ -17,15 +17,13 @@ defmodule PlausibleWeb.Api.InternalController do
     end
   end
 
-  def sites(conn, params) do
+  def sites(conn, _params) do
     current_user = conn.assigns[:current_user]
 
     if current_user do
-      sites =
-        sites_for(current_user, params)
-        |> buildResponse(conn)
+      sites = sites_for(current_user)
 
-      json(conn, sites)
+      json(conn, %{data: sites})
     else
       PlausibleWeb.Api.Helpers.unauthorized(
         conn,
@@ -67,23 +65,18 @@ defmodule PlausibleWeb.Api.InternalController do
     end
   end
 
-  defp sites_for(user, params) do
-    Repo.paginate(
+  defp sites_for(user) do
+    Repo.all(
       from(
         s in Site,
         join: sm in Site.Membership,
         on: sm.site_id == s.id,
         where: sm.user_id == ^user.id,
-        order_by: s.domain
-      ),
-      params
+        order_by: s.domain,
+        select: %{domain: s.domain},
+        # there are keyboard shortcuts for switching between sites, hence 9
+        limit: 9
+      )
     )
-  end
-
-  defp buildResponse({sites, pagination}, conn) do
-    %{
-      data: Enum.map(sites, &%{domain: &1.domain}),
-      pagination: Phoenix.Pagination.JSON.paginate(conn, pagination)
-    }
   end
 end

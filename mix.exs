@@ -102,7 +102,6 @@ defmodule Plausible.MixProject do
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 3.3", override: true},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_pagination, "~> 0.7.0"},
       {:phoenix_pubsub, "~> 2.0"},
       {:phoenix_live_view, "~> 0.18"},
       {:php_serializer, "~> 2.0"},
@@ -124,7 +123,8 @@ defmodule Plausible.MixProject do
       {:zxcvbn, git: "https://github.com/techgaun/zxcvbn-elixir.git"},
       {:open_api_spex, "~> 3.18"},
       {:joken, "~> 2.5"},
-      {:paginator, git: "https://github.com/duffelhq/paginator.git"}
+      {:paginator, git: "https://github.com/duffelhq/paginator.git"},
+      {:scrivener_ecto, "~> 2.0"}
     ]
   end
 

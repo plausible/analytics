@@ -16,12 +16,18 @@ defmodule PlausibleWeb.Live.Components.Pagination do
         </p>
       </div>
       <div class="flex-1 flex justify-between sm:justify-end">
-        <.pagination_link uri={@uri} cursor={{"before", @page.metadata.before}} label="← Previous" />
         <.pagination_link
+          page_number={@page_number}
+          total_pages={@total_pages}
+          uri={@uri}
+          type={:prev}
+        />
+        <.pagination_link
+          page_number={@page_number}
+          total_pages={@total_pages}
           class="ml-4"
           uri={@uri}
-          cursor={{"after", @page.metadata.after}}
-          label="Next →"
+          type={:next}
         />
       </div>
     </nav>
@@ -30,14 +36,24 @@ defmodule PlausibleWeb.Live.Components.Pagination do
 
   attr :class, :string, default: nil
   attr :uri, URI, required: true
-  attr :cursor, :any, required: true
-  attr :label, :string, required: true
+  attr :type, :atom, required: true
+  attr :page_number, :integer, required: true
+  attr :total_pages, :integer, required: true
 
   defp pagination_link(assigns) do
-    {field, cursor} = assigns.cursor
-    active? = not is_nil(cursor)
-    params = URI.decode_query(assigns.uri.query, %{field => cursor})
-    uri = %{assigns.uri | query: URI.encode_query(params)}
+    {active?, uri} =
+      case {assigns.type, assigns.page_number, assigns.total_pages} do
+        {:next, n, total} when n < total ->
+          params = URI.decode_query(assigns.uri.query, %{"page" => n + 1})
+          {true, %{assigns.uri | query: URI.encode_query(params)}}
+
+        {:prev, n, _total} when n > 1 ->
+          params = URI.decode_query(assigns.uri.query, %{"page" => n - 1})
+          {true, %{assigns.uri | query: URI.encode_query(params)}}
+
+        {_, _, _} ->
+          {false, nil}
+      end
 
     assigns = assign(assigns, uri: active? && URI.to_string(uri), active?: active?)
 
@@ -54,7 +70,8 @@ defmodule PlausibleWeb.Live.Components.Pagination do
         @class
       ]}
     >
-      <%= @label %>
+      <span :if={@type == :prev}>← Previous</span>
+      <span :if={@type == :next}>Next →</span>
     </.link>
     """
   end
