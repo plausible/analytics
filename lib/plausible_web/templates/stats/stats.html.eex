@@ -58,5 +58,4 @@
       </div>
     </div>
   <% end %>
-  <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/dashboard.js") %>"></script>
 </div>
