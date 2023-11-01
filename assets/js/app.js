@@ -1,6 +1,5 @@
-import "../css/app.css"
-import "flatpickr/dist/flatpickr.min.css"
 import "./polyfills/closest"
+import "./apply-theme"
 import 'abortcontroller-polyfill/dist/polyfill-patch-fetch'
 import Alpine from 'alpinejs'
 import "./liveview/live_socket"

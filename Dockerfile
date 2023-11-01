@@ -19,8 +19,7 @@ WORKDIR /app
 
 # install build dependencies
 RUN apk add --no-cache git nodejs yarn python3 npm ca-certificates wget gnupg make gcc libc-dev && \
-  npm install npm@latest -g && \
-  npm install -g webpack
+  npm install npm@latest -g
 
 COPY mix.exs ./
 COPY mix.lock ./
@@ -41,8 +40,8 @@ COPY tracker ./tracker
 COPY priv ./priv
 COPY lib ./lib
 
-RUN npm run deploy --prefix ./assets && \
-  npm run deploy --prefix ./tracker && \
+RUN npm run deploy --prefix ./tracker && \
+  mix assets.deploy && \
   mix phx.digest priv/static && \
   mix download_country_database && \
   # https://hexdocs.pm/sentry/Sentry.Sources.html#module-source-code-storage

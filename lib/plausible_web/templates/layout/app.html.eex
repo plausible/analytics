@@ -15,7 +15,6 @@
     <title><%= assigns[:title] || "Plausible · Simple, privacy-friendly alternative to Google Analytics" %></title>
     <link rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <%= render("_tracking.html", assigns) %>
-    <script type="text/javascript" data-pref="<%= @conn.assigns[:theme] || (@conn.assigns[:current_user] && @conn.assigns[:current_user].theme) %>" src="<%= Routes.static_path(@conn, "/js/applyTheme.js") %>"></script>
   </head>
   <body class="flex flex-col bg-gray-50 dark:bg-gray-850" style="<%= if !@conn.assigns[:embedded], do: "height: 100%;" %> <%= if @conn.assigns[:background], do: "background-color: #{@conn.assigns[:background]}" %>">
     <%= if !@conn.assigns[:embedded] do %>
@@ -33,6 +32,6 @@
     <% else %>
       <%= render("_footer.html", assigns) %>
     <% end %>
-    <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
+    <script type="text/javascript" data-pref="<%= @conn.assigns[:theme] || (@conn.assigns[:current_user] && @conn.assigns[:current_user].theme) %>"  src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </body>
 </html>

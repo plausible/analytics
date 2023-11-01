@@ -35,7 +35,8 @@ npm-debug.log
 # Since we are building assets from assets/,
 # we ignore priv/static. You may want to comment
 # this depending on your deployment strategy.
-/priv/static/
+/priv/static/css
+/priv/static/js
 /priv/version.json
 
 # Files matching config/*.secret.exs pattern contain sensitive
