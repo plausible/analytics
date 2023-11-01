@@ -18,8 +18,9 @@ Make sure Docker, Elixir, Erlang and Node.js are all installed on your developme
     4. Run `mix run priv/repo/seeds.exs` to seed the database. Check the [Seeds](#Seeds) section for more.
     5. Run `npm ci --prefix assets` to install the required client-side dependencies.
     6. Run `npm ci --prefix tracker` to install the required tracker dependencies.
-    7. Run `npm run deploy --prefix tracker` to generate tracker files in `priv/tracker/js`
-    8. Run `mix download_country_database` to fetch geolocation database
+    7. Run `mix assets.setup` to install Tailwind and Esbuild
+    8. Run `npm run deploy --prefix tracker` to generate tracker files in `priv/tracker/js`
+    9. Run `mix download_country_database` to fetch geolocation database
 3. Run `make server` or `mix phx.server` to start the Phoenix server.
 4. The system is now available on `localhost:8000`.
 
