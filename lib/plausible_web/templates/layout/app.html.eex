@@ -33,5 +33,8 @@
       <%= render("_footer.html", assigns) %>
     <% end %>
     <script type="text/javascript" data-pref="<%= @conn.assigns[:theme] || (@conn.assigns[:current_user] && @conn.assigns[:current_user].theme) %>"  src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
+    <%= if @conn.assigns[:load_dashboard_js] do %>
+      <script type="text/javascript" src="<%= Routes.static_path(@conn, "/js/dashboard.js") %>"></script>
+    <% end %>
   </body>
 </html>

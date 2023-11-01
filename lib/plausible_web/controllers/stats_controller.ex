@@ -74,7 +74,8 @@ defmodule PlausibleWeb.StatsController do
           demo: demo,
           flags: get_flags(conn.assigns[:current_user]),
           is_dbip: is_dbip(),
-          dogfood_page_path: dogfood_page_path
+          dogfood_page_path: dogfood_page_path,
+          load_dashboard_js: true
         )
 
       !stats_start_date && can_see_stats? ->
@@ -320,7 +321,8 @@ defmodule PlausibleWeb.StatsController do
           background: conn.params["background"],
           theme: conn.params["theme"],
           flags: get_flags(conn.assigns[:current_user]),
-          is_dbip: is_dbip()
+          is_dbip: is_dbip(),
+          load_dashboard_js: true
         )
 
       Sites.locked?(shared_link.site) ->
