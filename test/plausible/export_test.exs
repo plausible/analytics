@@ -59,35 +59,88 @@ defmodule Plausible.ExportTest do
     assert {:ok, files} = :zip.unzip(to_charlist(tmp_path), cwd: System.tmp_dir!())
     on_exit(fn -> Enum.each(files, &File.rm!/1) end)
 
-    assert Enum.map(files, &Path.basename/1) == [
-             "sources.csv",
-             "visitors.csv",
-             "devices.csv",
+    assert files |> Enum.map(&Path.basename/1) |> Enum.sort() == [
              "browsers.csv",
+             "devices.csv",
              "entry_pages.csv",
              "exit_pages.csv",
              "locations.csv",
              "operating_systems.csv",
-             "pages.csv"
+             "pages.csv",
+             "sources.csv",
+             "visitors.csv"
            ]
 
     read_csv = fn file ->
-      NimbleCSV.RFC4180.parse_string(File.read!(file), skip_headers: false)
+      path = Path.join(System.tmp_dir!(), file)
+      NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
     end
+
+    assert read_csv.("browsers.csv") == [
+             ["date", "browser", "visitors", "visits", "visit_duration", "bounces"],
+             ["2023-10-20", "", "1", "1", "200", "0"]
+           ]
+
+    assert read_csv.("devices.csv") == [
+             ["date", "device", "visitors", "visits", "visit_duration", "bounces"],
+             ["2023-10-20", "", "1", "1", "200", "0"]
+           ]
+
+    assert read_csv.("entry_pages.csv") == [
+             ["date", "entry_page", "visitors", "entrances", "visit_duration", "bounces"],
+             ["2023-10-20", "/", "1", "1", "200", "0"]
+           ]
+
+    assert read_csv.("exit_pages.csv") == [
+             ["date", "exit_page", "visitors", "exits"],
+             ["2023-10-20", "/signup", "1", "1"]
+           ]
+
+    assert read_csv.("locations.csv") == [
+             [
+               "date",
+               "country",
+               "region",
+               "city",
+               "visitors",
+               "visits",
+               "visit_duration",
+               "bounces"
+             ],
+             # TODO
+             ["2023-10-20", <<0, 0>>, "-", "0", "1", "1", "200", "0"]
+           ]
+
+    assert read_csv.("operating_systems.csv") == [
+             ["date", "operating_system", "visitors", "visits", "visit_duration", "bounces"],
+             ["2023-10-20", "", "1", "1", "200", "0"]
+           ]
+
+    assert read_csv.("pages.csv") == [
+             ["date", "path", "hostname", "time_on_page", "exits", "pageviews", "visitors"],
+             ["2023-10-20", "/signup", "export.dummy.site", "0", "1", "1", "1"],
+             ["2023-10-20", "/", "export.dummy.site", "60", "0", "1", "1"],
+             ["2023-10-20", "/about", "export.dummy.site", "140", "0", "1", "1"]
+           ]
 
     assert read_csv.("sources.csv") == [
              [
                "date",
-               "utm_source",
+               "source",
                "utm_campaign",
                "utm_content",
                "utm_term",
-               "uniq(user_id)",
-               "sum(sign)",
-               "toUInt32(round(divide(sum(multiply(duration, sign)), sum(sign))))",
-               "sum(multiply(is_bounce, sign))"
+               "visitors",
+               "visits",
+               "visit_duration",
+               "bounces"
              ],
              ["2023-10-20", "", "", "", "", "1", "1", "200", "0"]
+           ]
+
+    assert read_csv.("visitors.csv") == [
+             ["date", "visitors", "pageviews", "bounces", "visits", "visit_duration"],
+             ["2023-10-20", "1", "3", "0", "1", "200"]
            ]
   end
 end

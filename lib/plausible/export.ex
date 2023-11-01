@@ -42,14 +42,14 @@ defmodule Plausible.Export do
       |> with_cte("s", as: ^exported_visitors_sessions_q)
       # TODO test FULL OUTER JOIN in ch / ecto_ch
       |> join(:full, [e], s in "s", on: e.date == s.date)
-      |> select([e, s], %{
-        date: selected_as(coalesce(e.date, s.date), :date),
-        visitors: e.visitors,
-        pageviews: e.pageviews,
-        bounces: s.bounces,
-        visits: s.visits,
-        visit_duration: s.visit_duration
-      })
+      |> select([e, s], [
+        selected_as(coalesce(e.date, s.date), :date),
+        e.visitors,
+        e.pageviews,
+        s.bounces,
+        s.visits,
+        s.visit_duration
+      ])
       # TODO need it?
       |> order_by([], selected_as(:date))
 
@@ -64,14 +64,18 @@ defmodule Plausible.Export do
         s.utm_term
       ])
       |> select_merge([s], %{
-        source: s.utm_source,
+        source: selected_as(s.utm_source, :source),
         utm_campaign: s.utm_campaign,
         utm_content: s.utm_content,
         utm_term: s.utm_term,
-        visitors: fragment("uniq(?)", s.user_id),
-        visits: sum(s.sign),
-        visit_duration: fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-        bounces: sum(s.is_bounce * s.sign)
+        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
+        visits: selected_as(sum(s.sign), :visits),
+        visit_duration:
+          selected_as(
+            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
+            :visit_duration
+          ),
+        boucnes: selected_as(sum(s.is_bounce * s.sign), :bounces)
       })
 
     exported_pages =
@@ -95,15 +99,18 @@ defmodule Plausible.Export do
         user_id: e.user_id
       })
       |> subquery()
-      |> select([e], %{
-        date: selected_as(fragment("toDate(?)", e.timestamp), :date),
-        path: e.pathname,
-        hostname: fragment("any(?)", e.hostname),
-        time_on_page: fragment("sum(greatest(?,0))", e.next_timestamp - e.timestamp),
-        exits: fragment("countIf(?=0)", e.next_timestamp),
-        pageviews: fragment("countIf(?='pageview')", e.name),
-        visitors: fragment("uniq(?)", e.user_id)
-      })
+      |> select([e], [
+        selected_as(fragment("toDate(?)", e.timestamp), :date),
+        selected_as(e.pathname, :path),
+        selected_as(fragment("any(?)", e.hostname), :hostname),
+        selected_as(
+          fragment("sum(greatest(?,0))", e.next_timestamp - e.timestamp),
+          :time_on_page
+        ),
+        selected_as(fragment("countIf(?=0)", e.next_timestamp), :exits),
+        selected_as(fragment("countIf(?='pageview')", e.name), :pageviews),
+        selected_as(fragment("uniq(?)", e.user_id), :visitors)
+      ])
       |> group_by([e], [selected_as(:date), e.pathname])
       |> order_by([e], selected_as(:date))
 
@@ -112,10 +119,14 @@ defmodule Plausible.Export do
       |> group_by([s], [selected_as(:date), s.entry_page])
       |> select_merge([s], %{
         entry_page: s.entry_page,
-        visitors: fragment("uniq(?)", s.user_id),
-        entrances: sum(s.sign),
-        visit_duration: fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-        bounces: sum(s.is_bounce * s.sign)
+        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
+        entrances: selected_as(sum(s.sign), :entrances),
+        visit_duration:
+          selected_as(
+            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
+            :visit_duration
+          ),
+        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
       })
 
     exported_exit_pages =
@@ -123,8 +134,8 @@ defmodule Plausible.Export do
       |> group_by([s], [selected_as(:date), s.exit_page])
       |> select_merge([s], %{
         exit_page: s.exit_page,
-        visitors: fragment("uniq(?)", s.user_id),
-        exits: sum(s.sign)
+        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
+        exits: selected_as(sum(s.sign), :exits)
       })
 
     exported_locations =
@@ -136,29 +147,37 @@ defmodule Plausible.Export do
         s.city_geoname_id
       ])
       |> select_merge([s], %{
-        country: s.country_code,
+        country: selected_as(s.country_code, :country),
         # TODO
         region:
           selected_as(
             fragment("concatWithSeparator('-',?,?)", s.subdivision1_code, s.subdivision2_code),
             :region
           ),
-        city: s.city_geoname_id,
-        visitors: fragment("uniq(?)", s.user_id),
-        visits: sum(s.sign),
-        visit_duration: fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-        bounces: sum(s.is_bounce * s.sign)
+        city: selected_as(s.city_geoname_id, :city),
+        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
+        visits: selected_as(sum(s.sign), :visits),
+        visit_duration:
+          selected_as(
+            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
+            :visit_duration
+          ),
+        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
       })
 
     exported_devices =
       sessions_base_q
       |> group_by([s], [selected_as(:date), s.screen_size])
       |> select_merge([s], %{
-        device: s.screen_size,
-        visitors: fragment("uniq(?)", s.user_id),
-        visits: sum(s.sign),
-        visit_duration: fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-        bounces: sum(s.is_bounce * s.sign)
+        device: selected_as(s.screen_size, :device),
+        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
+        visits: selected_as(sum(s.sign), :visits),
+        visit_duration:
+          selected_as(
+            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
+            :visit_duration
+          ),
+        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
       })
 
     exported_browsers =
@@ -166,10 +185,14 @@ defmodule Plausible.Export do
       |> group_by([s], [selected_as(:date), s.browser])
       |> select_merge([s], %{
         browser: s.browser,
-        visitors: fragment("uniq(?)", s.user_id),
-        visits: sum(s.sign),
-        visit_duration: fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-        bounces: sum(s.is_bounce * s.sign)
+        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
+        visits: selected_as(sum(s.sign), :visits),
+        visit_duration:
+          selected_as(
+            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
+            :visit_duration
+          ),
+        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
       })
 
     exported_operating_systems =
@@ -177,10 +200,14 @@ defmodule Plausible.Export do
       |> group_by([s], [selected_as(:date), s.operating_system])
       |> select_merge([s], %{
         operating_system: s.operating_system,
-        visitors: fragment("uniq(?)", s.user_id),
-        visits: sum(s.sign),
-        visit_duration: fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-        bounces: sum(s.is_bounce * s.sign)
+        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
+        visits: selected_as(sum(s.sign), :visits),
+        visit_duration:
+          selected_as(
+            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
+            :visit_duration
+          ),
+        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
       })
 
     %{
