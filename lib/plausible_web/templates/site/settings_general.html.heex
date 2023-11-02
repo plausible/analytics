@@ -22,12 +22,11 @@
       </div>
     </div>
     <div>
-      <PlausibleWeb.Components.Generic.primary_button
-        as="a"
-        href={Routes.site_path(@conn, :change_domain, @site.domain)}
-      >
+      <PlausibleWeb.Components.Generic.button_link href={
+        Routes.site_path(@conn, :change_domain, @site.domain)
+      }>
         Change Domain
-      </PlausibleWeb.Components.Generic.primary_button>
+      </PlausibleWeb.Components.Generic.button_link>
     </div>
   </div>
 </div>
@@ -56,9 +55,9 @@
           ) %>
         </div>
       </div>
-      <PlausibleWeb.Components.Generic.primary_button type="submit">
+      <PlausibleWeb.Components.Generic.button type="submit">
         Save
-      </PlausibleWeb.Components.Generic.primary_button>
+      </PlausibleWeb.Components.Generic.button>
     </div>
   </div>
 <% end %>

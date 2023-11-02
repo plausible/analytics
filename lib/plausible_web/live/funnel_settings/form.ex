@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               </div>
 
               <div class="mt-6">
-                <PlausibleWeb.Components.Generic.primary_button
+                <PlausibleWeb.Components.Generic.button
                   type="submit"
                   class="w-full"
                   disabled={
@@ -132,7 +132,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                   }
                 >
                   Add Funnel →
-                </PlausibleWeb.Components.Generic.primary_button>
+                </PlausibleWeb.Components.Generic.button>
               </div>
             </div>
           </.form>

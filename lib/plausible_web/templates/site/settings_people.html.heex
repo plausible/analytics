@@ -226,11 +226,10 @@
   </div>
 
   <div class="mt-8">
-    <PlausibleWeb.Components.Generic.primary_button
-      as="a"
-      href={Routes.membership_path(@conn, :invite_member_form, @site.domain)}
-    >
+    <PlausibleWeb.Components.Generic.button_link href={
+      Routes.membership_path(@conn, :invite_member_form, @site.domain)
+    }>
       <Heroicons.user_plus solid class="w-5 h-5" /> Invite
-    </PlausibleWeb.Components.Generic.primary_button>
+    </PlausibleWeb.Components.Generic.button_link>
   </div>
 </div>

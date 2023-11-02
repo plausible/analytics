@@ -4,20 +4,16 @@ defmodule PlausibleWeb.Components.Generic do
   """
   use Phoenix.Component
 
-  attr(:as, :string, default: "button")
   attr(:type, :string, default: "button")
-  attr(:href, :string, default: "")
   attr(:class, :string, default: "")
   attr(:rest, :global)
 
   slot(:inner_block)
 
-  def primary_button(assigns) do
+  def button(assigns) do
     ~H"""
-    <.dynamic_tag
-      name={@as}
-      type={if @as == "button", do: @type}
-      href={if @as == "a", do: @href}
+    <button
+      type={@type}
       class={[
         "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
         @class
@@ -25,7 +21,28 @@ defmodule PlausibleWeb.Components.Generic do
       {@rest}
     >
       <%= render_slot(@inner_block) %>
-    </.dynamic_tag>
+    </button>
+    """
+  end
+
+  attr(:href, :string, required: true)
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+
+  slot(:inner_block)
+
+  def button_link(assigns) do
+    ~H"""
+    <.link
+      href={@href}
+      class={[
+        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
+        @class
+      ]}
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %>
+    </.link>
     """
   end
 

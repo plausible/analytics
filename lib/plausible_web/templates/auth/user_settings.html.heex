@@ -233,9 +233,9 @@
       ) %>
     </div>
 
-    <PlausibleWeb.Components.Generic.primary_button type="submit" class="mt-4">
+    <PlausibleWeb.Components.Generic.button type="submit" class="mt-4">
       Save
-    </PlausibleWeb.Components.Generic.primary_button>
+    </PlausibleWeb.Components.Generic.button>
   <% end %>
 </div>
 
@@ -257,9 +257,9 @@
         <%= error_tag(f, :name) %>
       </div>
     </div>
-    <PlausibleWeb.Components.Generic.primary_button type="submit" class="mt-4">
+    <PlausibleWeb.Components.Generic.button type="submit" class="mt-4">
       Save
-    </PlausibleWeb.Components.Generic.primary_button>
+    </PlausibleWeb.Components.Generic.button>
   <% end %>
 </div>
 
@@ -380,14 +380,13 @@
           </div>
         <% end %>
 
-        <PlausibleWeb.Components.Generic.primary_button
+        <PlausibleWeb.Components.Generic.button_link
           :if={Plausible.Billing.Feature.StatsAPI.check_availability(@current_user) == :ok}
-          as="a"
           href={Routes.auth_path(@conn, :new_api_key)}
           class="mt-4"
         >
           + New API Key
-        </PlausibleWeb.Components.Generic.primary_button>
+        </PlausibleWeb.Components.Generic.button_link>
       </div>
     </div>
   </div>

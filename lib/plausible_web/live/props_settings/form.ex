@@ -90,9 +90,9 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
           </div>
 
           <div class="py-4">
-            <PlausibleWeb.Components.Generic.primary_button type="submit" class="w-full">
+            <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
               Add Property →
-            </PlausibleWeb.Components.Generic.primary_button>
+            </PlausibleWeb.Components.Generic.button>
           </div>
 
           <button

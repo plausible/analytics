@@ -322,23 +322,19 @@ defmodule PlausibleWeb.Components.Billing do
 
   def upgrade_link(%{business_tier: true} = assigns) do
     ~H"""
-    <PlausibleWeb.Components.Generic.primary_button
-      id="upgrade-link-2"
-      as="a"
-      href={upgrade_link_href(@user)}
-    >
+    <PlausibleWeb.Components.Generic.button_link id="upgrade-link-2" href={upgrade_link_href(@user)}>
       Upgrade
-    </PlausibleWeb.Components.Generic.primary_button>
+    </PlausibleWeb.Components.Generic.button_link>
     """
   end
 
   def upgrade_link(assigns) do
     ~H"""
-    <PlausibleWeb.Components.Generic.primary_button href={
+    <PlausibleWeb.Components.Generic.button_link href={
       Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)
     }>
       Upgrade
-    </PlausibleWeb.Components.Generic.primary_button>
+    </PlausibleWeb.Components.Generic.button_link>
     """
   end
 
