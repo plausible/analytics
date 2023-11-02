@@ -30,7 +30,7 @@ function reapplyTheme() {
 }
 
 reapplyTheme();
-window.matchMedia('(prefers-color-scheme: dark)').addListener(reapplyTheme);
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', reapplyTheme);
 
 window.onload = function() {
 	reapplyTheme();

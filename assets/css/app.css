@@ -1,12 +1,11 @@
-/* purgecss start ignore */
-@tailwind base;
-@tailwind components;
-
-/* purgecss end ignore */
-@import "modal.css";
-@import "loader.css";
-@import "tooltip.css";
-@import "flatpickr.css";
+@import "tailwindcss/base";
+@import "flatpickr/dist/flatpickr.min.css";
+@import "./modal.css";
+@import "./loader.css";
+@import "./tooltip.css";
+@import "./flatpickr.css";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 [x-cloak] { display: none; }
 
@@ -64,8 +63,6 @@ blockquote {
     height: auto;
   }
 }
-
-@tailwind utilities;
 
 
 .light-text {

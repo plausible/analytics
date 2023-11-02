@@ -6,14 +6,8 @@ config :plausible, PlausibleWeb.Endpoint,
   code_reloader: true,
   check_origin: false,
   watchers: [
-    node: [
-      "node_modules/webpack/bin/webpack.js",
-      "--mode",
-      "development",
-      "--watch",
-      "--watch-options-stdin",
-      cd: Path.expand("../assets", __DIR__)
-    ],
+    esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]},
     npm: [
       "run",
       "deploy",
@@ -23,12 +17,7 @@ config :plausible, PlausibleWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
-      ~r{lib/plausible_web/views/.*(ex)$},
-      ~r{lib/plausible_web/templates/.*(eex)$},
-      ~r{lib/plausible_web/templates/.*(heex)$},
-      ~r{lib/plausible_web/controllers/.*(ex)$},
-      ~r{lib/plausible_web/plugs/.*(ex)$},
-      ~r{lib/plausible_web/live/.*(ex)$}
+      ~r"lib/plausible_web/(controllers|live|components|templates|views|plugs)/.*(ex|heex)$"
     ]
   ]
 

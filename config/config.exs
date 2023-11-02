@@ -21,6 +21,26 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :esbuild,
+  version: "0.17.11",
+  default: [
+    args:
+      ~w(js/app.js js/dashboard.js js/embed.host.js js/embed.content.js --bundle --target=es2017 --loader:.js=jsx --outdir=../priv/static/js),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
+
+config :tailwind,
+  version: "3.3.3",
+  default: [
+    args: ~w(
+      --config=tailwind.config.js
+      --input=css/app.css
+      --output=../priv/static/css/app.css
+    ),
+    cd: Path.expand("../assets", __DIR__)
+  ]
+
 config :ua_inspector,
   database_path: "priv/ua_inspector",
   remote_release: "66d80de32fbb265941f4d7941fadc19097375097"

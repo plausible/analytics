@@ -3,17 +3,12 @@
   "version": "1.4.0",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "deploy": "webpack --mode production",
-    "watch": "webpack --mode development --watch",
     "format": "prettier --write {css,js}/**",
     "check-format": "prettier --check {css,js}/**",
     "lint": "eslint js/**",
     "bundlemon": "bundlemon"
   },
   "dependencies": {
-    "@babel/core": "^7.14.3",
-    "@babel/preset-env": "^7.14.4",
-    "@babel/preset-react": "^7.13.13",
     "@headlessui/react": "^1.7.10",
     "@heroicons/react": "^2.0.11",
     "@juggle/resize-observer": "^3.3.1",
@@ -24,24 +19,16 @@
     "@tailwindcss/typography": "^0.4.1",
     "abortcontroller-polyfill": "^1.7.3",
     "alpinejs": "^3.13.1",
-    "autoprefixer": "^10.4.15",
-    "babel-loader": "^8.2.2",
     "chart.js": "^3.3.2",
     "chartjs-plugin-datalabels": "^2.2.0",
     "classnames": "^2.3.1",
-    "copy-webpack-plugin": "^9.0.0",
-    "css-loader": "^5.2.6",
-    "css-minimizer-webpack-plugin": "^3.2.0",
     "datamaps": "^0.5.9",
     "dayjs": "^1.11.7",
     "debounce-promise": "^3.1.2",
     "iframe-resizer": "^4.3.2",
-    "mini-css-extract-plugin": "^1.6.0",
     "phoenix": "^1.7.2",
     "phoenix_html": "^3.3.1",
     "phoenix_live_view": "^0.18.18",
-    "postcss": "^8.4.31",
-    "postcss-loader": "^6.1.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-flatpickr": "3.10.5",
@@ -50,15 +37,10 @@
     "react-popper": "^2.3.0",
     "react-router-dom": "^5.2.0",
     "react-transition-group": "^4.4.2",
-    "tailwindcss": "^3.3.3",
-    "terser-webpack-plugin": "^5.1.2",
-    "url-search-params-polyfill": "^8.1.1",
-    "webpack": "5.88.1",
-    "webpack-cli": "^4.7.0"
+    "url-search-params-polyfill": "^8.1.1"
   },
   "devDependencies": {
     "babel-eslint": "^10.1.0",
-    "bundlemon": "^1.4.0",
     "eslint": "^7.2.0",
     "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-import": "^2.26.0",
@@ -68,8 +50,7 @@
     "eslint-plugin-react-hooks": "^4.2.0",
     "stylelint": "^14.1.0",
     "stylelint-config-prettier": "^9.0.3",
-    "stylelint-config-standard": "^24.0.0",
-    "webpack-bundle-analyzer": "^4.4.2"
+    "stylelint-config-standard": "^24.0.0"
   },
   "name": "assets"
 }
