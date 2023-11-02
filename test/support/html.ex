@@ -29,6 +29,7 @@ defmodule Plausible.Test.Support.HTML do
     |> find(element)
     |> Floki.text()
     |> String.trim()
+    |> String.replace(~r/\s+/, " ")
   end
 
   def text(element) do
@@ -41,6 +42,12 @@ defmodule Plausible.Test.Support.HTML do
     html
     |> find(element)
     |> text_of_attr("class")
+  end
+
+  def text_of_attr(html, element, attr) do
+    html
+    |> find(element)
+    |> text_of_attr(attr)
   end
 
   def text_of_attr(element, attr) do

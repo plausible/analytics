@@ -29,12 +29,27 @@ defmodule Plausible.Site.Memberships do
     |> Repo.exists?()
   end
 
-  @spec has_any_invitations?(String.t()) :: boolean()
-  def has_any_invitations?(email) do
+  @spec pending?(String.t()) :: boolean()
+  def pending?(email) do
     Repo.exists?(
       from(i in Plausible.Auth.Invitation,
         where: i.email == ^email
       )
     )
+  end
+
+  @spec any_or_pending?(Plausible.Auth.User.t()) :: boolean()
+  def any_or_pending?(user) do
+    invitation_query =
+      from(i in Plausible.Auth.Invitation,
+        where: i.email == ^user.email,
+        select: 1
+      )
+
+    from(sm in Plausible.Site.Membership,
+      where: sm.user_id == ^user.id or exists(invitation_query),
+      select: 1
+    )
+    |> Repo.exists?()
   end
 end

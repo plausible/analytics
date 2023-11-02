@@ -6,48 +6,7 @@ defmodule PlausibleWeb.SiteController do
   plug PlausibleWeb.RequireAccountPlug
 
   plug PlausibleWeb.AuthorizeSiteAccess,
-       [:owner, :admin, :super_admin] when action not in [:index, :new, :create_site]
-
-  def index(conn, params) do
-    user = conn.assigns[:current_user]
-
-    invitations =
-      Repo.all(
-        from i in Plausible.Auth.Invitation,
-          where: i.email == ^user.email
-      )
-      |> Repo.preload(:site)
-
-    invitation_site_ids = Enum.map(invitations, & &1.site.id)
-
-    {sites, pagination} =
-      Repo.paginate(
-        from(s in Plausible.Site,
-          join: sm in Plausible.Site.Membership,
-          on: sm.site_id == s.id,
-          where: sm.user_id == ^user.id,
-          where: s.id not in ^invitation_site_ids,
-          order_by: s.domain,
-          preload: [memberships: sm]
-        ),
-        params
-      )
-
-    user_owns_sites =
-      Enum.any?(sites, fn site -> List.first(site.memberships).role == :owner end) ||
-        Plausible.Auth.user_owns_sites?(user)
-
-    visitors =
-      Plausible.Stats.Clickhouse.last_24h_visitors(sites ++ Enum.map(invitations, & &1.site))
-
-    render(conn, "index.html",
-      invitations: invitations,
-      sites: sites,
-      visitors: visitors,
-      pagination: pagination,
-      needs_to_upgrade: user_owns_sites && Plausible.Billing.check_needs_to_upgrade(user)
-    )
-  end
+       [:owner, :admin, :super_admin] when action not in [:new, :create_site]
 
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]

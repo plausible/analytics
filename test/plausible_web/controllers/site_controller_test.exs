@@ -42,14 +42,22 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "You don't have any sites yet"
     end
 
-    test "lists all of your sites with last 24h visitors", %{conn: conn, user: user} do
+    test "lists all of your sites with last 24h visitors (defaulting to 0 on first mount)", %{
+      conn: conn,
+      user: user
+    } do
       site = insert(:site, members: [user])
 
-      populate_stats(site, [build(:pageview), build(:pageview), build(:pageview)])
+      # will be skipped
+      populate_stats(site, [build(:pageview)])
       conn = get(conn, "/sites")
 
-      assert html_response(conn, 200) =~ site.domain
-      assert html_response(conn, 200) =~ "<b>3</b> visitors in last 24h"
+      assert resp = html_response(conn, 200)
+
+      site_card = text_of_element(resp, "li[data-domain=\"#{site.domain}\"]")
+
+      assert site_card =~ "0 visitors in last 24h"
+      assert site_card =~ site.domain
     end
 
     test "shows invitations for user by email address", %{conn: conn, user: user} do
@@ -74,25 +82,105 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ site.domain
     end
 
-    test "paginates sites", %{conn: conn, user: user} do
-      insert(:site, members: [user], domain: "test-site1.com")
-      insert(:site, members: [user], domain: "test-site2.com")
-      insert(:site, members: [user], domain: "test-site3.com")
-      insert(:site, members: [user], domain: "test-site4.com")
+    test "paginates sites", %{conn: initial_conn, user: user} do
+      for i <- 1..25 do
+        insert(:site,
+          members: [user],
+          domain: "paginated-site#{String.pad_leading("#{i}", 2, "0")}.example.com"
+        )
+      end
 
-      conn = get(conn, "/sites?per_page=2")
+      conn = get(initial_conn, "/sites")
+      resp = html_response(conn, 200)
 
-      assert html_response(conn, 200) =~ "test-site1.com"
-      assert html_response(conn, 200) =~ "test-site2.com"
-      refute html_response(conn, 200) =~ "test-site3.com"
-      refute html_response(conn, 200) =~ "test-site4.com"
+      for i <- 1..24 do
+        assert element_exists?(
+                 resp,
+                 "li[data-domain=\"paginated-site#{String.pad_leading("#{i}", 2, "0")}.example.com\"]"
+               )
+      end
 
-      conn = get(conn, "/sites?per_page=2&page=2")
+      refute resp =~ "paginated-site25.com"
 
-      refute html_response(conn, 200) =~ "test-site1.com"
-      refute html_response(conn, 200) =~ "test-site2.com"
-      assert html_response(conn, 200) =~ "test-site3.com"
-      assert html_response(conn, 200) =~ "test-site4.com"
+      next_page_link = text_of_attr(resp, ".pagination-link.active", "href")
+      next_page = initial_conn |> get(next_page_link) |> html_response(200)
+
+      assert element_exists?(
+               next_page,
+               "li[data-domain=\"paginated-site25.example.com\"]"
+             )
+
+      prev_page_link = text_of_attr(next_page, ".pagination-link.active", "href")
+      prev_page = initial_conn |> get(prev_page_link) |> html_response(200)
+
+      assert element_exists?(
+               prev_page,
+               "li[data-domain=\"paginated-site04.example.com\"]"
+             )
+
+      refute element_exists?(
+               prev_page,
+               "li[data-domain=\"paginated-site25.example.com\"]"
+             )
+    end
+
+    test "shows upgrade nag message to expired trial user without subscription", %{
+      conn: initial_conn,
+      user: user
+    } do
+      insert(:site, members: [user])
+
+      conn = get(initial_conn, "/sites")
+      resp = html_response(conn, 200)
+
+      nag_message =
+        "To access the sites you own, you need to subscribe to a monthly or yearly payment plan."
+
+      refute resp =~ nag_message
+
+      user
+      |> Plausible.Auth.User.end_trial()
+      |> Repo.update!()
+
+      conn = get(initial_conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert resp =~ nag_message
+    end
+
+    test "filters by domain", %{conn: conn, user: user} do
+      _site1 = insert(:site, domain: "first.example.com", members: [user])
+      _site2 = insert(:site, domain: "second.example.com", members: [user])
+      _rogue_site = insert(:site)
+
+      _site3 =
+        insert(:site,
+          domain: "first-another.example.com",
+          invitations: [
+            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+          ]
+        )
+
+      conn = get(conn, "/sites", filter_text: "first")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "first.example.com"
+      assert resp =~ "first-another.example.com"
+      refute resp =~ "second.example.com"
+    end
+
+    test "does not show empty state when filter returns empty but there are sites", %{
+      conn: conn,
+      user: user
+    } do
+      _site1 = insert(:site, domain: "example.com", members: [user])
+
+      conn = get(conn, "/sites", filter_text: "none")
+      resp = html_response(conn, 200)
+
+      refute resp =~ "second.example.com"
+      assert html_response(conn, 200) =~ "No sites found. Please search for something else."
+      refute html_response(conn, 200) =~ "You don't have any sites yet."
     end
   end
 

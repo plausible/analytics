@@ -8,6 +8,7 @@ defmodule Plausible.PromEx do
     [
       Plugins.Application,
       Plugins.Beam,
+      Plugins.PhoenixLiveView,
       {Plugins.Phoenix, router: PlausibleWeb.Router, endpoint: PlausibleWeb.Endpoint},
       {Plugins.Ecto,
        repos: [
