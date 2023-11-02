@@ -28,11 +28,17 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)
       end)
+      |> assign_new(:owned_tier, fn %{owned_plan: owned_plan} ->
+        if owned_plan, do: Map.get(owned_plan, :kind), else: nil
+      end)
+      |> assign_new(:recommended_tier, fn %{owned_plan: owned_plan, user: user} ->
+        if owned_plan, do: nil, else: Plans.suggest_tier(user)
+      end)
       |> assign_new(:current_interval, fn %{user: user} ->
         current_user_subscription_interval(user.subscription)
       end)
       |> assign_new(:available_plans, fn %{user: user} ->
-        Plans.available_plans_with_prices(user)
+        Plans.available_plans_for(user, with_prices: true)
       end)
       |> assign_new(:available_volumes, fn %{available_plans: available_plans} ->
         get_available_volumes(available_plans)
@@ -101,7 +107,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <.plan_box
             kind={:growth}
-            owned={@owned_plan && Map.get(@owned_plan, :kind) == :growth}
+            owned={@owned_tier == :growth}
+            recommended={@recommended_tier == :growth}
             plan_to_render={@growth_plan_to_render}
             benefits={@growth_benefits}
             available={!!@selected_growth_plan}
@@ -109,7 +116,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           />
           <.plan_box
             kind={:business}
-            owned={@owned_plan && Map.get(@owned_plan, :kind) == :business}
+            owned={@owned_tier == :business}
+            recommended={@recommended_tier == :business}
             plan_to_render={@business_plan_to_render}
             benefits={@business_benefits}
             available={!!@selected_business_plan}
@@ -241,24 +249,33 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   defp plan_box(assigns) do
+    highlight =
+      cond do
+        assigns.owned -> "Current"
+        assigns.recommended -> "Recommended"
+        true -> nil
+      end
+
+    assigns = assign(assigns, :highlight, highlight)
+
     ~H"""
     <div
       id={"#{@kind}-plan-box"}
       class={[
         "shadow-lg bg-white rounded-3xl px-6 sm:px-8 py-4 sm:py-6 dark:bg-gray-800",
-        !@owned && "dark:ring-gray-600",
-        @owned && "ring-2 ring-indigo-600 dark:ring-indigo-300"
+        !@highlight && "dark:ring-gray-600",
+        @highlight && "ring-2 ring-indigo-600 dark:ring-indigo-300"
       ]}
     >
       <div class="flex items-center justify-between gap-x-4">
         <h3 class={[
           "text-lg font-semibold leading-8",
-          !@owned && "text-gray-900 dark:text-gray-100",
-          @owned && "text-indigo-600 dark:text-indigo-300"
+          !@highlight && "text-gray-900 dark:text-gray-100",
+          @highlight && "text-indigo-600 dark:text-indigo-300"
         ]}>
           <%= String.capitalize(to_string(@kind)) %>
         </h3>
-        <.current_label :if={@owned} />
+        <.pill :if={@highlight} text={@highlight} />
       </div>
       <div>
         <.render_price_info available={@available} {assigns} />
@@ -444,14 +461,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  defp current_label(assigns) do
+  defp pill(assigns) do
     ~H"""
     <div class="flex items-center justify-between gap-x-4">
       <p
-        id="current-label"
+        id="highlight-pill"
         class="rounded-full bg-indigo-600/10 px-2.5 py-1 text-xs font-semibold leading-5 text-indigo-600 dark:text-indigo-300 dark:ring-1 dark:ring-indigo-300/50"
       >
-        Current
+        <%= @text %>
       </p>
     </div>
     """
