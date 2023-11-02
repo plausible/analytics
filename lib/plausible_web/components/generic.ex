@@ -4,6 +4,31 @@ defmodule PlausibleWeb.Components.Generic do
   """
   use Phoenix.Component
 
+  attr(:as, :string, default: "button")
+  attr(:type, :string, default: "button")
+  attr(:href, :string, default: "")
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+
+  slot(:inner_block)
+
+  def primary_button(assigns) do
+    ~H"""
+    <.dynamic_tag
+      name={@as}
+      type={if @as == "button", do: @type}
+      href={if @as == "a", do: @href}
+      class={[
+        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
+        @class
+      ]}
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %>
+    </.dynamic_tag>
+    """
+  end
+
   attr(:slug, :string, required: true)
 
   def docs_info(assigns) do
