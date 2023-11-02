@@ -85,7 +85,7 @@ export default class SearchTerms extends React.Component {
           This site is not connected to Search Console so we cannot show the search phrases.
           {this.state.isAdmin && this.state.error && <><br/><br/><p>Please click below to connect your Search Console account.</p></>}
           </div>
-          {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a> }
+          {this.state.isAdmin && <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a> }
         </div>
       )
     } else if (this.state.searchTerms.length > 0) {
