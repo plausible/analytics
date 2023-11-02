@@ -98,24 +98,38 @@ defmodule Plausible.SitesTest do
     end
 
     test "returns invitations and sites" do
-      user = insert(:user)
+      user = insert(:user, email: "hello@example.com")
 
-      %{id: site_id1} = insert(:site, members: [user])
-      %{id: site_id2} = insert(:site, members: [user])
-      _rogue_site = insert(:site)
+      site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
+      %{id: site_id2} = insert(:site, members: [user], domain: "two.example.com")
+      %{id: site_id4} = insert(:site, members: [user], domain: "four.example.com")
+
+      _rogue_site = insert(:site, domain: "rogue.example.com")
+
+      insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
 
       %{id: site_id3} =
         insert(:site,
+          domain: "three.example.com",
           invitations: [
             build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
           ]
         )
 
+      insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
+
+      insert(:invitation,
+        site: site1,
+        inviter: user,
+        email: "another@example.com"
+      )
+
       assert %{
                entries: [
-                 %{id: ^site_id3},
-                 %{id: ^site_id1},
-                 %{id: ^site_id2}
+                 %{id: ^site_id1, list_type: "invitation"},
+                 %{id: ^site_id3, list_type: "invitation"},
+                 %{id: ^site_id4, list_type: "site"},
+                 %{id: ^site_id2, list_type: "site"}
                ]
              } = Sites.list(user, %{})
     end
