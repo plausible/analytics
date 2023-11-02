@@ -68,10 +68,11 @@ defmodule Plausible.Billing.PlansTest do
       assert List.first(business_plans).monthly_product_id == @v4_business_plan_id
     end
 
-    test "available_plans_with_prices/1" do
+    test "available_plans returns all plans for user with prices when asked for" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
 
-      %{growth: growth_plans, business: business_plans} = Plans.available_plans_with_prices(user)
+      %{growth: growth_plans, business: business_plans} =
+        Plans.available_plans_for(user, with_prices: true)
 
       assert Enum.find(growth_plans, fn plan ->
                (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v2_plan_id
@@ -80,6 +81,12 @@ defmodule Plausible.Billing.PlansTest do
       assert Enum.find(business_plans, fn plan ->
                (%Money{} = plan.monthly_cost) && plan.monthly_product_id == @v3_business_plan_id
              end)
+    end
+
+    test "available_plans returns all plans without prices by default" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
+
+      assert %{growth: [_ | _], business: [_ | _]} = Plans.available_plans_for(user)
     end
 
     test "latest_enterprise_plan_with_price/1" do
@@ -223,6 +230,38 @@ defmodule Plausible.Billing.PlansTest do
                "857093",
                "857094"
              ] == Plans.yearly_product_ids()
+    end
+  end
+
+  describe "suggest_tier/1" do
+    test "suggests Business when user has used a premium feature" do
+      user = insert(:user, inserted_at: ~N[2024-01-01 10:00:00])
+      insert(:api_key, user: user)
+
+      assert Plans.suggest_tier(user) == :business
+    end
+
+    test "suggests Growth when no premium features used" do
+      user = insert(:user, inserted_at: ~N[2024-01-01 10:00:00])
+      site = insert(:site, members: [user])
+      insert(:goal, site: site, event_name: "goals_is_not_premium")
+
+      assert Plans.suggest_tier(user) == :growth
+    end
+
+    test "suggests Growth tier for a user who used the Stats API, but signed up before it was considered a premium feature" do
+      user = insert(:user, inserted_at: ~N[2023-10-25 10:00:00])
+      insert(:api_key, user: user)
+
+      assert Plans.suggest_tier(user) == :growth
+    end
+
+    test "suggests Business tier for a user who used the Revenue Goals, even when they signed up before Business tier release" do
+      user = insert(:user, inserted_at: ~N[2023-10-25 10:00:00])
+      site = insert(:site, members: [user])
+      insert(:goal, site: site, currency: :USD, event_name: "Purchase")
+
+      assert Plans.suggest_tier(user) == :business
     end
   end
 end

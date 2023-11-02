@@ -4,7 +4,7 @@ In the last month, your account has used <%= PlausibleWeb.AuthView.delimit_integ
 <%= if @suggested_plan == :enterprise do %>
 This is more than our standard plans, so please reply back to this email to get a quote for your volume.
 <% else %>
-Based on that we recommend you select the <%= @suggested_plan.volume %>/mo plan.
+Based on that we recommend you select a <%= @suggested_plan.volume %>/mo plan.
 <br /><br />
 <%= link("Upgrade now", to: "#{plausible_url()}/billing/upgrade") %>
 <br /><br />

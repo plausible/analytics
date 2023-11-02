@@ -166,7 +166,7 @@ defmodule Plausible.Workers.CheckUsageTest do
     })
 
     # Should find 2 visiors
-    assert html_body =~ ~s(Based on that we recommend you select the 100k/mo plan.)
+    assert html_body =~ ~s(Based on that we recommend you select a 100k/mo plan.)
   end
 
   describe "enterprise customers" do
