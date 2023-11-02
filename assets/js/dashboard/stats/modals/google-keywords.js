@@ -66,7 +66,7 @@ class GoogleKeywordsModal extends React.Component {
             <RocketIcon />
             <div className="text-lg">The site is not connected to Google Search Keywords</div>
             <div className="text-lg">Configure the integration to view search terms</div>
-            <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/search-console`} className="button mt-4">Connect with Google</a>
+            <a href={`/${encodeURIComponent(this.props.site.domain)}/settings/integrations`} className="button mt-4">Connect with Google</a>
           </div>
         )
       } else {
