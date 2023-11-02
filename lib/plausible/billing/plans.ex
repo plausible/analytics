@@ -1,7 +1,8 @@
 defmodule Plausible.Billing.Plans do
   alias Plausible.Billing.Subscriptions
   use Plausible.Repo
-  alias Plausible.Billing.{Subscription, Plan, EnterprisePlan}
+  alias Plausible.Billing.{Quota, Subscription, Plan, EnterprisePlan}
+  alias Plausible.Billing.Feature.{StatsAPI, Props}
   alias Plausible.Auth.User
 
   for f <- [
@@ -25,6 +26,8 @@ defmodule Plausible.Billing.Plans do
     # https://hexdocs.pm/elixir/1.15/Module.html#module-external_resource
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
+
+  @business_tier_launch ~D[2023-11-07]
 
   @spec growth_plans_for(User.t()) :: [Plan.t()]
   @doc """
@@ -214,6 +217,21 @@ defmodule Plausible.Billing.Plans do
         else: growth_plans_for(user)
 
     Enum.find(available_plans, &(usage_during_cycle < &1.monthly_pageview_limit))
+  end
+
+  def suggest_tier(user) do
+    growth_features =
+      if Timex.before?(user.inserted_at, @business_tier_launch) do
+        [StatsAPI, Props]
+      else
+        []
+      end
+
+    if Enum.any?(Quota.features_usage(user), &(&1 not in growth_features)) do
+      :business
+    else
+      :growth
+    end
   end
 
   defp all() do

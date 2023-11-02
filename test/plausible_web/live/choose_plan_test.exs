@@ -19,13 +19,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @growth_plan_box "#growth-plan-box"
   @growth_price_tag_amount "#growth-price-tag-amount"
   @growth_price_tag_interval "#growth-price-tag-interval"
-  @growth_current_label "#{@growth_plan_box} #current-label"
+  @growth_highlight_pill "#{@growth_plan_box} #highlight-pill"
   @growth_checkout_button "#growth-checkout"
 
   @business_plan_box "#business-plan-box"
   @business_price_tag_amount "#business-price-tag-amount"
   @business_price_tag_interval "#business-price-tag-interval"
-  @business_current_label "#{@business_plan_box} #current-label"
+  @business_highlight_pill "#{@business_plan_box} #highlight-pill"
   @business_checkout_button "#business-checkout"
 
   @enterprise_plan_box "#enterprise-plan-box"
@@ -229,6 +229,26 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
                "if (confirm(\"This plan does not support Custom Properties, which you are currently using. Please note that by subscribing to this plan you will lose access to this feature.\")) {Paddle.Checkout.open"
     end
+
+    test "recommends Growth tier when no premium features were used", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @growth_plan_box) =~ "Recommended"
+      refute text_of_element(doc, @business_plan_box) =~ "Recommended"
+    end
+
+    test "recommends Business tier when Revenue Goals were used during trial", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+      insert(:goal, site: site, currency: :USD, event_name: "Purchase")
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @business_plan_box) =~ "Recommended"
+      refute text_of_element(doc, @growth_plan_box) =~ "Recommended"
+    end
   end
 
   describe "for a user with a v4 growth subscription plan" do
@@ -318,7 +338,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert class =~ "ring-2"
       assert class =~ "ring-indigo-600"
-      assert text_of_element(doc, @growth_current_label) == "Current"
+      assert text_of_element(doc, @growth_highlight_pill) == "Current"
     end
 
     test "checkout button text and click-disabling CSS classes are dynamic", %{conn: conn} do
@@ -379,7 +399,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert class =~ "ring-2"
       assert class =~ "ring-indigo-600"
-      assert text_of_element(doc, @business_current_label) == "Current"
+      assert text_of_element(doc, @business_highlight_pill) == "Current"
     end
 
     test "checkout button text and click-disabling CSS classes are dynamic", %{conn: conn} do
@@ -568,16 +588,17 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
     test "currently owned tier is highlighted if stats are still unlocked", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      assert text_of_element(doc, @growth_current_label) == "Current"
+      assert text_of_element(doc, @growth_highlight_pill) == "Current"
     end
 
-    test "currently owned tier is not highlighted if stats are locked", %{conn: conn, user: user} do
+    test "highlights recommended tier", %{conn: conn, user: user} do
       user.subscription
       |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
       |> Repo.update()
 
       {:ok, _lv, doc} = get_liveview(conn)
-      refute element_exists?(doc, @growth_current_label)
+      assert text_of_element(doc, @growth_highlight_pill) == "Recommended"
+      refute text_of_element(doc, @business_highlight_pill) == "Recommended"
     end
   end
 
@@ -656,10 +677,20 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   describe "for a free_10k subscription" do
     setup [:create_user, :log_in, :subscribe_free_10k]
 
-    test "does not highlight any tier", %{conn: conn} do
+    test "recommends growth tier when no premium features used", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
-      refute element_exists?(doc, @growth_current_label)
-      refute element_exists?(doc, @business_current_label)
+      assert element_exists?(doc, @growth_highlight_pill)
+      refute element_exists?(doc, @business_highlight_pill)
+    end
+
+    test "recommends Business tier when premium features used", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+      insert(:goal, currency: :USD, site: site, event_name: "Purchase")
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, @business_plan_box) =~ "Recommended"
+      refute text_of_element(doc, @growth_plan_box) =~ "Recommended"
     end
 
     test "renders Paddle upgrade buttons", %{conn: conn, user: user} do
