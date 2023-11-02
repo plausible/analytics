@@ -2,6 +2,8 @@ defmodule Plausible.Sites do
   alias Plausible.{Repo, Site, Site.SharedLink, Billing.Quota}
   import Ecto.Query
 
+  @type list_opt() :: {:filter_by_domain, String.t()}
+
   def get_by_domain(domain) do
     Repo.get_by(Site, domain: domain)
   end
@@ -9,6 +11,71 @@ defmodule Plausible.Sites do
   def get_by_domain!(domain) do
     Repo.get_by!(Site, domain: domain)
   end
+
+  @spec list(Plausible.Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
+  def list(user, pagination_params, opts \\ []) do
+    domain_filter = Keyword.get(opts, :filter_by_domain)
+
+    base_query =
+      from(s in Plausible.Site,
+        left_join: sm in assoc(s, :memberships),
+        left_join: i in assoc(s, :invitations),
+        where: sm.user_id == ^user.id or i.email == ^user.email,
+        select: %{
+          s
+          | list_type:
+              fragment(
+                """
+                  CASE WHEN ? IS NOT NULL THEN 'invitation'
+                       ELSE 'site'
+                  END
+                """,
+                i.id
+              )
+        }
+      )
+
+    memberships_query =
+      from sm in Plausible.Site.Membership,
+        where: sm.user_id == ^user.id
+
+    invitations_query =
+      from i in Plausible.Auth.Invitation,
+        where: i.email == ^user.email
+
+    sites_query =
+      from(s in subquery(base_query),
+        order_by: [asc: s.list_type, asc: s.domain],
+        preload: [
+          memberships: ^memberships_query,
+          invitations: ^invitations_query
+        ]
+      )
+      |> maybe_filter_by_domain(domain_filter)
+
+    result =
+      Repo.paginate(sites_query, pagination_params)
+
+    entries =
+      Enum.map(result.entries, fn
+        %{invitations: [invitation]} = site ->
+          site = %{site | invitations: [], memberships: []}
+          invitation = %{invitation | site: site}
+          %{site | invitations: [invitation]}
+
+        site ->
+          site
+      end)
+
+    %{result | entries: entries}
+  end
+
+  defp maybe_filter_by_domain(query, domain)
+       when byte_size(domain) >= 1 and byte_size(domain) <= 64 do
+    where(query, [s], ilike(s.domain, ^"%#{domain}%"))
+  end
+
+  defp maybe_filter_by_domain(query, _), do: query
 
   def create(user, params) do
     site_changeset = Site.changeset(%Site{}, params)

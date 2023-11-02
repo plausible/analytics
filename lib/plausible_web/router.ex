@@ -29,6 +29,10 @@ defmodule PlausibleWeb.Router do
     plug :put_root_layout, html: {PlausibleWeb.LayoutView, :focus}
   end
 
+  pipeline :app_layout do
+    plug :put_root_layout, html: {PlausibleWeb.LayoutView, :app}
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
@@ -210,7 +214,12 @@ defmodule PlausibleWeb.Router do
     get "/billing/upgrade-success", BillingController, :upgrade_success
     get "/billing/subscription/ping", BillingController, :ping_subscription
 
-    get "/sites", SiteController, :index
+    scope alias: Live, assigns: %{connect_live_socket: true} do
+      pipe_through [:app_layout, PlausibleWeb.RequireAccountPlug]
+
+      live "/sites", Sites, :index, as: :site
+    end
+
     get "/sites/new", SiteController, :new
     post "/sites", SiteController, :create_site
     get "/sites/:website/change-domain", SiteController, :change_domain

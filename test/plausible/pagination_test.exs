@@ -1,7 +1,7 @@
-defmodule Plausible.Plugins.API.PaginationTest do
+defmodule Plausible.PaginationTest do
   use Plausible.DataCase, async: true
 
-  alias Plausible.Plugins.API.Pagination
+  alias Plausible.Pagination
   import Ecto.Query
 
   setup do

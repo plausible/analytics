@@ -4,7 +4,7 @@ defmodule Plausible.Plugins.API.SharedLinks do
   All high level Shared Links operations should be implemented here.
   """
   import Ecto.Query
-  import Plausible.Plugins.API.Pagination
+  import Plausible.Pagination
 
   alias Plausible.Repo
 

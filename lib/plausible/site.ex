@@ -49,6 +49,11 @@ defmodule Plausible.Site do
     # strictly necessary.
     field :from_cache?, :boolean, virtual: true, default: false
 
+    # Used in the context of paginated sites list to order in relation to 
+    # user's membership state. Currently it can be either "invitation"
+    # or "site", where invitations are first.
+    field :list_type, :string, virtual: true
+
     timestamps()
   end
 

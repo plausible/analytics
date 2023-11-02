@@ -68,7 +68,7 @@ defmodule PlausibleWeb.AuthController do
 
     render(conn, "activate.html",
       has_email_code?: Plausible.Users.has_email_code?(user),
-      has_any_invitations?: Plausible.Site.Memberships.has_any_invitations?(user.email),
+      has_any_invitations?: Plausible.Site.Memberships.pending?(user.email),
       has_any_memberships?: Plausible.Site.Memberships.any?(user),
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.AuthController do
   def activate(conn, %{"code" => code}) do
     user = conn.assigns[:current_user]
 
-    has_any_invitations? = Plausible.Site.Memberships.has_any_invitations?(user.email)
+    has_any_invitations? = Plausible.Site.Memberships.pending?(user.email)
     has_any_memberships? = Plausible.Site.Memberships.any?(user)
 
     case Auth.EmailVerification.verify_code(user, code) do
