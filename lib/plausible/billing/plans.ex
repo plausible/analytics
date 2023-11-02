@@ -67,9 +67,16 @@ defmodule Plausible.Billing.Plans do
   end
 
   def available_plans_for(%User{} = user, opts \\ []) do
-    (growth_plans_for(user) ++ business_plans_for(user))
-    |> then(fn all -> if opts[:with_prices], do: with_prices(all), else: all end)
-    |> Enum.group_by(& &1.kind)
+    plans = growth_plans_for(user) ++ business_plans_for(user)
+
+    plans =
+      if Keyword.get(opts, :with_prices) do
+        with_prices(plans)
+      else
+        plans
+      end
+
+    Enum.group_by(plans, & &1.kind)
   end
 
   @spec yearly_product_ids() :: [String.t()]
