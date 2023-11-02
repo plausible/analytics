@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-9989F028.js"></script>
+    <script src="dist/sidebar_items-7A47ECE0.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -136,6 +136,14 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#empty_24h_visitors_hourly_intervals/2" translate="no">empty_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now())</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#has_pageviews?/1" translate="no">has_pageviews?(site)</a>
 
       </div>
@@ -152,7 +160,7 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#last_24h_visitors/1" translate="no">last_24h_visitors(sites)</a>
+        <a href="#last_24h_visitors_hourly_intervals/2" translate="no">last_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now())</a>
 
       </div>
 
@@ -212,7 +220,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">current_visitors(site, query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L177" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L181" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -221,6 +229,37 @@ Functions
   </div>
 
   <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="empty_24h_visitors_hourly_intervals/2">
+
+    <span id="empty_24h_visitors_hourly_intervals/1"></span>
+
+  <div class="detail-header">
+    <a href="#empty_24h_visitors_hourly_intervals/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">empty_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now())</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L202" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> empty_24h_visitors_hourly_intervals([<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()], <a href="https://hexdocs.pm/elixir/NaiveDateTime.html#t:t/0">NaiveDateTime.t</a>()) ::
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -234,7 +273,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">has_pageviews?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L185" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L189" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -256,7 +295,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">imported_pageview_count(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L31" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L35" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -269,16 +308,18 @@ Functions
 
   </section>
 </section>
-<section class="detail" id="last_24h_visitors/1">
+<section class="detail" id="last_24h_visitors_hourly_intervals/2">
+
+    <span id="last_24h_visitors_hourly_intervals/1"></span>
 
   <div class="detail-header">
-    <a href="#last_24h_visitors/1" class="detail-link" title="Link to this function">
+    <a href="#last_24h_visitors_hourly_intervals/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">last_24h_visitors(sites)</h1>
+    <h1 class="signature" translate="no">last_24h_visitors_hourly_intervals(sites, now \\ NaiveDateTime.utc_now())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L197" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L216" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -287,6 +328,13 @@ Functions
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> last_24h_visitors_hourly_intervals([<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()], <a href="https://hexdocs.pm/elixir/NaiveDateTime.html#t:t/0">NaiveDateTime.t</a>()) ::
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -300,7 +348,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">pageview_start_date_local(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L9" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L13" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -330,7 +378,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">top_sources(site, query, limit, page, show_noref \\ false, include_details)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L92" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L96" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -352,7 +400,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">usage_breakdown(domains_or_site_ids)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L40" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L44" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -374,7 +422,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">usage_breakdown(domains, date_range)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L50" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/clickhouse.ex#L54" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

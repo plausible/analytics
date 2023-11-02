@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-9989F028.js"></script>
+    <script src="dist/sidebar_items-7A47ECE0.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -408,7 +408,7 @@ depending on the adapter to obtain statistics for the given query.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#paginate/3" translate="no">paginate(query, params \\ %{}, options \\ [])</a>
+        <a href="#paginate/2" translate="no">paginate(pageable, options \\ [])</a>
 
       </div>
 
@@ -511,6 +511,14 @@ depending on the adapter to obtain statistics for the given query.</p></div>
       </div>
 
         <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:rollback/1"><code class="inline">Ecto.Repo.rollback/1</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#scrivener_defaults/0" translate="no">scrivener_defaults()</a>
+
+      </div>
 
     </div>
 
@@ -1265,18 +1273,16 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
 <p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="paginate/3">
+<section class="detail" id="paginate/2">
 
     <span id="paginate/1"></span>
 
-    <span id="paginate/2"></span>
-
   <div class="detail-header">
-    <a href="#paginate/3" class="detail-link" title="Link to this function">
+    <a href="#paginate/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">paginate(query, params \\ %{}, options \\ [])</h1>
+    <h1 class="signature" translate="no">paginate(pageable, options \\ [])</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/repo.ex#L6" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -1287,6 +1293,12 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> paginate(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: <a href="https://hexdocs.pm/scrivener/2.7.2/Scrivener.Page.html#t:t/0">Scrivener.Page.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -1537,6 +1549,34 @@ depending on the adapter to obtain statistics for the given query.</p><p>See <a 
       </div>
 
 <p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:rollback/1"><code class="inline">Ecto.Repo.rollback/1</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="scrivener_defaults/0">
+
+  <div class="detail-header">
+    <a href="#scrivener_defaults/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">scrivener_defaults()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/repo.ex#L6" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> scrivener_defaults() :: <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()</pre>
+
+      </div>
+
+
   </section>
 </section>
 <section class="detail" id="start_link/1">

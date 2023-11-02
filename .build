@@ -85,8 +85,8 @@ Plausible.Ingestion.Request.html
 Plausible.Mailer.html
 Plausible.OpenTelemetry.Sampler.html
 Plausible.PaddleApi.Mock.html
+Plausible.Pagination.html
 Plausible.Plugins.API.Goals.html
-Plausible.Plugins.API.Pagination.html
 Plausible.Plugins.API.SharedLinks.html
 Plausible.Plugins.API.Token.html
 Plausible.Plugins.API.Tokens.html
@@ -205,6 +205,8 @@ PlausibleWeb.Live.ChoosePlan.html
 PlausibleWeb.Live.Components.ComboBox.StaticSearch.html
 PlausibleWeb.Live.Components.ComboBox.html
 PlausibleWeb.Live.Components.Form.html
+PlausibleWeb.Live.Components.Pagination.html
+PlausibleWeb.Live.Components.Visitors.html
 PlausibleWeb.Live.Flash.html
 PlausibleWeb.Live.FunnelSettings.Form.html
 PlausibleWeb.Live.FunnelSettings.List.html
@@ -219,6 +221,7 @@ PlausibleWeb.Live.PropsSettings.List.html
 PlausibleWeb.Live.PropsSettings.html
 PlausibleWeb.Live.RegisterForm.html
 PlausibleWeb.Live.ResetPasswordForm.html
+PlausibleWeb.Live.Sites.html
 PlausibleWeb.MJML.WeeklyReport.html
 PlausibleWeb.PageController.html
 PlausibleWeb.PageView.html
@@ -303,8 +306,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-9C8C7D1D.js
-dist/sidebar_items-9989F028.js
+dist/search_data-68641B94.js
+dist/sidebar_items-7A47ECE0.js
 index.html
 readme.html
 search.html
