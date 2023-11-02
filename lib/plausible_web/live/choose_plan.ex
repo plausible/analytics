@@ -304,7 +304,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     change_plan_link_text = change_plan_link_text(assigns)
 
     exceeded_limits = Quota.exceeded_limits(assigns.usage, assigns.plan_to_render)
-    usage_exceeds_plan_limits = Enum.any?([:team_member_limit, :site_limit], & &1 in exceeded_limits)
+
+    usage_exceeds_plan_limits =
+      Enum.any?([:team_member_limit, :site_limit], &(&1 in exceeded_limits))
 
     billing_details_expired =
       assigns.user.subscription &&
