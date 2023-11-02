@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.Components.Visitors do
       |> assign(:id, Ecto.UUID.generate())
 
     ~H"""
-    <svg viewBox={"0 -1 #{(@points_len - 1) * @tick} #{@height + 2}"} class="chart w-full mb-2">
+    <svg viewBox={"0 -1 #{(@points_len - 1) * @tick} #{@height + 3}"} class="chart w-full mb-2">
       <defs>
         <clipPath id={"gradient-cut-off-#{@id}"}>
           <polyline points={@clip_points} />
