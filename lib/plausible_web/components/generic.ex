@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:type, :string, default: "button")
   attr(:class, :string, default: "")
+  attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
 
   slot(:inner_block)
@@ -14,6 +15,7 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <button
       type={@type}
+      disabled={@disabled}
       class={[
         "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
         @class
