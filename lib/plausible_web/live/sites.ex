@@ -238,7 +238,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <div class="h-[58px]">
       <div :if={@hourly_stats == :loading} class="text-center pt-6">
-        <span class="animate-pulse text-xs">crunching numbers</span>
+        <span class="animate-pulse text-xs text-gray-600 dark:text-gray-400">crunching numbers</span>
       </div>
       <div
         :if={is_map(@hourly_stats)}
@@ -496,6 +496,7 @@ defmodule PlausibleWeb.Live.Sites do
 
     hourly_stats =
       if connected?(socket) do
+        :timer.sleep(3000)
         Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
       else
         sites.entries
