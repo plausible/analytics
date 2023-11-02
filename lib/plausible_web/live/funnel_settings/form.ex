@@ -124,6 +124,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
 
               <div class="mt-6">
                 <PlausibleWeb.Components.Generic.button
+                  id="save"
                   type="submit"
                   class="w-full"
                   disabled={
