@@ -236,20 +236,31 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div class="pl-8 mt-2 flex items-center justify-between">
-      <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
-        <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
-        <div class="flex justify-between items-center">
-          <p>
-            <span class="text-gray-800 dark:text-gray-200">
-              <b><%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %></b>
-              visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
-            </span>
-          </p>
+    <div class="h-[58px]">
+      <div :if={@hourly_stats == :loading} class="text-center pt-6">
+        <span class="animate-pulse text-xs">crunching numbers</span>
+      </div>
+      <div
+        :if={is_map(@hourly_stats)}
+        class="hidden"
+        phx-mounted={
+          Phoenix.LiveView.JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})
+        }
+      >
+        <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
+          <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
+          <div class="flex justify-between items-center">
+            <p>
+              <span class="text-gray-800 dark:text-gray-200">
+                <b><%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %></b>
+                visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
+              </span>
+            </p>
 
-          <.percentage_change change={@hourly_stats.change} />
-        </div>
-      </span>
+            <.percentage_change change={@hourly_stats.change} />
+          </div>
+        </span>
+      </div>
     </div>
     """
   end
@@ -487,7 +498,10 @@ defmodule PlausibleWeb.Live.Sites do
       if connected?(socket) do
         Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
       else
-        Plausible.Stats.Clickhouse.empty_24h_visitors_hourly_intervals(sites.entries)
+        sites.entries
+        |> Enum.into(%{}, fn site ->
+          {site.domain, :loading}
+        end)
       end
 
     assign(
