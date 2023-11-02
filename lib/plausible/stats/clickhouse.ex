@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Clickhouse do
   use Plausible.ClickhouseRepo
   use Plausible.Stats.Fragments
 
-  import Ecto.Query, only: [from: 2, subquery: 1]
+  import Ecto.Query, only: [from: 2]
 
   alias Plausible.Stats.Query
 
@@ -222,60 +222,43 @@ defmodule Plausible.Stats.Clickhouse do
 
     placeholder = empty_24h_visitors_hourly_intervals(sites, now)
 
-    previous_query =
-      from(e in "events_v2",
-        hints: [sample: 20_000_000],
-        where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
-        where: e.timestamp >= ^NaiveDateTime.add(now, -48, :hour),
-        where: e.timestamp <= ^NaiveDateTime.add(now, -24, :hour),
-        select: {
-          e.site_id,
-          fragment("toUInt64(round(uniq(user_id) * any(_sample_factor)))")
-        },
-        group_by: [e.site_id],
-        order_by: [e.site_id]
-      )
+    previous_query = visitors_24h_total(now, -48, -24, site_id_to_domain_mapping)
 
     previous_result =
       previous_query
       |> ClickhouseRepo.all()
-      |> Map.new()
+      |> Enum.reduce(%{}, fn
+        %{total_visitors: total, site_id: site_id}, acc -> Map.put_new(acc, site_id, total)
+      end)
 
-    current_base_query =
-      from(e in "events_v2",
+    total_q =
+      visitors_24h_total(now, -24, 0, site_id_to_domain_mapping)
+
+    current_q =
+      from(
+        e in "events_v2",
         hints: [sample: 20_000_000],
+        join: total_q in subquery(total_q),
+        on: e.site_id == total_q.site_id,
         where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
         where: e.timestamp >= ^NaiveDateTime.add(now, -24, :hour),
         where: e.timestamp <= ^now,
         select: %{
           site_id: e.site_id,
-          user_id: e.user_id,
-          timestamp: min(e.timestamp),
-          _sample_factor: e._sample_factor
-        },
-        group_by: [e.site_id, e.user_id, e._sample_factor]
-      )
-
-    current_query =
-      from(e in subquery(current_base_query),
-        select: %{
-          site_id: e.site_id,
           interval: fragment("toStartOfHour(timestamp)"),
-          visitors: fragment("toUInt64(round(uniq(user_id) * any(_sample_factor)))")
+          visitors: uniq(e.user_id),
+          total: fragment("any(total_visitors)")
         },
         group_by: [e.site_id, fragment("toStartOfHour(timestamp)")],
         order_by: [e.site_id, fragment("toStartOfHour(timestamp)")]
       )
 
     result =
-      current_query
+      current_q
       |> ClickhouseRepo.all()
       |> Enum.group_by(& &1.site_id)
       |> Enum.map(fn {site_id, entries} ->
-        visitors =
-          Enum.reduce(entries, 0, fn entry, acc ->
-            entry.visitors + acc
-          end)
+        %{total: visitors} = List.first(entries)
 
         full_entries =
           (entries ++ empty_24h_intervals(now))
@@ -290,6 +273,20 @@ defmodule Plausible.Stats.Clickhouse do
       |> Map.new()
 
     Map.merge(placeholder, result)
+  end
+
+  defp visitors_24h_total(now, offset1, offset2, site_id_to_domain_mapping) do
+    from(e in "events_v2",
+      hints: [sample: 20_000_000],
+      where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
+      where: e.timestamp >= ^NaiveDateTime.add(now, offset1, :hour),
+      where: e.timestamp <= ^NaiveDateTime.add(now, offset2, :hour),
+      select: %{
+        site_id: e.site_id,
+        total_visitors: fragment("toUInt64(round(uniq(user_id) * any(_sample_factor)))")
+      },
+      group_by: [e.site_id]
+    )
   end
 
   defp empty_24h_intervals(now) do
