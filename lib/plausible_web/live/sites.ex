@@ -257,12 +257,14 @@ defmodule PlausibleWeb.Live.Sites do
   attr :change, :integer, required: true
 
   def percentage_change(assigns) do
+    assigns = assign(assigns, :change, abs(assigns.change))
+
     ~H"""
     <p class="dark:text-gray-100">
-      <span :if={@change == 0} class="font-semibold text-green-500">〰</span>
+      <span :if={@change == 0} class="font-semibold">〰</span>
       <span :if={@change > 0} class="font-semibold text-green-500">↑</span>
       <span :if={@change < 0} class="font-semibold text-red-400">↓</span>
-      <%= abs(@change) %>%
+      <%= @change %>%
     </p>
     """
   end
