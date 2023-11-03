@@ -285,7 +285,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
         <% end %>
       </div>
-      <%= if @kind == :growth && @plan_to_render.generation < 4 do %>
+      <%= if @owned && @kind == :growth && @plan_to_render.generation < 4 do %>
         <.growth_grandfathering_notice />
       <% else %>
         <ul
