@@ -35,7 +35,7 @@ defmodule Plausible.TestUtils do
   end
 
   def create_user(_) do
-    {:ok, user: Factory.insert(:user)}
+    {:ok, user: Factory.insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])}
   end
 
   def create_site(%{user: user}) do
