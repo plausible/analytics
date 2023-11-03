@@ -303,7 +303,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
-    exceeds_some_limit = Quota.exceeded_limits(assigns.usage, assigns.plan_to_render) != []
+    exceeded_limits = Quota.exceeded_limits(assigns.usage, assigns.plan_to_render)
+
+    usage_exceeds_plan_limits =
+      Enum.any?([:team_member_limit, :site_limit], &(&1 in exceeded_limits))
 
     billing_details_expired =
       assigns.user.subscription &&
@@ -317,7 +320,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         change_plan_link_text == "Currently on this plan" ->
           {true, nil}
 
-        assigns.available && exceeds_some_limit ->
+        assigns.available && usage_exceeds_plan_limits ->
           {true, "Your usage exceeds this plan"}
 
         billing_details_expired ->
