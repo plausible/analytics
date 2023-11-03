@@ -474,9 +474,9 @@ defmodule Plausible.Billing.QuotaTest do
       assert [Goals, StatsAPI, Props] == Quota.allowed_features_for(user_on_v3)
     end
 
-    test "returns [Goals] when user is on free_10k plan" do
+    test "returns [Goals, Props, StatsAPI] when user is on free_10k plan" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
-      assert [Goals] == Quota.allowed_features_for(user)
+      assert [Goals, Props, StatsAPI] == Quota.allowed_features_for(user)
     end
 
     test "returns all features when user is on an enterprise plan" do

@@ -230,7 +230,7 @@ defmodule Plausible.Billing.Quota do
     case Plans.get_subscription_plan(user.subscription) do
       %EnterprisePlan{} -> Feature.list()
       %Plan{features: features} -> features
-      :free_10k -> [Goals]
+      :free_10k -> [Goals, Props, StatsAPI]
       nil -> Feature.list()
     end
   end
