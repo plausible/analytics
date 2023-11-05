@@ -5,6 +5,7 @@ defmodule PlausibleWeb.BillingControllerTest do
   alias Plausible.Billing.Subscription
 
   @v4_growth_plan "857097"
+  @v4_business_plan "857105"
 
   describe "GET /upgrade" do
     setup [:create_user, :log_in]
@@ -215,6 +216,35 @@ defmodule PlausibleWeb.BillingControllerTest do
                  :change_plan_preview,
                  @configured_enterprise_plan_paddle_plan_id
                )
+    end
+  end
+
+  describe "GET /billing/change-plan/preview/:plan_id" do
+    setup [:create_user, :log_in]
+
+    test "renders preview information about the plan change", %{conn: conn, user: user} do
+      insert(:subscription, user: user, paddle_plan_id: @v4_growth_plan)
+
+      html_response =
+        conn
+        |> get(Routes.billing_path(conn, :change_plan_preview, @v4_business_plan))
+        |> html_response(200)
+
+      assert html_response =~
+               "Your card will be charged a pro-rated amount for the current billing period"
+
+      assert html_response =~ "€-72.6"
+      assert html_response =~ "Back"
+      assert html_response =~ ~s[<a href="/billing/choose-plan"]
+    end
+
+    test "flashes error and redirects to choose-plan page", %{conn: conn} do
+      conn = get(conn, Routes.billing_path(conn, :change_plan_preview, @v4_business_plan))
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Something went wrong with loading your plan change information. Please try again, or contact us at support@plausible.io if the issue persists."
+
+      assert redirected_to(conn) == Routes.billing_path(conn, :choose_plan)
     end
   end
 

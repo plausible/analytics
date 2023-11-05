@@ -124,14 +124,12 @@ defmodule PlausibleWeb.BillingController do
   end
 
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
-    with {:ok, {subscription, preview_info}} <-
-           preview_subscription(conn.assigns.current_user, new_plan_id) do
+    user = conn.assigns.current_user
+    business_tier_enabled? = FunWithFlags.enabled?(:business_tier, for: user)
+
+    with {:ok, {subscription, preview_info}} <- preview_subscription(user, new_plan_id) do
       back_action =
-        if FunWithFlags.enabled?(:business_tier, for: conn.assigns.current_user) do
-          :choose_plan
-        else
-          :change_plan_form
-        end
+        if business_tier_enabled?, do: :choose_plan, else: :change_plan_form
 
       render(conn, "change_plan_preview.html",
         back_link: Routes.billing_path(conn, back_action),
@@ -142,7 +140,22 @@ defmodule PlausibleWeb.BillingController do
       )
     else
       _ ->
-        redirect(conn, to: Routes.billing_path(conn, :upgrade))
+        redirect_to = if business_tier_enabled?, do: :choose_plan, else: :upgrade
+
+        msg =
+          "Something went wrong with loading your plan change information. Please try again, or contact us at support@plausible.io if the issue persists."
+
+        Sentry.capture_message("Error loading change plan preview",
+          extra: %{
+            message: msg,
+            new_plan_id: new_plan_id,
+            user_id: user.id
+          }
+        )
+
+        conn
+        |> put_flash(:error, msg)
+        |> redirect(to: Routes.billing_path(conn, redirect_to))
     end
   end
 
