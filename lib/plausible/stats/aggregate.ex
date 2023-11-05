@@ -176,7 +176,7 @@ defmodule Plausible.Stats.Aggregate do
         },
         where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname),
         where: e.next_timestamp != 0,
-        group_by: [e.pathname]
+        group_by: e.pathname
 
     time_on_page_q =
       from e in Ecto.Query.subquery(avg_time_per_page_transition_q),
