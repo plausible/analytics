@@ -145,28 +145,42 @@ defmodule Plausible.Stats.Aggregate do
   end
 
   defp window_aggregate_time_on_page(site, query) do
-    import Ecto.Query
-
     windowed_pages_q =
       from e in base_event_query(site, %Query{
              query
              | filters: Map.delete(query.filters, "event:page")
            }),
            select: %{
-             next_timestamp:
-               over(fragment("leadInFrame(?)", e.timestamp),
-                 partition_by: e.session_id,
-                 order_by: e.timestamp,
-                 frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-               ),
+             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
              timestamp: e.timestamp,
              pathname: e.pathname
-           }
+           },
+           windows: [
+             event_horizon: [
+               partition_by: e.session_id,
+               order_by: e.timestamp,
+               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+             ]
+           ]
+
+    avg_time_per_page_transition_q =
+      from e in Ecto.Query.subquery(windowed_pages_q),
+        select: %{
+          avg:
+            fragment(
+              "sum(?)/countIf(?)",
+              e.next_timestamp - e.timestamp,
+              e.next_pathname != e.pathname
+            )
+        },
+        where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname),
+        where: e.next_timestamp != 0,
+        group_by: [e.pathname]
 
     time_on_page_q =
-      from e in subquery(windowed_pages_q),
-        select: fragment("avgIf(?,?)", e.next_timestamp - e.timestamp, e.next_timestamp != 0),
-        where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname)
+      from e in Ecto.Query.subquery(avg_time_per_page_transition_q),
+        select: fragment("avg(ifNotFinite(?,NULL))", e.avg)
 
     %{time_on_page: ClickhouseRepo.one(time_on_page_q)}
   end
