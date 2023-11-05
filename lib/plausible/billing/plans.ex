@@ -245,6 +245,10 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all() do
-    @legacy_plans ++ @plans_v1 ++ @plans_v2 ++ @plans_v3 ++ @plans_v4
+    @legacy_plans ++ @plans_v1 ++ @plans_v2 ++ @plans_v3 ++ @plans_v4 ++ sandbox_plans()
+  end
+
+  defp sandbox_plans() do
+    if Application.get_env(:plausible, :environment) == "dev", do: @sandbox_plans, else: []
   end
 end
