@@ -2,7 +2,7 @@ defmodule Plausible.Sites do
   alias Plausible.{Repo, Site, Site.SharedLink, Billing.Quota}
   import Ecto.Query
 
-  @type list_opt() :: {:filter_by_domain, String.t()}
+  @type list_opt() :: {:filter_by_domain, String.t()} | {:include_invitations?, boolean()}
 
   def get_by_domain(domain) do
     Repo.get_by(Site, domain: domain)
@@ -49,27 +49,39 @@ defmodule Plausible.Sites do
 
     base_query =
       from(s in Plausible.Site,
-        left_join: sm in assoc(s, :memberships),
-        on: sm.user_id == ^user.id,
-        left_join: i in assoc(s, :invitations),
-        on: i.email == ^user.email,
         left_join: up in Plausible.Site.UserPreference,
         on: up.site_id == s.id and up.user_id == ^user.id,
-        where: not is_nil(i.id) or not is_nil(sm.id),
         select: %{
           s
           | is_pinned: fragment("coalesce(?, false)", type(up.options["is_pinned"], :boolean)),
+            entry_type: "site"
+        }
+      )
+
+    query =
+      if Keyword.get(opts, :include_invitations?, true) do
+        from s in base_query,
+          left_join: i in assoc(s, :invitations),
+          on: i.email == ^user.email,
+          left_join: sm in assoc(s, :memberships),
+          on: sm.user_id == ^user.id,
+          where: not is_nil(sm.id) or not is_nil(i.id),
+          select_merge: %{
             entry_type:
               fragment(
                 """
-                  CASE WHEN ? IS NOT NULL THEN 'invitation'
-                       ELSE 'site'
-                  END
+                CASE WHEN ? IS NOT NULL THEN 'invitation'
+                ELSE 'site'
+                END
                 """,
                 i.id
               )
-        }
-      )
+          }
+      else
+        from s in base_query,
+          inner_join: sm in assoc(s, :memberships),
+          on: sm.user_id == ^user.id
+      end
 
     memberships_query =
       from sm in Plausible.Site.Membership,
@@ -80,7 +92,7 @@ defmodule Plausible.Sites do
         where: i.email == ^user.email
 
     sites_query =
-      from(s in subquery(base_query),
+      from(s in subquery(query),
         order_by: [desc: s.is_pinned, asc: s.entry_type, asc: s.domain],
         preload: [
           memberships: ^memberships_query,

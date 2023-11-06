@@ -134,6 +134,41 @@ defmodule Plausible.SitesTest do
              } = Sites.list(user, %{})
     end
 
+    test "returns sites only, no invitations, if option supplied" do
+      user = insert(:user, email: "hello@example.com")
+
+      site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
+      %{id: site_id2} = insert(:site, members: [user], domain: "two.example.com")
+      %{id: site_id4} = insert(:site, members: [user], domain: "four.example.com")
+
+      _rogue_site = insert(:site, domain: "rogue.example.com")
+
+      insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+
+      insert(:site,
+        domain: "three.example.com",
+        invitations: [
+          build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+        ]
+      )
+
+      insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
+
+      insert(:invitation,
+        site: site1,
+        inviter: user,
+        email: "another@example.com"
+      )
+
+      assert %{
+               entries: [
+                 %{id: ^site_id4, entry_type: "site"},
+                 %{id: ^site_id1, entry_type: "site"},
+                 %{id: ^site_id2, entry_type: "site"}
+               ]
+             } = Sites.list(user, %{}, include_invitations?: false)
+    end
+
     test "puts pinned sites first" do
       user = insert(:user, email: "hello@example.com")
 
@@ -171,6 +206,56 @@ defmodule Plausible.SitesTest do
                  %{id: ^site_id4, entry_type: "site"}
                ]
              } = Sites.list(user, %{})
+    end
+
+    test "pinned site doesn't matter with membership revoked (no active invitations)" do
+      user1 = insert(:user, email: "user1@example.com")
+      user2 = insert(:user, email: "user2@example.com")
+
+      insert(:site, members: [user1], domain: "one.example.com")
+
+      site2 =
+        insert(:site,
+          members: [user2],
+          domain: "two.example.com"
+        )
+
+      membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
+
+      Sites.toggle_pin(user1, site2)
+
+      Repo.delete!(membership)
+
+      assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
+
+      assert %{entries: [%{domain: "one.example.com"}]} =
+               Sites.list(user1, %{}, include_invitations?: false)
+    end
+
+    test "pinned site doesn't matter with membership revoked (with active invitation)" do
+      user1 = insert(:user, email: "user1@example.com")
+      user2 = insert(:user, email: "user2@example.com")
+
+      insert(:site, members: [user1], domain: "one.example.com")
+
+      site2 =
+        insert(:site,
+          members: [user2],
+          domain: "two.example.com"
+        )
+
+      membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
+      insert(:invitation, email: user1.email, inviter: user2, role: :owner, site: site2)
+
+      Sites.toggle_pin(user1, site2)
+
+      Repo.delete!(membership)
+
+      assert %{entries: [%{domain: "two.example.com"}, %{domain: "one.example.com"}]} =
+               Sites.list(user1, %{})
+
+      assert %{entries: [%{domain: "one.example.com"}]} =
+               Sites.list(user1, %{}, include_invitations?: false)
     end
 
     test "filters by domain" do
