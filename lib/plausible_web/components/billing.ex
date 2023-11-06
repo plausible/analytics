@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Components.Billing do
         not has_access? && display_upgrade_link? ->
           ~H"""
           <%= @feature_mod.display_name() %> is part of the Plausible Business plan. To get access to it, please
-          <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
+          <.link class="underline inline-block" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
             upgrade your subscription
           </.link> to the Business plan.
           """
