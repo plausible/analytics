@@ -39,7 +39,7 @@ defmodule Plausible.PaddleApi.Mock do
          "currency" => "EUR",
          "date" => "2023-12-05"
        },
-       "plan_id" => 63852,
+       "plan_id" => 63_852,
        "subscription_id" => 600_279,
        "user_id" => 666_317
      }}
