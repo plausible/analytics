@@ -255,6 +255,7 @@ defmodule PlausibleWeb.Live.Sites do
         x-transition.origin.top.right
         x-transition.duration.100ms
         class="absolute top-7 right-3 z-10 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+        style="display: none;"
         role="menu"
         aria-orientation="vertical"
         aria-labelledby={"menu-#{@index}-button"}
