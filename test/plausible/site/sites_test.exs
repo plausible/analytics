@@ -134,6 +134,45 @@ defmodule Plausible.SitesTest do
              } = Sites.list(user, %{})
     end
 
+    test "puts pinned sites first" do
+      user = insert(:user, email: "hello@example.com")
+
+      site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
+      site2 = %{id: site_id2} = insert(:site, members: [user], domain: "two.example.com")
+      %{id: site_id4} = insert(:site, members: [user], domain: "four.example.com")
+
+      _rogue_site = insert(:site, domain: "rogue.example.com")
+
+      insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+
+      %{id: site_id3} =
+        insert(:site,
+          domain: "three.example.com",
+          invitations: [
+            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+          ]
+        )
+
+      insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
+
+      insert(:invitation,
+        site: site1,
+        inviter: user,
+        email: "another@example.com"
+      )
+
+      Sites.toggle_pin(user, site2)
+
+      assert %{
+               entries: [
+                 %{id: ^site_id2, entry_type: "site"},
+                 %{id: ^site_id1, entry_type: "invitation"},
+                 %{id: ^site_id3, entry_type: "invitation"},
+                 %{id: ^site_id4, entry_type: "site"}
+               ]
+             } = Sites.list(user, %{})
+    end
+
     test "filters by domain" do
       user = insert(:user)
       %{id: site_id1} = insert(:site, domain: "first.example.com", members: [user])
