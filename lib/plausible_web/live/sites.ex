@@ -273,8 +273,9 @@ defmodule PlausibleWeb.Live.Sites do
             <span>Settings</span>
           </.unstyled_link>
 
-          <a
-            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
+          <button
+            type="button"
+            class="w-full text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
             role="menuitem"
             tabindex="-1"
             id={"menu-#{@index}-item-1"}
@@ -289,7 +290,7 @@ defmodule PlausibleWeb.Live.Sites do
 
             <.icon_pin :if={!@site.is_pinned} class="pt-1 mr-3 h-5 w-5" />
             <span :if={!@site.is_pinned}>Pin Site</span>
-          </a>
+          </button>
         </div>
       </div>
     </div>
