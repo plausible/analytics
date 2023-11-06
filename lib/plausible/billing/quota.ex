@@ -215,7 +215,7 @@ defmodule Plausible.Billing.Quota do
           {:team_members, :team_member_limit},
           {:sites, :site_limit}
         ],
-        !within_limit?(Map.get(usage, usage_field), Map.get(plan, limit_field)) do
+        !below_limit?(Map.get(usage, usage_field), Map.get(plan, limit_field)) do
       limit_field
     end
   end
@@ -241,11 +241,12 @@ defmodule Plausible.Billing.Quota do
       select: %{site_id: sm.site_id}
   end
 
-  @spec within_limit?(non_neg_integer(), non_neg_integer() | :unlimited) :: boolean()
+  @spec below_limit?(non_neg_integer(), non_neg_integer() | :unlimited) :: boolean()
   @doc """
-  Returns whether the limit has been exceeded or not.
+  Returns whether the usage is below the limit or not.
+  Returns false if usage is equal to the limit.
   """
-  def within_limit?(usage, limit) do
+  def below_limit?(usage, limit) do
     if limit == :unlimited, do: true, else: usage < limit
   end
 end

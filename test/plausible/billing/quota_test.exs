@@ -97,21 +97,21 @@ defmodule Plausible.Billing.QuotaTest do
     assert Quota.site_usage(user) == 3
   end
 
-  describe "within_limit?/2" do
+  describe "below_limit?/2" do
     test "returns true when quota is not exceeded" do
-      assert Quota.within_limit?(3, 5)
+      assert Quota.below_limit?(3, 5)
     end
 
     test "returns true when limit is :unlimited" do
-      assert Quota.within_limit?(10_000, :unlimited)
+      assert Quota.below_limit?(10_000, :unlimited)
     end
 
     test "returns false when usage is at limit" do
-      refute Quota.within_limit?(3, 3)
+      refute Quota.below_limit?(3, 3)
     end
 
     test "returns false when usage exceeds the limit" do
-      refute Quota.within_limit?(10, 3)
+      refute Quota.below_limit?(10, 3)
     end
   end
 

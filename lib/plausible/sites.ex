@@ -87,7 +87,7 @@ defmodule Plausible.Sites do
       limit = Quota.site_limit(user)
       usage = Quota.site_usage(user)
 
-      if Quota.within_limit?(usage, limit), do: {:ok, usage}, else: {:error, limit}
+      if Quota.below_limit?(usage, limit), do: {:ok, usage}, else: {:error, limit}
     end)
     |> Ecto.Multi.insert(:site, site_changeset)
     |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
