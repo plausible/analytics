@@ -54,7 +54,7 @@ defmodule Plausible.Sites do
           s
           | # TODO: work out a proper (GIN?) index for this
             is_pinned: fragment("coalesce(?, false)", type(up.options["is_pinned"], :boolean)),
-            list_type:
+            entry_type:
               fragment(
                 """
                   CASE WHEN ? IS NOT NULL THEN 'invitation'
@@ -76,7 +76,7 @@ defmodule Plausible.Sites do
 
     sites_query =
       from(s in subquery(base_query),
-        order_by: [desc: s.is_pinned, asc: s.list_type, asc: s.domain],
+        order_by: [desc: s.is_pinned, asc: s.entry_type, asc: s.domain],
         preload: [
           memberships: ^memberships_query,
           invitations: ^invitations_query

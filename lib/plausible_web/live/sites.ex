@@ -52,7 +52,7 @@ defmodule PlausibleWeb.Live.Sites do
   def render(assigns) do
     invitations =
       assigns.sites.entries
-      |> Enum.filter(&(&1.list_type == "invitation"))
+      |> Enum.filter(&(&1.entry_type == "invitation"))
       |> Enum.flat_map(& &1.invitations)
 
     assigns = assign(assigns, :invitations, invitations)
@@ -96,13 +96,13 @@ defmodule PlausibleWeb.Live.Sites do
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <%= for {site, index} <- Enum.with_index(@sites.entries) do %>
             <.site
-              :if={site.list_type == "site"}
+              :if={site.entry_type == "site"}
               site={site}
               index={index}
               hourly_stats={@hourly_stats[site.domain]}
             />
             <.invitation
-              :if={site.list_type == "invitation"}
+              :if={site.entry_type == "invitation"}
               site={site}
               invitation={hd(site.invitations)}
               hourly_stats={@hourly_stats[site.domain]}
@@ -120,7 +120,7 @@ defmodule PlausibleWeb.Live.Sites do
           Total of <span class="font-medium"><%= @sites.total_entries %></span> sites
         </.pagination>
         <.invitation_modal
-          :if={Enum.any?(@sites.entries, &(&1.list_type == "invitation"))}
+          :if={Enum.any?(@sites.entries, &(&1.entry_type == "invitation"))}
           user={@user}
         />
       </div>

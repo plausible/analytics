@@ -52,7 +52,7 @@ defmodule Plausible.Site do
     # Used in the context of paginated sites list to order in relation to 
     # user's membership state. Currently it can be either "invitation"
     # or "site", where invitations are first.
-    field :list_type, :string, virtual: true
+    field :entry_type, :string, virtual: true
     field :is_pinned, :boolean, virtual: true
 
     timestamps()

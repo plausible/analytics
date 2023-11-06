@@ -125,10 +125,10 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site_id1, list_type: "invitation"},
-                 %{id: ^site_id3, list_type: "invitation"},
-                 %{id: ^site_id4, list_type: "site"},
-                 %{id: ^site_id2, list_type: "site"}
+                 %{id: ^site_id1, entry_type: "invitation"},
+                 %{id: ^site_id3, entry_type: "invitation"},
+                 %{id: ^site_id4, entry_type: "site"},
+                 %{id: ^site_id2, entry_type: "site"}
                ]
              } = Sites.list(user, %{})
     end
