@@ -14,11 +14,24 @@ defmodule Plausible.Sites do
 
   @spec toggle_pin(Plausible.Auth.User.t(), Plausible.Site.t()) :: Plausible.Site.Preference.t()
   def toggle_pin(user, site) do
+    set_preference(user, site, :is_pinned, !site.is_pinned)
+  end
+
+  @spec set_preference(Plausible.Auth.User.t(), Plausible.Site.t(), atom(), any()) ::
+          Plausible.Site.Preference.t()
+  def set_preference(user, site, setting, value) do
     user
-    |> Plausible.Site.Preference.changeset(site, %{is_pinned: !site.is_pinned})
+    |> Plausible.Site.Preference.changeset(site, %{setting => value})
     |> Repo.insert!(
       conflict_target: [:user_id, :site_id],
-      on_conflict: {:replace, [:preferences]},
+      on_conflict:
+        from(p in Plausible.Site.Preference,
+          update: [
+            set: [
+              preferences: fragment("? || ?", p.preferences, type(^%{setting => value}, :map))
+            ]
+          ]
+        ),
       returning: true
     )
   end
