@@ -582,6 +582,8 @@ defmodule PlausibleWeb.Live.Sites do
         end
 
       socket = put_flash(socket, :success, flash_message)
+
+      Process.send_after(self(), :clear_flash, 5000)
       {:noreply, assign(socket, sites: sites)}
     else
       Sentry.capture_message("Attempting to toggle pin for invalid domain.",
@@ -616,6 +618,10 @@ defmodule PlausibleWeb.Live.Sites do
       |> set_filter_text("")
 
     {:noreply, socket}
+  end
+
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
   end
 
   defp load_sites(%{assigns: assigns} = socket) do

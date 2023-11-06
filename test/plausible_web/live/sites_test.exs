@@ -90,12 +90,16 @@ defmodule PlausibleWeb.Live.SitesTest do
         |> element(button_selector)
         |> render_click()
 
+      assert html =~ "Site pinned"
+
       assert text_of_element(html, button_selector) == "Unpin Site"
 
       html =
         lv
         |> element(button_selector)
         |> render_click()
+
+      assert html =~ "Site unpinned"
 
       assert text_of_element(html, button_selector) == "Pin Site"
     end
