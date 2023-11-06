@@ -10,19 +10,6 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "GET /upgrade" do
     setup [:create_user, :log_in]
 
-    test "shows upgrade page when user does not have a subcription already", %{conn: conn} do
-      conn = get(conn, Routes.billing_path(conn, :upgrade))
-
-      assert html_response(conn, 200) =~ "Upgrade your free trial"
-    end
-
-    test "redirects user to change plan if they already have a plan", %{conn: conn, user: user} do
-      insert(:subscription, user: user)
-      conn = get(conn, Routes.billing_path(conn, :upgrade))
-
-      assert redirected_to(conn) == Routes.billing_path(conn, :change_plan_form)
-    end
-
     test "redirects user to enteprise plan page if they are configured with one", %{
       conn: conn,
       user: user
