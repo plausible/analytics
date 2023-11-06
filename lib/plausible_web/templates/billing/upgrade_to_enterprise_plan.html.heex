@@ -22,11 +22,8 @@
         The plan is priced at
         <b>
           <%= case @price do
-            %Money{} = money ->
-              PlausibleWeb.Components.Billing.format_price(money, format: :standard)
-
-            nil ->
-              "N/A"
+            %Money{} = money -> PlausibleWeb.Components.Billing.format_price(money)
+            nil -> "N/A"
           end %>
         </b>
       </span>

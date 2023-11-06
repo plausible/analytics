@@ -267,16 +267,9 @@ defmodule PlausibleWeb.Components.Billing do
     |> PlausibleWeb.StatsView.large_number_format()
   end
 
-  @spec format_price(Money.t(), Keyword.t()) :: String.t()
-  def format_price(money, opts \\ []) do
-    opts =
-      opts
-      |> Keyword.put_new(:format, :short)
-      |> Keyword.put_new(:fractional_digits, 2)
-
-    money
-    |> Money.to_string!(opts)
-    |> String.replace(".00", "")
+  @spec format_price(Money.t()) :: String.t()
+  def format_price(money) do
+    Money.to_string!(money, fractional_digits: 2, no_fraction_if_integer: true)
   end
 
   attr :id, :string, required: true

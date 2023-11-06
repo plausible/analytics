@@ -638,7 +638,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       doc = lv |> element(@slider_input) |> render_change(%{slider: 9})
       assert text_of_element(doc, @slider_value) == "50M"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
-      assert text_of_element(doc, @growth_price_tag_amount) == "€1K"
+      assert text_of_element(doc, @growth_price_tag_amount) == "€1,000"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
       doc = lv |> element(@slider_input) |> render_change(%{slider: 10})
