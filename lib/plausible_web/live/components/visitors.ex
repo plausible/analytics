@@ -73,8 +73,7 @@ defmodule PlausibleWeb.Live.Components.Visitors do
   defp scale(data, target_range) do
     max_value = Enum.max_by(data, fn %{visitors: visitors} -> visitors end)
 
-    scaling_factor =
-      if max_value.visitors > 0, do: target_range / max_value.visitors, else: 0
+    scaling_factor = if max_value.visitors > 0, do: target_range / max_value.visitors, else: 0
 
     Enum.map(data, fn %{visitors: visitors} ->
       round(target_range - visitors * scaling_factor)
