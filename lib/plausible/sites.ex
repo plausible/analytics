@@ -25,6 +25,8 @@ defmodule Plausible.Sites do
   @spec set_option(Plausible.Auth.User.t(), Plausible.Site.t(), atom(), any()) ::
           Plausible.Site.UserPreference.t()
   def set_option(user, site, option, value) when option in @allowed_options do
+    get_for_user!(user.id, site.domain)
+
     user
     |> Plausible.Site.UserPreference.changeset(site, %{option => value})
     |> Repo.insert!(

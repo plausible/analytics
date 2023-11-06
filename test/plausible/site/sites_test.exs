@@ -280,6 +280,15 @@ defmodule Plausible.SitesTest do
         Sites.set_option(user, site, :invalid, false)
       end
     end
+
+    test "raises on invalid site/user combination" do
+      user = insert(:user)
+      site = insert(:site)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Sites.set_option(user, site, :is_pinned, false)
+      end
+    end
   end
 
   describe "toggle_pin/2" do
