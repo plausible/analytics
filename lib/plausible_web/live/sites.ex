@@ -236,20 +236,32 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div class="pl-8 mt-2 flex items-center justify-between">
-      <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
-        <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
-        <div class="flex justify-between items-center">
-          <p>
-            <span class="text-gray-800 dark:text-gray-200">
-              <b><%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %></b>
-              visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
-            </span>
-          </p>
+    <div class="md:h-[78px] h-20 pl-8 pr-8 pt-2">
+      <div :if={@hourly_stats == :loading} class="text-center animate-pulse">
+        <div class="md:h-[34px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+        <div class="md:h-[26px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+      </div>
+      <div
+        :if={is_map(@hourly_stats)}
+        class="hidden h-50px"
+        phx-mounted={
+          Phoenix.LiveView.JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})
+        }
+      >
+        <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
+          <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
+          <div class="flex justify-between items-center">
+            <p>
+              <span class="text-gray-800 dark:text-gray-200">
+                <b><%= PlausibleWeb.StatsView.large_number_format(@hourly_stats.visitors) %></b>
+                visitor<span :if={@hourly_stats.visitors != 1}>s</span> in last 24h
+              </span>
+            </p>
 
-          <.percentage_change change={@hourly_stats.change} />
-        </div>
-      </span>
+            <.percentage_change change={@hourly_stats.change} />
+          </div>
+        </span>
+      </div>
     </div>
     """
   end
@@ -259,7 +271,7 @@ defmodule PlausibleWeb.Live.Sites do
   def percentage_change(assigns) do
     ~H"""
     <p class="dark:text-gray-100">
-      <span :if={@change == 0} class="font-semibold text-green-500">〰</span>
+      <span :if={@change == 0} class="font-semibold">〰</span>
       <span :if={@change > 0} class="font-semibold text-green-500">↑</span>
       <span :if={@change < 0} class="font-semibold text-red-400">↓</span>
       <%= abs(@change) %>%
@@ -487,7 +499,10 @@ defmodule PlausibleWeb.Live.Sites do
       if connected?(socket) do
         Plausible.Stats.Clickhouse.last_24h_visitors_hourly_intervals(sites.entries)
       else
-        Plausible.Stats.Clickhouse.empty_24h_visitors_hourly_intervals(sites.entries)
+        sites.entries
+        |> Enum.into(%{}, fn site ->
+          {site.domain, :loading}
+        end)
       end
 
     assign(

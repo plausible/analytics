@@ -56,7 +56,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       site_card = text_of_element(resp, "li[data-domain=\"#{site.domain}\"]")
 
-      assert site_card =~ "0 visitors in last 24h"
+      refute site_card =~ "0 visitors"
       assert site_card =~ site.domain
     end
 
