@@ -127,6 +127,18 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert Quota.exceeded_limits(usage, plan) == [:monthly_pageview_limit, :site_limit]
     end
+
+    test "if limits are reached, they're not exceeded" do
+      usage = %{
+        monthly_pageviews: 10_000,
+        team_members: 2,
+        sites: 50
+      }
+
+      plan = Plans.find(@v3_plan_id)
+
+      assert Quota.exceeded_limits(usage, plan) == []
+    end
   end
 
   describe "monthly_pageview_limit/1" do
