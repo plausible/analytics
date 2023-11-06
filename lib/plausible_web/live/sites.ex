@@ -238,8 +238,8 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <div class="md:h-[78px] h-20 pl-8 pr-8 pt-2">
       <div :if={@hourly_stats == :loading} class="text-center animate-pulse">
-        <div class="md:h-[34px] h-11 dark:bg-gray-700 bg-gray-200 rounded-md"></div>
-        <div class="md:h-[26px] h-6 mt-1 dark:bg-gray-700 bg-gray-200 rounded-md"></div>
+        <div class="md:h-[34px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+        <div class="md:h-[26px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
       </div>
       <div
         :if={is_map(@hourly_stats)}
