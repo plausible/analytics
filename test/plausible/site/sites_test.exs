@@ -1,5 +1,6 @@
 defmodule Plausible.SitesTest do
   use Plausible.DataCase
+
   alias Plausible.Sites
 
   describe "is_member?" do
@@ -199,6 +200,74 @@ defmodule Plausible.SitesTest do
                total_entries: 3,
                total_pages: 2
              } = Sites.list(user, %{"page" => 1, "page_size" => 2})
+    end
+  end
+
+  describe "set_option/4" do
+    test "allows setting option multiple times" do
+      user = insert(:user)
+      site = insert(:site, members: [user])
+
+      assert prefs =
+               %{options: %{is_pinned: true}} = Sites.set_option(user, site, :is_pinned, true)
+
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.options.is_pinned == true
+
+      assert prefs =
+               %{options: %{is_pinned: false}} = Sites.set_option(user, site, :is_pinned, false)
+
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.options.is_pinned == false
+
+      assert prefs =
+               %{options: %{is_pinned: true}} = Sites.set_option(user, site, :is_pinned, true)
+
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.options.is_pinned == true
+    end
+
+    test "raises on invalid option" do
+      user = insert(:user)
+      site = insert(:site, members: [user])
+
+      assert_raise FunctionClauseError, fn ->
+        Sites.set_option(user, site, :invalid, false)
+      end
+    end
+  end
+
+  describe "toggle_pin/2" do
+    test "allows pinning and unpinning site" do
+      user = insert(:user)
+      site = insert(:site, members: [user])
+
+      site = %{site | is_pinned: false}
+      assert prefs = %{options: %{is_pinned: true}} = Sites.toggle_pin(user, site)
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.options.is_pinned == true
+
+      site = %{site | is_pinned: true}
+      assert prefs = %{options: %{is_pinned: false}} = Sites.toggle_pin(user, site)
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.options.is_pinned == false
+
+      site = %{site | is_pinned: false}
+      assert prefs = %{options: %{is_pinned: true}} = Sites.toggle_pin(user, site)
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.options.is_pinned == true
     end
   end
 end
