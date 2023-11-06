@@ -18,18 +18,22 @@ defmodule Plausible.Sites do
     set_option(user, site, :is_pinned, !site.is_pinned)
   end
 
+  @allowed_options :fields
+                   |> Plausible.Site.UserPreference.Options.__schema__()
+                   |> Enum.reject(&(&1 in [:id, :updated_at, :inserted_at]))
+
   @spec set_option(Plausible.Auth.User.t(), Plausible.Site.t(), atom(), any()) ::
           Plausible.Site.UserPreference.t()
-  def set_option(user, site, setting, value) do
+  def set_option(user, site, option, value) when option in @allowed_options do
     user
-    |> Plausible.Site.UserPreference.changeset(site, %{setting => value})
+    |> Plausible.Site.UserPreference.changeset(site, %{option => value})
     |> Repo.insert!(
       conflict_target: [:user_id, :site_id],
       on_conflict:
         from(p in Plausible.Site.UserPreference,
           update: [
             set: [
-              options: fragment("? || ?", p.options, type(^%{setting => value}, :map))
+              options: fragment("? || ?", p.options, type(^%{option => value}, :map))
             ]
           ]
         ),
