@@ -385,16 +385,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       growth_checkout_button = find(doc, @growth_checkout_button)
 
-      assert text_of_attr(growth_checkout_button, "href") =~
-               Routes.billing_path(conn, :change_plan_preview, @v4_growth_200k_yearly_plan_id)
+      assert text_of_attr(growth_checkout_button, "onclick") =~
+               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v4_growth_200k_yearly_plan_id)}'}"
 
       element(lv, @slider_input) |> render_change(%{slider: 6})
       doc = element(lv, @monthly_interval_button) |> render_click()
 
       business_checkout_button = find(doc, @business_checkout_button)
 
-      assert text_of_attr(business_checkout_button, "href") =~
-               Routes.billing_path(conn, :change_plan_preview, @v4_business_5m_monthly_plan_id)
+      assert text_of_attr(business_checkout_button, "onclick") =~
+               "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v4_business_5m_monthly_plan_id)}'}"
     end
   end
 
@@ -480,7 +480,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       {:ok, _lv, doc} = get_liveview(conn)
 
       assert text_of_attr(find(doc, @growth_checkout_button), "onclick") =~
-               "if (!confirm(\"This plan does not support Custom Properties, Revenue Goals and Stats API, which you are currently using. Please note that by subscribing to this plan you will lose access to these features.\")) {e.preventDefault()}"
+               "if (confirm(\"This plan does not support Custom Properties, Revenue Goals and Stats API, which you are currently using. Please note that by subscribing to this plan you will lose access to these features.\")) {window.location = "
     end
   end
 
