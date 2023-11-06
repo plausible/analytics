@@ -56,8 +56,7 @@ defmodule Plausible.Sites do
         where: not is_nil(i.id) or not is_nil(sm.id),
         select: %{
           s
-          | # TODO: work out a proper (GIN?) index for this
-            is_pinned: fragment("coalesce(?, false)", type(up.options["is_pinned"], :boolean)),
+          | is_pinned: fragment("coalesce(?, false)", type(up.options["is_pinned"], :boolean)),
             entry_type:
               fragment(
                 """
