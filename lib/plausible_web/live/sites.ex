@@ -558,29 +558,38 @@ defmodule PlausibleWeb.Live.Sites do
 
   def handle_event("pin-toggle", %{"domain" => domain}, socket) do
     site = Enum.find(socket.assigns.sites.entries, &(&1.domain == domain))
-    preference = Sites.toggle_pin(socket.assigns.user, site)
 
-    entries =
-      socket.assigns.sites.entries
-      |> Enum.map(fn
-        %{domain: ^domain} = site ->
-          %{site | is_pinned: preference.options.is_pinned}
+    if site do
+      preference = Sites.toggle_pin(socket.assigns.user, site)
 
-        site ->
-          site
-      end)
+      entries =
+        socket.assigns.sites.entries
+        |> Enum.map(fn
+          %{domain: ^domain} = site ->
+            %{site | is_pinned: preference.options.is_pinned}
 
-    sites = %{socket.assigns.sites | entries: entries}
+          site ->
+            site
+        end)
 
-    flash_message =
-      if preference.options.is_pinned do
-        "Site pinned"
-      else
-        "Site unpinned"
-      end
+      sites = %{socket.assigns.sites | entries: entries}
 
-    socket = put_flash(socket, :success, flash_message)
-    {:noreply, assign(socket, sites: sites)}
+      flash_message =
+        if preference.options.is_pinned do
+          "Site pinned"
+        else
+          "Site unpinned"
+        end
+
+      socket = put_flash(socket, :success, flash_message)
+      {:noreply, assign(socket, sites: sites)}
+    else
+      Sentry.capture_message("Attempting to toggle pin for invalid domain.",
+        extra: %{domain: domain, user: socket.assigns.user.id}
+      )
+
+      {:noreply, socket}
+    end
   end
 
   def handle_event(
