@@ -448,6 +448,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
           build(:site_membership, user: user, role: :owner),
           build(:site_membership, user: build(:user)),
           build(:site_membership, user: build(:user)),
+          build(:site_membership, user: build(:user)),
           build(:site_membership, user: build(:user))
         ]
       )
