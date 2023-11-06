@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-C685BE87.js"></script>
+    <script src="dist/sidebar_items-5F69600E.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -143,6 +143,17 @@ ability to use all features during their trial.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#below_limit?/2" translate="no">below_limit?(usage, limit)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns whether the usage is below the limit or not.
+Returns false if usage is equal to the limit.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#ensure_can_subscribe_to_plan/2" translate="no">ensure_can_subscribe_to_plan(user, plan)</a>
 
       </div>
@@ -245,7 +256,8 @@ with the user's sites.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns whether the limit has been exceeded or not.</p></div>
+        <div class="summary-synopsis"><p>Returns whether the usage is within the limit or not.
+Returns true if usage is equal to the limit.</p></div>
 
     </div>
 
@@ -283,6 +295,35 @@ Functions
 
 <p>Returns a list of features the user can use. Trial users have the
 ability to use all features during their trial.</p>
+  </section>
+</section>
+<section class="detail" id="below_limit?/2">
+
+  <div class="detail-header">
+    <a href="#below_limit?/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">below_limit?(usage, limit)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L249" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> below_limit?(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :unlimited) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Returns whether the usage is below the limit or not.
+Returns false if usage is equal to the limit.</p>
   </section>
 </section>
 <section class="detail" id="ensure_can_subscribe_to_plan/2">
@@ -564,7 +605,7 @@ with the user's sites.</p>
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L248" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L258" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -580,7 +621,8 @@ with the user's sites.</p>
 
       </div>
 
-<p>Returns whether the limit has been exceeded or not.</p>
+<p>Returns whether the usage is within the limit or not.
+Returns true if usage is equal to the limit.</p>
   </section>
 </section>
 
