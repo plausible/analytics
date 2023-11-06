@@ -1,6 +1,6 @@
 defmodule Plausible.Site.Preference do
   @moduledoc """
-  Site pin schema
+  User-specific site preferences schema
   """
 
   use Ecto.Schema
@@ -9,6 +9,10 @@ defmodule Plausible.Site.Preference do
   @type t() :: %__MODULE__{}
 
   defmodule Preferences do
+    @moduledoc """
+    Embed storing structured preferences
+    """
+
     use Ecto.Schema
     import Ecto.Changeset
 
