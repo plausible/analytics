@@ -1,4 +1,4 @@
-defmodule Plausible.Site.Preference do
+defmodule Plausible.Site.UserPreference do
   @moduledoc """
   User-specific site preferences schema
   """
@@ -8,7 +8,7 @@ defmodule Plausible.Site.Preference do
 
   @type t() :: %__MODULE__{}
 
-  defmodule Preferences do
+  defmodule Options do
     @moduledoc """
     Embed storing structured preferences
     """
@@ -25,8 +25,8 @@ defmodule Plausible.Site.Preference do
     end
   end
 
-  schema "site_preferences" do
-    embeds_one :preferences, Preferences
+  schema "site_user_preferences" do
+    embeds_one :options, Options
 
     belongs_to :user, Plausible.Auth.User
     belongs_to :site, Plausible.Site
@@ -35,11 +35,11 @@ defmodule Plausible.Site.Preference do
   end
 
   def changeset(user, site, attrs \\ %{}) do
-    embed_changeset = Preferences.changeset(attrs)
+    embed_changeset = Options.changeset(attrs)
 
     %__MODULE__{}
     |> change()
-    |> put_embed(:preferences, embed_changeset)
+    |> put_embed(:options, embed_changeset)
     |> put_assoc(:user, user)
     |> put_assoc(:site, site)
   end

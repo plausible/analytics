@@ -12,23 +12,24 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
-  @spec toggle_pin(Plausible.Auth.User.t(), Plausible.Site.t()) :: Plausible.Site.Preference.t()
+  @spec toggle_pin(Plausible.Auth.User.t(), Plausible.Site.t()) ::
+          Plausible.Site.UserPreference.t()
   def toggle_pin(user, site) do
-    set_preference(user, site, :is_pinned, !site.is_pinned)
+    set_option(user, site, :is_pinned, !site.is_pinned)
   end
 
-  @spec set_preference(Plausible.Auth.User.t(), Plausible.Site.t(), atom(), any()) ::
-          Plausible.Site.Preference.t()
-  def set_preference(user, site, setting, value) do
+  @spec set_option(Plausible.Auth.User.t(), Plausible.Site.t(), atom(), any()) ::
+          Plausible.Site.UserPreference.t()
+  def set_option(user, site, setting, value) do
     user
-    |> Plausible.Site.Preference.changeset(site, %{setting => value})
+    |> Plausible.Site.UserPreference.changeset(site, %{setting => value})
     |> Repo.insert!(
       conflict_target: [:user_id, :site_id],
       on_conflict:
-        from(p in Plausible.Site.Preference,
+        from(p in Plausible.Site.UserPreference,
           update: [
             set: [
-              preferences: fragment("? || ?", p.preferences, type(^%{setting => value}, :map))
+              options: fragment("? || ?", p.options, type(^%{setting => value}, :map))
             ]
           ]
         ),
@@ -46,13 +47,13 @@ defmodule Plausible.Sites do
         on: sm.user_id == ^user.id,
         left_join: i in assoc(s, :invitations),
         on: i.email == ^user.email,
-        left_join: p in Plausible.Site.Preference,
-        on: p.site_id == s.id and p.user_id == ^user.id,
+        left_join: up in Plausible.Site.UserPreference,
+        on: up.site_id == s.id and up.user_id == ^user.id,
         where: not is_nil(i.id) or not is_nil(sm.id),
         select: %{
           s
           | # TODO: work out a proper (GIN?) index for this
-            is_pinned: fragment("coalesce(?, false)", type(p.preferences["is_pinned"], :boolean)),
+            is_pinned: fragment("coalesce(?, false)", type(up.options["is_pinned"], :boolean)),
             list_type:
               fragment(
                 """

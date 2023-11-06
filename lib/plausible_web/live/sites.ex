@@ -564,7 +564,7 @@ defmodule PlausibleWeb.Live.Sites do
       socket.assigns.sites.entries
       |> Enum.map(fn
         %{domain: ^domain} = site ->
-          %{site | is_pinned: preference.preferences.is_pinned}
+          %{site | is_pinned: preference.options.is_pinned}
 
         site ->
           site
@@ -573,7 +573,7 @@ defmodule PlausibleWeb.Live.Sites do
     sites = %{socket.assigns.sites | entries: entries}
 
     flash_message =
-      if preference.preferences.is_pinned do
+      if preference.options.is_pinned do
         "Site pinned"
       else
         "Site unpinned"
