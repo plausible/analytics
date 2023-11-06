@@ -97,21 +97,21 @@ defmodule Plausible.Billing.QuotaTest do
     assert Quota.site_usage(user) == 3
   end
 
-  describe "within_limit?/2" do
+  describe "below_limit?/2" do
     test "returns true when quota is not exceeded" do
-      assert Quota.within_limit?(3, 5)
+      assert Quota.below_limit?(3, 5)
     end
 
     test "returns true when limit is :unlimited" do
-      assert Quota.within_limit?(10_000, :unlimited)
+      assert Quota.below_limit?(10_000, :unlimited)
     end
 
     test "returns false when usage is at limit" do
-      refute Quota.within_limit?(3, 3)
+      refute Quota.below_limit?(3, 3)
     end
 
     test "returns false when usage exceeds the limit" do
-      refute Quota.within_limit?(10, 3)
+      refute Quota.below_limit?(10, 3)
     end
   end
 
@@ -126,6 +126,18 @@ defmodule Plausible.Billing.QuotaTest do
       plan = Plans.find(@v3_plan_id)
 
       assert Quota.exceeded_limits(usage, plan) == [:monthly_pageview_limit, :site_limit]
+    end
+
+    test "if limits are reached, they're not exceeded" do
+      usage = %{
+        monthly_pageviews: 10_000,
+        team_members: 2,
+        sites: 50
+      }
+
+      plan = Plans.find(@v3_plan_id)
+
+      assert Quota.exceeded_limits(usage, plan) == []
     end
   end
 
@@ -474,9 +486,9 @@ defmodule Plausible.Billing.QuotaTest do
       assert [Goals, StatsAPI, Props] == Quota.allowed_features_for(user_on_v3)
     end
 
-    test "returns [Goals] when user is on free_10k plan" do
+    test "returns [Goals, Props, StatsAPI] when user is on free_10k plan" do
       user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
-      assert [Goals] == Quota.allowed_features_for(user)
+      assert [Goals, Props, StatsAPI] == Quota.allowed_features_for(user)
     end
 
     test "returns all features when user is on an enterprise plan" do

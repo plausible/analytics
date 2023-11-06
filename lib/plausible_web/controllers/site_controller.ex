@@ -13,12 +13,12 @@ defmodule PlausibleWeb.SiteController do
 
     limit = Plausible.Billing.Quota.site_limit(current_user)
     usage = Plausible.Billing.Quota.site_usage(current_user)
-    within_limit? = Plausible.Billing.Quota.within_limit?(usage, limit)
+    below_limit? = Plausible.Billing.Quota.below_limit?(usage, limit)
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
       is_first_site: usage == 0,
-      is_at_limit: !within_limit?,
+      is_at_limit: !below_limit?,
       site_limit: limit,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )

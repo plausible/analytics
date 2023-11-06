@@ -69,7 +69,7 @@ defmodule Plausible.Workers.CheckUsage do
     site_limit = check_site_limit_for_enterprise(subscriber)
 
     case {pageview_limit, site_limit} do
-      {{:within_limit, _}, {:within_limit, _}} ->
+      {{:below_limit, _}, {:below_limit, _}} ->
         nil
 
       {{_, {last_cycle, last_cycle_usage}}, {_, {site_usage, site_allowance}}} ->
@@ -126,15 +126,15 @@ defmodule Plausible.Workers.CheckUsage do
     {last_last_cycle_usage, last_cycle_usage} =
       billing_mod.last_two_billing_months_usage(subscriber)
 
-    exceeded_last_cycle? = not Plausible.Billing.Quota.within_limit?(last_cycle_usage, limit)
+    exceeded_last_cycle? = not Plausible.Billing.Quota.below_limit?(last_cycle_usage, limit)
 
     exceeded_last_last_cycle? =
-      not Plausible.Billing.Quota.within_limit?(last_last_cycle_usage, limit)
+      not Plausible.Billing.Quota.below_limit?(last_last_cycle_usage, limit)
 
     if exceeded_last_last_cycle? && exceeded_last_cycle? do
       {:over_limit, {last_cycle, last_cycle_usage}}
     else
-      {:within_limit, {last_cycle, last_cycle_usage}}
+      {:below_limit, {last_cycle, last_cycle_usage}}
     end
   end
 
@@ -142,8 +142,8 @@ defmodule Plausible.Workers.CheckUsage do
     limit = subscriber.enterprise_plan.site_limit
     usage = Plausible.Billing.Quota.site_usage(subscriber)
 
-    if Plausible.Billing.Quota.within_limit?(usage, limit) do
-      {:within_limit, {usage, limit}}
+    if Plausible.Billing.Quota.below_limit?(usage, limit) do
+      {:below_limit, {usage, limit}}
     else
       {:over_limit, {usage, limit}}
     end

@@ -27,7 +27,7 @@ defmodule Plausible.Billing.Plans do
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
-  @business_tier_launch ~D[2023-11-07]
+  @business_tier_launch ~N[2023-12-01 12:00:00]
 
   @spec growth_plans_for(User.t()) :: [Plan.t()]
   @doc """
@@ -44,7 +44,9 @@ defmodule Plausible.Billing.Plans do
 
     cond do
       Application.get_env(:plausible, :environment) == "dev" -> @sandbox_plans
-      !owned_plan -> if v4_available, do: @plans_v4, else: @plans_v3
+      is_nil(owned_plan) && Timex.before?(user.inserted_at, @business_tier_launch) -> @plans_v3
+      is_nil(owned_plan) && v4_available -> @plans_v4
+      is_nil(owned_plan) -> @plans_v3
       owned_plan.kind == :business -> @plans_v4
       owned_plan.generation == 1 -> @plans_v1
       owned_plan.generation == 2 -> @plans_v2
@@ -60,6 +62,7 @@ defmodule Plausible.Billing.Plans do
 
     cond do
       Application.get_env(:plausible, :environment) == "dev" -> @sandbox_plans
+      is_nil(owned_plan) && Timex.before?(user.inserted_at, @business_tier_launch) -> @plans_v3
       owned_plan && owned_plan.generation < 4 -> @plans_v3
       true -> @plans_v4
     end
@@ -242,6 +245,10 @@ defmodule Plausible.Billing.Plans do
   end
 
   defp all() do
-    @legacy_plans ++ @plans_v1 ++ @plans_v2 ++ @plans_v3 ++ @plans_v4
+    @legacy_plans ++ @plans_v1 ++ @plans_v2 ++ @plans_v3 ++ @plans_v4 ++ sandbox_plans()
+  end
+
+  defp sandbox_plans() do
+    if Application.get_env(:plausible, :environment) == "dev", do: @sandbox_plans, else: []
   end
 end

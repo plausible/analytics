@@ -117,14 +117,14 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     site_usage = Plausible.Repo.aggregate(Quota.team_member_usage_query(site.owner, site), :count)
     usage_after_transfer = current_usage + site_usage
 
-    Quota.within_limit?(usage_after_transfer, limit)
+    Quota.below_limit?(usage_after_transfer, limit)
   end
 
   defp within_site_limit_after_transfer?(new_owner) do
     limit = Quota.site_limit(new_owner)
     usage_after_transfer = Quota.site_usage(new_owner) + 1
 
-    Quota.within_limit?(usage_after_transfer, limit)
+    Quota.below_limit?(usage_after_transfer, limit)
   end
 
   defp has_access_to_site_features?(site, new_owner) do
@@ -174,7 +174,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     limit = Quota.team_member_limit(site.owner)
     usage = Quota.team_member_usage(site.owner)
 
-    if Quota.within_limit?(usage, limit),
+    if Quota.below_limit?(usage, limit),
       do: :ok,
       else: {:error, {:over_limit, limit}}
   end

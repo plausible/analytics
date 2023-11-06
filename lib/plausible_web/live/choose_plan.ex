@@ -285,7 +285,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <.contact_button class="bg-indigo-600 hover:bg-indigo-500 text-white" />
         <% end %>
       </div>
-      <%= if @kind == :growth && @plan_to_render.generation < 4 do %>
+      <%= if @owned && @kind == :growth && @plan_to_render.generation < 4 do %>
         <.growth_grandfathering_notice />
       <% else %>
         <ul
@@ -396,11 +396,15 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   defp change_plan_link(assigns) do
+    confirmed =
+      if assigns.confirm_message, do: "confirm(\"#{assigns.confirm_message}\")", else: "true"
+
+    assigns = assign(assigns, :confirmed, confirmed)
+
     ~H"""
-    <.link
+    <button
       id={"#{@kind}-checkout"}
-      onclick={if @confirm_message, do: "if (!confirm(\"#{@confirm_message}\")) {e.preventDefault()}"}
-      href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_preview, @paddle_product_id)}
+      onclick={"if (#{@confirmed}) {window.location = '#{Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_preview, @paddle_product_id)}'}"}
       class={[
         "w-full mt-6 block rounded-md py-2 px-3 text-center text-sm font-semibold leading-6 text-white",
         !@checkout_disabled && "bg-indigo-600 hover:bg-indigo-500",
@@ -408,7 +412,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       ]}
     >
       <%= @change_plan_link_text %>
-    </.link>
+    </button>
     """
   end
 

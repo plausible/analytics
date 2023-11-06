@@ -26,6 +26,25 @@ defmodule Plausible.PaddleApi.Mock do
      }}
   end
 
+  def update_subscription_preview(_user, _new_plan_id) do
+    {:ok,
+     %{
+       "immediate_payment" => %{
+         "amount" => -72.6,
+         "currency" => "EUR",
+         "date" => "2023-11-05"
+       },
+       "next_payment" => %{
+         "amount" => 47.19,
+         "currency" => "EUR",
+         "date" => "2023-12-05"
+       },
+       "plan_id" => 63_852,
+       "subscription_id" => 600_279,
+       "user_id" => 666_317
+     }}
+  end
+
   def get_invoices(nil), do: {:error, :no_invoices}
   def get_invoices(%{paddle_subscription_id: nil}), do: {:error, :no_invoices}
 

@@ -230,7 +230,7 @@ defmodule Plausible.Billing.Quota do
     case Plans.get_subscription_plan(user.subscription) do
       %EnterprisePlan{} -> Feature.list()
       %Plan{features: features} -> features
-      :free_10k -> [Goals]
+      :free_10k -> [Goals, Props, StatsAPI]
       nil -> Feature.list()
     end
   end
@@ -241,11 +241,21 @@ defmodule Plausible.Billing.Quota do
       select: %{site_id: sm.site_id}
   end
 
+  @spec below_limit?(non_neg_integer(), non_neg_integer() | :unlimited) :: boolean()
+  @doc """
+  Returns whether the usage is below the limit or not.
+  Returns false if usage is equal to the limit.
+  """
+  def below_limit?(usage, limit) do
+    if limit == :unlimited, do: true, else: usage < limit
+  end
+
   @spec within_limit?(non_neg_integer(), non_neg_integer() | :unlimited) :: boolean()
   @doc """
-  Returns whether the limit has been exceeded or not.
+  Returns whether the usage is within the limit or not.
+  Returns true if usage is equal to the limit.
   """
   def within_limit?(usage, limit) do
-    if limit == :unlimited, do: true, else: usage < limit
+    if limit == :unlimited, do: true, else: usage <= limit
   end
 end

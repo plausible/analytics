@@ -5,6 +5,7 @@ defmodule Plausible.Billing.PlansTest do
   @legacy_plan_id "558746"
   @v1_plan_id "558018"
   @v2_plan_id "654177"
+  @v3_plan_id "749342"
   @v4_plan_id "857097"
   @v3_business_plan_id "857481"
   @v4_business_plan_id "857105"
@@ -25,8 +26,13 @@ defmodule Plausible.Billing.PlansTest do
       assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v2_plan_id
     end
 
-    test "growth_plans_for/1 returns v4 plans for everyone else" do
-      user = insert(:user)
+    test "growth_plans_for/1 shows v3 pricing for users who signed up before the business tier" do
+      user = insert(:user, inserted_at: ~U[2023-10-01T00:00:00Z])
+      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v3_plan_id
+    end
+
+    test "growth_plans_for/1 shows v4 plans for everyone else" do
+      user = insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])
       assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v4_plan_id
     end
 
@@ -60,8 +66,13 @@ defmodule Plausible.Billing.PlansTest do
       assert List.first(business_plans).monthly_product_id == @v3_business_plan_id
     end
 
+    test "business_plans_for/1 returns v3 business plans for users who signed up before the business tier release" do
+      user = insert(:user, inserted_at: ~U[2023-10-01T00:00:00Z])
+      assert List.first(Plans.business_plans_for(user)).monthly_product_id == @v3_business_plan_id
+    end
+
     test "business_plans_for/1 returns v4 business plans for everyone else" do
-      user = insert(:user)
+      user = insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])
       business_plans = Plans.business_plans_for(user)
 
       assert Enum.all?(business_plans, &(&1.kind == :business))
