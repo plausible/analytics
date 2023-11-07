@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Components.BillingTest do
 
     assert rendered =~ "Custom Properties is part of the Plausible Business plan."
     assert rendered =~ "upgrade your subscription"
-    assert rendered =~ "/billing/upgrade"
+    assert rendered =~ "/billing/choose-plan"
   end
 
   test "premium_feature_notice/1 does not render an upgrade link when user is not the site owner" do
@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Components.BillingTest do
     assert rendered =~
              "Funnels is part of the Plausible Business plan. To get access to it, please reach out to the site owner to upgrade your subscription to the Business plan."
 
-    refute rendered =~ "/billing/upgrade"
+    refute rendered =~ "/billing/choose-plan"
   end
 
   test "premium_feature_notice/1 does not render a notice when the user has access to the feature" do
