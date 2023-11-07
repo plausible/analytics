@@ -31,7 +31,7 @@ defmodule PlausibleWeb.Components.Billing do
 
         private_preview? && display_upgrade_link? && growth? ->
           ~H"""
-          Business plans are now live! If you wish to continue using <%= @feature_mod.display_name() %>, please
+          Business plans are now live! The private preview of <%= @feature_mod.display_name() %> for Plausible Growth plans ends <%= private_preview_days_remaining() %>. If you wish to continue using this feature, please
           <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
             upgrade your subscription
           </.link> to the Plausible Business plan.
@@ -59,6 +59,18 @@ defmodule PlausibleWeb.Components.Billing do
       <%= @message %>
     </.notice>
     """
+  end
+
+  defp private_preview_days_remaining do
+    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 7)
+
+    days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
+
+    if days_remaining <= 0 do
+      "today"
+    else
+      "in #{days_remaining} days"
+    end
   end
 
   slot(:inner_block, required: true)

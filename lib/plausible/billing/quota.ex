@@ -8,8 +8,6 @@ defmodule Plausible.Billing.Quota do
   alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
-  @business_tier_launch ~D[2023-10-30]
-
   def usage(user, opts \\ []) do
     basic_usage = %{
       monthly_pageviews: monthly_pageview_usage(user),
@@ -58,7 +56,7 @@ defmodule Plausible.Billing.Quota do
         @site_limit_for_free_10k
 
       nil ->
-        if Timex.before?(user.inserted_at, @business_tier_launch) do
+        if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
           @site_limit_for_legacy_trials
         else
           @site_limit_for_trials
@@ -135,7 +133,7 @@ defmodule Plausible.Billing.Quota do
         :unlimited
 
       nil ->
-        if Timex.before?(user.inserted_at, @business_tier_launch) do
+        if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
           @team_member_limit_for_legacy_trials
         else
           @team_member_limit_for_trials
