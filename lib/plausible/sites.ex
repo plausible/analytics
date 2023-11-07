@@ -15,7 +15,14 @@ defmodule Plausible.Sites do
   @spec toggle_pin(Plausible.Auth.User.t(), Plausible.Site.t()) ::
           Plausible.Site.UserPreference.t()
   def toggle_pin(user, site) do
-    set_option(user, site, :is_pinned, !site.is_pinned)
+    pinned_at =
+      if site.pinned_at do
+        nil
+      else
+        NaiveDateTime.utc_now()
+      end
+
+    set_option(user, site, :pinned_at, pinned_at)
   end
 
   @allowed_options :fields
@@ -53,7 +60,7 @@ defmodule Plausible.Sites do
         on: up.site_id == s.id and up.user_id == ^user.id,
         select: %{
           s
-          | is_pinned: fragment("coalesce(?, false)", type(up.options["is_pinned"], :boolean)),
+          | pinned_at: fragment("(?->>'pinned_at')::timestamp", up.options),
             entry_type: "site"
         }
       )
@@ -93,7 +100,7 @@ defmodule Plausible.Sites do
 
     sites_query =
       from(s in subquery(query),
-        order_by: [desc: s.is_pinned, asc: s.entry_type, asc: s.domain],
+        order_by: [desc_nulls_last: s.pinned_at, asc: s.entry_type, asc: s.domain],
         preload: [
           memberships: ^memberships_query,
           invitations: ^invitations_query

@@ -17,11 +17,11 @@ defmodule Plausible.Site.UserPreference do
     import Ecto.Changeset
 
     embedded_schema do
-      field :is_pinned, :boolean, default: false
+      field :pinned_at, :naive_datetime
     end
 
     def changeset(attrs \\ %{}) do
-      cast(%__MODULE__{}, attrs, [:is_pinned])
+      cast(%__MODULE__{}, attrs, [:pinned_at])
     end
   end
 

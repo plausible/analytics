@@ -284,13 +284,13 @@ defmodule PlausibleWeb.Live.Sites do
             phx-value-domain={@site.domain}
           >
             <.icon_pin
-              :if={@site.is_pinned}
+              :if={@site.pinned_at}
               class="pt-1 mr-3 h-5 w-5 text-red-400 stroke-red-500 dark:text-yellow-600 dark:stroke-yellow-700"
             />
-            <span :if={@site.is_pinned}>Unpin Site</span>
+            <span :if={@site.pinned_at}>Unpin Site</span>
 
-            <.icon_pin :if={!@site.is_pinned} class="pt-1 mr-3 h-5 w-5" />
-            <span :if={!@site.is_pinned}>Pin Site</span>
+            <.icon_pin :if={!@site.pinned_at} class="pt-1 mr-3 h-5 w-5" />
+            <span :if={!@site.pinned_at}>Pin Site</span>
           </button>
         </div>
       </div>
@@ -567,7 +567,7 @@ defmodule PlausibleWeb.Live.Sites do
         socket.assigns.sites.entries
         |> Enum.map(fn
           %{domain: ^domain} = site ->
-            %{site | is_pinned: preference.options.is_pinned}
+            %{site | pinned_at: preference.options.pinned_at}
 
           site ->
             site
@@ -576,7 +576,7 @@ defmodule PlausibleWeb.Live.Sites do
       sites = %{socket.assigns.sites | entries: entries}
 
       flash_message =
-        if preference.options.is_pinned do
+        if preference.options.pinned_at do
           "Site pinned"
         else
           "Site unpinned"

@@ -258,6 +258,46 @@ defmodule Plausible.SitesTest do
                Sites.list(user1, %{}, include_invitations?: false)
     end
 
+    test "pinned sites are ordered according to the time they were pinned at" do
+      user = insert(:user, email: "hello@example.com")
+
+      site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
+      site2 = %{id: site_id2} = insert(:site, members: [user], domain: "two.example.com")
+      site4 = %{id: site_id4} = insert(:site, members: [user], domain: "four.example.com")
+
+      _rogue_site = insert(:site, domain: "rogue.example.com")
+
+      insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+
+      %{id: site_id3} =
+        insert(:site,
+          domain: "three.example.com",
+          invitations: [
+            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+          ]
+        )
+
+      insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
+
+      insert(:invitation,
+        site: site1,
+        inviter: user,
+        email: "another@example.com"
+      )
+
+      Sites.set_option(user, site2, :pinned_at, ~N[2023-10-22 12:00:00])
+      Sites.toggle_pin(user, site4)
+
+      assert %{
+               entries: [
+                 %{id: ^site_id4, entry_type: "site"},
+                 %{id: ^site_id2, entry_type: "site"},
+                 %{id: ^site_id1, entry_type: "invitation"},
+                 %{id: ^site_id3, entry_type: "invitation"}
+               ]
+             } = Sites.list(user, %{})
+    end
+
     test "filters by domain" do
       user = insert(:user)
       %{id: site_id1} = insert(:site, domain: "first.example.com", members: [user])
@@ -333,28 +373,30 @@ defmodule Plausible.SitesTest do
       site = insert(:site, members: [user])
 
       assert prefs =
-               %{options: %{is_pinned: true}} = Sites.set_option(user, site, :is_pinned, true)
+               %{options: %{pinned_at: %NaiveDateTime{}}} =
+               Sites.set_option(user, site, :pinned_at, NaiveDateTime.utc_now())
 
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.is_pinned == true
+      assert prefs.options.pinned_at
 
       assert prefs =
-               %{options: %{is_pinned: false}} = Sites.set_option(user, site, :is_pinned, false)
+               %{options: %{pinned_at: nil}} = Sites.set_option(user, site, :pinned_at, nil)
 
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.is_pinned == false
+      refute prefs.options.pinned_at
 
       assert prefs =
-               %{options: %{is_pinned: true}} = Sites.set_option(user, site, :is_pinned, true)
+               %{options: %{pinned_at: %NaiveDateTime{}}} =
+               Sites.set_option(user, site, :pinned_at, NaiveDateTime.utc_now())
 
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.is_pinned == true
+      assert prefs.options.pinned_at
     end
 
     test "raises on invalid option" do
@@ -371,7 +413,7 @@ defmodule Plausible.SitesTest do
       site = insert(:site)
 
       assert_raise Ecto.NoResultsError, fn ->
-        Sites.set_option(user, site, :is_pinned, false)
+        Sites.set_option(user, site, :pinned_at, nil)
       end
     end
   end
@@ -381,26 +423,26 @@ defmodule Plausible.SitesTest do
       user = insert(:user)
       site = insert(:site, members: [user])
 
-      site = %{site | is_pinned: false}
-      assert prefs = %{options: %{is_pinned: true}} = Sites.toggle_pin(user, site)
+      site = %{site | pinned_at: nil}
+      assert prefs = %{options: %{pinned_at: %NaiveDateTime{}}} = Sites.toggle_pin(user, site)
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.is_pinned == true
+      assert prefs.options.pinned_at
 
-      site = %{site | is_pinned: true}
-      assert prefs = %{options: %{is_pinned: false}} = Sites.toggle_pin(user, site)
+      site = %{site | pinned_at: NaiveDateTime.utc_now()}
+      assert prefs = %{options: %{pinned_at: nil}} = Sites.toggle_pin(user, site)
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.is_pinned == false
+      refute prefs.options.pinned_at
 
-      site = %{site | is_pinned: false}
-      assert prefs = %{options: %{is_pinned: true}} = Sites.toggle_pin(user, site)
+      site = %{site | pinned_at: nil}
+      assert prefs = %{options: %{pinned_at: %NaiveDateTime{}}} = Sites.toggle_pin(user, site)
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.is_pinned == true
+      assert prefs.options.pinned_at
     end
   end
 end
