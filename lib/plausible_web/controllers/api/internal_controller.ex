@@ -66,7 +66,7 @@ defmodule PlausibleWeb.Api.InternalController do
   end
 
   defp sites_for(user) do
-    pagination = Sites.list(user, %{page_size: 9}, include_invitations?: false)
+    pagination = Sites.list(user, %{page_size: 9})
     Enum.map(pagination.entries, &%{domain: &1.domain})
   end
 end

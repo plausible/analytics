@@ -612,7 +612,10 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp load_sites(%{assigns: assigns} = socket) do
-    sites = Sites.list(assigns.user, assigns.params, filter_by_domain: assigns.filter_text)
+    sites =
+      Sites.list_with_invitations(assigns.user, assigns.params,
+        filter_by_domain: assigns.filter_text
+      )
 
     hourly_stats =
       if connected?(socket) do
