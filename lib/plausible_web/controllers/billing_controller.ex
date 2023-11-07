@@ -40,12 +40,16 @@ defmodule PlausibleWeb.BillingController do
     user = conn.assigns.current_user
 
     if FunWithFlags.enabled?(:business_tier, for: user) do
-      render(conn, "choose_plan.html",
-        skip_plausible_tracking: true,
-        user: user,
-        layout: {PlausibleWeb.LayoutView, "focus.html"},
-        connect_live_socket: true
-      )
+      if Plausible.Auth.enterprise_configured?(user) do
+        redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+      else
+        render(conn, "choose_plan.html",
+          skip_plausible_tracking: true,
+          user: user,
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          connect_live_socket: true
+        )
+      end
     else
       # This will be needed in case we need to flip back the flag.
       # With the :business_tier flag enabled we'll have sent emails

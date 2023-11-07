@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Components.Billing do
   import PlausibleWeb.Components.Generic
   require Plausible.Billing.Subscription.Status
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing.{Subscription, Subscriptions}
 
   attr(:billable_user, Plausible.Auth.User, required: true)
   attr(:current_user, Plausible.Auth.User, required: true)
@@ -108,9 +108,11 @@ defmodule PlausibleWeb.Components.Billing do
         <%= PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long) %>
       </div>
       <.styled_link
-        :if={show_upgrade_or_change_plan_link?(@user, @subscription)}
+        :if={
+          not (Plausible.Auth.enterprise_configured?(@user) && Subscriptions.halted?(@subscription))
+        }
         id="#upgrade-or-change-plan-link"
-        href={upgrade_link_href(@user)}
+        href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
         class="text-sm font-medium"
       >
         <%= change_plan_or_upgrade_text(@subscription) %>
@@ -317,7 +319,7 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <.link
       id="upgrade-link-2"
-      href={upgrade_link_href(@user)}
+      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
       class="inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
     >
       Upgrade
@@ -336,29 +338,10 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  defp upgrade_link_href(user) do
-    action =
-      if Plausible.Auth.enterprise_configured?(user),
-        do: :upgrade_to_enterprise_plan,
-        else: :choose_plan
-
-    Routes.billing_path(PlausibleWeb.Endpoint, action)
-  end
-
   defp change_plan_or_upgrade_text(nil), do: "Upgrade"
 
   defp change_plan_or_upgrade_text(%Subscription{status: Subscription.Status.deleted()}),
     do: "Upgrade"
 
   defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
-
-  defp show_upgrade_or_change_plan_link?(user, subscription) do
-    is_enterprise? = Plausible.Auth.enterprise_configured?(user)
-
-    subscription_halted? =
-      subscription &&
-        subscription.status in [Subscription.Status.past_due(), Subscription.Status.paused()]
-
-    !(is_enterprise? && subscription_halted?)
-  end
 end

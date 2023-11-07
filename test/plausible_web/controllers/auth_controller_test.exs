@@ -510,7 +510,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
-    test "links to upgrade to a plan", %{conn: conn} do
+    test "renders two links to '/billing/choose-plan` with the text 'Upgrade'", %{conn: conn} do
       doc =
         get(conn, "/settings")
         |> html_response(200)
@@ -525,7 +525,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_attr(upgrade_link_2, "href") == Routes.billing_path(conn, :choose_plan)
     end
 
-    test "links to change existing plan", %{
+    test "renders a link to '/billing/choose-plan' with the text 'Change plan' + cancel link", %{
       conn: conn,
       user: user
     } do
@@ -544,7 +544,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_attr(change_plan_link, "href") == Routes.billing_path(conn, :choose_plan)
     end
 
-    test "upgrade_to_enterprise_plan link does not show up when subscription is past_due", %{
+    test "/billing/choose-plan link does not show up when enterprise subscription is past_due", %{
       conn: conn,
       user: user
     } do
@@ -564,7 +564,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute element_exists?(doc, "#upgrade-or-change-plan-link")
     end
 
-    test "upgrade_to_enterprise_plan link does not show up when subscription is paused", %{
+    test "/billing/choose-plan link does not show up when enterprise subscription is paused", %{
       conn: conn,
       user: user
     } do
@@ -584,7 +584,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute element_exists?(doc, "#upgrade-or-change-plan-link")
     end
 
-    test "links to upgrade to enterprise plan",
+    test "renders two links to '/billing/choose-plan' with the text 'Upgrade' for a configured enterprise plan",
          %{conn: conn, user: user} do
       configure_enterprise_plan(user)
 
@@ -598,15 +598,15 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text(upgrade_link_1) == "Upgrade"
 
       assert text_of_attr(upgrade_link_1, "href") ==
-               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+               Routes.billing_path(conn, :choose_plan)
 
       assert text(upgrade_link_2) == "Upgrade"
 
       assert text_of_attr(upgrade_link_2, "href") ==
-               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+               Routes.billing_path(conn, :choose_plan)
     end
 
-    test "links to change enterprise plan and cancel subscription",
+    test "links to '/billing/choose-plan' with the text 'Change plan' for a configured enterprise plan with an existing subscription + renders cancel button",
          %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
 
@@ -624,7 +624,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text(change_plan_link) == "Change plan"
 
       assert text_of_attr(change_plan_link, "href") ==
-               Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+               Routes.billing_path(conn, :choose_plan)
     end
 
     test "shows invoices for subscribed user", %{conn: conn, user: user} do

@@ -20,6 +20,17 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
   end
 
+  describe "GET /choose-plan" do
+    setup [:create_user, :log_in]
+
+    test "redirects to enterprise upgrade page if user has an enterprise plan configured",
+         %{conn: conn, user: user} do
+      insert(:enterprise_plan, user: user, paddle_plan_id: "123")
+      conn = get(conn, Routes.billing_path(conn, :choose_plan))
+      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+    end
+  end
+
   describe "GET /upgrade/enterprise/:plan_id (deprecated)" do
     setup [:create_user, :log_in]
 
