@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Live.Sites do
   """
 
   use Phoenix.LiveView
+  alias Phoenix.LiveView.JS
   use Phoenix.HTML
 
   import PlausibleWeb.Components.Generic
@@ -173,7 +174,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       class="group cursor-pointer"
-      id={"site-card-#{@site.domain}"}
+      id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
       x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
@@ -205,7 +206,24 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site(assigns) do
     ~H"""
-    <li class="group relative" id={"site-card-#{@site.domain}"} data-domain={@site.domain}>
+    <li
+      class="group relative hidden"
+      id={"site-card-#{hash_domain(@site.domain)}"}
+      data-domain={@site.domain}
+      data-pin-toggled={
+        JS.show(
+          transition: {"duration-500", "opacity-0 shadow-2xl -translate-y-6", "opacity-100 shadow"},
+          time: 400
+        )
+      }
+      data-pin-failed={
+        JS.show(
+          transition: {"duration-500", "opacity-0", "opacity-100"},
+          time: 200
+        )
+      }
+      phx-mounted={JS.show()}
+    >
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
         <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
@@ -278,7 +296,14 @@ defmodule PlausibleWeb.Live.Sites do
             role="menuitem"
             tabindex="-1"
             x-on:click="close($refs.button)"
-            phx-click="pin-toggle"
+            phx-click={
+              JS.hide(
+                transition: {"duration-500", "opacity-100", "opacity-0"},
+                to: "#site-card-#{hash_domain(@site.domain)}",
+                time: 500
+              )
+              |> JS.push("pin-toggle")
+            }
             phx-value-domain={@site.domain}
           >
             <.icon_pin
@@ -325,9 +350,7 @@ defmodule PlausibleWeb.Live.Sites do
       <div
         :if={is_map(@hourly_stats)}
         class="hidden h-50px"
-        phx-mounted={
-          Phoenix.LiveView.JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})
-        }
+        phx-mounted={JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})}
       >
         <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
           <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
@@ -569,18 +592,30 @@ defmodule PlausibleWeb.Live.Sites do
                 "Site unpinned"
               end
 
-            put_flash(socket, :success, flash_message)
+            socket
+            |> put_flash(:success, flash_message)
+            |> load_sites()
+            |> push_event("js-exec", %{
+              to: "#site-card-#{hash_domain(site.domain)}",
+              attr: "data-pin-toggled"
+            })
 
           {:error, :too_many_pins} ->
             flash_message =
               "Looks like you've hit the pinned sites limit! " <>
                 "Please unpin one of your pinned sites to make room for new pins"
 
-            put_flash(socket, :error, flash_message)
+            socket
+            |> put_flash(:error, flash_message)
+            |> push_event("js-exec", %{
+              to: "#site-card-#{hash_domain(site.domain)}",
+              attr: "data-pin-failed"
+            })
         end
 
       Process.send_after(self(), :clear_flash, 5000)
-      {:noreply, load_sites(socket)}
+
+      {:noreply, socket}
     else
       Sentry.capture_message("Attempting to toggle pin for invalid domain.",
         extra: %{domain: domain, user: socket.assigns.user.id}
@@ -674,5 +709,9 @@ defmodule PlausibleWeb.Live.Sites do
       uri: %{uri | query: uri_params},
       params: Map.drop(socket.assigns.params, pagination_fields)
     )
+  end
+
+  defp hash_domain(domain) do
+    :sha |> :crypto.hash(domain) |> Base.encode16()
   end
 end
