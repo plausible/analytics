@@ -104,6 +104,26 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text_of_element(html, button_selector) == "Pin Site"
     end
 
+    test "shows error when pins limit hit", %{conn: conn, user: user} do
+      for _ <- 1..9 do
+        site = insert(:site, members: [user])
+        assert {:ok, _} = Plausible.Sites.toggle_pin(user, site)
+      end
+
+      site = insert(:site, members: [user])
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      button_selector = ~s/li[data-domain="#{site.domain}"] button[phx-click="pin-toggle"]/
+
+      html =
+        lv
+        |> element(button_selector)
+        |> render_click()
+
+      assert text(html) =~ "Looks like you've hit the pinned sites limit!"
+    end
+
     test "does not allow pinning site user doesn't have access to", %{conn: conn, user: user} do
       site = insert(:site)
 

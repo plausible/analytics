@@ -119,7 +119,7 @@ defmodule Plausible.SitesTest do
 
       membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
 
-      Sites.toggle_pin(user1, site2)
+      {:ok, _} = Sites.toggle_pin(user1, site2)
 
       Repo.delete!(membership)
 
@@ -142,7 +142,7 @@ defmodule Plausible.SitesTest do
       membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
       insert(:invitation, email: user1.email, inviter: user2, role: :owner, site: site2)
 
-      Sites.toggle_pin(user1, site2)
+      {:ok, _} = Sites.toggle_pin(user1, site2)
 
       Repo.delete!(membership)
 
@@ -179,7 +179,7 @@ defmodule Plausible.SitesTest do
         email: "another@example.com"
       )
 
-      Sites.toggle_pin(user, site2)
+      {:ok, _} = Sites.toggle_pin(user, site2)
 
       assert %{
                entries: [
@@ -227,7 +227,7 @@ defmodule Plausible.SitesTest do
       )
 
       Sites.set_option(user, site2, :pinned_at, ~N[2023-10-22 12:00:00])
-      Sites.toggle_pin(user, site4)
+      {:ok, _} = Sites.toggle_pin(user, site4)
 
       assert %{
                entries: [
@@ -326,7 +326,7 @@ defmodule Plausible.SitesTest do
 
       site4 = %{id: site_id4} = insert(:site, members: [user])
 
-      Sites.toggle_pin(user, site4)
+      {:ok, _} = Sites.toggle_pin(user, site4)
 
       assert %{
                entries: [
@@ -504,25 +504,41 @@ defmodule Plausible.SitesTest do
       site = insert(:site, members: [user])
 
       site = %{site | pinned_at: nil}
-      assert prefs = %{options: %{pinned_at: %NaiveDateTime{}}} = Sites.toggle_pin(user, site)
+      assert {:ok, prefs} = Sites.toggle_pin(user, site)
+      assert prefs = %{options: %{pinned_at: %NaiveDateTime{}}} = prefs
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
       assert prefs.options.pinned_at
 
       site = %{site | pinned_at: NaiveDateTime.utc_now()}
-      assert prefs = %{options: %{pinned_at: nil}} = Sites.toggle_pin(user, site)
+      assert {:ok, prefs} = Sites.toggle_pin(user, site)
+      assert %{options: %{pinned_at: nil}} = prefs
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
       refute prefs.options.pinned_at
 
       site = %{site | pinned_at: nil}
-      assert prefs = %{options: %{pinned_at: %NaiveDateTime{}}} = Sites.toggle_pin(user, site)
+      assert {:ok, prefs} = Sites.toggle_pin(user, site)
+      assert %{options: %{pinned_at: %NaiveDateTime{}}} = prefs
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
       assert prefs.options.pinned_at
+    end
+
+    test "returns error when pins limit hit" do
+      user = insert(:user)
+
+      for _ <- 1..9 do
+        site = insert(:site, members: [user])
+        assert {:ok, _} = Sites.toggle_pin(user, site)
+      end
+
+      site = insert(:site, members: [user])
+
+      assert {:error, :too_many_pins} = Sites.toggle_pin(user, site)
     end
   end
 end

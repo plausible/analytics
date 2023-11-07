@@ -21,7 +21,8 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
-  @spec toggle_pin(Auth.User.t(), Site.t()) :: Site.UserPreference.t()
+  @spec toggle_pin(Auth.User.t(), Site.t()) ::
+          {:ok, Site.UserPreference.t()} | {:error, :too_many_pins}
   def toggle_pin(user, site) do
     pinned_at =
       if site.pinned_at do
@@ -30,7 +31,27 @@ defmodule Plausible.Sites do
         NaiveDateTime.utc_now()
       end
 
-    set_option(user, site, :pinned_at, pinned_at)
+    with :ok <- check_user_pin_limit(user, pinned_at) do
+      {:ok, set_option(user, site, :pinned_at, pinned_at)}
+    end
+  end
+
+  @pins_limit 9
+
+  defp check_user_pin_limit(_user, nil), do: :ok
+
+  defp check_user_pin_limit(user, _) do
+    pins_count =
+      from(up in Site.UserPreference,
+        where: up.user_id == ^user.id and not is_nil(fragment("?->>'pinned_at'", up.options))
+      )
+      |> Repo.aggregate(:count)
+
+    if pins_count + 1 > @pins_limit do
+      {:error, :too_many_pins}
+    else
+      :ok
+    end
   end
 
   @allowed_options :fields

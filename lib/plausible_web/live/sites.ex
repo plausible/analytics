@@ -559,16 +559,25 @@ defmodule PlausibleWeb.Live.Sites do
     site = Enum.find(socket.assigns.sites.entries, &(&1.domain == domain))
 
     if site do
-      preference = Sites.toggle_pin(socket.assigns.user, site)
+      socket =
+        case Sites.toggle_pin(socket.assigns.user, site) do
+          {:ok, preference} ->
+            flash_message =
+              if preference.options.pinned_at do
+                "Site pinned"
+              else
+                "Site unpinned"
+              end
 
-      flash_message =
-        if preference.options.pinned_at do
-          "Site pinned"
-        else
-          "Site unpinned"
+            put_flash(socket, :success, flash_message)
+
+          {:error, :too_many_pins} ->
+            flash_message =
+              "Looks like you've hit the pinned sites limit! " <>
+                "Please unpin one of your pinned sites to make room for new pins"
+
+            put_flash(socket, :error, flash_message)
         end
-
-      socket = put_flash(socket, :success, flash_message)
 
       Process.send_after(self(), :clear_flash, 5000)
       {:noreply, load_sites(socket)}

@@ -18,8 +18,14 @@ defmodule PlausibleWeb.Live.Flash do
           <:title :if={Flash.get(@flash, :success)}>
             <%= Flash.get(@flash, :success_title) || "Success!" %>
           </:title>
-          <:message>
+          <:title :if={Flash.get(@flash, :error)}>
+            <%= Flash.get(@flash, :error_title) || "Error!" %>
+          </:title>
+          <:message :if={Flash.get(@flash, :success)}>
             <%= Flash.get(@flash, :success) %>
+          </:message>
+          <:message :if={Flash.get(@flash, :error)}>
+            <%= Flash.get(@flash, :error) %>
           </:message>
         </.flash>
       </div>

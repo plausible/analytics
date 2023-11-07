@@ -81,8 +81,11 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
         site: hd(inserted)
       )
 
-      Plausible.Sites.toggle_pin(user, Plausible.Sites.get_by_domain!("site07.example.com"))
-      Plausible.Sites.toggle_pin(user, Plausible.Sites.get_by_domain!("site05.example.com"))
+      {:ok, _} =
+        Plausible.Sites.toggle_pin(user, Plausible.Sites.get_by_domain!("site07.example.com"))
+
+      {:ok, _} =
+        Plausible.Sites.toggle_pin(user, Plausible.Sites.get_by_domain!("site05.example.com"))
 
       conn = get(conn, "/api/sites")
 
