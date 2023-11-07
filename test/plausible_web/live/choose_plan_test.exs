@@ -105,7 +105,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert enterprise_box =~ "Everything in Business"
       assert enterprise_box =~ "10+ team members"
       assert enterprise_box =~ "50+ sites"
-      assert enterprise_box =~ "600+ API requests per hour"
+      assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
 
@@ -305,7 +305,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert enterprise_box =~ "Everything in Business"
       assert enterprise_box =~ "10+ team members"
       assert enterprise_box =~ "50+ sites"
-      assert enterprise_box =~ "600+ API requests per hour"
+      assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
 
@@ -522,7 +522,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert enterprise_box =~ "Everything in Business"
       assert enterprise_box =~ "50+ sites"
-      assert enterprise_box =~ "600+ API requests per hour"
+      assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
 
@@ -681,7 +681,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       assert enterprise_box =~ "Everything in Business"
       assert enterprise_box =~ "50+ sites"
-      assert enterprise_box =~ "600+ API requests per hour"
+      assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
 

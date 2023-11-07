@@ -708,7 +708,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       "Everything in Business",
       team_members,
       "50+ sites",
-      "600+ API requests per hour",
+      "600+ Stats API requests per hour",
       &sites_api_benefit/1,
       "Technical onboarding"
     ]
