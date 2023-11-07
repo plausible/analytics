@@ -1,5 +1,13 @@
 <%= form_for @conn, Routes.membership_path(@conn, :invite_member, @site.domain), [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
-  <h2 class="text-xl font-black dark:text-gray-100">Invite member to <%= @site.domain %></h2>
+  <h2 class="text-xl font-black dark:text-gray-100 mb-4">Invite member to <%= @site.domain %></h2>
+
+  <PlausibleWeb.Components.Billing.limit_exceeded_notice
+    :if={@is_at_limit}
+    current_user={@current_user}
+    billable_user={@site.owner}
+    limit={@team_member_limit}
+    resource="team members"
+  />
 
   <p class="mt-4 max-w-2xl text-sm text-gray-500 dark:text-gray-200">
     Enter the email address and role of the person you want to invite. We will contact them over email to offer them access to <%= @site.domain %> analytics.
@@ -97,7 +105,7 @@
   </fieldset>
 
   <div class="mt-6">
-    <%= submit(class: "button w-full") do %>
+    <%= submit(class: "button w-full disabled:cursor-not-allowed", disabled: @is_at_limit) do %>
       <svg
         class="w-5 h-5 mr-1"
         fill="currentColor"

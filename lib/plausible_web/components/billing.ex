@@ -55,6 +55,50 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
+  attr(:billable_user, Plausible.Auth.User, required: true)
+  attr(:current_user, Plausible.Auth.User, required: true)
+  attr(:limit, :integer, required: true)
+  attr(:resource, :string, required: true)
+  attr(:rest, :global)
+
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
+  def limit_exceeded_notice(assigns) do
+    billable_user = Plausible.Users.with_subscription(assigns.billable_user)
+
+    plan =
+      Plausible.Billing.Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
+
+    trial? = Plausible.Billing.on_trial?(assigns.billable_user)
+    growth? = plan && plan.kind == :growth
+
+    display_upgrade_link? = assigns.current_user.id == assigns.billable_user.id
+
+    message =
+      cond do
+        !display_upgrade_link? ->
+          "This account is limited to #{assigns.limit} #{assigns.resource}. To increase this limit, please reach out to the site owner to upgrade their subscription"
+
+        growth? || trial? ->
+          ~H"""
+          Your account is limited to <%= @limit %> <%= @resource %>. To increase this limit, please
+          <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@current_user)}>
+            upgrade your subscription
+          </.link> to the Business plan.
+          """
+
+        true ->
+          "Your account is limited to #{assigns.limit} #{assigns.resource}. To increase this limit, please contact support@plausible.io about the Enterprise plan"
+      end
+
+    assigns = assign(assigns, :message, message)
+
+    ~H"""
+    <.notice :if={@message} {@rest}>
+      <%= @message %>
+    </.notice>
+    """
+  end
+
   slot(:inner_block, required: true)
   attr(:rest, :global)
 

@@ -24,13 +24,22 @@ defmodule PlausibleWeb.Site.MembershipController do
        [:owner, :admin] when action not in @only_owner_is_allowed_to
 
   def invite_member_form(conn, _params) do
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, conn.assigns[:site].domain)
+    site =
+      conn.assigns.current_user.id
+      |> Sites.get_for_user!(conn.assigns.site.domain)
+      |> Plausible.Repo.preload(:owner)
+
+    limit = Plausible.Billing.Quota.team_member_limit(site.owner)
+    usage = Plausible.Billing.Quota.team_member_limit(site.owner)
+    below_limit? = Plausible.Billing.Quota.below_limit?(usage, limit)
 
     render(
       conn,
       "invite_member_form.html",
       site: site,
       layout: {PlausibleWeb.LayoutView, "focus.html"},
+      team_member_limit: limit,
+      is_at_limit: not below_limit?,
       skip_plausible_tracking: true
     )
   end

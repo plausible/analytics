@@ -58,4 +58,85 @@ defmodule PlausibleWeb.Components.BillingTest do
 
     assert rendered == ""
   end
+
+  test "limit_exceeded_notice/1 when billable user is on growth displays upgrade link" do
+    me = insert(:user, subscription: build(:growth_subscription))
+
+    rendered =
+      render_component(&Billing.limit_exceeded_notice/1,
+        billable_user: me,
+        current_user: me,
+        limit: 10,
+        resource: "users"
+      )
+
+    assert rendered =~ "Your account is limited to 10 users. To increase this limit"
+    assert rendered =~ "upgrade your subscription"
+    assert rendered =~ "/billing/choose-plan"
+  end
+
+  test "limit_exceeded_notice/1 when billable user is on growth but is not current user does not display upgrade link" do
+    me = insert(:user, subscription: build(:growth_subscription))
+
+    rendered =
+      render_component(&Billing.limit_exceeded_notice/1,
+        billable_user: me,
+        current_user: insert(:user),
+        limit: 10,
+        resource: "users"
+      )
+
+    assert rendered =~
+             "This account is limited to 10 users. To increase this limit, please reach out to the site owner to upgrade their subscription"
+  end
+
+  test "limit_exceeded_notice/1 when billable user is on trial displays upgrade link" do
+    me = insert(:user)
+
+    rendered =
+      render_component(&Billing.limit_exceeded_notice/1,
+        billable_user: me,
+        current_user: me,
+        limit: 10,
+        resource: "users"
+      )
+
+    assert rendered =~ "Your account is limited to 10 users. To increase this limit"
+    assert rendered =~ "upgrade your subscription"
+    assert rendered =~ "/billing/choose-plan"
+  end
+
+  test "limit_exceeded_notice/1 when billable user is on an enterprise plan displays support email" do
+    me =
+      insert(:user,
+        enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
+        subscription: build(:subscription, paddle_plan_id: "123321")
+      )
+
+    rendered =
+      render_component(&Billing.limit_exceeded_notice/1,
+        billable_user: me,
+        current_user: me,
+        limit: 10,
+        resource: "users"
+      )
+
+    assert rendered =~
+             "Your account is limited to 10 users. To increase this limit, please contact support@plausible.io about the Enterprise plan"
+  end
+
+  test "limit_exceeded_notice/1 when billable user is on a business plan displays support email" do
+    me = insert(:user, subscription: build(:business_subscription))
+
+    rendered =
+      render_component(&Billing.limit_exceeded_notice/1,
+        billable_user: me,
+        current_user: me,
+        limit: 10,
+        resource: "users"
+      )
+
+    assert rendered =~
+             "Your account is limited to 10 users. To increase this limit, please contact support@plausible.io about the Enterprise plan"
+  end
 end
