@@ -14,15 +14,12 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.ListResponse do
         items: Schemas.Goal,
         type: :array
       },
-      meta: %OpenApiSpex.Schema{
+      meta: %Schema{
         required: [:pagination],
-        properties: %{
-          pagination: %OpenApiSpex.Reference{
-            "$ref": "#/components/schemas/PaginationMetadata"
-          }
-        },
         type: :object,
-        items: Schemas.PaginationMetadata
+        properties: %{
+          pagination: Schemas.PaginationMetadata
+        }
       }
     }
   })

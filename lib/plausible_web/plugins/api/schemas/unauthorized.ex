@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Unauthorized do
     title: "UnauthorizedError",
     required: [:errors],
     properties: %{
-      errors: %OpenApiSpex.Schema{
+      errors: %Schema{
         items: Schemas.Error,
         type: :array
       }

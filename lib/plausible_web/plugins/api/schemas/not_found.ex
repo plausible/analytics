@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.NotFound do
     title: "NotFoundError",
     required: [:errors],
     properties: %{
-      errors: %OpenApiSpex.Schema{
+      errors: %Schema{
         items: Schemas.Error,
         type: :array
       }

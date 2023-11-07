@@ -8,6 +8,6 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Link do
     title: "Link",
     type: :object,
     required: [:url],
-    properties: %{url: %OpenApiSpex.Schema{type: :string}}
+    properties: %{url: %Schema{type: :string}}
   })
 end
