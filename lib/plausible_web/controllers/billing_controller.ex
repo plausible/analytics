@@ -112,6 +112,9 @@ defmodule PlausibleWeb.BillingController do
     subscription = Billing.active_subscription_for(user.id)
 
     cond do
+      FunWithFlags.enabled?(:business_tier, for: user) ->
+        render_error(conn, 404)
+
       Plausible.Auth.enterprise_configured?(user) ->
         redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
 

@@ -40,30 +40,6 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
   end
 
-  describe "GET /change-plan" do
-    setup [:create_user, :log_in]
-
-    test "shows change plan page if user has subsription", %{conn: conn, user: user} do
-      insert(:subscription, user: user)
-      conn = get(conn, Routes.billing_path(conn, :change_plan_form))
-
-      assert html_response(conn, 200) =~ "Change subscription plan"
-    end
-
-    test "redirects to /upgrade if user does not have a subscription", %{conn: conn} do
-      conn = get(conn, Routes.billing_path(conn, :change_plan_form))
-
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade)
-    end
-
-    test "redirects to enterprise upgrade page if user has an enterprise plan configured",
-         %{conn: conn, user: user} do
-      insert(:enterprise_plan, user: user, paddle_plan_id: "123")
-      conn = get(conn, Routes.billing_path(conn, :change_plan_form))
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
-    end
-  end
-
   describe "GET /change-plan/enterprise/:plan_id (deprecated)" do
     setup [:create_user, :log_in]
 
