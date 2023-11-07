@@ -94,11 +94,10 @@ defmodule PlausibleWeb.Live.Sites do
 
       <div :if={@has_sites?}>
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <%= for {site, index} <- Enum.with_index(@sites.entries) do %>
+          <%= for site <- @sites.entries do %>
             <.site
               :if={site.entry_type == "site"}
               site={site}
-              index={index}
               hourly_stats={@hourly_stats[site.domain]}
             />
             <.invitation
@@ -174,6 +173,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       class="group cursor-pointer"
+      id={"site-card-#{@site.domain}"}
       data-domain={@site.domain}
       x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
@@ -201,12 +201,11 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   attr :site, Plausible.Site, required: true
-  attr :index, :integer, required: true
   attr :hourly_stats, :map, required: true
 
   def site(assigns) do
     ~H"""
-    <li class="group relative" data-domain={@site.domain}>
+    <li class="group relative" id={"site-card-#{@site.domain}"} data-domain={@site.domain}>
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
         <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
@@ -224,7 +223,7 @@ defmodule PlausibleWeb.Live.Sites do
         </div>
       </.unstyled_link>
 
-      <.ellipsis_menu site={@site} index={@index} />
+      <.ellipsis_menu site={@site} />
     </li>
     """
   end
@@ -258,7 +257,7 @@ defmodule PlausibleWeb.Live.Sites do
         style="display: none;"
         role="menu"
         aria-orientation="vertical"
-        aria-labelledby={"menu-#{@index}-button"}
+        aria-label={"#{@site.domain} menu button"}
         tabindex="-1"
       >
         <div class="py-1 text-sm" role="none">
@@ -268,7 +267,6 @@ defmodule PlausibleWeb.Live.Sites do
             class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
             role="menuitem"
             tabindex="-1"
-            id={"menu-#{@index}-item-0"}
           >
             <Heroicons.cog_6_tooth class="mr-3 h-5 w-5" />
             <span>Settings</span>
@@ -279,7 +277,7 @@ defmodule PlausibleWeb.Live.Sites do
             class="w-full text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
             role="menuitem"
             tabindex="-1"
-            id={"menu-#{@index}-item-1"}
+            x-on:click="close($refs.button)"
             phx-click="pin-toggle"
             phx-value-domain={@site.domain}
           >
@@ -563,18 +561,6 @@ defmodule PlausibleWeb.Live.Sites do
     if site do
       preference = Sites.toggle_pin(socket.assigns.user, site)
 
-      entries =
-        socket.assigns.sites.entries
-        |> Enum.map(fn
-          %{domain: ^domain} = site ->
-            %{site | pinned_at: preference.options.pinned_at}
-
-          site ->
-            site
-        end)
-
-      sites = %{socket.assigns.sites | entries: entries}
-
       flash_message =
         if preference.options.pinned_at do
           "Site pinned"
@@ -585,7 +571,7 @@ defmodule PlausibleWeb.Live.Sites do
       socket = put_flash(socket, :success, flash_message)
 
       Process.send_after(self(), :clear_flash, 5000)
-      {:noreply, assign(socket, sites: sites)}
+      {:noreply, load_sites(socket)}
     else
       Sentry.capture_message("Attempting to toggle pin for invalid domain.",
         extra: %{domain: domain, user: socket.assigns.user.id}
