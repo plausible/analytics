@@ -2,10 +2,10 @@
   <h2 class="text-xl font-black dark:text-gray-100 mb-4">Invite member to <%= @site.domain %></h2>
 
   <PlausibleWeb.Components.Billing.limit_exceeded_notice
-    :if={@is_at_limit}
+    :if={Map.get(assigns, :is_at_limit, false)}
     current_user={@current_user}
     billable_user={@site.owner}
-    limit={@team_member_limit}
+    limit={Map.get(assigns, :team_member_limit, 0)}
     resource="team members"
   />
 
@@ -105,7 +105,7 @@
   </fieldset>
 
   <div class="mt-6">
-    <%= submit(class: "button w-full disabled:cursor-not-allowed", disabled: @is_at_limit) do %>
+    <%= submit(class: "button w-full disabled:cursor-not-allowed", disabled: Map.get(assigns, :is_at_limit, false)) do %>
       <svg
         class="w-5 h-5 mr-1"
         fill="currentColor"
