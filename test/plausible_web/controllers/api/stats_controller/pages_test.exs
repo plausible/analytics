@@ -772,6 +772,35 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "doesn't calculate time on page with only single page visits", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
+      ])
+
+      assert [%{"name" => "/", "time_on_page" => nil}] =
+               conn
+               |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
+               |> json_response(200)
+    end
+
+    test "ignores page refresh when calculating time on page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00], pathname: "/"),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:01:00], pathname: "/"),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:02:00], pathname: "/"),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:03:00], pathname: "/exit")
+      ])
+
+      assert [
+               %{"name" => "/", "time_on_page" => _three_minutes = 180.0},
+               %{"name" => "/exit", "time_on_page" => nil}
+             ] =
+               conn
+               |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
+               |> json_response(200)
+    end
+
     test "calculates bounce rate and time on page for pages with imported data", %{
       conn: conn,
       site: site

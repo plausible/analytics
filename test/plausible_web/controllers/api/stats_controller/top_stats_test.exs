@@ -296,6 +296,42 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       assert %{"name" => "Time on page", "value" => 600} in res["top_stats"]
     end
+
+    test "doesn't calculate time on page with only single page visits", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+
+      assert %{"name" => "Time on page", "value" => 0} ==
+               conn
+               |> get(path)
+               |> json_response(200)
+               |> Map.fetch!("top_stats")
+               |> Enum.find(&(&1["name"] == "Time on page"))
+    end
+
+    test "ignores page refresh when calculating time on page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00], pathname: "/"),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:01:00], pathname: "/"),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:02:00], pathname: "/"),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:03:00], pathname: "/exit")
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+
+      assert %{"name" => "Time on page", "value" => _three_minutes = 180} ==
+               conn
+               |> get(path)
+               |> json_response(200)
+               |> Map.fetch!("top_stats")
+               |> Enum.find(&(&1["name"] == "Time on page"))
+    end
   end
 
   describe "GET /api/stats/top-stats - with imported data" do
