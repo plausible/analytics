@@ -152,6 +152,13 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
             })
           }
         >
+          <PlausibleWeb.Components.Billing.premium_feature_notice
+            billable_user={@site.owner}
+            current_user={@current_user}
+            feature_mod={Plausible.Billing.Feature.RevenueGoals}
+            size={:xs}
+            class="rounded-b-md"
+          />
           <button
             class={[
               "flex items-center w-max mb-3",
@@ -190,16 +197,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
               Enable Revenue Tracking
             </span>
           </button>
-
-          <span x-show="active">
-            <PlausibleWeb.Components.Billing.premium_feature_notice
-              billable_user={@site.owner}
-              current_user={@current_user}
-              feature_mod={Plausible.Billing.Feature.RevenueGoals}
-              size={:xs}
-              class="rounded-b-md"
-            />
-          </span>
 
           <div x-show="active">
             <.live_component
