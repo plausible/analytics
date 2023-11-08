@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   defp private_preview_days_remaining do
-    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 7)
+    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 8)
 
     days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
 
