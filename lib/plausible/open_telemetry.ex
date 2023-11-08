@@ -46,39 +46,3 @@ defmodule Plausible.OpenTelemetry do
     ]
   end
 end
-
-defmodule Plausible.OpenTelemetry.Sampler do
-  @moduledoc """
-  [Custom OpenTelemetry sampler](https://hexdocs.pm/opentelemetry/readme.html#samplers)
-  implementation that ignores particular traces to reduce noise. Ingestion
-  HTTP requests and queries to Oban tables are ignored, for example.
-  """
-
-  @behaviour :otel_sampler
-  require OpenTelemetry.Tracer, as: Tracer
-
-  @routes_to_ignore ["/api/event", "/api/event/"]
-  @tables_to_ignore ["oban_jobs"]
-
-  @impl true
-  def setup(_sampler_opts), do: []
-
-  @impl true
-  def description(_sampler_config), do: inspect(__MODULE__)
-
-  @impl true
-  def should_sample(context, _trace_id, _links, _name, _kind, attributes, _config) do
-    tracestate = context |> Tracer.current_span_ctx() |> OpenTelemetry.Span.tracestate()
-
-    case attributes do
-      %{"db.instance": _db, source: source} when source in @tables_to_ignore ->
-        {:drop, [], tracestate}
-
-      %{"http.target": http_target} when http_target in @routes_to_ignore ->
-        {:drop, [], tracestate}
-
-      _any ->
-        {:record_and_sample, [], tracestate}
-    end
-  end
-end
