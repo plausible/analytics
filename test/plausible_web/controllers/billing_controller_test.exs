@@ -10,19 +10,6 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "GET /upgrade" do
     setup [:create_user, :log_in]
 
-    test "shows upgrade page when user does not have a subcription already", %{conn: conn} do
-      conn = get(conn, Routes.billing_path(conn, :upgrade))
-
-      assert html_response(conn, 200) =~ "Upgrade your free trial"
-    end
-
-    test "redirects user to change plan if they already have a plan", %{conn: conn, user: user} do
-      insert(:subscription, user: user)
-      conn = get(conn, Routes.billing_path(conn, :upgrade))
-
-      assert redirected_to(conn) == Routes.billing_path(conn, :change_plan_form)
-    end
-
     test "redirects user to enteprise plan page if they are configured with one", %{
       conn: conn,
       user: user
@@ -33,35 +20,22 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
   end
 
+  describe "GET /choose-plan" do
+    setup [:create_user, :log_in]
+
+    test "redirects to enterprise upgrade page if user has an enterprise plan configured",
+         %{conn: conn, user: user} do
+      insert(:enterprise_plan, user: user, paddle_plan_id: "123")
+      conn = get(conn, Routes.billing_path(conn, :choose_plan))
+      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
+    end
+  end
+
   describe "GET /upgrade/enterprise/:plan_id (deprecated)" do
     setup [:create_user, :log_in]
 
     test "redirects to the new :upgrade_to_enterprise_plan action", %{conn: conn} do
       conn = get(conn, Routes.billing_path(conn, :upgrade_enterprise_plan, "123"))
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
-    end
-  end
-
-  describe "GET /change-plan" do
-    setup [:create_user, :log_in]
-
-    test "shows change plan page if user has subsription", %{conn: conn, user: user} do
-      insert(:subscription, user: user)
-      conn = get(conn, Routes.billing_path(conn, :change_plan_form))
-
-      assert html_response(conn, 200) =~ "Change subscription plan"
-    end
-
-    test "redirects to /upgrade if user does not have a subscription", %{conn: conn} do
-      conn = get(conn, Routes.billing_path(conn, :change_plan_form))
-
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade)
-    end
-
-    test "redirects to enterprise upgrade page if user has an enterprise plan configured",
-         %{conn: conn, user: user} do
-      insert(:enterprise_plan, user: user, paddle_plan_id: "123")
-      conn = get(conn, Routes.billing_path(conn, :change_plan_form))
       assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end
   end

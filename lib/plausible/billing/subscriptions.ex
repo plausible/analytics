@@ -30,4 +30,13 @@ defmodule Plausible.Billing.Subscriptions do
       Subscription.Status.paused()
     ]
   end
+
+  def halted?(nil), do: false
+
+  def halted?(%Subscription{status: status}) do
+    status in [
+      Subscription.Status.past_due(),
+      Subscription.Status.paused()
+    ]
+  end
 end

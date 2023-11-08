@@ -63,6 +63,18 @@ defmodule Plausible.Billing.FeatureTest do
              Plausible.Billing.Feature.StatsAPI.check_availability(user)
   end
 
+  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user trial hasn't started and was created before the business tier launch" do
+    user = insert(:user, inserted_at: ~N[2020-01-01T00:00:00], trial_expiry_date: nil)
+    assert :ok == Plausible.Billing.Feature.StatsAPI.check_availability(user)
+  end
+
+  test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns error when user trial hasn't started and was created after the business tier launch" do
+    user = insert(:user, inserted_at: ~N[2024-01-01T00:00:00], trial_expiry_date: nil)
+
+    assert {:error, :upgrade_required} ==
+             Plausible.Billing.Feature.StatsAPI.check_availability(user)
+  end
+
   test "Plausible.Billing.Feature.Props.check_availability/1 applies grandfathering to old plans" do
     user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
     assert :ok == Plausible.Billing.Feature.Props.check_availability(user)

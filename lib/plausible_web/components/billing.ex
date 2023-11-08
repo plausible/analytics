@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Components.Billing do
   import PlausibleWeb.Components.Generic
   require Plausible.Billing.Subscription.Status
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias Plausible.{Billing.Subscription, Billing.Plans}
+  alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
   attr(:billable_user, Plausible.Auth.User, required: true)
   attr(:current_user, Plausible.Auth.User, required: true)
@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Components.Billing do
         not has_access? && display_upgrade_link? ->
           ~H"""
           <%= @feature_mod.display_name() %> is part of the Plausible Business plan. To get access to it, please
-          <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
+          <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@current_user)}>
             upgrade your subscription
           </.link> to the Business plan.
           """
@@ -56,6 +56,50 @@ defmodule PlausibleWeb.Components.Billing do
 
     ~H"""
     <.notice :if={@message} class="rounded-t-md rounded-b-none" size={@size} {@rest}>
+      <%= @message %>
+    </.notice>
+    """
+  end
+
+  attr(:billable_user, Plausible.Auth.User, required: true)
+  attr(:current_user, Plausible.Auth.User, required: true)
+  attr(:limit, :integer, required: true)
+  attr(:resource, :string, required: true)
+  attr(:rest, :global)
+
+  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
+  def limit_exceeded_notice(assigns) do
+    billable_user = Plausible.Users.with_subscription(assigns.billable_user)
+
+    plan =
+      Plausible.Billing.Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
+
+    trial? = Plausible.Billing.on_trial?(assigns.billable_user)
+    growth? = plan && plan.kind == :growth
+
+    display_upgrade_link? = assigns.current_user.id == assigns.billable_user.id
+
+    message =
+      cond do
+        !display_upgrade_link? ->
+          "This account is limited to #{assigns.limit} #{assigns.resource}. To increase this limit, please reach out to the site owner to upgrade their subscription"
+
+        growth? || trial? ->
+          ~H"""
+          Your account is limited to <%= @limit %> <%= @resource %>. To increase this limit, please
+          <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@current_user)}>
+            upgrade your subscription
+          </.link> to the Business plan.
+          """
+
+        true ->
+          "Your account is limited to #{assigns.limit} #{assigns.resource}. To increase this limit, please contact support@plausible.io about the Enterprise plan"
+      end
+
+    assigns = assign(assigns, :message, message)
+
+    ~H"""
+    <.notice :if={@message} {@rest}>
       <%= @message %>
     </.notice>
     """
@@ -126,9 +170,11 @@ defmodule PlausibleWeb.Components.Billing do
         <%= PlausibleWeb.AuthView.subscription_quota(@subscription, format: :long) %>
       </div>
       <.styled_link
-        :if={show_upgrade_or_change_plan_link?(@user, @subscription)}
+        :if={
+          not (Plausible.Auth.enterprise_configured?(@user) && Subscriptions.halted?(@subscription))
+        }
         id="#upgrade-or-change-plan-link"
-        href={upgrade_link_href(@user)}
+        href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
         class="text-sm font-medium"
       >
         <%= change_plan_or_upgrade_text(@subscription) %>
@@ -285,16 +331,9 @@ defmodule PlausibleWeb.Components.Billing do
     |> PlausibleWeb.StatsView.large_number_format()
   end
 
-  @spec format_price(Money.t(), Keyword.t()) :: String.t()
-  def format_price(money, opts \\ []) do
-    opts =
-      opts
-      |> Keyword.put_new(:format, :short)
-      |> Keyword.put_new(:fractional_digits, 2)
-
-    money
-    |> Money.to_string!(opts)
-    |> String.replace(".00", "")
+  @spec format_price(Money.t()) :: String.t()
+  def format_price(money) do
+    Money.to_string!(money, fractional_digits: 2, no_fraction_if_integer: true)
   end
 
   attr :id, :string, required: true
@@ -340,7 +379,10 @@ defmodule PlausibleWeb.Components.Billing do
 
   def upgrade_link(%{business_tier: true} = assigns) do
     ~H"""
-    <PlausibleWeb.Components.Generic.button_link id="upgrade-link-2" href={upgrade_link_href(@user)}>
+    <PlausibleWeb.Components.Generic.button_link
+      id="upgrade-link-2"
+      href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+    >
       Upgrade
     </PlausibleWeb.Components.Generic.button_link>
     """
@@ -356,29 +398,10 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  defp upgrade_link_href(user) do
-    action =
-      if Plausible.Auth.enterprise_configured?(user),
-        do: :upgrade_to_enterprise_plan,
-        else: :choose_plan
-
-    Routes.billing_path(PlausibleWeb.Endpoint, action)
-  end
-
   defp change_plan_or_upgrade_text(nil), do: "Upgrade"
 
   defp change_plan_or_upgrade_text(%Subscription{status: Subscription.Status.deleted()}),
     do: "Upgrade"
 
   defp change_plan_or_upgrade_text(_subscription), do: "Change plan"
-
-  defp show_upgrade_or_change_plan_link?(user, subscription) do
-    is_enterprise? = Plausible.Auth.enterprise_configured?(user)
-
-    subscription_halted? =
-      subscription &&
-        subscription.status in [Subscription.Status.past_due(), Subscription.Status.paused()]
-
-    !(is_enterprise? && subscription_halted?)
-  end
 end

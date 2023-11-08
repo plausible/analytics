@@ -708,6 +708,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       "Everything in Business",
       team_members,
       "50+ sites",
+      "600+ Stats API requests per hour",
       &sites_api_benefit/1,
       "Technical onboarding"
     ]
@@ -727,6 +728,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     Enum.map(plan.features, fn feature_mod ->
       case feature_mod.name() do
         :goals -> "Goals and custom events"
+        :stats_api -> "Stats API (600 requests per hour)"
         :revenue_goals -> "Ecommerce revenue attribution"
         _ -> feature_mod.display_name()
       end

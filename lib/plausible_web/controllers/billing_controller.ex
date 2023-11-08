@@ -20,6 +20,9 @@ defmodule PlausibleWeb.BillingController do
       Plausible.Auth.enterprise_configured?(user) ->
         redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
 
+      FunWithFlags.enabled?(:business_tier, for: user) ->
+        redirect(conn, to: Routes.billing_path(conn, :choose_plan))
+
       user.subscription && user.subscription.status == Subscription.Status.active() ->
         redirect(conn, to: Routes.billing_path(conn, :change_plan_form))
 
@@ -37,14 +40,21 @@ defmodule PlausibleWeb.BillingController do
     user = conn.assigns.current_user
 
     if FunWithFlags.enabled?(:business_tier, for: user) do
-      render(conn, "choose_plan.html",
-        skip_plausible_tracking: true,
-        user: user,
-        layout: {PlausibleWeb.LayoutView, "focus.html"},
-        connect_live_socket: true
-      )
+      if Plausible.Auth.enterprise_configured?(user) do
+        redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
+      else
+        render(conn, "choose_plan.html",
+          skip_plausible_tracking: true,
+          user: user,
+          layout: {PlausibleWeb.LayoutView, "focus.html"},
+          connect_live_socket: true
+        )
+      end
     else
-      render_error(conn, 404)
+      # This will be needed in case we need to flip back the flag.
+      # With the :business_tier flag enabled we'll have sent emails
+      # linking to `/billing/choose-plan`.
+      redirect(conn, to: Routes.billing_path(conn, :upgrade))
     end
   end
 
@@ -102,6 +112,9 @@ defmodule PlausibleWeb.BillingController do
     subscription = Billing.active_subscription_for(user.id)
 
     cond do
+      FunWithFlags.enabled?(:business_tier, for: user) ->
+        render_error(conn, 404)
+
       Plausible.Auth.enterprise_configured?(user) ->
         redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
 
@@ -139,8 +152,6 @@ defmodule PlausibleWeb.BillingController do
       )
     else
       _ ->
-        redirect_to = if business_tier_enabled?, do: :choose_plan, else: :upgrade
-
         msg =
           "Something went wrong with loading your plan change information. Please try again, or contact us at support@plausible.io if the issue persists."
 
@@ -154,7 +165,7 @@ defmodule PlausibleWeb.BillingController do
 
         conn
         |> put_flash(:error, msg)
-        |> redirect(to: Routes.billing_path(conn, redirect_to))
+        |> redirect(to: Plausible.Billing.upgrade_route_for(user))
     end
   end
 
