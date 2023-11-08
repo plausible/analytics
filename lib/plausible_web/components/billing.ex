@@ -103,7 +103,7 @@ defmodule PlausibleWeb.Components.Billing do
     if assigns.current_user.id == assigns.billable_user.id do
       ~H"""
       please
-      <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
+      <.link class="underline" href={Plausible.Billing.upgrade_route_for(@current_user)}>
         upgrade your subscription
       </.link>
       """
