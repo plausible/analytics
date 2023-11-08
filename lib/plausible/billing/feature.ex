@@ -124,6 +124,8 @@ defmodule Plausible.Billing.Feature do
           {:error, :upgrade_required} -> {:error, :upgrade_required}
         end
       end
+
+      defoverridable check_availability: 1
     end
   end
 end
@@ -165,4 +167,27 @@ defmodule Plausible.Billing.Feature.StatsAPI do
   use Plausible.Billing.Feature,
     name: :stats_api,
     display_name: "Stats API"
+
+  @impl true
+  @doc """
+  Checks whether the user has access to Stats API or not.
+
+  Before the the business tier, users who had not yet started their trial had
+  access to Stats API. With the business tier work, access is blocked and they
+  must either start their trial or subscribe to a plan. This is common when a
+  site owner invites a new user. In such cases, using the owner's API key is
+  recommended.
+  """
+  def check_availability(%Plausible.Auth.User{} = user) do
+    unlimited_trial? = is_nil(user.trial_expiry_date)
+
+    pre_business_tier_account? =
+      Timex.before?(user.inserted_at, Plausible.Billing.Plans.business_tier_launch())
+
+    cond do
+      unlimited_trial? && pre_business_tier_account? -> :ok
+      unlimited_trial? && !pre_business_tier_account? -> {:error, :upgrade_required}
+      true -> super(user)
+    end
+  end
 end
