@@ -4,6 +4,50 @@ defmodule PlausibleWeb.Components.Generic do
   """
   use Phoenix.Component
 
+  attr(:type, :string, default: "button")
+  attr(:class, :string, default: "")
+  attr(:disabled, :boolean, default: false)
+  attr(:rest, :global)
+
+  slot(:inner_block)
+
+  def button(assigns) do
+    ~H"""
+    <button
+      type={@type}
+      disabled={@disabled}
+      class={[
+        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
+        @class
+      ]}
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %>
+    </button>
+    """
+  end
+
+  attr(:href, :string, required: true)
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+
+  slot(:inner_block)
+
+  def button_link(assigns) do
+    ~H"""
+    <.link
+      href={@href}
+      class={[
+        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
+        @class
+      ]}
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %>
+    </.link>
+    """
+  end
+
   attr(:slug, :string, required: true)
 
   def docs_info(assigns) do

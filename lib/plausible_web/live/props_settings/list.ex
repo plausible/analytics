@@ -40,13 +40,9 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
           </div>
         </form>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <button
-            type="button"
-            phx-click="add-prop"
-            class="mt-2 block items-center rounded-md bg-indigo-600 p-2 text-sm text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
+          <PlausibleWeb.Components.Generic.button phx-click="add-prop">
             + Add Property
-          </button>
+          </PlausibleWeb.Components.Generic.button>
         </div>
       </div>
       <%= if is_list(@props) && length(@props) > 0 do %>

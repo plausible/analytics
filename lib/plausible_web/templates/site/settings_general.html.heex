@@ -21,12 +21,13 @@
         ) %>
       </div>
     </div>
-    <span class="inline-flex rounded-md shadow-sm">
-      <%= link("Change Domain",
-        to: Routes.site_path(@conn, :change_domain, @site.domain),
-        class: "button"
-      ) %>
-    </span>
+    <div>
+      <PlausibleWeb.Components.Generic.button_link href={
+        Routes.site_path(@conn, :change_domain, @site.domain)
+      }>
+        Change Domain
+      </PlausibleWeb.Components.Generic.button_link>
+    </div>
   </div>
 </div>
 
@@ -54,9 +55,9 @@
           ) %>
         </div>
       </div>
-      <span class="inline-flex rounded-md shadow-sm">
-        <%= submit("Save", class: "button") %>
-      </span>
+      <PlausibleWeb.Components.Generic.button type="submit">
+        Save
+      </PlausibleWeb.Components.Generic.button>
     </div>
   </div>
 <% end %>

@@ -39,9 +39,9 @@ defmodule PlausibleWeb.Live.FunnelSettings.List do
           </div>
         </form>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <button type="button" phx-click="add-funnel" class="button">
+          <PlausibleWeb.Components.Generic.button phx-click="add-funnel">
             + Add Funnel
-          </button>
+          </PlausibleWeb.Components.Generic.button>
         </div>
       </div>
       <%= if Enum.count(@funnels) > 0 do %>

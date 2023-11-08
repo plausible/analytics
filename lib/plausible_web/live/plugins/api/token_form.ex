@@ -86,9 +86,9 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
             </span>
           </p>
           <div class="py-4 mt-8">
-            <button type="submit" class="button text-base font-bold w-full">
+            <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
               Add Token →
-            </button>
+            </PlausibleWeb.Components.Generic.button>
           </div>
         </.form>
       </div>

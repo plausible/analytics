@@ -40,9 +40,9 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </div>
         </form>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <button type="button" phx-click="add-goal" class="button">
+          <PlausibleWeb.Components.Generic.button phx-click="add-goal">
             + Add Goal
-          </button>
+          </PlausibleWeb.Components.Generic.button>
         </div>
       </div>
       <%= if Enum.count(@goals) > 0 do %>

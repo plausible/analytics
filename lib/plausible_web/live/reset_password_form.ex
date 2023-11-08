@@ -57,9 +57,9 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
           class="transition bg-gray-100 dark:bg-gray-900 outline-none appearance-none border border-transparent rounded w-full p-2 text-gray-700 dark:text-gray-300 leading-normal appearance-none focus:outline-none focus:bg-white dark:focus:bg-gray-800 focus:border-gray-300 dark:focus:border-gray-500"
         />
       </div>
-      <button id="set" type="submit" class="button mt-4 w-full">
+      <PlausibleWeb.Components.Generic.button id="set" type="submit" class="mt-4 w-full">
         Set password →
-      </button>
+      </PlausibleWeb.Components.Generic.button>
       <p class="text-center text-gray-500 text-xs mt-4">
         Don't have an account? <%= link("Register",
           to: "/register",
