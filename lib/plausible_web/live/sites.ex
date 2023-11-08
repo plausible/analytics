@@ -344,10 +344,10 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div class="md:h-[78px] h-20 pl-8 pr-8 pt-2">
+    <div class="md:h-[68px] sm:h-[58px] h-20 pl-8 pr-8 pt-2">
       <div :if={@hourly_stats == :loading} class="text-center animate-pulse">
-        <div class="md:h-[34px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-        <div class="md:h-[26px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+        <div class="md:h-[34px] sm:h-[30px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+        <div class="md:h-[26px] sm:h-[18px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
       </div>
       <div
         :if={is_map(@hourly_stats)}
