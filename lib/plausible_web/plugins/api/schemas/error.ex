@@ -11,6 +11,6 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Error do
     """,
     type: :object,
     required: [:detail],
-    properties: %{detail: %OpenApiSpex.Schema{type: :string}}
+    properties: %{detail: %Schema{type: :string}}
   })
 end
