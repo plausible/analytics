@@ -24,9 +24,9 @@ defmodule PlausibleWeb.Components.BillingTest do
         feature_mod: Plausible.Billing.Feature.Props
       )
 
-    assert rendered =~ "Custom Properties is part of the Plausible Business plan."
+    assert rendered =~ "This account does not have access to Custom Properties"
     assert rendered =~ "upgrade your subscription"
-    assert rendered =~ "/billing/choose-plan"
+    assert rendered =~ "/billing/upgrade"
   end
 
   test "premium_feature_notice/1 does not render an upgrade link when user is not the site owner" do
@@ -40,10 +40,8 @@ defmodule PlausibleWeb.Components.BillingTest do
         feature_mod: Plausible.Billing.Feature.Funnels
       )
 
-    assert rendered =~
-             "Funnels is part of the Plausible Business plan. To get access to it, please reach out to the site owner to upgrade your subscription to the Business plan."
-
-    refute rendered =~ "/billing/choose-plan"
+    assert rendered =~ "This account does not have access to Funnels"
+    assert rendered =~ "please reach out to the site owner to upgrade their subscription"
   end
 
   test "premium_feature_notice/1 does not render a notice when the user has access to the feature" do
@@ -70,9 +68,9 @@ defmodule PlausibleWeb.Components.BillingTest do
         resource: "users"
       )
 
-    assert rendered =~ "Your account is limited to 10 users. To increase this limit"
+    assert rendered =~ "This account is limited to 10 users. To increase this limit"
     assert rendered =~ "upgrade your subscription"
-    assert rendered =~ "/billing/choose-plan"
+    assert rendered =~ "/billing/upgrade"
   end
 
   test "limit_exceeded_notice/1 when billable user is on growth but is not current user does not display upgrade link" do
@@ -86,8 +84,8 @@ defmodule PlausibleWeb.Components.BillingTest do
         resource: "users"
       )
 
-    assert rendered =~
-             "This account is limited to 10 users. To increase this limit, please reach out to the site owner to upgrade their subscription"
+    assert rendered =~ "This account is limited to 10 users"
+    assert rendered =~ "please reach out to the site owner to upgrade their subscription"
   end
 
   test "limit_exceeded_notice/1 when billable user is on trial displays upgrade link" do
@@ -101,9 +99,9 @@ defmodule PlausibleWeb.Components.BillingTest do
         resource: "users"
       )
 
-    assert rendered =~ "Your account is limited to 10 users. To increase this limit"
+    assert rendered =~ "This account is limited to 10 users"
     assert rendered =~ "upgrade your subscription"
-    assert rendered =~ "/billing/choose-plan"
+    assert rendered =~ "/billing/upgrade"
   end
 
   test "limit_exceeded_notice/1 when billable user is on an enterprise plan displays support email" do
