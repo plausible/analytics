@@ -13,7 +13,6 @@ defmodule PlausibleWeb.Plugins.API.Schemas.PaginationMetadata do
       has_next_page: %Schema{type: :boolean},
       has_prev_page: %Schema{type: :boolean},
       links: %Schema{
-        items: Schemas.Link,
         properties: %{
           next: Schemas.Link,
           prev: Schemas.Link
