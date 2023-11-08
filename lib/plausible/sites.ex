@@ -75,16 +75,16 @@ defmodule Plausible.Sites do
   def list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
-    query =
-      from(s in Site,
-        left_join: up in Site.UserPreference,
-        on: up.site_id == s.id and up.user_id == ^user.id,
-        inner_join: sm in assoc(s, :memberships),
-        on: sm.user_id == ^user.id,
-        select: %{
-          s
-          | pinned_at: up.pinned_at,
-            entry_type:
+    from(s in Site,
+      left_join: up in Site.UserPreference,
+      on: up.site_id == s.id and up.user_id == ^user.id,
+      inner_join: sm in assoc(s, :memberships),
+      on: sm.user_id == ^user.id,
+      select: %{
+        s
+        | pinned_at: selected_as(up.pinned_at, :pinned_at),
+          entry_type:
+            selected_as(
               fragment(
                 """
                 CASE 
@@ -93,25 +93,22 @@ defmodule Plausible.Sites do
                 END
                 """,
                 up.pinned_at
-              )
-        }
-      )
-
-    sites_query =
-      from(s in subquery(query),
-        order_by: [asc: s.entry_type, desc: s.pinned_at, asc: s.domain],
-        preload: [memberships: ^memberships_query(user)]
-      )
-      |> maybe_filter_by_domain(domain_filter)
-
-    Repo.paginate(sites_query, pagination_params)
+              ),
+              :entry_type
+            )
+      },
+      order_by: [asc: selected_as(:entry_type), desc: selected_as(:pinned_at), asc: s.domain],
+      preload: [memberships: sm]
+    )
+    |> maybe_filter_by_domain(domain_filter)
+    |> Repo.paginate(pagination_params)
   end
 
   @spec list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list_with_invitations(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
-    query =
+    result =
       from(s in Site,
         left_join: up in Site.UserPreference,
         on: up.site_id == s.id and up.user_id == ^user.id,
@@ -122,30 +119,28 @@ defmodule Plausible.Sites do
         where: not is_nil(sm.id) or not is_nil(i.id),
         select: %{
           s
-          | pinned_at: up.pinned_at,
+          | pinned_at: selected_as(up.pinned_at, :pinned_at),
             entry_type:
-              fragment(
-                """
-                CASE 
-                  WHEN ? IS NOT NULL THEN 'invitation'
-                  WHEN ? IS NOT NULL THEN 'pinned_site'
-                  ELSE 'site'
-                END
-                """,
-                i.id,
-                up.pinned_at
+              selected_as(
+                fragment(
+                  """
+                  CASE 
+                    WHEN ? IS NOT NULL THEN 'invitation'
+                    WHEN ? IS NOT NULL THEN 'pinned_site'
+                    ELSE 'site'
+                  END
+                  """,
+                  i.id,
+                  up.pinned_at
+                ),
+                :entry_type
               )
-        }
-      )
-
-    sites_query =
-      from(s in subquery(query),
-        order_by: [asc: s.entry_type, desc: s.pinned_at, asc: s.domain],
-        preload: [memberships: ^memberships_query(user), invitations: ^invitations_query(user)]
+        },
+        order_by: [asc: selected_as(:entry_type), desc: selected_as(:pinned_at), asc: s.domain],
+        preload: [memberships: sm, invitations: i]
       )
       |> maybe_filter_by_domain(domain_filter)
-
-    result = Repo.paginate(sites_query, pagination_params)
+      |> Repo.paginate(pagination_params)
 
     # Populating `site` preload on `invitation`
     # without requesting it from database.
@@ -162,14 +157,6 @@ defmodule Plausible.Sites do
       end)
 
     %{result | entries: entries}
-  end
-
-  defp memberships_query(user) do
-    from(sm in Site.Membership, where: sm.user_id == ^user.id)
-  end
-
-  defp invitations_query(user) do
-    from(i in Auth.Invitation, where: i.email == ^user.email)
   end
 
   defp maybe_filter_by_domain(query, domain)
