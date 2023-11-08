@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Components.Billing do
   use Phoenix.Component
   import PlausibleWeb.Components.Generic
   require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Feature.{Props, StatsAPI}
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
@@ -20,10 +21,17 @@ defmodule PlausibleWeb.Components.Billing do
     plan = Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
     business? = plan && plan.kind == :business
 
+    legacy_feature_access? =
+      Timex.before?(assigns.billable_user.inserted_at, Plans.business_tier_launch()) &&
+        assigns.feature_mod in [StatsAPI, Props]
+
     private_preview? = FunWithFlags.enabled?(:premium_features_private_preview)
     has_access? = assigns.feature_mod.check_availability(assigns.billable_user) == :ok
 
     cond do
+      legacy_feature_access? ->
+        ~H""
+
       Plausible.Billing.on_trial?(assigns.billable_user) ->
         ~H"""
         <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
@@ -53,7 +61,7 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   defp private_preview_days_remaining do
-    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 7)
+    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 8)
 
     days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
 
@@ -103,7 +111,7 @@ defmodule PlausibleWeb.Components.Billing do
     if assigns.current_user.id == assigns.billable_user.id do
       ~H"""
       please
-      <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
+      <.link class="underline" href={Plausible.Billing.upgrade_route_for(@current_user)}>
         upgrade your subscription
       </.link>
       """

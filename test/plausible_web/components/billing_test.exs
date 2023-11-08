@@ -26,7 +26,7 @@ defmodule PlausibleWeb.Components.BillingTest do
 
     assert rendered =~ "This account does not have access to Custom Properties"
     assert rendered =~ "upgrade your subscription"
-    assert rendered =~ "/billing/upgrade"
+    assert rendered =~ "/billing/choose-plan"
   end
 
   test "premium_feature_notice/1 does not render an upgrade link when user is not the site owner" do
@@ -70,7 +70,7 @@ defmodule PlausibleWeb.Components.BillingTest do
 
     assert rendered =~ "This account is limited to 10 users. To increase this limit"
     assert rendered =~ "upgrade your subscription"
-    assert rendered =~ "/billing/upgrade"
+    assert rendered =~ "/billing/choose-plan"
   end
 
   test "limit_exceeded_notice/1 when billable user is on growth but is not current user does not display upgrade link" do
@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Components.BillingTest do
 
     assert rendered =~ "This account is limited to 10 users"
     assert rendered =~ "upgrade your subscription"
-    assert rendered =~ "/billing/upgrade"
+    assert rendered =~ "/billing/choose-plan"
   end
 
   test "limit_exceeded_notice/1 when billable user is on an enterprise plan displays support email" do
