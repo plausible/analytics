@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Timeseries do
   @typep value :: nil | integer() | float()
   @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
 
-  @event_metrics [:visitors, :pageviews, :average_revenue, :total_revenue]
+  @event_metrics [:visitors, :pageviews, :events, :average_revenue, :total_revenue]
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
@@ -222,6 +222,7 @@ defmodule Plausible.Stats.Timeseries do
     Enum.reduce(metrics, %{date: date}, fn metric, row ->
       case metric do
         :pageviews -> Map.merge(row, %{pageviews: 0})
+        :events -> Map.merge(row, %{events: 0})
         :visitors -> Map.merge(row, %{visitors: 0})
         :visits -> Map.merge(row, %{visits: 0})
         :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
