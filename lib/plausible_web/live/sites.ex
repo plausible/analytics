@@ -254,10 +254,10 @@ defmodule PlausibleWeb.Live.Sites do
         x-ref="button"
         x-bind:aria-expanded="open"
         x-bind:aria-controls="$id('dropdown-button')"
-        class="absolute top-0 right-0 h-10 w-10 rounded-md hover:cursor-pointer hover:bg-gray-100 dark:hover:bg-indigo-900"
+        class="absolute top-0 right-0 h-10 w-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400"
       >
         <Heroicons.ellipsis_vertical
-          class="absolute top-3 right-3 w-4 h-4 text-gray-800 dark:text-gray-400"
+          class="absolute top-3 right-3 w-4 h-4"
           aria-expanded="false"
           aria-haspopup="true"
         />
