@@ -3,7 +3,7 @@ defmodule Plausible.Repo.Migrations.AddSiteUserPreferences do
 
   def change do
     create table(:site_user_preferences) do
-      add :options, :jsonb, null: false
+      add :pinned_at, :naive_datetime
       add :user_id, references(:users, on_delete: :delete_all), null: false
       add :site_id, references(:sites, on_delete: :delete_all), null: false
       timestamps()
