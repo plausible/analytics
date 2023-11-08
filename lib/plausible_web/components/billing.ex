@@ -57,10 +57,10 @@ defmodule PlausibleWeb.Components.Billing do
 
     days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
 
-    if days_remaining <= 0 do
-      "today"
-    else
-      "in #{days_remaining} days"
+    cond do
+      days_remaining <= 0 -> "today"
+      days_remaining == 1 -> "tomorrow"
+      true -> "in #{days_remaining} days"
     end
   end
 
