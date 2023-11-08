@@ -147,10 +147,12 @@
       </div>
     <% end %>
 
-    <%= link("+ New Link",
-      to: Routes.site_path(@conn, :new_shared_link, @site.domain),
-      class: "button mt-4"
-    ) %>
+    <PlausibleWeb.Components.Generic.button_link
+      href={Routes.site_path(@conn, :new_shared_link, @site.domain)}
+      class="mt-4"
+    >
+      + New Link
+    </PlausibleWeb.Components.Generic.button_link>
   </div>
 </div>
 
@@ -220,7 +222,9 @@
   </div>
 
   <input type="hidden" id="base-url" value={plausible_url()} />
-  <button id="generate-embed" class="my-4 button">Generate Embed Code 👇</button>
+  <PlausibleWeb.Components.Generic.button id="generate-embed" class="mt-4">
+    Generate Embed Code 👇
+  </PlausibleWeb.Components.Generic.button>
 
   <div class="mt-2">
     <div class="max-w-xl">

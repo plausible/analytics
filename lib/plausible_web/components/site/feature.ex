@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
     ~H"""
     <div>
       <div class="mt-4 mb-8 flex items-center">
-        <.button
+        <.feature_button
           set_to={!@current_setting}
           disabled?={@disabled?}
           conn={@conn}
@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Components.Site.Feature do
     Routes.site_path(conn, :update_feature_visibility, site.domain, setting, r: r, set: set_to)
   end
 
-  defp button(assigns) do
+  defp feature_button(assigns) do
     ~H"""
     <.form action={target(@site, @feature_mod.toggle_field(), @conn, @set_to)} method="put" for={nil}>
       <button

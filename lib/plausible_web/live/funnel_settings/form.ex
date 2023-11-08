@@ -123,11 +123,17 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               </div>
 
               <div class="mt-6">
-                <%= if has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or length(@step_ids) > map_size(@selections_made) do %>
-                  <.submit_button_inactive />
-                <% else %>
-                  <.submit_button />
-                <% end %>
+                <PlausibleWeb.Components.Generic.button
+                  id="save"
+                  type="submit"
+                  class="w-full"
+                  disabled={
+                    has_steps_errors?(f) or map_size(@selections_made) < Funnel.min_steps() or
+                      length(@step_ids) > map_size(@selections_made)
+                  }
+                >
+                  Add Funnel →
+                </PlausibleWeb.Components.Generic.button>
               </div>
             </div>
           </.form>
@@ -170,26 +176,6 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
     <a class="underline text-indigo-500 text-sm cursor-pointer mt-6" phx-click="add-step">
       + Add another step
     </a>
-    """
-  end
-
-  def submit_button(assigns) do
-    ~H"""
-    <button id="save" type="submit" class="button text-base font-bold w-full">
-      Add Funnel →
-    </button>
-    """
-  end
-
-  def submit_button_inactive(assigns) do
-    ~H"""
-    <button
-      type="none"
-      id="save"
-      class="w-full text-base font-bold py-2 border border-gray-300 dark:border-gray-500 rounded-md text-gray-300 bg-white dark:bg-gray-800 hover:text-gray-500 dark:hover:text-gray-400 focus:outline-none focus:border-blue-300 focus:ring active:text-gray-800 active:bg-gray-50 transition ease-in-out duration-150 cursor-not-allowed"
-    >
-      Add Funnel →
-    </button>
     """
   end
 

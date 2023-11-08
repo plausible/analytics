@@ -67,7 +67,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     end
 
     test "returns error when owner is over their team member limit" do
-      [owner, inviter, invitee] = insert_list(3, :user)
+      [owner, inviter, invitee] = insert_list(3, :user, inserted_at: ~N[2024-01-01T00:00:00Z])
 
       memberships =
         [
@@ -77,7 +77,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       site = insert(:site, memberships: memberships)
 
-      assert {:error, {:over_limit, 5}} =
+      assert {:error, {:over_limit, 3}} =
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
     end
 

@@ -52,9 +52,9 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
     <div class="mt-4">
       <div class="border-t border-gray-200 pt-4 grid">
         <div class="mt-4 sm:ml-4 sm:mt-0 justify-self-end">
-          <button type="button" phx-click="add-token" class="button">
+          <PlausibleWeb.Components.Generic.button phx-click="add-token">
             + Add Token
-          </button>
+          </PlausibleWeb.Components.Generic.button>
         </div>
       </div>
 

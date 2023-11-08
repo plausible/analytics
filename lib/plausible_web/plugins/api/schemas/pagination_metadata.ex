@@ -10,13 +10,12 @@ defmodule PlausibleWeb.Plugins.API.Schemas.PaginationMetadata do
     type: :object,
     required: [:has_next_page, :has_prev_page],
     properties: %{
-      has_next_page: %OpenApiSpex.Schema{type: :boolean},
-      has_prev_page: %OpenApiSpex.Schema{type: :boolean},
-      links: %OpenApiSpex.Schema{
-        items: Schemas.Link,
+      has_next_page: %Schema{type: :boolean},
+      has_prev_page: %Schema{type: :boolean},
+      links: %Schema{
         properties: %{
-          next: %OpenApiSpex.Reference{"$ref": "#/components/schemas/Link"},
-          prev: %OpenApiSpex.Reference{"$ref": "#/components/schemas/Link"}
+          next: Schemas.Link,
+          prev: Schemas.Link
         },
         type: :object
       }

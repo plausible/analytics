@@ -41,8 +41,23 @@ defmodule Plausible.Billing.QuotaTest do
       assert :unlimited == Quota.site_limit(user)
     end
 
-    test "returns 50 when user in on trial" do
-      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: 7))
+    test "returns 10 when user in on trial" do
+      user =
+        insert(:user,
+          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
+          inserted_at: ~U[2024-01-01T00:00:00Z]
+        )
+
+      assert 10 == Quota.site_limit(user)
+    end
+
+    test "returns 50 when user in on trial but registered before the business tier was live" do
+      user =
+        insert(:user,
+          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
+          inserted_at: ~U[2023-10-01T00:00:00Z]
+        )
+
       assert 50 == Quota.site_limit(user)
     end
 
@@ -56,14 +71,15 @@ defmodule Plausible.Billing.QuotaTest do
       assert 50 == Quota.site_limit(user)
     end
 
-    test "returns 50 for enterprise users who have not upgraded yet and are on trial" do
+    test "returns 10 for enterprise users who have not upgraded yet and are on trial" do
       user =
         insert(:user,
           enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
-          subscription: nil
+          subscription: nil,
+          inserted_at: ~U[2024-01-01T00:00:00Z]
         )
 
-      assert 50 == Quota.site_limit(user)
+      assert 10 == Quota.site_limit(user)
     end
 
     test "is unlimited for enterprise customers" do
@@ -371,8 +387,23 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "returns 5 when user in on trial" do
-      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: 7))
-      assert 5 == Quota.team_member_limit(user)
+      user =
+        insert(:user,
+          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
+          inserted_at: ~U[2024-01-01T00:00:00Z]
+        )
+
+      assert 3 == Quota.team_member_limit(user)
+    end
+
+    test "returns unlimited when user in on trial but registered before the business tier was live" do
+      user =
+        insert(:user,
+          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
+          inserted_at: ~U[2023-10-01T00:00:00Z]
+        )
+
+      assert :unlimited == Quota.team_member_limit(user)
     end
 
     test "is unlimited for enterprise customers" do

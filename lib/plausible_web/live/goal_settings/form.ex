@@ -74,9 +74,9 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           <.pageview_fields :if={@tabs.pageviews} f={f} site={@site} />
 
           <div class="py-4">
-            <button type="submit" class="button text-base font-bold w-full">
+            <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
               Add Goal →
-            </button>
+            </PlausibleWeb.Components.Generic.button>
           </div>
         </.form>
       </div>

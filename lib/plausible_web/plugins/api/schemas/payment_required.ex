@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.PaymentRequired do
     title: "PaymentRequiredError",
     required: [:errors],
     properties: %{
-      errors: %OpenApiSpex.Schema{
+      errors: %Schema{
         items: Schemas.Error,
         type: :array
       }

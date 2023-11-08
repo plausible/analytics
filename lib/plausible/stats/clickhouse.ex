@@ -231,8 +231,7 @@ defmodule Plausible.Stats.Clickhouse do
         %{total_visitors: total, site_id: site_id}, acc -> Map.put_new(acc, site_id, total)
       end)
 
-    total_q =
-      visitors_24h_total(now, -24, 0, site_id_to_domain_mapping)
+    total_q = visitors_24h_total(now, -24, 0, site_id_to_domain_mapping)
 
     current_q =
       from(

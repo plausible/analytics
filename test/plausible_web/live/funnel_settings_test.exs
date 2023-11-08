@@ -232,11 +232,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
         |> element("li#dropdown-step-2-option-1 a")
         |> render_click()
 
-      save_inactive = ~s/form button#save.cursor-not-allowed/
-      save_active = ~s/form button#save[type="submit"]/
-
-      refute element_exists?(doc, save_active)
-      assert element_exists?(doc, save_inactive)
+      assert element_exists?(doc, ~s/form button#save:disabled/)
 
       doc =
         lv
@@ -251,8 +247,8 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
           }
         })
 
-      assert element_exists?(doc, save_active)
-      refute element_exists?(doc, save_inactive)
+      assert element_exists?(doc, ~s/form button#save/)
+      refute element_exists?(doc, ~s/form button#save:disabled/)
     end
 
     @tag :slow

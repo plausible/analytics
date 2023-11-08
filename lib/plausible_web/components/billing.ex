@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Components.Billing do
   import PlausibleWeb.Components.Generic
   require Plausible.Billing.Subscription.Status
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias Plausible.Billing.{Subscription, Subscriptions}
+  alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
   attr(:billable_user, Plausible.Auth.User, required: true)
   attr(:current_user, Plausible.Auth.User, required: true)
@@ -16,20 +16,26 @@ defmodule PlausibleWeb.Components.Billing do
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def premium_feature_notice(assigns) do
-    private_preview? = not FunWithFlags.enabled?(:business_tier, for: assigns.current_user)
+    billable_user = Plausible.Users.with_subscription(assigns.billable_user)
+    plan = Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
+    growth? = plan && plan.kind == :growth
+
+    private_preview? = FunWithFlags.enabled?(:premium_features_private_preview)
     display_upgrade_link? = assigns.current_user.id == assigns.billable_user.id
     has_access? = assigns.feature_mod.check_availability(assigns.billable_user) == :ok
 
     message =
       cond do
-        private_preview? && assigns.grandfathered? ->
-          "#{assigns.feature_mod.display_name()} is an upcoming premium functionality that's free-to-use during the private preview. Existing subscribers will be grandfathered and will keep having access to this feature without any change to their plan."
-
-        private_preview? ->
-          "#{assigns.feature_mod.display_name()} is an upcoming premium functionality that's free-to-use during the private preview. Pricing will be announced soon."
-
         Plausible.Billing.on_trial?(assigns.billable_user) ->
           "#{assigns.feature_mod.display_name()} is part of the Plausible Business plan. You can access it during your trial, but you'll need to subscribe to the Business plan to retain access after the trial ends."
+
+        private_preview? && display_upgrade_link? && growth? ->
+          ~H"""
+          Business plans are now live! The private preview of <%= @feature_mod.display_name() %> for Plausible Growth plans ends <%= private_preview_days_remaining() %>. If you wish to continue using this feature, please
+          <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
+            upgrade your subscription
+          </.link> to the Plausible Business plan.
+          """
 
         not has_access? && display_upgrade_link? ->
           ~H"""
@@ -97,6 +103,18 @@ defmodule PlausibleWeb.Components.Billing do
       <%= @message %>
     </.notice>
     """
+  end
+
+  defp private_preview_days_remaining do
+    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 7)
+
+    days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
+
+    if days_remaining <= 0 do
+      "today"
+    else
+      "in #{days_remaining} days"
+    end
   end
 
   slot(:inner_block, required: true)
@@ -361,24 +379,22 @@ defmodule PlausibleWeb.Components.Billing do
 
   def upgrade_link(%{business_tier: true} = assigns) do
     ~H"""
-    <.link
+    <PlausibleWeb.Components.Generic.button_link
       id="upgrade-link-2"
       href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
-      class="inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
     >
       Upgrade
-    </.link>
+    </PlausibleWeb.Components.Generic.button_link>
     """
   end
 
   def upgrade_link(assigns) do
     ~H"""
-    <.link
-      href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}
-      class="inline-block px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:border-indigo-700 focus:ring active:bg-indigo-700 transition ease-in-out duration-150"
-    >
+    <PlausibleWeb.Components.Generic.button_link href={
+      Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)
+    }>
       Upgrade
-    </.link>
+    </PlausibleWeb.Components.Generic.button_link>
     """
   end
 
