@@ -8,25 +8,10 @@ defmodule Plausible.Site.UserPreference do
 
   @type t() :: %__MODULE__{}
 
-  defmodule Options do
-    @moduledoc """
-    Embed storing structured preferences
-    """
-
-    use Ecto.Schema
-    import Ecto.Changeset
-
-    embedded_schema do
-      field :pinned_at, :naive_datetime
-    end
-
-    def changeset(attrs \\ %{}) do
-      cast(%__MODULE__{}, attrs, [:pinned_at])
-    end
-  end
+  @options [:pinned_at]
 
   schema "site_user_preferences" do
-    embeds_one :options, Options
+    field :pinned_at, :naive_datetime
 
     belongs_to :user, Plausible.Auth.User
     belongs_to :site, Plausible.Site
@@ -34,12 +19,11 @@ defmodule Plausible.Site.UserPreference do
     timestamps()
   end
 
-  def changeset(user, site, attrs \\ %{}) do
-    embed_changeset = Options.changeset(attrs)
+  defmacro options, do: @options
 
+  def changeset(user, site, attrs \\ %{}) do
     %__MODULE__{}
-    |> change()
-    |> put_embed(:options, embed_changeset)
+    |> cast(attrs, @options)
     |> put_assoc(:user, user)
     |> put_assoc(:site, site)
   end

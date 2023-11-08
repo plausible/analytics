@@ -586,7 +586,7 @@ defmodule PlausibleWeb.Live.Sites do
         case Sites.toggle_pin(socket.assigns.user, site) do
           {:ok, preference} ->
             flash_message =
-              if preference.options.pinned_at do
+              if preference.pinned_at do
                 "Site pinned"
               else
                 "Site unpinned"

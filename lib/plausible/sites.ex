@@ -11,6 +11,8 @@ defmodule Plausible.Sites do
   alias Plausible.Site
   alias Plausible.Site.SharedLink
 
+  require Plausible.Site.UserPreference
+
   @type list_opt() :: {:filter_by_domain, String.t()}
 
   def get_by_domain(domain) do
@@ -43,7 +45,7 @@ defmodule Plausible.Sites do
   defp check_user_pin_limit(user, _) do
     pins_count =
       from(up in Site.UserPreference,
-        where: up.user_id == ^user.id and not is_nil(fragment("?->>'pinned_at'", up.options))
+        where: up.user_id == ^user.id and not is_nil(up.pinned_at)
       )
       |> Repo.aggregate(:count)
 
@@ -54,37 +56,19 @@ defmodule Plausible.Sites do
     end
   end
 
-  @allowed_options :fields
-                   |> Site.UserPreference.Options.__schema__()
-                   |> Enum.reject(&(&1 in [:id, :updated_at, :inserted_at]))
-
   @spec set_option(Auth.User.t(), Site.t(), atom(), any()) :: Site.UserPreference.t()
-  def set_option(user, site, option, value) when option in @allowed_options do
+  def set_option(user, site, option, value) when option in Site.UserPreference.options() do
     get_for_user!(user.id, site.domain)
 
     user
     |> Site.UserPreference.changeset(site, %{option => value})
     |> Repo.insert!(
       conflict_target: [:user_id, :site_id],
-      # This way of conflict handling enables
-      # doing upserts on embedded options leaving
+      # This way of conflict handling enables doing upserts of options leaving
       # existing, unrelated values intact.
-      on_conflict:
-        from(p in Site.UserPreference,
-          update: [
-            set: [
-              options: fragment("? || ?", p.options, type(^%{option => value}, :map))
-            ]
-          ]
-        ),
+      on_conflict: from(p in Site.UserPreference, update: [set: [{^option, ^value}]]),
       returning: true
     )
-  end
-
-  defmacrop pinned_at(options_field) do
-    quote do
-      fragment("(?->>'pinned_at')::timestamp", unquote(options_field))
-    end
   end
 
   @spec list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
@@ -99,7 +83,7 @@ defmodule Plausible.Sites do
         on: sm.user_id == ^user.id,
         select: %{
           s
-          | pinned_at: pinned_at(up.options),
+          | pinned_at: up.pinned_at,
             entry_type:
               fragment(
                 """
@@ -108,7 +92,7 @@ defmodule Plausible.Sites do
                   ELSE 'site'
                 END
                 """,
-                pinned_at(up.options)
+                up.pinned_at
               )
         }
       )
@@ -138,7 +122,7 @@ defmodule Plausible.Sites do
         where: not is_nil(sm.id) or not is_nil(i.id),
         select: %{
           s
-          | pinned_at: pinned_at(up.options),
+          | pinned_at: up.pinned_at,
             entry_type:
               fragment(
                 """
@@ -149,7 +133,7 @@ defmodule Plausible.Sites do
                 END
                 """,
                 i.id,
-                pinned_at(up.options)
+                up.pinned_at
               )
         }
       )

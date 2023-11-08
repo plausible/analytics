@@ -453,30 +453,30 @@ defmodule Plausible.SitesTest do
       site = insert(:site, members: [user])
 
       assert prefs =
-               %{options: %{pinned_at: %NaiveDateTime{}}} =
+               %{pinned_at: %NaiveDateTime{}} =
                Sites.set_option(user, site, :pinned_at, NaiveDateTime.utc_now())
 
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.pinned_at
+      assert prefs.pinned_at
 
       assert prefs =
-               %{options: %{pinned_at: nil}} = Sites.set_option(user, site, :pinned_at, nil)
+               %{pinned_at: nil} = Sites.set_option(user, site, :pinned_at, nil)
 
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      refute prefs.options.pinned_at
+      refute prefs.pinned_at
 
       assert prefs =
-               %{options: %{pinned_at: %NaiveDateTime{}}} =
+               %{pinned_at: %NaiveDateTime{}} =
                Sites.set_option(user, site, :pinned_at, NaiveDateTime.utc_now())
 
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.pinned_at
+      assert prefs.pinned_at
     end
 
     test "raises on invalid option" do
@@ -505,27 +505,27 @@ defmodule Plausible.SitesTest do
 
       site = %{site | pinned_at: nil}
       assert {:ok, prefs} = Sites.toggle_pin(user, site)
-      assert prefs = %{options: %{pinned_at: %NaiveDateTime{}}} = prefs
+      assert prefs = %{pinned_at: %NaiveDateTime{}} = prefs
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.pinned_at
+      assert prefs.pinned_at
 
       site = %{site | pinned_at: NaiveDateTime.utc_now()}
       assert {:ok, prefs} = Sites.toggle_pin(user, site)
-      assert %{options: %{pinned_at: nil}} = prefs
+      assert %{pinned_at: nil} = prefs
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      refute prefs.options.pinned_at
+      refute prefs.pinned_at
 
       site = %{site | pinned_at: nil}
       assert {:ok, prefs} = Sites.toggle_pin(user, site)
-      assert %{options: %{pinned_at: %NaiveDateTime{}}} = prefs
+      assert %{pinned_at: %NaiveDateTime{}} = prefs
       prefs = Repo.reload!(prefs)
       assert prefs.site_id == site.id
       assert prefs.user_id == user.id
-      assert prefs.options.pinned_at
+      assert prefs.pinned_at
     end
 
     test "returns error when pins limit hit" do
