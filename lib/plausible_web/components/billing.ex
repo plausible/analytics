@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Components.Billing do
   use Phoenix.Component
   import PlausibleWeb.Components.Generic
   require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Feature.{Props, StatsAPI}
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
@@ -20,10 +21,17 @@ defmodule PlausibleWeb.Components.Billing do
     plan = Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
     business? = plan && plan.kind == :business
 
+    legacy_feature_access? =
+      Timex.before?(assigns.billable_user.inserted_at, Plans.business_tier_launch()) &&
+        assigns.feature_mod in [StatsAPI, Props]
+
     private_preview? = FunWithFlags.enabled?(:premium_features_private_preview)
     has_access? = assigns.feature_mod.check_availability(assigns.billable_user) == :ok
 
     cond do
+      legacy_feature_access? ->
+        ~H""
+
       Plausible.Billing.on_trial?(assigns.billable_user) ->
         ~H"""
         <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
