@@ -55,8 +55,7 @@ defmodule Plausible.Sites do
       )
       |> maybe_filter_by_domain(domain_filter)
 
-    result =
-      Repo.paginate(sites_query, pagination_params)
+    result = Repo.paginate(sites_query, pagination_params)
 
     entries =
       Enum.map(result.entries, fn

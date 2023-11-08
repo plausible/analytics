@@ -93,8 +93,7 @@ defmodule Plausible.SitesTest do
                page_number: 1,
                total_entries: 0,
                total_pages: 1
-             } =
-               Sites.list(user, %{})
+             } = Sites.list(user, %{})
     end
 
     test "returns invitations and sites" do

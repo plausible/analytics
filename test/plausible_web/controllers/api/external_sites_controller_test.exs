@@ -2,11 +2,12 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
   use PlausibleWeb.ConnCase, async: false
   use Plausible.Repo
 
-  setup %{conn: conn} do
-    user = insert(:user)
+  setup :create_user
+
+  setup %{conn: conn, user: user} do
     api_key = insert(:api_key, user: user, scopes: ["sites:provision:*"])
     conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer #{api_key.key}")
-    {:ok, user: user, api_key: api_key, conn: conn}
+    {:ok, api_key: api_key, conn: conn}
   end
 
   describe "POST /api/v1/sites" do
@@ -70,9 +71,9 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
           "timezone" => "Europe/Tallinn"
         })
 
-      assert json_response(conn, 403) == %{
+      assert json_response(conn, 402) == %{
                "error" =>
-                 "Your account has reached the limit of 50 sites per account. Please contact hello@plausible.io to unlock more sites."
+                 "Your account has reached the limit of 10 sites. To unlock more sites, please upgrade your subscription."
              }
     end
 

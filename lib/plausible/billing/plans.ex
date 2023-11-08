@@ -27,7 +27,8 @@ defmodule Plausible.Billing.Plans do
     Module.put_attribute(__MODULE__, :external_resource, path)
   end
 
-  @business_tier_launch ~N[2023-12-01 12:00:00]
+  @business_tier_launch ~N[2023-11-08 12:00:00]
+  def business_tier_launch, do: @business_tier_launch
 
   @spec growth_plans_for(User.t()) :: [Plan.t()]
   @doc """

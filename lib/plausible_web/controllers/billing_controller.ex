@@ -128,8 +128,7 @@ defmodule PlausibleWeb.BillingController do
     business_tier_enabled? = FunWithFlags.enabled?(:business_tier, for: user)
 
     with {:ok, {subscription, preview_info}} <- preview_subscription(user, new_plan_id) do
-      back_action =
-        if business_tier_enabled?, do: :choose_plan, else: :change_plan_form
+      back_action = if business_tier_enabled?, do: :choose_plan, else: :change_plan_form
 
       render(conn, "change_plan_preview.html",
         back_link: Routes.billing_path(conn, back_action),
