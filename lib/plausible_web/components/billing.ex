@@ -18,47 +18,50 @@ defmodule PlausibleWeb.Components.Billing do
   def premium_feature_notice(assigns) do
     billable_user = Plausible.Users.with_subscription(assigns.billable_user)
     plan = Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
-    growth? = plan && plan.kind == :growth
+    business? = plan && plan.kind == :business
 
     private_preview? = FunWithFlags.enabled?(:premium_features_private_preview)
-    display_upgrade_link? = assigns.current_user.id == assigns.billable_user.id
     has_access? = assigns.feature_mod.check_availability(assigns.billable_user) == :ok
 
-    message =
-      cond do
-        Plausible.Billing.on_trial?(assigns.billable_user) ->
-          "#{assigns.feature_mod.display_name()} is part of the Plausible Business plan. You can access it during your trial, but you'll need to subscribe to the Business plan to retain access after the trial ends."
+    cond do
+      Plausible.Billing.on_trial?(assigns.billable_user) ->
+        ~H"""
+        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
+          <%= @feature_mod.display_name() %> is part of the Plausible Business plan. You can access it during your trial, but you'll need to subscribe to the Business plan to retain access after the trial ends."
+        </.notice>
+        """
 
-        private_preview? && display_upgrade_link? && growth? ->
-          ~H"""
-          Business plans are now live! The private preview of <%= @feature_mod.display_name() %> for Plausible Growth plans ends <%= private_preview_days_remaining() %>. If you wish to continue using this feature, please
-          <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
-            upgrade your subscription
-          </.link> to the Plausible Business plan.
-          """
+      private_preview? && !business? ->
+        ~H"""
+        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
+          Business plans are now live! The private preview of <%= @feature_mod.display_name() %> ends <%= private_preview_days_remaining() %>. If you wish to continue using this feature,
+          <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+        </.notice>
+        """
 
-        not has_access? && display_upgrade_link? ->
-          ~H"""
-          <%= @feature_mod.display_name() %> is part of the Plausible Business plan. To get access to it, please
-          <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@current_user)}>
-            upgrade your subscription
-          </.link> to the Business plan.
-          """
+      not has_access? ->
+        ~H"""
+        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
+          This account does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
+          <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+        </.notice>
+        """
 
-        not has_access? && not display_upgrade_link? ->
-          "#{assigns.feature_mod.display_name()} is part of the Plausible Business plan. To get access to it, please reach out to the site owner to upgrade your subscription to the Business plan."
+      true ->
+        ~H""
+    end
+  end
 
-        true ->
-          nil
-      end
+  defp private_preview_days_remaining do
+    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 7)
 
-    assigns = assign(assigns, :message, message)
+    days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
 
-    ~H"""
-    <.notice :if={@message} class="rounded-t-md rounded-b-none" size={@size} {@rest}>
-      <%= @message %>
-    </.notice>
-    """
+    cond do
+      days_remaining <= 0 -> "today"
+      days_remaining == 1 -> "tomorrow"
+      true -> "in #{days_remaining} days"
+    end
   end
 
   attr(:billable_user, Plausible.Auth.User, required: true)
@@ -77,43 +80,37 @@ defmodule PlausibleWeb.Components.Billing do
     trial? = Plausible.Billing.on_trial?(assigns.billable_user)
     growth? = plan && plan.kind == :growth
 
-    display_upgrade_link? = assigns.current_user.id == assigns.billable_user.id
-
-    message =
-      cond do
-        !display_upgrade_link? ->
-          "This account is limited to #{assigns.limit} #{assigns.resource}. To increase this limit, please reach out to the site owner to upgrade their subscription"
-
-        growth? || trial? ->
-          ~H"""
-          Your account is limited to <%= @limit %> <%= @resource %>. To increase this limit, please
-          <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@current_user)}>
-            upgrade your subscription
-          </.link> to the Business plan.
-          """
-
-        true ->
-          "Your account is limited to #{assigns.limit} #{assigns.resource}. To increase this limit, please contact support@plausible.io about the Enterprise plan"
-      end
-
-    assigns = assign(assigns, :message, message)
-
-    ~H"""
-    <.notice :if={@message} {@rest}>
-      <%= @message %>
-    </.notice>
-    """
+    if growth? || trial? do
+      ~H"""
+      <.notice {@rest}>
+        This account is limited to <%= @limit %> <%= @resource %>. To increase this limit,
+        <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+      </.notice>
+      """
+    else
+      ~H"""
+      <.notice {@rest}>
+        Your account is limited to <%= @limit %> <%= @resource %>. To increase this limit, please contact support@plausible.io about the Enterprise plan
+      </.notice>
+      """
+    end
   end
 
-  defp private_preview_days_remaining do
-    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 7)
+  attr(:current_user, :map)
+  attr(:billable_user, :map)
 
-    days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
-
-    if days_remaining <= 0 do
-      "today"
+  defp upgrade_call_to_action(assigns) do
+    if assigns.current_user.id == assigns.billable_user.id do
+      ~H"""
+      please
+      <.link class="underline" href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
+        upgrade your subscription
+      </.link>
+      """
     else
-      "in #{days_remaining} days"
+      ~H"""
+      please reach out to the site owner to upgrade their subscription
+      """
     end
   end
 
