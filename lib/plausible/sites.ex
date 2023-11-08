@@ -81,19 +81,41 @@ defmodule Plausible.Sites do
     )
   end
 
+  defmacrop pinned_at(options_field) do
+    quote do
+      fragment("(?->>'pinned_at')::timestamp", unquote(options_field))
+    end
+  end
+
   @spec list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
     query =
-      from(s in base_sites_query(user),
+      from(s in Site,
+        left_join: up in Site.UserPreference,
+        on: up.site_id == s.id and up.user_id == ^user.id,
         inner_join: sm in assoc(s, :memberships),
-        on: sm.user_id == ^user.id
+        on: sm.user_id == ^user.id,
+        select: %{
+          s
+          | pinned_at: pinned_at(up.options),
+            entry_type:
+              fragment(
+                """
+                CASE 
+                  WHEN ? IS NOT NULL THEN 'pinned_site'
+                  ELSE 'site'
+                END
+                """,
+                pinned_at(up.options)
+              )
+        }
       )
 
     sites_query =
       from(s in subquery(query),
-        order_by: [desc_nulls_last: s.pinned_at, asc: s.domain],
+        order_by: [asc: s.entry_type, desc: s.pinned_at, asc: s.domain],
         preload: [memberships: ^memberships_query(user)]
       )
       |> maybe_filter_by_domain(domain_filter)
@@ -106,27 +128,35 @@ defmodule Plausible.Sites do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
     query =
-      from s in base_sites_query(user),
+      from(s in Site,
+        left_join: up in Site.UserPreference,
+        on: up.site_id == s.id and up.user_id == ^user.id,
         left_join: i in assoc(s, :invitations),
         on: i.email == ^user.email,
         left_join: sm in assoc(s, :memberships),
         on: sm.user_id == ^user.id,
         where: not is_nil(sm.id) or not is_nil(i.id),
-        select_merge: %{
-          entry_type:
-            fragment(
-              """
-              CASE WHEN ? IS NOT NULL THEN 'invitation'
-              ELSE 'site'
-              END
-              """,
-              i.id
-            )
+        select: %{
+          s
+          | pinned_at: pinned_at(up.options),
+            entry_type:
+              fragment(
+                """
+                CASE 
+                  WHEN ? IS NOT NULL THEN 'invitation'
+                  WHEN ? IS NOT NULL THEN 'pinned_site'
+                  ELSE 'site'
+                END
+                """,
+                i.id,
+                pinned_at(up.options)
+              )
         }
+      )
 
     sites_query =
       from(s in subquery(query),
-        order_by: [desc_nulls_last: s.pinned_at, asc: s.entry_type, asc: s.domain],
+        order_by: [asc: s.entry_type, desc: s.pinned_at, asc: s.domain],
         preload: [memberships: ^memberships_query(user), invitations: ^invitations_query(user)]
       )
       |> maybe_filter_by_domain(domain_filter)
@@ -148,18 +178,6 @@ defmodule Plausible.Sites do
       end)
 
     %{result | entries: entries}
-  end
-
-  defp base_sites_query(user) do
-    from(s in Site,
-      left_join: up in Site.UserPreference,
-      on: up.site_id == s.id and up.user_id == ^user.id,
-      select: %{
-        s
-        | pinned_at: fragment("(?->>'pinned_at')::timestamp", up.options),
-          entry_type: "site"
-      }
-    )
   end
 
   defp memberships_query(user) do

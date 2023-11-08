@@ -97,7 +97,7 @@ defmodule PlausibleWeb.Live.Sites do
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <%= for site <- @sites.entries do %>
             <.site
-              :if={site.entry_type == "site"}
+              :if={site.entry_type in ["pinned_site", "site"]}
               site={site}
               hourly_stats={@hourly_stats[site.domain]}
             />

@@ -152,7 +152,7 @@ defmodule Plausible.SitesTest do
                Sites.list_with_invitations(user1, %{})
     end
 
-    test "puts pinned sites first" do
+    test "puts invitations first, pinned sites second, sites last" do
       user = insert(:user, email: "hello@example.com")
 
       site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
@@ -183,7 +183,7 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site_id2, entry_type: "site"},
+                 %{id: ^site_id2, entry_type: "pinned_site"},
                  %{id: ^site_id4, entry_type: "site"},
                  %{id: ^site_id1, entry_type: "site"}
                ]
@@ -191,9 +191,9 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site_id2, entry_type: "site"},
                  %{id: ^site_id1, entry_type: "invitation"},
                  %{id: ^site_id3, entry_type: "invitation"},
+                 %{id: ^site_id2, entry_type: "pinned_site"},
                  %{id: ^site_id4, entry_type: "site"}
                ]
              } = Sites.list_with_invitations(user, %{})
@@ -231,18 +231,18 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site_id4, entry_type: "site"},
-                 %{id: ^site_id2, entry_type: "site"},
+                 %{id: ^site_id4, entry_type: "pinned_site"},
+                 %{id: ^site_id2, entry_type: "pinned_site"},
                  %{id: ^site_id1, entry_type: "site"}
                ]
              } = Sites.list(user, %{})
 
       assert %{
                entries: [
-                 %{id: ^site_id4, entry_type: "site"},
-                 %{id: ^site_id2, entry_type: "site"},
                  %{id: ^site_id1, entry_type: "invitation"},
-                 %{id: ^site_id3, entry_type: "invitation"}
+                 %{id: ^site_id3, entry_type: "invitation"},
+                 %{id: ^site_id4, entry_type: "pinned_site"},
+                 %{id: ^site_id2, entry_type: "pinned_site"}
                ]
              } = Sites.list_with_invitations(user, %{})
     end
