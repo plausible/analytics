@@ -222,8 +222,6 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
   end
 
-  @enterprise_contact_link "enterprise@plausible.io"
-
   describe "GET /upgrade-to-enterprise-plan (already subscribed to latest enterprise plan)" do
     setup [:create_user, :log_in, :configure_enterprise_plan]
 
@@ -237,9 +235,9 @@ defmodule PlausibleWeb.BillingControllerTest do
         |> get(Routes.billing_path(conn, :upgrade_to_enterprise_plan))
         |> html_response(200)
 
-      assert doc =~ "Need to change your limits?"
-      assert doc =~ "Your account is on an enterprise plan"
-      assert doc =~ "contact us at #{@enterprise_contact_link}"
+      assert doc =~ "Looking to adjust your plan?"
+      assert doc =~ "You're currently on a custom plan."
+      assert doc =~ "please contact us at hello@plausible.io"
     end
   end
 
