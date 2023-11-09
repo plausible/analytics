@@ -33,7 +33,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute html_response(conn, 200) =~ "Add site info"
     end
 
-    test "allows enterprise accounts to create unlimited sites", %{
+    test "does not display limit notice when user is on an enterprise plan", %{
       conn: conn,
       user: user
     } do
