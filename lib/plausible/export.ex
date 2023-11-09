@@ -55,14 +55,7 @@ defmodule Plausible.Export do
 
     exported_sources =
       sessions_base_q
-      |> group_by([s], [
-        selected_as(:date),
-        s.utm_source,
-        s.utm_campaign,
-        s.utm_medium,
-        s.utm_content,
-        s.utm_term
-      ])
+      |> group_by([s], [s.utm_source, s.utm_campaign, s.utm_medium, s.utm_content, s.utm_term])
       |> select_merge([s], %{
         source: selected_as(s.utm_source, :source),
         utm_campaign: s.utm_campaign,
@@ -82,17 +75,14 @@ defmodule Plausible.Export do
       "events_v2"
       # TODO need `where(name: "pageview")`?
       |> where(site_id: ^site_id)
-      |> windows([e],
-        next: [
-          partition_by: e.session_id,
-          order_by: e.timestamp,
-          frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-        ]
-      )
       |> select([e], %{
-        session_id: e.session_id,
         timestamp: e.timestamp,
-        next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :next),
+        next_timestamp:
+          over(fragment("leadInFrame(?)", e.timestamp),
+            partition_by: e.session_id,
+            order_by: e.timestamp,
+            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+          ),
         pathname: e.pathname,
         hostname: e.hostname,
         name: e.name,
@@ -116,7 +106,7 @@ defmodule Plausible.Export do
 
     exported_entry_pages =
       sessions_base_q
-      |> group_by([s], [selected_as(:date), s.entry_page])
+      |> group_by([s], s.entry_page)
       |> select_merge([s], %{
         entry_page: s.entry_page,
         visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
@@ -131,7 +121,7 @@ defmodule Plausible.Export do
 
     exported_exit_pages =
       sessions_base_q
-      |> group_by([s], [selected_as(:date), s.exit_page])
+      |> group_by([s], s.exit_page)
       |> select_merge([s], %{
         exit_page: s.exit_page,
         visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
@@ -140,12 +130,7 @@ defmodule Plausible.Export do
 
     exported_locations =
       sessions_base_q
-      |> group_by([s], [
-        selected_as(:date),
-        s.country_code,
-        selected_as(:region),
-        s.city_geoname_id
-      ])
+      |> group_by([s], [s.country_code, selected_as(:region), s.city_geoname_id])
       |> select_merge([s], %{
         country: selected_as(s.country_code, :country),
         # TODO
@@ -167,7 +152,7 @@ defmodule Plausible.Export do
 
     exported_devices =
       sessions_base_q
-      |> group_by([s], [selected_as(:date), s.screen_size])
+      |> group_by([s], s.screen_size)
       |> select_merge([s], %{
         device: selected_as(s.screen_size, :device),
         visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
@@ -182,7 +167,7 @@ defmodule Plausible.Export do
 
     exported_browsers =
       sessions_base_q
-      |> group_by([s], [selected_as(:date), s.browser])
+      |> group_by([s], s.browser)
       |> select_merge([s], %{
         browser: s.browser,
         visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
@@ -197,7 +182,7 @@ defmodule Plausible.Export do
 
     exported_operating_systems =
       sessions_base_q
-      |> group_by([s], [selected_as(:date), s.operating_system])
+      |> group_by([s], s.operating_system)
       |> select_merge([s], %{
         operating_system: s.operating_system,
         visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
