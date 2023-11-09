@@ -209,7 +209,10 @@ defmodule Plausible.Export do
 
   @spec export_archive(
           DBConnection.conn(),
-          queries :: [{name :: String.t(), sql :: iodata, params :: [term]}],
+          queries :: [
+            {name :: String.t(), sql :: iodata, params :: [term]}
+            | {name :: String.t(), query :: Ecto.Query.t()}
+          ],
           on_data :: (iodata -> :ok),
           opts :: Keyword.t()
         ) :: :ok
@@ -230,7 +233,17 @@ defmodule Plausible.Export do
     :ok = on_data.(encoded)
 
     entries =
-      Enum.map(queries, fn {name, sql, params} ->
+      Enum.map(queries, fn query ->
+        {name, sql, params} =
+          case query do
+            {name, query} ->
+              {sql, params} = Plausible.ClickhouseRepo.to_sql(:all, query)
+              {name, sql, params}
+
+            {_name, _sql, _params} = ready ->
+              ready
+          end
+
         Ch.run(conn, fn conn ->
           packets = Ch.stream(conn, sql, params, opts)
           {entry, encoded} = zip_start_entry(name)

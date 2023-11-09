@@ -35,13 +35,10 @@ defmodule Plausible.ExportTest do
       )
     ])
 
-    queries = Plausible.Export.export_queries(site.id)
-
-    raw_queries =
-      Enum.map(queries, fn {name, query} ->
-        {sql, params} = Plausible.ClickhouseRepo.to_sql(:all, query)
-        {Atom.to_string(name) <> ".csv", sql, params}
-      end)
+    queries =
+      site.id
+      |> Plausible.Export.export_queries()
+      |> Enum.map(fn {name, query} -> {"#{name}.csv", query} end)
 
     config = Plausible.ClickhouseRepo.config()
     {:ok, conn} = Ch.start_link(Keyword.put(config, :pool_size, 1))
@@ -49,7 +46,7 @@ defmodule Plausible.ExportTest do
     :ok =
       Plausible.Export.export_archive(
         conn,
-        raw_queries,
+        queries,
         fn data -> :file.write(fd, data) end,
         format: "CSVWithNames",
         site_id: site.id
