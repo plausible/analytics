@@ -5,91 +5,149 @@ defmodule Plausible.Export do
   import Bitwise
 
   # TODO sampling
-  # TODO checksums (whole archive, each compressed CSV, each decompressed CSV)
   # TODO do in one pass over both tables?
   # TODO scheduling (limit parallel exports)
+
+  @spec export_queries(pos_integer) :: %{atom => Ecto.Query.t()}
   def export_queries(site_id) do
-    sessions_base_q =
-      "sessions_v2"
-      |> where(site_id: ^site_id)
-      |> group_by([], selected_as(:date))
-      |> order_by([s], selected_as(:date))
-      |> select([s], %{date: selected_as(fragment("toDate(?)", s.start), :date)})
+    %{
+      visitors: export_visitors_q(site_id),
+      sources: export_sources_q(site_id),
+      pages: export_pages_q(site_id),
+      entry_pages: export_entry_pages_q(site_id),
+      exit_pages: export_exit_pages_q(site_id),
+      locations: export_locations_q(site_id),
+      devices: export_devices_q(site_id),
+      browsers: export_browsers_q(site_id),
+      operating_systems: export_operating_systems_q(site_id)
+    }
+  end
 
-    exported_visitors_events_q =
-      "events_v2"
-      |> where(site_id: ^site_id)
-      |> group_by([], selected_as(:date))
-      |> order_by([e], selected_as(:date))
-      |> select([e], %{
-        date: selected_as(fragment("toDate(?)", e.timestamp), :date),
-        # TODO calc visitors from sessions?
-        visitors: fragment("uniq(?)", e.user_id),
-        pageviews: fragment("countIf(?='pageview')", e.name)
-      })
+  defmacrop date(timestamp) do
+    quote do
+      selected_as(fragment("toDate(?)", unquote(timestamp)), :date)
+    end
+  end
 
-    exported_visitors_sessions_q =
-      select_merge(sessions_base_q, [s], %{
-        bounces: sum(s.is_bounce * s.sign),
-        visits: sum(s.sign),
-        visit_duration: fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign))
-      })
+  defmacrop visit_duration(t) do
+    quote do
+      selected_as(
+        fragment(
+          "toUInt32(round(?))",
+          sum(unquote(t).sign * unquote(t).duration) / sum(unquote(t).sign)
+        ),
+        :visit_duration
+      )
+    end
+  end
 
-    exported_visitors =
+  defmacrop visitors(t) do
+    quote do
+      selected_as(fragment("uniq(?)", unquote(t).user_id), :visitors)
+    end
+  end
+
+  defmacrop visits(t) do
+    quote do
+      selected_as(sum(unquote(t).sign), :visits)
+    end
+  end
+
+  defmacrop bounces(t) do
+    quote do
+      selected_as(sum(unquote(t).sign * unquote(t).is_bounce), :bounces)
+    end
+  end
+
+  @spec export_visitors_q(pos_integer) :: Ecto.Query.t()
+  def export_visitors_q(site_id) do
+    visitors_sessions_q =
+      from s in "sessions_v2",
+        where: s.site_id == ^site_id,
+        group_by: selected_as(:date),
+        select: [date(s.start), bounces(s), visits(s), visit_duration(s)]
+
+    visitors_events_q =
+      from e in "events_v2",
+        where: e.site_id == ^site_id,
+        group_by: selected_as(:date),
+        select: [
+          date(e.timestamp),
+          visitors(e),
+          selected_as(fragment("countIf(?='pageview')", e.name), :pageviews)
+        ]
+
+    visitors_q =
       "e"
-      |> with_cte("e", as: ^exported_visitors_events_q)
-      |> with_cte("s", as: ^exported_visitors_sessions_q)
-      # TODO test FULL OUTER JOIN in ch / ecto_ch
-      |> join(:full, [e], s in "s", on: e.date == s.date)
-      |> select([e, s], [
-        selected_as(coalesce(e.date, s.date), :date),
+      |> with_cte("e", as: ^visitors_sessions_q)
+      |> with_cte("s", as: ^visitors_events_q)
+
+    from e in visitors_q,
+      full_join: s in "s",
+      on: e.date == s.date,
+      order_by: selected_as(:date),
+      select: [
+        # TODO can use coalesce? or greatest(?,?)?
+        selected_as(fragment("if(?,?,?)", e.date == 0, s.date, e.date), :date),
         e.visitors,
         e.pageviews,
         s.bounces,
         s.visits,
         s.visit_duration
-      ])
-      # TODO need it?
-      |> order_by([], selected_as(:date))
+      ]
+  end
 
-    exported_sources =
-      sessions_base_q
-      |> group_by([s], [s.utm_source, s.utm_campaign, s.utm_medium, s.utm_content, s.utm_term])
-      |> select_merge([s], %{
-        source: selected_as(s.utm_source, :source),
-        utm_campaign: s.utm_campaign,
-        utm_content: s.utm_content,
-        utm_term: s.utm_term,
-        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
-        visits: selected_as(sum(s.sign), :visits),
-        visit_duration:
-          selected_as(
-            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-            :visit_duration
-          ),
-        boucnes: selected_as(sum(s.is_bounce * s.sign), :bounces)
-      })
+  @spec export_sources_q(pos_integer) :: Ecto.Query.t()
+  def export_sources_q(site_id) do
+    from s in "sessions_v2",
+      where: s.site_id == ^site_id,
+      group_by: [
+        selected_as(:date),
+        s.utm_source,
+        s.utm_campaign,
+        s.utm_medium,
+        s.utm_content,
+        s.utm_term
+      ],
+      order_by: selected_as(:date),
+      select: [
+        date(s.start),
+        selected_as(s.utm_source, :source),
+        s.utm_campaign,
+        s.utm_content,
+        s.utm_term,
+        visitors(s),
+        visits(s),
+        visit_duration(s),
+        bounces(s)
+      ]
+  end
 
-    exported_pages =
-      "events_v2"
-      # TODO need `where(name: "pageview")`?
-      |> where(site_id: ^site_id)
-      |> select([e], %{
-        timestamp: e.timestamp,
-        next_timestamp:
-          over(fragment("leadInFrame(?)", e.timestamp),
-            partition_by: e.session_id,
-            order_by: e.timestamp,
-            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
-          ),
-        pathname: e.pathname,
-        hostname: e.hostname,
-        name: e.name,
-        user_id: e.user_id
-      })
-      |> subquery()
-      |> select([e], [
-        selected_as(fragment("toDate(?)", e.timestamp), :date),
+  @spec export_pages_q(pos_integer) :: Ecto.Query.t()
+  def export_pages_q(site_id) do
+    window_q =
+      from e in "events_v2",
+        where: e.site_id == ^site_id,
+        select: %{
+          timestamp: e.timestamp,
+          next_timestamp:
+            over(fragment("leadInFrame(?)", e.timestamp),
+              partition_by: e.session_id,
+              order_by: e.timestamp,
+              frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+            ),
+          pathname: e.pathname,
+          hostname: e.hostname,
+          name: e.name,
+          user_id: e.user_id
+        }
+
+    # TODO exits > pageviews?
+    from e in subquery(window_q),
+      group_by: [selected_as(:date), e.pathname],
+      order_by: selected_as(:date),
+      select: [
+        date(e.timestamp),
         selected_as(e.pathname, :path),
         selected_as(fragment("any(?)", e.hostname), :hostname),
         selected_as(
@@ -98,113 +156,108 @@ defmodule Plausible.Export do
         ),
         selected_as(fragment("countIf(?=0)", e.next_timestamp), :exits),
         selected_as(fragment("countIf(?='pageview')", e.name), :pageviews),
-        selected_as(fragment("uniq(?)", e.user_id), :visitors)
-      ])
-      |> group_by([e], [selected_as(:date), e.pathname])
-      |> order_by([e], selected_as(:date))
+        visitors(e)
+      ]
+  end
 
-    exported_entry_pages =
-      sessions_base_q
-      |> group_by([s], s.entry_page)
-      |> select_merge([s], %{
-        entry_page: s.entry_page,
-        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
-        entrances: selected_as(sum(s.sign), :entrances),
-        visit_duration:
-          selected_as(
-            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-            :visit_duration
-          ),
-        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
-      })
+  @spec export_entry_pages_q(pos_integer) :: Ecto.Query.t()
+  def export_entry_pages_q(site_id) do
+    from s in "sessions_v2",
+      where: s.site_id == ^site_id,
+      group_by: [selected_as(:date), s.entry_page],
+      order_by: selected_as(:date),
+      select: [
+        date(s.start),
+        s.entry_page,
+        visitors(s),
+        selected_as(sum(s.sign), :entrances),
+        visit_duration(s),
+        bounces(s)
+      ]
+  end
 
-    exported_exit_pages =
-      sessions_base_q
-      |> group_by([s], s.exit_page)
-      |> select_merge([s], %{
-        exit_page: s.exit_page,
-        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
-        exits: selected_as(sum(s.sign), :exits)
-      })
+  @spec export_exit_pages_q(pos_integer) :: Ecto.Query.t()
+  def export_exit_pages_q(site_id) do
+    from s in "sessions_v2",
+      where: s.site_id == ^site_id,
+      group_by: [selected_as(:date), s.exit_page],
+      order_by: selected_as(:date),
+      select: [
+        date(s.start),
+        s.exit_page,
+        visitors(s),
+        selected_as(sum(s.sign), :exits)
+      ]
+  end
 
-    exported_locations =
-      sessions_base_q
-      |> group_by([s], [s.country_code, selected_as(:region), s.city_geoname_id])
-      |> select_merge([s], %{
-        country: selected_as(s.country_code, :country),
-        # TODO
-        region:
-          selected_as(
-            fragment("concatWithSeparator('-',?,?)", s.subdivision1_code, s.subdivision2_code),
-            :region
-          ),
-        city: selected_as(s.city_geoname_id, :city),
-        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
-        visits: selected_as(sum(s.sign), :visits),
-        visit_duration:
-          selected_as(
-            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-            :visit_duration
-          ),
-        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
-      })
+  @spec export_locations_q(pos_integer) :: Ecto.Query.t()
+  def export_locations_q(site_id) do
+    from s in "sessions_v2",
+      where: s.site_id == ^site_id,
+      group_by: [selected_as(:date), s.country_code, selected_as(:region), s.city_geoname_id],
+      order_by: selected_as(:date),
+      select: [
+        date(s.start),
+        selected_as(s.country_code, :country),
+        # TODO avoid "AK-", "-US", "-"
+        selected_as(
+          fragment("concatWithSeparator('-',?,?)", s.subdivision1_code, s.subdivision2_code),
+          :region
+        ),
+        selected_as(s.city_geoname_id, :city),
+        visitors(s),
+        visits(s),
+        visit_duration(s),
+        bounces(s)
+      ]
+  end
 
-    exported_devices =
-      sessions_base_q
-      |> group_by([s], s.screen_size)
-      |> select_merge([s], %{
-        device: selected_as(s.screen_size, :device),
-        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
-        visits: selected_as(sum(s.sign), :visits),
-        visit_duration:
-          selected_as(
-            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-            :visit_duration
-          ),
-        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
-      })
+  @spec export_devices_q(pos_integer) :: Ecto.Query.t()
+  def export_devices_q(site_id) do
+    from s in "sessions_v2",
+      where: s.site_id == ^site_id,
+      group_by: [selected_as(:date), s.screen_size],
+      order_by: selected_as(:date),
+      select: [
+        date(s.start),
+        selected_as(s.screen_size, :device),
+        visitors(s),
+        visits(s),
+        visit_duration(s),
+        bounces(s)
+      ]
+  end
 
-    exported_browsers =
-      sessions_base_q
-      |> group_by([s], s.browser)
-      |> select_merge([s], %{
-        browser: s.browser,
-        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
-        visits: selected_as(sum(s.sign), :visits),
-        visit_duration:
-          selected_as(
-            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-            :visit_duration
-          ),
-        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
-      })
+  @spec export_browsers_q(pos_integer) :: Ecto.Query.t()
+  def export_browsers_q(site_id) do
+    from s in "sessions_v2",
+      where: s.site_id == ^site_id,
+      group_by: [selected_as(:date), s.browser],
+      order_by: selected_as(:date),
+      select: [
+        date(s.start),
+        s.browser,
+        visitors(s),
+        visits(s),
+        visit_duration(s),
+        bounces(s)
+      ]
+  end
 
-    exported_operating_systems =
-      sessions_base_q
-      |> group_by([s], s.operating_system)
-      |> select_merge([s], %{
-        operating_system: s.operating_system,
-        visitors: selected_as(fragment("uniq(?)", s.user_id), :visitors),
-        visits: selected_as(sum(s.sign), :visits),
-        visit_duration:
-          selected_as(
-            fragment("toUInt32(round(?))", sum(s.duration * s.sign) / sum(s.sign)),
-            :visit_duration
-          ),
-        bounces: selected_as(sum(s.is_bounce * s.sign), :bounces)
-      })
-
-    %{
-      visitors: exported_visitors,
-      sources: exported_sources,
-      pages: exported_pages,
-      entry_pages: exported_entry_pages,
-      exit_pages: exported_exit_pages,
-      locations: exported_locations,
-      devices: exported_devices,
-      browsers: exported_browsers,
-      operating_systems: exported_operating_systems
-    }
+  @spec export_operating_systems_q(pos_integer) :: Ecto.Query.t()
+  def export_operating_systems_q(site_id) do
+    from s in "sessions_v2",
+      where: s.site_id == ^site_id,
+      group_by: [selected_as(:date), s.operating_system],
+      order_by: selected_as(:date),
+      select: [
+        date(s.start),
+        s.operating_system,
+        visitors(s),
+        visits(s),
+        visit_duration(s),
+        bounces(s)
+      ]
   end
 
   @spec export_archive(
