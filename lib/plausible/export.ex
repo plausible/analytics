@@ -209,16 +209,15 @@ defmodule Plausible.Export do
 
   @spec export_archive(
           DBConnection.conn(),
-          queries :: [
-            {name :: String.t(), sql :: iodata, params :: [term]}
-            | {name :: String.t(), query :: Ecto.Query.t()}
-          ],
-          on_data :: (iodata -> :ok),
+          queries :: [{name, sql :: iodata, params :: [term]} | {name, query :: Ecto.Query.t()}],
+          on_data_acc,
+          on_data :: (iodata, on_data_acc -> {:ok, on_data_acc}),
           opts :: Keyword.t()
-        ) :: :ok
-  def export_archive(conn, queries, on_data, opts \\ []) do
+        ) :: {:ok, on_data_acc}
+        when name: String.t(), on_data_acc: term
+  def export_archive(conn, queries, on_data_acc, on_data, opts \\ []) do
     {metadata_entry, encoded} = zip_start_entry("metadata.json")
-    :ok = on_data.(encoded)
+    {:ok, on_data_acc} = on_data.(encoded, on_data_acc)
 
     metadata =
       Jason.encode_to_iodata!(%{
@@ -227,49 +226,56 @@ defmodule Plausible.Export do
         "site_id" => Keyword.fetch!(opts, :site_id)
       })
 
-    :ok = on_data.(metadata)
+    {:ok, on_data_acc} = on_data.(metadata, on_data_acc)
     metadata_entry = zip_grow_entry(metadata_entry, metadata)
     {metadata_entry, encoded} = zip_end_entry(metadata_entry)
-    :ok = on_data.(encoded)
+    {:ok, on_data_acc} = on_data.(encoded, on_data_acc)
 
-    entries =
+    raw_queries =
       Enum.map(queries, fn query ->
-        {name, sql, params} =
-          case query do
-            {name, query} ->
-              {sql, params} = Plausible.ClickhouseRepo.to_sql(:all, query)
-              {name, sql, params}
+        case query do
+          {name, query} ->
+            {sql, params} = Plausible.ClickhouseRepo.to_sql(:all, query)
+            {name, sql, params}
 
-            {_name, _sql, _params} = ready ->
-              ready
-          end
+          {_name, _sql, _params} = ready ->
+            ready
+        end
+      end)
 
+    {entries, on_data_acc} =
+      Enum.reduce(raw_queries, {[], on_data_acc}, fn {name, sql, params},
+                                                     {entries, on_data_acc} ->
         Ch.run(conn, fn conn ->
           packets = Ch.stream(conn, sql, params, opts)
           {entry, encoded} = zip_start_entry(name)
-          :ok = on_data.(encoded)
+          {:ok, on_data_acc} = on_data.(encoded, on_data_acc)
 
-          entry =
-            Enum.reduce(packets, entry, fn packets, entry ->
-              Enum.reduce(packets, entry, fn packet, entry ->
+          {entry, on_data_acc} =
+            Enum.reduce(packets, {entry, on_data_acc}, fn packets, acc ->
+              Enum.reduce(packets, acc, fn packet, {entry, on_data_acc} ->
                 case packet do
                   {:data, _ref, data} ->
-                    :ok = on_data.(data)
-                    zip_grow_entry(entry, data)
+                    {:ok, on_data_acc} = on_data.(data, on_data_acc)
+                    {zip_grow_entry(entry, data), on_data_acc}
 
                   _other ->
-                    entry
+                    {entry, on_data_acc}
                 end
               end)
             end)
 
           {entry, encoded} = zip_end_entry(entry)
-          :ok = on_data.(encoded)
-          entry
+          {:ok, on_data_acc} = on_data.(encoded, on_data_acc)
+          {[entry | entries], on_data_acc}
         end)
       end)
 
-    :ok = on_data.(zip_encode_central_directory([metadata_entry | entries]))
+    {:ok, _on_data_acc} =
+      on_data.(
+        zip_encode_central_directory([metadata_entry | :lists.reverse(entries)]),
+        on_data_acc
+      )
   end
 
   @spec zip_start_entry(String.t(), Keyword.t()) :: {zip_entry :: map, iodata}

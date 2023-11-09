@@ -194,6 +194,39 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
+  require Logger
+
+  def full_export(plug_conn, _params) do
+    site_id = plug_conn.assigns.site.id
+    config = Plausible.ClickhouseRepo.config()
+    {:ok, ch_conn} = Ch.start_link(Keyword.put(config, :pool_size, 1))
+
+    queries =
+      site_id
+      |> Plausible.Export.export_queries()
+      |> Enum.map(fn {name, query} -> {"#{name}.csv", query} end)
+
+    plug_conn =
+      plug_conn
+      |> put_resp_content_type("application/zip")
+      |> put_resp_header("content-disposition", "attachment; filename=\"export.zip\"")
+      |> send_chunked(200)
+
+    {:ok, plug_conn} =
+      Plausible.Export.export_archive(
+        ch_conn,
+        queries,
+        plug_conn,
+        fn data, plug_conn ->
+          {:ok, _plug_conn} = chunk(plug_conn, data)
+        end,
+        format: "CSVWithNames",
+        site_id: site_id
+      )
+
+    plug_conn
+  end
+
   @doc """
     Authorizes and renders a shared link:
     1. Shared link with no password protection: needs to just make sure the shared link entry is still

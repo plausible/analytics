@@ -20,8 +20,6 @@ defmodule Plausible.ExportTest do
   end
 
   test "it works", %{site: site, tmp_path: tmp_path, conn: conn} do
-    {:ok, fd} = File.open(tmp_path, [:binary, :raw, :append])
-
     populate_stats(site, [
       build(:pageview,
         user_id: 123,
@@ -48,16 +46,20 @@ defmodule Plausible.ExportTest do
       |> Plausible.Export.export_queries()
       |> Enum.map(fn {name, query} -> {"#{name}.csv", query} end)
 
-    :ok =
-      Plausible.Export.export_archive(
-        conn,
-        queries,
-        fn data -> :file.write(fd, data) end,
-        format: "CSVWithNames",
-        site_id: site.id
-      )
+    assert {:ok, fd} =
+             Plausible.Export.export_archive(
+               conn,
+               queries,
+               _fd = File.open!(tmp_path, [:binary, :raw, :append]),
+               fn data, fd ->
+                 :ok = :file.write(fd, data)
+                 {:ok, fd}
+               end,
+               format: "CSVWithNames",
+               site_id: site.id
+             )
 
-    :ok = File.close(fd)
+    assert :ok = File.close(fd)
 
     assert {:ok, files} = :zip.unzip(to_charlist(tmp_path), cwd: System.tmp_dir!())
     on_exit(fn -> Enum.each(files, &File.rm!/1) end)
