@@ -102,7 +102,7 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/open_telemetry.ex#L50" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/open_telemetry/sampler.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
@@ -116,7 +116,8 @@ Plausible
   <section id="moduledoc">
 <p><a href="https://hexdocs.pm/opentelemetry/readme.html#samplers">Custom OpenTelemetry sampler</a>
 implementation that ignores particular traces to reduce noise. Ingestion
-HTTP requests and queries to Oban tables are ignored, for example.</p>
+HTTP requests and queries to Oban tables are ignored, for example.</p><p>For non-ignored traces, implements trace ID ratio-based sampling following the method
+from <a href="https://github.com/open-telemetry/opentelemetry-erlang/blob/main/apps/opentelemetry/src/otel_sampler_trace_id_ratio_based.erl">built-in sampler</a>.</p>
   </section>
 
 
