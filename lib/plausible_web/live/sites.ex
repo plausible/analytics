@@ -474,6 +474,14 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
+  def handle_event(
+        "filter",
+        %{"filter_text" => filter_text},
+        %{assigns: %{filter_text: filter_text}} = socket
+      ) do
+    {:noreply, socket}
+  end
+
   def handle_event("filter", %{"filter_text" => filter_text}, socket) do
     socket =
       socket
