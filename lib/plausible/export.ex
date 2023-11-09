@@ -223,7 +223,7 @@ defmodule Plausible.Export do
       Jason.encode_to_iodata!(%{
         "version" => "0",
         "format" => Keyword.fetch!(opts, :format),
-        "site_id" => Keyword.fetch!(opts, :site_id)
+        "domain" => Keyword.fetch!(opts, :domain)
       })
 
     {:ok, on_data_acc} = on_data.(metadata, on_data_acc)

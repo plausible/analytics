@@ -56,7 +56,8 @@ defmodule Plausible.ExportTest do
                  {:ok, fd}
                end,
                format: "CSVWithNames",
-               site_id: site.id
+               site_id: site.id,
+               domain: "export.dummy.site"
              )
 
     assert :ok = File.close(fd)
@@ -83,7 +84,7 @@ defmodule Plausible.ExportTest do
 
     assert read_json.("metadata.json") == %{
              "format" => "CSVWithNames",
-             "site_id" => site.id,
+             "domain" => "export.dummy.site",
              "version" => "0"
            }
 

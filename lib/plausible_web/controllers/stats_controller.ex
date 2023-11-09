@@ -195,7 +195,7 @@ defmodule PlausibleWeb.StatsController do
   end
 
   def full_export(plug_conn, _params) do
-    site_id = plug_conn.assigns.site.id
+    %{id: site_id, domain: site_domain} = plug_conn.assigns.site
 
     queries =
       site_id
@@ -218,7 +218,7 @@ defmodule PlausibleWeb.StatsController do
         plug_conn,
         fn data, plug_conn -> {:ok, _plug_conn} = chunk(plug_conn, data) end,
         format: "CSVWithNames",
-        site_id: site_id
+        domain: site_domain
       )
 
     plug_conn

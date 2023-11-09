@@ -4,12 +4,12 @@
       Aggregated Data Export
     </h2>
     <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-      Export aggregated data for this site.
+      Export aggregated data for this site. It can then be imported into another Plausible instance.
     </p>
   </header>
-  <%= link("Download ZIP!1",
+  <%= link("Download ZIP archive!1",
     to: "/#{URI.encode_www_form(@site.domain)}/full-export",
     class:
-      "inline-block mt-4 px-4 py-2 text-sm leading-5 font-medium text-red-600 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150"
+      "inline-block py-2 px-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium text-gray-600 dark:text-gray-50"
   ) %>
 </div>
