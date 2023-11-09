@@ -32,6 +32,21 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       refute html_response(conn, 200) =~ "Add site info"
     end
+
+    test "allows enterprise accounts to create unlimited sites", %{
+      conn: conn,
+      user: user
+    } do
+      ep = insert(:enterprise_plan, user: user)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+
+      conn = get(conn, "/sites/new")
+      refute html_response(conn, 200) =~ "is limited to"
+    end
   end
 
   describe "GET /sites" do
