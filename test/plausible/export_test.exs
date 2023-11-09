@@ -1,7 +1,7 @@
 defmodule Plausible.ExportTest do
   use Plausible.DataCase
 
-  test "it works" do
+  setup do
     site = insert(:site)
 
     tmp_path =
@@ -12,6 +12,14 @@ defmodule Plausible.ExportTest do
 
     File.touch!(tmp_path)
     on_exit(fn -> File.rm!(tmp_path) end)
+
+    config = Plausible.ClickhouseRepo.config()
+    {:ok, conn} = Ch.start_link(Keyword.put(config, :pool_size, 1))
+
+    {:ok, site: site, tmp_path: tmp_path, conn: conn}
+  end
+
+  test "it works", %{site: site, tmp_path: tmp_path, conn: conn} do
     {:ok, fd} = File.open(tmp_path, [:binary, :raw, :append])
 
     populate_stats(site, [
@@ -39,9 +47,6 @@ defmodule Plausible.ExportTest do
       site.id
       |> Plausible.Export.export_queries()
       |> Enum.map(fn {name, query} -> {"#{name}.csv", query} end)
-
-    config = Plausible.ClickhouseRepo.config()
-    {:ok, conn} = Ch.start_link(Keyword.put(config, :pool_size, 1))
 
     :ok =
       Plausible.Export.export_archive(
