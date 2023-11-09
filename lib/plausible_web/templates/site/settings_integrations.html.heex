@@ -6,6 +6,7 @@
   site={@site}
   imported_pageviews={@imported_pageviews}
 />
+<PlausibleWeb.Components.Settings.settings_full_export site={@site} />
 
 <section
   :if={@has_plugins_tokens? || @conn.query_params["new_token"]}

@@ -9,4 +9,5 @@ defmodule PlausibleWeb.Components.Settings do
 
   embed_templates("../templates/site/settings_search_console.html")
   embed_templates("../templates/site/settings_google_import.html")
+  embed_templates("../templates/site/settings_full_export.html")
 end

@@ -48,7 +48,7 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats.{Query, Filters}
   alias PlausibleWeb.Api
 
-  plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
+  plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export, :full_export])
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owner)
@@ -194,12 +194,8 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  require Logger
-
   def full_export(plug_conn, _params) do
     site_id = plug_conn.assigns.site.id
-    config = Plausible.ClickhouseRepo.config()
-    {:ok, ch_conn} = Ch.start_link(Keyword.put(config, :pool_size, 1))
 
     queries =
       site_id
@@ -212,14 +208,15 @@ defmodule PlausibleWeb.StatsController do
       |> put_resp_header("content-disposition", "attachment; filename=\"export.zip\"")
       |> send_chunked(200)
 
+    config = Plausible.ClickhouseRepo.config()
+    {:ok, ch_conn} = Ch.start_link(Keyword.put(config, :pool_size, 1))
+
     {:ok, plug_conn} =
       Plausible.Export.export_archive(
         ch_conn,
         queries,
         plug_conn,
-        fn data, plug_conn ->
-          {:ok, _plug_conn} = chunk(plug_conn, data)
-        end,
+        fn data, plug_conn -> {:ok, _plug_conn} = chunk(plug_conn, data) end,
         format: "CSVWithNames",
         site_id: site_id
       )
