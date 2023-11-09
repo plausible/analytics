@@ -4,7 +4,6 @@ defmodule Plausible.Export do
   import Ecto.Query
   import Bitwise
 
-  # TODO header
   # TODO sampling
   # TODO checksums (whole archive, each compressed CSV, each decompressed CSV)
   # TODO do in one pass over both tables?
@@ -215,6 +214,21 @@ defmodule Plausible.Export do
           opts :: Keyword.t()
         ) :: :ok
   def export_archive(conn, queries, on_data, opts \\ []) do
+    {metadata_entry, encoded} = zip_start_entry("metadata.json")
+    :ok = on_data.(encoded)
+
+    metadata =
+      Jason.encode_to_iodata!(%{
+        "version" => "0",
+        "format" => Keyword.fetch!(opts, :format),
+        "site_id" => Keyword.fetch!(opts, :site_id)
+      })
+
+    :ok = on_data.(metadata)
+    metadata_entry = zip_grow_entry(metadata_entry, metadata)
+    {metadata_entry, encoded} = zip_end_entry(metadata_entry)
+    :ok = on_data.(encoded)
+
     entries =
       Enum.map(queries, fn {name, sql, params} ->
         Ch.run(conn, fn conn ->
@@ -242,7 +256,7 @@ defmodule Plausible.Export do
         end)
       end)
 
-    :ok = on_data.(zip_encode_central_directory(entries))
+    :ok = on_data.(zip_encode_central_directory([metadata_entry | entries]))
   end
 
   @spec zip_start_entry(String.t(), Keyword.t()) :: {zip_entry :: map, iodata}

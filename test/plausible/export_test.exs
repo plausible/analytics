@@ -51,7 +51,8 @@ defmodule Plausible.ExportTest do
         conn,
         raw_queries,
         fn data -> :file.write(fd, data) end,
-        format: "CSVWithNames"
+        format: "CSVWithNames",
+        site_id: site.id
       )
 
     :ok = File.close(fd)
@@ -65,16 +66,22 @@ defmodule Plausible.ExportTest do
              "entry_pages.csv",
              "exit_pages.csv",
              "locations.csv",
+             "metadata.json",
              "operating_systems.csv",
              "pages.csv",
              "sources.csv",
              "visitors.csv"
            ]
 
-    read_csv = fn file ->
-      path = Path.join(System.tmp_dir!(), file)
-      NimbleCSV.RFC4180.parse_string(File.read!(path), skip_headers: false)
-    end
+    read = fn file -> File.read!(Path.join(System.tmp_dir!(), file)) end
+    read_csv = fn file -> NimbleCSV.RFC4180.parse_string(read.(file), skip_headers: false) end
+    read_json = fn file -> Jason.decode!(read.(file)) end
+
+    assert read_json.("metadata.json") == %{
+             "format" => "CSVWithNames",
+             "site_id" => site.id,
+             "version" => "0"
+           }
 
     assert read_csv.("browsers.csv") == [
              ["date", "browser", "visitors", "visits", "visit_duration", "bounces"],
