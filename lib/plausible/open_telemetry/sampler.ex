@@ -45,10 +45,7 @@ defmodule Plausible.OpenTelemetry.Sampler do
     end
   end
 
-  defp decide(:undefined), do: :drop
-  defp decide(0), do: :drop
-
-  defp decide(trace_id) do
+  defp decide(trace_id) when is_integer(trace_id) and trace_id > 0 do
     lower_64_bits = trace_id &&& @max_value
 
     if abs(lower_64_bits) < @id_upper_bound do
@@ -57,4 +54,6 @@ defmodule Plausible.OpenTelemetry.Sampler do
       :drop
     end
   end
+
+  defp decide(_), do: :drop
 end
