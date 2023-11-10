@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Components.Billing do
       not has_access? ->
         ~H"""
         <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
-          This account does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
+          <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
           <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
         </.notice>
         """
@@ -82,7 +82,7 @@ defmodule PlausibleWeb.Components.Billing do
   def limit_exceeded_notice(assigns) do
     ~H"""
     <.notice {@rest}>
-      This account is limited to <%= @limit %> <%= @resource %>. To increase this limit,
+      <%= account_label(@current_user, @billable_user) %> is limited to <%= @limit %> <%= @resource %>. To increase this limit,
       <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
     </.notice>
     """
@@ -90,7 +90,6 @@ defmodule PlausibleWeb.Components.Billing do
 
   attr(:current_user, :map)
   attr(:billable_user, :map)
-  attr(:plan, :atom)
 
   defp upgrade_call_to_action(assigns) do
     billable_user = Plausible.Users.with_subscription(assigns.billable_user)
@@ -103,9 +102,7 @@ defmodule PlausibleWeb.Components.Billing do
 
     cond do
       assigns.billable_user.id !== assigns.current_user.id ->
-        ~H"""
-        please reach out to the site owner to upgrade their subscription
-        """
+        ~H"please reach out to the site owner to upgrade their subscription"
 
       growth? || trial? ->
         ~H"""
@@ -116,9 +113,15 @@ defmodule PlausibleWeb.Components.Billing do
         """
 
       true ->
-        ~H"""
-        please contact support@plausible.io about the Enterprise plan
-        """
+        ~H"please contact support@plausible.io about the Enterprise plan"
+    end
+  end
+
+  defp account_label(current_user, billable_user) do
+    if current_user.id == billable_user.id do
+      "Your account"
+    else
+      "The owner of this site"
     end
   end
 
