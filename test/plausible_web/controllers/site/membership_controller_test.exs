@@ -3,15 +3,36 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
   use Plausible.Repo
   use Bamboo.Test
 
+  import Plausible.Test.Support.HTML
+
   setup [:create_user, :log_in]
 
   describe "GET /sites/:website/memberships/invite" do
     test "shows invite form", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
-      conn = get(conn, "/sites/#{site.domain}/memberships/invite")
+      html =
+        conn
+        |> get("/sites/#{site.domain}/memberships/invite")
+        |> html_response(200)
 
-      assert html_response(conn, 200) =~ "Invite member to"
+      assert html =~ "Invite member to"
+      assert element_exists?(html, ~s/button[type=submit]/)
+      refute element_exists?(html, ~s/button[type=submit][disabled]/)
+    end
+
+    test "disables invite form when is over limit", %{conn: conn, user: user} do
+      memberships =
+        [build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)]
+
+      site = insert(:site, memberships: memberships)
+
+      html =
+        conn
+        |> get("/sites/#{site.domain}/memberships/invite")
+        |> html_response(200)
+
+      assert element_exists?(html, ~s/button[type=submit][disabled]/)
     end
   end
 
@@ -33,7 +54,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
 
     test "fails to create invitation when is over limit", %{conn: conn, user: user} do
       memberships =
-        [build(:site_membership, user: user, role: :owner)] ++ build_list(5, :site_membership)
+        [build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)]
 
       site = insert(:site, memberships: memberships)
 
