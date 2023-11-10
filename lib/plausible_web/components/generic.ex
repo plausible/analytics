@@ -60,42 +60,60 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:title, :string, default: "Notice")
   attr(:size, :atom, default: :sm)
+  attr(:dismissable_id, :any, default: nil)
   attr(:rest, :global)
   slot(:inner_block)
 
   def notice(assigns) do
     ~H"""
-    <div class="rounded-md bg-yellow-50 dark:bg-yellow-100 p-4" {@rest}>
-      <div class="flex">
-        <div :if={@size !== :xs} class="flex-shrink-0">
-          <svg
-            class="h-5 w-5 text-yellow-400"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              fill-rule="evenodd"
-              d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </div>
-        <div class="ml-3">
-          <h3
-            :if={@size !== :xs}
-            class={"text-#{@size} font-medium text-yellow-800 dark:text-yellow-900 mb-2"}
-          >
-            <%= @title %>
-          </h3>
-          <div class={"text-#{@size} text-yellow-700 dark:text-yellow-800"}>
-            <p>
-              <%= render_slot(@inner_block) %>
-            </p>
+    <div id={@dismissable_id} class={@dismissable_id && "hidden"}>
+      <div class="rounded-md bg-yellow-50 dark:bg-yellow-100 p-4 relative" {@rest}>
+        <button
+          :if={@dismissable_id}
+          class="absolute right-0 top-0 m-2 text-yellow-800 dark:text-yellow-900"
+          onclick={"localStorage['notice_dismissed__#{@dismissable_id}'] = 'true'; document.getElementById('#{@dismissable_id}').classList.add('hidden')"}
+        >
+          <.x_icon class="h-4 w-4 font-semibold" />
+        </button>
+        <div class="flex">
+          <div :if={@size !== :xs} class="flex-shrink-0">
+            <svg
+              class="h-5 w-5 text-yellow-400"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3
+              :if={@size !== :xs}
+              class={"text-#{@size} font-medium text-yellow-800 dark:text-yellow-900 mb-2"}
+            >
+              <%= @title %>
+            </h3>
+            <div class={"text-#{@size} text-yellow-700 dark:text-yellow-800"}>
+              <p>
+                <%= render_slot(@inner_block) %>
+              </p>
+            </div>
           </div>
         </div>
       </div>
     </div>
+    <script data-key={@dismissable_id}>
+      const dismissId = document.currentScript.dataset.key
+      const localStorageKey = `notice_dismissed__${dismissId}`
+
+      if (localStorage[localStorageKey] !== 'true') {
+        document.getElementById(dismissId).classList.remove('hidden')
+      }
+    </script>
     """
   end
 
@@ -218,5 +236,22 @@ defmodule PlausibleWeb.Components.Generic do
     else
       ["w-4 h-4"]
     end
+  end
+
+  attr(:class, :string, default: "")
+
+  defp x_icon(assigns) do
+    ~H"""
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="1.5"
+      stroke="currentColor"
+      class={@class}
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+    """
   end
 end
