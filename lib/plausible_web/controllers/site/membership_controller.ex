@@ -30,7 +30,7 @@ defmodule PlausibleWeb.Site.MembershipController do
       |> Plausible.Repo.preload(:owner)
 
     limit = Plausible.Billing.Quota.team_member_limit(site.owner)
-    usage = Plausible.Billing.Quota.team_member_limit(site.owner)
+    usage = Plausible.Billing.Quota.team_member_usage(site.owner)
     below_limit? = Plausible.Billing.Quota.below_limit?(usage, limit)
 
     render(
