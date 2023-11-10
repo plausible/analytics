@@ -1,5 +1,5 @@
 defmodule Plausible.ValueHelpers do
-  @prefix_pattern "[a-zA-Z]+"
+  @prefix_pattern "[a-zA-Z]+(-[a-zA-Z]+)*"
   @id_pattern "\\d+"
   @uuid_pattern "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 
