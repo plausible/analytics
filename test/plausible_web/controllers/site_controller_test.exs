@@ -32,6 +32,21 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       refute html_response(conn, 200) =~ "Add site info"
     end
+
+    test "does not display limit notice when user is on an enterprise plan", %{
+      conn: conn,
+      user: user
+    } do
+      ep = insert(:enterprise_plan, user: user)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+      insert(:site, members: [user])
+
+      conn = get(conn, "/sites/new")
+      refute html_response(conn, 200) =~ "is limited to"
+    end
   end
 
   describe "GET /sites" do
@@ -271,7 +286,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert html = html_response(conn, 200)
-      assert html =~ "This account is limited to 10 sites"
+      assert html =~ "Your account is limited to 10 sites"
       refute Repo.get_by(Plausible.Site, domain: "over-limit.example.com")
     end
 
