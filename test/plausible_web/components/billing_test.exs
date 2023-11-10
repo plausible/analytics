@@ -120,7 +120,7 @@ defmodule PlausibleWeb.Components.BillingTest do
       )
 
     assert rendered =~
-             "Your account is limited to 10 users. To increase this limit, please contact support@plausible.io about the Enterprise plan"
+             "This account is limited to 10 users. To increase this limit, please contact support@plausible.io about the Enterprise plan"
   end
 
   test "limit_exceeded_notice/1 when billable user is on a business plan displays support email" do
@@ -135,6 +135,6 @@ defmodule PlausibleWeb.Components.BillingTest do
       )
 
     assert rendered =~
-             "Your account is limited to 10 users. To increase this limit, please contact support@plausible.io about the Enterprise plan"
+             "This account is limited to 10 users. To increase this limit, please contact support@plausible.io about the Enterprise plan"
   end
 end
