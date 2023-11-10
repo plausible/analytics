@@ -113,7 +113,7 @@ defmodule PlausibleWeb.Components.Billing do
         """
 
       true ->
-        ~H"please contact support@plausible.io about the Enterprise plan"
+        ~H"please contact hello@plausible.io to upgrade your subscription"
     end
   end
 
