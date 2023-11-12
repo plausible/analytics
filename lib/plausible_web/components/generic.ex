@@ -61,13 +61,14 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:title, :string, default: "Notice")
   attr(:size, :atom, default: :sm)
   attr(:dismissable_id, :any, default: nil)
+  attr(:class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
 
   def notice(assigns) do
     ~H"""
     <div id={@dismissable_id} class={@dismissable_id && "hidden"}>
-      <div class="rounded-md bg-yellow-50 dark:bg-yellow-100 p-4 relative" {@rest}>
+      <div class={"rounded-md bg-yellow-50 dark:bg-yellow-100 p-4 relative #{@class}"} {@rest}>
         <button
           :if={@dismissable_id}
           class="absolute right-0 top-0 m-2 text-yellow-800 dark:text-yellow-900"
