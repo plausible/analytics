@@ -330,7 +330,7 @@ defmodule PlausibleWeb.Components.Billing do
     >
       <.notice
         class="rounded-t-md rounded-b-none"
-        dismissable_id="premium_features_private_preview_end"
+        dismissable_id={"premium_features_private_preview_end__#{@user.id}"}
       >
         Business plans are now live! The private preview of <%= PlausibleWeb.TextHelpers.pretty_join(
           Enum.map(@features_to_lose, & &1.display_name())
