@@ -329,7 +329,7 @@ defmodule PlausibleWeb.Components.Billing do
       class="container mt-2"
     >
       <.notice
-        class="rounded-t-md rounded-b-none"
+        class="shadow-md dark:shadow-none"
         dismissable_id={"premium_features_private_preview_end__#{@user.id}"}
       >
         Business plans are now live! The private preview of <%= PlausibleWeb.TextHelpers.pretty_join(
