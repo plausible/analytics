@@ -65,30 +65,35 @@ defmodule Plausible.Export do
       from s in "sessions_v2",
         where: s.site_id == ^site_id,
         group_by: selected_as(:date),
-        select: [date(s.start), bounces(s), visits(s), visit_duration(s)]
+        select: %{
+          date: date(s.start),
+          bounces: bounces(s),
+          visits: visits(s),
+          visit_duration: visit_duration(s)
+        }
 
     visitors_events_q =
       from e in "events_v2",
         where: e.site_id == ^site_id,
         group_by: selected_as(:date),
-        select: [
-          date(e.timestamp),
-          visitors(e),
-          selected_as(fragment("countIf(?='pageview')", e.name), :pageviews)
-        ]
+        select: %{
+          date: date(e.timestamp),
+          visitors: visitors(e),
+          pageviews: selected_as(fragment("countIf(?='pageview')", e.name), :pageviews)
+        }
 
     visitors_q =
       "e"
-      |> with_cte("e", as: ^visitors_sessions_q)
-      |> with_cte("s", as: ^visitors_events_q)
+      |> with_cte("e", as: ^visitors_events_q)
+      |> with_cte("s", as: ^visitors_sessions_q)
 
     from e in visitors_q,
       full_join: s in "s",
       on: e.date == s.date,
       order_by: selected_as(:date),
       select: [
-        # TODO can use coalesce? or greatest(?,?)?
-        selected_as(fragment("if(?,?,?)", e.date == 0, s.date, e.date), :date),
+        # TODO can use coalesce?
+        selected_as(fragment("greatest(?,?)", s.date, e.date), :date),
         e.visitors,
         e.pageviews,
         s.bounces,
