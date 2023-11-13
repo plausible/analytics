@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Components.Billing do
       not has_access? ->
         ~H"""
         <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
-          This account does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
+          <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
           <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
         </.notice>
         """
@@ -80,6 +80,18 @@ defmodule PlausibleWeb.Components.Billing do
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def limit_exceeded_notice(assigns) do
+    ~H"""
+    <.notice {@rest}>
+      <%= account_label(@current_user, @billable_user) %> is limited to <%= @limit %> <%= @resource %>. To increase this limit,
+      <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+    </.notice>
+    """
+  end
+
+  attr(:current_user, :map)
+  attr(:billable_user, :map)
+
+  defp upgrade_call_to_action(assigns) do
     billable_user = Plausible.Users.with_subscription(assigns.billable_user)
 
     plan =
@@ -88,37 +100,28 @@ defmodule PlausibleWeb.Components.Billing do
     trial? = Plausible.Billing.on_trial?(assigns.billable_user)
     growth? = plan && plan.kind == :growth
 
-    if growth? || trial? do
-      ~H"""
-      <.notice {@rest}>
-        This account is limited to <%= @limit %> <%= @resource %>. To increase this limit,
-        <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
-      </.notice>
-      """
-    else
-      ~H"""
-      <.notice {@rest}>
-        Your account is limited to <%= @limit %> <%= @resource %>. To increase this limit, please contact support@plausible.io about the Enterprise plan
-      </.notice>
-      """
+    cond do
+      assigns.billable_user.id !== assigns.current_user.id ->
+        ~H"please reach out to the site owner to upgrade their subscription"
+
+      growth? || trial? ->
+        ~H"""
+        please
+        <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@current_user)}>
+          upgrade your subscription
+        </.link>
+        """
+
+      true ->
+        ~H"please contact support@plausible.io about the Enterprise plan"
     end
   end
 
-  attr(:current_user, :map)
-  attr(:billable_user, :map)
-
-  defp upgrade_call_to_action(assigns) do
-    if assigns.current_user.id == assigns.billable_user.id do
-      ~H"""
-      please
-      <.link class="underline" href={Plausible.Billing.upgrade_route_for(@current_user)}>
-        upgrade your subscription
-      </.link>
-      """
+  defp account_label(current_user, billable_user) do
+    if current_user.id == billable_user.id do
+      "Your account"
     else
-      ~H"""
-      please reach out to the site owner to upgrade their subscription
-      """
+      "The owner of this site"
     end
   end
 

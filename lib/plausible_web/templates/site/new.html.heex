@@ -3,6 +3,7 @@
     <h2 class="text-xl font-black dark:text-gray-100 mb-4">Your website details</h2>
 
     <PlausibleWeb.Components.Billing.limit_exceeded_notice
+      :if={Map.get(assigns, :is_at_limit, false)}
       current_user={@current_user}
       billable_user={@current_user}
       limit={Map.get(assigns, :site_limit, 0)}
