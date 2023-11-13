@@ -611,7 +611,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @growth_highlight_pill) == "Current"
     end
 
-    test "highlights recommended tier", %{conn: conn, user: user} do
+    test "can subscribe again to the currently owned (but cancelled) plan", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "highlights recommended tier if subscription expired and no days are paid for anymore",
+         %{conn: conn, user: user} do
       user.subscription
       |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
       |> Repo.update()
