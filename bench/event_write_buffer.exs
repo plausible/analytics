@@ -30,11 +30,17 @@ measured = fn name, f ->
   result
 end
 
+# TODO
+:code.add_path(:code.root_dir() ++ ~c"/lib/tools-3.6/ebin")
+:ok = Application.load(:tools)
+profile? = System.get_env("EPROF") || System.get_env("PROFILE")
+if profile?, do: :eprof.start_profiling([Process.whereis(Plausible.Event.WriteBuffer)])
+
 measured.("insert into buffer", fn ->
   1..1_000_000
   |> Task.async_stream(
     fn _ -> Plausible.Event.WriteBuffer.insert(event) end,
-    max_concurrency: 10,
+    max_concurrency: 100,
     ordered: false
   )
   |> Stream.run()
@@ -46,3 +52,8 @@ IO.puts(
 
 measured.("flushed", fn -> Plausible.Event.WriteBuffer.flush() end)
 IO.puts("inserted #{Plausible.ClickhouseRepo.aggregate("events_v2", :count)} events")
+
+if profile? do
+  :eprof.stop_profiling()
+  :eprof.analyze()
+end
