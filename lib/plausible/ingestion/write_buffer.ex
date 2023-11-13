@@ -96,4 +96,29 @@ defmodule Plausible.Ingestion.WriteBuffer do
   defp default_max_buffer_size do
     Keyword.fetch!(Application.get_env(:plausible, IngestRepo), :max_buffer_size)
   end
+
+  @doc false
+  def compile_time_prepare(schema) do
+    fields = schema.__schema__(:fields)
+
+    types =
+      Enum.map(fields, fn field ->
+        type = schema.__schema__(:type, field) || raise "missing type for #{field}"
+
+        type
+        |> Ecto.Type.type()
+        |> Ecto.Adapters.ClickHouse.Schema.remap_type(schema, field)
+      end)
+
+    encoding_types = Ch.RowBinary.encoding_types(types)
+
+    header =
+      fields
+      |> Enum.map(&to_string/1)
+      |> Ch.RowBinary.encode_names_and_types(types)
+      |> IO.iodata_to_binary()
+
+    sql = "INSERT INTO #{schema.__schema__(:source)} FORMAT RowBinaryWithNamesAndTypes"
+    %{fields: fields, types: types, encoding_types: encoding_types, header: header, sql: sql}
+  end
 end

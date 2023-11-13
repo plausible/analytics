@@ -1,36 +1,12 @@
 defmodule Plausible.Session.WriteBuffer do
   @moduledoc false
 
-  fields = Plausible.ClickhouseSessionV2.__schema__(:fields)
-
-  types =
-    Enum.map(fields, fn field ->
-      type =
-        Plausible.ClickhouseSessionV2.__schema__(:type, field) ||
-          raise "missing type for #{field}"
-
-      type
-      |> Ecto.Type.type()
-      |> Ecto.Adapters.ClickHouse.Schema.remap_type(Plausible.ClickhouseSessionV2, field)
-    end)
-
-  encoding_types = Ch.RowBinary.encoding_types(types)
-
-  header =
-    fields
-    |> Enum.map(&to_string/1)
-    |> Ch.RowBinary.encode_names_and_types(types)
-    |> IO.iodata_to_binary()
-
-  insert_sql =
-    "INSERT INTO #{Plausible.ClickhouseSessionV2.__schema__(:source)} FORMAT RowBinaryWithNamesAndTypes"
-
-  defp merge_opts(opts) do
-    Keyword.merge(opts, name: __MODULE__, header: unquote(header), sql: unquote(insert_sql))
-  end
+  %{header: header, sql: sql, fields: fields, encoding_types: encoding_types} =
+    Plausible.Ingestion.WriteBuffer.compile_time_prepare(Plausible.ClickhouseSessionV2)
 
   def child_spec(opts) do
-    Plausible.Ingestion.WriteBuffer.child_spec(merge_opts(opts))
+    opts = Keyword.merge(opts, name: __MODULE__, header: unquote(header), sql: unquote(sql))
+    Plausible.Ingestion.WriteBuffer.child_spec(opts)
   end
 
   def insert(sessions) do
