@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>PlausibleWeb.Plugins.API.Schemas.Unauthorized — Plausible v0.0.1</title>
+    <title>Plausible.Site.UserPreference — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,19 +102,19 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugins/api/schemas/unauthorized.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/user_preference.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">PlausibleWeb.Plugins.API.Schemas.Unauthorized</span> 
+  <span translate="no">Plausible.Site.UserPreference</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>OpenAPI schema for a generic 401 response</p>
+<p>User-specific site preferences schema</p>
   </section>
 
 
@@ -146,11 +146,17 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#schema/0" translate="no">schema()</a>
+        <a href="#changeset/3" translate="no">changeset(user, site, attrs \\ %{})</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/open_api_spex/3.18.0/OpenApiSpex.Schema.html#c:schema/0"><code class="inline">OpenApiSpex.Schema.schema/0</code></a>.</p></div>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#options/0" translate="no">options()</a>
+
+      </div>
 
     </div>
 
@@ -176,7 +182,7 @@ Types
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugins/api/schemas/unauthorized.ex#L8" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/user_preference.ex#L9" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -188,7 +194,17 @@ Types
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@type</span> t() :: %PlausibleWeb.Plugins.API.Schemas.Unauthorized{errors: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
+          <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Site.UserPreference{
+  __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  pinned_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  site: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  updated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  user: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  user_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
+}</pre>
 
       </div>
 
@@ -207,16 +223,18 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="schema/0">
+<section class="detail" id="changeset/3">
+
+    <span id="changeset/2"></span>
 
   <div class="detail-header">
-    <a href="#schema/0" class="detail-link" title="Link to this function">
+    <a href="#changeset/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">schema()</h1>
+    <h1 class="signature" translate="no">changeset(user, site, attrs \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/plugins/api/schemas/unauthorized.ex#L8" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/user_preference.ex#L24" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -226,7 +244,31 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/open_api_spex/3.18.0/OpenApiSpex.Schema.html#c:schema/0"><code class="inline">OpenApiSpex.Schema.schema/0</code></a>.</p>
+
+  </section>
+</section>
+<section class="detail" id="options/0">
+
+  <div class="detail-header">
+    <a href="#options/0" class="detail-link" title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">options()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/user_preference.ex#L22" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 
