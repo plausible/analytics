@@ -1,4 +1,5 @@
 defmodule Plausible.Ingestion.WriteBuffer do
+  @moduledoc false
   use GenServer
   require Logger
 
@@ -8,14 +9,12 @@ defmodule Plausible.Ingestion.WriteBuffer do
     GenServer.start_link(__MODULE__, opts, name: Keyword.fetch!(opts, :name))
   end
 
-  def insert(server, schema, value) do
-    GenServer.cast(server, {:insert, encode_rows(schema, value)})
-    {:ok, value}
+  def insert(server, row_binary) do
+    GenServer.cast(server, {:insert, row_binary})
   end
 
   def flush(server) do
     GenServer.call(server, :flush, :infinity)
-    :ok
   end
 
   @impl true
@@ -23,7 +22,6 @@ defmodule Plausible.Ingestion.WriteBuffer do
     buffer = opts[:buffer] || []
     max_buffer_size = opts[:max_buffer_size] || default_max_buffer_size()
     flush_interval_ms = opts[:flush_interval_ms] || default_flush_interval_ms()
-    schema = Keyword.fetch!(opts, :schema)
 
     Process.flag(:trap_exit, true)
     timer = Process.send_after(self(), :tick, flush_interval_ms)
@@ -32,8 +30,8 @@ defmodule Plausible.Ingestion.WriteBuffer do
      %{
        buffer: buffer,
        timer: timer,
-       insert_sql: insert_sql(schema),
-       header: row_binary_header(schema),
+       insert_sql: Keyword.fetch!(opts, :sql),
+       header: Keyword.fetch!(opts, :header),
        buffer_size: length(buffer),
        max_buffer_size: max_buffer_size,
        flush_interval_ms: flush_interval_ms
@@ -97,40 +95,5 @@ defmodule Plausible.Ingestion.WriteBuffer do
 
   defp default_max_buffer_size do
     Keyword.fetch!(Application.get_env(:plausible, IngestRepo), :max_buffer_size)
-  end
-
-  defp insert_sql(schema) do
-    "INSERT INTO #{schema.__schema__(:source)} FORMAT RowBinaryWithNamesAndTypes"
-  end
-
-  defp row_binary_header(schema) do
-    fields = schema.__schema__(:fields)
-    types = Enum.map(fields, fn field -> extract_type(schema, field) end)
-    names = Enum.map(fields, &String.Chars.Atom.to_string/1)
-    Ch.RowBinary.encode_names_and_types(names, types)
-  end
-
-  defp extract_type(schema, field) do
-    type = schema.__schema__(:type, field) || raise "missing type for #{field}"
-    type |> Ecto.Type.type() |> Ecto.Adapters.ClickHouse.Schema.remap_type(schema, field)
-  end
-
-  def encode_rows(schema, %{} = struct) do
-    fields = schema.__schema__(:fields)
-    types = Enum.map(fields, fn field -> extract_type(schema, field) end)
-    values = Enum.map(fields, fn field -> Map.fetch!(struct, field) end)
-    Ch.RowBinary.encode_row(values, types)
-  end
-
-  def encode_rows(schema, [_ | _] = structs) do
-    fields = schema.__schema__(:fields)
-    types = Enum.map(fields, fn field -> extract_type(schema, field) end)
-
-    values =
-      Enum.map(structs, fn struct ->
-        Enum.map(fields, fn field -> Map.fetch!(struct, field) end)
-      end)
-
-    Ch.RowBinary.encode_rows(values, types)
   end
 end

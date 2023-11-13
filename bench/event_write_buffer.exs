@@ -5,8 +5,6 @@ Benchee.init([])
 
 Plausible.IngestRepo.query!("truncate events_v2")
 
-{:ok, pid} = Plausible.Event.WriteBuffer.start_link(name: :bench_event_write_buffer)
-
 event = %Plausible.ClickhouseEventV2{
   name: "pageview",
   site_id: 3,
@@ -35,7 +33,7 @@ end
 measured.("insert into buffer", fn ->
   1..1_000_000
   |> Task.async_stream(
-    fn _ -> Plausible.Event.WriteBuffer.insert(:bench_event_write_buffer, event) end,
+    fn _ -> Plausible.Event.WriteBuffer.insert(event) end,
     max_concurrency: 10,
     ordered: false
   )
@@ -43,11 +41,8 @@ measured.("insert into buffer", fn ->
 end)
 
 IO.puts(
-  "message queue length #{Process.info(pid, :message_queue_len) |> elem(1)} after insert and before flush"
+  "message queue length #{Plausible.Event.WriteBuffer |> Process.whereis() |> Process.info(:message_queue_len) |> elem(1)} after insert and before flush"
 )
 
-measured.("flushed", fn ->
-  Plausible.Event.WriteBuffer.flush(:bench_event_write_buffer)
-end)
-
+measured.("flushed", fn -> Plausible.Event.WriteBuffer.flush() end)
 IO.puts("inserted #{Plausible.ClickhouseRepo.aggregate("events_v2", :count)} events")
