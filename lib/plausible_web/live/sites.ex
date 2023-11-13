@@ -455,7 +455,7 @@ defmodule PlausibleWeb.Live.Sites do
                       x-text="selectedInvitation && selectedInvitation.role"
                     >Admin</b>.
                   </p>
-                  <p
+                  <div
                     x-show="selectedInvitation && selectedInvitation.role === 'owner'"
                     class="mt-2 text-sm text-gray-500 dark:text-gray-200"
                   >
@@ -472,7 +472,7 @@ defmodule PlausibleWeb.Live.Sites do
                       <strong>you will have to enter your card details</strong>
                       to keep using Plausible.
                     </div>
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
