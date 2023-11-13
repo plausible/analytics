@@ -37,16 +37,8 @@ defmodule Plausible.Session.WriteBuffer do
     row_binary =
       sessions
       |> Enum.map(fn %{is_bounce: is_bounce} = session ->
-        is_bounce =
-          case is_bounce do
-            true -> 1
-            false -> 0
-            other -> other
-          end
-
-        %{session | is_bounce: is_bounce}
-      end)
-      |> Enum.map(fn session ->
+        {:ok, is_bounce} = Plausible.ClickhouseSessionV2.BoolUInt8.dump(is_bounce)
+        session = %{session | is_bounce: is_bounce}
         Enum.map(unquote(fields), fn field -> Map.fetch!(session, field) end)
       end)
       |> Ch.RowBinary._encode_rows(unquote(encoding_types))
