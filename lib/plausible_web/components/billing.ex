@@ -318,7 +318,7 @@ defmodule PlausibleWeb.Components.Billing do
 
         _free_10k_or_enterprise_or_growth ->
           used_features = Plausible.Billing.Quota.features_usage(assigns.user)
-          for f_mod <- [Funnels, RevenueGoals], f_mod in used_features, do: f_mod
+          Enum.filter([Funnels, RevenueGoals], &(&1 in used_features))
       end
 
     assigns = assign(assigns, :features_to_lose, features_to_lose)
