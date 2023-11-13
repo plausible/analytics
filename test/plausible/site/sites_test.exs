@@ -1,5 +1,6 @@
 defmodule Plausible.SitesTest do
   use Plausible.DataCase
+
   alias Plausible.Sites
 
   describe "is_member?" do
@@ -82,7 +83,7 @@ defmodule Plausible.SitesTest do
     end
   end
 
-  describe "list/3" do
+  describe "list/3 and list_with_invitations/3" do
     test "returns empty when there are no sites" do
       user = insert(:user)
       _rogue_site = insert(:site)
@@ -94,8 +95,274 @@ defmodule Plausible.SitesTest do
                total_entries: 0,
                total_pages: 1
              } = Sites.list(user, %{})
+
+      assert %{
+               entries: [],
+               page_size: 24,
+               page_number: 1,
+               total_entries: 0,
+               total_pages: 1
+             } = Sites.list_with_invitations(user, %{})
     end
 
+    test "pinned site doesn't matter with membership revoked (no active invitations)" do
+      user1 = insert(:user, email: "user1@example.com")
+      user2 = insert(:user, email: "user2@example.com")
+
+      insert(:site, members: [user1], domain: "one.example.com")
+
+      site2 =
+        insert(:site,
+          members: [user2],
+          domain: "two.example.com"
+        )
+
+      membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
+
+      {:ok, _} = Sites.toggle_pin(user1, site2)
+
+      Repo.delete!(membership)
+
+      assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
+      assert %{entries: [%{domain: "one.example.com"}]} = Sites.list_with_invitations(user1, %{})
+    end
+
+    test "pinned site doesn't matter with membership revoked (with active invitation)" do
+      user1 = insert(:user, email: "user1@example.com")
+      user2 = insert(:user, email: "user2@example.com")
+
+      insert(:site, members: [user1], domain: "one.example.com")
+
+      site2 =
+        insert(:site,
+          members: [user2],
+          domain: "two.example.com"
+        )
+
+      membership = insert(:site_membership, user: user1, role: :viewer, site: site2)
+      insert(:invitation, email: user1.email, inviter: user2, role: :owner, site: site2)
+
+      {:ok, _} = Sites.toggle_pin(user1, site2)
+
+      Repo.delete!(membership)
+
+      assert %{entries: [%{domain: "one.example.com"}]} = Sites.list(user1, %{})
+
+      assert %{entries: [%{domain: "two.example.com"}, %{domain: "one.example.com"}]} =
+               Sites.list_with_invitations(user1, %{})
+    end
+
+    test "puts invitations first, pinned sites second, sites last" do
+      user = insert(:user, email: "hello@example.com")
+
+      site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
+      site2 = %{id: site_id2} = insert(:site, members: [user], domain: "two.example.com")
+      %{id: site_id4} = insert(:site, members: [user], domain: "four.example.com")
+
+      _rogue_site = insert(:site, domain: "rogue.example.com")
+
+      insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+
+      %{id: site_id3} =
+        insert(:site,
+          domain: "three.example.com",
+          invitations: [
+            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+          ]
+        )
+
+      insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
+
+      insert(:invitation,
+        site: site1,
+        inviter: user,
+        email: "another@example.com"
+      )
+
+      {:ok, _} = Sites.toggle_pin(user, site2)
+
+      assert %{
+               entries: [
+                 %{id: ^site_id2, entry_type: "pinned_site"},
+                 %{id: ^site_id4, entry_type: "site"},
+                 %{id: ^site_id1, entry_type: "site"}
+               ]
+             } = Sites.list(user, %{})
+
+      assert %{
+               entries: [
+                 %{id: ^site_id1, entry_type: "invitation"},
+                 %{id: ^site_id3, entry_type: "invitation"},
+                 %{id: ^site_id2, entry_type: "pinned_site"},
+                 %{id: ^site_id4, entry_type: "site"}
+               ]
+             } = Sites.list_with_invitations(user, %{})
+    end
+
+    test "pinned sites are ordered according to the time they were pinned at" do
+      user = insert(:user, email: "hello@example.com")
+
+      site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
+      site2 = %{id: site_id2} = insert(:site, members: [user], domain: "two.example.com")
+      site4 = %{id: site_id4} = insert(:site, members: [user], domain: "four.example.com")
+
+      _rogue_site = insert(:site, domain: "rogue.example.com")
+
+      insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+
+      %{id: site_id3} =
+        insert(:site,
+          domain: "three.example.com",
+          invitations: [
+            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+          ]
+        )
+
+      insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
+
+      insert(:invitation,
+        site: site1,
+        inviter: user,
+        email: "another@example.com"
+      )
+
+      Sites.set_option(user, site2, :pinned_at, ~N[2023-10-22 12:00:00])
+      {:ok, _} = Sites.toggle_pin(user, site4)
+
+      assert %{
+               entries: [
+                 %{id: ^site_id4, entry_type: "pinned_site"},
+                 %{id: ^site_id2, entry_type: "pinned_site"},
+                 %{id: ^site_id1, entry_type: "site"}
+               ]
+             } = Sites.list(user, %{})
+
+      assert %{
+               entries: [
+                 %{id: ^site_id1, entry_type: "invitation"},
+                 %{id: ^site_id3, entry_type: "invitation"},
+                 %{id: ^site_id4, entry_type: "pinned_site"},
+                 %{id: ^site_id2, entry_type: "pinned_site"}
+               ]
+             } = Sites.list_with_invitations(user, %{})
+    end
+
+    test "filters by domain" do
+      user = insert(:user)
+      %{id: site_id1} = insert(:site, domain: "first.example.com", members: [user])
+      %{id: _site_id2} = insert(:site, domain: "second.example.com", members: [user])
+      _rogue_site = insert(:site)
+
+      %{id: site_id3} =
+        insert(:site,
+          domain: "first-another.example.com",
+          invitations: [
+            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+          ]
+        )
+
+      assert %{
+               entries: [
+                 %{id: ^site_id1}
+               ]
+             } = Sites.list(user, %{}, filter_by_domain: "first")
+
+      assert %{
+               entries: [
+                 %{id: ^site_id3},
+                 %{id: ^site_id1}
+               ]
+             } = Sites.list_with_invitations(user, %{}, filter_by_domain: "first")
+    end
+  end
+
+  describe "list/3" do
+    test "returns sites only, no invitations" do
+      user = insert(:user, email: "hello@example.com")
+
+      site1 = %{id: site_id1} = insert(:site, members: [user], domain: "one.example.com")
+      %{id: site_id2} = insert(:site, members: [user], domain: "two.example.com")
+      %{id: site_id4} = insert(:site, members: [user], domain: "four.example.com")
+
+      _rogue_site = insert(:site, domain: "rogue.example.com")
+
+      insert(:invitation, email: user.email, inviter: build(:user), role: :owner, site: site1)
+
+      insert(:site,
+        domain: "three.example.com",
+        invitations: [
+          build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+        ]
+      )
+
+      insert(:invitation, email: "friend@example.com", inviter: user, role: :viewer, site: site1)
+
+      insert(:invitation,
+        site: site1,
+        inviter: user,
+        email: "another@example.com"
+      )
+
+      assert %{
+               entries: [
+                 %{id: ^site_id4, entry_type: "site"},
+                 %{id: ^site_id1, entry_type: "site"},
+                 %{id: ^site_id2, entry_type: "site"}
+               ]
+             } = Sites.list(user, %{})
+    end
+
+    test "handles pagination correctly" do
+      user = insert(:user)
+      %{id: site_id1} = insert(:site, members: [user])
+      %{id: site_id2} = insert(:site, members: [user])
+      _rogue_site = insert(:site)
+
+      insert(:site,
+        invitations: [
+          build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+        ]
+      )
+
+      site4 = %{id: site_id4} = insert(:site, members: [user])
+
+      {:ok, _} = Sites.toggle_pin(user, site4)
+
+      assert %{
+               entries: [
+                 %{id: ^site_id4},
+                 %{id: ^site_id1}
+               ],
+               page_number: 1,
+               page_size: 2,
+               total_entries: 3,
+               total_pages: 2
+             } = Sites.list(user, %{"page_size" => 2})
+
+      assert %{
+               entries: [
+                 %{id: ^site_id2}
+               ],
+               page_number: 2,
+               page_size: 2,
+               total_entries: 3,
+               total_pages: 2
+             } = Sites.list(user, %{"page" => 2, "page_size" => 2})
+
+      assert %{
+               entries: [
+                 %{id: ^site_id4},
+                 %{id: ^site_id1}
+               ],
+               page_number: 1,
+               page_size: 2,
+               total_entries: 3,
+               total_pages: 2
+             } = Sites.list(user, %{"page" => 1, "page_size" => 2})
+    end
+  end
+
+  describe "list_with_invitations/3" do
     test "returns invitations and sites" do
       user = insert(:user, email: "hello@example.com")
 
@@ -125,34 +392,12 @@ defmodule Plausible.SitesTest do
 
       assert %{
                entries: [
-                 %{id: ^site_id1, list_type: "invitation"},
-                 %{id: ^site_id3, list_type: "invitation"},
-                 %{id: ^site_id4, list_type: "site"},
-                 %{id: ^site_id2, list_type: "site"}
+                 %{id: ^site_id1, entry_type: "invitation"},
+                 %{id: ^site_id3, entry_type: "invitation"},
+                 %{id: ^site_id4, entry_type: "site"},
+                 %{id: ^site_id2, entry_type: "site"}
                ]
-             } = Sites.list(user, %{})
-    end
-
-    test "filters by domain" do
-      user = insert(:user)
-      %{id: site_id1} = insert(:site, domain: "first.example.com", members: [user])
-      %{id: _site_id2} = insert(:site, domain: "second.example.com", members: [user])
-      _rogue_site = insert(:site)
-
-      %{id: site_id3} =
-        insert(:site,
-          domain: "first-another.example.com",
-          invitations: [
-            build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
-          ]
-        )
-
-      assert %{
-               entries: [
-                 %{id: ^site_id3},
-                 %{id: ^site_id1}
-               ]
-             } = Sites.list(user, %{}, filter_by_domain: "first")
+             } = Sites.list_with_invitations(user, %{})
     end
 
     test "handles pagination correctly" do
@@ -177,7 +422,7 @@ defmodule Plausible.SitesTest do
                page_size: 2,
                total_entries: 3,
                total_pages: 2
-             } = Sites.list(user, %{"page_size" => 2})
+             } = Sites.list_with_invitations(user, %{"page_size" => 2})
 
       assert %{
                entries: [
@@ -187,7 +432,7 @@ defmodule Plausible.SitesTest do
                page_size: 2,
                total_entries: 3,
                total_pages: 2
-             } = Sites.list(user, %{"page" => 2, "page_size" => 2})
+             } = Sites.list_with_invitations(user, %{"page" => 2, "page_size" => 2})
 
       assert %{
                entries: [
@@ -198,7 +443,102 @@ defmodule Plausible.SitesTest do
                page_size: 2,
                total_entries: 3,
                total_pages: 2
-             } = Sites.list(user, %{"page" => 1, "page_size" => 2})
+             } = Sites.list_with_invitations(user, %{"page" => 1, "page_size" => 2})
+    end
+  end
+
+  describe "set_option/4" do
+    test "allows setting option multiple times" do
+      user = insert(:user)
+      site = insert(:site, members: [user])
+
+      assert prefs =
+               %{pinned_at: %NaiveDateTime{}} =
+               Sites.set_option(user, site, :pinned_at, NaiveDateTime.utc_now())
+
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.pinned_at
+
+      assert prefs =
+               %{pinned_at: nil} = Sites.set_option(user, site, :pinned_at, nil)
+
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      refute prefs.pinned_at
+
+      assert prefs =
+               %{pinned_at: %NaiveDateTime{}} =
+               Sites.set_option(user, site, :pinned_at, NaiveDateTime.utc_now())
+
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.pinned_at
+    end
+
+    test "raises on invalid option" do
+      user = insert(:user)
+      site = insert(:site, members: [user])
+
+      assert_raise FunctionClauseError, fn ->
+        Sites.set_option(user, site, :invalid, false)
+      end
+    end
+
+    test "raises on invalid site/user combination" do
+      user = insert(:user)
+      site = insert(:site)
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Sites.set_option(user, site, :pinned_at, nil)
+      end
+    end
+  end
+
+  describe "toggle_pin/2" do
+    test "allows pinning and unpinning site" do
+      user = insert(:user)
+      site = insert(:site, members: [user])
+
+      site = %{site | pinned_at: nil}
+      assert {:ok, prefs} = Sites.toggle_pin(user, site)
+      assert prefs = %{pinned_at: %NaiveDateTime{}} = prefs
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.pinned_at
+
+      site = %{site | pinned_at: NaiveDateTime.utc_now()}
+      assert {:ok, prefs} = Sites.toggle_pin(user, site)
+      assert %{pinned_at: nil} = prefs
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      refute prefs.pinned_at
+
+      site = %{site | pinned_at: nil}
+      assert {:ok, prefs} = Sites.toggle_pin(user, site)
+      assert %{pinned_at: %NaiveDateTime{}} = prefs
+      prefs = Repo.reload!(prefs)
+      assert prefs.site_id == site.id
+      assert prefs.user_id == user.id
+      assert prefs.pinned_at
+    end
+
+    test "returns error when pins limit hit" do
+      user = insert(:user)
+
+      for _ <- 1..9 do
+        site = insert(:site, members: [user])
+        assert {:ok, _} = Sites.toggle_pin(user, site)
+      end
+
+      site = insert(:site, members: [user])
+
+      assert {:error, :too_many_pins} = Sites.toggle_pin(user, site)
     end
   end
 end

@@ -1,6 +1,17 @@
 defmodule Plausible.Sites do
-  alias Plausible.{Repo, Site, Site.SharedLink, Billing.Quota}
+  @moduledoc """
+  Sites context functions.
+  """
+
   import Ecto.Query
+
+  alias Plausible.Auth
+  alias Plausible.Billing.Quota
+  alias Plausible.Repo
+  alias Plausible.Site
+  alias Plausible.Site.SharedLink
+
+  require Plausible.Site.UserPreference
 
   @type list_opt() :: {:filter_by_domain, String.t()}
 
@@ -12,51 +23,128 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
-  @spec list(Plausible.Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
+  @spec toggle_pin(Auth.User.t(), Site.t()) ::
+          {:ok, Site.UserPreference.t()} | {:error, :too_many_pins}
+  def toggle_pin(user, site) do
+    pinned_at =
+      if site.pinned_at do
+        nil
+      else
+        NaiveDateTime.utc_now()
+      end
+
+    with :ok <- check_user_pin_limit(user, pinned_at) do
+      {:ok, set_option(user, site, :pinned_at, pinned_at)}
+    end
+  end
+
+  @pins_limit 9
+
+  defp check_user_pin_limit(_user, nil), do: :ok
+
+  defp check_user_pin_limit(user, _) do
+    pins_count =
+      from(up in Site.UserPreference,
+        where: up.user_id == ^user.id and not is_nil(up.pinned_at)
+      )
+      |> Repo.aggregate(:count)
+
+    if pins_count + 1 > @pins_limit do
+      {:error, :too_many_pins}
+    else
+      :ok
+    end
+  end
+
+  @spec set_option(Auth.User.t(), Site.t(), atom(), any()) :: Site.UserPreference.t()
+  def set_option(user, site, option, value) when option in Site.UserPreference.options() do
+    get_for_user!(user.id, site.domain)
+
+    user
+    |> Site.UserPreference.changeset(site, %{option => value})
+    |> Repo.insert!(
+      conflict_target: [:user_id, :site_id],
+      # This way of conflict handling enables doing upserts of options leaving
+      # existing, unrelated values intact.
+      on_conflict: from(p in Site.UserPreference, update: [set: [{^option, ^value}]]),
+      returning: true
+    )
+  end
+
+  @spec list(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
   def list(user, pagination_params, opts \\ []) do
     domain_filter = Keyword.get(opts, :filter_by_domain)
 
-    base_query =
-      from(s in Plausible.Site,
-        left_join: sm in assoc(s, :memberships),
-        on: sm.user_id == ^user.id,
-        left_join: i in assoc(s, :invitations),
-        on: i.email == ^user.email,
-        where: not is_nil(i.id) or not is_nil(sm.id),
-        select: %{
-          s
-          | list_type:
+    from(s in Site,
+      left_join: up in Site.UserPreference,
+      on: up.site_id == s.id and up.user_id == ^user.id,
+      inner_join: sm in assoc(s, :memberships),
+      on: sm.user_id == ^user.id,
+      select: %{
+        s
+        | pinned_at: selected_as(up.pinned_at, :pinned_at),
+          entry_type:
+            selected_as(
               fragment(
                 """
-                  CASE WHEN ? IS NOT NULL THEN 'invitation'
-                       ELSE 'site'
-                  END
+                CASE 
+                  WHEN ? IS NOT NULL THEN 'pinned_site'
+                  ELSE 'site'
+                END
                 """,
-                i.id
+                up.pinned_at
+              ),
+              :entry_type
+            )
+      },
+      order_by: [asc: selected_as(:entry_type), desc: selected_as(:pinned_at), asc: s.domain],
+      preload: [memberships: sm]
+    )
+    |> maybe_filter_by_domain(domain_filter)
+    |> Repo.paginate(pagination_params)
+  end
+
+  @spec list_with_invitations(Auth.User.t(), map(), [list_opt()]) :: Scrivener.Page.t()
+  def list_with_invitations(user, pagination_params, opts \\ []) do
+    domain_filter = Keyword.get(opts, :filter_by_domain)
+
+    result =
+      from(s in Site,
+        left_join: up in Site.UserPreference,
+        on: up.site_id == s.id and up.user_id == ^user.id,
+        left_join: i in assoc(s, :invitations),
+        on: i.email == ^user.email,
+        left_join: sm in assoc(s, :memberships),
+        on: sm.user_id == ^user.id,
+        where: not is_nil(sm.id) or not is_nil(i.id),
+        select: %{
+          s
+          | pinned_at: selected_as(up.pinned_at, :pinned_at),
+            entry_type:
+              selected_as(
+                fragment(
+                  """
+                  CASE 
+                    WHEN ? IS NOT NULL THEN 'invitation'
+                    WHEN ? IS NOT NULL THEN 'pinned_site'
+                    ELSE 'site'
+                  END
+                  """,
+                  i.id,
+                  up.pinned_at
+                ),
+                :entry_type
               )
-        }
-      )
-
-    memberships_query =
-      from sm in Plausible.Site.Membership,
-        where: sm.user_id == ^user.id
-
-    invitations_query =
-      from i in Plausible.Auth.Invitation,
-        where: i.email == ^user.email
-
-    sites_query =
-      from(s in subquery(base_query),
-        order_by: [asc: s.list_type, asc: s.domain],
-        preload: [
-          memberships: ^memberships_query,
-          invitations: ^invitations_query
-        ]
+        },
+        order_by: [asc: selected_as(:entry_type), desc: selected_as(:pinned_at), asc: s.domain],
+        preload: [memberships: sm, invitations: i]
       )
       |> maybe_filter_by_domain(domain_filter)
+      |> Repo.paginate(pagination_params)
 
-    result = Repo.paginate(sites_query, pagination_params)
-
+    # Populating `site` preload on `invitation`
+    # without requesting it from database.
+    # Necessary for invitation modals logic.
     entries =
       Enum.map(result.entries, fn
         %{invitations: [invitation]} = site ->
@@ -99,7 +187,7 @@ defmodule Plausible.Sites do
   defp maybe_start_trial(multi, user) do
     case user.trial_expiry_date do
       nil ->
-        changeset = Plausible.Auth.User.start_trial(user)
+        changeset = Auth.User.start_trial(user)
         Ecto.Multi.update(multi, :user, changeset)
 
       _ ->
@@ -107,7 +195,7 @@ defmodule Plausible.Sites do
     end
   end
 
-  @spec stats_start_date(Plausible.Site.t()) :: Date.t() | nil
+  @spec stats_start_date(Site.t()) :: Date.t() | nil
   @doc """
   Returns the date of the first event of the given site, or `nil` if the site
   does not have stats yet.
@@ -156,7 +244,7 @@ defmodule Plausible.Sites do
   end
 
   def get_for_user!(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
-    if :super_admin in roles and Plausible.Auth.is_super_admin?(user_id) do
+    if :super_admin in roles and Auth.is_super_admin?(user_id) do
       get_by_domain!(domain)
     else
       user_id
@@ -166,7 +254,7 @@ defmodule Plausible.Sites do
   end
 
   def get_for_user(user_id, domain, roles \\ [:owner, :admin, :viewer]) do
-    if :super_admin in roles and Plausible.Auth.is_super_admin?(user_id) do
+    if :super_admin in roles and Auth.is_super_admin?(user_id) do
       get_by_domain(domain)
     else
       user_id

@@ -197,6 +197,33 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert html_response(conn, 200) =~ "No sites found. Please search for something else."
       refute html_response(conn, 200) =~ "You don't have any sites yet."
     end
+
+    test "shows settings on sites when user is an admin", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, domain: "example.com", members: [user])
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      assert resp =~ "/#{site.domain}/settings"
+    end
+
+    test "does not show settings on sites when user is not an admin or owner", %{
+      conn: conn,
+      user: user
+    } do
+      site =
+        insert(:site,
+          domain: "example.com",
+          memberships: [build(:site_membership, user: user, role: :viewer)]
+        )
+
+      conn = get(conn, "/sites")
+      resp = html_response(conn, 200)
+
+      refute resp =~ "/#{site.domain}/settings"
+    end
   end
 
   describe "POST /sites" do

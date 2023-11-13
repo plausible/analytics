@@ -5,3 +5,9 @@ window.addEventListener(`phx:update-value`, (e) => {
     el.dispatchEvent(new Event("input", { bubbles: true }))
   }
 })
+
+window.addEventListener(`phx:js-exec`, ({ detail }) => {
+  document.querySelectorAll(detail.to).forEach(el => {
+    window.liveSocket.execJS(el, el.getAttribute(detail.attr))
+  })
+})

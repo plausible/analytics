@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Live.Sites do
   """
 
   use Phoenix.LiveView
+  alias Phoenix.LiveView.JS
   use Phoenix.HTML
 
   import PlausibleWeb.Components.Generic
@@ -52,12 +53,13 @@ defmodule PlausibleWeb.Live.Sites do
   def render(assigns) do
     invitations =
       assigns.sites.entries
-      |> Enum.filter(&(&1.list_type == "invitation"))
+      |> Enum.filter(&(&1.entry_type == "invitation"))
       |> Enum.flat_map(& &1.invitations)
 
     assigns = assign(assigns, :invitations, invitations)
 
     ~H"""
+    <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
     <div
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
       x-on:keydown.escape.window="invitationOpen = false"
@@ -95,12 +97,12 @@ defmodule PlausibleWeb.Live.Sites do
         <ul class="my-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <%= for site <- @sites.entries do %>
             <.site
-              :if={site.list_type == "site"}
+              :if={site.entry_type in ["pinned_site", "site"]}
               site={site}
               hourly_stats={@hourly_stats[site.domain]}
             />
             <.invitation
-              :if={site.list_type == "invitation"}
+              :if={site.entry_type == "invitation"}
               site={site}
               invitation={hd(site.invitations)}
               hourly_stats={@hourly_stats[site.domain]}
@@ -118,7 +120,7 @@ defmodule PlausibleWeb.Live.Sites do
           Total of <span class="font-medium"><%= @sites.total_entries %></span> sites
         </.pagination>
         <.invitation_modal
-          :if={Enum.any?(@sites.entries, &(&1.list_type == "invitation"))}
+          :if={Enum.any?(@sites.entries, &(&1.entry_type == "invitation"))}
           user={@user}
         />
       </div>
@@ -172,6 +174,7 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <li
       class="group cursor-pointer"
+      id={"site-card-#{hash_domain(@site.domain)}"}
       data-domain={@site.domain}
       x-on:click={"invitationOpen = true; selectedInvitation = invitations['#{@invitation.invitation_id}']"}
     >
@@ -203,7 +206,24 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site(assigns) do
     ~H"""
-    <li class="group relative" data-domain={@site.domain}>
+    <li
+      class="group relative hidden"
+      id={"site-card-#{hash_domain(@site.domain)}"}
+      data-domain={@site.domain}
+      data-pin-toggled={
+        JS.show(
+          transition: {"duration-500", "opacity-0 shadow-2xl -translate-y-6", "opacity-100 shadow"},
+          time: 400
+        )
+      }
+      data-pin-failed={
+        JS.show(
+          transition: {"duration-500", "opacity-0", "opacity-100"},
+          time: 200
+        )
+      }
+      phx-mounted={JS.show()}
+    >
       <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
         <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
@@ -220,15 +240,101 @@ defmodule PlausibleWeb.Live.Sites do
           <.site_stats hourly_stats={@hourly_stats} />
         </div>
       </.unstyled_link>
-      <%= if List.first(@site.memberships).role != :viewer do %>
-        <.unstyled_link
-          href={"/#{URI.encode_www_form(@site.domain)}/settings"}
-          class="absolute top-0 right-0 p-4 mt-1"
-        >
-          <Heroicons.cog_8_tooth class="w-4 h-4 text-gray-800 dark:text-gray-400" />
-        </.unstyled_link>
-      <% end %>
+
+      <.ellipsis_menu site={@site} />
     </li>
+    """
+  end
+
+  def ellipsis_menu(assigns) do
+    ~H"""
+    <div x-data="dropdown">
+      <a
+        x-on:click="toggle()"
+        x-ref="button"
+        x-bind:aria-expanded="open"
+        x-bind:aria-controls="$id('dropdown-button')"
+        class="absolute top-0 right-0 h-10 w-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400"
+      >
+        <Heroicons.ellipsis_vertical
+          class="absolute top-3 right-3 w-4 h-4"
+          aria-expanded="false"
+          aria-haspopup="true"
+        />
+      </a>
+
+      <div
+        x-ref="panel"
+        x-show="open"
+        x-bind:id="$id('dropdown-button')"
+        x-on:click.outside="close($refs.button)"
+        x-on:click="onPanelClick"
+        x-transition.origin.top.right
+        x-transition.duration.100ms
+        class="absolute top-7 right-3 z-10 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+        style="display: none;"
+        role="menu"
+        aria-orientation="vertical"
+        aria-label={"#{@site.domain} menu button"}
+        tabindex="-1"
+      >
+        <div class="py-1 text-sm" role="none">
+          <.unstyled_link
+            :if={List.first(@site.memberships).role != :viewer}
+            href={"/#{URI.encode_www_form(@site.domain)}/settings"}
+            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
+            role="menuitem"
+            tabindex="-1"
+          >
+            <Heroicons.cog_6_tooth class="mr-3 h-5 w-5" />
+            <span>Settings</span>
+          </.unstyled_link>
+
+          <button
+            type="button"
+            class="w-full text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
+            role="menuitem"
+            tabindex="-1"
+            x-on:click="close($refs.button)"
+            phx-click={
+              JS.hide(
+                transition: {"duration-500", "opacity-100", "opacity-0"},
+                to: "#site-card-#{hash_domain(@site.domain)}",
+                time: 500
+              )
+              |> JS.push("pin-toggle")
+            }
+            phx-value-domain={@site.domain}
+          >
+            <.icon_pin
+              :if={@site.pinned_at}
+              class="pt-1 mr-3 h-5 w-5 text-red-400 stroke-red-500 dark:text-yellow-600 dark:stroke-yellow-700"
+            />
+            <span :if={@site.pinned_at}>Unpin Site</span>
+
+            <.icon_pin :if={!@site.pinned_at} class="pt-1 mr-3 h-5 w-5" />
+            <span :if={!@site.pinned_at}>Pin Site</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  attr :rest, :global
+
+  def icon_pin(assigns) do
+    ~H"""
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      fill="currentColor"
+      viewBox="0 0 16 16"
+      {@rest}
+    >
+      <path d="M9.828.722a.5.5 0 0 1 .354.146l4.95 4.95a.5.5 0 0 1 0 .707c-.48.48-1.072.588-1.503.588-.177 0-.335-.018-.46-.039l-3.134 3.134a5.927 5.927 0 0 1 .16 1.013c.046.702-.032 1.687-.72 2.375a.5.5 0 0 1-.707 0l-2.829-2.828-3.182 3.182c-.195.195-1.219.902-1.414.707-.195-.195.512-1.22.707-1.414l3.182-3.182-2.828-2.829a.5.5 0 0 1 0-.707c.688-.688 1.673-.767 2.375-.72a5.922 5.922 0 0 1 1.013.16l3.134-3.133a2.772 2.772 0 0 1-.04-.461c0-.43.108-1.022.589-1.503a.5.5 0 0 1 .353-.146z" />
+    </svg>
     """
   end
 
@@ -236,17 +342,15 @@ defmodule PlausibleWeb.Live.Sites do
 
   def site_stats(assigns) do
     ~H"""
-    <div class="md:h-[78px] h-20 pl-8 pr-8 pt-2">
+    <div class="md:h-[68px] sm:h-[58px] h-20 pl-8 pr-8 pt-2">
       <div :if={@hourly_stats == :loading} class="text-center animate-pulse">
-        <div class="md:h-[34px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
-        <div class="md:h-[26px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+        <div class="md:h-[34px] sm:h-[30px] h-11 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
+        <div class="md:h-[26px] sm:h-[18px] h-6 mt-1 dark:bg-gray-700 bg-gray-100 rounded-md"></div>
       </div>
       <div
         :if={is_map(@hourly_stats)}
         class="hidden h-50px"
-        phx-mounted={
-          Phoenix.LiveView.JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})
-        }
+        phx-mounted={JS.show(transition: {"ease-in duration-500", "opacity-0", "opacity-100"})}
       >
         <span class="text-gray-600 dark:text-gray-400 text-sm truncate">
           <PlausibleWeb.Live.Components.Visitors.chart intervals={@hourly_stats.intervals} />
@@ -474,6 +578,53 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
+  def handle_event("pin-toggle", %{"domain" => domain}, socket) do
+    site = Enum.find(socket.assigns.sites.entries, &(&1.domain == domain))
+
+    if site do
+      socket =
+        case Sites.toggle_pin(socket.assigns.user, site) do
+          {:ok, preference} ->
+            flash_message =
+              if preference.pinned_at do
+                "Site pinned"
+              else
+                "Site unpinned"
+              end
+
+            socket
+            |> put_flash(:success, flash_message)
+            |> load_sites()
+            |> push_event("js-exec", %{
+              to: "#site-card-#{hash_domain(site.domain)}",
+              attr: "data-pin-toggled"
+            })
+
+          {:error, :too_many_pins} ->
+            flash_message =
+              "Looks like you've hit the pinned sites limit! " <>
+                "Please unpin one of your pinned sites to make room for new pins"
+
+            socket
+            |> put_flash(:error, flash_message)
+            |> push_event("js-exec", %{
+              to: "#site-card-#{hash_domain(site.domain)}",
+              attr: "data-pin-failed"
+            })
+        end
+
+      Process.send_after(self(), :clear_flash, 5000)
+
+      {:noreply, socket}
+    else
+      Sentry.capture_message("Attempting to toggle pin for invalid domain.",
+        extra: %{domain: domain, user: socket.assigns.user.id}
+      )
+
+      {:noreply, socket}
+    end
+  end
+
   def handle_event(
         "filter",
         %{"filter_text" => filter_text},
@@ -500,8 +651,15 @@ defmodule PlausibleWeb.Live.Sites do
     {:noreply, socket}
   end
 
+  def handle_info(:clear_flash, socket) do
+    {:noreply, clear_flash(socket)}
+  end
+
   defp load_sites(%{assigns: assigns} = socket) do
-    sites = Sites.list(assigns.user, assigns.params, filter_by_domain: assigns.filter_text)
+    sites =
+      Sites.list_with_invitations(assigns.user, assigns.params,
+        filter_by_domain: assigns.filter_text
+      )
 
     hourly_stats =
       if connected?(socket) do
@@ -551,5 +709,9 @@ defmodule PlausibleWeb.Live.Sites do
       uri: %{uri | query: uri_params},
       params: Map.drop(socket.assigns.params, pagination_fields)
     )
+  end
+
+  defp hash_domain(domain) do
+    :sha |> :crypto.hash(domain) |> Base.encode16()
   end
 end

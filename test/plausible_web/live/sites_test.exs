@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Live.SitesTest do
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 
+  alias Plausible.Repo
+
   setup [:create_user, :log_in]
 
   describe "/sites" do
@@ -61,6 +63,75 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert html =~ "third.another.example.com"
       refute html =~ "page=1"
       refute html =~ "page=2"
+    end
+  end
+
+  describe "pinning" do
+    test "renders pin site option when site not pinned", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      assert text_of_element(
+               html,
+               ~s/li[data-domain="#{site.domain}"] button/
+             ) == "Pin Site"
+    end
+
+    test "site state changes when pin toggled", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      button_selector = ~s/li[data-domain="#{site.domain}"] button/
+
+      html =
+        lv
+        |> element(button_selector)
+        |> render_click()
+
+      assert html =~ "Site pinned"
+
+      assert text_of_element(html, button_selector) == "Unpin Site"
+
+      html =
+        lv
+        |> element(button_selector)
+        |> render_click()
+
+      assert html =~ "Site unpinned"
+
+      assert text_of_element(html, button_selector) == "Pin Site"
+    end
+
+    test "shows error when pins limit hit", %{conn: conn, user: user} do
+      for _ <- 1..9 do
+        site = insert(:site, members: [user])
+        assert {:ok, _} = Plausible.Sites.toggle_pin(user, site)
+      end
+
+      site = insert(:site, members: [user])
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      button_selector = ~s/li[data-domain="#{site.domain}"] button/
+
+      html =
+        lv
+        |> element(button_selector)
+        |> render_click()
+
+      assert text(html) =~ "Looks like you've hit the pinned sites limit!"
+    end
+
+    test "does not allow pinning site user doesn't have access to", %{conn: conn, user: user} do
+      site = insert(:site)
+
+      {:ok, lv, _html} = live(conn, "/sites")
+
+      render_click(lv, "pin-toggle", %{"domain" => site.domain})
+
+      refute Repo.get_by(Plausible.Site.UserPreference, user_id: user.id, site_id: site.id)
     end
   end
 

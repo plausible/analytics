@@ -12,6 +12,9 @@ All notable changes to this project will be documented in this file.
 - Adds Gravatar profile image to navbar
 - Enforce email reverification on update
 - Add Plugins API Tokens provisioning UI
+- Add searching sites by domain in /sites view
+- Add last 24h plots to /sites view
+- Add site pinning to /sites view
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
