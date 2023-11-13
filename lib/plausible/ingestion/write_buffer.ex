@@ -30,6 +30,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
      %{
        buffer: buffer,
        timer: timer,
+       name: Keyword.fetch!(opts, :name),
        insert_sql: Keyword.fetch!(opts, :sql),
        header: Keyword.fetch!(opts, :header),
        buffer_size: length(buffer),
@@ -70,7 +71,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
 
   @impl true
   def terminate(_reason, state) do
-    Logger.info("Flushing #{state.schema} buffer before shutdown...")
+    Logger.info("Flushing #{state.name} buffer before shutdown...")
     do_flush(state)
   end
 
@@ -80,7 +81,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
         nil
 
       _not_empty ->
-        Logger.info("Flushing #{state.buffer_size} #{state.schema}")
+        Logger.info("Flushing #{state.buffer_size} binaries from #{state.name}")
 
         IngestRepo.query!(state.insert_sql, [state.header | buffer],
           command: :insert,
