@@ -366,9 +366,10 @@ defmodule Plausible.Stats.Breakdown do
           select:
             {e.pathname,
              fragment(
-               "sum(?)/countIf(?)",
+               "sum(?)/countIf(case when ?!=? then 1 end)",
                e.next_timestamp - e.timestamp,
-               e.next_pathname != e.pathname
+               e.next_pathname,
+               e.pathname
              )}
       end
 
