@@ -178,6 +178,11 @@ google_cid = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_ID")
 google_secret = get_var_from_path_or_env(config_dir, "GOOGLE_CLIENT_SECRET")
 postmark_api_key = get_var_from_path_or_env(config_dir, "POSTMARK_API_KEY")
 
+{otel_sampler_ratio, ""} =
+  config_dir
+  |> get_var_from_path_or_env("OTEL_SAMPLER_RATIO", "0.5")
+  |> Float.parse()
+
 cron_enabled =
   config_dir
   |> get_var_from_path_or_env("CRON_ENABLED", "false")
@@ -612,7 +617,7 @@ end
 if honeycomb_api_key && honeycomb_dataset do
   config :opentelemetry,
     resource: Plausible.OpenTelemetry.resource_attributes(runtime_metadata),
-    sampler: {Plausible.OpenTelemetry.Sampler, nil},
+    sampler: {Plausible.OpenTelemetry.Sampler, %{ratio: otel_sampler_ratio}},
     span_processor: :batch,
     traces_exporter: :otlp
 
