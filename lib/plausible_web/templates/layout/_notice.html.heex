@@ -95,12 +95,16 @@
   </div>
 <% end %>
 
-<.subscription_past_due_notice
-  subscription={@conn.assigns[:current_user] && @conn.assigns[:current_user].subscription}
-  class="container"
-/>
+<%= if @conn.assigns[:current_user] do %>
+  <.subscription_past_due_notice
+    subscription={@conn.assigns.current_user.subscription}
+    class="container"
+  />
 
-<.subscription_paused_notice
-  subscription={@conn.assigns[:current_user] && @conn.assigns[:current_user].subscription}
-  class="container"
-/>
+  <.subscription_paused_notice
+    subscription={@conn.assigns.current_user.subscription}
+    class="container"
+  />
+
+  <.private_preview_end_notice user={@conn.assigns.current_user} />
+<% end %>

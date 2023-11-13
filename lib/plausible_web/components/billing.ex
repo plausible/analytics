@@ -4,9 +4,10 @@ defmodule PlausibleWeb.Components.Billing do
   use Phoenix.Component
   import PlausibleWeb.Components.Generic
   require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Feature.{RevenueGoals, Funnels}
   alias Plausible.Billing.Feature.{Props, StatsAPI}
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias Plausible.Billing.{Subscription, Plans, Subscriptions}
+  alias Plausible.Billing.{Subscription, Plans, Plan, Subscriptions}
 
   attr(:billable_user, Plausible.Auth.User, required: true)
   attr(:current_user, Plausible.Auth.User, required: true)
@@ -17,15 +18,10 @@ defmodule PlausibleWeb.Components.Billing do
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def premium_feature_notice(assigns) do
-    billable_user = Plausible.Users.with_subscription(assigns.billable_user)
-    plan = Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
-    business? = plan && plan.kind == :business
-
     legacy_feature_access? =
       Timex.before?(assigns.billable_user.inserted_at, Plans.business_tier_launch()) &&
         assigns.feature_mod in [StatsAPI, Props]
 
-    private_preview? = FunWithFlags.enabled?(:premium_features_private_preview)
     has_access? = assigns.feature_mod.check_availability(assigns.billable_user) == :ok
 
     cond do
@@ -36,14 +32,6 @@ defmodule PlausibleWeb.Components.Billing do
         ~H"""
         <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
           <%= @feature_mod.display_name() %> is part of the Plausible Business plan. You can access it during your trial, but you'll need to subscribe to the Business plan to retain access after the trial ends."
-        </.notice>
-        """
-
-      private_preview? && !business? ->
-        ~H"""
-        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
-          Business plans are now live! The private preview of <%= @feature_mod.display_name() %> ends <%= private_preview_days_remaining() %>. If you wish to continue using this feature,
-          <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
         </.notice>
         """
 
@@ -60,7 +48,7 @@ defmodule PlausibleWeb.Components.Billing do
     end
   end
 
-  defp private_preview_days_remaining do
+  defp private_preview_end do
     private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 8)
 
     days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
@@ -113,7 +101,7 @@ defmodule PlausibleWeb.Components.Billing do
         """
 
       true ->
-        ~H"please contact support@plausible.io about the Enterprise plan"
+        ~H"please contact hello@plausible.io to upgrade your subscription"
     end
   end
 
@@ -316,6 +304,48 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   def subscription_paused_notice(assigns), do: ~H""
+
+  def private_preview_end_notice(assigns) do
+    user = assigns.user |> Plausible.Users.with_subscription()
+
+    features_to_lose =
+      case Plans.get_subscription_plan(user.subscription) do
+        nil ->
+          []
+
+        %Plan{kind: :business} ->
+          []
+
+        _free_10k_or_enterprise_or_growth ->
+          used_features = Plausible.Billing.Quota.features_usage(assigns.user)
+          Enum.filter([Funnels, RevenueGoals], &(&1 in used_features))
+      end
+
+    assigns = assign(assigns, :features_to_lose, features_to_lose)
+
+    ~H"""
+    <div
+      :if={FunWithFlags.enabled?(:premium_features_private_preview) && @features_to_lose != []}
+      class="container mt-2"
+    >
+      <.notice
+        class="shadow-md dark:shadow-none"
+        dismissable_id={"premium_features_private_preview_end__#{@user.id}"}
+      >
+        Business plans are now live! The private preview of <%= PlausibleWeb.TextHelpers.pretty_join(
+          Enum.map(@features_to_lose, & &1.display_name())
+        ) %> ends <b><%= private_preview_end() %></b>. If you wish to continue using <%= if length(
+                                                                                              @features_to_lose
+                                                                                            ) == 1,
+                                                                                            do:
+                                                                                              "this feature",
+                                                                                            else:
+                                                                                              "these features" %>,
+        <.upgrade_call_to_action current_user={@user} billable_user={@user} />.
+      </.notice>
+    </div>
+    """
+  end
 
   def present_enterprise_plan(assigns) do
     ~H"""
