@@ -32,7 +32,6 @@ defmodule Plausible.Event.WriteBuffer do
     Plausible.Ingestion.WriteBuffer.child_spec(merge_opts(opts))
   end
 
-  @spec insert(event) :: {:ok, event} when event: %Plausible.ClickhouseEventV2{}
   def insert(event) do
     row_binary =
       [Enum.map(unquote(fields), fn field -> Map.fetch!(event, field) end)]

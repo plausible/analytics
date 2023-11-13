@@ -33,7 +33,6 @@ defmodule Plausible.Session.WriteBuffer do
     Plausible.Ingestion.WriteBuffer.child_spec(merge_opts(opts))
   end
 
-  @spec insert(sessions) :: {:ok, sessions} when sessions: [%Plausible.ClickhouseSessionV2{}]
   def insert(sessions) do
     row_binary =
       sessions
