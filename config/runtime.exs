@@ -8,6 +8,36 @@ end
 
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 
+log_format =
+  get_var_from_path_or_env(config_dir, "LOG_FORMAT", "standard")
+
+log_level =
+  config_dir
+  |> get_var_from_path_or_env("LOG_LEVEL", "warn")
+  |> String.to_existing_atom()
+
+config :logger,
+  level: log_level,
+  backends: [:console]
+
+config :logger, Sentry.LoggerBackend,
+  capture_log_messages: true,
+  level: :error
+
+case String.downcase(log_format) do
+  "standard" ->
+    config :logger, :console,
+      format: "$time $metadata[$level] $message\n",
+      metadata: [:request_id]
+
+  "json" ->
+    config :logger, :console,
+      format: {ExJsonLogger, :format},
+      metadata: [
+        :request_id
+      ]
+end
+
 # Listen IP supports IPv4 and IPv6 addresses.
 listen_ip =
   (
@@ -167,7 +197,6 @@ maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLi
 maxmind_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
 if System.get_env("DISABLE_AUTH") do
-  require Logger
   Logger.warning("DISABLE_AUTH env var is no longer supported")
 end
 
@@ -195,11 +224,6 @@ end
 
 hcaptcha_sitekey = get_var_from_path_or_env(config_dir, "HCAPTCHA_SITEKEY")
 hcaptcha_secret = get_var_from_path_or_env(config_dir, "HCAPTCHA_SECRET")
-
-log_level =
-  config_dir
-  |> get_var_from_path_or_env("LOG_LEVEL", "warn")
-  |> String.to_existing_atom()
 
 custom_script_name =
   config_dir
@@ -293,10 +317,6 @@ config :sentry,
   filter: Plausible.SentryFilter,
   before_send_event: {Plausible.SentryFilter, :before_send}
 
-config :logger, Sentry.LoggerBackend,
-  capture_log_messages: true,
-  level: :error
-
 config :plausible, :paddle,
   vendor_auth_code: paddle_auth_code,
   vendor_id: paddle_vendor_id
@@ -328,7 +348,6 @@ ch_transport_opts =
   end
 
 config :plausible, Plausible.ClickhouseRepo,
-  loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
@@ -338,7 +357,6 @@ config :plausible, Plausible.ClickhouseRepo,
   ]
 
 config :plausible, Plausible.IngestRepo,
-  loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
@@ -348,7 +366,6 @@ config :plausible, Plausible.IngestRepo,
   pool_size: ingest_pool_size
 
 config :plausible, Plausible.AsyncInsertRepo,
-  loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
@@ -360,7 +377,6 @@ config :plausible, Plausible.AsyncInsertRepo,
   ]
 
 config :plausible, Plausible.ImportDeletionRepo,
-  loggers: [Ecto.LogEntry],
   queue_target: 500,
   queue_interval: 2000,
   url: ch_db_url,
@@ -592,10 +608,6 @@ config :plausible, Plausible.Geo, geo_opts
 if geonames_source_file do
   config :location, :geonames_source_file, geonames_source_file
 end
-
-config :logger,
-  level: log_level,
-  backends: [:console]
 
 if honeycomb_api_key && honeycomb_dataset do
   config :opentelemetry,
