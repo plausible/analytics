@@ -1,0 +1,67 @@
+name: bench
+
+on: workflow_dispatch
+
+jobs:
+  min:
+    runs-on: ubuntu-latest
+
+    env:
+      MIX_ENV: bench
+
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: postgres
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+
+      clickhouse:
+        image: clickhouse/clickhouse-server:23.3.7.5-alpine
+        ports:
+          - 8123:8123
+        env:
+          options: >-
+            --health-cmd nc -zw3 localhost 8124
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: versions
+        uses: marocchino/tool-versions-action@v1
+        
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{steps.versions.outputs.elixir}}
+          otp-version: ${{ steps.versions.outputs.erlang}}
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            deps
+            _build
+          key: bench-ref-${{ github.head_ref || github.ref }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            bench-ref-${{ github.head_ref || github.ref }}-mix-
+            bench-ref-refs/heads/master-mix-
+
+      - run: mix deps.get --only $MIX_ENV
+      - run: mix compile --warnings-as-errors --all-warnings
+      - run: mkdir results
+      - run: mix run bench/event_write_buffer.exs | tee results/event_write_buffer.txt
+      - run: mix run bench/event_write_insert.exs | tee results/event_write_insert.txt
+      - uses: actions/upload-artifact@v3
+        with:
+          name: results
+          path: results/*.txt
