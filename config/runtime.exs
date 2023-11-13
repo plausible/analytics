@@ -232,13 +232,29 @@ secure_cookie =
   |> get_var_from_path_or_env("SECURE_COOKIE", if(is_selfhost, do: "false", else: "true"))
   |> String.to_existing_atom()
 
+oidc_idp = get_var_from_path_or_env(config_dir, "OIDC_IDP", "")
+use_oidc = oidc_idp != ""
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
   super_admin_user_ids: super_admin_user_ids,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
-  log_failed_login_attempts: log_failed_login_attempts
+  log_failed_login_attempts: log_failed_login_attempts,
+  use_oidc: use_oidc
+
+if use_oidc do
+  config :plausible, :openid_connect_providers,
+    default: [
+      discovery_document_uri: oidc_idp <> "/.well-known/openid-configuration",
+      client_id: get_var_from_path_or_env(config_dir, "OIDC_CLIENT_ID"),
+      client_secret: get_var_from_path_or_env(config_dir, "OIDC_CLIENT_SECRET"),
+      redirect_uri: get_var_from_path_or_env(config_dir, "BASE_URL") <> "/oidc/callback",
+      response_type: "code",
+      scope: "openid email profile"
+    ]
+end
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,

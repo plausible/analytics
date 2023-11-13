@@ -126,7 +126,8 @@ defmodule Plausible.MixProject do
       {:paginator, git: "https://github.com/duffelhq/paginator.git"},
       {:scrivener_ecto, "~> 2.0"},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev}
+      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
+      {:openid_connect, "~> 0.2.2"}
     ]
   end
 
