@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Add searching sites by domain in /sites view
 - Add last 24h plots to /sites view
 - Add site pinning to /sites view
+- Add support for JSON logger, via LOG_FORMAT=json environment variable
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
