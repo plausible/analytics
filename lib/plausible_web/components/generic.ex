@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Components.Generic do
           class="absolute right-0 top-0 m-2 text-yellow-800 dark:text-yellow-900"
           onclick={"localStorage['notice_dismissed__#{@dismissable_id}'] = 'true'; document.getElementById('#{@dismissable_id}').classList.add('hidden')"}
         >
-          <.x_icon class="h-4 w-4 font-semibold" />
+          <Heroicons.x_mark class="h-4 w-4 hover:stroke-2" />
         </button>
         <div class="flex">
           <div :if={@size !== :xs} class="flex-shrink-0">
@@ -237,22 +237,5 @@ defmodule PlausibleWeb.Components.Generic do
     else
       ["w-4 h-4"]
     end
-  end
-
-  attr(:class, :string, default: "")
-
-  defp x_icon(assigns) do
-    ~H"""
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke-width="1.5"
-      stroke="currentColor"
-      class={@class}
-    >
-      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
-    """
   end
 end
