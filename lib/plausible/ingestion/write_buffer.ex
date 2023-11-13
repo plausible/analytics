@@ -85,7 +85,8 @@ defmodule Plausible.Ingestion.WriteBuffer do
 
         IngestRepo.query!(state.insert_sql, [state.header | buffer],
           command: :insert,
-          encode: false
+          encode: false,
+          cast_params: []
         )
     end
   end
