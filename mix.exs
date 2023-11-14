@@ -46,8 +46,9 @@ defmodule Plausible.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(env) when env in [:test, :dev], do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
+  defp elixirc_paths(env) when env in [:test, :dev], do: ["lib", "test/support", "experimental"]
+  defp elixirc_paths(:community), do: ["lib"]
+  defp elixirc_paths(_), do: ["lib", "experimental"]
 
   # Specifies your project dependencies.
   #
@@ -72,10 +73,10 @@ defmodule Plausible.MixProject do
       {:ecto, "~> 3.10.0"},
       {:ecto_sql, "~> 3.10.0"},
       {:envy, "~> 1.1.1"},
-      {:ex_machina, "~> 2.3", only: [:dev, :test]},
+      {:ex_machina, "~> 2.3", only: [:dev, :test, :community]},
       {:excoveralls, "~> 0.10", only: :test},
       {:finch, "~> 0.16.0"},
-      {:floki, "~> 0.34.3", only: [:dev, :test]},
+      {:floki, "~> 0.34.3", only: [:dev, :test, :community]},
       {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
       {:locus, "~> 2.3"},
@@ -101,7 +102,8 @@ defmodule Plausible.MixProject do
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 3.3", override: true},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      # TODO remove from here
+      {:phoenix_live_reload, "~> 1.2", only: [:dev, :community]},
       {:phoenix_pubsub, "~> 2.0"},
       {:phoenix_live_view, "~> 0.18"},
       {:php_serializer, "~> 2.0"},
@@ -125,8 +127,9 @@ defmodule Plausible.MixProject do
       {:joken, "~> 2.5"},
       {:paginator, git: "https://github.com/duffelhq/paginator.git"},
       {:scrivener_ecto, "~> 2.0"},
-      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
+      # TODO: remove from here
+      {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :community]},
+      {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :community]},
       {:ex_json_logger, "~> 1.3.0"}
     ]
   end
