@@ -29,11 +29,7 @@ defmodule PlausibleWeb.Components.Billing do
         ~H""
 
       Plausible.Billing.on_trial?(assigns.billable_user) ->
-        ~H"""
-        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
-          <%= @feature_mod.display_name() %> is part of the Plausible Business plan. You can access it during your trial, but you'll need to subscribe to the Business plan to retain access after the trial ends."
-        </.notice>
-        """
+        ~H""
 
       not has_access? ->
         ~H"""

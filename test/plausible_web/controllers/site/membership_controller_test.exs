@@ -22,8 +22,9 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "disables invite form when is over limit", %{conn: conn, user: user} do
-      memberships =
-        [build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)]
+      memberships = [
+        build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)
+      ]
 
       site = insert(:site, memberships: memberships)
 
@@ -53,8 +54,9 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     test "fails to create invitation when is over limit", %{conn: conn, user: user} do
-      memberships =
-        [build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)]
+      memberships = [
+        build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)
+      ]
 
       site = insert(:site, memberships: memberships)
 
