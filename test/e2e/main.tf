@@ -30,6 +30,10 @@ variable "checkly_alert_channel_instatus_webhook_url" {
   sensitive = true
 }
 
+variable "checkly_alert_channel_instatus_webhook_url_ingestion" {
+  sensitive = true
+}
+
 provider "checkly" {
   api_key    = var.checkly_api_key
   account_id = var.checkly_account_id
@@ -163,6 +167,12 @@ EOT
       comparison = "IS_EMPTY"
     }
   }
+
+  alert_channel_subscription {
+    channel_id = checkly_alert_channel.instatus_ingestion.id
+    activated  = true
+  }
+
 }
 
 resource "checkly_check" "plausible-io-tracker-script" {
@@ -296,5 +306,16 @@ resource "checkly_alert_channel" "instatus" {
   {"alert": "{{ALERT_TYPE}}"}
 EOT
     url      = var.checkly_alert_channel_instatus_webhook_url
+  }
+}
+
+resource "checkly_alert_channel" "instatus_ingestion" {
+  webhook {
+    name     = "Instatus integration - ingestion"
+    method   = "POST"
+    template = <<EOT
+  {"alert": "{{ALERT_TYPE}}"}
+EOT
+    url      = var.checkly_alert_channel_instatus_webhook_url_ingestion
   }
 }

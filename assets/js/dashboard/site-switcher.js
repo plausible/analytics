@@ -131,7 +131,7 @@ export default class SiteSwitcher extends React.Component {
       domain === this.props.site.domain
         ? 'font-medium text-gray-900 dark:text-gray-100 cursor-default font-bold'
         : 'hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100'
-    const showHotkey = !this.props.loggedIn
+    const showHotkey = this.props.loggedIn && this.state.sites.length > 1
     return (
       <a
         href={
@@ -151,7 +151,7 @@ export default class SiteSwitcher extends React.Component {
             {domain}
           </span>
         </span>
-        {showHotkey ? index < 9 && <span>{index + 1}</span> : null}
+        {showHotkey && index < 9 ? <span>{index + 1}</span> : null}
       </a>
     )
   }

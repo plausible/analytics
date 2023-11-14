@@ -50,6 +50,59 @@ defmodule PlausibleWeb.Api.InternalControllerTest do
       assert %{"domain" => site.domain} in sites
       assert %{"domain" => site2.domain} in sites
     end
+
+    test "returns a list of max 9 site domains for the current user, putting pinned first", %{
+      conn: conn,
+      user: user
+    } do
+      inserted =
+        for i <- 1..10 do
+          i = to_string(i)
+
+          insert(:site,
+            members: [user],
+            domain: "site#{String.pad_leading(i, 2, "0")}.example.com"
+          )
+        end
+
+      _rogue = insert(:site, domain: "site00.example.com")
+
+      insert(:site,
+        domain: "friend.example.com",
+        invitations: [
+          build(:invitation, email: user.email, inviter: build(:user), role: :viewer)
+        ]
+      )
+
+      insert(:invitation,
+        email: "friend@example.com",
+        inviter: user,
+        role: :viewer,
+        site: hd(inserted)
+      )
+
+      {:ok, _} =
+        Plausible.Sites.toggle_pin(user, Plausible.Sites.get_by_domain!("site07.example.com"))
+
+      {:ok, _} =
+        Plausible.Sites.toggle_pin(user, Plausible.Sites.get_by_domain!("site05.example.com"))
+
+      conn = get(conn, "/api/sites")
+
+      %{"data" => sites} =
+        json_response(conn, 200)
+
+      assert Enum.count(sites) == 9
+
+      assert [
+               %{"domain" => "site05.example.com"},
+               %{"domain" => "site07.example.com"},
+               %{"domain" => "site01.example.com"} | _
+             ] = sites
+
+      assert %{"domain" => "site09.example.com"} in sites
+      refute %{"domain" => "sites10.example.com"} in sites
+    end
   end
 
   describe "GET /api/sites - user not logged in" do

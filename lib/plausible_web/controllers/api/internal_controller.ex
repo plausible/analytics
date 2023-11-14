@@ -66,17 +66,7 @@ defmodule PlausibleWeb.Api.InternalController do
   end
 
   defp sites_for(user) do
-    Repo.all(
-      from(
-        s in Site,
-        join: sm in Site.Membership,
-        on: sm.site_id == s.id,
-        where: sm.user_id == ^user.id,
-        order_by: s.domain,
-        select: %{domain: s.domain},
-        # there are keyboard shortcuts for switching between sites, hence 9
-        limit: 9
-      )
-    )
+    pagination = Sites.list(user, %{page_size: 9})
+    Enum.map(pagination.entries, &%{domain: &1.domain})
   end
 end

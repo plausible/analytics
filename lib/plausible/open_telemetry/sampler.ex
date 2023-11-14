@@ -10,12 +10,9 @@ defmodule Plausible.OpenTelemetry.Sampler do
 
   import Bitwise, only: [&&&: 2]
 
-  # effective sampling ratio for non-ignored traces
-  @ratio 0.5
+  # mask for extracting first 64 bits of trace ID
   # 2^63 - 1
   @max_value 9_223_372_036_854_775_807
-
-  @id_upper_bound @ratio * @max_value
 
   @behaviour :otel_sampler
   require OpenTelemetry.Tracer, as: Tracer
@@ -24,13 +21,17 @@ defmodule Plausible.OpenTelemetry.Sampler do
   @tables_to_ignore ["oban_jobs"]
 
   @impl true
-  def setup(_sampler_opts), do: []
+  def setup(%{ratio: ratio}) when is_number(ratio) do
+    %{ratio: ratio, id_upper_bound: ratio * @max_value}
+  end
 
   @impl true
-  def description(_sampler_config), do: inspect(__MODULE__)
+  def description(%{ratio: ratio}) do
+    "#{inspect(__MODULE__)}{ratio=#{ratio}}"
+  end
 
   @impl true
-  def should_sample(context, trace_id, _links, _name, _kind, attributes, _config) do
+  def should_sample(context, trace_id, _links, _name, _kind, attributes, config) do
     tracestate = context |> Tracer.current_span_ctx() |> OpenTelemetry.Span.tracestate()
 
     case attributes do
@@ -41,19 +42,19 @@ defmodule Plausible.OpenTelemetry.Sampler do
         {:drop, [], tracestate}
 
       _any ->
-        {decide(trace_id), [], tracestate}
+        {decide(trace_id, config.id_upper_bound), [], tracestate}
     end
   end
 
-  defp decide(trace_id) when is_integer(trace_id) and trace_id > 0 do
+  defp decide(trace_id, id_upper_bound) when is_integer(trace_id) and trace_id > 0 do
     lower_64_bits = trace_id &&& @max_value
 
-    if abs(lower_64_bits) < @id_upper_bound do
+    if abs(lower_64_bits) < id_upper_bound do
       :record_and_sample
     else
       :drop
     end
   end
 
-  defp decide(_), do: :drop
+  defp decide(_, _), do: :drop
 end

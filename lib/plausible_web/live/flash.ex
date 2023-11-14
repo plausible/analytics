@@ -9,17 +9,27 @@ defmodule PlausibleWeb.Live.Flash do
   def render(assigns) do
     ~H"""
     <div id="liveview-flash">
-      <div :if={@flash != %{}}>
-        <.flash>
+      <div :if={@flash != %{}} class="">
+        <.flash :if={Flash.get(@flash, :success)}>
           <:icon>
-            <.icon_success :if={Flash.get(@flash, :success)} />
-            <.icon_error :if={Flash.get(@flash, :error)} />
+            <.icon_success />
           </:icon>
-          <:title :if={Flash.get(@flash, :success)}>
+          <:title>
             <%= Flash.get(@flash, :success_title) || "Success!" %>
           </:title>
           <:message>
             <%= Flash.get(@flash, :success) %>
+          </:message>
+        </.flash>
+        <.flash :if={Flash.get(@flash, :error)}>
+          <:icon>
+            <.icon_error />
+          </:icon>
+          <:title>
+            <%= Flash.get(@flash, :error_title) || "Error!" %>
+          </:title>
+          <:message>
+            <%= Flash.get(@flash, :error) %>
           </:message>
         </.flash>
       </div>
@@ -53,7 +63,7 @@ defmodule PlausibleWeb.Live.Flash do
 
   def flash(assigns) do
     ~H"""
-    <div class="z-50 fixed inset-0 flex items-end justify-center px-4 py-6 pointer-events-none sm:p-6 sm:items-start sm:justify-end">
+    <div class="inset-0 z-50 fixed flex items-end justify-center px-4 py-6 pointer-events-none sm:p-6 sm:items-start sm:justify-end">
       <div class="max-w-sm w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto">
         <div class="rounded-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
           <div class="p-4">

@@ -30,6 +30,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   @enterprise_plan_box "#enterprise-plan-box"
 
+  @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
+
   describe "for a legacy trial (user registered before business tiers release)" do
     setup %{conn: conn} do
       user = insert(:user, inserted_at: ~N[2023-10-25 12:00:00])
@@ -135,37 +137,37 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "pageview slider changes selected volume and prices shown", %{conn: conn} do
       {:ok, lv, _doc} = get_liveview(conn)
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
+      doc = set_slider(lv, "100k")
       assert text_of_element(doc, @slider_value) == "100k"
       assert text_of_element(doc, @growth_price_tag_amount) == "€20"
       assert text_of_element(doc, @business_price_tag_amount) == "€100"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 2})
+      doc = set_slider(lv, "200k")
       assert text_of_element(doc, @slider_value) == "200k"
       assert text_of_element(doc, @growth_price_tag_amount) == "€30"
       assert text_of_element(doc, @business_price_tag_amount) == "€110"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 3})
+      doc = set_slider(lv, "500k")
       assert text_of_element(doc, @slider_value) == "500k"
       assert text_of_element(doc, @growth_price_tag_amount) == "€40"
       assert text_of_element(doc, @business_price_tag_amount) == "€120"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 4})
+      doc = set_slider(lv, "1M")
       assert text_of_element(doc, @slider_value) == "1M"
       assert text_of_element(doc, @growth_price_tag_amount) == "€50"
       assert text_of_element(doc, @business_price_tag_amount) == "€130"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 5})
+      doc = set_slider(lv, "2M")
       assert text_of_element(doc, @slider_value) == "2M"
       assert text_of_element(doc, @growth_price_tag_amount) == "€60"
       assert text_of_element(doc, @business_price_tag_amount) == "€140"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 6})
+      doc = set_slider(lv, "5M")
       assert text_of_element(doc, @slider_value) == "5M"
       assert text_of_element(doc, @growth_price_tag_amount) == "€70"
       assert text_of_element(doc, @business_price_tag_amount) == "€150"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
+      doc = set_slider(lv, "10M")
       assert text_of_element(doc, @slider_value) == "10M"
       assert text_of_element(doc, @growth_price_tag_amount) == "€80"
       assert text_of_element(doc, @business_price_tag_amount) == "€160"
@@ -177,14 +179,14 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
          } do
       {:ok, lv, _doc} = get_liveview(conn)
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 8})
+      doc = set_slider(lv, "10M+")
 
       assert text_of_element(doc, "#growth-custom-price") =~ "Custom"
       assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
       assert text_of_element(doc, "#business-custom-price") =~ "Custom"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
+      doc = set_slider(lv, "10M")
 
       refute text_of_element(doc, "#growth-custom-price") =~ "Custom"
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
@@ -216,7 +218,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     } do
       {:ok, lv, _doc} = get_liveview(conn)
 
-      element(lv, @slider_input) |> render_change(%{slider: 2})
+      set_slider(lv, "200k")
       doc = element(lv, @yearly_interval_button) |> render_click()
 
       assert %{
@@ -228,7 +230,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
 
-      element(lv, @slider_input) |> render_change(%{slider: 6})
+      set_slider(lv, "5M")
       doc = element(lv, @monthly_interval_button) |> render_click()
 
       assert get_paddle_checkout_params(find(doc, @business_checkout_button))["product"] ==
@@ -340,10 +342,10 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "pageview slider changes selected volume", %{conn: conn} do
       {:ok, lv, _doc} = get_liveview(conn)
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
+      doc = set_slider(lv, "100k")
       assert text_of_element(doc, @slider_value) == "100k"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 0})
+      doc = set_slider(lv, "10k")
       assert text_of_element(doc, @slider_value) == "10k"
     end
 
@@ -369,12 +371,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @growth_checkout_button) == "Change billing interval"
       assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 4})
+      doc = set_slider(lv, "1M")
 
       assert text_of_element(doc, @growth_checkout_button) == "Upgrade"
       assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
+      doc = set_slider(lv, "100k")
 
       assert text_of_element(doc, @growth_checkout_button) == "Downgrade"
       assert text_of_element(doc, @business_checkout_button) == "Upgrade to Business"
@@ -390,7 +392,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_attr(growth_checkout_button, "onclick") =~
                "if (true) {window.location = '#{Routes.billing_path(conn, :change_plan_preview, @v4_growth_200k_yearly_plan_id)}'}"
 
-      element(lv, @slider_input) |> render_change(%{slider: 6})
+      set_slider(lv, "5M")
       doc = element(lv, @monthly_interval_button) |> render_click()
 
       business_checkout_button = find(doc, @business_checkout_button)
@@ -430,12 +432,12 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @business_checkout_button) == "Change billing interval"
       assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
+      doc = set_slider(lv, "10M")
 
       assert text_of_element(doc, @business_checkout_button) == "Upgrade"
       assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 1})
+      doc = set_slider(lv, "100k")
 
       assert text_of_element(doc, @business_checkout_button) == "Downgrade"
       assert text_of_element(doc, @growth_checkout_button) == "Downgrade to Growth"
@@ -554,7 +556,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, "#{@business_checkout_button} + p") =~
                "Please update your billing details first"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 4})
+      doc = set_slider(lv, "1M")
 
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
 
@@ -584,7 +586,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, "#{@business_checkout_button} + p") =~
                "Please update your billing details first"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 4})
+      doc = set_slider(lv, "1M")
 
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none bg-gray-400"
 
@@ -609,7 +611,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @growth_highlight_pill) == "Current"
     end
 
-    test "highlights recommended tier", %{conn: conn, user: user} do
+    test "can subscribe again to the currently owned (but cancelled) plan", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "highlights recommended tier if subscription expired and no days are paid for anymore",
+         %{conn: conn, user: user} do
       user.subscription
       |> Subscription.changeset(%{next_bill_date: Timex.shift(Timex.now(), months: -2)})
       |> Repo.update()
@@ -632,24 +640,24 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
          %{conn: conn} do
       {:ok, lv, _doc} = get_liveview(conn)
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 8})
+      doc = set_slider(lv, 8)
       assert text_of_element(doc, @slider_value) == "20M"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_price_tag_amount) == "€900"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 9})
+      doc = set_slider(lv, 9)
       assert text_of_element(doc, @slider_value) == "50M"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_price_tag_amount) == "€1,000"
       assert text_of_element(doc, @growth_price_tag_interval) == "/year"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 10})
+      doc = set_slider(lv, 10)
       assert text_of_element(doc, @slider_value) == "50M+"
       assert text_of_element(doc, @business_plan_box) =~ "Contact us"
       assert text_of_element(doc, @growth_plan_box) =~ "Contact us"
 
-      doc = lv |> element(@slider_input) |> render_change(%{slider: 7})
+      doc = set_slider(lv, 7)
       assert text_of_element(doc, @slider_value) == "10M"
       refute text_of_element(doc, @business_plan_box) =~ "Contact us"
       refute text_of_element(doc, @growth_plan_box) =~ "Contact us"
@@ -715,7 +723,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "renders Paddle upgrade buttons", %{conn: conn, user: user} do
       {:ok, lv, _doc} = get_liveview(conn)
 
-      element(lv, @slider_input) |> render_change(%{slider: 2})
+      set_slider(lv, "200k")
       doc = element(lv, @yearly_interval_button) |> render_click()
 
       assert %{
@@ -783,5 +791,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
          {:ok, checkout_params} <- Jason.decode(checkout_params_str) do
       checkout_params
     end
+  end
+
+  defp set_slider(lv, volume) when is_binary(volume) do
+    index = Enum.find_index(@slider_volumes, &(&1 == volume))
+    set_slider(lv, index)
+  end
+
+  defp set_slider(lv, index) do
+    lv
+    |> element(@slider_input)
+    |> render_change(%{slider: index})
   end
 end

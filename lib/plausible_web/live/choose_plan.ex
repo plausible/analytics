@@ -308,16 +308,20 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     usage_exceeds_plan_limits =
       Enum.any?([:team_member_limit, :site_limit], &(&1 in exceeded_limits))
 
+    subscription = assigns.user.subscription
+
     billing_details_expired =
-      assigns.user.subscription &&
-        assigns.user.subscription.status in [
+      subscription &&
+        subscription.status in [
           Subscription.Status.paused(),
           Subscription.Status.past_due()
         ]
 
+    subscription_cancelled = subscription && subscription.status == Subscription.Status.deleted()
+
     {checkout_disabled, disabled_message} =
       cond do
-        change_plan_link_text == "Currently on this plan" ->
+        change_plan_link_text == "Currently on this plan" && not subscription_cancelled ->
           {true, nil}
 
         assigns.available && usage_exceeds_plan_limits ->
