@@ -4,8 +4,8 @@ defmodule Plausible.Event.WriteBuffer do
 
   alias Plausible.IngestRepo
 
-  def start_link(_opts) do
-    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, [], name: opts[:name] || __MODULE__)
   end
 
   def init(buffer) do
@@ -14,13 +14,13 @@ defmodule Plausible.Event.WriteBuffer do
     {:ok, %{buffer: buffer, timer: timer}}
   end
 
-  def insert(event) do
-    GenServer.cast(__MODULE__, {:insert, event})
+  def insert(server \\ __MODULE__, event) do
+    GenServer.cast(server, {:insert, event})
     {:ok, event}
   end
 
-  def flush() do
-    GenServer.call(__MODULE__, :flush, :infinity)
+  def flush(server \\ __MODULE__) do
+    GenServer.call(server, :flush, :infinity)
     :ok
   end
 
