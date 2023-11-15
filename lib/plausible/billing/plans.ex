@@ -48,6 +48,7 @@ defmodule Plausible.Billing.Plans do
       is_nil(owned_plan) && grandfathered_trial?(user.trial_expiry_date, now) -> @plans_v3
       is_nil(owned_plan) && v4_available -> @plans_v4
       is_nil(owned_plan) -> @plans_v3
+      user.subscription && Subscriptions.expired?(user.subscription) -> @plans_v4
       owned_plan.kind == :business -> @plans_v4
       owned_plan.generation == 1 -> @plans_v1
       owned_plan.generation == 2 -> @plans_v2
@@ -64,6 +65,7 @@ defmodule Plausible.Billing.Plans do
     cond do
       Application.get_env(:plausible, :environment) == "dev" -> @sandbox_plans
       is_nil(owned_plan) && grandfathered_trial?(user.trial_expiry_date, now) -> @plans_v3
+      user.subscription && Subscriptions.expired?(user.subscription) -> @plans_v4
       owned_plan && owned_plan.generation < 4 -> @plans_v3
       true -> @plans_v4
     end

@@ -54,6 +54,19 @@ defmodule Plausible.Billing.PlansTest do
       Plans.growth_plans_for(user, now3) |> assert_generation(4)
     end
 
+    test "growth_plans_for/1 returns v4 plans for expired legacy subscriptions" do
+      subscription =
+        build(:subscription,
+          paddle_plan_id: @v1_plan_id,
+          status: :deleted,
+          next_bill_date: ~D[2023-11-10]
+        )
+
+      insert(:user, subscription: subscription)
+      |> Plans.growth_plans_for()
+      |> assert_generation(4)
+    end
+
     test "growth_plans_for/1 shows v4 plans for everyone else" do
       insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])
       |> Plans.growth_plans_for()
@@ -115,6 +128,19 @@ defmodule Plausible.Billing.PlansTest do
       Plans.business_plans_for(user, now1) |> assert_generation(3)
       Plans.business_plans_for(user, now2) |> assert_generation(3)
       Plans.business_plans_for(user, now3) |> assert_generation(4)
+    end
+
+    test "business_plans_for/1 returns v4 plans for expired legacy subscriptions" do
+      subscription =
+        build(:subscription,
+          paddle_plan_id: @v2_plan_id,
+          status: :deleted,
+          next_bill_date: ~D[2023-11-10]
+        )
+
+      insert(:user, subscription: subscription)
+      |> Plans.business_plans_for()
+      |> assert_generation(4)
     end
 
     test "business_plans_for/1 returns v4 business plans for everyone else" do
