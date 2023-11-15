@@ -134,7 +134,7 @@ ch_db_url =
 
 {ch_max_buffer_size, ""} =
   config_dir
-  |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000")
+  |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE", "100000")
   |> Integer.parse()
 
 ### Mandatory params End

@@ -26,6 +26,7 @@ All notable changes to this project will be documented in this file.
 - Show Outbound Links / File Downloads / 404 Pages / Cloaked Links instead of Goal Conversions when filtering by the corresponding goal
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
 - GA/SC sections moved to new settings: Integrations
+- `CLICKHOUSE_MAX_BUFFER_SIZE` now represents bytes and defaults to `100000` (100KB)
 
 ### Fixed
 - Only return `(none)` values in custom property breakdown for the first page (pagination) of results

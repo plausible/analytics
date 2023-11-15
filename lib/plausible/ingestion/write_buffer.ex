@@ -34,15 +34,20 @@ defmodule Plausible.Ingestion.WriteBuffer do
        insert_sql: Keyword.fetch!(opts, :insert_sql),
        insert_opts: Keyword.fetch!(opts, :insert_opts),
        header: Keyword.fetch!(opts, :header),
-       buffer_size: length(buffer),
+       buffer_size: IO.iodata_length(buffer),
        max_buffer_size: max_buffer_size,
        flush_interval_ms: flush_interval_ms
      }}
   end
 
   @impl true
+
   def handle_cast({:insert, row_binary}, state) do
-    state = %{state | buffer: [state.buffer | row_binary], buffer_size: state.buffer_size + 1}
+    state = %{
+      state
+      | buffer: [state.buffer | row_binary],
+        buffer_size: state.buffer_size + IO.iodata_length(row_binary)
+    }
 
     if state.buffer_size >= state.max_buffer_size do
       Logger.info("#{state.name} buffer full, flushing to ClickHouse")
@@ -92,7 +97,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
         nil
 
       _not_empty ->
-        Logger.info("Flushing #{buffer_size} binaries from #{name}")
+        Logger.info("Flushing #{buffer_size} byte(s) RowBinary from #{name}")
         IngestRepo.query!(insert_sql, [header | buffer], insert_opts)
     end
   end
