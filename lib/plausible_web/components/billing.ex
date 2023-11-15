@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Components.Billing do
 
       not has_access? ->
         ~H"""
-        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
+        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest} title="Notice">
           <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
           <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
         </.notice>
@@ -65,7 +65,7 @@ defmodule PlausibleWeb.Components.Billing do
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def limit_exceeded_notice(assigns) do
     ~H"""
-    <.notice {@rest}>
+    <.notice {@rest} title="Notice">
       <%= account_label(@current_user, @billable_user) %> is limited to <%= @limit %> <%= @resource %>. To increase this limit,
       <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
     </.notice>
@@ -326,6 +326,7 @@ defmodule PlausibleWeb.Components.Billing do
     >
       <.notice
         class="shadow-md dark:shadow-none"
+        title="Notice"
         dismissable_id={"premium_features_private_preview_end__#{@user.id}"}
       >
         Business plans are now live! The private preview of <%= PlausibleWeb.TextHelpers.pretty_join(

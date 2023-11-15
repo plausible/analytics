@@ -58,7 +58,7 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr(:title, :string, default: "Notice")
+  attr(:title, :any, default: nil)
   attr(:size, :atom, default: :sm)
   attr(:dismissable_id, :any, default: nil)
   attr(:class, :string, default: "")
@@ -77,7 +77,7 @@ defmodule PlausibleWeb.Components.Generic do
           <Heroicons.x_mark class="h-4 w-4 hover:stroke-2" />
         </button>
         <div class="flex">
-          <div :if={@size !== :xs} class="flex-shrink-0">
+          <div :if={@title} class="flex-shrink-0">
             <svg
               class="h-5 w-5 text-yellow-400"
               viewBox="0 0 20 20"
@@ -91,9 +91,9 @@ defmodule PlausibleWeb.Components.Generic do
               />
             </svg>
           </div>
-          <div class="ml-3">
+          <div class={@title && "ml-3"}>
             <h3
-              :if={@size !== :xs}
+              :if={@title}
               class={"text-#{@size} font-medium text-yellow-800 dark:text-yellow-900 mb-2"}
             >
               <%= @title %>
