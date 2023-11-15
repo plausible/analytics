@@ -804,7 +804,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
     test "calculates time on page per unique transition within session", %{conn: conn, site: site} do
       # ┌─p─────┬─p2──────┬─minus(t2, t)─┬──s─┐
       # │ /a    │ /b      │          100 │ s1 │
-      # │ /a    │ /d      │          100 │ s2 │ <- this two get treated
+      # │ /a    │ /d      │          100 │ s2 │ <- these two get treated
       # │ /a    │ /d      │            0 │ s2 │ <- as single page transition
       # └───────┴─────────┴──────────────┴────┘
       # so that time_on_page(a)=(100+100)/uniq(transition)=200/2=100
