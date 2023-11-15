@@ -46,9 +46,11 @@ defmodule Plausible.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(env) when env in [:test, :dev], do: ["lib", "test/support", "experimental"]
+  defp elixirc_paths(env) when env in [:test, :dev],
+    do: ["lib", "test/support", "experimental/lib"]
+
   defp elixirc_paths(:community), do: ["lib"]
-  defp elixirc_paths(_), do: ["lib", "experimental"]
+  defp elixirc_paths(_), do: ["lib", "experimental/lib"]
 
   # Specifies your project dependencies.
   #
