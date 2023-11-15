@@ -3,13 +3,13 @@ import FlipMove from 'react-flip-move';
 import Chart from 'chart.js/auto'
 import FunnelTooltip from './funnel-tooltip.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
-import numberFormatter from '../../util/number-formatter'
-import Bar from '../bar'
+import numberFormatter from '../util/number-formatter'
+import Bar from '../stats/bar'
 
-import RocketIcon from '../modals/rocket-icon'
+import RocketIcon from '../stats/modals/rocket-icon'
 
-import * as api from '../../api'
-import LazyLoader from '../../components/lazy-loader'
+import * as api from '../api'
+import LazyLoader from '../components/lazy-loader'
 
 
 export default function Funnel(props) {

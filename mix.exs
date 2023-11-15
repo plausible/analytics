@@ -144,7 +144,10 @@ defmodule Plausible.MixProject do
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
       sentry_recompile: ["compile", "deps.compile sentry --force"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind default", "esbuild default"],
+      "assets.build": [
+        "tailwind default",
+        "esbuild default --define:IS_CE=#{Mix.env() == :comminity}"
+      ],
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
     ]
   end

@@ -6,9 +6,22 @@ import * as storage from '../../util/storage'
 
 import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
 import Properties from './props'
-import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
 import { SPECIAL_GOALS } from './goal-conversions'
+
+/*global IS_CE*/
+/*global require*/
+function maybeRequire() {
+  if (IS_CE) {
+    console.info('CE')
+    return { default: null }
+  } else {
+    console.info('EE')
+    return require('../../experimental/funnel')
+  }
+}
+
+const Funnel = maybeRequire().default
 
 const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
 const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
@@ -165,8 +178,8 @@ export default function Behaviours(props) {
   }
 
   function renderFunnels() {
-    if (selectedFunnel) { return <Funnel site={site} query={query} funnelName={selectedFunnel} /> }
-    else if (adminAccess) {
+    if (Funnel && selectedFunnel) { return <Funnel site={site} query={query} funnelName={selectedFunnel} /> }
+    else if (Funnel && adminAccess) {
       return (
         <FeatureSetupNotice
           site={site}
@@ -178,6 +191,9 @@ export default function Behaviours(props) {
           onHideAction={onHideAction(FUNNELS)}
         />
       )
+    }
+    else if (Funnel === null) {
+      return featureUnavailable()
     }
     else { return noDataYet() }
   }
@@ -204,6 +220,14 @@ export default function Behaviours(props) {
     return (
       <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
         No data yet
+      </div>
+    )
+  }
+
+  function featureUnavailable() {
+    return (
+      <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
+        This feature is unavailable
       </div>
     )
   }
