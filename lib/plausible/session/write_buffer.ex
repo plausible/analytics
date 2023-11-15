@@ -1,11 +1,24 @@
 defmodule Plausible.Session.WriteBuffer do
   @moduledoc false
 
-  %{header: header, sql: sql, fields: fields, encoding_types: encoding_types} =
+  %{
+    header: header,
+    insert_sql: insert_sql,
+    insert_opts: insert_opts,
+    fields: fields,
+    encoding_types: encoding_types
+  } =
     Plausible.Ingestion.WriteBuffer.compile_time_prepare(Plausible.ClickhouseSessionV2)
 
   def child_spec(opts) do
-    opts = Keyword.merge(opts, name: __MODULE__, header: unquote(header), sql: unquote(sql))
+    opts =
+      Keyword.merge(opts,
+        name: __MODULE__,
+        header: unquote(header),
+        insert_sql: unquote(insert_sql),
+        insert_opts: unquote(insert_opts)
+      )
+
     Plausible.Ingestion.WriteBuffer.child_spec(opts)
   end
 

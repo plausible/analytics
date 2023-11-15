@@ -31,7 +31,8 @@ defmodule Plausible.Ingestion.WriteBuffer do
        buffer: buffer,
        timer: timer,
        name: Keyword.fetch!(opts, :name),
-       insert_sql: Keyword.fetch!(opts, :sql),
+       insert_sql: Keyword.fetch!(opts, :insert_sql),
+       insert_opts: Keyword.fetch!(opts, :insert_opts),
        header: Keyword.fetch!(opts, :header),
        buffer_size: length(buffer),
        max_buffer_size: max_buffer_size,
@@ -40,11 +41,11 @@ defmodule Plausible.Ingestion.WriteBuffer do
   end
 
   @impl true
-  def handle_cast({:insert, row_binary}, %{buffer: buffer} = state) do
-    state = %{state | buffer: [buffer | row_binary], buffer_size: state.buffer_size + 1}
+  def handle_cast({:insert, row_binary}, state) do
+    state = %{state | buffer: [state.buffer | row_binary], buffer_size: state.buffer_size + 1}
 
     if state.buffer_size >= state.max_buffer_size do
-      Logger.info("Buffer full, flushing to ClickHouse")
+      Logger.info("#{state.name} buffer full, flushing to ClickHouse")
       Process.cancel_timer(state.timer)
       do_flush(state)
       new_timer = Process.send_after(self(), :tick, state.flush_interval_ms)
@@ -63,31 +64,36 @@ defmodule Plausible.Ingestion.WriteBuffer do
 
   @impl true
   def handle_call(:flush, _from, state) do
-    Process.cancel_timer(state.timer)
+    %{timer: timer, flush_interval_ms: flush_interval_ms} = state
+    Process.cancel_timer(timer)
     do_flush(state)
-    new_timer = Process.send_after(self(), :tick, state.flush_interval_ms)
+    new_timer = Process.send_after(self(), :tick, flush_interval_ms)
     {:reply, :ok, %{state | buffer: [], buffer_size: 0, timer: new_timer}}
   end
 
   @impl true
-  def terminate(_reason, state) do
-    Logger.info("Flushing #{state.name} buffer before shutdown...")
+  def terminate(_reason, %{name: name} = state) do
+    Logger.info("Flushing #{name} buffer before shutdown...")
     do_flush(state)
   end
 
-  defp do_flush(%{buffer: buffer} = state) do
+  defp do_flush(state) do
+    %{
+      buffer: buffer,
+      buffer_size: buffer_size,
+      insert_opts: insert_opts,
+      insert_sql: insert_sql,
+      header: header,
+      name: name
+    } = state
+
     case buffer do
       [] ->
         nil
 
       _not_empty ->
-        Logger.info("Flushing #{state.buffer_size} binaries from #{state.name}")
-
-        IngestRepo.query!(state.insert_sql, [state.header | buffer],
-          command: :insert,
-          encode: false,
-          cast_params: []
-        )
+        Logger.info("Flushing #{buffer_size} binaries from #{name}")
+        IngestRepo.query!(insert_sql, [header | buffer], insert_opts)
     end
   end
 
@@ -120,7 +126,20 @@ defmodule Plausible.Ingestion.WriteBuffer do
       |> Ch.RowBinary.encode_names_and_types(types)
       |> IO.iodata_to_binary()
 
-    sql = "INSERT INTO #{schema.__schema__(:source)} FORMAT RowBinaryWithNamesAndTypes"
-    %{fields: fields, types: types, encoding_types: encoding_types, header: header, sql: sql}
+    insert_sql = "INSERT INTO #{schema.__schema__(:source)} FORMAT RowBinaryWithNamesAndTypes"
+
+    %{
+      fields: fields,
+      types: types,
+      encoding_types: encoding_types,
+      header: header,
+      insert_sql: insert_sql,
+      insert_opts: [
+        command: :insert,
+        encode: false,
+        source: schema.__schema__(:source),
+        cast_params: []
+      ]
+    }
   end
 end
