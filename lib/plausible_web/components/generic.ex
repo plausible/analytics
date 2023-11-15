@@ -107,7 +107,7 @@ defmodule PlausibleWeb.Components.Generic do
         </div>
       </div>
     </div>
-    <script data-key={@dismissable_id}>
+    <script :if={@dismissable_id} data-key={@dismissable_id}>
       const dismissId = document.currentScript.dataset.key
       const localStorageKey = `notice_dismissed__${dismissId}`
 
