@@ -28,6 +28,7 @@ defmodule Plausible.Application do
       {Plausible.Site.Cache, []},
       {Plausible.Site.Cache.Warmer.All, []},
       {Plausible.Site.Cache.Warmer.RecentlyUpdated, []},
+      {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
       PlausibleWeb.Endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
       Plausible.PromEx
@@ -48,6 +49,13 @@ defmodule Plausible.Application do
   def config_change(changed, _new, removed) do
     PlausibleWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp totp_vault_key() do
+    :plausible
+    |> Application.fetch_env!(Plausible.Auth.TOTP)
+    |> Keyword.fetch!(:vault_key)
+    |> Base.decode64!()
   end
 
   defp finch_pool_config() do
