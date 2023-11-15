@@ -311,7 +311,8 @@ defmodule Plausible.Stats.Breakdown do
           next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
           next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
           timestamp: e.timestamp,
-          pathname: e.pathname
+          pathname: e.pathname,
+          session_id: e.session_id
         },
         windows: [
           event_horizon: [
@@ -321,11 +322,20 @@ defmodule Plausible.Stats.Breakdown do
           ]
         ]
 
-    no_select_timed_pages_q =
+    timed_page_transitions_q =
       from e in subquery(windowed_pages_q),
-        group_by: e.pathname,
+        group_by: [e.pathname, e.next_pathname, e.session_id],
         where: e.pathname in ^pages,
-        where: e.next_timestamp != 0
+        where: e.next_timestamp != 0,
+        select: %{
+          pathname: e.pathname,
+          transition: e.next_pathname != e.pathname,
+          duration: sum(e.next_timestamp - e.timestamp)
+        }
+
+    no_select_timed_pages_q =
+      from e in subquery(timed_page_transitions_q),
+        group_by: e.pathname
 
     timed_pages_q =
       if query.include_imported do
@@ -346,8 +356,8 @@ defmodule Plausible.Stats.Breakdown do
           from e in no_select_timed_pages_q,
             select: %{
               page: e.pathname,
-              time_on_page: fragment("sum(?)", e.next_timestamp - e.timestamp),
-              visits: fragment("countIf(?)", e.next_pathname != e.pathname)
+              time_on_page: sum(e.duration),
+              visits: fragment("countIf(?)", e.transition)
             }
 
         "timed_pages"
@@ -363,14 +373,7 @@ defmodule Plausible.Stats.Breakdown do
         )
       else
         from e in no_select_timed_pages_q,
-          select:
-            {e.pathname,
-             fragment(
-               "sum(?)/countIf(case when ?!=? then 1 end)",
-               e.next_timestamp - e.timestamp,
-               e.next_pathname,
-               e.pathname
-             )}
+          select: {e.pathname, fragment("sum(?)/countIf(?)", e.duration, e.transition)}
       end
 
     timed_pages_q
