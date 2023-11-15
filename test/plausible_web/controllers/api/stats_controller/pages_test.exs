@@ -801,6 +801,39 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                |> json_response(200)
     end
 
+    test "calculates time on page per unique transition within session", %{conn: conn, site: site} do
+      # ┌─p──┬─p2─┬─minus(t2, t)─┬──s─┐
+      # │ /a │ /b │          100 │ s1 │
+      # │ /a │ /d │          100 │ s2 │ <- these two get treated
+      # │ /a │ /d │            0 │ s2 │ <- as single page transition
+      # └────┴────┴──────────────┴────┘
+      # so that time_on_page(a)=(100+100)/uniq(transition)=200/2=100
+
+      s1 = @user_id
+      s2 = @user_id + 1
+
+      now = ~N[2021-01-01 00:00:00]
+      later = fn seconds -> NaiveDateTime.add(now, seconds) end
+
+      populate_stats(site, [
+        build(:pageview, user_id: s1, timestamp: now, pathname: "/a"),
+        build(:pageview, user_id: s1, timestamp: later.(100), pathname: "/b"),
+        build(:pageview, user_id: s2, timestamp: now, pathname: "/a"),
+        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d"),
+        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/a"),
+        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d")
+      ])
+
+      assert [
+               %{"name" => "/a", "time_on_page" => 100.0},
+               %{"name" => "/b", "time_on_page" => nil},
+               %{"name" => "/d", "time_on_page" => 0.0}
+             ] =
+               conn
+               |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
+               |> json_response(200)
+    end
+
     test "calculates bounce rate and time on page for pages with imported data", %{
       conn: conn,
       site: site
