@@ -13,10 +13,8 @@ import { SPECIAL_GOALS } from './goal-conversions'
 /*global require*/
 function maybeRequire() {
   if (IS_CE) {
-    console.info('CE')
     return { default: null }
   } else {
-    console.info('EE')
     return require('../../experimental/funnel')
   }
 }
@@ -152,7 +150,7 @@ export default function Behaviours(props) {
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
         {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS, 'Goals')}
         {isEnabled(PROPS) && tabSwitcher(PROPS, 'Properties')}
-        {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
+        {isEnabled(FUNNELS) && Funnel && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
       </div>
     )
   }
