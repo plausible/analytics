@@ -807,7 +807,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       # │ /a    │ /d      │          100 │ s2 │ <- this two get treated
       # │ /a    │ /d      │            0 │ s2 │ <- as single page transition
       # └───────┴─────────┴──────────────┴────┘
-      # so that 200 gets divided by 2 instead of 3
+      # so that time_on_page(a)=(100+100)/uniq(transition)=200/2=100
 
       s1 = @user_id
       s2 = @user_id + 1
