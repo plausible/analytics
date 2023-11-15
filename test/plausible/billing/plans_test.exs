@@ -26,10 +26,32 @@ defmodule Plausible.Billing.PlansTest do
       |> assert_generation(2)
     end
 
-    test "growth_plans_for/1 shows v3 pricing for users who signed up before the business tier" do
-      insert(:user, inserted_at: ~U[2023-10-01T00:00:00Z])
+    test "growth_plans_for/1 returns v4 plans for invited users with trial_expiry = nil" do
+      insert(:user, trial_expiry_date: nil)
       |> Plans.growth_plans_for()
-      |> assert_generation(3)
+      |> assert_generation(4)
+    end
+
+    test "growth_plans_for/1 returns v4 plans for users whose trial started after the business tiers release" do
+      insert(:user, trial_expiry_date: ~D[2023-12-24])
+      |> Plans.growth_plans_for()
+      |> assert_generation(4)
+    end
+
+    test "growth_plans_for/1 returns v3 plans for pre business tier trials only if their trial is active or expired less than 10 days ago" do
+      trial_start = ~D[2023-10-27]
+      trial_expiry = Timex.shift(trial_start, days: 30)
+      expiry_datetime = Timex.to_datetime(trial_expiry)
+
+      user = insert(:user, trial_expiry_date: trial_expiry)
+
+      now1 = Timex.shift(expiry_datetime, days: -1)
+      now2 = Timex.shift(expiry_datetime, days: 10)
+      now3 = Timex.shift(expiry_datetime, days: 11)
+
+      Plans.growth_plans_for(user, now1) |> assert_generation(3)
+      Plans.growth_plans_for(user, now2) |> assert_generation(3)
+      Plans.growth_plans_for(user, now3) |> assert_generation(4)
     end
 
     test "growth_plans_for/1 shows v4 plans for everyone else" do
@@ -67,10 +89,32 @@ defmodule Plausible.Billing.PlansTest do
       assert_generation(business_plans, 3)
     end
 
-    test "business_plans_for/1 returns v3 business plans for users who signed up before the business tier release" do
-      insert(:user, inserted_at: ~U[2023-10-01T00:00:00Z])
+    test "business_plans_for/1 returns v4 plans for invited users with trial_expiry = nil" do
+      insert(:user, trial_expiry_date: nil)
       |> Plans.business_plans_for()
-      |> assert_generation(3)
+      |> assert_generation(4)
+    end
+
+    test "business_plans_for/1 returns v4 plans for users whose trial started after the business tiers release" do
+      insert(:user, trial_expiry_date: ~D[2023-12-24])
+      |> Plans.business_plans_for()
+      |> assert_generation(4)
+    end
+
+    test "business_plans_for/1 returns v3 plans for pre business tier trials only if their trial is active or expired less than 10 days ago" do
+      trial_start = ~D[2023-10-27]
+      trial_expiry = Timex.shift(trial_start, days: 30)
+      expiry_datetime = Timex.to_datetime(trial_expiry)
+
+      user = insert(:user, trial_expiry_date: trial_expiry)
+
+      now1 = Timex.shift(expiry_datetime, days: -1)
+      now2 = Timex.shift(expiry_datetime, days: 10)
+      now3 = Timex.shift(expiry_datetime, days: 11)
+
+      Plans.business_plans_for(user, now1) |> assert_generation(3)
+      Plans.business_plans_for(user, now2) |> assert_generation(3)
+      Plans.business_plans_for(user, now3) |> assert_generation(4)
     end
 
     test "business_plans_for/1 returns v4 business plans for everyone else" do
