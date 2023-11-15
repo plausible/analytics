@@ -154,7 +154,8 @@ defmodule Plausible.Stats.Aggregate do
              next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
              next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
              timestamp: e.timestamp,
-             pathname: e.pathname
+             pathname: e.pathname,
+             session_id: e.session_id
            },
            windows: [
              event_horizon: [
@@ -164,18 +165,20 @@ defmodule Plausible.Stats.Aggregate do
              ]
            ]
 
-    avg_time_per_page_transition_q =
+    timed_page_transitions_q =
       from e in Ecto.Query.subquery(windowed_pages_q),
-        select: %{
-          avg:
-            fragment(
-              "sum(?)/countIf(?)",
-              e.next_timestamp - e.timestamp,
-              e.next_pathname != e.pathname
-            )
-        },
+        group_by: [e.pathname, e.next_pathname, e.session_id],
         where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname),
         where: e.next_timestamp != 0,
+        select: %{
+          pathname: e.pathname,
+          transition: e.next_pathname != e.pathname,
+          duration: sum(e.next_timestamp - e.timestamp)
+        }
+
+    avg_time_per_page_transition_q =
+      from e in Ecto.Query.subquery(timed_page_transitions_q),
+        select: %{avg: fragment("sum(?)/countIf(?)", e.duration, e.transition)},
         group_by: e.pathname
 
     time_on_page_q =
