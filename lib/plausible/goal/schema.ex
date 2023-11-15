@@ -1,4 +1,5 @@
 defmodule Plausible.Goal do
+  use Plausible
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -9,7 +10,9 @@ defmodule Plausible.Goal do
     field :page_path, :string
     field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
 
-    many_to_many :funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step
+    ee? do
+      many_to_many :funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step
+    end
 
     belongs_to :site, Plausible.Site
 

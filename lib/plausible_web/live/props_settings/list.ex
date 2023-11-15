@@ -5,8 +5,6 @@ defmodule PlausibleWeb.Live.PropsSettings.List do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  use Plausible.Funnel
-
   attr(:props, :list, required: true)
   attr(:domain, :string, required: true)
   attr(:filter_text, :string)
