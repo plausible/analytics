@@ -457,7 +457,8 @@ defmodule Plausible.Ingestion.RequestTest do
              "remote_ip" => "127.0.0.1",
              "revenue_source" => %{"amount" => "12.3", "currency" => "USD"},
              "uri" => "https://dummy.site/pictures/index.html?foo=bar&baz=bam",
-             "user_agent" => "Mozilla"
+             "user_agent" => "Mozilla",
+             "ip_classification" => nil
            }
 
     assert %NaiveDateTime{} = NaiveDateTime.from_iso8601!(request["timestamp"])

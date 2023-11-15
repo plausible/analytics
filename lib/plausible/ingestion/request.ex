@@ -36,6 +36,7 @@ defmodule Plausible.Ingestion.Request do
     field :hostname, :string
     field :referrer, :string
     field :domains, {:array, :string}
+    field :ip_classification, :string
     field :hash_mode, :integer
     field :pathname, :string
     field :props, :map
@@ -63,6 +64,7 @@ defmodule Plausible.Ingestion.Request do
     case parse_body(conn) do
       {:ok, request_body} ->
         changeset
+        |> put_ip_classification(conn)
         |> put_remote_ip(conn)
         |> put_uri(request_body)
         |> put_hostname()
@@ -270,6 +272,15 @@ defmodule Plausible.Ingestion.Request do
       _any ->
         changeset
     end
+  end
+
+  defp put_ip_classification(changeset, %Plug.Conn{} = conn) do
+    value =
+      conn
+      |> Plug.Conn.get_req_header("x-plausible-ip-type")
+      |> List.first()
+
+    Changeset.put_change(changeset, :ip_classification, value)
   end
 
   defp put_user_agent(changeset, %Plug.Conn{} = conn) do
