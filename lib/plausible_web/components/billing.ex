@@ -300,7 +300,7 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <div
       :if={FunWithFlags.enabled?(:premium_features_private_preview) && @features_to_lose != []}
-      class="container mt-2"
+      class="container"
     >
       <.notice
         class="shadow-md dark:shadow-none"
