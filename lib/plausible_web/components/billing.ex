@@ -245,6 +245,9 @@ defmodule PlausibleWeb.Components.Billing do
 
   def subscription_cancelled_notice(assigns), do: ~H""
 
+  attr(:class, :string, default: "")
+  attr(:subscription, :any, default: nil)
+
   def subscription_past_due_notice(
         %{subscription: %Subscription{status: Subscription.Status.past_due()}} = assigns
       ) do
@@ -261,6 +264,9 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   def subscription_past_due_notice(assigns), do: ~H""
+
+  attr(:class, :string, default: "")
+  attr(:subscription, :any, default: nil)
 
   def subscription_paused_notice(
         %{subscription: %Subscription{status: Subscription.Status.paused()}} = assigns
