@@ -17,20 +17,15 @@ defmodule PlausibleWeb.Components.Billing do
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def premium_feature_notice(assigns) do
-    cond do
-      Plausible.Billing.on_trial?(assigns.billable_user) ->
-        ~H""
-
-      assigns.feature_mod.check_availability(assigns.billable_user) != :ok ->
-        ~H"""
-        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest} title="Notice">
-          <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
-          <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
-        </.notice>
-        """
-
-      true ->
-        ~H""
+    if assigns.feature_mod.check_availability(assigns.billable_user) == :ok do
+      ~H""
+    else
+      ~H"""
+      <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest} title="Notice">
+        <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
+        <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+      </.notice>
+      """
     end
   end
 
