@@ -123,8 +123,8 @@ defmodule Plausible.Billing.Quota do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{} ->
-        :unlimited
+      %EnterprisePlan{team_member_limit: limit} ->
+        limit
 
       %Plan{team_member_limit: limit} ->
         limit
@@ -252,7 +252,7 @@ defmodule Plausible.Billing.Quota do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{} -> Feature.list()
+      %EnterprisePlan{features: features} -> features
       %Plan{features: features} -> features
       :free_10k -> [Goals, Props, StatsAPI]
       nil -> Feature.list()
