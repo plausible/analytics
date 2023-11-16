@@ -4,13 +4,14 @@ defmodule PlausibleWeb.Components.Billing do
   use Phoenix.Component
   import PlausibleWeb.Components.Generic
   require Plausible.Billing.Subscription.Status
+  alias Plausible.Auth.User
   alias Plausible.Billing.Feature.{RevenueGoals, Funnels}
   alias Plausible.Billing.Feature.{Props, StatsAPI}
   alias PlausibleWeb.Router.Helpers, as: Routes
   alias Plausible.Billing.{Subscription, Plans, Plan, Subscriptions}
 
-  attr(:billable_user, Plausible.Auth.User, required: true)
-  attr(:current_user, Plausible.Auth.User, required: true)
+  attr(:billable_user, User, required: true)
+  attr(:current_user, User, required: true)
   attr(:feature_mod, :atom, required: true, values: Plausible.Billing.Feature.list())
   attr(:grandfathered?, :boolean, default: false)
   attr(:size, :atom, default: :sm)
@@ -56,8 +57,8 @@ defmodule PlausibleWeb.Components.Billing do
     end
   end
 
-  attr(:billable_user, Plausible.Auth.User, required: true)
-  attr(:current_user, Plausible.Auth.User, required: true)
+  attr(:billable_user, User, required: true)
+  attr(:current_user, User, required: true)
   attr(:limit, :integer, required: true)
   attr(:resource, :string, required: true)
   attr(:rest, :global)
