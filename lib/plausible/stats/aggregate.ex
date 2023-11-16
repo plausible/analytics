@@ -58,6 +58,14 @@ defmodule Plausible.Stats.Aggregate do
   end
 
   defp aggregate_time_on_page(site, query) do
+    if FunWithFlags.enabled?(:window_time_on_page) do
+      window_aggregate_time_on_page(site, query)
+    else
+      neighbor_aggregate_time_on_page(site, query)
+    end
+  end
+
+  defp neighbor_aggregate_time_on_page(site, query) do
     q =
       from(
         e in base_event_query(site, %Query{
@@ -134,6 +142,50 @@ defmodule Plausible.Stats.Aggregate do
     {:ok, res} = ClickhouseRepo.query(time_query, params)
     [[time_on_page]] = res.rows
     %{time_on_page: time_on_page}
+  end
+
+  defp window_aggregate_time_on_page(site, query) do
+    windowed_pages_q =
+      from e in base_event_query(site, %Query{
+             query
+             | filters: Map.delete(query.filters, "event:page")
+           }),
+           select: %{
+             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
+             timestamp: e.timestamp,
+             pathname: e.pathname,
+             session_id: e.session_id
+           },
+           windows: [
+             event_horizon: [
+               partition_by: e.session_id,
+               order_by: e.timestamp,
+               frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+             ]
+           ]
+
+    timed_page_transitions_q =
+      from e in Ecto.Query.subquery(windowed_pages_q),
+        group_by: [e.pathname, e.next_pathname, e.session_id],
+        where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname),
+        where: e.next_timestamp != 0,
+        select: %{
+          pathname: e.pathname,
+          transition: e.next_pathname != e.pathname,
+          duration: sum(e.next_timestamp - e.timestamp)
+        }
+
+    avg_time_per_page_transition_q =
+      from e in Ecto.Query.subquery(timed_page_transitions_q),
+        select: %{avg: fragment("sum(?)/countIf(?)", e.duration, e.transition)},
+        group_by: e.pathname
+
+    time_on_page_q =
+      from e in Ecto.Query.subquery(avg_time_per_page_transition_q),
+        select: fragment("avg(ifNotFinite(?,NULL))", e.avg)
+
+    %{time_on_page: ClickhouseRepo.one(time_on_page_q)}
   end
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]

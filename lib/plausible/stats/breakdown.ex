@@ -211,10 +211,18 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp breakdown_time_on_page(_site, _query, []) do
-    []
+    %{}
   end
 
   defp breakdown_time_on_page(site, query, pages) do
+    if FunWithFlags.enabled?(:window_time_on_page) do
+      window_breakdown_time_on_page(site, query, pages)
+    else
+      neighbor_breakdown_time_on_page(site, query, pages)
+    end
+  end
+
+  defp neighbor_breakdown_time_on_page(site, query, pages) do
     q =
       from(
         e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
@@ -292,6 +300,85 @@ defmodule Plausible.Stats.Breakdown do
     else
       res.rows |> Enum.map(fn [page, time] -> {page, time} end) |> Enum.into(%{})
     end
+  end
+
+  defp window_breakdown_time_on_page(site, query, pages) do
+    import Ecto.Query
+
+    windowed_pages_q =
+      from e in base_event_query(site, Query.remove_event_filters(query, [:page, :props])),
+        select: %{
+          next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+          next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
+          timestamp: e.timestamp,
+          pathname: e.pathname,
+          session_id: e.session_id
+        },
+        windows: [
+          event_horizon: [
+            partition_by: e.session_id,
+            order_by: e.timestamp,
+            frame: fragment("ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING")
+          ]
+        ]
+
+    timed_page_transitions_q =
+      from e in subquery(windowed_pages_q),
+        group_by: [e.pathname, e.next_pathname, e.session_id],
+        where: e.pathname in ^pages,
+        where: e.next_timestamp != 0,
+        select: %{
+          pathname: e.pathname,
+          transition: e.next_pathname != e.pathname,
+          duration: sum(e.next_timestamp - e.timestamp)
+        }
+
+    no_select_timed_pages_q =
+      from e in subquery(timed_page_transitions_q),
+        group_by: e.pathname
+
+    timed_pages_q =
+      if query.include_imported do
+        # Imported page views have pre-calculated values
+        imported_timed_pages_q =
+          from i in "imported_pages",
+            group_by: i.page,
+            where: i.site_id == ^site.id,
+            where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+            where: i.page in ^pages,
+            select: %{
+              page: i.page,
+              time_on_page: sum(i.time_on_page),
+              visits: sum(i.pageviews) - sum(i.exits)
+            }
+
+        timed_pages_q =
+          from e in no_select_timed_pages_q,
+            select: %{
+              page: e.pathname,
+              time_on_page: sum(e.duration),
+              visits: fragment("countIf(?)", e.transition)
+            }
+
+        "timed_pages"
+        |> with_cte("timed_pages", as: ^timed_pages_q)
+        |> with_cte("imported_timed_pages", as: ^imported_timed_pages_q)
+        |> join(:full, [t], i in "imported_timed_pages", on: t.page == i.page)
+        |> select(
+          [t, i],
+          {
+            fragment("if(empty(?),?,?)", t.page, i.page, t.page),
+            (t.time_on_page + i.time_on_page) / (t.visits + i.visits)
+          }
+        )
+      else
+        from e in no_select_timed_pages_q,
+          select: {e.pathname, fragment("sum(?)/countIf(?)", e.duration, e.transition)}
+      end
+
+    timed_pages_q
+    |> Plausible.ClickhouseRepo.all()
+    |> Map.new()
   end
 
   defp joins_table?(ecto_q, table) do

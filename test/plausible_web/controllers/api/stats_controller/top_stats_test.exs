@@ -332,6 +332,43 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                |> Map.fetch!("top_stats")
                |> Enum.find(&(&1["name"] == "Time on page"))
     end
+
+    test "averages time on page over unique transitions across sessions", %{
+      conn: conn,
+      site: site
+    } do
+      # ┌─p──┬─p2─┬─minus(t2, t)─┬──s─┐
+      # │ /a │ /b │          100 │ s1 │
+      # │ /a │ /d │          100 │ s2 │ <- these two get treated
+      # │ /a │ /d │            0 │ s2 │ <- as single page transition
+      # └────┴────┴──────────────┴────┘
+      # so that time_on_page(a)=(100+100)/uniq(transition)=200/2=100
+
+      s1 = @user_id
+      s2 = @user_id + 1
+
+      now = ~N[2021-01-01 00:00:00]
+      later = fn seconds -> NaiveDateTime.add(now, seconds) end
+
+      populate_stats(site, [
+        build(:pageview, user_id: s1, timestamp: now, pathname: "/a"),
+        build(:pageview, user_id: s1, timestamp: later.(100), pathname: "/b"),
+        build(:pageview, user_id: s2, timestamp: now, pathname: "/a"),
+        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d"),
+        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/a"),
+        build(:pageview, user_id: s2, timestamp: later.(100), pathname: "/d")
+      ])
+
+      filters = Jason.encode!(%{page: "/a"})
+      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+
+      assert %{"name" => "Time on page", "value" => 100} ==
+               conn
+               |> get(path)
+               |> json_response(200)
+               |> Map.fetch!("top_stats")
+               |> Enum.find(&(&1["name"] == "Time on page"))
+    end
   end
 
   describe "GET /api/stats/top-stats - with imported data" do
