@@ -46,7 +46,10 @@ defmodule PlausibleWeb.Live.Flash do
   def flash_messages(assigns) do
     ~H"""
     <div id="liveview-flash">
-      <div :if={@flash != %{}} class="">
+      <div
+        :if={@flash != %{} or Application.get_env(:plausible, :environment) == "dev"}
+        class="inset-0 z-50 fixed flex flex-col-reverse items-center sm:items-end justify-start sm:justify-end px-4 py-6 pointer-events-none sm:p-6"
+      >
         <.flash :if={Flash.get(@flash, :success)} key="success">
           <:icon>
             <.icon_success />
@@ -69,15 +72,14 @@ defmodule PlausibleWeb.Live.Flash do
             <%= Flash.get(@flash, :error) %>
           </:message>
         </.flash>
-      </div>
-      <div
-        :if={Application.get_env(:plausible, :environment) == "dev"}
-        id="live-view-connection-status"
-        class="hidden"
-        phx-disconnected={JS.show()}
-        phx-connected={JS.hide()}
-      >
-        <.flash on_close={JS.hide(to: "#live-view-connection-status")}>
+        <.flash
+          :if={Application.get_env(:plausible, :environment) == "dev"}
+          id="live-view-connection-status"
+          class="hidden"
+          phx-disconnected={JS.show()}
+          phx-connected={JS.hide()}
+          on_close={JS.hide()}
+        >
           <:icon>
             <.icon_error />
           </:icon>
@@ -98,26 +100,32 @@ defmodule PlausibleWeb.Live.Flash do
   slot(:message, required: true)
   attr(:key, :string, default: nil)
   attr(:on_close, :any, default: "lv:clear-flash")
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
 
   def flash(assigns) do
     ~H"""
-    <div class="inset-0 z-50 fixed flex items-end justify-center px-4 py-6 pointer-events-none sm:p-6 sm:items-start sm:justify-end">
-      <div class="max-w-sm w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto">
-        <div class="rounded-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
-          <div class="p-4">
-            <div class="flex items-start">
-              <%= render_slot(@icon) %>
-              <div class="ml-3 w-0 flex-1 pt-0.5">
-                <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
-                  <%= render_slot(@title) %>
-                </p>
-                <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-                  <%= render_slot(@message) %>
-                </p>
-              </div>
-              <div class="ml-4 flex-shrink-0 flex">
-                <.clear_flash_button on_close={@on_close} key={@key} />
-              </div>
+    <div
+      class={[
+        @class,
+        "mb-4 max-w-sm w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto"
+      ]}
+      {@rest}
+    >
+      <div class="rounded-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
+        <div class="p-4">
+          <div class="flex items-start">
+            <%= render_slot(@icon) %>
+            <div class="ml-3 w-0 flex-1 pt-0.5">
+              <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
+                <%= render_slot(@title) %>
+              </p>
+              <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
+                <%= render_slot(@message) %>
+              </p>
+            </div>
+            <div class="ml-4 flex-shrink-0 flex">
+              <.clear_flash_button on_close={@on_close} key={@key} />
             </div>
           </div>
         </div>
