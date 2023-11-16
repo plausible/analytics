@@ -1,5 +1,7 @@
 defmodule PlausibleWeb.Live.FunnelSettings.FormTest do
   use PlausibleWeb.ConnCase, async: true
+  @moduletag :ee_only
+
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
 

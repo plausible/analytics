@@ -1,36 +1,44 @@
 defmodule Plausible do
   @moduledoc """
-  Plausible keeps the contexts that define your domain
-  and business logic.
-
-  Contexts are also responsible for managing your data, regardless
-  if it comes from the database, an external API or others.
+  Build-related macros
   """
 
   defmacro __using__(_) do
     quote do
       require Plausible
-      import Plausible, only: [ce?: 1, ee?: 1, ee?: 0]
+      import Plausible, only: [ce?: 1, ee?: 1, ee?: 0, ce?: 0]
     end
   end
 
   defmacro ce?(do: block) do
-    quote do
-      if Mix.env() == :community do
+    if Mix.env() in [:community, :community_test] do
+      quote do
         unquote(block)
       end
     end
   end
 
   defmacro ee?(do: block) do
-    quote do
-      if Mix.env() != :community do
+    if Mix.env() not in [:community, :community_test] do
+      quote do
         unquote(block)
       end
     end
   end
 
   defmacro ee?() do
-    Mix.env() != :community
+    ee? = Mix.env() not in [:community, :community_test]
+
+    quote do
+      unquote(ee?)
+    end
+  end
+
+  defmacro ce?() do
+    ee? = Mix.env() in [:community, :community_test]
+
+    quote do
+      unquote(ee?)
+    end
   end
 end

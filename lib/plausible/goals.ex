@@ -1,4 +1,5 @@
 defmodule Plausible.Goals do
+  use Plausible
   use Plausible.Repo
   alias Plausible.Goal
   alias Ecto.Multi
@@ -90,7 +91,7 @@ defmodule Plausible.Goals do
         order_by: [desc: g.id],
         preload: [:site]
 
-    if opts[:preload_funnels?] do
+    if opts[:preload_funnels?] == true and ee?() do
       from(g in query,
         left_join: assoc(g, :funnels),
         group_by: g.id,
@@ -117,15 +118,28 @@ defmodule Plausible.Goals do
   end
 
   def delete(id, site_id) do
-    result =
-      Multi.new()
-      |> Multi.one(
-        :goal,
+    ee? do
+      goal_query =
         from(g in Goal,
           where: g.id == ^id,
           where: g.site_id == ^site_id,
           preload: [funnels: :steps]
         )
+    end
+
+    ce? do
+      goal_query =
+        from(g in Goal,
+          where: g.id == ^id,
+          where: g.site_id == ^site_id
+        )
+    end
+
+    result =
+      Multi.new()
+      |> Multi.one(
+        :goal,
+        goal_query
       )
       |> Multi.run(:funnel_ids_to_wipe, fn
         _, %{goal: nil} ->

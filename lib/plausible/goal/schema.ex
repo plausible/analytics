@@ -14,6 +14,10 @@ defmodule Plausible.Goal do
       many_to_many :funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step
     end
 
+    ce? do
+      field :funnels, {:array, :map}, virtual: true, default: []
+    end
+
     belongs_to :site, Plausible.Site
 
     timestamps()
