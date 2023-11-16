@@ -25,6 +25,11 @@
 
     <div class="my-4 border-b border-gray-400"></div>
 
+    <PlausibleWeb.Components.Billing.subscription_cancelled_notice
+      user={@user}
+      dismissable={false}
+    />
+
     <div class="flex flex-col items-center justify-between mt-8 sm:flex-row sm:items-start">
       <PlausibleWeb.Components.Billing.monthly_quota_box
         user={@user}

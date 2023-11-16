@@ -216,34 +216,74 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
+  attr(:user, :map, required: true)
+  attr(:dismissable, :boolean, default: true)
+
+  @doc """
+  Given a user with a cancelled subscription, this component renders a cancelled
+  subscription notice. If the given user does not have a subscription or it has a
+  different status, this function returns an empty template.
+
+  It also takes a dismissable argument which renders the notice dismissable (with
+  the help of JavaScript and localStorage). We show a dismissable notice about a
+  cancelled subscription across the app. But when the user dismisses it. We will
+  start displaying it in the account settings > subscription section instead.
+
+  So it's either shown across the app, or only on the /settings page. Depending
+  on whether the localStorage flag to dismiss it has been set or not.
+  """
+  def subscription_cancelled_notice(assigns)
+
   def subscription_cancelled_notice(
-        %{user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}} =
+        %{
+          dismissable: true,
+          user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
+        } =
           assigns
       ) do
     ~H"""
-    <aside id="subscription-cancelled-notice" class="container">
+    <aside id="global-subscription-cancelled-notice" class="container">
+      <PlausibleWeb.Components.Generic.notice
+        dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@user)}
+        title="Subscription cancelled"
+        theme={:red}
+        class="shadow-md dark:shadow-none"
+      >
+        <.subscription_cancelled_notice_body user={@user} />
+      </PlausibleWeb.Components.Generic.notice>
+    </aside>
+    """
+  end
+
+  def subscription_cancelled_notice(
+        %{
+          dismissable: false,
+          user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
+        } =
+          assigns
+      ) do
+    assigns = assign(assigns, :container_id, "local-subscription-cancelled-notice")
+
+    ~H"""
+    <aside id={@container_id} class="hidden">
       <PlausibleWeb.Components.Generic.notice
         title="Subscription cancelled"
         theme={:red}
         class="shadow-md dark:shadow-none"
       >
-        <%= if @user.subscription.next_bill_date && Timex.compare(@user.subscription.next_bill_date, Timex.today()) >= 0 do %>
-          <p>
-            You have access to your stats until <span class="font-semibold inline"><%= Timex.format!(@user.subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></span>.
-            <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
-              Upgrade your subscription
-            </.link>
-            to make sure you don't lose access.
-          </p>
-          <.lose_grandfathering_warning user={@user} />
-        <% else %>
-          <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
-            Upgrade your subscription
-          </.link>
-          <p>to get access to your stats again.</p>
-        <% end %>
+        <.subscription_cancelled_notice_body user={@user} />
       </PlausibleWeb.Components.Generic.notice>
     </aside>
+    <script
+      data-localstorage-key={"notice_dismissed__#{Plausible.Billing.cancelled_subscription_notice_dismiss_id(assigns.user)}"}
+      data-container-id={@container_id}
+    >
+      const dataset = document.currentScript.dataset
+
+      if (localStorage[dataset.localstorageKey]) {
+        document.getElementById(dataset.containerId).classList.remove('hidden')
+      }
+    </script>
     """
   end
 
@@ -426,6 +466,28 @@ defmodule PlausibleWeb.Components.Billing do
       Upgrade
     </PlausibleWeb.Components.Generic.button_link>
     """
+  end
+
+  defp subscription_cancelled_notice_body(assigns) do
+    if Plausible.Billing.Subscriptions.expired?(assigns.user.subscription) do
+      ~H"""
+      <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
+        Upgrade your subscription
+      </.link>
+      <p>to get access to your stats again.</p>
+      """
+    else
+      ~H"""
+      <p>
+        You have access to your stats until <span class="font-semibold inline"><%= Timex.format!(@user.subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></span>.
+        <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
+          Upgrade your subscription
+        </.link>
+        to make sure you don't lose access.
+      </p>
+      <.lose_grandfathering_warning user={@user} />
+      """
+    end
   end
 
   defp lose_grandfathering_warning(%{user: %{subscription: subscription} = user} = assigns) do

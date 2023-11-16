@@ -639,7 +639,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       notice_text =
         get(conn, "/settings")
         |> html_response(200)
-        |> text_of_element("#subscription-cancelled-notice")
+        |> text_of_element("#global-subscription-cancelled-notice")
 
       assert notice_text =~ "Subscription cancelled"
       assert notice_text =~ "Upgrade your subscription to get access to your stats again"
@@ -659,7 +659,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       notice_text =
         get(conn, "/settings")
         |> html_response(200)
-        |> text_of_element("#subscription-cancelled-notice")
+        |> text_of_element("#global-subscription-cancelled-notice")
 
       assert notice_text =~ "Subscription cancelled"
       assert notice_text =~ "You have access to your stats until"
@@ -680,7 +680,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       notice_text =
         get(conn, "/settings")
         |> html_response(200)
-        |> text_of_element("#subscription-cancelled-notice")
+        |> text_of_element("#global-subscription-cancelled-notice")
 
       assert notice_text =~ "Subscription cancelled"
       assert notice_text =~ "You have access to your stats until"
