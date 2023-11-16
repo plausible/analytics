@@ -8,14 +8,16 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
     ]
   end
 
-  def form_fields(_) do
+  def form_fields(_schema) do
     [
       user_id: nil,
       paddle_plan_id: nil,
       billing_interval: %{choices: [{"Yearly", "yearly"}, {"Monthly", "monthly"}]},
       monthly_pageview_limit: nil,
+      site_limit: nil,
+      team_member_limit: nil,
       hourly_api_request_limit: nil,
-      site_limit: nil
+      features: nil
     ]
   end
 
@@ -30,10 +32,16 @@ defmodule Plausible.Billing.EnterprisePlanAdmin do
       paddle_plan_id: nil,
       billing_interval: nil,
       monthly_pageview_limit: nil,
-      hourly_api_request_limit: nil,
-      site_limit: nil
+      site_limit: nil,
+      team_member_limit: nil,
+      hourly_api_request_limit: nil
     ]
   end
 
   defp get_user_email(plan), do: plan.user.email
+
+  def update_changeset(enterprise_plan, attrs) do
+    attrs = Map.put_new(attrs, "features", [])
+    Plausible.Billing.EnterprisePlan.changeset(enterprise_plan, attrs)
+  end
 end
