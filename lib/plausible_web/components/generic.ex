@@ -109,7 +109,7 @@ defmodule PlausibleWeb.Components.Generic do
               />
             </svg>
           </div>
-          <div class={@title && "ml-3"}>
+          <div class={["w-full", @title && "ml-3"]}>
             <h3 :if={@title} class={"text-#{@size} font-medium #{@theme.title_text} mb-2"}>
               <%= @title %>
             </h3>
