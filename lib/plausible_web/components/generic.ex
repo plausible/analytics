@@ -10,6 +10,12 @@ defmodule PlausibleWeb.Components.Generic do
       icon: "text-yellow-400",
       title_text: "text-yellow-800 dark:text-yellow-900",
       body_text: "text-yellow-700 dark:text-yellow-800"
+    },
+    red: %{
+      bg: "bg-red-50 dark:bg-red-100",
+      icon: "text-red-700",
+      title_text: "text-red-800 dark:text-red-900",
+      body_text: "text-red-700 dark:text-red-800"
     }
   }
 

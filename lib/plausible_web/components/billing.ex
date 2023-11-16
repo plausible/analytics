@@ -216,6 +216,35 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
+  def subscription_cancelled_notice(
+        %{user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}} =
+          assigns
+      ) do
+    ~H"""
+    <aside id="subscription-cancelled-notice" class="container">
+      <PlausibleWeb.Components.Generic.notice title="Subscription cancelled" theme={:red}>
+        <%= if @user.subscription.next_bill_date && Timex.compare(@user.subscription.next_bill_date, Timex.today()) >= 0 do %>
+          <p>
+            You have access to your stats until <span class="font-semibold inline"><%= Timex.format!(@user.subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></span>.
+            <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
+              Upgrade your subscription
+            </.link>
+            to make sure you don't lose access.
+          </p>
+          <.lose_grandfathering_warning user={@user} />
+        <% else %>
+          <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
+            Upgrade your subscription
+          </.link>
+          <p>to get access to your stats again.</p>
+        <% end %>
+      </PlausibleWeb.Components.Generic.notice>
+    </aside>
+    """
+  end
+
+  def subscription_cancelled_notice(assigns), do: ~H""
+
   def subscription_past_due_notice(
         %{subscription: %Subscription{status: Subscription.Status.past_due()}} = assigns
       ) do
@@ -431,6 +460,25 @@ defmodule PlausibleWeb.Components.Billing do
     }>
       Upgrade
     </PlausibleWeb.Components.Generic.button_link>
+    """
+  end
+
+  defp lose_grandfathering_warning(%{user: %{subscription: subscription} = user} = assigns) do
+    business_tiers_available? = FunWithFlags.enabled?(:business_tier, for: user)
+    plan = Plans.get_regular_plan(subscription, only_non_expired: true)
+    loses_grandfathering = business_tiers_available? && plan && plan.generation < 4
+
+    assigns = assign(assigns, :loses_grandfathering, loses_grandfathering)
+
+    ~H"""
+    <p :if={@loses_grandfathering} class="mt-2">
+      Please also note that by letting your subscription expire, you lose access to our grandfathered terms. If you want to subscribe again after that, your account will be offered the <.link
+        href="https://plausible.io/#pricing"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline"
+      >latest pricing</.link>.
+    </p>
     """
   end
 
