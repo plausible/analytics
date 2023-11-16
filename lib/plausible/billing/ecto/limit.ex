@@ -1,4 +1,10 @@
 defmodule Plausible.Billing.Ecto.Limit do
+  @moduledoc """
+  Ecto type representing a limit, that can be either a number or unlimited.
+  Unlimited is dumped to the database as `-1` and loaded as `:unlimited` to
+  keep compatibility with the rest of the codebase.
+  """
+
   use Ecto.Type
 
   def type, do: :integer

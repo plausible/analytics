@@ -1,4 +1,10 @@
 defmodule Plausible.Billing.Ecto.Feature do
+  @moduledoc """
+  Ecto type representing a feature. Features are cast and stored in the
+  database as strings and loaded as modules, for example: `"props"` is loaded
+  as `Plausible.Billing.Feature.Props`.
+  """
+
   use Ecto.Type
 
   def type, do: :string
@@ -26,6 +32,12 @@ defmodule Plausible.Billing.Ecto.Feature do
 end
 
 defmodule Plausible.Billing.Ecto.FeatureList do
+  @moduledoc """
+  Ecto type representing a list of features. This is a proxy for 
+  `{:array, Plausible.Billing.Ecto.Feature}` and is required for Kaffy to
+  render the HTML input correctly.
+  """
+
   use Ecto.Type
 
   def type, do: {:array, Plausible.Billing.Ecto.Feature}
