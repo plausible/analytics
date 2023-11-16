@@ -613,9 +613,13 @@ defmodule PlausibleWeb.Live.Sites do
             })
         end
 
-      Process.send_after(self(), :clear_flash, 5000)
+      if flash_timer = socket.assigns[:flash_timer] do
+        Process.cancel_timer(flash_timer)
+      end
 
-      {:noreply, socket}
+      flash_timer = Process.send_after(self(), :clear_flash, 5000)
+
+      {:noreply, assign(socket, :flash_timer, flash_timer)}
     else
       Sentry.capture_message("Attempting to toggle pin for invalid domain.",
         extra: %{domain: domain, user: socket.assigns.user.id}
