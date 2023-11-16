@@ -29,8 +29,7 @@ defmodule Plausible.Auth.UserAdmin do
       trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
       subscription_plan: %{value: &subscription_plan/1},
       subscription_status: %{value: &subscription_status/1},
-      grace_period: %{value: &grace_period_status/1},
-      usage: %{name: "Usage", value: &usage/1}
+      grace_period: %{value: &grace_period_status/1}
     ]
   end
 
@@ -120,10 +119,5 @@ defmodule Plausible.Auth.UserAdmin do
 
   defp format_date(date) do
     Timex.format!(date, "{Mshort} {D}, {YYYY}")
-  end
-
-  defp usage(user) do
-    usage = Plausible.Billing.Quota.usage(user)
-    "#{usage.sites} sites / #{usage.team_members} team members"
   end
 end
