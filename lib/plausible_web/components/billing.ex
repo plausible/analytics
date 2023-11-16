@@ -226,7 +226,7 @@ defmodule PlausibleWeb.Components.Billing do
 
   It also takes a dismissable argument which renders the notice dismissable (with
   the help of JavaScript and localStorage). We show a dismissable notice about a
-  cancelled subscription across the app. But when the user dismisses it. We will
+  cancelled subscription across the app, but when the user dismisses it, we will
   start displaying it in the account settings > subscription section instead.
 
   So it's either shown across the app, or only on the /settings page. Depending
