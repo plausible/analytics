@@ -2,15 +2,52 @@ defmodule PlausibleWeb.Live.Flash do
   @moduledoc """
   Flash component for LiveViews - works also when embedded within dead views
   """
-  use Phoenix.LiveComponent
+
+  use Phoenix.Component
   alias Phoenix.LiveView.JS
   alias Phoenix.Flash
 
-  def render(assigns) do
+  @flash_timer_assigns %{
+    success: :clear_flash_success,
+    error: :clear_flash_error
+  }
+
+  @flash_timer_timeout_ms 5000
+
+  defmacro __using__(_opts) do
+    quote do
+      import PlausibleWeb.Live.Flash, only: [put_live_flash: 3, flash_messages: 1]
+
+      def handle_info({:clear_live_flash, key}, socket) do
+        {:noreply, Phoenix.LiveView.clear_flash(socket, key)}
+      end
+    end
+  end
+
+  def put_live_flash(socket, key, message) when key in [:success, :error] do
+    timer_key = Map.fetch!(@flash_timer_assigns, key)
+
+    if flash_timer = socket.assigns[timer_key] do
+      Process.cancel_timer(flash_timer)
+    end
+
+    flash_timer =
+      Process.send_after(
+        self(),
+        {:clear_live_flash, key},
+        @flash_timer_timeout_ms
+      )
+
+    socket
+    |> Phoenix.LiveView.put_flash(key, message)
+    |> assign(timer_key, flash_timer)
+  end
+
+  def flash_messages(assigns) do
     ~H"""
     <div id="liveview-flash">
       <div :if={@flash != %{}} class="">
-        <.flash :if={Flash.get(@flash, :success)}>
+        <.flash :if={Flash.get(@flash, :success)} key="success">
           <:icon>
             <.icon_success />
           </:icon>
@@ -21,7 +58,7 @@ defmodule PlausibleWeb.Live.Flash do
             <%= Flash.get(@flash, :success) %>
           </:message>
         </.flash>
-        <.flash :if={Flash.get(@flash, :error)}>
+        <.flash :if={Flash.get(@flash, :error)} key="error">
           <:icon>
             <.icon_error />
           </:icon>
@@ -59,6 +96,7 @@ defmodule PlausibleWeb.Live.Flash do
   slot(:icon, required: true)
   slot(:title, require: true)
   slot(:message, required: true)
+  attr(:key, :string, default: nil)
   attr(:on_close, :any, default: "lv:clear-flash")
 
   def flash(assigns) do
@@ -78,7 +116,7 @@ defmodule PlausibleWeb.Live.Flash do
                 </p>
               </div>
               <div class="ml-4 flex-shrink-0 flex">
-                <.clear_flash_button on_close={@on_close} />
+                <.clear_flash_button on_close={@on_close} key={@key} />
               </div>
             </div>
           </div>
@@ -134,6 +172,7 @@ defmodule PlausibleWeb.Live.Flash do
     <button
       class="inline-flex text-gray-400 focus:outline-none focus:text-gray-500 dark:focus:text-gray-200 transition ease-in-out duration-150"
       phx-click={@on_close}
+      phx-value-key={@key}
     >
       <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
         <path

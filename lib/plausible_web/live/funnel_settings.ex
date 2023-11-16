@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   """
   use Phoenix.LiveView
   use Phoenix.HTML
+  use PlausibleWeb.Live.Flash
 
   use Plausible.Funnel
 
@@ -41,7 +42,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   def render(assigns) do
     ~H"""
     <div id="funnel-settings-main">
-      <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
+      <.flash_messages flash={@flash} />
       <%= if @add_funnel? do %>
         <%= live_render(
           @socket,
@@ -101,8 +102,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
     id = String.to_integer(id)
     :ok = Funnels.delete(site, id)
-    socket = put_flash(socket, :success, "Funnel deleted successfully")
-    Process.send_after(self(), :clear_flash, 5000)
+    socket = put_live_flash(socket, :success, "Funnel deleted successfully")
 
     {:noreply,
      assign(socket,
@@ -112,8 +112,7 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   end
 
   def handle_info({:funnel_saved, funnel}, socket) do
-    socket = put_flash(socket, :success, "Funnel saved successfully")
-    Process.send_after(self(), :clear_flash, 5000)
+    socket = put_live_flash(socket, :success, "Funnel saved successfully")
 
     {:noreply,
      assign(socket,
@@ -125,9 +124,5 @@ defmodule PlausibleWeb.Live.FunnelSettings do
 
   def handle_info(:cancel_add_funnel, socket) do
     {:noreply, assign(socket, add_funnel?: false)}
-  end
-
-  def handle_info(:clear_flash, socket) do
-    {:noreply, clear_flash(socket)}
   end
 end

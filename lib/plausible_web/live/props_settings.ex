@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
   use Phoenix.LiveView
   use Phoenix.HTML
+  use PlausibleWeb.Live.Flash
+
   alias PlausibleWeb.Live.Components.ComboBox
 
   def mount(
@@ -37,7 +39,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
   def render(assigns) do
     ~H"""
     <section id="props-settings-main">
-      <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
+      <.flash_messages flash={@flash} />
       <%= if @add_prop? do %>
         <%= live_render(
           @socket,
@@ -105,14 +107,13 @@ defmodule PlausibleWeb.Live.PropsSettings do
 
     socket =
       socket
-      |> put_flash(:success, "Property removed successfully")
+      |> put_live_flash(:success, "Property removed successfully")
       |> assign(
         all_props: Enum.reject(socket.assigns.all_props, &(&1 == prop)),
         displayed_props: Enum.reject(socket.assigns.displayed_props, &(&1 == prop)),
         site: site
       )
 
-    Process.send_after(self(), :clear_flash, 5000)
     {:noreply, socket}
   end
 
@@ -139,7 +140,7 @@ defmodule PlausibleWeb.Live.PropsSettings do
         displayed_props: props,
         site: %{socket.assigns.site | allowed_event_props: props}
       )
-      |> put_flash(:success, "Properties added successfully")
+      |> put_live_flash(:success, "Properties added successfully")
 
     {:noreply, socket}
   end
@@ -160,13 +161,9 @@ defmodule PlausibleWeb.Live.PropsSettings do
         displayed_props: allowed_event_props,
         site: %{site | allowed_event_props: allowed_event_props}
       )
-      |> put_flash(:success, "Property added successfully")
+      |> put_live_flash(:success, "Property added successfully")
 
     {:noreply, socket}
-  end
-
-  def handle_info(:clear_flash, socket) do
-    {:noreply, clear_flash(socket)}
   end
 
   defp new_form(site) do
