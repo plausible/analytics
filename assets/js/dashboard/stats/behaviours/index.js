@@ -9,13 +9,13 @@ import Properties from './props'
 import { FeatureSetupNotice } from '../../components/notice'
 import { SPECIAL_GOALS } from './goal-conversions'
 
-/*global IS_CE*/
+/*global BUILD_EXTRA*/
 /*global require*/
 function maybeRequire() {
-  if (IS_CE) {
-    return { default: null }
+  if (BUILD_EXTRA) {
+    return require('../../extra/funnel')
   } else {
-    return require('../../experimental/funnel')
+    return { default: null }
   }
 }
 
