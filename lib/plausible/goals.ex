@@ -91,7 +91,7 @@ defmodule Plausible.Goals do
         order_by: [desc: g.id],
         preload: [:site]
 
-    if opts[:preload_funnels?] == true and ee?() do
+    if opts[:preload_funnels?] == true and full_build?() do
       from(g in query,
         left_join: assoc(g, :funnels),
         group_by: g.id,
@@ -118,7 +118,7 @@ defmodule Plausible.Goals do
   end
 
   def delete(id, site_id) do
-    ee? do
+    on_full_build do
       goal_query =
         from(g in Goal,
           where: g.id == ^id,
@@ -127,7 +127,7 @@ defmodule Plausible.Goals do
         )
     end
 
-    ce? do
+    on_small_build do
       goal_query =
         from(g in Goal,
           where: g.id == ^id,

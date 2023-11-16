@@ -80,7 +80,7 @@ defmodule PlausibleWeb.Router do
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through(:internal_stats_api)
 
-    ee? do
+    on_full_build do
       get("/:domain/funnels/:id", StatsController, :funnel)
     end
 
@@ -315,7 +315,7 @@ defmodule PlausibleWeb.Router do
     get("/:website/settings/goals", SiteController, :settings_goals)
     get("/:website/settings/properties", SiteController, :settings_props)
 
-    ee? do
+    on_full_build do
       get("/:website/settings/funnels", SiteController, :settings_funnels)
     end
 

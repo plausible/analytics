@@ -10,11 +10,11 @@ defmodule Plausible.Goal do
     field :page_path, :string
     field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
 
-    ee? do
+    on_full_build do
       many_to_many :funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step
     end
 
-    ce? do
+    on_small_build do
       field :funnels, {:array, :map}, virtual: true, default: []
     end
 

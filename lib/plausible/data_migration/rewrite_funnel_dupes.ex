@@ -1,7 +1,7 @@
 defmodule Plausible.DataMigration.RewriteFunnelDupes do
   use Plausible
 
-  ee? do
+  on_full_build do
     @moduledoc """
     A data fix migration that seeks funnels having steps
     whose goals are equally named.

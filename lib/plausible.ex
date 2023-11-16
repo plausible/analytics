@@ -3,42 +3,44 @@ defmodule Plausible do
   Build-related macros
   """
 
+  @small_builds [:small, :small_test]
+
   defmacro __using__(_) do
     quote do
       require Plausible
-      import Plausible, only: [ce?: 1, ee?: 1, ee?: 0, ce?: 0]
+      import Plausible
     end
   end
 
-  defmacro ce?(do: block) do
-    if Mix.env() in [:community, :community_test] do
+  defmacro on_small_build(do: block) do
+    if Mix.env() in @small_builds do
       quote do
         unquote(block)
       end
     end
   end
 
-  defmacro ee?(do: block) do
-    if Mix.env() not in [:community, :community_test] do
+  defmacro on_full_build(do: block) do
+    if Mix.env() not in @small_builds do
       quote do
         unquote(block)
       end
     end
   end
 
-  defmacro ee?() do
-    ee? = Mix.env() not in [:community, :community_test]
+  defmacro full_build?() do
+    full_build? = Mix.env() not in @small_builds
 
     quote do
-      unquote(ee?)
+      unquote(full_build?)
     end
   end
 
-  defmacro ce?() do
-    ee? = Mix.env() in [:community, :community_test]
+  defmacro small_build?() do
+    small_build? = Mix.env() in @small_builds
 
     quote do
-      unquote(ee?)
+      unquote(small_build?)
     end
   end
 end

@@ -5,8 +5,8 @@ FunWithFlags.enable(:business_tier)
 FunWithFlags.enable(:window_time_on_page)
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
-if Mix.env() == :community_test do
-  ExUnit.configure(exclude: [:slow, :ee_only])
+if Mix.env() == :small_test do
+  ExUnit.configure(exclude: [:slow, :full_build_only])
 else
-  ExUnit.configure(exclude: [:slow, :ce_only])
+  ExUnit.configure(exclude: [:slow, :small_build_only])
 end

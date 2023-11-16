@@ -49,10 +49,10 @@ defmodule Plausible.MixProject do
   defp elixirc_paths(env) when env in [:test, :dev],
     do: ["lib", "test/support", "extra/lib"]
 
-  defp elixirc_paths(env) when env in [:community_test],
+  defp elixirc_paths(env) when env in [:small_test],
     do: ["lib", "test/support"]
 
-  defp elixirc_paths(:community), do: ["lib"]
+  defp elixirc_paths(:small), do: ["lib"]
   defp elixirc_paths(_), do: ["lib", "extra/lib"]
 
   # Specifies your project dependencies.
@@ -65,7 +65,7 @@ defmodule Plausible.MixProject do
       {:bamboo_postmark, git: "https://github.com/plausible/bamboo_postmark.git", branch: "main"},
       {:bamboo_smtp, "~> 4.1"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:bypass, "~> 2.1", only: [:dev, :test, :community_test]},
+      {:bypass, "~> 2.1", only: [:dev, :test, :small_test]},
       {:cachex, "~> 3.4"},
       {:ecto_ch, "~> 0.1.10"},
       {:combination, "~> 0.0.3"},
@@ -74,14 +74,14 @@ defmodule Plausible.MixProject do
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:csv, "~> 2.3"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:double, "~> 0.8.0", only: [:test, :community_test]},
+      {:double, "~> 0.8.0", only: [:test, :small_test]},
       {:ecto, "~> 3.10.0"},
       {:ecto_sql, "~> 3.10.0"},
       {:envy, "~> 1.1.1"},
-      {:ex_machina, "~> 2.3", only: [:dev, :test, :community, :community_test]},
+      {:ex_machina, "~> 2.3", only: [:dev, :test, :small, :small_test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:finch, "~> 0.16.0"},
-      {:floki, "~> 0.34.3", only: [:dev, :test, :community, :community_test]},
+      {:floki, "~> 0.34.3", only: [:dev, :test, :small, :small_test]},
       {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
       {:locus, "~> 2.3"},
@@ -92,7 +92,7 @@ defmodule Plausible.MixProject do
       {:jason, "~> 1.3"},
       {:kaffy, "~> 0.10.2"},
       {:location, git: "https://github.com/plausible/location.git"},
-      {:mox, "~> 1.0", only: [:test, :community_test]},
+      {:mox, "~> 1.0", only: [:test, :small_test]},
       {:nanoid, "~> 2.0.2"},
       {:oauther, "~> 1.3"},
       {:oban, "~> 2.12.0"},
@@ -107,8 +107,7 @@ defmodule Plausible.MixProject do
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 3.3", override: true},
-      # TODO remove from here
-      {:phoenix_live_reload, "~> 1.2", only: [:dev, :community]},
+      {:phoenix_live_reload, "~> 1.2", only: [:dev, :small]},
       {:phoenix_pubsub, "~> 2.0"},
       {:phoenix_live_view, "~> 0.18"},
       {:php_serializer, "~> 2.0"},
@@ -132,9 +131,8 @@ defmodule Plausible.MixProject do
       {:joken, "~> 2.5"},
       {:paginator, git: "https://github.com/duffelhq/paginator.git"},
       {:scrivener_ecto, "~> 2.0"},
-      # TODO: remove from here
-      {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :community]},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :community]},
+      {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :small]},
+      {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :small]},
       {:ex_json_logger, "~> 1.3.0"}
     ]
   end

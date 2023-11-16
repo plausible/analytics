@@ -493,7 +493,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  ee? do
+  on_full_build do
     def funnel(conn, %{"id" => funnel_id} = params) do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
 

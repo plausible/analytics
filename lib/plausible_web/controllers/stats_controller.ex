@@ -92,13 +92,13 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  ee? do
+  on_full_build do
     def list_funnels(site) do
       Plausible.Funnels.list(site)
     end
   end
 
-  ce? do
+  on_small_build do
     def list_funnels(_site) do
       []
     end

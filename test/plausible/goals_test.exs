@@ -133,7 +133,7 @@ defmodule Plausible.GoalsTest do
     assert [] = Goals.for_site(site)
   end
 
-  ee? do
+  on_full_build do
     test "goals can be fetched with funnel count preloaded" do
       site = insert(:site)
 

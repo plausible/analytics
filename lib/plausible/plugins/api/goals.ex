@@ -42,7 +42,7 @@ defmodule Plausible.Plugins.API.Goals do
     |> Repo.one()
   end
 
-  ee? do
+  on_full_build do
     defp get_query(site) do
       from g in Plausible.Goal,
         where: g.site_id == ^site.id,
@@ -53,7 +53,7 @@ defmodule Plausible.Plugins.API.Goals do
     end
   end
 
-  ce? do
+  on_small_build do
     defp get_query(site) do
       from g in Plausible.Goal,
         where: g.site_id == ^site.id,

@@ -77,7 +77,7 @@ defmodule PlausibleWeb.LayoutView do
       [key: "People", value: "people"],
       [key: "Visibility", value: "visibility"],
       [key: "Goals", value: "goals"],
-      ee? do
+      on_full_build do
         [key: "Funnels", value: "funnels"]
       end,
       [key: "Custom Properties", value: "properties"],

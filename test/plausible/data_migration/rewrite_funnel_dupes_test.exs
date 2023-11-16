@@ -2,7 +2,7 @@ defmodule Plausible.DataMigration.RewriteFunnelDupesTest do
   use Plausible.DataCase, async: true
   use Plausible
 
-  ee? do
+  on_full_build do
     alias Plausible.DataMigration.RewriteFunnelDupes
 
     import ExUnit.CaptureIO
