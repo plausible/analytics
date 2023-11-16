@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Components.Generic do
 
     ~H"""
     <div id={@dismissable_id} class={@dismissable_id && "hidden"}>
-      <div class={"rounded-md #{@theme.bg} p-4 relative #{@class}"} {@rest}>
+      <div class={["rounded-md p-4 relative", @theme.bg, @class]} {@rest}>
         <button
           :if={@dismissable_id}
           class={"absolute right-0 top-0 m-2 #{@theme.title_text}"}
