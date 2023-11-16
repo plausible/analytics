@@ -267,38 +267,12 @@ defmodule PlausibleWeb.Components.Billing do
       ) do
     ~H"""
     <aside class={@class}>
-      <div class="shadow-md dark:shadow-none rounded-lg bg-red-100 p-4">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg
-              class="w-5 h-5 mt-0.5 text-yellow-800"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          <div class="ml-3 flex-1 md:flex md:justify-between">
-            <p class="text-red-700">
-              Your subscription is paused due to failed payments. Please provide valid payment details to keep using Plausible.
-            </p>
-            <.link
-              href={@subscription.update_url}
-              class="whitespace-nowrap font-medium text-red-700 hover:text-red-600"
-            >
-              Update billing info <span aria-hidden="true"> &rarr;</span>
-            </.link>
-          </div>
-        </div>
-      </div>
+      <PlausibleWeb.Components.Generic.notice title="Subscription paused" theme={:red}>
+        Your subscription is paused due to failed payments. Please provide valid payment details to keep using Plausible.<.link
+          href={@subscription.update_url}
+          class="whitespace-nowrap font-semibold"
+        > Update billing info <span aria-hidden="true"> &rarr;</span></.link>
+      </PlausibleWeb.Components.Generic.notice>
     </aside>
     """
   end
