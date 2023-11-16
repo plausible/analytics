@@ -222,7 +222,11 @@ defmodule PlausibleWeb.Components.Billing do
       ) do
     ~H"""
     <aside id="subscription-cancelled-notice" class="container">
-      <PlausibleWeb.Components.Generic.notice title="Subscription cancelled" theme={:red}>
+      <PlausibleWeb.Components.Generic.notice
+        title="Subscription cancelled"
+        theme={:red}
+        class="shadow-md dark:shadow-none"
+      >
         <%= if @user.subscription.next_bill_date && Timex.compare(@user.subscription.next_bill_date, Timex.today()) >= 0 do %>
           <p>
             You have access to your stats until <span class="font-semibold inline"><%= Timex.format!(@user.subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></span>.
@@ -253,7 +257,10 @@ defmodule PlausibleWeb.Components.Billing do
       ) do
     ~H"""
     <aside class={@class}>
-      <PlausibleWeb.Components.Generic.notice title="Payment failed">
+      <PlausibleWeb.Components.Generic.notice
+        title="Payment failed"
+        class="shadow-md dark:shadow-none"
+      >
         There was a problem with your latest payment. Please update your payment information to keep using Plausible.<.link
           href={@subscription.update_url}
           class="whitespace-nowrap font-semibold"
@@ -273,7 +280,11 @@ defmodule PlausibleWeb.Components.Billing do
       ) do
     ~H"""
     <aside class={@class}>
-      <PlausibleWeb.Components.Generic.notice title="Subscription paused" theme={:red}>
+      <PlausibleWeb.Components.Generic.notice
+        title="Subscription paused"
+        theme={:red}
+        class="shadow-md dark:shadow-none"
+      >
         Your subscription is paused due to failed payments. Please provide valid payment details to keep using Plausible.<.link
           href={@subscription.update_url}
           class="whitespace-nowrap font-semibold"
