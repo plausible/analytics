@@ -176,7 +176,12 @@ export default function Behaviours(props) {
   }
 
   function renderFunnels() {
-    if (Funnel && selectedFunnel) { return <Funnel site={site} query={query} funnelName={selectedFunnel} /> }
+    if (Funnel === null) {
+      return featureUnavailable()
+    }
+    else if (Funnel && selectedFunnel) {
+      return <Funnel site={site} query={query} funnelName={selectedFunnel} />
+    }
     else if (Funnel && adminAccess) {
       return (
         <FeatureSetupNotice
@@ -189,9 +194,6 @@ export default function Behaviours(props) {
           onHideAction={onHideAction(FUNNELS)}
         />
       )
-    }
-    else if (Funnel === null) {
-      return featureUnavailable()
     }
     else { return noDataYet() }
   }

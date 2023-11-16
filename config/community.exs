@@ -21,5 +21,13 @@ config :plausible, PlausibleWeb.Endpoint,
     ]
   ]
 
+config :esbuild,
+  default: [
+    args:
+      ~w(js/app.js js/dashboard.js js/embed.host.js js/embed.content.js --bundle --target=es2017 --loader:.js=jsx --outdir=../priv/static/js --define:IS_CE=true),
+    cd: Path.expand("../assets", __DIR__),
+    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+  ]
+
 config :phoenix, :stacktrace_depth, 20
 config :phoenix, :plug_init_mode, :runtime

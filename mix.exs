@@ -146,7 +146,7 @@ defmodule Plausible.MixProject do
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": [
         "tailwind default",
-        "esbuild default --define:IS_CE=#{Mix.env() == :comminity}"
+        "esbuild default"
       ],
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
     ]
