@@ -19,13 +19,13 @@ defmodule PlausibleWeb.Components.Billing do
   def premium_feature_notice(assigns) do
     ~H"""
     <.notice
-      :if={assigns.feature_mod.check_availability(assigns.billable_user) == :ok}
+      :if={@feature_mod.check_availability(@billable_user) == :ok}
       class="rounded-t-md rounded-b-none"
       size={@size}
       title="Notice"
       {@rest}
     >
-      <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
+      <%= account_label(@current_user, @billable_user) %> does not have access to <%= @feature_mod.display_name() %>. To get access to this feature,
       <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
     </.notice>
     """
