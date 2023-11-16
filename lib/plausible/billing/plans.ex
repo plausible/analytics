@@ -72,11 +72,9 @@ defmodule Plausible.Billing.Plans do
     |> Enum.filter(&(&1.kind == :business))
   end
 
-  @doc """
-  Takes a Date struct argument representing the trial end date of a user.
-  If the `trial_expiry` is `nil`, it means that the user has not started
-  their trial yet (i.e. invited user), and this function returns false.
-  """
+  # Takes a Date struct argument representing the trial end date of a user.
+  # If the `trial_expiry` is `nil`, it means that the user has not started
+  # their trial yet (i.e. invited user), and this function returns false.
   defp grandfathered_trial?(nil, _now), do: false
 
   defp grandfathered_trial?(trial_expiry, now) do
