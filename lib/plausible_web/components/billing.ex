@@ -17,16 +17,18 @@ defmodule PlausibleWeb.Components.Billing do
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def premium_feature_notice(assigns) do
-    if assigns.feature_mod.check_availability(assigns.billable_user) == :ok do
-      ~H""
-    else
-      ~H"""
-      <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest} title="Notice">
-        <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
-        <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
-      </.notice>
-      """
-    end
+    ~H"""
+    <.notice
+      :if={assigns.feature_mod.check_availability(assigns.billable_user) == :ok}
+      class="rounded-t-md rounded-b-none"
+      size={@size}
+      title="Notice"
+      {@rest}
+    >
+      <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
+      <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+    </.notice>
+    """
   end
 
   attr(:billable_user, User, required: true)
@@ -210,8 +212,7 @@ defmodule PlausibleWeb.Components.Billing do
         %{
           dismissable: true,
           user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
-        } =
-          assigns
+        } = assigns
       ) do
     ~H"""
     <aside id="global-subscription-cancelled-notice" class="container">
@@ -231,8 +232,7 @@ defmodule PlausibleWeb.Components.Billing do
         %{
           dismissable: false,
           user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
-        } =
-          assigns
+        } = assigns
       ) do
     assigns = assign(assigns, :container_id, "local-subscription-cancelled-notice")
 
