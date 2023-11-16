@@ -5,56 +5,92 @@ defmodule Plausible.Billing.PlansTest do
   @legacy_plan_id "558746"
   @v1_plan_id "558018"
   @v2_plan_id "654177"
-  @v3_plan_id "749342"
-  @v4_plan_id "857097"
   @v3_business_plan_id "857481"
-  @v4_business_plan_id "857105"
 
   describe "getting subscription plans for user" do
     test "growth_plans_for/1 returns v1 plans for a user on a legacy plan" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @legacy_plan_id))
-      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v1_plan_id
+      insert(:user, subscription: build(:subscription, paddle_plan_id: @legacy_plan_id))
+      |> Plans.growth_plans_for()
+      |> assert_generation(1)
     end
 
     test "growth_plans_for/1 returns v1 plans for users who are already on v1 pricing" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
-      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v1_plan_id
+      insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
+      |> Plans.growth_plans_for()
+      |> assert_generation(1)
     end
 
     test "growth_plans_for/1 returns v2 plans for users who are already on v2 pricing" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
-      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v2_plan_id
+      insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
+      |> Plans.growth_plans_for()
+      |> assert_generation(2)
     end
 
-    test "growth_plans_for/1 shows v3 pricing for users who signed up before the business tier" do
-      user = insert(:user, inserted_at: ~U[2023-10-01T00:00:00Z])
-      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v3_plan_id
+    test "growth_plans_for/1 returns v4 plans for invited users with trial_expiry = nil" do
+      insert(:user, trial_expiry_date: nil)
+      |> Plans.growth_plans_for()
+      |> assert_generation(4)
+    end
+
+    test "growth_plans_for/1 returns v4 plans for users whose trial started after the business tiers release" do
+      insert(:user, trial_expiry_date: ~D[2023-12-24])
+      |> Plans.growth_plans_for()
+      |> assert_generation(4)
+    end
+
+    test "growth_plans_for/1 returns v3 plans for pre business tier trials only if their trial is active or expired less than 10 days ago" do
+      trial_start = ~D[2023-10-27]
+      trial_expiry = Timex.shift(trial_start, days: 30)
+      expiry_datetime = Timex.to_datetime(trial_expiry)
+
+      user = insert(:user, trial_expiry_date: trial_expiry)
+
+      now1 = Timex.shift(expiry_datetime, days: -1)
+      now2 = Timex.shift(expiry_datetime, days: 10)
+      now3 = Timex.shift(expiry_datetime, days: 11)
+
+      Plans.growth_plans_for(user, now1) |> assert_generation(3)
+      Plans.growth_plans_for(user, now2) |> assert_generation(3)
+      Plans.growth_plans_for(user, now3) |> assert_generation(4)
+    end
+
+    test "growth_plans_for/1 returns v4 plans for expired legacy subscriptions" do
+      subscription =
+        build(:subscription,
+          paddle_plan_id: @v1_plan_id,
+          status: :deleted,
+          next_bill_date: ~D[2023-11-10]
+        )
+
+      insert(:user, subscription: subscription)
+      |> Plans.growth_plans_for()
+      |> assert_generation(4)
     end
 
     test "growth_plans_for/1 shows v4 plans for everyone else" do
-      user = insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])
-      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v4_plan_id
+      insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])
+      |> Plans.growth_plans_for()
+      |> assert_generation(4)
     end
 
     test "growth_plans_for/1 does not return business plans" do
-      user = insert(:user)
-
-      Plans.growth_plans_for(user)
+      insert(:user)
+      |> Plans.growth_plans_for()
       |> Enum.each(fn plan ->
         assert plan.kind != :business
       end)
     end
 
     test "growth_plans_for/1 returns the latest generation of growth plans for a user with a business subscription" do
-      user =
-        insert(:user, subscription: build(:subscription, paddle_plan_id: @v3_business_plan_id))
-
-      assert List.first(Plans.growth_plans_for(user)).monthly_product_id == @v4_plan_id
+      insert(:user, subscription: build(:subscription, paddle_plan_id: @v3_business_plan_id))
+      |> Plans.growth_plans_for()
+      |> assert_generation(4)
     end
 
     test "business_plans_for/1 returns v3 business plans for a user on a legacy plan" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: @legacy_plan_id))
-      assert List.first(Plans.business_plans_for(user)).monthly_product_id == @v3_business_plan_id
+      insert(:user, subscription: build(:subscription, paddle_plan_id: @legacy_plan_id))
+      |> Plans.business_plans_for()
+      |> assert_generation(3)
     end
 
     test "business_plans_for/1 returns v3 business plans for a v2 subscriber" do
@@ -63,12 +99,48 @@ defmodule Plausible.Billing.PlansTest do
       business_plans = Plans.business_plans_for(user)
 
       assert Enum.all?(business_plans, &(&1.kind == :business))
-      assert List.first(business_plans).monthly_product_id == @v3_business_plan_id
+      assert_generation(business_plans, 3)
     end
 
-    test "business_plans_for/1 returns v3 business plans for users who signed up before the business tier release" do
-      user = insert(:user, inserted_at: ~U[2023-10-01T00:00:00Z])
-      assert List.first(Plans.business_plans_for(user)).monthly_product_id == @v3_business_plan_id
+    test "business_plans_for/1 returns v4 plans for invited users with trial_expiry = nil" do
+      insert(:user, trial_expiry_date: nil)
+      |> Plans.business_plans_for()
+      |> assert_generation(4)
+    end
+
+    test "business_plans_for/1 returns v4 plans for users whose trial started after the business tiers release" do
+      insert(:user, trial_expiry_date: ~D[2023-12-24])
+      |> Plans.business_plans_for()
+      |> assert_generation(4)
+    end
+
+    test "business_plans_for/1 returns v3 plans for pre business tier trials only if their trial is active or expired less than 10 days ago" do
+      trial_start = ~D[2023-10-27]
+      trial_expiry = Timex.shift(trial_start, days: 30)
+      expiry_datetime = Timex.to_datetime(trial_expiry)
+
+      user = insert(:user, trial_expiry_date: trial_expiry)
+
+      now1 = Timex.shift(expiry_datetime, days: -1)
+      now2 = Timex.shift(expiry_datetime, days: 10)
+      now3 = Timex.shift(expiry_datetime, days: 11)
+
+      Plans.business_plans_for(user, now1) |> assert_generation(3)
+      Plans.business_plans_for(user, now2) |> assert_generation(3)
+      Plans.business_plans_for(user, now3) |> assert_generation(4)
+    end
+
+    test "business_plans_for/1 returns v4 plans for expired legacy subscriptions" do
+      subscription =
+        build(:subscription,
+          paddle_plan_id: @v2_plan_id,
+          status: :deleted,
+          next_bill_date: ~D[2023-11-10]
+        )
+
+      insert(:user, subscription: subscription)
+      |> Plans.business_plans_for()
+      |> assert_generation(4)
     end
 
     test "business_plans_for/1 returns v4 business plans for everyone else" do
@@ -76,7 +148,7 @@ defmodule Plausible.Billing.PlansTest do
       business_plans = Plans.business_plans_for(user)
 
       assert Enum.all?(business_plans, &(&1.kind == :business))
-      assert List.first(business_plans).monthly_product_id == @v4_business_plan_id
+      assert_generation(business_plans, 4)
     end
 
     test "available_plans returns all plans for user with prices when asked for" do
@@ -274,5 +346,9 @@ defmodule Plausible.Billing.PlansTest do
 
       assert Plans.suggest_tier(user) == :business
     end
+  end
+
+  defp assert_generation(plans_list, generation) do
+    assert List.first(plans_list).generation == generation
   end
 end

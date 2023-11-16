@@ -38,16 +38,17 @@ defmodule Plausible.Billing.Plans do
   still choose from old plans.
   """
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-  def growth_plans_for(%User{} = user) do
+  def growth_plans_for(%User{} = user, now \\ Timex.now()) do
     user = Plausible.Users.with_subscription(user)
     v4_available = FunWithFlags.enabled?(:business_tier, for: user)
     owned_plan = get_regular_plan(user.subscription)
 
     cond do
       Application.get_env(:plausible, :environment) == "dev" -> @sandbox_plans
-      is_nil(owned_plan) && Timex.before?(user.inserted_at, @business_tier_launch) -> @plans_v3
+      is_nil(owned_plan) && grandfathered_trial?(user.trial_expiry_date, now) -> @plans_v3
       is_nil(owned_plan) && v4_available -> @plans_v4
       is_nil(owned_plan) -> @plans_v3
+      user.subscription && Subscriptions.expired?(user.subscription) -> @plans_v4
       owned_plan.kind == :business -> @plans_v4
       owned_plan.generation == 1 -> @plans_v1
       owned_plan.generation == 2 -> @plans_v2
@@ -57,17 +58,32 @@ defmodule Plausible.Billing.Plans do
     |> Enum.filter(&(&1.kind == :growth))
   end
 
-  def business_plans_for(%User{} = user) do
+  def business_plans_for(%User{} = user, now \\ Timex.now()) do
     user = Plausible.Users.with_subscription(user)
     owned_plan = get_regular_plan(user.subscription)
 
     cond do
       Application.get_env(:plausible, :environment) == "dev" -> @sandbox_plans
-      is_nil(owned_plan) && Timex.before?(user.inserted_at, @business_tier_launch) -> @plans_v3
+      is_nil(owned_plan) && grandfathered_trial?(user.trial_expiry_date, now) -> @plans_v3
+      user.subscription && Subscriptions.expired?(user.subscription) -> @plans_v4
       owned_plan && owned_plan.generation < 4 -> @plans_v3
       true -> @plans_v4
     end
     |> Enum.filter(&(&1.kind == :business))
+  end
+
+  # Takes a Date struct argument representing the trial end date of a user.
+  # If the `trial_expiry` is `nil`, it means that the user has not started
+  # their trial yet (i.e. invited user), and this function returns false.
+  defp grandfathered_trial?(nil, _now), do: false
+
+  defp grandfathered_trial?(trial_expiry, now) do
+    trial_start = Timex.shift(trial_expiry, days: -30)
+
+    joined_before_business_tiers = Timex.before?(trial_start, @business_tier_launch)
+    trial_active_or_expired_less_than_10d_ago = Timex.diff(now, trial_expiry, :days) <= 10
+
+    joined_before_business_tiers && trial_active_or_expired_less_than_10d_ago
   end
 
   def available_plans_for(%User{} = user, opts \\ []) do

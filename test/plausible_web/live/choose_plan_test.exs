@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   describe "for a legacy trial (user registered before business tiers release)" do
     setup %{conn: conn} do
-      user = insert(:user, inserted_at: ~N[2023-10-25 12:00:00])
+      user = insert(:user, trial_expiry_date: ~D[2023-11-24])
       {:ok, conn: conn} = log_in(%{conn: conn, user: user})
       {:ok, conn: conn, user: user}
     end

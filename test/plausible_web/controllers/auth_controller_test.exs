@@ -16,6 +16,7 @@ defmodule PlausibleWeb.AuthControllerTest do
   setup :verify_on_exit!
 
   @v3_plan_id "749355"
+  @v4_plan_id "857097"
   @configured_enterprise_plan_paddle_plan_id "123"
 
   describe "GET /register" do
@@ -625,6 +626,67 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert text_of_attr(change_plan_link, "href") ==
                Routes.billing_path(conn, :choose_plan)
+    end
+
+    test "renders cancelled subscription notice", %{conn: conn, user: user} do
+      insert(:subscription,
+        paddle_plan_id: @v4_plan_id,
+        user: user,
+        status: :deleted,
+        next_bill_date: ~D[2023-01-01]
+      )
+
+      notice_text =
+        get(conn, "/settings")
+        |> html_response(200)
+        |> text_of_element("#global-subscription-cancelled-notice")
+
+      assert notice_text =~ "Subscription cancelled"
+      assert notice_text =~ "Upgrade your subscription to get access to your stats again"
+    end
+
+    test "renders cancelled subscription notice with some subscription days still left", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:subscription,
+        paddle_plan_id: @v4_plan_id,
+        user: user,
+        status: :deleted,
+        next_bill_date: Timex.shift(Timex.today(), days: 10)
+      )
+
+      notice_text =
+        get(conn, "/settings")
+        |> html_response(200)
+        |> text_of_element("#global-subscription-cancelled-notice")
+
+      assert notice_text =~ "Subscription cancelled"
+      assert notice_text =~ "You have access to your stats until"
+      assert notice_text =~ "Upgrade your subscription to make sure you don't lose access"
+    end
+
+    test "renders cancelled subscription notice with a warning about losing grandfathering", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:subscription,
+        paddle_plan_id: @v3_plan_id,
+        user: user,
+        status: :deleted,
+        next_bill_date: Timex.shift(Timex.today(), days: 10)
+      )
+
+      notice_text =
+        get(conn, "/settings")
+        |> html_response(200)
+        |> text_of_element("#global-subscription-cancelled-notice")
+
+      assert notice_text =~ "Subscription cancelled"
+      assert notice_text =~ "You have access to your stats until"
+
+      assert notice_text =~
+               "by letting your subscription expire, you lose access to our grandfathered terms"
     end
 
     test "shows invoices for subscribed user", %{conn: conn, user: user} do

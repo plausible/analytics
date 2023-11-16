@@ -96,15 +96,19 @@
 <% end %>
 
 <%= if @conn.assigns[:current_user] do %>
-  <.subscription_past_due_notice
-    subscription={@conn.assigns.current_user.subscription}
-    class="container"
-  />
+  <div class="flex flex-col gap-y-2">
+    <.subscription_cancelled_notice user={@conn.assigns.current_user} />
 
-  <.subscription_paused_notice
-    subscription={@conn.assigns.current_user.subscription}
-    class="container"
-  />
+    <.subscription_past_due_notice
+      subscription={@conn.assigns.current_user.subscription}
+      class="container"
+    />
 
-  <.private_preview_end_notice user={@conn.assigns.current_user} />
+    <.subscription_paused_notice
+      subscription={@conn.assigns.current_user.subscription}
+      class="container"
+    />
+
+    <.private_preview_end_notice user={@conn.assigns.current_user} />
+  </div>
 <% end %>
