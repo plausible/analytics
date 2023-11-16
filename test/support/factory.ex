@@ -121,7 +121,8 @@ defmodule Plausible.Factory do
       billing_interval: :monthly,
       monthly_pageview_limit: 1_000_000,
       hourly_api_request_limit: 3000,
-      site_limit: 100
+      site_limit: 100,
+      team_member_limit: 10
     }
   end
 
