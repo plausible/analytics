@@ -77,9 +77,9 @@ defmodule Plausible.Billing.Plans do
   If the `trial_expiry` is `nil`, it means that the user has not started
   their trial yet (i.e. invited user), and this function returns false.
   """
-  def grandfathered_trial?(nil, _now), do: false
+  defp grandfathered_trial?(nil, _now), do: false
 
-  def grandfathered_trial?(trial_expiry, now) do
+  defp grandfathered_trial?(trial_expiry, now) do
     trial_start = Timex.shift(trial_expiry, days: -30)
 
     joined_before_business_tiers = Timex.before?(trial_start, @business_tier_launch)
