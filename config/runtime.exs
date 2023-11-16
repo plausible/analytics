@@ -2,9 +2,16 @@ import Config
 import Plausible.ConfigHelpers
 require Logger
 
-# Remove this later
-if config_env() in [:dev, :test, :community, :community_test] do
+if config_env() in [:dev, :test] do
   Envy.load(["config/.env.#{config_env()}"])
+end
+
+if config_env() == :community do
+  Envy.load(["config/.env.dev"])
+end
+
+if config_env() == :community_test do
+  Envy.load(["config/.env.test"])
 end
 
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
