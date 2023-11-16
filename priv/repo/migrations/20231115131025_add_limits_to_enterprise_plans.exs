@@ -3,17 +3,11 @@ defmodule Plausible.Repo.Migrations.AddLimitsToEnterprisePlans do
 
   def change do
     alter table(:enterprise_plans) do
-      add :team_member_limit, :integer, null: true
-      add :features, {:array, :string}
+      modify :hourly_api_request_limit, :integer, null: false
+      modify :monthly_pageview_limit, :integer, null: false
+      modify :site_limit, :integer, null: false
+      add :team_member_limit, :integer, null: false, default: -1
+      add :features, {:array, :string}, null: false, default: ["props", "stats_api"]
     end
-
-    flush()
-
-    Plausible.Repo.update_all(Plausible.Billing.EnterprisePlan,
-      set: [
-        team_member_limit: -1,
-        features: ["props", "stats_api"]
-      ]
-    )
   end
 end
