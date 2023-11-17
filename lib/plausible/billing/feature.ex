@@ -102,7 +102,6 @@ defmodule Plausible.Billing.Feature do
       def check_availability(%Plausible.Auth.User{} = user) do
         cond do
           Keyword.get(unquote(opts), :free) -> :ok
-          FunWithFlags.enabled?(:premium_features_private_preview) -> :ok
           __MODULE__ in Quota.allowed_features_for(user) -> :ok
           true -> {:error, :upgrade_required}
         end

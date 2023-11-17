@@ -5,10 +5,8 @@ defmodule PlausibleWeb.Components.Billing do
   import PlausibleWeb.Components.Generic
   require Plausible.Billing.Subscription.Status
   alias Plausible.Auth.User
-  alias Plausible.Billing.Feature.{RevenueGoals, Funnels}
-  alias Plausible.Billing.Feature.{Props, StatsAPI}
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias Plausible.Billing.{Subscription, Plans, Plan, Subscriptions}
+  alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
   attr(:billable_user, User, required: true)
   attr(:current_user, User, required: true)
@@ -19,42 +17,18 @@ defmodule PlausibleWeb.Components.Billing do
 
   # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def premium_feature_notice(assigns) do
-    legacy_feature_access? =
-      Timex.before?(assigns.billable_user.inserted_at, Plans.business_tier_launch()) &&
-        assigns.feature_mod in [StatsAPI, Props]
-
-    has_access? = assigns.feature_mod.check_availability(assigns.billable_user) == :ok
-
-    cond do
-      legacy_feature_access? ->
-        ~H""
-
-      Plausible.Billing.on_trial?(assigns.billable_user) ->
-        ~H""
-
-      not has_access? ->
-        ~H"""
-        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest} title="Notice">
-          <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
-          <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
-        </.notice>
-        """
-
-      true ->
-        ~H""
-    end
-  end
-
-  defp private_preview_end do
-    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 8)
-
-    days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
-
-    cond do
-      days_remaining <= 0 -> "today"
-      days_remaining == 1 -> "tomorrow"
-      true -> "in #{days_remaining} days"
-    end
+    ~H"""
+    <.notice
+      :if={@feature_mod.check_availability(@billable_user) !== :ok}
+      class="rounded-t-md rounded-b-none"
+      size={@size}
+      title="Notice"
+      {@rest}
+    >
+      <%= account_label(@current_user, @billable_user) %> does not have access to <%= @feature_mod.display_name() %>. To get access to this feature,
+      <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+    </.notice>
+    """
   end
 
   attr(:billable_user, User, required: true)
@@ -238,8 +212,7 @@ defmodule PlausibleWeb.Components.Billing do
         %{
           dismissable: true,
           user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
-        } =
-          assigns
+        } = assigns
       ) do
     ~H"""
     <aside id="global-subscription-cancelled-notice" class="container">
@@ -259,8 +232,7 @@ defmodule PlausibleWeb.Components.Billing do
         %{
           dismissable: false,
           user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
-        } =
-          assigns
+        } = assigns
       ) do
     assigns = assign(assigns, :container_id, "local-subscription-cancelled-notice")
 
@@ -335,49 +307,6 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   def subscription_paused_notice(assigns), do: ~H""
-
-  def private_preview_end_notice(assigns) do
-    user = assigns.user |> Plausible.Users.with_subscription()
-
-    features_to_lose =
-      case Plans.get_subscription_plan(user.subscription) do
-        nil ->
-          []
-
-        %Plan{kind: :business} ->
-          []
-
-        _free_10k_or_enterprise_or_growth ->
-          used_features = Plausible.Billing.Quota.features_usage(assigns.user)
-          Enum.filter([Funnels, RevenueGoals], &(&1 in used_features))
-      end
-
-    assigns = assign(assigns, :features_to_lose, features_to_lose)
-
-    ~H"""
-    <div
-      :if={FunWithFlags.enabled?(:premium_features_private_preview) && @features_to_lose != []}
-      class="container"
-    >
-      <.notice
-        class="shadow-md dark:shadow-none"
-        title="Notice"
-        dismissable_id={"premium_features_private_preview_end__#{@user.id}"}
-      >
-        Business plans are now live! The private preview of <%= PlausibleWeb.TextHelpers.pretty_join(
-          Enum.map(@features_to_lose, & &1.display_name())
-        ) %> ends <b><%= private_preview_end() %></b>. If you wish to continue using <%= if length(
-                                                                                              @features_to_lose
-                                                                                            ) == 1,
-                                                                                            do:
-                                                                                              "this feature",
-                                                                                            else:
-                                                                                              "these features" %>,
-        <.upgrade_call_to_action current_user={@user} billable_user={@user} />.
-      </.notice>
-    </div>
-    """
-  end
 
   def present_enterprise_plan(assigns) do
     ~H"""

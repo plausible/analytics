@@ -7,7 +7,8 @@ defmodule Plausible.Billing.FeatureTest do
     test "#{mod}.check_availability/1 returns :ok when site owner is on a enterprise plan" do
       user =
         insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
+          enterprise_plan:
+            build(:enterprise_plan, paddle_plan_id: "123321", features: [unquote(mod)]),
           subscription: build(:subscription, paddle_plan_id: "123321")
         )
 
@@ -49,7 +50,11 @@ defmodule Plausible.Billing.FeatureTest do
   test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns :ok when user is on an enterprise plan" do
     user =
       insert(:user,
-        enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
+        enterprise_plan:
+          build(:enterprise_plan,
+            paddle_plan_id: "123321",
+            features: [Plausible.Billing.Feature.StatsAPI]
+          ),
         subscription: build(:subscription, paddle_plan_id: "123321")
       )
 
