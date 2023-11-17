@@ -425,23 +425,25 @@ defmodule Plausible.Billing.QuotaTest do
   end
 
   describe "features_usage/1" do
-    test "returns an empty list" do
-      user = insert(:user)
-      assert [] == Quota.features_usage(user)
+    test "returns an empty list for a user/site who does not use any feature" do
+      assert [] == Quota.features_usage(insert(:user))
+      assert [] == Quota.features_usage(insert(:site))
     end
 
-    test "returns [Props] when user uses custom props" do
+    test "returns [Props] when user/site uses custom props" do
       user = insert(:user)
 
-      insert(:site,
-        allowed_event_props: ["dummy"],
-        memberships: [build(:site_membership, user: user, role: :owner)]
-      )
+      site =
+        insert(:site,
+          allowed_event_props: ["dummy"],
+          memberships: [build(:site_membership, user: user, role: :owner)]
+        )
 
+      assert [Props] == Quota.features_usage(site)
       assert [Props] == Quota.features_usage(user)
     end
 
-    test "returns [Funnels] when user uses funnels" do
+    test "returns [Funnels] when user/site uses funnels" do
       user = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
 
@@ -449,14 +451,16 @@ defmodule Plausible.Billing.QuotaTest do
       steps = Enum.map(goals, &%{"goal_id" => &1.id})
       Plausible.Funnels.create(site, "dummy", steps)
 
+      assert [Funnels] == Quota.features_usage(site)
       assert [Funnels] == Quota.features_usage(user)
     end
 
-    test "returns [RevenueGoals] when user uses revenue goals" do
+    test "returns [RevenueGoals] when user/site uses revenue goals" do
       user = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
+      assert [RevenueGoals] == Quota.features_usage(site)
       assert [RevenueGoals] == Quota.features_usage(user)
     end
 
@@ -482,6 +486,7 @@ defmodule Plausible.Billing.QuotaTest do
       steps = Enum.map(goals, &%{"goal_id" => &1.id})
       Plausible.Funnels.create(site, "dummy", steps)
 
+      assert [Props, Funnels, RevenueGoals] == Quota.features_usage(site)
       assert [Props, Funnels, RevenueGoals] == Quota.features_usage(user)
     end
 

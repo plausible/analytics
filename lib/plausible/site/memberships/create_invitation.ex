@@ -115,28 +115,22 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
 
     current_usage = Quota.team_member_usage(new_owner)
     site_usage = Plausible.Repo.aggregate(Quota.team_member_usage_query(site.owner, site), :count)
-    usage_after_transfer = current_usage + site_usage
+    usage_after_transfer = current_usage + site_usage + 1
 
-    Quota.below_limit?(usage_after_transfer, limit)
+    Quota.within_limit?(usage_after_transfer, limit)
   end
 
   defp within_site_limit_after_transfer?(new_owner) do
     limit = Quota.site_limit(new_owner)
     usage_after_transfer = Quota.site_usage(new_owner) + 1
 
-    Quota.below_limit?(usage_after_transfer, limit)
+    Quota.within_limit?(usage_after_transfer, limit)
   end
 
   defp has_access_to_site_features?(site, new_owner) do
-    features_to_check = [
-      Plausible.Billing.Feature.Props,
-      Plausible.Billing.Feature.RevenueGoals,
-      Plausible.Billing.Feature.Funnels
-    ]
-
-    Enum.all?(features_to_check, fn feature ->
-      if feature.enabled?(site), do: feature.check_availability(new_owner) == :ok, else: true
-    end)
+    site
+    |> Plausible.Billing.Quota.features_usage()
+    |> Enum.all?(&(&1.check_availability(new_owner) == :ok))
   end
 
   defp ensure_transfer_valid(%Site{} = site, %User{} = new_owner, :owner) do

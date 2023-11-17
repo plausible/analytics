@@ -4,6 +4,8 @@ defmodule Plausible.Billing.Quota do
   """
 
   import Ecto.Query
+  alias Plausible.Auth.User
+  alias Plausible.Site
   alias Plausible.Billing
   alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
@@ -24,7 +26,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   @limit_sites_since ~D[2021-05-05]
-  @spec site_limit(Plausible.Auth.User.t()) :: non_neg_integer() | :unlimited
+  @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
   @doc """
   Returns the limit of sites a user can have.
 
@@ -64,7 +66,7 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @spec site_usage(Plausible.Auth.User.t()) :: non_neg_integer()
+  @spec site_usage(User.t()) :: non_neg_integer()
   @doc """
   Returns the number of sites the given user owns.
   """
@@ -102,7 +104,7 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @spec monthly_pageview_usage(Plausible.Auth.User.t()) :: non_neg_integer()
+  @spec monthly_pageview_usage(User.t()) :: non_neg_integer()
   @doc """
   Returns the amount of pageviews and custom events
   sent by the sites the user owns in last 30 days.
@@ -115,7 +117,7 @@ defmodule Plausible.Billing.Quota do
 
   @team_member_limit_for_trials 3
   @team_member_limit_for_legacy_trials :unlimited
-  @spec team_member_limit(Plausible.Auth.User.t()) :: non_neg_integer()
+  @spec team_member_limit(User.t()) :: non_neg_integer()
   @doc """
   Returns the limit of team members a user can have in their sites.
   """
@@ -141,7 +143,7 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @spec team_member_usage(Plausible.Auth.User.t()) :: integer()
+  @spec team_member_usage(User.t()) :: integer()
   @doc """
   Returns the total count of team members and pending invitations associated
   with the user's sites.
@@ -163,7 +165,7 @@ defmodule Plausible.Billing.Quota do
 
     team_members_query =
       from os in subquery(owned_sites_query),
-        inner_join: sm in Plausible.Site.Membership,
+        inner_join: sm in Site.Membership,
         on: sm.site_id == os.site_id,
         inner_join: u in assoc(sm, :user),
         where: sm.role != :owner,
@@ -177,15 +179,16 @@ defmodule Plausible.Billing.Quota do
       union: ^team_members_query
   end
 
-  @spec features_usage(Plausible.Auth.User.t()) :: [atom()]
+  @spec features_usage(User.t() | Site.t()) :: [atom()]
   @doc """
-  Returns a list of features the given user is using. At the
-  current stage, the only features that we need to know the
-  usage for are `Props`, `Funnels`, and `RevenueGoals`
+  Given a user, this function returns the features used across all the sites
+  this user owns + StatsAPI if the user has a configured Stats API key.
+
+  Given a site, returns the features used by the site.
   """
-  def features_usage(user) do
+  def features_usage(%User{} = user) do
     props_usage_query =
-      from s in Plausible.Site,
+      from s in Site,
         inner_join: os in subquery(owned_sites_query(user)),
         on: s.id == os.site_id,
         where: fragment("cardinality(?) > 0", s.allowed_event_props)
@@ -213,6 +216,27 @@ defmodule Plausible.Billing.Quota do
     Enum.reduce(queries, [], fn {feature, query}, acc ->
       if Plausible.Repo.exists?(query), do: acc ++ [feature], else: acc
     end)
+  end
+
+  def features_usage(%Site{} = site) do
+    props_exist = is_list(site.allowed_event_props) && site.allowed_event_props != []
+
+    funnels_exist =
+      Plausible.Repo.exists?(from f in Plausible.Funnel, where: f.site_id == ^site.id)
+
+    revenue_goals_exist =
+      Plausible.Repo.exists?(
+        from g in Plausible.Goal, where: g.site_id == ^site.id and not is_nil(g.currency)
+      )
+
+    used_features =
+      [
+        {Props, props_exist},
+        {Funnels, funnels_exist},
+        {RevenueGoals, revenue_goals_exist}
+      ]
+
+    for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
   def ensure_can_subscribe_to_plan(user, %Plan{} = plan) do
@@ -260,7 +284,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   defp owned_sites_query(user) do
-    from sm in Plausible.Site.Membership,
+    from sm in Site.Membership,
       where: sm.role == :owner and sm.user_id == ^user.id,
       select: %{site_id: sm.site_id}
   end

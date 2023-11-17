@@ -201,7 +201,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         insert(:site,
           memberships: [build(:site_membership, user: old_owner, role: :owner)],
           props_enabled: true,
-          funnels_enabled: true
+          allowed_event_props: ["author"]
         )
 
       assert {:error, :upgrade_required} =
@@ -215,6 +215,58 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       assert {:error, :upgrade_required} =
                CreateInvitation.create_invitation(
                  site_using_premium_features,
+                 old_owner,
+                 new_owner.email,
+                 :owner
+               )
+    end
+
+    test "allows transferring ownership to growth plan when premium feature enabled but not used" do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner], props_enabled: true)
+
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      assert {:ok, _invitation} =
+               CreateInvitation.create_invitation(
+                 site,
+                 old_owner,
+                 new_owner.email,
+                 :owner
+               )
+    end
+
+    test "allows transferring ownership when invitee reaches (but does not exceed) site limit" do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner])
+
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+      for _ <- 1..9, do: insert(:site, members: [new_owner])
+
+      assert {:ok, _invitation} =
+               CreateInvitation.create_invitation(
+                 site,
+                 old_owner,
+                 new_owner.email,
+                 :owner
+               )
+    end
+
+    test "allows transferring ownership when invitee reaches (but does not exceed) team member limit" do
+      old_owner = insert(:user)
+
+      site =
+        insert(:site,
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(2, :site_membership, role: :admin)
+        )
+
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      assert {:ok, _invitation} =
+               CreateInvitation.create_invitation(
+                 site,
                  old_owner,
                  new_owner.email,
                  :owner
