@@ -201,7 +201,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
         insert(:site,
           memberships: [build(:site_membership, user: old_owner, role: :owner)],
           props_enabled: true,
-          funnels_enabled: true
+          allowed_event_props: ["author"]
         )
 
       assert {:error, :upgrade_required} =
@@ -219,6 +219,20 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                  new_owner.email,
                  :owner
                )
+    end
+
+    test "allows transferring ownership to growth plan when premium feature enabled but not used" do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner], props_enabled: true)
+
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      assert {:ok, _invitation} = CreateInvitation.create_invitation(
+        site,
+        old_owner,
+        new_owner.email,
+        :owner
+      )
     end
   end
 

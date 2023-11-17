@@ -128,15 +128,9 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   end
 
   defp has_access_to_site_features?(site, new_owner) do
-    features_to_check = [
-      Plausible.Billing.Feature.Props,
-      Plausible.Billing.Feature.RevenueGoals,
-      Plausible.Billing.Feature.Funnels
-    ]
-
-    Enum.all?(features_to_check, fn feature ->
-      if feature.enabled?(site), do: feature.check_availability(new_owner) == :ok, else: true
-    end)
+    site
+    |> Plausible.Billing.Quota.features_usage()
+    |> Enum.all?(& &1.check_availability(new_owner) == :ok)
   end
 
   defp ensure_transfer_valid(%Site{} = site, %User{} = new_owner, :owner) do
