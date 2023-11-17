@@ -433,10 +433,11 @@ defmodule Plausible.Billing.QuotaTest do
     test "returns [Props] when user/site uses custom props" do
       user = insert(:user)
 
-      site = insert(:site,
-        allowed_event_props: ["dummy"],
-        memberships: [build(:site_membership, user: user, role: :owner)]
-      )
+      site =
+        insert(:site,
+          allowed_event_props: ["dummy"],
+          memberships: [build(:site_membership, user: user, role: :owner)]
+        )
 
       assert [Props] == Quota.features_usage(site)
       assert [Props] == Quota.features_usage(user)

@@ -220,8 +220,14 @@ defmodule Plausible.Billing.Quota do
 
   def features_usage(%Site{} = site) do
     props_exist = is_list(site.allowed_event_props) && site.allowed_event_props != []
-    funnels_exist = Plausible.Repo.exists?(from f in Plausible.Funnel, where: f.site_id == ^site.id)
-    revenue_goals_exist = Plausible.Repo.exists?(from g in Plausible.Goal, where: g.site_id == ^site.id and not is_nil(g.currency))
+
+    funnels_exist =
+      Plausible.Repo.exists?(from f in Plausible.Funnel, where: f.site_id == ^site.id)
+
+    revenue_goals_exist =
+      Plausible.Repo.exists?(
+        from g in Plausible.Goal, where: g.site_id == ^site.id and not is_nil(g.currency)
+      )
 
     [
       {Props, props_exist},

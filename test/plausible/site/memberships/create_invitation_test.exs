@@ -227,12 +227,50 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       new_owner = insert(:user, subscription: build(:growth_subscription))
 
-      assert {:ok, _invitation} = CreateInvitation.create_invitation(
-        site,
-        old_owner,
-        new_owner.email,
-        :owner
-      )
+      assert {:ok, _invitation} =
+               CreateInvitation.create_invitation(
+                 site,
+                 old_owner,
+                 new_owner.email,
+                 :owner
+               )
+    end
+
+    test "allows transferring ownership when invitee reaches (but does not exceed) site limit" do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner])
+
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+      for _ <- 1..9, do: insert(:site, members: [new_owner])
+
+      assert {:ok, _invitation} =
+               CreateInvitation.create_invitation(
+                 site,
+                 old_owner,
+                 new_owner.email,
+                 :owner
+               )
+    end
+
+    test "allows transferring ownership when invitee reaches (but does not exceed) team member limit" do
+      old_owner = insert(:user)
+
+      site =
+        insert(:site,
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(2, :site_membership, role: :admin)
+        )
+
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      assert {:ok, _invitation} =
+               CreateInvitation.create_invitation(
+                 site,
+                 old_owner,
+                 new_owner.email,
+                 :owner
+               )
     end
   end
 
