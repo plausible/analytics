@@ -19,6 +19,9 @@ Plausible.Auth.Token.html
 Plausible.Auth.User.html
 Plausible.Auth.UserAdmin.html
 Plausible.Auth.html
+Plausible.Billing.Ecto.Feature.html
+Plausible.Billing.Ecto.FeatureList.html
+Plausible.Billing.Ecto.Limit.html
 Plausible.Billing.EnterprisePlan.html
 Plausible.Billing.EnterprisePlanAdmin.html
 Plausible.Billing.Feature.html
@@ -307,8 +310,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-FFB7418E.js
-dist/sidebar_items-F325A691.js
+dist/search_data-F6EF0A87.js
+dist/sidebar_items-E047BD79.js
 index.html
 readme.html
 search.html

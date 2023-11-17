@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-F325A691.js"></script>
+    <script src="dist/sidebar_items-E047BD79.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -236,6 +236,39 @@ period.</p></div>
     <a href="Plausible.Billing.html" translate="no">Plausible.Billing</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Billing.Ecto.Feature.html" translate="no">Plausible.Billing.Ecto.Feature</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Ecto type representing a feature. Features are cast and stored in the
+database as strings and loaded as modules, for example: <code class="inline">&quot;props&quot;</code> is loaded
+as <code class="inline">Plausible.Billing.Feature.Props</code>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Billing.Ecto.FeatureList.html" translate="no">Plausible.Billing.Ecto.FeatureList</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Ecto type representing a list of features. This is a proxy for 
+<code class="inline">{:array, Plausible.Billing.Ecto.Feature}</code> and is required for Kaffy to
+render the HTML input correctly.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Billing.Ecto.Limit.html" translate="no">Plausible.Billing.Ecto.Limit</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Ecto type representing a limit, that can be either a number or unlimited.
+Unlimited is dumped to the database as <code class="inline">-1</code> and loaded as <code class="inline">:unlimited</code> to
+keep compatibility with the rest of the codebase.</p></div>
 
 </div>
 <div class="summary-row">
