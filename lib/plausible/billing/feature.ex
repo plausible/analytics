@@ -39,6 +39,11 @@ defmodule Plausible.Billing.Feature do
   @callback toggle_field() :: atom()
 
   @doc """
+  Returns whether the feature is free to use or not.
+  """
+  @callback free?() :: boolean()
+
+  @doc """
   Toggles the feature on and off for a site. Returns
   `{:error, :upgrade_required}` when toggling a feature the site owner does not
   have access to.
@@ -88,6 +93,9 @@ defmodule Plausible.Billing.Feature do
       def toggle_field, do: Keyword.get(unquote(opts), :toggle_field)
 
       @impl true
+      def free?, do: Keyword.get(unquote(opts), :free, false)
+
+      @impl true
       def enabled?(%Plausible.Site{} = site) do
         site = Plausible.Repo.preload(site, :owner)
 
@@ -101,7 +109,7 @@ defmodule Plausible.Billing.Feature do
       @impl true
       def check_availability(%Plausible.Auth.User{} = user) do
         cond do
-          Keyword.get(unquote(opts), :free) -> :ok
+          free?() -> :ok
           __MODULE__ in Quota.allowed_features_for(user) -> :ok
           true -> {:error, :upgrade_required}
         end

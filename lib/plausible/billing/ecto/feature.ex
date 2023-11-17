@@ -49,7 +49,7 @@ defmodule Plausible.Billing.Ecto.FeatureList do
     features = Ecto.Changeset.get_field(changeset, field)
 
     checkboxes =
-      for mod <- Plausible.Billing.Feature.list() do
+      for mod <- Plausible.Billing.Feature.list(), not mod.free?() do
         [
           {:safe, ~s(<label style="padding-right: 15px;">)},
           Phoenix.HTML.Tag.tag(
