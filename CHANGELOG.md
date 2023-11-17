@@ -38,6 +38,7 @@ All notable changes to this project will be documented in this file.
 - Update bot detection (matomo 6.1.4, ua_inspector 3.4.0)
 - Improved the Goal Settings page (search, autcompletion etc.)
 - Log mailer errors plausible/analytics#3336
+- Allow custom event timeseries in stats API plausible/analytics#3505
 
 ## v2.0.0 - 2023-07-12
 
