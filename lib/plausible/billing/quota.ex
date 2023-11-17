@@ -229,14 +229,14 @@ defmodule Plausible.Billing.Quota do
         from g in Plausible.Goal, where: g.site_id == ^site.id and not is_nil(g.currency)
       )
 
-    [
-      {Props, props_exist},
-      {Funnels, funnels_exist},
-      {RevenueGoals, revenue_goals_exist}
-    ]
-    |> Enum.reduce([], fn {f_mod, used?}, acc ->
-      if used? && f_mod.enabled?(site), do: acc ++ [f_mod], else: acc
-    end)
+    used_features =
+      [
+        {Props, props_exist},
+        {Funnels, funnels_exist},
+        {RevenueGoals, revenue_goals_exist}
+      ]
+
+    for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
   def ensure_can_subscribe_to_plan(user, %Plan{} = plan) do
