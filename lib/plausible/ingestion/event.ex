@@ -24,6 +24,7 @@ defmodule Plausible.Ingestion.Event do
           | :spam_referrer
           | GateKeeper.policy()
           | :invalid
+          | :dc_ip
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -92,6 +93,7 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
+      &put_ip_classification/1,
       &put_user_agent/1,
       &put_basic_info/1,
       &put_referrer/1,
@@ -136,6 +138,17 @@ defmodule Plausible.Ingestion.Event do
 
   defp update_attrs(%__MODULE__{} = event, %{} = attrs) do
     struct!(event, clickhouse_event_attrs: Map.merge(event.clickhouse_event_attrs, attrs))
+  end
+
+  defp put_ip_classification(%__MODULE__{} = event) do
+    case event.request.ip_classification do
+      "dc_ip" ->
+        emit_telemetry_dropped(event, :dc_ip)
+        event
+
+      _any ->
+        event
+    end
   end
 
   defp put_user_agent(%__MODULE__{} = event) do
