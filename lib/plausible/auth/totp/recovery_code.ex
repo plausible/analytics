@@ -54,8 +54,19 @@ defmodule Plausible.Auth.TOTP.RecoveryCode do
     |> Map.put(:inserted_at, now)
   end
 
-  defp disambiguate(code) do
-    String.replace(code, "O", "8")
+  @safe_disambiguations %{
+    "O" => "8",
+    "I" => "7"
+  }
+
+  @doc false
+  # Exposed for testing only
+  def disambiguate(code) do
+    String.replace(
+      code,
+      Map.keys(@safe_disambiguations),
+      &Map.fetch!(@safe_disambiguations, &1)
+    )
   end
 
   defp generate_code() do

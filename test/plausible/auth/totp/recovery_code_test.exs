@@ -72,4 +72,16 @@ defmodule Plausible.Auth.TOTP.RecoveryCodeTest do
              } = RecoveryCode.changeset_to_map(changeset, now)
     end
   end
+
+  describe "disambiguate/1" do
+    test "disambiguates strings with hard to discern letters" do
+      assert RecoveryCode.disambiguate("ABDIZL12") == "ABD7ZL12"
+      assert RecoveryCode.disambiguate("ABDIZLO12") == "ABD7ZL812"
+      assert RecoveryCode.disambiguate("AOBDIZLO12I") == "A8BD7ZL8127"
+    end
+
+    test "leaves strings that have no sunch letters intact" do
+      assert RecoveryCode.disambiguate("N0D0UBT") == "N0D0UBT"
+    end
+  end
 end
