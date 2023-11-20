@@ -187,6 +187,15 @@ defmodule PlausibleWeb.Router do
     post "/login", AuthController, :login
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
+    post "/2fa/setup/initiate", AuthController, :initiate_2fa_setup
+    get "/2fa/setup/verify", AuthController, :verify_2fa_setup_form
+    post "/2fa/setup/verify", AuthController, :verify_2fa_setup
+    post "/2fa/disable", AuthController, :disable_2fa
+    post "/2fa/recovery_codes", AuthController, :generate_2fa_recovery_codes
+    get "/2fa/verify", AuthController, :verify_2fa_form
+    post "/2fa/verify", AuthController, :verify_2fa
+    get "/2fa/use_recovery_code", AuthController, :verify_2fa_recovery_code_form
+    post "/2fa/use_recovery_code", AuthController, :verify_2fa_recovery_code
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
     get "/avatar/:hash", AvatarController, :avatar
