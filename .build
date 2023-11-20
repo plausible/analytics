@@ -15,6 +15,10 @@ Plausible.Auth.EmailVerification.html
 Plausible.Auth.GracePeriod.html
 Plausible.Auth.Invitation.html
 Plausible.Auth.Password.html
+Plausible.Auth.TOTP.EncryptedBinary.html
+Plausible.Auth.TOTP.RecoveryCode.html
+Plausible.Auth.TOTP.Vault.html
+Plausible.Auth.TOTP.html
 Plausible.Auth.Token.html
 Plausible.Auth.User.html
 Plausible.Auth.UserAdmin.html
@@ -310,8 +314,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-3A47F6AA.js
-dist/sidebar_items-72A97DF3.js
+dist/search_data-83934DEA.js
+dist/sidebar_items-212625DF.js
 index.html
 readme.html
 search.html
