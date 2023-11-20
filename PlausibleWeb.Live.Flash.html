@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-6A957D75.js"></script>
+    <script src="dist/sidebar_items-073B7C2E.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -144,7 +144,15 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">on_close</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">&quot;lv:clear-flash&quot;</code>.</li></ul><h2>Slots</h2><ul><li><code class="inline">icon</code> (required)</li><li><code class="inline">title</code></li><li><code class="inline">message</code> (required)</li></ul></div>
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">key</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">on_close</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">&quot;lv:clear-flash&quot;</code>.</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li>Global attributes are accepted.</li></ul><h2>Slots</h2><ul><li><code class="inline">icon</code> (required)</li><li><code class="inline">title</code></li><li><code class="inline">message</code> (required)</li></ul></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#flash_messages/1" translate="no">flash_messages(assigns)</a>
+
+      </div>
 
     </div>
 
@@ -166,11 +174,9 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#render/1" translate="no">render(assigns)</a>
+        <a href="#put_live_flash/3" translate="no">put_live_flash(socket, key, message)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveComponent.html#c:render/1"><code class="inline">Phoenix.LiveComponent.render/1</code></a>.</p></div>
 
     </div>
 
@@ -196,7 +202,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">clear_flash_button(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/flash.ex#L132" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/flash.ex#L178" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -234,13 +240,35 @@ Functions
     Attributes
   </a>
 </h2>
-<ul><li><code class="inline">on_close</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">&quot;lv:clear-flash&quot;</code>.</li></ul><h2 id="flash/1-slots" class="section-heading">
+<ul><li><code class="inline">key</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li><li><code class="inline">on_close</code> (<code class="inline">:any</code>) - Defaults to <code class="inline">&quot;lv:clear-flash&quot;</code>.</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li>Global attributes are accepted.</li></ul><h2 id="flash/1-slots" class="section-heading">
   <a href="#flash/1-slots">
     <i class="ri-link-m" aria-hidden="true"></i>
     Slots
   </a>
 </h2>
 <ul><li><code class="inline">icon</code> (required)</li><li><code class="inline">title</code></li><li><code class="inline">message</code> (required)</li></ul>
+  </section>
+</section>
+<section class="detail" id="flash_messages/1">
+
+  <div class="detail-header">
+    <a href="#flash_messages/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">flash_messages(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/flash.ex#L46" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 <section class="detail" id="icon_error/1">
@@ -252,7 +280,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">icon_error(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/flash.ex#L112" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/flash.ex#L158" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -274,7 +302,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">icon_success(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/flash.ex#L91" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/flash.ex#L137" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -287,16 +315,16 @@ Functions
 
   </section>
 </section>
-<section class="detail" id="render/1">
+<section class="detail" id="put_live_flash/3">
 
   <div class="detail-header">
-    <a href="#render/1" class="detail-link" title="Link to this function">
+    <a href="#put_live_flash/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">render(assigns)</h1>
+    <h1 class="signature" translate="no">put_live_flash(socket, key, message)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/flash.ex#L9" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/flash.ex#L27" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -306,7 +334,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveComponent.html#c:render/1"><code class="inline">Phoenix.LiveComponent.render/1</code></a>.</p>
+
   </section>
 </section>
 
