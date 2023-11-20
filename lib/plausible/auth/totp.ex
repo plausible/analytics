@@ -12,8 +12,8 @@ defmodule Plausible.Auth.TOTP do
   vault for safe storage is configured in `Plausible.Auth.TOTP.Vault` via
   a dedicated `Ecto` type defined in `Plausible.Auth.TOTP.EncryptedBinary`.
   The function returns updated user along with TOTP URI and a readable form
-  of secret. Both - the URI and readable secret - are meant for exposure in the user's setup screen. The URI
-  should be encoded as a QR code.
+  of secret. Both - the URI and readable secret - are meant for exposure 
+  in the user's setup screen. The URI should be encoded as a QR code.
 
   After initiation, user is expected to confirm valid setup with `enable/2`,
   providing TOTP code from their authenticator app. After code validation 
