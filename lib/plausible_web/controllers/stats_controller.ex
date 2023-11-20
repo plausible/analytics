@@ -48,7 +48,8 @@ defmodule PlausibleWeb.StatsController do
   alias Plausible.Stats.{Query, Filters}
   alias PlausibleWeb.Api
 
-  plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export, :full_export])
+  plug PlausibleWeb.AuthorizeSiteAccess
+       when action in [:stats, :csv_export, :wip_export, :wip_import, :wip_import_status]
 
   def stats(%{assigns: %{site: site}} = conn, _params) do
     site = Plausible.Repo.preload(site, :owner)
@@ -230,6 +231,8 @@ defmodule PlausibleWeb.StatsController do
     File.mkdir_p!(imports_dir)
     target_path = Path.join(imports_dir, Path.basename(tmp_path))
     File.cp!(tmp_path, target_path)
+
+    # TODO ensure no job is scheduled for that site yet
 
     %Oban.Job{id: job_id} =
       Oban.insert!(

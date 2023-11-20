@@ -7,7 +7,7 @@
   imported_pageviews={@imported_pageviews}
 />
 <PlausibleWeb.Components.Settings.settings_wip_export
-  :if={FunWithFlags.enabled?(:new_export, for: @current_user)}
+  :if={FunWithFlags.enabled?(:wip_export, for: @current_user)}
   site={@site}
 />
 

@@ -356,6 +356,7 @@ defmodule PlausibleWeb.Router do
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/wip-export", StatsController, :wip_export
     put "/:domain/wip-import", StatsController, :wip_import
+    get "/:domain/wip-import-status", StatsController, :wip_import_status
     get "/:domain/*path", StatsController, :stats
   end
 end
