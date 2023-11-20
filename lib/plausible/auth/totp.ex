@@ -267,12 +267,8 @@ defmodule Plausible.Auth.TOTP do
       from(u in Plausible.Auth.User, where: u.id == ^user.id, select: u.totp_last_used_at)
       |> Repo.one()
 
-    case datetime do
-      nil ->
-        nil
-
-      datetime ->
-        Timex.to_unix(datetime)
+    if datetime do
+      Timex.to_unix(datetime)
     end
   end
 
