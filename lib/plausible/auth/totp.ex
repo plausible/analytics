@@ -82,6 +82,11 @@ defmodule Plausible.Auth.TOTP do
     user.totp_enabled and not is_nil(user.totp_secret)
   end
 
+  @spec initiated?(Auth.User.t()) :: boolean()
+  def initiated?(user) do
+    not user.totp_enabled and not is_nil(user.totp_secret)
+  end
+
   @spec initiate(Auth.User.t()) ::
           {:ok, Auth.User.t(), %{totp_uri: String.t(), secret: String.t()}}
           | {:error, :not_verified | :already_setup}
@@ -108,7 +113,8 @@ defmodule Plausible.Auth.TOTP do
   end
 
   @spec enable(Auth.User.t(), String.t(), Keyword.t()) ::
-          {:ok, Auth.User.t()} | {:error, :invalid_code | :not_initiated}
+          {:ok, Auth.User.t(), %{recovery_codes: [String.t()]}}
+          | {:error, :invalid_code | :not_initiated}
   def enable(user, code, opts \\ [])
 
   def enable(%{totp_secret: nil}, _, _) do
@@ -122,7 +128,9 @@ defmodule Plausible.Auth.TOTP do
         |> change(totp_enabled: true)
         |> Repo.update!()
 
-      {:ok, user}
+      {:ok, recovery_codes} = do_generate_recovery_codes(user)
+
+      {:ok, user, %{recovery_codes: recovery_codes}}
     end
   end
 
@@ -148,26 +156,25 @@ defmodule Plausible.Auth.TOTP do
     end
   end
 
-  @spec generate_recovery_codes_protected(Auth.User.t(), String.t()) ::
+  @spec generate_recovery_codes(Auth.User.t(), String.t()) ::
           {:ok, [String.t()]} | {:error, :invalid_password | :not_enabled}
-  def generate_recovery_codes_protected(%{totp_enabled: false}) do
+  def generate_recovery_codes(%{totp_enabled: false}) do
     {:error, :not_enabled}
   end
 
-  def generate_recovery_codes_protected(user, password) do
+  def generate_recovery_codes(user, password) do
     if Auth.Password.match?(password, user.password_hash) do
-      generate_recovery_codes(user)
+      do_generate_recovery_codes(user)
     else
       {:error, :invalid_password}
     end
   end
 
-  @spec generate_recovery_codes(Auth.User.t()) :: {:ok, [String.t()]} | {:error, :not_enabled}
-  def generate_recovery_codes(%{totp_enabled: false}) do
+  defp do_generate_recovery_codes(%{totp_enabled: false}) do
     {:error, :not_enabled}
   end
 
-  def generate_recovery_codes(user) do
+  defp do_generate_recovery_codes(user) do
     Repo.transaction(fn ->
       {_, _} =
         user
@@ -194,8 +201,8 @@ defmodule Plausible.Auth.TOTP do
     end)
   end
 
-  @spec validate_code(Auth.User.t(), String.t()) ::
-          {:ok, Auth.User.t(), Keyword.t()} | {:error, :invalid_code | :not_enabled}
+  @spec validate_code(Auth.User.t(), String.t(), Keyword.t()) ::
+          {:ok, Auth.User.t()} | {:error, :invalid_code | :not_enabled}
   def validate_code(user, code, opts \\ [])
 
   def validate_code(%{totp_enabled: false}, _, _) do
@@ -208,7 +215,7 @@ defmodule Plausible.Auth.TOTP do
 
   @spec use_recovery_code(Auth.User.t(), String.t()) ::
           :ok | {:error, :invalid_code | :not_enabled}
-  def user_recovery_code(%{totp_enabled: false}, _) do
+  def use_recovery_code(%{totp_enabled: false}, _) do
     {:error, :not_enabled}
   end
 
