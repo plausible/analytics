@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
   """
   use Phoenix.LiveView
   use Phoenix.HTML
+  use PlausibleWeb.Live.Flash
 
   use Plausible.Funnel
 
@@ -39,7 +40,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
   def render(assigns) do
     ~H"""
     <div id="goal-settings-main">
-      <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
+      <.flash_messages flash={@flash} />
       <%= if @add_goal? do %>
         <%= live_render(
           @socket,
@@ -89,13 +90,12 @@ defmodule PlausibleWeb.Live.GoalSettings do
       :ok ->
         socket =
           socket
-          |> put_flash(:success, "Goal deleted successfully")
+          |> put_live_flash(:success, "Goal deleted successfully")
           |> assign(
             all_goals: Enum.reject(socket.assigns.all_goals, &(&1.id == goal_id)),
             displayed_goals: Enum.reject(socket.assigns.displayed_goals, &(&1.id == goal_id))
           )
 
-        Process.send_after(self(), :clear_flash, 5000)
         {:noreply, socket}
 
       _ ->
@@ -116,12 +116,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
         all_goals: [goal | socket.assigns.all_goals],
         displayed_goals: [goal | socket.assigns.all_goals]
       )
-      |> put_flash(:success, "Goal saved successfully")
+      |> put_live_flash(:success, "Goal saved successfully")
 
     {:noreply, socket}
-  end
-
-  def handle_info(:clear_flash, socket) do
-    {:noreply, clear_flash(socket)}
   end
 end

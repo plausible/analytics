@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Live.Sites do
   """
 
   use Phoenix.LiveView
+  use PlausibleWeb.Live.Flash
+
   alias Phoenix.LiveView.JS
   use Phoenix.HTML
 
@@ -59,7 +61,7 @@ defmodule PlausibleWeb.Live.Sites do
     assigns = assign(assigns, :invitations, invitations)
 
     ~H"""
-    <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
+    <.flash_messages flash={@flash} />
     <div
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
       x-on:keydown.escape.window="invitationOpen = false"
@@ -593,7 +595,7 @@ defmodule PlausibleWeb.Live.Sites do
               end
 
             socket
-            |> put_flash(:success, flash_message)
+            |> put_live_flash(:success, flash_message)
             |> load_sites()
             |> push_event("js-exec", %{
               to: "#site-card-#{hash_domain(site.domain)}",
@@ -606,14 +608,12 @@ defmodule PlausibleWeb.Live.Sites do
                 "Please unpin one of your pinned sites to make room for new pins"
 
             socket
-            |> put_flash(:error, flash_message)
+            |> put_live_flash(:error, flash_message)
             |> push_event("js-exec", %{
               to: "#site-card-#{hash_domain(site.domain)}",
               attr: "data-pin-failed"
             })
         end
-
-      Process.send_after(self(), :clear_flash, 5000)
 
       {:noreply, socket}
     else
@@ -649,10 +649,6 @@ defmodule PlausibleWeb.Live.Sites do
       |> set_filter_text("")
 
     {:noreply, socket}
-  end
-
-  def handle_info(:clear_flash, socket) do
-    {:noreply, clear_flash(socket)}
   end
 
   defp load_sites(%{assigns: assigns} = socket) do
