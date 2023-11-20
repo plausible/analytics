@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-073B7C2E.js"></script>
+    <script src="dist/sidebar_items-72A97DF3.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -134,8 +134,7 @@ Plausible
 
   </div>
 
-    <div class="summary-synopsis"><p>Plausible keeps the contexts that define your domain
-and business logic.</p></div>
+    <div class="summary-synopsis"><p>Build-related macros</p></div>
 
 </div>
 <div class="summary-row">
@@ -568,23 +567,6 @@ outside of the main application supervision tree.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.DataMigration.RewriteFunnelDupes.html" translate="no">Plausible.DataMigration.RewriteFunnelDupes</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A data fix migration that seeks funnels having steps
-whose goals are equally named.
-It then tries to rewrite the duplicate goals using the
-oldest goal available. In extreme cases, e.g. when multiple
-duplicates are found for a single funnel, it will either
-reduce or completely remove the funnel.
-This enables us to run a migration later on that will
-delete duplicate goals and enforce goal uniqueness at the
-database level via a CHECK constraint.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Plausible.DebugReplayInfo.html" translate="no">Plausible.DebugReplayInfo</a>
 
   </div>
@@ -625,6 +607,15 @@ database level via a CHECK constraint.</p></div>
     <div class="summary-synopsis"><p>A funnel is a marketing term used to capture and describe the journey
 that users go through, from initial step to conversion.
 A funnel consists of several steps (here: 2..8).</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Funnel.Const.html" translate="no">Plausible.Funnel.Const</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Compile-time convience constants for funnel characteristics.</p></div>
 
 </div>
 <div class="summary-row">
