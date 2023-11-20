@@ -9,10 +9,10 @@ defmodule Plausible.Auth.TOTP do
   TOTP setup is started with `initiate/1`. At this stage, a random secret
   binary is generated for user and stored under `User.totp_secret`. The secret
   is additionally encrypted while stored in the database using `Cloak`. The
-  vault for stafe storage is configured in `Plausible.Auth.TOTP.Vault` via
+  vault for safe storage is configured in `Plausible.Auth.TOTP.Vault` via
   a dedicated `Ecto` type defined in `Plausible.Auth.TOTP.EncryptedBinary`.
   The function returns updated user along with TOTP URI and a readable form
-  of secret. Both are meant for exposing in user's setup screen. The URI
+  of secret. Both - the URI and readable secret - are meant for exposure in the user's setup screen. The URI
   should be encoded as a QR code.
 
   After initiation, user is expected to confirm valid setup with `enable/2`,
@@ -37,7 +37,7 @@ defmodule Plausible.Auth.TOTP do
   cleared and any remaining generated recovery codes are removed. The function
   can be safely run more than once.
 
-  If user needs to regenerate the recovery codes outside of setup procedure,
+  If the user needs to regenerate the recovery codes outside of setup procedure,
   they must do it via `generate_recovery_codes_protected/2`, providing
   their current password for safety. They must be warned that any existing
   recovery codes will be invalidated.
