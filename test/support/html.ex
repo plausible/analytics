@@ -1,4 +1,6 @@
 defmodule Plausible.Test.Support.HTML do
+  Code.ensure_compiled!(Floki)
+
   @moduledoc """
   Floki wrappers to help make assertions about HTML/DOM structures
   """

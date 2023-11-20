@@ -1,7 +1,12 @@
 defmodule Plausible.Billing.QuotaTest do
   use Plausible.DataCase, async: true
+  use Plausible
   alias Plausible.Billing.{Quota, Plans}
-  alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
+  alias Plausible.Billing.Feature.{Goals, RevenueGoals, Props, StatsAPI}
+
+  on_full_build do
+    alias Plausible.Billing.Feature.Funnels
+  end
 
   @legacy_plan_id "558746"
   @v1_plan_id "558018"
@@ -443,16 +448,18 @@ defmodule Plausible.Billing.QuotaTest do
       assert [Props] == Quota.features_usage(user)
     end
 
-    test "returns [Funnels] when user/site uses funnels" do
-      user = insert(:user)
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+    on_full_build do
+      test "returns [Funnels] when user/site uses funnels" do
+        user = insert(:user)
+        site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
 
-      goals = insert_list(3, :goal, site: site, event_name: fn -> Ecto.UUID.generate() end)
-      steps = Enum.map(goals, &%{"goal_id" => &1.id})
-      Plausible.Funnels.create(site, "dummy", steps)
+        goals = insert_list(3, :goal, site: site, event_name: fn -> Ecto.UUID.generate() end)
+        steps = Enum.map(goals, &%{"goal_id" => &1.id})
+        Plausible.Funnels.create(site, "dummy", steps)
 
-      assert [Funnels] == Quota.features_usage(site)
-      assert [Funnels] == Quota.features_usage(user)
+        assert [Funnels] == Quota.features_usage(site)
+        assert [Funnels] == Quota.features_usage(user)
+      end
     end
 
     test "returns [RevenueGoals] when user/site uses revenue goals" do
@@ -471,23 +478,25 @@ defmodule Plausible.Billing.QuotaTest do
       assert [StatsAPI] == Quota.features_usage(user)
     end
 
-    test "returns multiple features" do
-      user = insert(:user)
+    on_full_build do
+      test "returns multiple features" do
+        user = insert(:user)
 
-      site =
-        insert(:site,
-          allowed_event_props: ["dummy"],
-          memberships: [build(:site_membership, user: user, role: :owner)]
-        )
+        site =
+          insert(:site,
+            allowed_event_props: ["dummy"],
+            memberships: [build(:site_membership, user: user, role: :owner)]
+          )
 
-      insert(:goal, currency: :USD, site: site, event_name: "Purchase")
+        insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
-      goals = insert_list(3, :goal, site: site, event_name: fn -> Ecto.UUID.generate() end)
-      steps = Enum.map(goals, &%{"goal_id" => &1.id})
-      Plausible.Funnels.create(site, "dummy", steps)
+        goals = insert_list(3, :goal, site: site, event_name: fn -> Ecto.UUID.generate() end)
+        steps = Enum.map(goals, &%{"goal_id" => &1.id})
+        Plausible.Funnels.create(site, "dummy", steps)
 
-      assert [Props, Funnels, RevenueGoals] == Quota.features_usage(site)
-      assert [Props, Funnels, RevenueGoals] == Quota.features_usage(user)
+        assert [Props, Funnels, RevenueGoals] == Quota.features_usage(site)
+        assert [Props, Funnels, RevenueGoals] == Quota.features_usage(user)
+      end
     end
 
     test "accounts only for sites the user owns" do
@@ -518,22 +527,24 @@ defmodule Plausible.Billing.QuotaTest do
       assert [Goals, Props, StatsAPI] == Quota.allowed_features_for(user)
     end
 
-    test "returns the enterprise plan features" do
-      user = insert(:user)
+    on_full_build do
+      test "returns the enterprise plan features" do
+        user = insert(:user)
 
-      enterprise_plan =
-        insert(:enterprise_plan,
-          user_id: user.id,
-          monthly_pageview_limit: 100_000,
-          site_limit: 500,
-          features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels]
-        )
+        enterprise_plan =
+          insert(:enterprise_plan,
+            user_id: user.id,
+            monthly_pageview_limit: 100_000,
+            site_limit: 500,
+            features: [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels]
+          )
 
-      _subscription =
-        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
+        _subscription =
+          insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
 
-      assert [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels] ==
-               Quota.allowed_features_for(user)
+        assert [Plausible.Billing.Feature.StatsAPI, Plausible.Billing.Feature.Funnels] ==
+                 Quota.allowed_features_for(user)
+      end
     end
 
     test "returns all features when user in on trial" do

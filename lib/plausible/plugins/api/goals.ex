@@ -3,6 +3,7 @@ defmodule Plausible.Plugins.API.Goals do
   Plugins API context module for Goals.
   All high level Goal operations should be implemented here.
   """
+  use Plausible
 
   import Ecto.Query
   import Plausible.Pagination
@@ -41,13 +42,24 @@ defmodule Plausible.Plugins.API.Goals do
     |> Repo.one()
   end
 
-  defp get_query(site) do
-    from g in Plausible.Goal,
-      where: g.site_id == ^site.id,
-      order_by: [desc: g.id],
-      left_join: assoc(g, :funnels),
-      group_by: g.id,
-      preload: [:funnels]
+  on_full_build do
+    defp get_query(site) do
+      from g in Plausible.Goal,
+        where: g.site_id == ^site.id,
+        order_by: [desc: g.id],
+        left_join: assoc(g, :funnels),
+        group_by: g.id,
+        preload: [:funnels]
+    end
+  end
+
+  on_small_build do
+    defp get_query(site) do
+      from g in Plausible.Goal,
+        where: g.site_id == ^site.id,
+        order_by: [desc: g.id],
+        group_by: g.id
+    end
   end
 
   defp convert_to_create_params(%CreateRequest.CustomEvent{goal: %{event_name: event_name}}) do

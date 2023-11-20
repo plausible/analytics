@@ -1,5 +1,7 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
+  use Plausible
+
   import PlausibleWeb.Components.Billing
 
   def base_domain do
@@ -75,7 +77,9 @@ defmodule PlausibleWeb.LayoutView do
       [key: "People", value: "people"],
       [key: "Visibility", value: "visibility"],
       [key: "Goals", value: "goals"],
-      [key: "Funnels", value: "funnels"],
+      on_full_build do
+        [key: "Funnels", value: "funnels"]
+      end,
       [key: "Custom Properties", value: "properties"],
       [key: "Integrations", value: "integrations"],
       [key: "Email Reports", value: "email-reports"],

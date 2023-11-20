@@ -5,8 +5,6 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   use Phoenix.LiveComponent
   use Phoenix.HTML
 
-  use Plausible.Funnel
-
   attr(:goals, :list, required: true)
   attr(:domain, :string, required: true)
   attr(:filter_text, :string)

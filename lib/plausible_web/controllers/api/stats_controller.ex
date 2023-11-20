@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Api.StatsController do
+  use Plausible
   use PlausibleWeb, :controller
   use Plausible.Repo
   use Plug.ErrorHandler
@@ -492,56 +493,58 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  def funnel(conn, %{"id" => funnel_id} = params) do
-    site = Plausible.Repo.preload(conn.assigns.site, :owner)
+  on_full_build do
+    def funnel(conn, %{"id" => funnel_id} = params) do
+      site = Plausible.Repo.preload(conn.assigns.site, :owner)
 
-    with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.owner),
-         :ok <- validate_params(site, params),
-         query <- Query.from(site, params) |> Filters.add_prefix(),
-         :ok <- validate_funnel_query(query),
-         {funnel_id, ""} <- Integer.parse(funnel_id),
-         {:ok, funnel} <- Stats.funnel(site, query, funnel_id) do
-      json(conn, funnel)
-    else
-      {:error, {:invalid_funnel_query, due_to}} ->
-        bad_request(
-          conn,
-          "We are unable to show funnels when the dashboard is filtered by #{due_to}",
-          %{
-            level: :normal
-          }
-        )
+      with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.owner),
+           :ok <- validate_params(site, params),
+           query <- Query.from(site, params) |> Filters.add_prefix(),
+           :ok <- validate_funnel_query(query),
+           {funnel_id, ""} <- Integer.parse(funnel_id),
+           {:ok, funnel} <- Stats.funnel(site, query, funnel_id) do
+        json(conn, funnel)
+      else
+        {:error, {:invalid_funnel_query, due_to}} ->
+          bad_request(
+            conn,
+            "We are unable to show funnels when the dashboard is filtered by #{due_to}",
+            %{
+              level: :normal
+            }
+          )
 
-      {:error, :funnel_not_found} ->
-        conn
-        |> put_status(404)
-        |> json(%{error: "Funnel not found"})
-        |> halt()
+        {:error, :funnel_not_found} ->
+          conn
+          |> put_status(404)
+          |> json(%{error: "Funnel not found"})
+          |> halt()
 
-      {:error, :upgrade_required} ->
-        H.payment_required(
-          conn,
-          "#{Plausible.Billing.Feature.Funnels.display_name()} is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
-        )
+        {:error, :upgrade_required} ->
+          H.payment_required(
+            conn,
+            "#{Plausible.Billing.Feature.Funnels.display_name()} is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+          )
 
-      _ ->
-        bad_request(conn, "There was an error with your request")
+        _ ->
+          bad_request(conn, "There was an error with your request")
+      end
     end
-  end
 
-  defp validate_funnel_query(query) do
-    case query do
-      _ when is_map_key(query.filters, "event:goal") ->
-        {:error, {:invalid_funnel_query, "goals"}}
+    defp validate_funnel_query(query) do
+      case query do
+        _ when is_map_key(query.filters, "event:goal") ->
+          {:error, {:invalid_funnel_query, "goals"}}
 
-      _ when is_map_key(query.filters, "event:page") ->
-        {:error, {:invalid_funnel_query, "pages"}}
+        _ when is_map_key(query.filters, "event:page") ->
+          {:error, {:invalid_funnel_query, "pages"}}
 
-      _ when query.period == "realtime" ->
-        {:error, {:invalid_funnel_query, "realtime period"}}
+        _ when query.period == "realtime" ->
+          {:error, {:invalid_funnel_query, "realtime period"}}
 
-      _ ->
-        :ok
+        _ ->
+          :ok
+      end
     end
   end
 

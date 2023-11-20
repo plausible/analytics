@@ -6,6 +6,14 @@ if config_env() in [:dev, :test] do
   Envy.load(["config/.env.#{config_env()}"])
 end
 
+if config_env() == :small do
+  Envy.load(["config/.env.dev"])
+end
+
+if config_env() == :small_test do
+  Envy.load(["config/.env.test"])
+end
+
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 
 log_format =
@@ -549,32 +557,34 @@ config :ua_inspector,
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10]}
 
-config :kaffy,
-  otp_app: :plausible,
-  ecto_repo: Plausible.Repo,
-  router: PlausibleWeb.Router,
-  admin_title: "Plausible Admin",
-  resources: [
-    auth: [
-      resources: [
-        user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin],
-        api_key: [schema: Plausible.Auth.ApiKey, admin: Plausible.Auth.ApiKeyAdmin]
-      ]
-    ],
-    sites: [
-      resources: [
-        site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
-      ]
-    ],
-    billing: [
-      resources: [
-        enterprise_plan: [
-          schema: Plausible.Billing.EnterprisePlan,
-          admin: Plausible.Billing.EnterprisePlanAdmin
+if config_env() in [:dev, :staging, :prod] do
+  config :kaffy,
+    otp_app: :plausible,
+    ecto_repo: Plausible.Repo,
+    router: PlausibleWeb.Router,
+    admin_title: "Plausible Admin",
+    resources: [
+      auth: [
+        resources: [
+          user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin],
+          api_key: [schema: Plausible.Auth.ApiKey, admin: Plausible.Auth.ApiKeyAdmin]
+        ]
+      ],
+      sites: [
+        resources: [
+          site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
+        ]
+      ],
+      billing: [
+        resources: [
+          enterprise_plan: [
+            schema: Plausible.Billing.EnterprisePlan,
+            admin: Plausible.Billing.EnterprisePlanAdmin
+          ]
         ]
       ]
     ]
-  ]
+end
 
 geo_opts =
   cond do

@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
   describe "GET /:website/settings/goals" do
     setup [:create_user, :log_in, :create_site]
 
+    @tag :full_build_only
     test "lists goals for the site and renders links", %{conn: conn, site: site} do
       {:ok, [g1, g2, g3]} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")

@@ -6,8 +6,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
   use Phoenix.HTML
   use PlausibleWeb.Live.Flash
 
-  use Plausible.Funnel
-
   alias Plausible.{Sites, Goals}
 
   def mount(

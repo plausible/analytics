@@ -1,6 +1,6 @@
 defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
-  use Plausible.Funnel
+  use Plausible
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()

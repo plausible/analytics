@@ -3,6 +3,7 @@ defmodule Plausible.Billing.Quota do
   This module provides functions to work with plans usage and limits.
   """
 
+  use Plausible
   import Ecto.Query
   alias Plausible.Auth.User
   alias Plausible.Site
@@ -193,11 +194,6 @@ defmodule Plausible.Billing.Quota do
         on: s.id == os.site_id,
         where: fragment("cardinality(?) > 0", s.allowed_event_props)
 
-    funnels_usage_query =
-      from f in Plausible.Funnel,
-        inner_join: os in subquery(owned_sites_query(user)),
-        on: f.site_id == os.site_id
-
     revenue_goals_usage =
       from g in Plausible.Goal,
         inner_join: os in subquery(owned_sites_query(user)),
@@ -206,12 +202,26 @@ defmodule Plausible.Billing.Quota do
 
     stats_api_usage = from a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id
 
-    queries = [
-      {Props, props_usage_query},
-      {Funnels, funnels_usage_query},
-      {RevenueGoals, revenue_goals_usage},
-      {StatsAPI, stats_api_usage}
-    ]
+    queries =
+      if Plausible.Release.selfhost?() do
+        [
+          {Props, props_usage_query},
+          {RevenueGoals, revenue_goals_usage},
+          {StatsAPI, stats_api_usage}
+        ]
+      else
+        funnels_usage_query =
+          from f in "funnels",
+            inner_join: os in subquery(owned_sites_query(user)),
+            on: f.site_id == os.site_id
+
+        [
+          {Props, props_usage_query},
+          {Funnels, funnels_usage_query},
+          {RevenueGoals, revenue_goals_usage},
+          {StatsAPI, stats_api_usage}
+        ]
+      end
 
     Enum.reduce(queries, [], fn {feature, query}, acc ->
       if Plausible.Repo.exists?(query), do: acc ++ [feature], else: acc
@@ -221,8 +231,14 @@ defmodule Plausible.Billing.Quota do
   def features_usage(%Site{} = site) do
     props_exist = is_list(site.allowed_event_props) && site.allowed_event_props != []
 
-    funnels_exist =
-      Plausible.Repo.exists?(from f in Plausible.Funnel, where: f.site_id == ^site.id)
+    on_full_build do
+      funnels_exist =
+        Plausible.Repo.exists?(from f in Plausible.Funnel, where: f.site_id == ^site.id)
+    end
+
+    on_small_build do
+      funnels_exist = false
+    end
 
     revenue_goals_exist =
       Plausible.Repo.exists?(

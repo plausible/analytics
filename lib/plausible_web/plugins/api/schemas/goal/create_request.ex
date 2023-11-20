@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest do
   @moduledoc """
   OpenAPI schema for Goal creation request
   """
-  use Plausible.Funnel
+  use Plausible.Funnel.Const
   use PlausibleWeb, :open_api_schema
 
   OpenApiSpex.schema(%{
@@ -19,7 +19,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Goal.CreateRequest do
           goals: %Schema{
             type: :array,
             minItems: 1,
-            maxItems: Funnel.max_steps(),
+            maxItems: Funnel.Const.max_steps(),
             items: %Schema{
               oneOf: [
                 Schemas.Goal.CreateRequest.CustomEvent,

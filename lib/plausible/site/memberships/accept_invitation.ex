@@ -1,4 +1,6 @@
 defmodule Plausible.Site.Memberships.AcceptInvitation do
+  use Plausible
+
   @moduledoc """
   Service for accepting invitations, including ownership transfers.
 
@@ -25,7 +27,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   @spec transfer_ownership(Site.t(), Auth.User.t(), Keyword.t()) ::
           {:ok, Site.Membership.t()} | {:error, Ecto.Changeset.t()}
   def transfer_ownership(site, user, opts \\ []) do
-    selfhost? = Keyword.get(opts, :selfhost?, Plausible.Release.selfhost?())
+    selfhost? = Keyword.get(opts, :selfhost?, small_build?())
     membership = get_or_create_owner_membership(site, user)
     multi = add_and_transfer_ownership(site, membership, user, selfhost?)
 

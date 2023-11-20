@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
+  use Plausible
   import Phoenix.LiveView.Router
   @two_weeks_in_seconds 60 * 60 * 24 * 14
 
@@ -50,25 +51,32 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
   end
 
-  pipeline :flags do
-    plug :accepts, ["html"]
-    plug :put_secure_browser_headers
-    plug PlausibleWeb.Plugs.NoRobots
-    plug :fetch_session
-    plug PlausibleWeb.CRMAuthPlug
+  on_full_build do
+    pipeline :flags do
+      plug :accepts, ["html"]
+      plug :put_secure_browser_headers
+      plug PlausibleWeb.Plugs.NoRobots
+      plug :fetch_session
+
+      plug PlausibleWeb.CRMAuthPlug
+    end
   end
 
   if Mix.env() == :dev do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
-  use Kaffy.Routes,
-    scope: "/crm",
-    pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
+  on_full_build do
+    use Kaffy.Routes,
+      scope: "/crm",
+      pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
+  end
 
-  scope path: "/flags" do
-    pipe_through :flags
-    forward "/", FunWithFlags.UI.Router, namespace: "flags"
+  on_full_build do
+    scope path: "/flags" do
+      pipe_through :flags
+      forward "/", FunWithFlags.UI.Router, namespace: "flags"
+    end
   end
 
   scope path: "/api/plugins" do
@@ -77,7 +85,11 @@ defmodule PlausibleWeb.Router do
 
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
-    get "/:domain/funnels/:id", StatsController, :funnel
+
+    on_full_build do
+      get "/:domain/funnels/:id", StatsController, :funnel
+    end
+
     get "/:domain/current-visitors", StatsController, :current_visitors
     get "/:domain/main-graph", StatsController, :main_graph
     get "/:domain/top-stats", StatsController, :top_stats
@@ -291,7 +303,10 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
     get "/:website/settings/properties", SiteController, :settings_props
-    get "/:website/settings/funnels", SiteController, :settings_funnels
+
+    on_full_build do
+      get "/:website/settings/funnels", SiteController, :settings_funnels
+    end
 
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
     get "/:website/settings/custom-domain", SiteController, :settings_custom_domain

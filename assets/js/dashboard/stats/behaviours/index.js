@@ -6,9 +6,20 @@ import * as storage from '../../util/storage'
 
 import GoalConversions, { specialTitleWhenGoalFilter } from './goal-conversions'
 import Properties from './props'
-import Funnel from './funnel'
 import { FeatureSetupNotice } from '../../components/notice'
 import { SPECIAL_GOALS } from './goal-conversions'
+
+/*global BUILD_EXTRA*/
+/*global require*/
+function maybeRequire() {
+  if (BUILD_EXTRA) {
+    return require('../../extra/funnel')
+  } else {
+    return { default: null }
+  }
+}
+
+const Funnel = maybeRequire().default
 
 const ACTIVE_CLASS = 'inline-block h-5 text-indigo-700 dark:text-indigo-500 font-bold active-prop-heading truncate text-left'
 const DEFAULT_CLASS = 'hover:text-indigo-600 cursor-pointer truncate text-left'
@@ -139,7 +150,7 @@ export default function Behaviours(props) {
       <div className="flex text-xs font-medium text-gray-500 dark:text-gray-400 space-x-2">
         {isEnabled(CONVERSIONS) && tabSwitcher(CONVERSIONS, 'Goals')}
         {isEnabled(PROPS) && tabSwitcher(PROPS, 'Properties')}
-        {isEnabled(FUNNELS) && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
+        {isEnabled(FUNNELS) && Funnel && (hasFunnels() ? tabFunnelPicker() : tabSwitcher(FUNNELS, 'Funnels'))}
       </div>
     )
   }
@@ -165,8 +176,13 @@ export default function Behaviours(props) {
   }
 
   function renderFunnels() {
-    if (selectedFunnel) { return <Funnel site={site} query={query} funnelName={selectedFunnel} /> }
-    else if (adminAccess) {
+    if (Funnel === null) {
+      return featureUnavailable()
+    }
+    else if (Funnel && selectedFunnel) {
+      return <Funnel site={site} query={query} funnelName={selectedFunnel} />
+    }
+    else if (Funnel && adminAccess) {
       return (
         <FeatureSetupNotice
           site={site}
@@ -204,6 +220,14 @@ export default function Behaviours(props) {
     return (
       <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
         No data yet
+      </div>
+    )
+  }
+
+  function featureUnavailable() {
+    return (
+      <div className="font-medium text-gray-500 dark:text-gray-400 py-12 text-center">
+        This feature is unavailable
       </div>
     )
   }

@@ -1,4 +1,6 @@
 defmodule PlausibleWeb.StatsController do
+  use Plausible
+
   @moduledoc """
   This controller is responsible for rendering stats dashboards.
 
@@ -65,7 +67,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: site,
           has_goals: Plausible.Sites.has_goals?(site),
-          funnels: Plausible.Funnels.list(site),
+          funnels: list_funnels(site),
           has_props: Plausible.Props.configured?(site),
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
@@ -87,6 +89,18 @@ defmodule PlausibleWeb.StatsController do
       Sites.locked?(site) ->
         site = Plausible.Repo.preload(site, :owner)
         render(conn, "site_locked.html", site: site, dogfood_page_path: dogfood_page_path)
+    end
+  end
+
+  on_full_build do
+    defp list_funnels(site) do
+      Plausible.Funnels.list(site)
+    end
+  end
+
+  on_small_build do
+    defp list_funnels(_site) do
+      []
     end
   end
 
@@ -308,7 +322,7 @@ defmodule PlausibleWeb.StatsController do
         |> render("stats.html",
           site: shared_link.site,
           has_goals: Sites.has_goals?(shared_link.site),
-          funnels: Plausible.Funnels.list(shared_link.site),
+          funnels: list_funnels(shared_link.site),
           has_props: Plausible.Props.configured?(shared_link.site),
           stats_start_date: shared_link.site.stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
