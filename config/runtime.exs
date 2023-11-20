@@ -557,7 +557,7 @@ config :ua_inspector,
 config :hammer,
   backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10]}
 
-if config_env() in [:dev, :test, :staging, :prod] do
+if config_env() in [:dev, :staging, :prod] do
   config :kaffy,
     otp_app: :plausible,
     ecto_repo: Plausible.Repo,
