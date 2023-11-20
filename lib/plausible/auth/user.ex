@@ -29,6 +29,12 @@ defmodule Plausible.Auth.User do
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     field :previous_email, :string
+
+    # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
+    field :totp_enabled, :boolean, default: false
+    field :totp_secret, Plausible.Auth.TOTP.EncryptedBinary
+    field :totp_last_used_at, :naive_datetime
+
     embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 
     has_many :site_memberships, Plausible.Site.Membership

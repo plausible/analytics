@@ -145,6 +145,20 @@ ch_db_url =
   |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000")
   |> Integer.parse()
 
+# Can be generated  with `Base.encode64(:crypto.strong_rand_bytes(32))` from
+# iex shell or `openssl rand -base64 32` from command line.
+totp_vault_key = get_var_from_path_or_env(config_dir, "TOTP_VAULT_KEY", nil)
+
+case totp_vault_key do
+  nil ->
+    raise "TOTP_VAULT_KEY configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+
+  key ->
+    if byte_size(Base.decode64!(key)) != 32 do
+      raise "TOTP_VAULT_KEY must exactly 32 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+    end
+end
+
 ### Mandatory params End
 
 build_metadata_raw = get_var_from_path_or_env(config_dir, "BUILD_METADATA", "{}")
@@ -176,6 +190,8 @@ runtime_metadata = [
 ]
 
 config :plausible, :runtime_metadata, runtime_metadata
+
+config :plausible, Plausible.Auth.TOTP, vault_key: totp_vault_key
 
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
