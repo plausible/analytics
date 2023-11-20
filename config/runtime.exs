@@ -155,7 +155,7 @@ case totp_vault_key do
 
   key ->
     if byte_size(Base.decode64!(key)) != 32 do
-      raise "TOTP_VALUE_KEY must exactly 32 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+      raise "TOTP_VAULT_KEY must exactly 32 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
     end
 end
 
