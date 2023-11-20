@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.Endpoint do
+  use Plausible
   use Sentry.PlugCapture
   use Phoenix.Endpoint, otp_app: :plausible
 
@@ -34,12 +35,14 @@ defmodule PlausibleWeb.Endpoint do
     only: ~w(css js images favicon.ico robots.txt)
   )
 
-  plug(Plug.Static,
-    at: "/kaffy",
-    from: :kaffy,
-    gzip: false,
-    only: ~w(assets)
-  )
+  on_full_build do
+    plug(Plug.Static,
+      at: "/kaffy",
+      from: :kaffy,
+      gzip: false,
+      only: ~w(assets)
+    )
+  end
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.

@@ -90,7 +90,7 @@ defmodule Plausible.MixProject do
       {:hammer, "~> 6.0"},
       {:httpoison, "~> 1.4"},
       {:jason, "~> 1.3"},
-      {:kaffy, "~> 0.10.2"},
+      {:kaffy, "~> 0.10.2", only: [:dev, :test, :staging, :prod]},
       {:location, git: "https://github.com/plausible/location.git"},
       {:mox, "~> 1.0", only: [:test, :small_test]},
       {:nanoid, "~> 2.0.2"},

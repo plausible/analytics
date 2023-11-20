@@ -56,16 +56,21 @@ defmodule PlausibleWeb.Router do
     plug :put_secure_browser_headers
     plug PlausibleWeb.Plugs.NoRobots
     plug :fetch_session
-    plug PlausibleWeb.CRMAuthPlug
+
+    on_full_build do
+      plug PlausibleWeb.CRMAuthPlug
+    end
   end
 
   if Mix.env() == :dev do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
-  use Kaffy.Routes,
-    scope: "/crm",
-    pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
+  on_full_build do
+    use Kaffy.Routes,
+      scope: "/crm",
+      pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
+  end
 
   scope path: "/flags" do
     pipe_through :flags
