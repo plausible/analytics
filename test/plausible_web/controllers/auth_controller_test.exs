@@ -727,6 +727,52 @@ defmodule PlausibleWeb.AuthControllerTest do
       conn = get(conn, "/settings")
       refute html_response(conn, 200) =~ "Invoices"
     end
+
+    test "renders last 30 days pageviews and custom events usage", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -1)),
+        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -10)),
+        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -20))
+      ])
+
+      doc =
+        conn
+        |> get("/settings")
+        |> html_response(200)
+
+      assert text_of_element(doc, "#total-pageviews-last-30-days-row") =~
+               "Total billable pageviews (last 30 days) 3 / ∞"
+
+      assert text_of_element(doc, "#pageviews-last-30-days-row") =~ "Pageviews 1"
+      assert text_of_element(doc, "#custom-events-last-30-days-row") =~ "Custom events 2"
+    end
+
+    test "renders sites usage and limit", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
+      insert(:site, members: [user])
+
+      site_usage_row_text =
+        conn
+        |> get("/settings")
+        |> html_response(200)
+        |> text_of_element("#site-usage-row")
+
+      assert site_usage_row_text =~ "Owned sites 1 / 50"
+    end
+
+    test "renders team members usage and limit", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: @v4_plan_id, user: user)
+
+      team_member_usage_row_text =
+        conn
+        |> get("/settings")
+        |> html_response(200)
+        |> text_of_element("#team-member-usage-row")
+
+      assert team_member_usage_row_text =~ "Team members 0 / 3"
+    end
   end
 
   describe "PUT /settings" do

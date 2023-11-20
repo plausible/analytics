@@ -81,28 +81,33 @@
       </h2>
       <PlausibleWeb.Components.Billing.usage_and_limits_table>
         <PlausibleWeb.Components.Billing.usage_and_limits_row
+          id="total-pageviews-last-30-days-row"
           title="Total billable pageviews (last 30 days)"
           usage={@total_pageview_usage}
           limit={@total_pageview_limit}
         />
         <PlausibleWeb.Components.Billing.usage_and_limits_row
           pad
+          id="pageviews-last-30-days-row"
           title="Pageviews"
           usage={@pageview_usage}
           class="font-normal text-gray-500 dark:text-gray-400"
         />
         <PlausibleWeb.Components.Billing.usage_and_limits_row
           pad
+          id="custom-events-last-30-days-row"
           title="Custom events"
           usage={@custom_event_usage}
           class="font-normal text-gray-500 dark:text-gray-400"
         />
         <PlausibleWeb.Components.Billing.usage_and_limits_row
+          id="site-usage-row"
           title="Owned sites"
           usage={@site_usage}
           limit={@site_limit}
         />
         <PlausibleWeb.Components.Billing.usage_and_limits_row
+          id="team-member-usage-row"
           title="Team members"
           usage={@team_member_usage}
           limit={@team_member_limit}
