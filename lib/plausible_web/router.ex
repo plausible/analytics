@@ -51,13 +51,13 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
   end
 
-  pipeline :flags do
-    plug :accepts, ["html"]
-    plug :put_secure_browser_headers
-    plug PlausibleWeb.Plugs.NoRobots
-    plug :fetch_session
+  on_full_build do
+    pipeline :flags do
+      plug :accepts, ["html"]
+      plug :put_secure_browser_headers
+      plug PlausibleWeb.Plugs.NoRobots
+      plug :fetch_session
 
-    on_full_build do
       plug PlausibleWeb.CRMAuthPlug
     end
   end
@@ -72,9 +72,11 @@ defmodule PlausibleWeb.Router do
       pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
   end
 
-  scope path: "/flags" do
-    pipe_through :flags
-    forward "/", FunWithFlags.UI.Router, namespace: "flags"
+  on_full_build do
+    scope path: "/flags" do
+      pipe_through :flags
+      forward "/", FunWithFlags.UI.Router, namespace: "flags"
+    end
   end
 
   scope path: "/api/plugins" do
