@@ -1,0 +1,41 @@
+<div class="w-full max-w-3xl mt-4 mx-auto flex">
+  <%= form_for @conn.params, 
+  Routes.auth_path(@conn, :verify_2fa_recovery_code), 
+  [
+    class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8",
+    onsubmit: "var button = document.getElementById('submit'); button.disabled = true; button.classList.add('animate-pulse')"
+  ], fn f -> %>
+    <h2 class="text-xl font-black dark:text-gray-100">
+      Enter Recovery Code
+    </h2>
+
+    <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
+      Can't access your authenticator application? Enter a recovery code instead.
+      <div class="mt-6">
+        <div>
+          <%= text_input(f, :recovery_code,
+            value: "",
+            autocomplete: "off",
+            class:
+              "font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full px-8 border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-md",
+            maxlength: "10",
+            placeholder: "Enter recovery code",
+            required: "required"
+          ) %>
+        </div>
+        <button id="submit" class="w-full button mt-2">Use Code</button>
+      </div>
+
+      <div class="mt-6 flex flex-row justify-between items-center">
+        <p class="text-sm">
+          Authenticator application working again?
+          <a href={Routes.auth_path(@conn, :verify_2fa)} class="underline text-indigo-600">
+            Enter verification code
+          </a>
+          <br /> Lost your recovery codes?
+          <a href="/contact" class="underline text-indigo-600">Contact us</a>
+        </p>
+      </div>
+    </div>
+  <% end %>
+</div>
