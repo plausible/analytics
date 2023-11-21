@@ -2,16 +2,14 @@ Last week we sent a reminder that your site traffic has exceeded the limits of y
 <br /><br />
 Your subscription is still active, we're still counting your stats and haven't deleted any of your data but as you have outgrown your subscription tier, we kindly ask you to upgrade to match your new traffic levels. Upon upgrading to a suitable tier, your dashboard access will be immediately restored.
 <br /><br />
-During the last billing cycle (<%= date_format(@last_cycle.first) %> to <%= date_format(@last_cycle.last) %>), your account recorded <%= PlausibleWeb.StatsView.large_number_format(@usage) %> billable pageviews. In the billing cycle before that, the usage was X billable pageviews. Note that billable pageviews include both standard pageviews and custom events.
+During the last billing cycle (<%= date_format(@last_cycle.first) %> to <%= date_format(@last_cycle.last) %>), your account recorded <%= PlausibleWeb.StatsView.large_number_format(@usage) %> billable pageviews. In the billing cycle before that, the usage was X billable pageviews. Note that billable pageviews include both standard pageviews and custom events. In your <a href="https://plausible.io/settings">account settings</a>, you'll find an overview of your usage and limits.
 <%= if @suggested_plan == :enterprise do %>
 Your usage exceeds our standard plans, so please reply back to this email for a tailored quote.
 <% else %>
-We recommend upgrading to the <%= @suggested_plan.volume %>/mo plan.
-<br /><br />
-<a href="https://plausible.io/settings">Click here</a> to go to your account settings. In your account settings, you'll find an overview of your usage and limits. You can upgrade your subscription tier by clicking the 'Change plan' link.
+<%= link("Click here to upgrade your subscription", to: plausible_url() <> Plausible.Billing.upgrade_route_for(@user)) %>
 <% end %>
 <br /><br />
-The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
+We recommend you upgrade to the <%= @suggested_plan.volume %>/mo plan. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
 <br /><br />
 Do you have questions or need help with anything? Just reply to this email. We're here to help!
 <br /><br />
