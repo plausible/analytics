@@ -78,6 +78,35 @@ defmodule Plausible.Release do
     Application.put_env(:ua_inspector, :database_path, priv_dir)
   end
 
+  def dump_plans() do
+    prepare()
+
+    Repo.delete_all("plans")
+
+    plans =
+      Plausible.Billing.Plans.all()
+      |> Plausible.Billing.Plans.with_prices()
+      |> Enum.map(fn plan ->
+        plan = Map.from_struct(plan)
+
+        monthly_cost = plan.monthly_cost && Money.to_decimal(plan.monthly_cost)
+        yearly_cost = plan.yearly_cost && Money.to_decimal(plan.yearly_cost)
+        {:ok, features} = Plausible.Billing.Ecto.FeatureList.dump(plan.features)
+        {:ok, team_member_limit} = Plausible.Billing.Ecto.Limit.dump(plan.team_member_limit)
+
+        plan
+        |> Map.drop([:id])
+        |> Map.put(:kind, Atom.to_string(plan.kind))
+        |> Map.put(:monthly_cost, monthly_cost)
+        |> Map.put(:yearly_cost, yearly_cost)
+        |> Map.put(:features, features)
+        |> Map.put(:team_member_limit, team_member_limit)
+      end)
+
+    {count, _} = Repo.insert_all("plans", plans)
+    IO.puts("Inserted #{count} plans")
+  end
+
   ##############################
 
   defp repos do
@@ -142,7 +171,7 @@ defmodule Plausible.Release do
   defp prepare do
     IO.puts("Loading #{@app}..")
     # Load the code for myapp, but don't start it
-    :ok = Application.load(@app)
+    :ok = Application.ensure_loaded(@app)
 
     IO.puts("Starting dependencies..")
     # Start apps necessary for executing migrations
