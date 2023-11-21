@@ -1,0 +1,50 @@
+<div class="w-full max-w-3xl mt-4 mx-auto flex">
+  <div class="w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8">
+    <h2 class="text-xl font-black dark:text-gray-100">
+      <%= if @from_setup do %>
+        Setup Two-Factor Authentication
+      <% else %>
+        Your New Recovery Codes
+      <% end %>
+    </h2>
+
+    <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
+      Use these recovery codes to log in if you lose access to the authenticator application. Store them somewhere safe!
+      <div
+        id="recovery-codes-list"
+        style="font-family: courier, monospace; letter-spacing: 2px;"
+        class="border-2 border-dotted border-gray-200 rounded-md text-gray-600 text-lg bg-gray-100 p-2 mt-6 flex flex-wrap"
+      >
+        <%= for code <- @recovery_codes do %>
+          <div class="basis-1/2 text-center"><%= code %></div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-row justify-between">
+      <button onclick="print(); event.stopPropagation();" id="print" class="button">
+        Print Codes <Heroicons.printer class="h-4 w-4 ml-2 mt-1" />
+      </button>
+      <button
+        onclick="var list = document.getElementById('recovery-codes-list'); var selection = getSelection(); selection.removeAllRanges(); var range = createRange(); range.selectNodeContents(list); selection.addRange(range); document.execCommand('copy'); selection.removeAllRanges(); event.stopPropagation(); document.getElementById('copy-base-icon').classList.add('hidden'); document.getElementById('copy-done-icon').classList.remove('hidden'); setTimeout(function() { document.getElementById('copy-done-icon').classList.add('hidden'); document.getElementById('copy-base-icon').classList.remove('hidden'); }, 2000)"
+        id="copy"
+        class="button"
+      >
+        Copy to Clipboard
+        <span id="copy-base-icon">
+          <Heroicons.document_duplicate class="h-4 w-4 ml-2 mt-1" />
+        </span>
+        <span id="copy-done-icon" class="hidden">
+          <Heroicons.check class="h-4 w-4 ml-2 mt-1" />
+        </span>
+      </button>
+      <button
+        id="finish"
+        class="button"
+        onclick={"location.replace('#{Routes.auth_path(@conn, :user_settings) <> "#setup-2fa"}')"}
+      >
+        Finish
+      </button>
+    </div>
+  </div>
+</div>
