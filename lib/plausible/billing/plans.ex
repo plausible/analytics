@@ -260,7 +260,7 @@ defmodule Plausible.Billing.Plans do
     end
   end
 
-  defp all() do
+  def all() do
     @legacy_plans ++ @plans_v1 ++ @plans_v2 ++ @plans_v3 ++ @plans_v4 ++ sandbox_plans()
   end
 
