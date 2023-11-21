@@ -248,6 +248,30 @@ defmodule PlausibleWeb.Components.Generic do
     end
   end
 
+  attr :text, :string, required: true
+  attr :scale, :integer, default: 4
+
+  def qr_code(assigns) do
+    qr_color = {101, 116, 205}
+
+    svg_settings = %QRCode.Render.SvgSettings{
+      qrcode_color: qr_color,
+      structure: :readable,
+      scale: assigns.scale
+    }
+
+    {:ok, qr_code} =
+      assigns.text
+      |> QRCode.create()
+      |> QRCode.render(:svg, svg_settings)
+
+    assigns = assign(assigns, :code, qr_code)
+
+    ~H"""
+    <%= Phoenix.HTML.raw(@code) %>
+    """
+  end
+
   defp icon_class(link_assigns) do
     if String.contains?(link_assigns[:class], "text-sm") do
       ["w-3 h-3"]
