@@ -517,9 +517,9 @@ defmodule Plausible.Billing.QuotaTest do
       user_on_v2 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
       user_on_v3 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v3_plan_id))
 
-      assert [Goals, StatsAPI, Props] == Quota.allowed_features_for(user_on_v1)
-      assert [Goals, StatsAPI, Props] == Quota.allowed_features_for(user_on_v2)
-      assert [Goals, StatsAPI, Props] == Quota.allowed_features_for(user_on_v3)
+      assert [Goals, Props, StatsAPI] == Quota.allowed_features_for(user_on_v1)
+      assert [Goals, Props, StatsAPI] == Quota.allowed_features_for(user_on_v2)
+      assert [Goals, Props, StatsAPI] == Quota.allowed_features_for(user_on_v3)
     end
 
     test "returns [Goals, Props, StatsAPI] when user is on free_10k plan" do
@@ -560,7 +560,7 @@ defmodule Plausible.Billing.QuotaTest do
           subscription: build(:subscription, paddle_plan_id: @v1_plan_id)
         )
 
-      assert [Goals, StatsAPI, Props] == Quota.allowed_features_for(user)
+      assert [Goals, Props, StatsAPI] == Quota.allowed_features_for(user)
     end
 
     test "returns all features for enterprise users who have not upgraded yet and are on trial" do

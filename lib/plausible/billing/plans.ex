@@ -16,10 +16,9 @@ defmodule Plausible.Billing.Plans do
     path = Application.app_dir(:plausible, ["priv", "#{f}.json"])
 
     plans_list =
-      path
-      |> File.read!()
-      |> Jason.decode!(keys: :atoms!)
-      |> Enum.map(&Plan.build!(&1, f))
+      for attrs <- path |> File.read!() |> Jason.decode!() do
+        %Plan{} |> Plan.changeset(attrs) |> Ecto.Changeset.apply_action!(nil)
+      end
 
     Module.put_attribute(__MODULE__, f, plans_list)
 

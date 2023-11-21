@@ -1,95 +1,59 @@
 defmodule Plausible.Billing.Plan do
   @moduledoc false
 
-  @derive Jason.Encoder
-  @enforce_keys ~w(kind generation site_limit monthly_pageview_limit team_member_limit features volume monthly_product_id yearly_product_id)a
-  defstruct @enforce_keys ++ [:monthly_cost, :yearly_cost]
+  use Ecto.Schema
+  import Ecto.Changeset
 
-  @type t() ::
-          %__MODULE__{
-            kind: atom(),
-            generation: non_neg_integer(),
-            monthly_pageview_limit: non_neg_integer(),
-            site_limit: non_neg_integer(),
-            team_member_limit: non_neg_integer() | :unlimited,
-            volume: String.t(),
-            monthly_cost: Money.t() | nil,
-            yearly_cost: Money.t() | nil,
-            monthly_product_id: String.t() | nil,
-            yearly_product_id: String.t() | nil,
-            features: [atom()]
-          }
-          | :enterprise
+  @type t() :: %__MODULE__{} | :enterprise
 
-  def build!(raw_params, file_name) when is_map(raw_params) do
-    raw_params
-    |> put_kind()
-    |> put_generation()
+  embedded_schema do
+    # Due to grandfathering, we sometimes need to check the "generation" (e.g.
+    # v1, v2, etc...) of a user's subscription plan. For instance, on prod, the
+    # users subscribed to a v2 plan are only supposed to see v2 plans when they
+    # go to the upgrade page.
+    #
+    # In the `dev` environment though, "sandbox" plans are used, which unlike
+    # production plans, contain multiple generations of plans in the same file
+    # for testing purposes.
+    field :generation, :integer
+    field :kind, Ecto.Enum, values: [:growth, :business]
+
+    field :features, Plausible.Billing.Ecto.FeatureList
+    field :monthly_pageview_limit, :integer
+    field :site_limit, :integer
+    field :team_member_limit, Plausible.Billing.Ecto.Limit
+    field :volume, :string
+
+    field :monthly_cost
+    field :monthly_product_id, :string
+    field :yearly_cost
+    field :yearly_product_id, :string
+  end
+
+  @fields ~w(generation kind features monthly_pageview_limit site_limit team_member_limit volume monthly_cost monthly_product_id yearly_cost yearly_product_id)a
+
+  def changeset(plan, attrs) do
+    plan
+    |> cast(attrs, @fields)
     |> put_volume()
-    |> put_team_member_limit!(file_name)
-    |> put_features!(file_name)
-    |> new!()
+    |> validate_required_either([:monthly_product_id, :yearly_product_id])
+    |> validate_required(
+      @fields -- [:monthly_cost, :yearly_cost, :monthly_product_id, :yearly_product_id]
+    )
   end
 
-  defp new!(params) do
-    struct!(__MODULE__, params)
-  end
-
-  defp put_kind(params) do
-    Map.put(params, :kind, String.to_existing_atom(params.kind))
-  end
-
-  # Due to grandfathering, we sometimes need to check the "generation"
-  # (e.g. v1, v2, etc...) of a user's subscription plan. For instance,
-  # on prod, the users subscribed to a v2 plan are only supposed to
-  # see v2 plans when they go to the upgrade page.
-  #
-  # In the `dev` environment though, "sandbox" plans are used, which
-  # unlike production plans, contain multiple generations of plans in
-  # the same file for testing purposes.
-  defp put_generation(params) do
-    Map.put(params, :generation, params.generation)
-  end
-
-  defp put_volume(params) do
-    volume =
-      params.monthly_pageview_limit
-      |> PlausibleWeb.StatsView.large_number_format()
-
-    Map.put(params, :volume, volume)
-  end
-
-  defp put_team_member_limit!(params, file_name) do
-    team_member_limit =
-      case params.team_member_limit do
-        number when is_integer(number) ->
-          number
-
-        "unlimited" ->
-          :unlimited
-
-        other ->
-          raise ArgumentError,
-                "Failed to parse team member limit #{inspect(other)} from #{file_name}.json"
-      end
-
-    Map.put(params, :team_member_limit, team_member_limit)
-  end
-
-  defp put_features!(params, file_name) do
-    features =
-      Plausible.Billing.Feature.list()
-      |> Enum.filter(fn module ->
-        to_string(module.name()) in params.features
-      end)
-
-    if length(features) == length(params.features) do
-      Map.put(params, :features, features)
+  defp put_volume(changeset) do
+    if volume = get_field(changeset, :monthly_pageview_limit) do
+      put_change(changeset, :volume, PlausibleWeb.StatsView.large_number_format(volume))
     else
-      raise(
-        ArgumentError,
-        "Unrecognized feature(s) in #{inspect(params.features)} (#{file_name}.json)"
-      )
+      changeset
     end
+  end
+
+  def validate_required_either(changeset, fields) do
+    if Enum.any?(fields, &get_field(changeset, &1)),
+      do: changeset,
+      else:
+        add_error(changeset, hd(fields), "one of these fields must be present #{inspect(fields)}")
   end
 end
