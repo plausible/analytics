@@ -277,18 +277,6 @@ defmodule Plausible.Export do
     {metadata_entry, encoded} = zip_start_entry("metadata.json")
     {:ok, on_data_acc} = on_data.(encoded, on_data_acc)
 
-    metadata =
-      Jason.encode_to_iodata!(%{
-        "version" => "0",
-        "format" => Keyword.fetch!(opts, :format),
-        "domain" => Keyword.fetch!(opts, :domain)
-      })
-
-    {:ok, on_data_acc} = on_data.(metadata, on_data_acc)
-    metadata_entry = zip_grow_entry(metadata_entry, metadata)
-    {metadata_entry, encoded} = zip_end_entry(metadata_entry)
-    {:ok, on_data_acc} = on_data.(encoded, on_data_acc)
-
     raw_queries =
       Enum.map(queries, fn query ->
         case query do
@@ -300,6 +288,29 @@ defmodule Plausible.Export do
             ready
         end
       end)
+
+    format = Keyword.fetch!(opts, :format)
+
+    metadata =
+      Jason.encode_to_iodata!(%{
+        "version" => "0",
+        "domain" => Keyword.fetch!(opts, :domain),
+        "files" =>
+          Map.new(raw_queries, fn {name, _sql, _params} ->
+            # TODO extract table
+            {name,
+             %{
+               "format" => format,
+               "table" => String.trim_trailing("imported_#{name}", ".csv"),
+               "compression" => nil
+             }}
+          end)
+      })
+
+    {:ok, on_data_acc} = on_data.(metadata, on_data_acc)
+    metadata_entry = zip_grow_entry(metadata_entry, metadata)
+    {metadata_entry, encoded} = zip_end_entry(metadata_entry)
+    {:ok, on_data_acc} = on_data.(encoded, on_data_acc)
 
     {entries, on_data_acc} =
       Enum.reduce(raw_queries, {[], on_data_acc}, fn {name, sql, params},
