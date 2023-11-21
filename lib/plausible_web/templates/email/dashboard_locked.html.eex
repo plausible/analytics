@@ -6,10 +6,8 @@ During the last billing cycle (<%= date_format(@last_cycle.first) %> to <%= date
 <%= if @suggested_plan == :enterprise do %>
 Your usage exceeds our standard plans, so please reply back to this email for a tailored quote.
 <% else %>
-<%= link("Click here to upgrade your subscription", to: plausible_url() <> Plausible.Billing.upgrade_route_for(@user)) %>
+<%= link("Click here to upgrade your subscription", to: plausible_url() <> Plausible.Billing.upgrade_route_for(@user)) %>. We recommend you upgrade to the <%= @suggested_plan.volume %>/mo plan. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
 <% end %>
-<br /><br />
-We recommend you upgrade to the <%= @suggested_plan.volume %>/mo plan. The new charge will be prorated to reflect the amount you have already paid and the time until your current subscription is supposed to expire.
 <br /><br />
 Do you have questions or need help with anything? Just reply to this email. We're here to help!
 <br /><br />
