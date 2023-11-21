@@ -252,10 +252,7 @@ defmodule PlausibleWeb.Components.Generic do
   attr :scale, :integer, default: 4
 
   def qr_code(assigns) do
-    qr_color = {101, 116, 205}
-
     svg_settings = %QRCode.Render.SvgSettings{
-      qrcode_color: qr_color,
       structure: :readable,
       scale: assigns.scale
     }

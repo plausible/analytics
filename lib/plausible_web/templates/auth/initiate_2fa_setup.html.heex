@@ -1,0 +1,66 @@
+<div class="w-full max-w-3xl mt-4 mx-auto flex">
+  <div class="w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8">
+    <h2 class="text-xl font-black dark:text-gray-100">
+      Setup Two-Factor Authentication
+    </h2>
+
+    <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
+      Link your Plausible account to the authenticator app you have installed either on your phone or computer.
+      <div class="flex flex-row items-center justify-between">
+        <div class="mt-6 p-3 dark:bg-white">
+          <.qr_code text={@totp_uri} />
+        </div>
+
+        <div class="mt-6 ml-4">
+          <ol>
+            <li class="flex items-start">
+              <div class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
+                <div class="h-2 w-2 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+              </div>
+              Open the authenticator application
+            </li>
+            <li class="mt-1 flex items-start">
+              <div class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
+                <div class="h-2 w-2 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+              </div>
+              Tap Scan a QR Code
+            </li>
+            <li class="mt-1 flex items-start">
+              <div class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
+                <div class="h-2 w-2 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+              </div>
+              Scan this code with your phone camera
+            </li>
+          </ol>
+
+          <div class="ml-2 mt-5">
+            <p>or type in the code manually:</p>
+            <pre
+              style="font-family: courier, monospace; letter-spacing: 2px;"
+              class="border-2 border-dotted border-gray-300 mt-2 rounded-md p-1 inline-block text-gray-600 text-lg bg-gray-200"
+            ><%= @secret %></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex flex-row justify-between items-center">
+        <p class="text-sm">
+          Changed your mind?
+          <a
+            href={Routes.auth_path(@conn, :user_settings) <> "#setup-2fa"}
+            class="underline text-indigo-600"
+          >
+            Go back to settings
+          </a>
+        </p>
+        <.unstyled_link
+          id="proceed"
+          class="button"
+          href={Routes.auth_path(@conn, :verify_2fa_setup_form)}
+        >
+          Proceed &rarr;
+        </.unstyled_link>
+      </div>
+    </div>
+  </div>
+</div>
