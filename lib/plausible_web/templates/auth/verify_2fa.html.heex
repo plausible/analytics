@@ -1,0 +1,42 @@
+<div class="w-full max-w-3xl mt-4 mx-auto flex">
+  <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa), [class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"], fn f -> %>
+    <h2 class="text-xl font-black dark:text-gray-100">
+      Enter Your 2FA Code
+    </h2>
+
+    <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
+      Enter the code from your authenticator application before it expires or wait for a new one.
+      <div class="mt-6 flex items-stretch flex-grow">
+        <div>
+          <%= text_input(f, :code,
+            value: "",
+            class:
+              "tracking-widest font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-48 px-8 border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-l-md",
+            oninput:
+              "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('verify').focus()",
+            onclick: "this.select();",
+            maxlength: "6",
+            placeholder: "••••••",
+            style: "letter-spacing: 10px; margin-right: -10px;",
+            required: "required"
+          ) %>
+        </div>
+        <button id="verify" class="button rounded-l-none">Verify &rarr;</button>
+      </div>
+
+      <div class="mt-6 flex flex-row justify-between items-center">
+        <p class="text-sm">
+          Can't access your authenticator application?
+          <a
+            href={Routes.auth_path(@conn, :verify_2fa_recovery_code_form)}
+            class="underline text-indigo-600"
+          >
+            Use recovery code
+          </a>
+          <br /> Lost your recovery codes?
+          <a href="/contact" class="underline text-indigo-600">Contact us</a>
+        </p>
+      </div>
+    </div>
+  <% end %>
+</div>
