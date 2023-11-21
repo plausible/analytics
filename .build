@@ -3,6 +3,7 @@ Mix.Tasks.CancelSubscription.html
 Mix.Tasks.CleanClickhouse.html
 Mix.Tasks.CreateFreeSubscription.html
 Mix.Tasks.DownloadCountryDatabase.html
+Mix.Tasks.DumpPlans.html
 Mix.Tasks.GenerateReferrerFavicons.html
 Mix.Tasks.PullSandboxSubscription.html
 Mix.Tasks.SendPageview.html
@@ -314,8 +315,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-83934DEA.js
-dist/sidebar_items-212625DF.js
+dist/search_data-620F5B03.js
+dist/sidebar_items-2DFE6AA3.js
 index.html
 readme.html
 search.html

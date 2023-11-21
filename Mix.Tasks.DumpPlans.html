@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Ingestion.Request — Plausible v0.0.1</title>
+    <title>mix dump_plans — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -21,7 +21,7 @@
 
 
   </head>
-  <body data-type="modules" class="page-module">
+  <body data-type="tasks" class="page-task">
     <script>
 
       try {
@@ -102,21 +102,21 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/request.ex#L18" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/mix/tasks/dump_plans.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Ingestion.Request</span> 
+  <span translate="no">mix dump_plans</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>The %Plausible.Ingestion.Request{} struct stores all needed fields
-to create an event downstream. Pre-eliminary validation is made
-to detect user errors early.</p>
+<p>This task dumps plan information from the JSON files to the <code class="inline">plans</code> table in
+PostgreSQL for internal use. This task deletes existing records and
+(re)inserts the list of plans.</p>
   </section>
 
 
@@ -127,20 +127,6 @@ to detect user errors early.</p>
         Summary
       </a>
     </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
-
-      </div>
-
-    </div>
-
-</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -148,21 +134,11 @@ to detect user errors early.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#build/2" translate="no">build(conn, now \\ NaiveDateTime.utc_now())</a>
+        <a href="#run/1" translate="no">run(args)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Builds and initially validates %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#sanitize_hostname/1" translate="no">sanitize_hostname(hostname)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Removes the &quot;www&quot; part of a hostname.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/mix/Mix.Task.html#c:run/1"><code class="inline">Mix.Task.run/1</code></a>.</p></div>
 
     </div>
 
@@ -170,61 +146,6 @@ to detect user errors early.</p>
 
   </section>
 
-
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-Types
-      </a>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:t/0">
-
-  <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">t()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/request.ex#L49" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Ingestion.Request{
-  domains: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  event_name: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  hash_mode: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  hostname: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  ip_classification: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  pathname: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  props: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  query_params: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  referrer: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  remote_ip: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  revenue_source: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  timestamp: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  uri: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  user_agent: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
-}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
 
   <section id="functions" class="details-list">
     <h1 class="section-heading">
@@ -234,18 +155,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="build/2">
-
-    <span id="build/1"></span>
+<section class="detail" id="run/1">
 
   <div class="detail-header">
-    <a href="#build/2" class="detail-link" title="Link to this function">
+    <a href="#run/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">build(conn, now \\ NaiveDateTime.utc_now())</h1>
+    <h1 class="signature" translate="no">run(args)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/request.ex#L55" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/mix/tasks/dump_plans.ex#L13" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -255,36 +174,7 @@ Functions
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> build(<a href="https://hexdocs.pm/plug/1.14.2/Plug.Conn.html#t:t/0">Plug.Conn.t</a>(), <a href="https://hexdocs.pm/elixir/NaiveDateTime.html#t:t/0">NaiveDateTime.t</a>()) ::
-  {:ok, <a href="#t:t/0">t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
-
-      </div>
-
-<p>Builds and initially validates %Plausible.Ingestion.Request{} struct from %Plug.Conn{}.</p>
-  </section>
-</section>
-<section class="detail" id="sanitize_hostname/1">
-
-  <div class="detail-header">
-    <a href="#sanitize_hostname/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">sanitize_hostname(hostname)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/request.ex#L313" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Removes the &quot;www&quot; part of a hostname.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/mix/Mix.Task.html#c:run/1"><code class="inline">Mix.Task.run/1</code></a>.</p>
   </section>
 </section>
 
