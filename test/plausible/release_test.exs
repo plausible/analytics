@@ -27,4 +27,9 @@ defmodule Plausible.ReleaseTest do
       refute Release.should_be_first_launch?()
     end
   end
+
+  test "dump_plans/0 inserts plans" do
+    Release.dump_plans()
+    assert Plausible.Repo.aggregate("plans", :count) == 54
+  end
 end
