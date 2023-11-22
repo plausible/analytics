@@ -383,11 +383,12 @@ defmodule PlausibleWeb.AuthController do
 
     usage =
       if active_subscription? && user.subscription.last_bill_date do
-        %{
-          current_cycle: Quota.monthly_pageview_usage(user, :current_cycle),
-          last_cycle: Quota.monthly_pageview_usage(user, :last_cycle),
-          penultimate_cycle: Quota.monthly_pageview_usage(user, :penultimate_cycle)
-        }
+        [:current_cycle, :last_cycle, :penultimate_cycle]
+        |> Task.async_stream(fn cycle ->
+          %{cycle => Quota.monthly_pageview_usage(user, cycle)}
+        end)
+        |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
+        |> Enum.reduce(%{}, &Map.merge/2)
       else
         %{last_30_days: Quota.monthly_pageview_usage(user, :last_30_days)}
       end
