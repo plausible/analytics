@@ -386,8 +386,12 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats_entry(results, comparison, "Unique visitors", :unique_visitors),
       top_stats_entry(results, comparison, "Unique conversions", :converted_visitors),
       top_stats_entry(results, comparison, "Total conversions", :completions),
-      top_stats_entry(results, comparison, "Average revenue", :average_revenue, &format_money/1),
-      top_stats_entry(results, comparison, "Total revenue", :total_revenue, &format_money/1),
+      on_full_build do
+        top_stats_entry(results, comparison, "Average revenue", :average_revenue, &format_money/1)
+      end,
+      on_full_build do
+        top_stats_entry(results, comparison, "Total revenue", :total_revenue, &format_money/1)
+      end,
       top_stats_entry(conversion_rate, comparison_conversion_rate, "Conversion rate", :cr)
     ]
     |> Enum.reject(&is_nil/1)
@@ -1173,28 +1177,6 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  @revenue_metrics [:average_revenue, :total_revenue]
-  defp format_revenue_metric({metric, value}) do
-    if metric in @revenue_metrics do
-      {metric, format_money(value)}
-    else
-      {metric, value}
-    end
-  end
-
-  defp format_money(value) do
-    case value do
-      %Money{} ->
-        %{
-          short: Money.to_string!(value, format: :short, fractional_digits: 1),
-          long: Money.to_string!(value)
-        }
-
-      _any ->
-        value
-    end
-  end
-
   def custom_prop_values(conn, params) do
     site = Plausible.Repo.preload(conn.assigns.site, :owner)
 
@@ -1484,6 +1466,16 @@ defmodule PlausibleWeb.Api.StatsController do
       source_query.include_imported -> true
       comparison_query && comparison_query.include_imported -> true
       true -> false
+    end
+  end
+
+  on_full_build do
+    defdelegate format_revenue_metric({metric, value}), to: PlausibleWeb.Controllers.API.Revenue
+  end
+
+  on_small_build do
+    defp format_revenue_metric({metric, value}) do
+      {metric, value}
     end
   end
 end
