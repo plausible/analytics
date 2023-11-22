@@ -1,4 +1,8 @@
 defmodule Plausible.Goal.Revenue do
+  @moduledoc """
+  Currency specific functions for revenue goals
+  """
+
   def revenue?(%Plausible.Goal{currency: currency}) do
     !!currency
   end

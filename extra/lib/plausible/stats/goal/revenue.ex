@@ -1,4 +1,7 @@
 defmodule Plausible.Stats.Goal.Revenue do
+  @moduledoc """
+  Revenue specific functions for the stats scope
+  """
   import Ecto.Query
 
   @revenue_metrics [:average_revenue, :total_revenue]

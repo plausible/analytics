@@ -1,4 +1,8 @@
 defmodule Plausible.Ingestion.Event.Revenue do
+  @moduledoc """
+  Revenue specific functions for the ingestion scope
+  """
+
   def get_revenue_attrs(
         %Plausible.Ingestion.Event{request: %{revenue_source: %Money{} = revenue_source}} = event
       ) do

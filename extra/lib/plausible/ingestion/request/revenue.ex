@@ -1,4 +1,8 @@
 defmodule Plausible.Ingestion.Request.Revenue do
+  @moduledoc """
+  Revenue specific functions for the ingestion scope
+  """
+
   def put_revenue_source(%Ecto.Changeset{} = changeset, %{} = request_body) do
     with revenue_source <- request_body["revenue"] || request_body["$"],
          %{"amount" => _, "currency" => _} = revenue_source <-
