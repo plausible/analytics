@@ -1470,7 +1470,8 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   on_full_build do
-    defdelegate format_revenue_metric({metric, value}), to: PlausibleWeb.Controllers.API.Revenue
+    defdelegate format_revenue_metric(metric_value), to: PlausibleWeb.Controllers.API.Revenue
+    defdelegate format_money(money), to: PlausibleWeb.Controllers.API.Revenue
   end
 
   on_small_build do
