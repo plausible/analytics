@@ -70,6 +70,7 @@ Plausible.Funnel.Step.html
 Plausible.Funnel.html
 Plausible.Funnels.html
 Plausible.Geo.html
+Plausible.Goal.Revenue.html
 Plausible.Goal.html
 Plausible.Goals.html
 Plausible.Google.Api.Mock.html
@@ -80,6 +81,7 @@ Plausible.Google.ReportRequest.html
 Plausible.HTTPClient.Interface.html
 Plausible.HTTPClient.Non200Error.html
 Plausible.HTTPClient.html
+Plausible.Helpers.JSON.html
 Plausible.ImportDeletionRepo.html
 Plausible.Imported.html
 Plausible.IngestRepo.html
@@ -87,7 +89,9 @@ Plausible.Ingestion.Counters.Buffer.html
 Plausible.Ingestion.Counters.Record.html
 Plausible.Ingestion.Counters.TelemetryHandler.html
 Plausible.Ingestion.Counters.html
+Plausible.Ingestion.Event.Revenue.html
 Plausible.Ingestion.Event.html
+Plausible.Ingestion.Request.Revenue.html
 Plausible.Ingestion.Request.html
 Plausible.Mailer.html
 Plausible.OpenTelemetry.Sampler.html
@@ -145,6 +149,7 @@ Plausible.Stats.FilterSuggestions.html
 Plausible.Stats.Filters.html
 Plausible.Stats.Fragments.html
 Plausible.Stats.Funnel.html
+Plausible.Stats.Goal.Revenue.html
 Plausible.Stats.Imported.html
 Plausible.Stats.Interval.html
 Plausible.Stats.Props.html
@@ -196,6 +201,7 @@ PlausibleWeb.Components.Settings.html
 PlausibleWeb.Components.Site.Feature.html
 PlausibleWeb.ConnCase.html
 PlausibleWeb.ControllerHelpers.html
+PlausibleWeb.Controllers.API.Revenue.html
 PlausibleWeb.Email.html
 PlausibleWeb.EmailView.html
 PlausibleWeb.Endpoint.html
@@ -314,8 +320,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-4E818948.js
-dist/sidebar_items-CD400468.js
+dist/search_data-06A04AAD.js
+dist/sidebar_items-1B0C8384.js
 index.html
 readme.html
 search.html
