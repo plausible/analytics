@@ -1,10 +1,12 @@
 defmodule Plausible.Goals do
   use Plausible
   use Plausible.Repo
+  use Plausible.Funnel.Const
+
+  import Ecto.Query
+
   alias Plausible.Goal
   alias Ecto.Multi
-
-  use Plausible.Funnel.Const
 
   @spec create(Plausible.Site.t(), map(), Keyword.t()) ::
           {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
@@ -120,22 +122,13 @@ defmodule Plausible.Goals do
   end
 
   def delete(id, site_id) do
-    on_full_build do
-      goal_query =
-        from(g in Goal,
-          where: g.id == ^id,
-          where: g.site_id == ^site_id,
-          preload: [funnels: :steps]
-        )
-    end
+    goal_query =
+      from(g in Goal,
+        where: g.id == ^id,
+        where: g.site_id == ^site_id
+      )
 
-    on_small_build do
-      goal_query =
-        from(g in Goal,
-          where: g.id == ^id,
-          where: g.site_id == ^site_id
-        )
-    end
+    goal_query = on_full_build(do: preload(goal_query, funnels: :steps), else: goal_query)
 
     result =
       Multi.new()

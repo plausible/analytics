@@ -16,13 +16,7 @@ defmodule Plausible.Stats.Timeseries do
   @typep value :: nil | integer() | float()
   @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
 
-  on_full_build do
-    @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
-  end
-
-  on_small_build do
-    @revenue_metrics []
-  end
+  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
@@ -32,14 +26,12 @@ defmodule Plausible.Stats.Timeseries do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    on_full_build do
-      {currency, event_metrics} =
+    {currency, event_metrics} =
+      on_full_build do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, event_metrics)
-    end
-
-    on_small_build do
-      currency = nil
-    end
+      else
+        {nil, event_metrics}
+      end
 
     [event_result, session_result] =
       Plausible.ClickhouseRepo.parallel_tasks([
@@ -255,9 +247,7 @@ defmodule Plausible.Stats.Timeseries do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end
-  end
-
-  on_small_build do
+  else
     defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
   end
 end

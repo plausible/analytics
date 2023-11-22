@@ -5,13 +5,7 @@ defmodule Plausible.Stats.Aggregate do
   import Plausible.Stats.{Base, Imported, Util}
   import Ecto.Query
 
-  on_full_build do
-    @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
-  end
-
-  on_small_build do
-    @revenue_metrics []
-  end
+  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   @event_metrics [
                    :visitors,
@@ -23,14 +17,12 @@ defmodule Plausible.Stats.Aggregate do
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
 
   def aggregate(site, query, metrics) do
-    on_full_build do
-      {currency, metrics} =
+    {currency, metrics} =
+      on_full_build do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
-    end
-
-    on_small_build do
-      currency = nil
-    end
+      else
+        {nil, metrics}
+      end
 
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     event_task = fn -> aggregate_events(site, query, event_metrics) end
@@ -217,9 +209,7 @@ defmodule Plausible.Stats.Aggregate do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end
-  end
-
-  on_small_build do
+  else
     defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
   end
 end

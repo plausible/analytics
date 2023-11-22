@@ -10,13 +10,7 @@ defmodule Plausible.Stats.Breakdown do
 
   @session_metrics [:visits, :bounce_rate, :visit_duration]
 
-  on_full_build do
-    @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
-  end
-
-  on_small_build do
-    @revenue_metrics []
-  end
+  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
 
@@ -33,13 +27,10 @@ defmodule Plausible.Stats.Breakdown do
 
     event_results =
       if Enum.any?(event_goals) do
-        on_full_build do
-          revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
-        end
-
-        on_small_build do
-          revenue_goals = nil
-        end
+        revenue_goals =
+          on_full_build do
+            Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
+          end
 
         site
         |> breakdown(event_query, "event:name", metrics, pagination)
@@ -84,14 +75,12 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination) do
-    on_full_build do
-      {currency, metrics} =
+    {currency, metrics} =
+      on_full_build do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
-    end
-
-    on_small_build do
-      currency = nil
-    end
+      else
+        {nil, metrics}
+      end
 
     {_limit, page} = pagination
 
@@ -703,9 +692,7 @@ defmodule Plausible.Stats.Breakdown do
     defp cast_revenue_metrics_to_money(results, revenue_goals) do
       Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
     end
-  end
-
-  on_small_build do
+  else
     defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
   end
 end

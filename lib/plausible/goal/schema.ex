@@ -12,9 +12,7 @@ defmodule Plausible.Goal do
     on_full_build do
       field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
       many_to_many :funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step
-    end
-
-    on_small_build do
+    else
       field :currency, :string, virtual: true, default: nil
       field :funnels, {:array, :map}, virtual: true, default: []
     end
@@ -24,13 +22,7 @@ defmodule Plausible.Goal do
     timestamps()
   end
 
-  on_full_build do
-    @fields [:id, :site_id, :event_name, :page_path, :currency]
-  end
-
-  on_small_build do
-    @fields [:id, :site_id, :event_name, :page_path]
-  end
+  @fields [:id, :site_id, :event_name, :page_path] ++ on_full_build(do: [:currency], else: [])
 
   def changeset(goal, attrs \\ %{}) do
     goal
@@ -84,18 +76,12 @@ defmodule Plausible.Goal do
     value && String.match?(value, ~r/^.+/)
   end
 
-  on_full_build do
-    defp maybe_drop_currency(changeset) do
-      if get_field(changeset, :page_path) do
-        delete_change(changeset, :currency)
-      else
-        changeset
-      end
+  defp maybe_drop_currency(changeset) do
+    if full_build?() and get_field(changeset, :page_path) do
+      delete_change(changeset, :currency)
+    else
+      changeset
     end
-  end
-
-  on_small_build do
-    defp maybe_drop_currency(changeset), do: changeset
   end
 end
 

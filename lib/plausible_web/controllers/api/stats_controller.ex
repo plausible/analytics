@@ -9,13 +9,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   require Logger
 
-  on_full_build do
-    @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
-  end
-
-  on_small_build do
-    @revenue_metrics []
-  end
+  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
   plug(:validate_common_input)
 
@@ -1156,18 +1150,16 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
-    on_full_build do
-      metrics =
+    metrics =
+      on_full_build do
         if Enum.any?(site.goals, &Plausible.Goal.Revenue.revenue?/1) do
           [:visitors, :events] ++ @revenue_metrics
         else
           [:visitors, :events]
         end
-    end
-
-    on_small_build do
-      metrics = [:visitors, :events]
-    end
+      else
+        [:visitors, :events]
+      end
 
     conversions =
       site
@@ -1486,9 +1478,7 @@ defmodule PlausibleWeb.Api.StatsController do
   on_full_build do
     defdelegate format_revenue_metric(metric_value), to: PlausibleWeb.Controllers.API.Revenue
     defdelegate format_money(money), to: PlausibleWeb.Controllers.API.Revenue
-  end
-
-  on_small_build do
+  else
     defp format_revenue_metric({metric, value}) do
       {metric, value}
     end

@@ -29,7 +29,7 @@ defmodule Plausible.Plugins.API.Goals do
 
   @spec get_goals(Plausible.Site.t(), map()) :: {:ok, Paginator.Page.t()}
   def get_goals(site, params) do
-    query = Plausible.Goals.for_site_query(site, preload_funnels?: true)
+    query = Plausible.Goals.for_site_query(site, preload_funnels?: false)
 
     {:ok, paginate(query, params, cursor_fields: [{:id, :desc}])}
   end
@@ -42,24 +42,11 @@ defmodule Plausible.Plugins.API.Goals do
     |> Repo.one()
   end
 
-  on_full_build do
-    defp get_query(site) do
-      from g in Plausible.Goal,
-        where: g.site_id == ^site.id,
-        order_by: [desc: g.id],
-        left_join: assoc(g, :funnels),
-        group_by: g.id,
-        preload: [:funnels]
-    end
-  end
-
-  on_small_build do
-    defp get_query(site) do
-      from g in Plausible.Goal,
-        where: g.site_id == ^site.id,
-        order_by: [desc: g.id],
-        group_by: g.id
-    end
+  defp get_query(site) do
+    from g in Plausible.Goal,
+      where: g.site_id == ^site.id,
+      order_by: [desc: g.id],
+      group_by: g.id
   end
 
   defp convert_to_create_params(%CreateRequest.CustomEvent{goal: %{event_name: event_name}}) do

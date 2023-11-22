@@ -99,9 +99,7 @@ defmodule Plausible.Ingestion.Request do
     defp put_revenue_source(changeset, request_body) do
       Plausible.Ingestion.Request.Revenue.put_revenue_source(changeset, request_body)
     end
-  end
-
-  on_small_build do
+  else
     defp put_revenue_source(changeset, _request_body), do: changeset
   end
 

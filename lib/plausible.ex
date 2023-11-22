@@ -12,18 +12,22 @@ defmodule Plausible do
     end
   end
 
-  defmacro on_small_build(do: block) do
-    if Mix.env() in @small_builds do
-      quote do
-        unquote(block)
-      end
-    end
+  defmacro on_full_build(clauses) do
+    do_on_full_build(clauses)
   end
 
-  defmacro on_full_build(do: block) do
+  def do_on_full_build(do: block) do
+    do_on_full_build(do: block, else: nil)
+  end
+
+  def do_on_full_build(do: do_block, else: else_block) do
     if Mix.env() not in @small_builds do
       quote do
-        unquote(block)
+        unquote(do_block)
+      end
+    else
+      quote do
+        unquote(else_block)
       end
     end
   end
