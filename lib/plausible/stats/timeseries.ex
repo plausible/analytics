@@ -16,7 +16,15 @@ defmodule Plausible.Stats.Timeseries do
   @typep value :: nil | integer() | float()
   @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
 
-  @event_metrics [:visitors, :pageviews, :events, :average_revenue, :total_revenue]
+  on_full_build do
+    @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
+  end
+
+  on_small_build do
+    @revenue_metrics []
+  end
+
+  @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
   def timeseries(site, query, metrics) do
     steps = buckets(query)

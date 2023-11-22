@@ -9,6 +9,14 @@ defmodule PlausibleWeb.Api.StatsController do
 
   require Logger
 
+  on_full_build do
+    @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
+  end
+
+  on_small_build do
+    @revenue_metrics []
+  end
+
   plug(:validate_common_input)
 
   @doc """
@@ -339,7 +347,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _}} = query, comparison_query) do
     query_without_filters = Query.remove_event_filters(query, [:goal, :props])
-    metrics = [:visitors, :events, :average_revenue, :total_revenue]
+    metrics = [:visitors, :events] ++ @revenue_metrics
 
     results_without_filters =
       site
@@ -1151,7 +1159,7 @@ defmodule PlausibleWeb.Api.StatsController do
     on_full_build do
       metrics =
         if Enum.any?(site.goals, &Plausible.Goal.Revenue.revenue?/1) do
-          [:visitors, :events, :average_revenue, :total_revenue]
+          [:visitors, :events] ++ @revenue_metrics
         else
           [:visitors, :events]
         end
@@ -1233,7 +1241,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       if full_build?() and Map.has_key?(query.filters, "event:goal") do
-        [:visitors, :events, :average_revenue, :total_revenue]
+        [:visitors, :events] ++ @revenue_metrics
       else
         [:visitors, :events]
       end

@@ -8,9 +8,18 @@ defmodule Plausible.Stats.Breakdown do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
-  @event_metrics [:visitors, :pageviews, :events, :average_revenue, :total_revenue]
   @session_metrics [:visits, :bounce_rate, :visit_duration]
-  @revenue_metrics [:average_revenue, :total_revenue]
+
+  on_full_build do
+    @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
+  end
+
+  on_small_build do
+    @revenue_metrics []
+  end
+
+  @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
+
   @event_props Plausible.Stats.Props.event_props()
 
   def breakdown(site, query, "event:goal" = property, metrics, pagination) do

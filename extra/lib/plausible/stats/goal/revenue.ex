@@ -6,6 +6,10 @@ defmodule Plausible.Stats.Goal.Revenue do
 
   @revenue_metrics [:average_revenue, :total_revenue]
 
+  def revenue_metrics() do
+    @revenue_metrics
+  end
+
   def total_revenue_query(query) do
     from(e in query,
       select_merge: %{

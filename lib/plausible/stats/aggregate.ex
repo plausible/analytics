@@ -6,24 +6,19 @@ defmodule Plausible.Stats.Aggregate do
   import Ecto.Query
 
   on_full_build do
-    @event_metrics [
-      :visitors,
-      :pageviews,
-      :events,
-      :sample_percent,
-      :average_revenue,
-      :total_revenue
-    ]
+    @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
   end
 
   on_small_build do
-    @event_metrics [
-      :visitors,
-      :pageviews,
-      :events,
-      :sample_percent
-    ]
+    @revenue_metrics []
   end
+
+  @event_metrics [
+                   :visitors,
+                   :pageviews,
+                   :events,
+                   :sample_percent
+                 ] ++ @revenue_metrics
 
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
 

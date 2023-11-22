@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Controllers.API.Revenue do
   Revenue specific functions for the API scope
   """
 
-  @revenue_metrics [:average_revenue, :total_revenue]
+  @revenue_metrics Plausible.Stats.Goal.Revenue.revenue_metrics()
   def format_revenue_metric({metric, value}) do
     if metric in @revenue_metrics do
       {metric, format_money(value)}
