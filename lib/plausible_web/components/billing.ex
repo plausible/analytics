@@ -558,7 +558,7 @@ defmodule PlausibleWeb.Components.Billing do
       <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
         Upgrade your subscription
       </.link>
-      <p>to get access to your stats again.</p>
+      to get access to your stats again.
       """
     else
       ~H"""
