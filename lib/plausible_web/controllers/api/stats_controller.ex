@@ -1232,7 +1232,7 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Map.put(:include_imported, false)
 
     metrics =
-      if Map.has_key?(query.filters, "event:goal") do
+      if full_build?() and Map.has_key?(query.filters, "event:goal") do
         [:visitors, :events, :average_revenue, :total_revenue]
       else
         [:visitors, :events]

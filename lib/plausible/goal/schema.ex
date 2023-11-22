@@ -8,13 +8,14 @@ defmodule Plausible.Goal do
   schema "goals" do
     field :event_name, :string
     field :page_path, :string
-    field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
 
     on_full_build do
+      field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
       many_to_many :funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step
     end
 
     on_small_build do
+      field :currency, :string, virtual: true, default: nil
       field :funnels, {:array, :map}, virtual: true, default: []
     end
 

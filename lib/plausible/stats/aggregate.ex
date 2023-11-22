@@ -5,14 +5,26 @@ defmodule Plausible.Stats.Aggregate do
   import Plausible.Stats.{Base, Imported, Util}
   import Ecto.Query
 
-  @event_metrics [
-    :visitors,
-    :pageviews,
-    :events,
-    :sample_percent,
-    :average_revenue,
-    :total_revenue
-  ]
+  on_full_build do
+    @event_metrics [
+      :visitors,
+      :pageviews,
+      :events,
+      :sample_percent,
+      :average_revenue,
+      :total_revenue
+    ]
+  end
+
+  on_small_build do
+    @event_metrics [
+      :visitors,
+      :pageviews,
+      :events,
+      :sample_percent
+    ]
+  end
+
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
 
   def aggregate(site, query, metrics) do

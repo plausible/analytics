@@ -254,6 +254,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute text_of_element(doc, @business_plan_box) =~ "Recommended"
     end
 
+    @tag :full_build_only
     test "recommends Business tier when Revenue Goals were used during trial", %{
       conn: conn,
       user: user
@@ -475,6 +476,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
     end
 
+    @tag :full_build_only
     test "warns about losing access to a feature", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -710,6 +712,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute element_exists?(doc, @business_highlight_pill)
     end
 
+    @tag :full_build_only
     test "recommends Business tier when premium features used", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")

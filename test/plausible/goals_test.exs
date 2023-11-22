@@ -48,6 +48,7 @@ defmodule Plausible.GoalsTest do
     assert {"has already been taken", _} = changeset.errors[:event_name]
   end
 
+  @tag :full_build_only
   test "create/2 sets site.updated_at for revenue goal" do
     site_1 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
 
@@ -63,6 +64,7 @@ defmodule Plausible.GoalsTest do
              :eq
   end
 
+  @tag :full_build_only
   test "create/2 creates revenue goal" do
     site = insert(:site)
     {:ok, goal} = Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
@@ -71,6 +73,7 @@ defmodule Plausible.GoalsTest do
     assert goal.currency == :EUR
   end
 
+  @tag :full_build_only
   test "create/2 returns error when site does not have access to revenue goals" do
     user = insert(:user, subscription: build(:growth_subscription))
     site = insert(:site, members: [user])
@@ -79,6 +82,7 @@ defmodule Plausible.GoalsTest do
       Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
   end
 
+  @tag :full_build_only
   test "create/2 fails for unknown currency code" do
     site = insert(:site)
 

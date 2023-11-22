@@ -3,6 +3,24 @@ defmodule Plausible.Stats.Goal.Revenue do
 
   @revenue_metrics [:average_revenue, :total_revenue]
 
+  def total_revenue_query(query) do
+    from(e in query,
+      select_merge: %{
+        total_revenue:
+          fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
+      }
+    )
+  end
+
+  def average_revenue_query(query) do
+    from(e in query,
+      select_merge: %{
+        average_revenue:
+          fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
+      }
+    )
+  end
+
   @spec get_revenue_tracking_currency(Plausible.Site.t(), Plausible.Stats.Query.t(), [atom()]) ::
           {atom() | nil, [atom()]}
   @doc """
