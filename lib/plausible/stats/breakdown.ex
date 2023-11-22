@@ -1,5 +1,6 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
+  use Plausible
   import Plausible.Stats.{Base, Imported, Util}
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.Query
@@ -23,7 +24,13 @@ defmodule Plausible.Stats.Breakdown do
 
     event_results =
       if Enum.any?(event_goals) do
-        revenue_goals = Enum.filter(event_goals, &Plausible.Goal.revenue?/1)
+        on_full_build do
+          revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
+        end
+
+        on_small_build do
+          revenue_goals = nil
+        end
 
         site
         |> breakdown(event_query, "event:name", metrics, pagination)
@@ -68,7 +75,15 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination) do
-    {currency, metrics} = get_revenue_tracking_currency(site, query, metrics)
+    on_full_build do
+      {currency, metrics} =
+        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
+    end
+
+    on_small_build do
+      currency = nil
+    end
+
     {_limit, page} = pagination
 
     none_result =
@@ -673,5 +688,15 @@ defmodule Plausible.Stats.Breakdown do
       {"plausible.query.breakdown_property", property},
       {"plausible.query.breakdown_metrics", metrics}
     ])
+  end
+
+  on_full_build do
+    defp cast_revenue_metrics_to_money(results, revenue_goals) do
+      Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
+    end
+  end
+
+  on_small_build do
+    defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
   end
 end

@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.Aggregate do
   alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
+  use Plausible
   import Plausible.Stats.{Base, Imported, Util}
   import Ecto.Query
 
@@ -15,7 +16,14 @@ defmodule Plausible.Stats.Aggregate do
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
 
   def aggregate(site, query, metrics) do
-    {currency, metrics} = get_revenue_tracking_currency(site, query, metrics)
+    on_full_build do
+      {currency, metrics} =
+        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
+    end
+
+    on_small_build do
+      currency = nil
+    end
 
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     event_task = fn -> aggregate_events(site, query, event_metrics) end
@@ -197,4 +205,14 @@ defmodule Plausible.Stats.Aggregate do
   end
 
   defp maybe_round_value(entry), do: entry
+
+  on_full_build do
+    defp cast_revenue_metrics_to_money(results, revenue_goals) do
+      Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
+    end
+  end
+
+  on_small_build do
+    defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
+  end
 end

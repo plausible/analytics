@@ -3,6 +3,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   Live view for the goal creation form
   """
   use Phoenix.LiveView
+  use Plausible
   import PlausibleWeb.Live.Components.Form
   alias PlausibleWeb.Live.Components.ComboBox
 
@@ -144,6 +145,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         </div>
 
         <div
+          :if={full_build?()}
           class="mt-6 space-y-3"
           x-data={
             Jason.encode!(%{
@@ -162,10 +164,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
           <button
             class={[
               "flex items-center w-max mb-3",
-              if(assigns.has_access_to_revenue_goals?,
-                do: "cursor-pointer",
-                else: "cursor-not-allowed"
-              )
+              if @has_access_to_revenue_goals? do
+                "cursor-pointer"
+              else
+                "cursor-not-allowed"
+              end
             ]}
             aria-labelledby="enable-revenue-tracking"
             role="switch"
@@ -204,13 +207,16 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
               submit_name={@f[:currency].name}
               module={ComboBox}
               suggest_fun={
-                fn
-                  "", [] ->
-                    Plausible.Goal.currency_options()
+                on_full_build do
+                  fn
+                    "", [] ->
+                      Plausible.Goal.Revenue.currency_options()
 
-                  input, options ->
-                    ComboBox.StaticSearch.suggest(input, options, weight_threshold: 0.8)
+                    input, options ->
+                      ComboBox.StaticSearch.suggest(input, options, weight_threshold: 0.8)
+                  end
                 end
+              }
               }
             />
           </div>

@@ -1148,12 +1148,18 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
-    metrics =
-      if Enum.any?(site.goals, &Plausible.Goal.revenue?/1) do
-        [:visitors, :events, :average_revenue, :total_revenue]
-      else
-        [:visitors, :events]
-      end
+    on_full_build do
+      metrics =
+        if Enum.any?(site.goals, &Plausible.Goal.Revenue.revenue?/1) do
+          [:visitors, :events, :average_revenue, :total_revenue]
+        else
+          [:visitors, :events]
+        end
+    end
+
+    on_small_build do
+      metrics = [:visitors, :events]
+    end
 
     conversions =
       site

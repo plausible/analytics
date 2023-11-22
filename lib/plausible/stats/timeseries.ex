@@ -1,5 +1,6 @@
 defmodule Plausible.Stats.Timeseries do
   use Plausible.ClickhouseRepo
+  use Plausible
   alias Plausible.Stats.Query
   import Plausible.Stats.{Base, Util}
   use Plausible.Stats.Fragments
@@ -23,7 +24,14 @@ defmodule Plausible.Stats.Timeseries do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    {currency, event_metrics} = get_revenue_tracking_currency(site, query, event_metrics)
+    on_full_build do
+      {currency, event_metrics} =
+        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, event_metrics)
+    end
+
+    on_small_build do
+      currency = nil
+    end
 
     [event_result, session_result] =
       Plausible.ClickhouseRepo.parallel_tasks([
@@ -233,5 +241,15 @@ defmodule Plausible.Stats.Timeseries do
         :total_revenue -> Map.merge(row, %{total_revenue: nil})
       end
     end)
+  end
+
+  on_full_build do
+    defp cast_revenue_metrics_to_money(results, revenue_goals) do
+      Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
+    end
+  end
+
+  on_small_build do
+    defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
   end
 end

@@ -15,15 +15,17 @@ defmodule Plausible.Goals do
   refreshed by the sites cache, as revenue goals are used during ingestion.
   """
   def create(site, params, opts \\ []) do
-    now = Keyword.get(opts, :now, DateTime.utc_now())
     upsert? = Keyword.get(opts, :upsert?, false)
 
     Repo.transaction(fn ->
       case insert_goal(site, params, upsert?) do
         {:ok, :insert, goal} ->
-          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-          if Goal.revenue?(goal) do
-            Plausible.Site.Cache.touch_site!(site, now)
+          on_full_build do
+            now = Keyword.get(opts, :now, DateTime.utc_now())
+            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+            if Plausible.Goal.Revenue.revenue?(goal) do
+              Plausible.Site.Cache.touch_site!(site, now)
+            end
           end
 
           Repo.preload(goal, :site)

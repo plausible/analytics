@@ -23,26 +23,17 @@ defmodule Plausible.Goal do
     timestamps()
   end
 
-  def revenue?(%__MODULE__{currency: currency}) do
-    !!currency
+  on_full_build do
+    @fields [:id, :site_id, :event_name, :page_path, :currency]
   end
 
-  def valid_currencies do
-    Ecto.Enum.dump_values(__MODULE__, :currency)
-  end
-
-  def currency_options do
-    options =
-      for code <- valid_currencies() do
-        {code, "#{code} - #{Cldr.Currency.display_name!(code)}"}
-      end
-
-    options
+  on_small_build do
+    @fields [:id, :site_id, :event_name, :page_path]
   end
 
   def changeset(goal, attrs \\ %{}) do
     goal
-    |> cast(attrs, [:id, :site_id, :event_name, :page_path, :currency])
+    |> cast(attrs, @fields)
     |> validate_required([:site_id])
     |> cast_assoc(:site)
     |> update_leading_slash()
@@ -92,12 +83,18 @@ defmodule Plausible.Goal do
     value && String.match?(value, ~r/^.+/)
   end
 
-  defp maybe_drop_currency(changeset) do
-    if get_field(changeset, :page_path) do
-      delete_change(changeset, :currency)
-    else
-      changeset
+  on_full_build do
+    defp maybe_drop_currency(changeset) do
+      if get_field(changeset, :page_path) do
+        delete_change(changeset, :currency)
+      else
+        changeset
+      end
     end
+  end
+
+  on_small_build do
+    defp maybe_drop_currency(changeset), do: changeset
   end
 end
 
