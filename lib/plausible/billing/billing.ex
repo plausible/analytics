@@ -104,17 +104,15 @@ defmodule Plausible.Billing do
     end
   end
 
-  defp subscription_is_active?(%Subscription{status: Subscription.Status.active()}), do: true
-  defp subscription_is_active?(%Subscription{status: Subscription.Status.past_due()}), do: true
+  def subscription_is_active?(%Subscription{status: Subscription.Status.active()}), do: true
+  def subscription_is_active?(%Subscription{status: Subscription.Status.past_due()}), do: true
 
-  defp subscription_is_active?(
-         %Subscription{status: Subscription.Status.deleted()} = subscription
-       ) do
+  def subscription_is_active?(%Subscription{status: Subscription.Status.deleted()} = subscription) do
     subscription.next_bill_date && !Timex.before?(subscription.next_bill_date, Timex.today())
   end
 
-  defp subscription_is_active?(%Subscription{}), do: false
-  defp subscription_is_active?(nil), do: false
+  def subscription_is_active?(%Subscription{}), do: false
+  def subscription_is_active?(nil), do: false
 
   def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
 

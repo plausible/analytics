@@ -2,6 +2,7 @@ defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Auth
+  alias Plausible.Billing.Quota
   require Logger
 
   plug(
@@ -378,7 +379,18 @@ defmodule PlausibleWeb.AuthController do
     email_changeset = Keyword.fetch!(opts, :email_changeset)
 
     user = Plausible.Users.with_subscription(conn.assigns[:current_user])
-    usage = Plausible.Billing.Quota.monthly_pageview_usage(user, :last_30_days)
+    active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
+
+    usage =
+      if active_subscription? && user.subscription.last_bill_date do
+        %{
+          current_cycle: Quota.monthly_pageview_usage(user, :current_cycle),
+          last_cycle: Quota.monthly_pageview_usage(user, :last_cycle),
+          penultimate_cycle: Quota.monthly_pageview_usage(user, :penultimate_cycle)
+        }
+      else
+        %{last_30_days: Quota.monthly_pageview_usage(user, :last_30_days)}
+      end
 
     render(conn, "user_settings.html",
       user: user |> Repo.preload(:api_keys),
@@ -387,14 +399,12 @@ defmodule PlausibleWeb.AuthController do
       subscription: user.subscription,
       invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
       theme: user.theme || "system",
-      team_member_limit: Plausible.Billing.Quota.team_member_limit(user),
-      team_member_usage: Plausible.Billing.Quota.team_member_usage(user),
-      site_limit: Plausible.Billing.Quota.site_limit(user),
-      site_usage: Plausible.Billing.Quota.site_usage(user),
-      total_pageview_limit: Plausible.Billing.Quota.monthly_pageview_limit(user.subscription),
-      total_pageview_usage: usage.total,
-      custom_event_usage: usage.custom_events,
-      pageview_usage: usage.pageviews
+      team_member_limit: Quota.team_member_limit(user),
+      team_member_usage: Quota.team_member_usage(user),
+      site_limit: Quota.site_limit(user),
+      site_usage: Quota.site_usage(user),
+      total_pageview_limit: Quota.monthly_pageview_limit(user.subscription),
+      usage: usage
     )
   end
 
