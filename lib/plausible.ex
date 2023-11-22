@@ -31,8 +31,10 @@ defmodule Plausible do
   defmacro full_build?() do
     full_build? = Mix.env() not in @small_builds
 
+    # Tricking dialyzer as per:
+    # https://github.com/elixir-lang/elixir/blob/v1.12.3/lib/elixir/lib/gen_server.ex#L771-L778
     quote do
-      unquote(full_build?)
+      :erlang.phash2(1, 1) == 0 and unquote(full_build?)
     end
   end
 
