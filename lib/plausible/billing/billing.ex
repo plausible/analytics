@@ -127,51 +127,6 @@ defmodule Plausible.Billing do
     Timex.diff(user.trial_expiry_date, Timex.today(), :days)
   end
 
-  @spec last_two_billing_months_usage(Plausible.Auth.User.t(), Date.t()) ::
-          {non_neg_integer(), non_neg_integer()}
-  def last_two_billing_months_usage(user, today \\ Timex.today()) do
-    {first, second} = last_two_billing_cycles(user, today)
-
-    site_ids = Plausible.Sites.owned_site_ids(user)
-
-    usage_for_sites = fn site_ids, date_range ->
-      {pageviews, custom_events} =
-        Plausible.Stats.Clickhouse.usage_breakdown(site_ids, date_range)
-
-      pageviews + custom_events
-    end
-
-    {
-      usage_for_sites.(site_ids, first),
-      usage_for_sites.(site_ids, second)
-    }
-  end
-
-  def last_two_billing_cycles(user, today \\ Timex.today()) do
-    last_bill_date = user.subscription.last_bill_date
-
-    normalized_last_bill_date =
-      Timex.shift(last_bill_date,
-        months: Timex.diff(today, last_bill_date, :months)
-      )
-
-    {
-      Date.range(
-        Timex.shift(normalized_last_bill_date, months: -2),
-        Timex.shift(normalized_last_bill_date, days: -1, months: -1)
-      ),
-      Date.range(
-        Timex.shift(normalized_last_bill_date, months: -1),
-        Timex.shift(normalized_last_bill_date, days: -1)
-      )
-    }
-  end
-
-  def usage_breakdown(user) do
-    site_ids = Plausible.Sites.owned_site_ids(user)
-    Plausible.Stats.Clickhouse.usage_breakdown(site_ids)
-  end
-
   defp handle_subscription_created(params) do
     params =
       if present?(params["passthrough"]) do

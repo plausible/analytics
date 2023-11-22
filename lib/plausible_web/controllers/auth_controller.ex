@@ -378,7 +378,7 @@ defmodule PlausibleWeb.AuthController do
     email_changeset = Keyword.fetch!(opts, :email_changeset)
 
     user = Plausible.Users.with_subscription(conn.assigns[:current_user])
-    {pageview_usage, custom_event_usage} = Plausible.Billing.usage_breakdown(user)
+    usage = Plausible.Billing.Quota.monthly_pageview_usage(user, :last_30_days)
 
     render(conn, "user_settings.html",
       user: user |> Repo.preload(:api_keys),
@@ -392,9 +392,9 @@ defmodule PlausibleWeb.AuthController do
       site_limit: Plausible.Billing.Quota.site_limit(user),
       site_usage: Plausible.Billing.Quota.site_usage(user),
       total_pageview_limit: Plausible.Billing.Quota.monthly_pageview_limit(user.subscription),
-      total_pageview_usage: pageview_usage + custom_event_usage,
-      custom_event_usage: custom_event_usage,
-      pageview_usage: pageview_usage
+      total_pageview_usage: usage.total,
+      custom_event_usage: usage.custom_events,
+      pageview_usage: usage.pageviews
     )
   end
 

@@ -32,7 +32,7 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   @impl Oban.Worker
-  def perform(_job, billing_mod \\ Plausible.Billing, today \\ Timex.today()) do
+  def perform(_job, quota_mod \\ Plausible.Billing.Quota, today \\ Timex.today()) do
     yesterday = today |> Timex.shift(days: -1)
 
     active_subscribers =
@@ -55,17 +55,17 @@ defmodule Plausible.Workers.CheckUsage do
 
     for subscriber <- active_subscribers do
       if subscriber.enterprise_plan do
-        check_enterprise_subscriber(subscriber, billing_mod)
+        check_enterprise_subscriber(subscriber, quota_mod)
       else
-        check_regular_subscriber(subscriber, billing_mod)
+        check_regular_subscriber(subscriber, quota_mod)
       end
     end
 
     :ok
   end
 
-  def check_enterprise_subscriber(subscriber, billing_mod) do
-    pageview_limit = check_pageview_limit(subscriber, billing_mod)
+  def check_enterprise_subscriber(subscriber, quota_mod) do
+    pageview_limit = check_pageview_limit(subscriber, quota_mod)
     site_limit = check_site_limit_for_enterprise(subscriber)
 
     case {pageview_limit, site_limit} do
@@ -90,8 +90,8 @@ defmodule Plausible.Workers.CheckUsage do
     end
   end
 
-  defp check_regular_subscriber(subscriber, billing_mod) do
-    case check_pageview_limit(subscriber, billing_mod) do
+  defp check_regular_subscriber(subscriber, quota_mod) do
+    case check_pageview_limit(subscriber, quota_mod) do
       {:over_limit, {last_cycle, last_cycle_usage}} ->
         suggested_plan = Plausible.Billing.Plans.suggest(subscriber, last_cycle_usage)
 
@@ -114,27 +114,25 @@ defmodule Plausible.Workers.CheckUsage do
     end
   end
 
-  defp check_pageview_limit(subscriber, billing_mod) do
+  defp check_pageview_limit(subscriber, quota_mod) do
     limit =
       subscriber.subscription
       |> Plausible.Billing.Quota.monthly_pageview_limit()
       |> Kernel.*(1.1)
       |> ceil()
 
-    {_, last_cycle} = billing_mod.last_two_billing_cycles(subscriber)
+    last_cycle_usage = quota_mod.monthly_pageview_usage(subscriber, :last_cycle)
+    penultimate_cycle_usage = quota_mod.monthly_pageview_usage(subscriber, :penultimate_cycle)
 
-    {last_last_cycle_usage, last_cycle_usage} =
-      billing_mod.last_two_billing_months_usage(subscriber)
+    exceeded_two_cycles? =
+      Enum.all?([last_cycle_usage, penultimate_cycle_usage], fn usage ->
+        not Plausible.Billing.Quota.below_limit?(usage.total, limit)
+      end)
 
-    exceeded_last_cycle? = not Plausible.Billing.Quota.below_limit?(last_cycle_usage, limit)
-
-    exceeded_last_last_cycle? =
-      not Plausible.Billing.Quota.below_limit?(last_last_cycle_usage, limit)
-
-    if exceeded_last_last_cycle? && exceeded_last_cycle? do
-      {:over_limit, {last_cycle, last_cycle_usage}}
+    if exceeded_two_cycles? do
+      {:over_limit, {last_cycle_usage.date_range, last_cycle_usage.total}}
     else
-      {:below_limit, {last_cycle, last_cycle_usage}}
+      {:below_limit, {last_cycle_usage.date_range, last_cycle_usage.total}}
     end
   end
 

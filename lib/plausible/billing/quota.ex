@@ -7,13 +7,12 @@ defmodule Plausible.Billing.Quota do
   import Ecto.Query
   alias Plausible.Auth.User
   alias Plausible.Site
-  alias Plausible.Billing
   alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
   def usage(user, opts \\ []) do
     basic_usage = %{
-      monthly_pageviews: monthly_pageview_usage(user),
+      monthly_pageviews: monthly_pageview_usage(user, :last_30_days).total,
       team_members: team_member_usage(user),
       sites: site_usage(user)
     }
@@ -105,15 +104,71 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @spec monthly_pageview_usage(User.t()) :: non_neg_integer()
-  @doc """
-  Returns the amount of pageviews and custom events
-  sent by the sites the user owns in last 30 days.
-  """
-  def monthly_pageview_usage(user) do
-    user
-    |> Billing.usage_breakdown()
-    |> Tuple.sum()
+  @type pageview_usage :: %{
+          date_range: Date.Range.t(),
+          pageviews: non_neg_integer(),
+          custom_events: non_neg_integer(),
+          total: non_neg_integer()
+        }
+
+  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
+
+  @spec monthly_pageview_usage(User.t(), period()) :: pageview_usage()
+
+  def monthly_pageview_usage(user, period, today \\ Timex.today())
+
+  def monthly_pageview_usage(user, :last_30_days, today) do
+    date_range = Date.range(Timex.shift(today, days: -30), today)
+
+    {pageviews, custom_events} =
+      user
+      |> Plausible.Sites.owned_site_ids()
+      |> Plausible.Stats.Clickhouse.usage_breakdown(date_range)
+
+    %{
+      date_range: date_range,
+      pageviews: pageviews,
+      custom_events: custom_events,
+      total: pageviews + custom_events
+    }
+  end
+
+  def monthly_pageview_usage(user, period, today) do
+    user = Plausible.Users.with_subscription(user)
+    last_bill_date = user.subscription.last_bill_date
+
+    normalized_last_bill_date =
+      Timex.shift(last_bill_date, months: Timex.diff(today, last_bill_date, :months))
+
+    date_range =
+      case period do
+        :current_cycle ->
+          Date.range(normalized_last_bill_date, today)
+
+        :last_cycle ->
+          Date.range(
+            Timex.shift(normalized_last_bill_date, months: -1),
+            Timex.shift(normalized_last_bill_date, days: -1)
+          )
+
+        :penultimate_cycle ->
+          Date.range(
+            Timex.shift(normalized_last_bill_date, months: -2),
+            Timex.shift(normalized_last_bill_date, days: -1, months: -1)
+          )
+      end
+
+    {pageviews, custom_events} =
+      user
+      |> Plausible.Sites.owned_site_ids()
+      |> Plausible.Stats.Clickhouse.usage_breakdown(date_range)
+
+    %{
+      date_range: date_range,
+      pageviews: pageviews,
+      custom_events: custom_events,
+      total: pageviews + custom_events
+    }
   end
 
   @team_member_limit_for_trials 3
