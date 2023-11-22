@@ -753,7 +753,10 @@ defmodule PlausibleWeb.AuthControllerTest do
       doc = get(conn, "/settings") |> html_response(200)
 
       assert text_of_element(doc, "#billing_cycle_tab_current_cycle") =~
-               Date.range(last_bill_date, Timex.today())
+               Date.range(
+                 last_bill_date,
+                 Timex.shift(last_bill_date, months: 1, days: -1)
+               )
                |> PlausibleWeb.TextHelpers.format_date_range()
 
       assert text_of_element(doc, "#billing_cycle_tab_last_cycle") =~

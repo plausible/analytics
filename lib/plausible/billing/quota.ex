@@ -143,7 +143,10 @@ defmodule Plausible.Billing.Quota do
     date_range =
       case period do
         :current_cycle ->
-          Date.range(normalized_last_bill_date, today)
+          Date.range(
+            normalized_last_bill_date,
+            Timex.shift(normalized_last_bill_date, months: 1, days: -1)
+          )
 
         :last_cycle ->
           Date.range(

@@ -587,7 +587,7 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert penultimate_cycle == Date.range(~D[2023-04-03], ~D[2023-05-02])
       assert last_cycle == Date.range(~D[2023-05-03], ~D[2023-06-02])
-      assert current_cycle == Date.range(~D[2023-06-03], ~D[2023-06-05])
+      assert current_cycle == Date.range(~D[2023-06-03], ~D[2023-07-02])
     end
 
     test "returns usage and date_range for the last 30 days", %{user: user} do
@@ -639,7 +639,7 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert penultimate_cycle == Date.range(~D[2020-12-01], ~D[2020-12-31])
       assert last_cycle == Date.range(~D[2021-01-01], ~D[2021-01-31])
-      assert current_cycle == Date.range(~D[2021-02-01], ~D[2021-02-02])
+      assert current_cycle == Date.range(~D[2021-02-01], ~D[2021-02-28])
     end
 
     test "returns correct billing months when last_bill_date is the first day of the year" do
@@ -659,7 +659,7 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert penultimate_cycle == Date.range(~D[2020-11-01], ~D[2020-11-30])
       assert last_cycle == Date.range(~D[2020-12-01], ~D[2020-12-31])
-      assert current_cycle == Date.range(~D[2021-01-01], ~D[2021-01-02])
+      assert current_cycle == Date.range(~D[2021-01-01], ~D[2021-01-31])
     end
   end
 end
