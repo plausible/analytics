@@ -829,6 +829,98 @@ defmodule PlausibleWeb.AuthControllerTest do
       get(conn, "/settings") |> html_response(200) |> assert_cycles_rendered.()
     end
 
+    test "penultimate cycle is disabled if there's no usage", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -5)),
+        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -20))
+      ])
+
+      last_bill_date = Timex.shift(Timex.today(), days: -10)
+
+      insert(:subscription,
+        paddle_plan_id: @v4_plan_id,
+        user: user,
+        last_bill_date: last_bill_date
+      )
+
+      doc = get(conn, "/settings") |> html_response(200)
+
+      assert text_of_attr(find(doc, "#monthly_pageview_usage_container"), "x-data") ==
+               "{ tab: 'last_cycle' }"
+
+      assert class_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~
+               "pointer-events-none"
+
+      assert text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
+    end
+
+    test "penultimate and last cycles are both disabled if there's no usage", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -5))
+      ])
+
+      last_bill_date = Timex.shift(Timex.today(), days: -10)
+
+      insert(:subscription,
+        paddle_plan_id: @v4_plan_id,
+        user: user,
+        last_bill_date: last_bill_date
+      )
+
+      doc = get(conn, "/settings") |> html_response(200)
+
+      assert text_of_attr(find(doc, "#monthly_pageview_usage_container"), "x-data") ==
+               "{ tab: 'current_cycle' }"
+
+      assert class_of_element(doc, "#billing_cycle_tab_last_cycle") =~ "pointer-events-none"
+      assert text_of_element(doc, "#billing_cycle_tab_last_cycle") =~ "Not available"
+
+      assert class_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~
+               "pointer-events-none"
+
+      assert text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
+    end
+
+    test "when last cycle usage is 0, it's still not disabled if penultimate cycle has usage", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -5)),
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -50))
+      ])
+
+      last_bill_date = Timex.shift(Timex.today(), days: -10)
+
+      insert(:subscription,
+        paddle_plan_id: @v4_plan_id,
+        user: user,
+        last_bill_date: last_bill_date
+      )
+
+      doc = get(conn, "/settings") |> html_response(200)
+
+      assert text_of_attr(find(doc, "#monthly_pageview_usage_container"), "x-data") ==
+               "{ tab: 'last_cycle' }"
+
+      refute class_of_element(doc, "#billing_cycle_tab_last_cycle") =~ "pointer-events-none"
+      refute text_of_element(doc, "#billing_cycle_tab_last_cycle") =~ "Not available"
+
+      refute class_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~
+               "pointer-events-none"
+
+      refute text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
+    end
+
     test "renders last 30 days pageview usage for trials and non-active/free_10k subscriptions",
          %{
            conn: conn,

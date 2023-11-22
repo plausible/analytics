@@ -94,8 +94,16 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   def render_monthly_pageview_usage(assigns) do
+    default_tab =
+      case assigns.usage do
+        %{last_cycle: %{total: 0}, penultimate_cycle: %{total: 0}} -> :current_cycle
+        _ -> :last_cycle
+      end
+
+    assigns = assign(assigns, :default_tab, default_tab)
+
     ~H"""
-    <article x-data="{ tab: 'last_cycle' }" class="mt-8">
+    <article id="monthly_pageview_usage_container" x-data={"{ tab: '#{@default_tab}' }"} class="mt-8">
       <h1 class="text-xl mb-6 font-bold dark:text-gray-100">Monthly pageviews usage</h1>
       <div class="mb-3">
         <ol class="divide-y divide-gray-300 rounded-md border border-gray-300 md:flex md:flex-row-reverse md:divide-y-0">
@@ -109,12 +117,14 @@ defmodule PlausibleWeb.Components.Billing do
             name="Last cycle"
             tab={:last_cycle}
             date_range={@usage.last_cycle.date_range}
+            disabled={@usage.last_cycle.total == 0 && @usage.penultimate_cycle.total == 0}
             with_separator={true}
           />
           <.billing_cycle_tab
             name="Penultimate cycle"
             tab={:penultimate_cycle}
             date_range={@usage.penultimate_cycle.date_range}
+            disabled={@usage.penultimate_cycle.total == 0}
           />
         </ol>
       </div>
@@ -177,11 +187,15 @@ defmodule PlausibleWeb.Components.Billing do
   attr(:name, :string, required: true)
   attr(:date_range, :any, required: true)
   attr(:tab, :atom, required: true)
+  attr(:disabled, :boolean, default: false)
   attr(:with_separator, :boolean, default: false)
 
   defp billing_cycle_tab(assigns) do
     ~H"""
-    <li id={"billing_cycle_tab_#{@tab}"} class="relative md:w-1/3">
+    <li
+      id={"billing_cycle_tab_#{@tab}"}
+      class={["relative md:w-1/3", @disabled && "pointer-events-none opacity-50"]}
+    >
       <button class="w-full group" x-on:click={"tab = '#{@tab}'"}>
         <span
           class="absolute left-0 top-0 h-full w-1 md:bottom-0 md:top-auto md:h-1 md:w-full"
@@ -197,7 +211,9 @@ defmodule PlausibleWeb.Components.Billing do
             <%= @name %>
           </span>
           <span class="flex text-xs text-gray-500">
-            <%= PlausibleWeb.TextHelpers.format_date_range(@date_range) %>
+            <%= if @disabled,
+              do: "Not available",
+              else: PlausibleWeb.TextHelpers.format_date_range(@date_range) %>
           </span>
         </div>
       </button>
