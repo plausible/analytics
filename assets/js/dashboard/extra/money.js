@@ -7,4 +7,3 @@ export default function Money({ formatted }) {
     return "-"
   }
 }
-

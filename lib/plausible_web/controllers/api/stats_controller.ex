@@ -9,6 +9,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
   require Logger
 
+  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+
   plug(:validate_common_input)
 
   @doc """
@@ -339,7 +341,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _}} = query, comparison_query) do
     query_without_filters = Query.remove_event_filters(query, [:goal, :props])
-    metrics = [:visitors, :events, :average_revenue, :total_revenue]
+    metrics = [:visitors, :events] ++ @revenue_metrics
 
     results_without_filters =
       site
@@ -386,8 +388,12 @@ defmodule PlausibleWeb.Api.StatsController do
       top_stats_entry(results, comparison, "Unique visitors", :unique_visitors),
       top_stats_entry(results, comparison, "Unique conversions", :converted_visitors),
       top_stats_entry(results, comparison, "Total conversions", :completions),
-      top_stats_entry(results, comparison, "Average revenue", :average_revenue, &format_money/1),
-      top_stats_entry(results, comparison, "Total revenue", :total_revenue, &format_money/1),
+      on_full_build do
+        top_stats_entry(results, comparison, "Average revenue", :average_revenue, &format_money/1)
+      end,
+      on_full_build do
+        top_stats_entry(results, comparison, "Total revenue", :total_revenue, &format_money/1)
+      end,
       top_stats_entry(conversion_rate, comparison_conversion_rate, "Conversion rate", :cr)
     ]
     |> Enum.reject(&is_nil/1)
@@ -1145,8 +1151,12 @@ defmodule PlausibleWeb.Api.StatsController do
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
     metrics =
-      if Enum.any?(site.goals, &Plausible.Goal.revenue?/1) do
-        [:visitors, :events, :average_revenue, :total_revenue]
+      on_full_build do
+        if Enum.any?(site.goals, &Plausible.Goal.Revenue.revenue?/1) do
+          [:visitors, :events] ++ @revenue_metrics
+        else
+          [:visitors, :events]
+        end
       else
         [:visitors, :events]
       end
@@ -1170,28 +1180,6 @@ defmodule PlausibleWeb.Api.StatsController do
       ])
     else
       json(conn, conversions)
-    end
-  end
-
-  @revenue_metrics [:average_revenue, :total_revenue]
-  defp format_revenue_metric({metric, value}) do
-    if metric in @revenue_metrics do
-      {metric, format_money(value)}
-    else
-      {metric, value}
-    end
-  end
-
-  defp format_money(value) do
-    case value do
-      %Money{} ->
-        %{
-          short: Money.to_string!(value, format: :short, fractional_digits: 1),
-          long: Money.to_string!(value)
-        }
-
-      _any ->
-        value
     end
   end
 
@@ -1244,8 +1232,8 @@ defmodule PlausibleWeb.Api.StatsController do
       |> Map.put(:include_imported, false)
 
     metrics =
-      if Map.has_key?(query.filters, "event:goal") do
-        [:visitors, :events, :average_revenue, :total_revenue]
+      if full_build?() and Map.has_key?(query.filters, "event:goal") do
+        [:visitors, :events] ++ @revenue_metrics
       else
         [:visitors, :events]
       end
@@ -1484,6 +1472,15 @@ defmodule PlausibleWeb.Api.StatsController do
       source_query.include_imported -> true
       comparison_query && comparison_query.include_imported -> true
       true -> false
+    end
+  end
+
+  on_full_build do
+    defdelegate format_revenue_metric(metric_value), to: PlausibleWeb.Controllers.API.Revenue
+    defdelegate format_money(money), to: PlausibleWeb.Controllers.API.Revenue
+  else
+    defp format_revenue_metric({metric, value}) do
+      {metric, value}
     end
   end
 end

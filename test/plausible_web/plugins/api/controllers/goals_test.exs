@@ -45,6 +45,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
   end
 
   describe "business tier" do
+    @tag :full_build_only
     test "fails on revenue goal creation attempt with insufficient plan", %{
       site: site,
       token: token,
@@ -71,6 +72,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       |> assert_schema("PaymentRequiredError", spec())
     end
 
+    @tag :full_build_only
     test "fails on bulk revenue goal creation attempt with insufficient plan", %{
       site: site,
       token: token,
@@ -147,6 +149,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert [%{event_name: "Signup"}] = Plausible.Goals.for_site(site)
     end
 
+    @tag :full_build_only
     test "creates a revenue goal", %{conn: conn, token: token, site: site} do
       url = Routes.goals_url(base_uri(), :create)
 
@@ -177,6 +180,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert [%{event_name: "Purchase", currency: :EUR}] = Plausible.Goals.for_site(site)
     end
 
+    @tag :full_build_only
     test "fails to create a revenue goal with unknown currency", %{
       conn: conn,
       token: token,
@@ -205,6 +209,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert [%{detail: "currency: is invalid"}] = resp.errors
     end
 
+    @tag :full_build_only
     test "edge case - revenue goal exists under the same name and different currency", %{
       conn: conn,
       token: token,
@@ -277,6 +282,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
   end
 
   describe "put /goals - bulk creation" do
+    @tag :full_build_only
     test "creates a goal of each type", %{conn: conn, token: token, site: site} do
       url = Routes.goals_url(base_uri(), :create)
 
@@ -351,6 +357,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
              } in resp.errors
     end
 
+    @tag :full_build_only
     test "is idempotent", %{conn: conn, token: token, site: site} do
       url = Routes.goals_url(base_uri(), :create)
 
@@ -385,6 +392,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       |> assert_schema("Goal.ListResponse", spec())
     end
 
+    @tag :full_build_only
     test "edge case - revenue goals exist under the same name and different currency", %{
       conn: conn,
       token: token,
@@ -430,6 +438,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert %{errors: [%{detail: "Invalid integer. Got: string"}]} = resp
     end
 
+    @tag :full_build_only
     test "retrieves revenue goal by ID", %{conn: conn, site: site, token: token} do
       {:ok, goal} =
         Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
@@ -507,6 +516,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       assert resp.meta.pagination.links == %{}
     end
 
+    @tag :full_build_only
     test "returns a list of goals of each possible goal type", %{
       conn: conn,
       site: site,

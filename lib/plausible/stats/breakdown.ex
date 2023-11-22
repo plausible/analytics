@@ -1,5 +1,6 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
+  use Plausible
   import Plausible.Stats.{Base, Imported, Util}
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.Query
@@ -7,9 +8,12 @@ defmodule Plausible.Stats.Breakdown do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
-  @event_metrics [:visitors, :pageviews, :events, :average_revenue, :total_revenue]
   @session_metrics [:visits, :bounce_rate, :visit_duration]
-  @revenue_metrics [:average_revenue, :total_revenue]
+
+  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+
+  @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
+
   @event_props Plausible.Stats.Props.event_props()
 
   def breakdown(site, query, "event:goal" = property, metrics, pagination) do
@@ -23,7 +27,10 @@ defmodule Plausible.Stats.Breakdown do
 
     event_results =
       if Enum.any?(event_goals) do
-        revenue_goals = Enum.filter(event_goals, &Plausible.Goal.revenue?/1)
+        revenue_goals =
+          on_full_build do
+            Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
+          end
 
         site
         |> breakdown(event_query, "event:name", metrics, pagination)
@@ -68,7 +75,13 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination) do
-    {currency, metrics} = get_revenue_tracking_currency(site, query, metrics)
+    {currency, metrics} =
+      on_full_build do
+        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
+      else
+        {nil, metrics}
+      end
+
     {_limit, page} = pagination
 
     none_result =
@@ -673,5 +686,13 @@ defmodule Plausible.Stats.Breakdown do
       {"plausible.query.breakdown_property", property},
       {"plausible.query.breakdown_metrics", metrics}
     ])
+  end
+
+  on_full_build do
+    defp cast_revenue_metrics_to_money(results, revenue_goals) do
+      Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
+    end
+  else
+    defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
   end
 end

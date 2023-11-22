@@ -96,9 +96,7 @@ defmodule PlausibleWeb.StatsController do
     defp list_funnels(site) do
       Plausible.Funnels.list(site)
     end
-  end
-
-  on_small_build do
+  else
     defp list_funnels(_site) do
       []
     end

@@ -35,7 +35,8 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
   describe "Goal submission" do
     setup [:create_user, :log_in, :create_site]
 
-    test "renders form fields", %{conn: conn, site: site} do
+    @tag :full_build_only
+    test "renders form fields (with currency)", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
       html = render(lv)
 
@@ -44,6 +45,22 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert name_of(event_name) == "goal[event_name]"
       assert name_of(currency_display) == "display-currency_input"
       assert name_of(currency_submit) == "goal[currency]"
+
+      html = lv |> element(~s/a#pageview-tab/) |> render_click()
+
+      [page_path_display, page_path] = find(html, "input")
+      assert name_of(page_path_display) == "display-page_path_input"
+      assert name_of(page_path) == "goal[page_path]"
+    end
+
+    @tag :small_build_only
+    test "renders form fields (no currency)", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      html = render(lv)
+
+      [event_name] = find(html, "input")
+
+      assert name_of(event_name) == "goal[event_name]"
 
       html = lv |> element(~s/a#pageview-tab/) |> render_click()
 
@@ -70,6 +87,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       assert parent_html =~ "Custom Event"
     end
 
+    @tag :full_build_only
     test "creates a revenue goal", %{conn: conn, site: site} do
       {parent, lv} = get_liveview(conn, site, with_parent?: true)
       refute render(parent) =~ "SampleRevenueGoal"
@@ -96,6 +114,7 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
   describe "Combos integration" do
     setup [:create_user, :log_in, :create_site]
 
+    @tag :full_build_only
     test "currency combo works", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
 

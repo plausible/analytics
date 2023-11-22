@@ -1,6 +1,17 @@
 import numberFormatter from "../../util/number-formatter"
 import React from "react"
-import Money from "../behaviours/money"
+
+/*global BUILD_EXTRA*/
+/*global require*/
+function maybeRequire() {
+  if (BUILD_EXTRA) {
+    return require('../../extra/money')
+  } else {
+    return { default: null }
+  }
+}
+
+const Money = maybeRequire().default
 
 export const VISITORS_METRIC = {
   name: 'visitors',
@@ -32,7 +43,7 @@ export function displayMetricValue(value, metric) {
   } else if (metric === CR_METRIC) {
     return `${value}%`
   } else {
-    return <span tooltip={value}>{ numberFormatter(value) }</span>
+    return <span tooltip={value}>{numberFormatter(value)}</span>
   }
 }
 

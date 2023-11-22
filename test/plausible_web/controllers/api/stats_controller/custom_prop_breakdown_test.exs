@@ -787,6 +787,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
+    @tag :full_build_only
     test "returns revenue metrics when filtering by a revenue goal", %{conn: conn, site: site} do
       prop_key = "logged_in"
 
@@ -844,6 +845,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
+    @tag :full_build_only
     test "returns revenue metrics when filtering by many revenue goals with same currency", %{
       conn: conn,
       site: site

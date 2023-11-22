@@ -2,10 +2,11 @@ defmodule Plausible.Billing.QuotaTest do
   use Plausible.DataCase, async: true
   use Plausible
   alias Plausible.Billing.{Quota, Plans}
-  alias Plausible.Billing.Feature.{Goals, RevenueGoals, Props, StatsAPI}
+  alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
 
   on_full_build do
     alias Plausible.Billing.Feature.Funnels
+    alias Plausible.Billing.Feature.RevenueGoals
   end
 
   @legacy_plan_id "558746"
@@ -460,15 +461,15 @@ defmodule Plausible.Billing.QuotaTest do
         assert [Funnels] == Quota.features_usage(site)
         assert [Funnels] == Quota.features_usage(user)
       end
-    end
 
-    test "returns [RevenueGoals] when user/site uses revenue goals" do
-      user = insert(:user)
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
-      insert(:goal, currency: :USD, site: site, event_name: "Purchase")
+      test "returns [RevenueGoals] when user/site uses revenue goals" do
+        user = insert(:user)
+        site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+        insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
-      assert [RevenueGoals] == Quota.features_usage(site)
-      assert [RevenueGoals] == Quota.features_usage(user)
+        assert [RevenueGoals] == Quota.features_usage(site)
+        assert [RevenueGoals] == Quota.features_usage(user)
+      end
     end
 
     test "returns [StatsAPI] when user has a stats api key" do
