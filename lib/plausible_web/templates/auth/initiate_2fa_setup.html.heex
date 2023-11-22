@@ -1,17 +1,19 @@
-<div class="w-full max-w-3xl mt-4 mx-auto flex">
+<div class="w-full max-w-2xl mt-4 mx-auto flex">
   <div class="w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8">
     <h2 class="text-xl font-black dark:text-gray-100">
       Setup Two-Factor Authentication
     </h2>
 
-    <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
+    <div class="text-sm mt-2 text-gray-500 dark:text-gray-200">
       Link your Plausible account to the authenticator app you have installed either on your phone or computer.
-      <div class="flex flex-row items-center justify-between">
-        <div class="mt-6 p-3 dark:bg-white">
-          <.qr_code text={@totp_uri} />
+      <div class="flex flex-col sm:flex-row items-center sm:items-start">
+        <div class="mt-8">
+          <div class="border-2 border-gray-300 p-6 inline-block dark:bg-white">
+            <.qr_code text={@totp_uri} />
+          </div>
         </div>
 
-        <div class="mt-6 ml-4">
+        <div class="mt-8 sm:ml-4">
           <ol>
             <li class="flex items-start">
               <div class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
@@ -29,22 +31,25 @@
               <div class="flex-shrink-0 h-5 w-5 relative flex items-center justify-center">
                 <div class="h-2 w-2 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
               </div>
-              Scan this code with your phone camera
+              Scan this code with your phone camera or paste the code manually
             </li>
           </ol>
 
-          <div class="ml-2 mt-5">
-            <p>or type in the code manually:</p>
-            <pre
-              style="font-family: courier, monospace; letter-spacing: 2px;"
-              class="border-2 border-dotted border-gray-300 mt-2 rounded-md p-1 inline-block text-gray-600 text-lg bg-gray-200"
-            ><%= @secret %></pre>
+          <div class="sm:ml-2">
+            <PlausibleWeb.Live.Components.Form.input_with_clipboard
+              id="secret"
+              name="secret_clipboard"
+              label="Code"
+              value={@secret}
+              onfocus="this.value = this.value;"
+              class="focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 dark:bg-gray-850 dark:text-gray-300 block w-7/12 rounded-md sm:text-sm border-gray-300 dark:border-gray-500 w-full p-2 mt-2"
+            />
           </div>
         </div>
       </div>
 
-      <div class="mt-6 flex flex-row justify-between items-center">
-        <p class="text-sm">
+      <div class="mt-6 flex flex-col-reverse sm:flex-row justify-between items-center">
+        <p class="text-sm mt-4 sm:mt-0">
           Changed your mind?
           <a
             href={Routes.auth_path(@conn, :user_settings) <> "#setup-2fa"}
@@ -55,7 +60,7 @@
         </p>
         <.unstyled_link
           id="proceed"
-          class="button"
+          class="button sm:w-auto w-full"
           href={Routes.auth_path(@conn, :verify_2fa_setup_form)}
         >
           Proceed &rarr;
