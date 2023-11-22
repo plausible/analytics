@@ -627,7 +627,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp change_plan_link_text(
          %{
            owned_plan: %Plan{kind: from_kind, monthly_pageview_limit: from_volume},

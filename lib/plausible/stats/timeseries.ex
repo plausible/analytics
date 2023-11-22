@@ -226,7 +226,6 @@ defmodule Plausible.Stats.Timeseries do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp empty_row(date, metrics) do
     Enum.reduce(metrics, %{date: date}, fn metric, row ->
       case metric do

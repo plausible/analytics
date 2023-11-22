@@ -71,7 +71,6 @@ defmodule Plausible.Plugins.API.Token do
   end
 
   @spec last_used_humanize(t()) :: String.t()
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def last_used_humanize(token) do
     diff =
       if token.last_used_at do

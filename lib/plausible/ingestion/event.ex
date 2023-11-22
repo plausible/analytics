@@ -353,7 +353,7 @@ defmodule Plausible.Ingestion.Event do
   @tablet_types ["car browser", "tablet"]
   @desktop_types ["tv", "console", "desktop"]
   alias UAInspector.Result.Device
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
+
   defp screen_size(ua) do
     case ua.device do
       %Device{type: t} when t in @mobile_types ->

@@ -301,7 +301,6 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp base_session_query(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
@@ -421,7 +420,6 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp base_query_bare(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
