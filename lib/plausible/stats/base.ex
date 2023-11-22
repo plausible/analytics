@@ -31,7 +31,6 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_events(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
@@ -419,7 +418,6 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest, query)
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def dynamic_filter_condition(query, filter_key, db_field) do
     case query && query.filters && query.filters[filter_key] do
       {:is, value} ->

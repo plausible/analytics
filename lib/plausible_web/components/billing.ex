@@ -15,7 +15,6 @@ defmodule PlausibleWeb.Components.Billing do
   attr(:size, :atom, default: :sm)
   attr(:rest, :global)
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def premium_feature_notice(assigns) do
     ~H"""
     <.notice
@@ -37,7 +36,6 @@ defmodule PlausibleWeb.Components.Billing do
   attr(:resource, :string, required: true)
   attr(:rest, :global)
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def limit_exceeded_notice(assigns) do
     ~H"""
     <.notice {@rest} title="Notice">
