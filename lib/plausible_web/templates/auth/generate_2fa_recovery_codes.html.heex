@@ -12,8 +12,7 @@
       Use these recovery codes to log in if you lose access to the authenticator application. Store them somewhere safe!
       <div
         id="recovery-codes-list"
-        style="font-family: courier, monospace; letter-spacing: 2px;"
-        class="border-2 border-dotted border-gray-200 rounded-md text-gray-600 text-lg bg-gray-100 p-2 mt-6 flex flex-wrap"
+        class="font-mono border-2 border-dotted border-gray-200 dark:border-gray-700 rounded-md text-gray-600 dark:text-gray-200 text-lg bg-gray-100 dark:bg-gray-900 p-2 mt-6 flex flex-wrap"
       >
         <%= for code <- @recovery_codes do %>
           <div class="basis-1/2 text-center"><%= code %></div>
@@ -21,14 +20,14 @@
       </div>
     </div>
 
-    <div class="mt-6 flex flex-row justify-between">
+    <div class="mt-6 flex sm:flex-row flex-col justify-between">
       <button onclick="print(); event.stopPropagation();" id="print" class="button">
         Print Codes <Heroicons.printer class="h-4 w-4 ml-2 mt-1" />
       </button>
       <button
         onclick="var list = document.getElementById('recovery-codes-list'); var selection = getSelection(); selection.removeAllRanges(); var range = createRange(); range.selectNodeContents(list); selection.addRange(range); document.execCommand('copy'); selection.removeAllRanges(); event.stopPropagation(); document.getElementById('copy-base-icon').classList.add('hidden'); document.getElementById('copy-done-icon').classList.remove('hidden'); setTimeout(function() { document.getElementById('copy-done-icon').classList.add('hidden'); document.getElementById('copy-base-icon').classList.remove('hidden'); }, 2000)"
         id="copy"
-        class="button"
+        class="button sm:mt-0 mt-3"
       >
         Copy to Clipboard
         <span id="copy-base-icon">
@@ -40,7 +39,7 @@
       </button>
       <button
         id="finish"
-        class="button"
+        class="button sm:mt-0 mt-3"
         onclick={"location.replace('#{Routes.auth_path(@conn, :user_settings) <> "#setup-2fa"}')"}
       >
         Finish
