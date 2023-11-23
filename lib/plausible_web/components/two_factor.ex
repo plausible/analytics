@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
 
   def verify_2fa_input(assigns) do
     ~H"""
-    <div class={[@class, "flex items-center justify-center sm:justify-start"]}>
+    <div class={[@class, "flex justify-center sm:justify-start"]}>
       <%= Phoenix.HTML.Form.text_input(@form, @field,
         autocomplete: "off",
         class:
@@ -23,7 +23,9 @@ defmodule PlausibleWeb.Components.TwoFactor do
         value: "",
         required: "required"
       ) %>
-      <button id="verify" class="button rounded-l-none">Verify &rarr;</button>
+      <PlausibleWeb.Components.Generic.button id="verify" class="rounded-l-none">
+        Verify &rarr;
+      </PlausibleWeb.Components.Generic.button>
     </div>
     """
   end
