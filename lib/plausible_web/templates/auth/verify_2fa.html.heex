@@ -17,8 +17,12 @@
           >
             Use recovery code
           </a>
-          <br /> Lost your recovery codes?
-          <a href="/contact" class="underline text-indigo-600">Contact us</a>
+          <%= if not @is_selfhost do %>
+            <br /> Lost your recovery codes?
+            <a href="https://plausible.io/contact" class="underline text-indigo-600">
+              Contact us
+            </a>
+          <% end %>
         </p>
       </div>
     </div>
