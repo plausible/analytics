@@ -1,31 +1,16 @@
 <div class="w-full max-w-3xl mt-4 mx-auto flex">
-  <%= form_for @conn.params, 
-    Routes.auth_path(@conn, :verify_2fa_setup), [
-      onsubmit: "var button = document.getElementById('verify'); button.disabled = true; button.classList.add('animate-pulse')",
-      class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"
-    ], fn f -> %>
+  <div class="w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8">
     <h2 class="text-xl font-black dark:text-gray-100">
       Setup Two-Factor Authentication
     </h2>
 
     <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
-      Enter the code from your authenticator application before it expires or wait for a new one.
-      <div class="mt-6 flex items-center justify-center sm:justify-start">
-        <div>
-          <%= text_input(f, :code,
-            class:
-              "font-mono tracking-[0.5em] w-36 pl-5 font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-l-md",
-            oninput:
-              "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('verify').focus()",
-            onclick: "this.select();",
-            maxlength: "6",
-            placeholder: "••••••",
-            value: "",
-            required: "required"
-          ) %>
-        </div>
-        <button id="verify" class="button rounded-l-none">Verify &rarr;</button>
-      </div>
+      <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa_setup), [
+            onsubmit: "var button = document.getElementById('verify'); button.disabled = true; button.classList.add('animate-pulse')",
+    ], fn f -> %>
+        Enter the code from your authenticator application before it expires or wait for a new one.
+        <.verify_2fa_input form={f} field={:code} class="mt-6" />
+      <% end %>
 
       <div class="mt-6 flex flex-col">
         <p class="text-sm">
@@ -37,7 +22,16 @@
             Go back to settings
           </a>
         </p>
+
+        <p class="text-sm">
+          <%= form_for @conn.params, Routes.auth_path(@conn, :initiate_2fa_setup), [id: "start-over-form"], fn _f -> %>
+            Having trouble?
+            <button class="underline text-indigo-600">
+              Start over
+            </button>
+          <% end %>
+        </p>
       </div>
     </div>
-  <% end %>
+  </div>
 </div>
