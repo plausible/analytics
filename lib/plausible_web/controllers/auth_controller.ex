@@ -377,7 +377,7 @@ defmodule PlausibleWeb.AuthController do
     case Auth.TOTP.generate_recovery_codes(conn.assigns.current_user, password) do
       {:ok, codes} ->
         conn
-        |> put_flash(:success, "New recovery codes got generated")
+        |> put_flash(:success, "New recovery codes generated")
         |> render("generate_2fa_recovery_codes.html", recovery_codes: codes, from_setup: false)
 
       {:error, :invalid_password} ->
