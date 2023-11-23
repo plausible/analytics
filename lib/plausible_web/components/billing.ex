@@ -85,11 +85,7 @@ defmodule PlausibleWeb.Components.Billing do
   def render_monthly_pageview_usage(%{usage: usage} = assigns)
       when is_map_key(usage, :last_30_days) do
     ~H"""
-    <.monthly_pageview_usage_table
-      usage={@usage.last_30_days}
-      limit={@total_pageview_limit}
-      period={:last_30_days}
-    />
+    <.monthly_pageview_usage_table usage={@usage.last_30_days} limit={@limit} period={:last_30_days} />
     """
   end
 
@@ -131,21 +127,17 @@ defmodule PlausibleWeb.Components.Billing do
       <div x-show="tab === 'current_cycle'">
         <.monthly_pageview_usage_table
           usage={@usage.current_cycle}
-          limit={@total_pageview_limit}
+          limit={@limit}
           period={:current_cycle}
         />
       </div>
       <div x-show="tab === 'last_cycle'">
-        <.monthly_pageview_usage_table
-          usage={@usage.last_cycle}
-          limit={@total_pageview_limit}
-          period={:last_cycle}
-        />
+        <.monthly_pageview_usage_table usage={@usage.last_cycle} limit={@limit} period={:last_cycle} />
       </div>
       <div x-show="tab === 'penultimate_cycle'">
         <.monthly_pageview_usage_table
           usage={@usage.penultimate_cycle}
-          limit={@total_pageview_limit}
+          limit={@limit}
           period={:penultimate_cycle}
         />
       </div>

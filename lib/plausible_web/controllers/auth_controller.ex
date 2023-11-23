@@ -391,8 +391,8 @@ defmodule PlausibleWeb.AuthController do
       team_member_usage: Quota.team_member_usage(user),
       site_limit: Quota.site_limit(user),
       site_usage: Quota.site_usage(user),
-      total_pageview_limit: Quota.monthly_pageview_limit(user.subscription),
-      usage: Quota.monthly_pageview_usage_for(user)
+      pageview_limit: Quota.monthly_pageview_limit(user.subscription),
+      pageview_usage: Quota.monthly_pageview_usage_for(user)
     )
   end
 
