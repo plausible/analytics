@@ -379,19 +379,6 @@ defmodule PlausibleWeb.AuthController do
     email_changeset = Keyword.fetch!(opts, :email_changeset)
 
     user = Plausible.Users.with_subscription(conn.assigns[:current_user])
-    active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
-
-    usage =
-      if active_subscription? && user.subscription.last_bill_date do
-        [:current_cycle, :last_cycle, :penultimate_cycle]
-        |> Task.async_stream(fn cycle ->
-          %{cycle => Quota.monthly_pageview_usage(user, cycle)}
-        end)
-        |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
-        |> Enum.reduce(%{}, &Map.merge/2)
-      else
-        %{last_30_days: Quota.monthly_pageview_usage(user, :last_30_days)}
-      end
 
     render(conn, "user_settings.html",
       user: user |> Repo.preload(:api_keys),
@@ -405,7 +392,7 @@ defmodule PlausibleWeb.AuthController do
       site_limit: Quota.site_limit(user),
       site_usage: Quota.site_usage(user),
       total_pageview_limit: Quota.monthly_pageview_limit(user.subscription),
-      usage: usage
+      usage: Quota.monthly_pageview_usage_for(user)
     )
   end
 

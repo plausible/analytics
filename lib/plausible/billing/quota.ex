@@ -113,7 +113,7 @@ defmodule Plausible.Billing.Quota do
 
   @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
 
-  @spec monthly_pageview_usage(User.t(), period()) :: pageview_usage()
+  @spec monthly_pageview_usage(User.t(), period(), Date.t()) :: pageview_usage()
 
   def monthly_pageview_usage(user, period, today \\ Timex.today())
 
@@ -172,6 +172,33 @@ defmodule Plausible.Billing.Quota do
       custom_events: custom_events,
       total: pageviews + custom_events
     }
+  end
+
+  @type billing_cycles_usage() :: %{
+          current_cycle: pageview_usage(),
+          last_cycle: pageview_usage(),
+          penultimate_cycle: pageview_usage()
+        }
+
+  @type last_30_days_usage() :: %{
+          last_30_days: pageview_usage()
+        }
+
+  @spec monthly_pageview_usage_for(User.t()) :: billing_cycles_usage() | last_30_days_usage()
+
+  def monthly_pageview_usage_for(user) do
+    active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
+
+    if active_subscription? && user.subscription.last_bill_date do
+      [:current_cycle, :last_cycle, :penultimate_cycle]
+      |> Task.async_stream(fn cycle ->
+        %{cycle => monthly_pageview_usage(user, cycle)}
+      end)
+      |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
+      |> Enum.reduce(%{}, &Map.merge/2)
+    else
+      %{last_30_days: monthly_pageview_usage(user, :last_30_days)}
+    end
   end
 
   @team_member_limit_for_trials 3
