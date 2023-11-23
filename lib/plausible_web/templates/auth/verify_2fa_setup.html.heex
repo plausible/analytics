@@ -9,7 +9,7 @@
             onsubmit: "var button = document.getElementById('verify'); button.disabled = true; button.classList.add('animate-pulse')",
     ], fn f -> %>
         Enter the code from your authenticator application before it expires or wait for a new one.
-        <.verify_2fa_input form={f} field={:code} class="mt-6" />
+        <PlausibleWeb.Components.TwoFactor.verify_2fa_input form={f} field={:code} class="mt-6" />
       <% end %>
 
       <div class="mt-6 flex flex-col">

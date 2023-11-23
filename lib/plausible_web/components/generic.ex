@@ -248,29 +248,6 @@ defmodule PlausibleWeb.Components.Generic do
     end
   end
 
-  attr :form, :any, required: true
-  attr :field, :any, required: true
-  attr :class, :string, default: ""
-
-  def verify_2fa_input(assigns) do
-    ~H"""
-    <div class={[@class, "flex items-center justify-center sm:justify-start"]}>
-      <%= Phoenix.HTML.Form.text_input(@form, @field,
-        class:
-          "font-mono tracking-[0.5em] w-36 pl-5 font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-l-md",
-        oninput:
-          "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('verify').focus()",
-        onclick: "this.select();",
-        maxlength: "6",
-        placeholder: "••••••",
-        value: "",
-        required: "required"
-      ) %>
-      <button id="verify" class="button rounded-l-none">Verify &rarr;</button>
-    </div>
-    """
-  end
-
   attr :text, :string, required: true
   attr :scale, :integer, default: 4
 
