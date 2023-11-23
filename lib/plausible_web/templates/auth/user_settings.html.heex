@@ -459,7 +459,7 @@
     state_param="regenerate2FAOpen"
     form_data={@conn.params}
     form_target={Routes.auth_path(@conn, :generate_2fa_recovery_codes)}
-    onsubmit="var group = document.querySelector('#buttons'); group.classList.add('submitting');"
+    onsubmit="var group = document.querySelector('#regenerate-2fa-modal-buttons'); group.classList.add('submitting');"
     title="Generate New Recovery Codes?"
   >
     <:icon>
@@ -467,11 +467,11 @@
     </:icon>
 
     <:buttons>
-      <div x-data="{submitted: false}" class="group" id="buttons">
+      <div x-data="{submitted: false}" class="group" id="regenerate-2fa-modal-buttons">
         <.button
           type="submit"
-          x-on:click="submitted = true"
-          class="w-52 group-[.submitting]:bg-gray-400 dark:group-[.submitting]:bg-gray-800"
+          onclick="submitted = true"
+          class="w-full sm:w-52 group-[.submitting]:bg-gray-400 dark:group-[.submitting]:bg-gray-800"
         >
           <span x-show="!submitted">
             Generate New Codes
@@ -496,12 +496,12 @@
       Enter your password to continue.
     </div>
 
-    <div class="mt-3">
+    <div class="mt-3 w-full">
       <%= password_input(f, :password,
         placeholder: "Enter password",
         "x-ref": "regenerate2FAPassword",
         class:
-          "shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
+          "w-full shadow-sm dark:bg-gray-900 dark:text-gray-300 focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-500 rounded-md dark:bg-gray-800"
       ) %>
     </div>
   </PlausibleWeb.Components.TwoFactor.modal>
