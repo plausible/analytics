@@ -36,6 +36,10 @@ defmodule PlausibleWeb.AuthController do
          ]
   )
 
+  @remember_2fa_cookie "remember_2fa"
+  @remember_2fa_days 30
+  @remember_2fa_seconds @remember_2fa_days * 24 * 60 * 60
+
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
     with {:ok, user} <- login_user(conn, email, password) do
       conn = set_user_session(conn, user)
@@ -202,7 +206,7 @@ defmodule PlausibleWeb.AuthController do
 
   def login(conn, %{"email" => email, "password" => password}) do
     with {:ok, user} <- login_user(conn, email, password) do
-      if Auth.TOTP.enabled?(user) do
+      if Auth.TOTP.enabled?(user) and not remember_2fa?(conn) do
         conn
         |> set_2fa_user(user)
         |> redirect(to: Routes.auth_path(conn, :verify_2fa))
@@ -398,7 +402,10 @@ defmodule PlausibleWeb.AuthController do
         login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
 
         if Auth.TOTP.enabled?(user) do
-          render(conn, "verify_2fa.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+          render(conn, "verify_2fa.html",
+            remember_2fa_days: @remember_2fa_days,
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
         else
           conn
           |> clear_2fa_user()
@@ -412,7 +419,7 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  def verify_2fa(conn, %{"code" => code}) do
+  def verify_2fa(conn, %{"code" => code} = params) do
     login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
 
     with {:ok, user} <- get_2fa_user_limited(conn) do
@@ -422,6 +429,7 @@ defmodule PlausibleWeb.AuthController do
           |> clear_2fa_user()
           |> set_user_session(user)
           |> put_session(:login_dest, nil)
+          |> maybe_set_remember_2fa(params["remember_2fa"])
           |> redirect(to: login_dest)
 
         {:error, :invalid_code} ->
@@ -431,7 +439,10 @@ defmodule PlausibleWeb.AuthController do
 
           conn
           |> put_flash(:error, "The provided code is invalid. Please try again")
-          |> render("verify_2fa.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+          |> render("verify_2fa.html",
+            remember_2fa_days: @remember_2fa_days,
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
 
         {:error, :not_enabled} ->
           conn
@@ -495,6 +506,21 @@ defmodule PlausibleWeb.AuthController do
       end
     end
   end
+
+  defp remember_2fa?(conn) do
+    conn = fetch_cookies(conn, signed: [@remember_2fa_cookie])
+
+    conn.cookies[@remember_2fa_cookie] == "true"
+  end
+
+  defp maybe_set_remember_2fa(conn, "true") do
+    put_resp_cookie(conn, @remember_2fa_cookie, "true",
+      sign: true,
+      max_age: @remember_2fa_seconds
+    )
+  end
+
+  defp maybe_set_remember_2fa(conn, _), do: conn
 
   defp get_2fa_user_limited(conn) do
     case get_2fa_user(conn) do

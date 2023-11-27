@@ -8,6 +8,15 @@
       Enter the code from your authenticator application before it expires or wait for a new one.
       <PlausibleWeb.Components.TwoFactor.verify_2fa_input form={f} field={:code} class="mt-6" />
 
+      <div class="mt-4 flex flex-inline items-center sm:justify-start justify-center">
+        <%= checkbox(f, :remember_2fa,
+          class: "block h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+        ) %>
+        <label class="block ml-2" for="remember_2fa">
+          Trust this device for <%= @remember_2fa_days %> days
+        </label>
+      </div>
+
       <div class="mt-6 flex flex-row justify-between items-center">
         <p class="text-sm">
           Can't access your authenticator application?
