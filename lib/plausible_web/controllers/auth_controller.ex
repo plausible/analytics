@@ -425,6 +425,10 @@ defmodule PlausibleWeb.AuthController do
           |> redirect(to: login_dest)
 
         {:error, :invalid_code} ->
+          maybe_log_failed_login_attempts(
+            "wrong 2FA verification code provided for #{user.email}"
+          )
+
           conn
           |> put_flash(:error, "The provided code is invalid. Please try again")
           |> render("verify_2fa.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
@@ -474,6 +478,8 @@ defmodule PlausibleWeb.AuthController do
           |> redirect(to: login_dest)
 
         {:error, :invalid_code} ->
+          maybe_log_failed_login_attempts("wrong 2FA recovery code provided for #{user.email}")
+
           conn
           |> put_flash(:error, "The provided recovery code is invalid. Please try another one")
           |> render("verify_2fa_recovery_code.html",
