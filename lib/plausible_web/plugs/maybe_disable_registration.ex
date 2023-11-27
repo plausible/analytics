@@ -21,10 +21,7 @@ defmodule PlausibleWeb.Plugs.MaybeDisableRegistration do
     first_launch? = Release.should_be_first_launch?()
 
     cond do
-      first_launch? ->
-        conn
-
-      disable_registration in disabled_for ->
+      not first_launch? and disable_registration in disabled_for ->
         conn
         |> put_flash(:error, "Registration is disabled on this instance")
         |> redirect(to: Routes.auth_path(conn, :login_form))
