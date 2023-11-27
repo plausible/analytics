@@ -73,6 +73,7 @@ defmodule Plausible.Auth.TOTP do
   alias Plausible.Auth
   alias Plausible.Auth.TOTP
   alias Plausible.Repo
+  alias PlausibleWeb.Email
 
   @issuer_name "Plausible Analytics"
   @recovery_codes_count 10
@@ -123,12 +124,21 @@ defmodule Plausible.Auth.TOTP do
 
   def enable(user, code, opts) do
     with {:ok, user} <- do_validate_code(user, code, opts) do
-      user =
-        user
-        |> change(totp_enabled: true)
-        |> Repo.update!()
+      {:ok, {user, recovery_codes}} =
+        Repo.transaction(fn ->
+          user =
+            user
+            |> change(totp_enabled: true)
+            |> Repo.update!()
 
-      {:ok, recovery_codes} = do_generate_recovery_codes(user)
+          {:ok, recovery_codes} = do_generate_recovery_codes(user)
+
+          {user, recovery_codes}
+        end)
+
+      user
+      |> Email.two_factor_enabled_email()
+      |> Plausible.Mailer.send()
 
       {:ok, user, %{recovery_codes: recovery_codes}}
     end
@@ -137,20 +147,27 @@ defmodule Plausible.Auth.TOTP do
   @spec disable(Auth.User.t(), String.t()) :: {:ok, Auth.User.t()} | {:error, :invalid_password}
   def disable(user, password) do
     if Auth.Password.match?(password, user.password_hash) do
-      Repo.transaction(fn ->
-        {_, _} =
-          user
-          |> recovery_codes_query()
-          |> Repo.delete_all()
+      {:ok, user} =
+        Repo.transaction(fn ->
+          {_, _} =
+            user
+            |> recovery_codes_query()
+            |> Repo.delete_all()
 
-        user
-        |> change(
-          totp_enabled: false,
-          totp_secret: nil,
-          totp_last_used_at: nil
-        )
-        |> Repo.update!()
-      end)
+          user
+          |> change(
+            totp_enabled: false,
+            totp_secret: nil,
+            totp_last_used_at: nil
+          )
+          |> Repo.update!()
+        end)
+
+      user
+      |> Email.two_factor_disabled_email()
+      |> Plausible.Mailer.send()
+
+      {:ok, user}
     else
       {:error, :invalid_password}
     end
