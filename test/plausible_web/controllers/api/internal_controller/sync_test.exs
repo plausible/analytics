@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Api.InternalController.SyncTest do
   describe "PUT /api/:domain/disable-feature" do
     setup [:create_user, :log_in]
 
+    @tag :full_build_only
     test "when the logged-in user is an super-admin", %{conn: conn, user: user} do
       site = insert(:site)
       patch_env(:super_admin_user_ids, [user.id])

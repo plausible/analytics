@@ -72,6 +72,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:website - as a super admin" do
+    @describetag :full_build_only
     setup [:create_user, :make_user_super_admin, :log_in]
 
     test "can view a private dashboard with stats", %{conn: conn} do
