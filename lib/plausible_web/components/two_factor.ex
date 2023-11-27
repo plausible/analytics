@@ -16,15 +16,28 @@ defmodule PlausibleWeb.Components.TwoFactor do
         class:
           "font-mono tracking-[0.5em] w-36 pl-5 font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block border-gray-300 dark:border-gray-500 dark:text-gray-200 dark:bg-gray-900 rounded-l-md",
         oninput:
-          "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('verify').focus()",
+          "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 6) document.getElementById('verify-button').focus()",
         onclick: "this.select();",
+        oninvalid: "document.getElementById('verify-button').disabled = false",
         maxlength: "6",
         placeholder: "••••••",
         value: "",
         required: "required"
       ) %>
-      <PlausibleWeb.Components.Generic.button id="verify" class="rounded-l-none">
-        Verify &rarr;
+      <PlausibleWeb.Components.Generic.button
+        type="submit"
+        id="verify-button"
+        onclick="event.target.disabled = true"
+        class="rounded-l-none [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
+      >
+        <span class="label-enabled pointer-events-none">
+          Verify &rarr;
+        </span>
+
+        <span class="label-disabled text-white dark:text-gray-600">
+          <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-600" />
+          Verifying...
+        </span>
       </PlausibleWeb.Components.Generic.button>
     </div>
     """

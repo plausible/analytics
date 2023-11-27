@@ -5,9 +5,7 @@
     </h2>
 
     <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
-      <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa_setup), [
-            onsubmit: "var button = document.getElementById('verify'); button.disabled = true; button.classList.add('animate-pulse')",
-    ], fn f -> %>
+      <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa_setup), [], fn f -> %>
         Enter the code from your authenticator application before it expires or wait for a new one.
         <PlausibleWeb.Components.TwoFactor.verify_2fa_input form={f} field={:code} class="mt-6" />
       <% end %>

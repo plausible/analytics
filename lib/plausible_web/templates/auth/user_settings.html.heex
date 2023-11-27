@@ -427,12 +427,9 @@
       <Heroicons.shield_exclamation class="h-6 w-6" />
     </:icon>
     <:buttons>
-      <button
-        type="submit"
-        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700 sm:ml-3 sm:w-auto sm:text-sm"
-      >
+      <.button type="submit" class="w-full sm:w-auto">
         Disable 2FA
-      </button>
+      </.button>
     </:buttons>
 
     <div class="text-sm mt-2">
@@ -459,7 +456,6 @@
     state_param="regenerate2FAOpen"
     form_data={@conn.params}
     form_target={Routes.auth_path(@conn, :generate_2fa_recovery_codes)}
-    onsubmit="var group = document.querySelector('#regenerate-2fa-modal-buttons'); group.classList.add('submitting');"
     title="Generate New Recovery Codes?"
   >
     <:icon>
@@ -467,25 +463,20 @@
     </:icon>
 
     <:buttons>
-      <div x-data="{submitted: false}" class="group" id="regenerate-2fa-modal-buttons">
-        <.button
-          type="submit"
-          onclick="submitted = true"
-          class="w-full sm:w-52 group-[.submitting]:bg-gray-400 dark:group-[.submitting]:bg-gray-800"
-        >
-          <span x-show="!submitted">
-            Generate New Codes
-          </span>
+      <.button
+        type="submit"
+        onclick="event.target.disabled = true"
+        class="w-full sm:w-auto [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
+      >
+        <span class="label-enabled pointer-events-none">
+          Generate New Codes
+        </span>
 
-          <span
-            x-show="submitted"
-            style="display: none;"
-            class="inline-flex items-center text-white dark:text-gray-600"
-          >
-            <.spinner class="h-5 w-5 mr-2 text-white dark:text-gray-600" /> Generating Codes
-          </span>
-        </.button>
-      </div>
+        <span class="label-disabled text-white dark:text-gray-600">
+          <.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-600" />
+          Generating Codes
+        </span>
+      </.button>
     </:buttons>
 
     <div class="text-sm mt-2">
