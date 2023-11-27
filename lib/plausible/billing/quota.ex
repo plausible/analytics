@@ -26,44 +26,50 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @limit_sites_since ~D[2021-05-05]
-  @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
   @doc """
   Returns the limit of sites a user can have.
 
   For enterprise customers, returns :unlimited. The site limit is checked in a
   background job so as to avoid service disruption.
   """
-  def site_limit(user) do
-    cond do
-      Application.get_env(:plausible, :is_selfhost) -> :unlimited
-      Timex.before?(user.inserted_at, @limit_sites_since) -> :unlimited
-      true -> get_site_limit_from_plan(user)
+  on_full_build do
+    @limit_sites_since ~D[2021-05-05]
+    @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
+    def site_limit(user) do
+      cond do
+        Timex.before?(user.inserted_at, @limit_sites_since) -> :unlimited
+        true -> get_site_limit_from_plan(user)
+      end
     end
-  end
 
-  @site_limit_for_trials 10
-  @site_limit_for_legacy_trials 50
-  @site_limit_for_free_10k 50
-  defp get_site_limit_from_plan(user) do
-    user = Plausible.Users.with_subscription(user)
+    @site_limit_for_trials 10
+    @site_limit_for_legacy_trials 50
+    @site_limit_for_free_10k 50
+    defp get_site_limit_from_plan(user) do
+      user = Plausible.Users.with_subscription(user)
 
-    case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{} ->
-        :unlimited
+      case Plans.get_subscription_plan(user.subscription) do
+        %EnterprisePlan{} ->
+          :unlimited
 
-      %Plan{site_limit: site_limit} ->
-        site_limit
+        %Plan{site_limit: site_limit} ->
+          site_limit
 
-      :free_10k ->
-        @site_limit_for_free_10k
+        :free_10k ->
+          @site_limit_for_free_10k
 
-      nil ->
-        if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
-          @site_limit_for_legacy_trials
-        else
-          @site_limit_for_trials
-        end
+        nil ->
+          if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
+            @site_limit_for_legacy_trials
+          else
+            @site_limit_for_trials
+          end
+      end
+    end
+  else
+    @spec site_limit(any()) :: non_neg_integer() | :unlimited
+    def site_limit(_) do
+      :unlimited
     end
   end
 
