@@ -413,35 +413,29 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def verify_2fa(conn, %{"code" => code}) do
-    case get_2fa_user(conn) do
-      {:ok, user} ->
-        login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+    login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
 
-        case Auth.TOTP.validate_code(user, code) do
-          {:ok, _} ->
-            conn
-            |> clear_2fa_user()
-            |> set_user_session(user)
-            |> put_session(:login_dest, nil)
-            |> redirect(to: login_dest)
+    with {:ok, user} <- get_2fa_user_limited(conn) do
+      case Auth.TOTP.validate_code(user, code) do
+        {:ok, user} ->
+          conn
+          |> clear_2fa_user()
+          |> set_user_session(user)
+          |> put_session(:login_dest, nil)
+          |> redirect(to: login_dest)
 
-          {:error, :invalid_code} ->
-            conn
-            |> put_flash(:error, "The provided code is invalid. Please try again")
-            |> render("verify_2fa.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+        {:error, :invalid_code} ->
+          conn
+          |> put_flash(:error, "The provided code is invalid. Please try again")
+          |> render("verify_2fa.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
 
-          {:error, :not_enabled} ->
-            conn
-            |> clear_2fa_user()
-            |> set_user_session(user)
-            |> put_session(:login_dest, nil)
-            |> redirect(to: login_dest)
-        end
-
-      {:error, :not_found} ->
-        conn
-        |> clear_2fa_user()
-        |> redirect(to: Routes.auth_path(conn, :login_form))
+        {:error, :not_enabled} ->
+          conn
+          |> clear_2fa_user()
+          |> set_user_session(user)
+          |> put_session(:login_dest, nil)
+          |> redirect(to: login_dest)
+      end
     end
   end
 
@@ -468,31 +462,49 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def verify_2fa_recovery_code(conn, %{"recovery_code" => recovery_code}) do
+    with {:ok, user} <- get_2fa_user_limited(conn) do
+      login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+
+      case Auth.TOTP.use_recovery_code(user, recovery_code) do
+        :ok ->
+          conn
+          |> clear_2fa_user()
+          |> set_user_session(user)
+          |> put_session(:login_dest, nil)
+          |> redirect(to: login_dest)
+
+        {:error, :invalid_code} ->
+          conn
+          |> put_flash(:error, "The provided recovery code is invalid. Please try another one")
+          |> render("verify_2fa_recovery_code.html",
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
+
+        {:error, :not_enabled} ->
+          conn
+          |> clear_2fa_user()
+          |> set_user_session(user)
+          |> put_session(:login_dest, nil)
+          |> redirect(to: login_dest)
+      end
+    end
+  end
+
+  defp get_2fa_user_limited(conn) do
     case get_2fa_user(conn) do
       {:ok, user} ->
-        login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+        with :ok <- check_ip_rate_limit(conn),
+             :ok <- check_user_rate_limit(user) do
+          {:ok, user}
+        else
+          {:rate_limit, _} ->
+            maybe_log_failed_login_attempts("too many logging attempts for #{user.email}")
 
-        case Auth.TOTP.use_recovery_code(user, recovery_code) do
-          :ok ->
-            conn
-            |> clear_2fa_user()
-            |> set_user_session(user)
-            |> put_session(:login_dest, nil)
-            |> redirect(to: login_dest)
-
-          {:error, :invalid_code} ->
-            conn
-            |> put_flash(:error, "The provided recover code is invalid. Please try another one")
-            |> render("verify_2fa_recovery_code.html",
-              layout: {PlausibleWeb.LayoutView, "focus.html"}
+            render_error(
+              conn,
+              429,
+              "Too many login attempts. Wait a minute before trying again."
             )
-
-          {:error, :not_enabled} ->
-            conn
-            |> clear_2fa_user()
-            |> set_user_session(user)
-            |> put_session(:login_dest, nil)
-            |> redirect(to: login_dest)
         end
 
       {:error, :not_found} ->
