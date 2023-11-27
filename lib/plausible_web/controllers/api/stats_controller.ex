@@ -1186,11 +1186,11 @@ defmodule PlausibleWeb.Api.StatsController do
   def custom_prop_values(conn, params) do
     site = Plausible.Repo.preload(conn.assigns.site, :owner)
 
-    case Plausible.Billing.Feature.Props.check_availability(site.owner) do
-      :ok ->
-        props = breakdown_custom_prop_values(site, params)
-        json(conn, props)
-
+    with prop_key <- Map.fetch!(params, "prop_key"),
+         :ok <- Plausible.Props.ensure_prop_key_accessible(prop_key, site.owner) do
+      props = breakdown_custom_prop_values(site, params)
+      json(conn, props)
+    else
       {:error, :upgrade_required} ->
         H.payment_required(
           conn,

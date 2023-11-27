@@ -96,6 +96,14 @@ defmodule Plausible.Props do
   """
   def internal_keys, do: @internal_keys
 
+  def ensure_prop_key_accessible(prop_key, user) do
+    if prop_key in @internal_keys do
+      :ok
+    else
+      Plausible.Billing.Feature.Props.check_availability(user)
+    end
+  end
+
   @spec suggest_keys_to_allow(Plausible.Site.t(), non_neg_integer()) :: [String.t()]
   @doc """
   Queries the events table to fetch the #{@max_props} most frequent prop keys
