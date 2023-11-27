@@ -283,7 +283,7 @@ defmodule PlausibleWeb.Live.Sites do
         <div class="py-1 text-sm" role="none">
           <.unstyled_link
             :if={List.first(@site.memberships).role != :viewer}
-            href={"/#{URI.encode_www_form(@site.domain)}/settings"}
+            href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
             class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
             role="menuitem"
             tabindex="-1"
