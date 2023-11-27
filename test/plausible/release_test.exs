@@ -1,6 +1,7 @@
 defmodule Plausible.ReleaseTest do
   use Plausible.DataCase
   alias Plausible.{Release, Auth}
+  import ExUnit.CaptureIO
 
   describe "should_be_first_launch?/0" do
     test "returns true when self-hosted and no users" do
@@ -29,7 +30,14 @@ defmodule Plausible.ReleaseTest do
   end
 
   test "dump_plans/0 inserts plans" do
-    Release.dump_plans()
-    assert Plausible.Repo.aggregate("plans", :count) == 54
+    stdout =
+      capture_io(fn ->
+        Release.dump_plans()
+      end)
+
+    assert stdout =~ "Loading plausible.."
+    assert stdout =~ "Starting dependencies.."
+    assert stdout =~ "Starting repos.."
+    assert stdout =~ "Inserted 54 plans"
   end
 end
