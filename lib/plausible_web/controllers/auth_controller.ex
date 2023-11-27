@@ -31,12 +31,6 @@ defmodule PlausibleWeb.AuthController do
          ]
   )
 
-  plug(:assign_is_selfhost)
-
-  defp assign_is_selfhost(conn, _opts) do
-    assign(conn, :is_selfhost, Plausible.Release.selfhost?())
-  end
-
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
     with {:ok, user} <- login_user(conn, email, password) do
       conn = set_user_session(conn, user)
