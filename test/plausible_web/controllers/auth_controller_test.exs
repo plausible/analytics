@@ -457,6 +457,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert resp =~ "Change email address"
     end
 
+    @tag :full_build_only
     test "shows subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "558018", user: user)
       conn = get(conn, "/settings")
@@ -464,6 +465,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "monthly billing"
     end
 
+    @tag :full_build_only
     test "shows yearly subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "590752", user: user)
       conn = get(conn, "/settings")
@@ -471,6 +473,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
+    @tag :full_build_only
     test "shows free subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "free_10k", user: user)
       conn = get(conn, "/settings")
@@ -478,6 +481,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "N/A billing"
     end
 
+    @tag :full_build_only
     test "shows enterprise plan subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "123", user: user)
 
@@ -488,6 +492,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
+    @tag :full_build_only
     test "shows current enterprise plan subscription when user has a new one to upgrade to", %{
       conn: conn,
       user: user
@@ -511,6 +516,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
+    @tag :full_build_only
     test "renders two links to '/billing/choose-plan` with the text 'Upgrade'", %{conn: conn} do
       doc =
         get(conn, "/settings")
@@ -526,6 +532,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_attr(upgrade_link_2, "href") == Routes.billing_path(conn, :choose_plan)
     end
 
+    @tag :full_build_only
     test "renders a link to '/billing/choose-plan' with the text 'Change plan' + cancel link", %{
       conn: conn,
       user: user
@@ -585,6 +592,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute element_exists?(doc, "#upgrade-or-change-plan-link")
     end
 
+    @tag :full_build_only
     test "renders two links to '/billing/choose-plan' with the text 'Upgrade' for a configured enterprise plan",
          %{conn: conn, user: user} do
       configure_enterprise_plan(user)
@@ -607,6 +615,7 @@ defmodule PlausibleWeb.AuthControllerTest do
                Routes.billing_path(conn, :choose_plan)
     end
 
+    @tag :full_build_only
     test "links to '/billing/choose-plan' with the text 'Change plan' for a configured enterprise plan with an existing subscription + renders cancel button",
          %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
@@ -628,6 +637,7 @@ defmodule PlausibleWeb.AuthControllerTest do
                Routes.billing_path(conn, :choose_plan)
     end
 
+    @tag :full_build_only
     test "renders cancelled subscription notice", %{conn: conn, user: user} do
       insert(:subscription,
         paddle_plan_id: @v4_plan_id,
@@ -645,6 +655,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert notice_text =~ "Upgrade your subscription to get access to your stats again"
     end
 
+    @tag :full_build_only
     test "renders cancelled subscription notice with some subscription days still left", %{
       conn: conn,
       user: user
@@ -666,6 +677,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert notice_text =~ "Upgrade your subscription to make sure you don't lose access"
     end
 
+    @tag :full_build_only
     test "renders cancelled subscription notice with a warning about losing grandfathering", %{
       conn: conn,
       user: user
@@ -689,6 +701,7 @@ defmodule PlausibleWeb.AuthControllerTest do
                "by letting your subscription expire, you lose access to our grandfathered terms"
     end
 
+    @tag :full_build_only
     test "shows invoices for subscribed user", %{conn: conn, user: user} do
       insert(:subscription,
         paddle_plan_id: "558018",
@@ -703,6 +716,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "$22.00"
     end
 
+    @tag :full_build_only
     test "shows 'something went wrong' on failed invoice request'", %{conn: conn, user: user} do
       insert(:subscription,
         paddle_plan_id: "558018",
