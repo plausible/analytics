@@ -121,9 +121,4 @@ defmodule PlausibleWeb.LayoutView do
   def is_current_tab(conn, tab) do
     List.last(conn.path_info) == tab
   end
-
-  defp is_selfhost() do
-    # XXX
-    Application.get_env(:plausible, :is_selfhost)
-  end
 end
