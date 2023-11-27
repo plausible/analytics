@@ -367,6 +367,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       refute Repo.reload(invitation)
     end
 
+    @tag :full_build_only
     test "locks the site if the new owner has no active subscription or trial" do
       existing_owner = insert(:user)
 
@@ -447,6 +448,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert Repo.reload!(site).locked
     end
 
+    @tag :full_build_only
     test "sets user's trial expiry date to yesterday if they don't have one" do
       existing_owner = insert(:user)
 
@@ -473,6 +475,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert Repo.reload!(site).locked
     end
 
+    @tag :full_build_only
     test "ends grace period and sends an email about it if new owner is past grace period" do
       existing_owner = insert(:user)
 

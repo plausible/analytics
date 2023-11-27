@@ -4,6 +4,14 @@ defmodule PlausibleWeb.AvatarControllerTest do
   import Mox
   setup :verify_on_exit!
 
+  if small_build?() do
+    setup do
+      # insert some user to prevent first launch redirect
+      insert(:user)
+      :ok
+    end
+  end
+
   describe "GET /avatar/:hash" do
     test "proxies the request to gravatar", %{conn: conn} do
       expect(

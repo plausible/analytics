@@ -1,6 +1,14 @@
 defmodule PlausibleWeb.PageControllerTest do
   use PlausibleWeb.ConnCase, async: true
 
+  if small_build?() do
+    setup do
+      # insert some user to prevent first launch redirect
+      insert(:user)
+      :ok
+    end
+  end
+
   describe "GET /" do
     test "shows landing page when user not authenticated", %{conn: conn} do
       assert conn |> get("/") |> html_response(200) =~ "Welcome to Plausible Analytics!"

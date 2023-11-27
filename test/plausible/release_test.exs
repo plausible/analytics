@@ -1,30 +1,30 @@
 defmodule Plausible.ReleaseTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   alias Plausible.{Release, Auth}
   import ExUnit.CaptureIO
 
   describe "should_be_first_launch?/0" do
+    @tag :small_build_only
     test "returns true when self-hosted and no users" do
-      patch_env(:is_selfhost, true)
       refute Repo.exists?(Auth.User)
       assert Release.should_be_first_launch?()
     end
 
+    @tag :full_build_only
     test "returns false when not self-hosted and has no users" do
-      patch_env(:is_selfhost, false)
       refute Repo.exists?(Auth.User)
       refute Release.should_be_first_launch?()
     end
 
+    @tag :full_build_only
     test "returns false when not self-hosted and has users" do
       insert(:user)
-      patch_env(:is_selfhost, false)
       refute Release.should_be_first_launch?()
     end
 
+    @tag :small_build_only
     test "returns false when self-hosted and has users" do
       insert(:user)
-      patch_env(:is_selfhost, true)
       refute Release.should_be_first_launch?()
     end
   end

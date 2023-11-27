@@ -209,13 +209,7 @@ defmodule Plausible.Billing.Quota do
     stats_api_usage = from a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id
 
     queries =
-      if Plausible.Release.selfhost?() do
-        [
-          {Props, props_usage_query},
-          {RevenueGoals, revenue_goals_usage},
-          {StatsAPI, stats_api_usage}
-        ]
-      else
+      on_full_build do
         funnels_usage_query =
           from f in "funnels",
             inner_join: os in subquery(owned_sites_query(user)),
@@ -224,6 +218,12 @@ defmodule Plausible.Billing.Quota do
         [
           {Props, props_usage_query},
           {Funnels, funnels_usage_query},
+          {RevenueGoals, revenue_goals_usage},
+          {StatsAPI, stats_api_usage}
+        ]
+      else
+        [
+          {Props, props_usage_query},
           {RevenueGoals, revenue_goals_usage},
           {StatsAPI, stats_api_usage}
         ]

@@ -15,6 +15,14 @@ defmodule PlausibleWeb.AuthControllerTest do
 
   setup :verify_on_exit!
 
+  if small_build?() do
+    setup do
+      # insert some user to prevent first launch redirect
+      insert(:user)
+      :ok
+    end
+  end
+
   @v3_plan_id "749355"
   @v4_plan_id "857097"
   @configured_enterprise_plan_paddle_plan_id "123"

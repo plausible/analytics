@@ -2,9 +2,8 @@ defmodule PlausibleWeb.AdminAuthControllerTest do
   use PlausibleWeb.ConnCase
   alias Plausible.Release
 
-  setup_patch_env(:is_selfhost, true)
-
   describe "GET /" do
+    @describetag :small_build_only
     test "disable registration", %{conn: conn} do
       prevent_first_launch()
       patch_config(disable_registration: true)

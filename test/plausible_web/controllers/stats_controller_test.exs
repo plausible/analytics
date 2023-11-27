@@ -44,6 +44,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "can not view stats of a private website", %{conn: conn} do
+      _ = insert(:user)
       conn = get(conn, "/test-site.com")
       assert html_response(conn, 404) =~ "There's nothing here"
     end
