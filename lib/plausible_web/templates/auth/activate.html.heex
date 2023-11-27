@@ -27,10 +27,10 @@
       <ol class="list-disc text-xs text-gray-500 leading-tight space-y-1 mt-1">
         <li>Check your spam folder</li>
         <li><%= link("Send a new code", class: "underline text-indigo-600", to: "/activate/request-code", method: :post) %> to <%= @conn.assigns[:current_user].email %></li>
-        <%= if Application.get_env(:plausible, :is_selfhost) do %>
-          <li>Ask on our <%= link("community-supported forum", to: "https://github.com/plausible/analytics/discussions", class: "text-indigo-600 underline" ) %></li>
-        <% else %>
+        <%= if full_build?() do %>
           <li><a class="underline text-indigo-600" href="https://plausible.io/contact">Contact us</a> if the problem persists</li>
+        <% else %>
+          <li>Ask on our <%= link("community-supported forum", to: "https://github.com/plausible/analytics/discussions", class: "text-indigo-600 underline" ) %></li>
         <% end %>
       </ol>
       <div class="mt-4 text-sm dark:text-gray-100">

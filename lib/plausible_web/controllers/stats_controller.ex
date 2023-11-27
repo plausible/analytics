@@ -363,14 +363,11 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp is_dbip() do
-    is_or_nil =
-      if Application.get_env(:plausible, :is_selfhost) do
-        if type = Plausible.Geo.database_type() do
-          String.starts_with?(type, "DBIP")
-        end
-      end
-
-    !!is_or_nil
+    on_full_build do
+      true
+    else
+      String.starts_with?(Plausible.Geo.database_type(), "DBIP")
+    end
   end
 
   defp title(%{path_info: ["plausible.io"]}, _) do
