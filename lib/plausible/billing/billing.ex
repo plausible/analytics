@@ -1,4 +1,5 @@
 defmodule Plausible.Billing do
+  use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Plans, Quota}
@@ -116,11 +117,15 @@ defmodule Plausible.Billing do
   defp subscription_is_active?(%Subscription{}), do: false
   defp subscription_is_active?(nil), do: false
 
-  def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
+  on_full_build do
+    def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
 
-  def on_trial?(user) do
-    user = Plausible.Users.with_subscription(user)
-    !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
+    def on_trial?(user) do
+      user = Plausible.Users.with_subscription(user)
+      !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
+    end
+  else
+    def on_trial?(_), do: false
   end
 
   def trial_days_left(user) do
