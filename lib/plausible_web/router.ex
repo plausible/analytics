@@ -278,8 +278,6 @@ defmodule PlausibleWeb.Router do
     put "/sites/:website/shared-links/:slug", SiteController, :update_shared_link
     delete "/sites/:website/shared-links/:slug", SiteController, :delete_shared_link
 
-    delete "/sites/:website/custom-domains/:id", SiteController, :delete_custom_domain
-
     get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
     post "/sites/:website/memberships/invite", Site.MembershipController, :invite_member
 
@@ -311,7 +309,6 @@ defmodule PlausibleWeb.Router do
     end
 
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
-    get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:website/settings/integrations", SiteController, :settings_integrations
 

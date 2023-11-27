@@ -135,12 +135,6 @@ defmodule Plausible.Factory do
     }
   end
 
-  def custom_domain_factory do
-    %Plausible.Site.CustomDomain{
-      domain: sequence(:custom_domain, &"domain-#{&1}.com")
-    }
-  end
-
   def weekly_report_factory do
     %Plausible.Site.WeeklyReport{}
   end
