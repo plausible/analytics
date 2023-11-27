@@ -10,7 +10,8 @@
 
       <div class="mt-4 flex flex-inline items-center sm:justify-start justify-center">
         <%= checkbox(f, :remember_2fa,
-          class: "block h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+          class:
+            "block h-5 w-5 rounded dark:bg-gray-700 border-gray-300 text-indigo-600 focus:ring-indigo-600"
         ) %>
         <label class="block ml-2" for="remember_2fa">
           Trust this device for <%= @remember_2fa_days %> days

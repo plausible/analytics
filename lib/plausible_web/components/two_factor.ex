@@ -34,8 +34,8 @@ defmodule PlausibleWeb.Components.TwoFactor do
           Verify &rarr;
         </span>
 
-        <span class="label-disabled text-white dark:text-gray-600">
-          <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-600" />
+        <span class="label-disabled">
+          <PlausibleWeb.Components.Generic.spinner class="inline-block h-5 w-5 mr-2 text-white dark:text-gray-400" />
           Verifying...
         </span>
       </PlausibleWeb.Components.Generic.button>
