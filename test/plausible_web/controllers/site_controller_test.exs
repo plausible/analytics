@@ -233,14 +233,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn =
         post(conn, "/sites", %{
           "site" => %{
-            "domain" => "example.com",
+            "domain" => "éxample.com",
             "timezone" => "Europe/London"
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet"
-      assert site = Repo.get_by(Plausible.Site, domain: "example.com")
-      assert site.domain == "example.com"
+      assert redirected_to(conn) == "/#{URI.encode_www_form("éxample.com")}/snippet"
+      assert site = Repo.get_by(Plausible.Site, domain: "éxample.com")
       assert site.timezone == "Europe/London"
       assert site.ingest_rate_limit_scale_seconds == 60
       assert site.ingest_rate_limit_threshold == 1_000_000
@@ -498,7 +497,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       updated = Repo.get(Plausible.Site, site.id)
       assert updated.timezone == "Europe/London"
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/general"
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/general"
     end
   end
 
@@ -510,7 +509,9 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       updated = Repo.get(Plausible.Site, site.id)
       assert updated.public
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/visibility"
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/visibility"
     end
 
     test "fails to make site public with insufficient permissions", %{conn: conn, user: user} do
@@ -542,7 +543,9 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       updated = Repo.get(Plausible.Site, site.id)
       refute updated.public
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/visibility"
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/visibility"
     end
   end
 
@@ -603,7 +606,9 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       updated_auth = Repo.one(Plausible.Site.GoogleAuth)
       assert updated_auth.property == "some-new-property.com"
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/integrations"
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/integrations"
     end
   end
 
@@ -615,7 +620,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/#{site.domain}/settings/google-search")
 
       refute Repo.exists?(Plausible.Site.GoogleAuth)
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/integrations"
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/integrations"
     end
 
     test "fails to delete associated google auth from the outside", %{
@@ -624,7 +631,7 @@ defmodule PlausibleWeb.SiteControllerTest do
     } do
       other_site = insert(:site)
       insert(:google_auth, user: user, site: other_site)
-      conn = delete(conn, "/#{other_site.domain}/settings/google-search")
+      conn = delete(conn, "/#{URI.encode_www_form(other_site.domain)}/settings/google-search")
 
       assert conn.status == 404
       assert Repo.exists?(Plausible.Site.GoogleAuth)
@@ -1213,7 +1220,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
 
       refute Repo.one(Plausible.Site.SharedLink)
-      assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
+      assert redirected_to(conn, 302) =~ "/#{URI.encode_www_form(site.domain)}/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Shared Link deleted"
     end
 
@@ -1224,7 +1231,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
 
       assert Repo.one(Plausible.Site.SharedLink)
-      assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
+      assert redirected_to(conn, 302) =~ "/#{URI.encode_www_form(site.domain)}/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find Shared Link"
     end
   end

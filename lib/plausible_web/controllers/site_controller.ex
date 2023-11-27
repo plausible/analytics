@@ -38,7 +38,7 @@ defmodule PlausibleWeb.SiteController do
 
         conn
         |> put_session(site.domain <> "_offer_email_report", true)
-        |> redirect(to: Routes.site_path(conn, :add_snippet, site.domain))
+        |> redirect(external: Routes.site_path(conn, :add_snippet, site.domain))
 
       {:error, :limit, limit, _} ->
         render(conn, "new.html",
@@ -279,7 +279,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Google integration saved successfully")
-    |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
+    |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def delete_google_auth(conn, _params) do
@@ -291,7 +291,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn = put_flash(conn, :success, "Google account unlinked from Plausible")
 
-    redirect(conn, to: Routes.site_path(conn, :settings_integrations, site.domain))
+    redirect(conn, external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def update_settings(conn, %{"site" => site_params}) do
@@ -305,7 +305,7 @@ defmodule PlausibleWeb.SiteController do
         conn
         |> put_session(site_session_key, nil)
         |> put_flash(:success, "Your site settings have been saved")
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
 
       {:error, changeset} ->
         conn
@@ -345,7 +345,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Stats for #{site.domain} are now public.")
-    |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
+    |> redirect(external: Routes.site_path(conn, :settings_visibility, site.domain))
   end
 
   def make_private(conn, _params) do
@@ -356,7 +356,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Stats for #{site.domain} are now private.")
-    |> redirect(to: Routes.site_path(conn, :settings_visibility, site.domain))
+    |> redirect(external: Routes.site_path(conn, :settings_visibility, site.domain))
   end
 
   def enable_weekly_report(conn, _params) do
@@ -373,7 +373,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "You will receive an email report every Monday going forward")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def disable_weekly_report(conn, _params) do
@@ -382,7 +382,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "You will not receive weekly email reports going forward")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def add_weekly_report_recipient(conn, %{"recipient" => recipient}) do
@@ -394,7 +394,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Added #{recipient} as a recipient for the weekly report")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def remove_weekly_report_recipient(conn, %{"recipient" => recipient}) do
@@ -409,7 +409,7 @@ defmodule PlausibleWeb.SiteController do
       :success,
       "Removed #{recipient} as a recipient for the weekly report"
     )
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def enable_monthly_report(conn, _params) do
@@ -427,7 +427,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "You will receive an email report every month going forward")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def disable_monthly_report(conn, _params) do
@@ -436,7 +436,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "You will not receive monthly email reports going forward")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def add_monthly_report_recipient(conn, %{"recipient" => recipient}) do
@@ -448,7 +448,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Added #{recipient} as a recipient for the monthly report")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def remove_monthly_report_recipient(conn, %{"recipient" => recipient}) do
@@ -463,7 +463,7 @@ defmodule PlausibleWeb.SiteController do
       :success,
       "Removed #{recipient} as a recipient for the monthly report"
     )
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def enable_spike_notification(conn, _params) do
@@ -481,12 +481,12 @@ defmodule PlausibleWeb.SiteController do
       {:ok, _} ->
         conn
         |> put_flash(:success, "You will a notification with traffic spikes going forward")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+        |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
 
       {:error, _} ->
         conn
         |> put_flash(:error, "Unable to create a spike notification")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+        |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
     end
   end
 
@@ -496,7 +496,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Spike notification disabled")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def update_spike_notification(conn, %{"spike_notification" => params}) do
@@ -508,7 +508,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Notification settings updated")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def add_spike_notification_recipient(conn, %{"recipient" => recipient}) do
@@ -520,7 +520,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Added #{recipient} as a recipient for the traffic spike notification")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def remove_spike_notification_recipient(conn, %{"recipient" => recipient}) do
@@ -535,7 +535,7 @@ defmodule PlausibleWeb.SiteController do
       :success,
       "Removed #{recipient} as a recipient for the monthly report"
     )
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
+    |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/email-reports")
   end
 
   def new_shared_link(conn, _params) do
@@ -556,7 +556,7 @@ defmodule PlausibleWeb.SiteController do
 
     case Sites.create_shared_link(site, link["name"], link["password"]) do
       {:ok, _created} ->
-        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+        redirect(conn, external: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
 
       {:error, changeset} ->
         conn
@@ -590,7 +590,7 @@ defmodule PlausibleWeb.SiteController do
 
     case Repo.update(changeset) do
       {:ok, _created} ->
-        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+        redirect(conn, external: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
 
       {:error, changeset} ->
         conn
@@ -615,12 +615,12 @@ defmodule PlausibleWeb.SiteController do
       {1, _} ->
         conn
         |> put_flash(:success, "Shared Link deleted")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+        |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
 
       {0, _} ->
         conn
         |> put_flash(:error, "Could not find Shared Link")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
+        |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/visibility")
     end
   end
 
@@ -636,12 +636,12 @@ defmodule PlausibleWeb.SiteController do
       {1, _} ->
         conn
         |> put_flash(:success, "Custom domain deleted successfully")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+        |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/general")
 
       {0, _} ->
         conn
         |> put_flash(:error, "Failed to delete custom domain")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
+        |> redirect(external: "/#{URI.encode_www_form(site.domain)}/settings/general")
     end
   end
 
@@ -813,7 +813,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
-    |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
+    |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def forget_imported(conn, _params) do
@@ -836,12 +836,12 @@ defmodule PlausibleWeb.SiteController do
 
         conn
         |> put_flash(:success, "Imported data has been cleared")
-        |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
 
       true ->
         conn
         |> put_flash(:error, "No data has been imported")
-        |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
     end
   end
 
