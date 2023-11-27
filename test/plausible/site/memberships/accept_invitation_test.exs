@@ -420,6 +420,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       refute Repo.reload!(site).locked
     end
 
+    @tag :full_build_only
     test "ends trial of the new owner immediately" do
       existing_owner = insert(:user)
 

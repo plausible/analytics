@@ -108,6 +108,7 @@ defmodule Plausible.BillingTest do
   end
 
   describe "on_trial?" do
+    @describetag :full_build_only
     test "is true with >= 0 trial days left" do
       user = insert(:user)
 
