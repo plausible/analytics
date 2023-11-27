@@ -4,6 +4,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
   """
   use Phoenix.Component
 
+  attr :id, :string, default: "verify-button"
   attr :form, :any, required: true
   attr :field, :any, required: true
   attr :class, :string, default: ""
@@ -26,8 +27,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
       ) %>
       <PlausibleWeb.Components.Generic.button
         type="submit"
-        id="verify-button"
-        onclick="event.target.disabled = true"
+        id={@id}
         class="rounded-l-none [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
       >
         <span class="label-enabled pointer-events-none">
@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Components.TwoFactor do
   attr :state_param, :string, required: true
   attr :form_data, :any, required: true
   attr :form_target, :string, required: true
-  attr :onsubmit, :string, default: ""
+  attr :onsubmit, :string, default: nil
   attr :title, :string, required: true
 
   slot :icon, required: true

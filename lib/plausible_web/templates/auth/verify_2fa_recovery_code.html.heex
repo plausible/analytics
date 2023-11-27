@@ -2,7 +2,8 @@
   <%= form_for @conn.params, 
   Routes.auth_path(@conn, :verify_2fa_recovery_code), 
   [
-    class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"
+    class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8",
+    onsubmit: "document.getElementById('use-code-button').disabled = true"
   ], fn f -> %>
     <h2 class="text-xl font-black dark:text-gray-100">
       Enter Recovery Code
@@ -26,7 +27,6 @@
         <.button
           id="use-code-button"
           type="submit"
-          onclick="event.target.disabled = true"
           class="w-full mt-2 [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
         >
           <span class="label-enabled pointer-events-none">

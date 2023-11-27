@@ -442,6 +442,7 @@
 
     <div class="mt-3">
       <%= password_input(f, :password,
+        id: "disable_2fa_password",
         placeholder: "Enter password",
         "x-ref": "disable2FAPassword",
         class:
@@ -456,6 +457,7 @@
     state_param="regenerate2FAOpen"
     form_data={@conn.params}
     form_target={Routes.auth_path(@conn, :generate_2fa_recovery_codes)}
+    onsubmit="document.getElementById('generate-2fa-recovery-button').disabled = true"
     title="Generate New Recovery Codes?"
   >
     <:icon>
@@ -464,8 +466,8 @@
 
     <:buttons>
       <.button
+        id="generate-2fa-recovery-button"
         type="submit"
-        onclick="event.target.disabled = true"
         class="w-full sm:w-auto [&>span.label-enabled]:block [&>span.label-disabled]:hidden [&[disabled]>span.label-enabled]:hidden [&[disabled]>span.label-disabled]:block"
       >
         <span class="label-enabled pointer-events-none">
@@ -489,6 +491,7 @@
 
     <div class="mt-3 w-full">
       <%= password_input(f, :password,
+        id: "regenerate_2fa_password",
         placeholder: "Enter password",
         "x-ref": "regenerate2FAPassword",
         class:
