@@ -6,7 +6,7 @@ defmodule Plausible.Stats.Sampling do
 
   import Ecto.Query
 
-  @spec add_query_hint(Ecto.Query.t(), Plausible.Query.t()) :: Ecto.Query.t()
+  @spec add_query_hint(Ecto.Query.t(), Plausible.Stats.Query.t()) :: Ecto.Query.t()
   def add_query_hint(%Ecto.Query{} = db_query, %Plausible.Stats.Query{} = query) do
     case query.sample_threshold do
       :infinite ->
@@ -27,7 +27,7 @@ defmodule Plausible.Stats.Sampling do
     add_query_hint(query, @default_sample_threshold)
   end
 
-  @spec put_threshold(Plausible.Query.t(), map()) :: Plausible.Query.t()
+  @spec put_threshold(Plausible.Stats.Query.t(), map()) :: Plausible.Stats.Query.t()
   def put_threshold(query, params) do
     sample_threshold =
       case params["sample_threshold"] do
