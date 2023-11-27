@@ -367,6 +367,7 @@ defmodule PlausibleWeb.AuthController do
     case Auth.TOTP.disable(conn.assigns.current_user, password) do
       {:ok, _} ->
         conn
+        |> delete_resp_cookie(@remember_2fa_cookie, sign: true, max_age: @remember_2fa_seconds)
         |> put_flash(:success, "Two-factor authentication is disabled")
         |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
 
