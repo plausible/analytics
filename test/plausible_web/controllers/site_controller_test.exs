@@ -298,6 +298,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert_no_emails_delivered()
     end
 
+    @tag :full_build_only
     test "does not allow site creation when the user is at their site limit", %{
       conn: conn,
       user: user

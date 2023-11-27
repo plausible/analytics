@@ -16,6 +16,7 @@ defmodule Plausible.Billing.QuotaTest do
   @v3_business_plan_id "857481"
 
   describe "site_limit/1" do
+    @describetag :full_build_only
     test "returns 50 when user is on an old plan" do
       user_on_v1 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
       user_on_v2 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
