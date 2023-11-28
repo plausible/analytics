@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-EEAC7A5C.js"></script>
+    <script src="dist/sidebar_items-9C9BA1D3.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -144,7 +144,7 @@ times, allowing user to abort and restart setup up to these stages.</p><h2 id="m
 current password for safety. Once disabled, all TOTP user settings are
 cleared and any remaining generated recovery codes are removed. The function
 can be safely run more than once.</p><p>If the user needs to regenerate the recovery codes outside of setup procedure,
-they must do it via <a href="#generate_recovery_codes_protected/2"><code class="inline">generate_recovery_codes_protected/2</code></a>, providing
+they must do it via <code class="inline">generate_recovery_codes_protected/2</code>, providing
 their current password for safety. They must be warned that any existing
 recovery codes will be invalidated.</p><h2 id="module-validation" class="section-heading">
   <a href="#module-validation">
@@ -209,7 +209,7 @@ They are strictly one-time use only.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#generate_recovery_codes/1" translate="no">generate_recovery_codes(user)</a>
+        <a href="#generate_recovery_codes/1" translate="no">generate_recovery_codes(map)</a>
 
       </div>
 
@@ -217,15 +217,7 @@ They are strictly one-time use only.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#generate_recovery_codes_protected/1" translate="no">generate_recovery_codes_protected(map)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#generate_recovery_codes_protected/2" translate="no">generate_recovery_codes_protected(user, password)</a>
+        <a href="#generate_recovery_codes/2" translate="no">generate_recovery_codes(user, password)</a>
 
       </div>
 
@@ -241,7 +233,7 @@ They are strictly one-time use only.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#use_recovery_code/2" translate="no">use_recovery_code(user, code)</a>
+        <a href="#initiated?/1" translate="no">initiated?(user)</a>
 
       </div>
 
@@ -249,7 +241,7 @@ They are strictly one-time use only.</p>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#user_recovery_code/2" translate="no">user_recovery_code(map, _)</a>
+        <a href="#use_recovery_code/2" translate="no">use_recovery_code(user, code)</a>
 
       </div>
 
@@ -285,7 +277,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">disable(user, password)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L130" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L148" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -316,7 +308,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">enable(user, code, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L112" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L119" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -329,7 +321,8 @@ Functions
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> enable(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
-  {:ok, <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()} | {:error, :invalid_code | :not_initiated}</pre>
+  {:ok, <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), %{recovery_codes: [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]}}
+  | {:error, :invalid_code | :not_initiated}</pre>
 
       </div>
 
@@ -345,7 +338,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">enabled?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L81" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L82" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -371,38 +364,9 @@ Functions
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">generate_recovery_codes(user)</h1>
+    <h1 class="signature" translate="no">generate_recovery_codes(map)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L166" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> generate_recovery_codes(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
-  {:ok, [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]} | {:error, :not_enabled}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="generate_recovery_codes_protected/1">
-
-  <div class="detail-header">
-    <a href="#generate_recovery_codes_protected/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">generate_recovery_codes_protected(map)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L153" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L178" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -415,16 +379,16 @@ Functions
 
   </section>
 </section>
-<section class="detail" id="generate_recovery_codes_protected/2">
+<section class="detail" id="generate_recovery_codes/2">
 
   <div class="detail-header">
-    <a href="#generate_recovery_codes_protected/2" class="detail-link" title="Link to this function">
+    <a href="#generate_recovery_codes/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">generate_recovery_codes_protected(user, password)</h1>
+    <h1 class="signature" translate="no">generate_recovery_codes(user, password)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L157" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L182" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -436,7 +400,7 @@ Functions
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> generate_recovery_codes_protected(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> generate_recovery_codes(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
   {:ok, [<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()]} | {:error, :invalid_password | :not_enabled}</pre>
 
       </div>
@@ -453,7 +417,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">initiate(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L88" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L94" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -474,6 +438,34 @@ Functions
 
   </section>
 </section>
+<section class="detail" id="initiated?/1">
+
+  <div class="detail-header">
+    <a href="#initiated?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">initiated?(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L87" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> initiated?(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="use_recovery_code/2">
 
   <div class="detail-header">
@@ -483,7 +475,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">use_recovery_code(user, code)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L215" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L235" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -503,28 +495,6 @@ Functions
 
   </section>
 </section>
-<section class="detail" id="user_recovery_code/2">
-
-  <div class="detail-header">
-    <a href="#user_recovery_code/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">user_recovery_code(map, _)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L211" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
 <section class="detail" id="validate_code/3">
 
     <span id="validate_code/2"></span>
@@ -536,7 +506,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">validate_code(user, code, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L199" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L223" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -545,6 +515,13 @@ Functions
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> validate_code(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  {:ok, <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()} | {:error, :invalid_code | :not_enabled}</pre>
+
+      </div>
 
 
   </section>
