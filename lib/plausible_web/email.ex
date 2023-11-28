@@ -71,7 +71,7 @@ defmodule PlausibleWeb.Email do
   def two_factor_enabled_email(user) do
     priority_email()
     |> to(user)
-    |> tag("two-factor-enabled-reset-email")
+    |> tag("two-factor-enabled-email")
     |> subject("Plausible two-factor authentication enabled")
     |> render("two_factor_enabled_email.html", user: user)
   end
@@ -79,7 +79,7 @@ defmodule PlausibleWeb.Email do
   def two_factor_disabled_email(user) do
     priority_email()
     |> to(user)
-    |> tag("two-factor-enabled-reset-email")
+    |> tag("two-factor-disabled-email")
     |> subject("Plausible two-factor authentication disabled")
     |> render("two_factor_disabled_email.html", user: user)
   end
