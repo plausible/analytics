@@ -12,7 +12,7 @@ defmodule Plausible.Billing.Quota do
 
   def usage(user, opts \\ []) do
     basic_usage = %{
-      monthly_pageviews: monthly_pageview_usage(user, :last_30_days).total,
+      monthly_pageviews: monthly_pageview_usage(user),
       team_members: team_member_usage(user),
       sites: site_usage(user)
     }
@@ -104,20 +104,39 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @type pageview_usage :: %{
+  @type monthly_pageview_usage() :: %{period() => usage_cycle()}
+
+  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
+
+  @type usage_cycle :: %{
           date_range: Date.Range.t(),
           pageviews: non_neg_integer(),
           custom_events: non_neg_integer(),
           total: non_neg_integer()
         }
 
-  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
+  @spec monthly_pageview_usage(User.t()) :: monthly_pageview_usage()
 
-  @spec monthly_pageview_usage(User.t(), period(), Date.t()) :: pageview_usage()
+  def monthly_pageview_usage(user) do
+    active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
 
-  def monthly_pageview_usage(user, period, today \\ Timex.today())
+    if active_subscription? && user.subscription.last_bill_date do
+      [:current_cycle, :last_cycle, :penultimate_cycle]
+      |> Task.async_stream(fn cycle ->
+        %{cycle => usage_cycle(user, cycle)}
+      end)
+      |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
+      |> Enum.reduce(%{}, &Map.merge/2)
+    else
+      %{last_30_days: usage_cycle(user, :last_30_days)}
+    end
+  end
 
-  def monthly_pageview_usage(user, :last_30_days, today) do
+  @spec usage_cycle(User.t(), period(), Date.t()) :: usage_cycle()
+
+  def usage_cycle(user, cycle, today \\ Timex.today())
+
+  def usage_cycle(user, :last_30_days, today) do
     date_range = Date.range(Timex.shift(today, days: -30), today)
 
     {pageviews, custom_events} =
@@ -133,7 +152,7 @@ defmodule Plausible.Billing.Quota do
     }
   end
 
-  def monthly_pageview_usage(user, period, today) do
+  def usage_cycle(user, cycle, today) do
     user = Plausible.Users.with_subscription(user)
     last_bill_date = user.subscription.last_bill_date
 
@@ -141,7 +160,7 @@ defmodule Plausible.Billing.Quota do
       Timex.shift(last_bill_date, months: Timex.diff(today, last_bill_date, :months))
 
     date_range =
-      case period do
+      case cycle do
         :current_cycle ->
           Date.range(
             normalized_last_bill_date,
@@ -172,33 +191,6 @@ defmodule Plausible.Billing.Quota do
       custom_events: custom_events,
       total: pageviews + custom_events
     }
-  end
-
-  @type billing_cycles_usage() :: %{
-          current_cycle: pageview_usage(),
-          last_cycle: pageview_usage(),
-          penultimate_cycle: pageview_usage()
-        }
-
-  @type last_30_days_usage() :: %{
-          last_30_days: pageview_usage()
-        }
-
-  @spec monthly_pageview_usage_for(User.t()) :: billing_cycles_usage() | last_30_days_usage()
-
-  def monthly_pageview_usage_for(user) do
-    active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
-
-    if active_subscription? && user.subscription.last_bill_date do
-      [:current_cycle, :last_cycle, :penultimate_cycle]
-      |> Task.async_stream(fn cycle ->
-        %{cycle => monthly_pageview_usage(user, cycle)}
-      end)
-      |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
-      |> Enum.reduce(%{}, &Map.merge/2)
-    else
-      %{last_30_days: monthly_pageview_usage(user, :last_30_days)}
-    end
   end
 
   @team_member_limit_for_trials 3
@@ -337,32 +329,46 @@ defmodule Plausible.Billing.Quota do
     for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
-  def ensure_can_subscribe_to_plan(user, %Plan{} = plan) do
-    case exceeded_limits(usage(user), plan) do
-      [] ->
-        :ok
+  def ensure_can_subscribe_to_plan(%User{} = user, %Plan{} = plan) do
+    ensure_can_subscribe_to_plan(usage(user), plan)
+  end
 
-      [:monthly_pageview_limit] ->
-        # This is a quick fix. Need to figure out how to handle this case. Only
-        # checking the last 30 days usage is not accurate enough. Needs to be
-        # in sync with the actual locking system.
-        :ok
-
-      exceeded_limits ->
-        {:error, %{exceeded_limits: exceeded_limits}}
+  def ensure_can_subscribe_to_plan(usage, %Plan{} = plan) do
+    case exceeded_limits(usage, plan) do
+      [] -> :ok
+      exceeded_limits -> {:error, %{exceeded_limits: exceeded_limits}}
     end
   end
 
-  def ensure_can_subscribe_to_plan(_user, nil), do: :ok
+  def ensure_can_subscribe_to_plan(_, _), do: :ok
 
-  def exceeded_limits(usage, %Plan{} = plan) do
-    for {usage_field, limit_field} <- [
-          {:monthly_pageviews, :monthly_pageview_limit},
-          {:team_members, :team_member_limit},
-          {:sites, :site_limit}
-        ],
-        !within_limit?(Map.get(usage, usage_field), Map.get(plan, limit_field)) do
-      limit_field
+  defp exceeded_limits(usage, %Plan{} = plan) do
+    exceeded_limits =
+      for {usage_field, limit_field} <- [
+            {:team_members, :team_member_limit},
+            {:sites, :site_limit}
+          ],
+          !within_limit?(Map.get(usage, usage_field), Map.get(plan, limit_field)) do
+        limit_field
+      end
+
+    pageview_limit_exceeded? =
+      case usage.monthly_pageviews do
+        %{last_30_days: %{total: total}} ->
+          limit = ceil(plan.monthly_pageview_limit * 1.15)
+          total > 13_000 && !within_limit?(total, limit)
+
+        billing_cycles_usage ->
+          Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
+            billing_cycles_usage,
+            plan.monthly_pageview_limit
+          )
+      end
+
+    if pageview_limit_exceeded? do
+      exceeded_limits ++ [:monthly_pageview_limit]
+    else
+      exceeded_limits
     end
   end
 

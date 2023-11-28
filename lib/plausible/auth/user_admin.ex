@@ -82,7 +82,7 @@ defmodule Plausible.Auth.UserAdmin do
 
     pageview_usage =
       user
-      |> Plausible.Billing.Quota.monthly_pageview_usage_for()
+      |> Plausible.Billing.Quota.monthly_pageview_usage()
       |> Enum.map(fn {cycle, usage} ->
         "#{cycle}: (#{PlausibleWeb.TextHelpers.format_date_range(usage.date_range)}): #{usage.total}"
       end)

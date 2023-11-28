@@ -33,11 +33,11 @@ defmodule Plausible.Workers.CheckUsageTest do
   } do
     quota_stub =
       Plausible.Billing.Quota
-      |> stub(:monthly_pageview_usage, fn _user, :penultimate_cycle ->
-        %{date_range: @date_range, total: 9_000}
-      end)
-      |> stub(:monthly_pageview_usage, fn _user, :last_cycle ->
-        %{date_range: @date_range, total: 11_000}
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 9_000},
+          last_cycle: %{date_range: @date_range, total: 11_000}
+        }
       end)
 
     insert(:subscription,
@@ -57,11 +57,11 @@ defmodule Plausible.Workers.CheckUsageTest do
   } do
     quota_stub =
       Plausible.Billing.Quota
-      |> stub(:monthly_pageview_usage, fn _user, :penultimate_cycle ->
-        %{date_range: @date_range, total: 10_999}
-      end)
-      |> stub(:monthly_pageview_usage, fn _user, :last_cycle ->
-        %{date_range: @date_range, total: 11_000}
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 10_999},
+          last_cycle: %{date_range: @date_range, total: 11_000}
+        }
       end)
 
     insert(:subscription,
@@ -81,8 +81,11 @@ defmodule Plausible.Workers.CheckUsageTest do
   } do
     quota_stub =
       Plausible.Billing.Quota
-      |> stub(:monthly_pageview_usage, fn _user, _period ->
-        %{date_range: @date_range, total: 11_000}
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 11_000},
+          last_cycle: %{date_range: @date_range, total: 11_000}
+        }
       end)
 
     insert(:subscription,
@@ -106,8 +109,11 @@ defmodule Plausible.Workers.CheckUsageTest do
   } do
     quota_stub =
       Plausible.Billing.Quota
-      |> stub(:monthly_pageview_usage, fn _user, _period ->
-        %{date_range: @date_range, total: 11_000_000}
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 11_000_000},
+          last_cycle: %{date_range: @date_range, total: 11_000_000}
+        }
       end)
 
     insert(:subscription,
@@ -129,8 +135,11 @@ defmodule Plausible.Workers.CheckUsageTest do
 
     quota_stub =
       Plausible.Billing.Quota
-      |> stub(:monthly_pageview_usage, fn _user, _period ->
-        %{date_range: @date_range, total: 11_000}
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 11_000},
+          last_cycle: %{date_range: @date_range, total: 11_000}
+        }
       end)
 
     insert(:subscription,
@@ -150,8 +159,11 @@ defmodule Plausible.Workers.CheckUsageTest do
   } do
     quota_stub =
       Plausible.Billing.Quota
-      |> stub(:monthly_pageview_usage, fn _user, _period ->
-        %{date_range: @date_range, total: 11_000}
+      |> stub(:monthly_pageview_usage, fn _user ->
+        %{
+          penultimate_cycle: %{date_range: @date_range, total: 11_000},
+          last_cycle: %{date_range: @date_range, total: 11_000}
+        }
       end)
 
     insert(:subscription,
@@ -177,8 +189,11 @@ defmodule Plausible.Workers.CheckUsageTest do
          } do
       quota_stub =
         Plausible.Billing.Quota
-        |> stub(:monthly_pageview_usage, fn _user, _period ->
-          %{date_range: @date_range, total: 1_100_000}
+        |> stub(:monthly_pageview_usage, fn _user ->
+          %{
+            penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
+            last_cycle: %{date_range: @date_range, total: 1_100_000}
+          }
         end)
 
       enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
@@ -203,8 +218,11 @@ defmodule Plausible.Workers.CheckUsageTest do
          } do
       quota_stub =
         Plausible.Billing.Quota
-        |> stub(:monthly_pageview_usage, fn _user, _period ->
-          %{date_range: @date_range, total: 1}
+        |> stub(:monthly_pageview_usage, fn _user ->
+          %{
+            penultimate_cycle: %{date_range: @date_range, total: 1},
+            last_cycle: %{date_range: @date_range, total: 1}
+          }
         end)
 
       enterprise_plan = insert(:enterprise_plan, user: user, site_limit: 2)
@@ -230,8 +248,11 @@ defmodule Plausible.Workers.CheckUsageTest do
     test "starts grace period when plan is outgrown", %{user: user} do
       quota_stub =
         Plausible.Billing.Quota
-        |> stub(:monthly_pageview_usage, fn _user, _period ->
-          %{date_range: @date_range, total: 1_100_000}
+        |> stub(:monthly_pageview_usage, fn _user ->
+          %{
+            penultimate_cycle: %{date_range: @date_range, total: 1_100_000},
+            last_cycle: %{date_range: @date_range, total: 1_100_000}
+          }
         end)
 
       enterprise_plan = insert(:enterprise_plan, user: user, monthly_pageview_limit: 1_000_000)
@@ -253,8 +274,11 @@ defmodule Plausible.Workers.CheckUsageTest do
     } do
       quota_stub =
         Plausible.Billing.Quota
-        |> stub(:monthly_pageview_usage, fn _user, _period ->
-          %{date_range: @date_range, total: 11_000}
+        |> stub(:monthly_pageview_usage, fn _user ->
+          %{
+            penultimate_cycle: %{date_range: @date_range, total: 11_000},
+            last_cycle: %{date_range: @date_range, total: 11_000}
+          }
         end)
 
       insert(:subscription,
@@ -276,8 +300,11 @@ defmodule Plausible.Workers.CheckUsageTest do
     } do
       quota_stub =
         Plausible.Billing.Quota
-        |> stub(:monthly_pageview_usage, fn _user, _period ->
-          %{date_range: @date_range, total: 11_000}
+        |> stub(:monthly_pageview_usage, fn _user ->
+          %{
+            penultimate_cycle: %{date_range: @date_range, total: 11_000},
+            last_cycle: %{date_range: @date_range, total: 11_000}
+          }
         end)
 
       insert(:subscription,
@@ -297,8 +324,11 @@ defmodule Plausible.Workers.CheckUsageTest do
          } do
       quota_stub =
         Plausible.Billing.Quota
-        |> stub(:monthly_pageview_usage, fn _user, _period ->
-          %{date_range: @date_range, total: 11_000}
+        |> stub(:monthly_pageview_usage, fn _user ->
+          %{
+            penultimate_cycle: %{date_range: @date_range, total: 11_000},
+            last_cycle: %{date_range: @date_range, total: 11_000}
+          }
         end)
 
       insert(:subscription,

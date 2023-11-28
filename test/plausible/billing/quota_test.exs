@@ -14,6 +14,7 @@ defmodule Plausible.Billing.QuotaTest do
   @v2_plan_id "654177"
   @v3_plan_id "749342"
   @v3_business_plan_id "857481"
+  @v4_1m_plan_id "857101"
 
   describe "site_limit/1" do
     test "returns 50 when user is on an old plan" do
@@ -137,29 +138,97 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  describe "exceeded_limits/2" do
-    test "returns limits that are exceeded" do
+  describe "ensure_can_subscribe_to_plan/2" do
+    test "returns :ok when site and team member limits are reached but not exceeded" do
       usage = %{
-        monthly_pageviews: 10_001,
-        team_members: 2,
-        sites: 51
+        monthly_pageviews: %{last_30_days: %{total: 1}},
+        team_members: 3,
+        sites: 10
       }
 
-      plan = Plans.find(@v3_plan_id)
+      plan = Plans.find(@v4_1m_plan_id)
 
-      assert Quota.exceeded_limits(usage, plan) == [:monthly_pageview_limit, :site_limit]
+      assert Quota.ensure_can_subscribe_to_plan(usage, plan) == :ok
     end
 
-    test "if limits are reached, they're not exceeded" do
+    test "returns all exceeded limits" do
       usage = %{
-        monthly_pageviews: 10_000,
-        team_members: 2,
-        sites: 50
+        monthly_pageviews: %{last_30_days: %{total: 1_150_001}},
+        team_members: 4,
+        sites: 11
+      }
+
+      plan = Plans.find(@v4_1m_plan_id)
+
+      {:error, %{exceeded_limits: exceeded_limits}} =
+        Quota.ensure_can_subscribe_to_plan(usage, plan)
+
+      assert :monthly_pageview_limit in exceeded_limits
+      assert :team_member_limit in exceeded_limits
+      assert :site_limit in exceeded_limits
+    end
+
+    test "by the last 30 days usage, pageview limit for 10k plan is only exceeded when 30% over the limit" do
+      usage_within_pageview_limit = %{
+        monthly_pageviews: %{last_30_days: %{total: 13_000}},
+        team_members: 1,
+        sites: 1
+      }
+
+      usage_over_pageview_limit = %{
+        monthly_pageviews: %{last_30_days: %{total: 13_001}},
+        team_members: 1,
+        sites: 1
       }
 
       plan = Plans.find(@v3_plan_id)
 
-      assert Quota.exceeded_limits(usage, plan) == []
+      assert Quota.ensure_can_subscribe_to_plan(usage_within_pageview_limit, plan) == :ok
+
+      assert Quota.ensure_can_subscribe_to_plan(usage_over_pageview_limit, plan) ==
+               {:error, %{exceeded_limits: [:monthly_pageview_limit]}}
+    end
+
+    test "by the last 30 days usage, pageview limit for all plans above 10k is exceeded when 15% over the limit" do
+      usage_within_pageview_limit = %{
+        monthly_pageviews: %{last_30_days: %{total: 1_150_000}},
+        team_members: 1,
+        sites: 1
+      }
+
+      usage_over_pageview_limit = %{
+        monthly_pageviews: %{last_30_days: %{total: 1_150_001}},
+        team_members: 1,
+        sites: 1
+      }
+
+      plan = Plans.find(@v4_1m_plan_id)
+
+      assert Quota.ensure_can_subscribe_to_plan(usage_within_pageview_limit, plan) == :ok
+
+      assert Quota.ensure_can_subscribe_to_plan(usage_over_pageview_limit, plan) ==
+               {:error, %{exceeded_limits: [:monthly_pageview_limit]}}
+    end
+
+    test "by billing cycles usage, pageview limit is exceeded when last two billing cycles exceed by 10%" do
+      usage_within_pageview_limit = %{
+        monthly_pageviews: %{penultimate_cycle: %{total: 11_000}, last_cycle: %{total: 10_999}},
+        team_members: 1,
+        sites: 1
+      }
+
+      usage_over_pageview_limit = %{
+        monthly_pageviews: %{penultimate_cycle: %{total: 11_000}, last_cycle: %{total: 11_000}},
+        team_members: 1,
+        sites: 1
+      }
+
+      plan = Plans.find(@v3_plan_id)
+
+      assert Quota.ensure_can_subscribe_to_plan(usage_within_pageview_limit, plan) == :ok
+
+      assert Quota.ensure_can_subscribe_to_plan(usage_over_pageview_limit, plan) ==
+               {:error, %{exceeded_limits: [:monthly_pageview_limit]}}
     end
   end
 
@@ -544,7 +613,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  describe "monthly_pageview_usage/1" do
+  describe "usage_cycle/1" do
     setup do
       user = insert(:user)
       site = insert(:site, members: [user])
@@ -577,13 +646,13 @@ defmodule Plausible.Billing.QuotaTest do
       insert(:subscription, user_id: user.id, last_bill_date: last_bill_date)
 
       assert %{date_range: penultimate_cycle, pageviews: 2, custom_events: 3, total: 5} =
-               Quota.monthly_pageview_usage(user, :penultimate_cycle, today)
+               Quota.usage_cycle(user, :penultimate_cycle, today)
 
       assert %{date_range: last_cycle, pageviews: 3, custom_events: 2, total: 5} =
-               Quota.monthly_pageview_usage(user, :last_cycle, today)
+               Quota.usage_cycle(user, :last_cycle, today)
 
       assert %{date_range: current_cycle, pageviews: 0, custom_events: 3, total: 3} =
-               Quota.monthly_pageview_usage(user, :current_cycle, today)
+               Quota.usage_cycle(user, :current_cycle, today)
 
       assert penultimate_cycle == Date.range(~D[2023-04-03], ~D[2023-05-02])
       assert last_cycle == Date.range(~D[2023-05-03], ~D[2023-06-02])
@@ -594,7 +663,7 @@ defmodule Plausible.Billing.QuotaTest do
       today = ~D[2023-06-01]
 
       assert %{date_range: last_30_days, pageviews: 4, custom_events: 1, total: 5} =
-               Quota.monthly_pageview_usage(user, :last_30_days, today)
+               Quota.usage_cycle(user, :last_30_days, today)
 
       assert last_30_days == Date.range(~D[2023-05-02], ~D[2023-06-01])
     end
@@ -617,7 +686,7 @@ defmodule Plausible.Billing.QuotaTest do
       insert(:subscription, user_id: user.id, last_bill_date: last_bill_date)
 
       assert %{date_range: last_cycle, pageviews: 3, custom_events: 2, total: 5} =
-               Quota.monthly_pageview_usage(user, :last_cycle, today)
+               Quota.usage_cycle(user, :last_cycle, today)
 
       assert last_cycle == Date.range(~D[2023-05-03], ~D[2023-06-02])
     end
@@ -629,13 +698,13 @@ defmodule Plausible.Billing.QuotaTest do
       user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
 
       assert %{date_range: penultimate_cycle} =
-               Quota.monthly_pageview_usage(user, :penultimate_cycle, today)
+               Quota.usage_cycle(user, :penultimate_cycle, today)
 
       assert %{date_range: last_cycle} =
-               Quota.monthly_pageview_usage(user, :last_cycle, today)
+               Quota.usage_cycle(user, :last_cycle, today)
 
       assert %{date_range: current_cycle} =
-               Quota.monthly_pageview_usage(user, :current_cycle, today)
+               Quota.usage_cycle(user, :current_cycle, today)
 
       assert penultimate_cycle == Date.range(~D[2020-12-01], ~D[2020-12-31])
       assert last_cycle == Date.range(~D[2021-01-01], ~D[2021-01-31])
@@ -649,13 +718,13 @@ defmodule Plausible.Billing.QuotaTest do
       user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
 
       assert %{date_range: penultimate_cycle, total: 0} =
-               Quota.monthly_pageview_usage(user, :penultimate_cycle, today)
+               Quota.usage_cycle(user, :penultimate_cycle, today)
 
       assert %{date_range: last_cycle, total: 0} =
-               Quota.monthly_pageview_usage(user, :last_cycle, today)
+               Quota.usage_cycle(user, :last_cycle, today)
 
       assert %{date_range: current_cycle, total: 0} =
-               Quota.monthly_pageview_usage(user, :current_cycle, today)
+               Quota.usage_cycle(user, :current_cycle, today)
 
       assert penultimate_cycle == Date.range(~D[2020-11-01], ~D[2020-11-30])
       assert last_cycle == Date.range(~D[2020-12-01], ~D[2020-12-31])

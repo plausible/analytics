@@ -2,7 +2,8 @@ defmodule Plausible.Workers.CheckUsage do
   use Plausible.Repo
   use Oban.Worker, queue: :check_usage
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.Subscription
+  alias Plausible.Billing.{Subscription, Quota}
+  alias Plausible.Auth.User
 
   defmacro yesterday() do
     quote do
@@ -32,12 +33,12 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   @impl Oban.Worker
-  def perform(_job, quota_mod \\ Plausible.Billing.Quota, today \\ Timex.today()) do
+  def perform(_job, quota_mod \\ Quota, today \\ Timex.today()) do
     yesterday = today |> Timex.shift(days: -1)
 
     active_subscribers =
       Repo.all(
-        from(u in Plausible.Auth.User,
+        from(u in User,
           join: s in Plausible.Billing.Subscription,
           on: s.user_id == u.id,
           left_join: ep in Plausible.Billing.EnterprisePlan,
@@ -65,10 +66,10 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   def check_enterprise_subscriber(subscriber, quota_mod) do
-    pageview_limit = check_pageview_limit(subscriber, quota_mod)
-    site_limit = check_site_limit_for_enterprise(subscriber)
+    pageview_usage = check_pageview_usage(subscriber, quota_mod)
+    site_usage = check_site_usage_for_enterprise(subscriber)
 
-    case {pageview_limit, site_limit} do
+    case {pageview_usage, site_usage} do
       {{:below_limit, _}, {:below_limit, _}} ->
         nil
 
@@ -91,7 +92,7 @@ defmodule Plausible.Workers.CheckUsage do
   end
 
   defp check_regular_subscriber(subscriber, quota_mod) do
-    case check_pageview_limit(subscriber, quota_mod) do
+    case check_pageview_usage(subscriber, quota_mod) do
       {:over_limit, {last_cycle, last_cycle_usage}} ->
         suggested_plan = Plausible.Billing.Plans.suggest(subscriber, last_cycle_usage)
 
@@ -114,33 +115,33 @@ defmodule Plausible.Workers.CheckUsage do
     end
   end
 
-  defp check_pageview_limit(subscriber, quota_mod) do
-    limit =
-      subscriber.subscription
-      |> Plausible.Billing.Quota.monthly_pageview_limit()
-      |> Kernel.*(1.1)
-      |> ceil()
+  defp check_pageview_usage(subscriber, quota_mod) do
+    usage = quota_mod.monthly_pageview_usage(subscriber)
+    limit = Quota.monthly_pageview_limit(subscriber.subscription)
 
-    last_cycle_usage = quota_mod.monthly_pageview_usage(subscriber, :last_cycle)
-    penultimate_cycle_usage = quota_mod.monthly_pageview_usage(subscriber, :penultimate_cycle)
-
-    exceeded_two_cycles? =
-      Enum.all?([last_cycle_usage, penultimate_cycle_usage], fn usage ->
-        not Plausible.Billing.Quota.below_limit?(usage.total, limit)
-      end)
-
-    if exceeded_two_cycles? do
-      {:over_limit, {last_cycle_usage.date_range, last_cycle_usage.total}}
+    if exceeds_last_two_usage_cycles?(usage, limit) do
+      {:over_limit, {usage.last_cycle.date_range, usage.last_cycle.total}}
     else
-      {:below_limit, {last_cycle_usage.date_range, last_cycle_usage.total}}
+      {:below_limit, {usage.last_cycle.date_range, usage.last_cycle.total}}
     end
   end
 
-  defp check_site_limit_for_enterprise(subscriber) do
-    limit = subscriber.enterprise_plan.site_limit
-    usage = Plausible.Billing.Quota.site_usage(subscriber)
+  @spec exceeds_last_two_usage_cycles?(Quota.monthly_pageview_usage(), non_neg_integer()) ::
+          boolean()
 
-    if Plausible.Billing.Quota.below_limit?(usage, limit) do
+  def exceeds_last_two_usage_cycles?(usage, limit) when is_integer(limit) do
+    limit = ceil(limit * 1.1)
+
+    Enum.all?([usage.last_cycle, usage.penultimate_cycle], fn usage ->
+      not Quota.below_limit?(usage.total, limit)
+    end)
+  end
+
+  defp check_site_usage_for_enterprise(subscriber) do
+    limit = subscriber.enterprise_plan.site_limit
+    usage = Quota.site_usage(subscriber)
+
+    if Quota.below_limit?(usage, limit) do
       {:below_limit, {usage, limit}}
     else
       {:over_limit, {usage, limit}}
