@@ -186,9 +186,9 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <li
       id={"billing_cycle_tab_#{@tab}"}
-      class={["relative md:w-1/3", @disabled && "pointer-events-none opacity-50"]}
+      class="relative md:w-1/3"
     >
-      <button class="w-full group" x-on:click={"tab = '#{@tab}'"}>
+      <button class={["w-full group", @disabled && "pointer-events-none opacity-50"]} x-on:click={"tab = '#{@tab}'"}>
         <span
           class="absolute left-0 top-0 h-full w-1 md:bottom-0 md:top-auto md:h-1 md:w-full"
           x-bind:class={"tab === '#{@tab}' ? 'bg-indigo-500' : 'bg-transparent group-hover:bg-gray-200'"}

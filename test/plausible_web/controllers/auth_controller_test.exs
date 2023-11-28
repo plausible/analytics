@@ -853,7 +853,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_attr(find(doc, "#monthly_pageview_usage_container"), "x-data") ==
                "{ tab: 'last_cycle' }"
 
-      assert class_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~
+      assert class_of_element(doc, "#billing_cycle_tab_penultimate_cycle button") =~
                "pointer-events-none"
 
       assert text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
@@ -882,10 +882,10 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_attr(find(doc, "#monthly_pageview_usage_container"), "x-data") ==
                "{ tab: 'current_cycle' }"
 
-      assert class_of_element(doc, "#billing_cycle_tab_last_cycle") =~ "pointer-events-none"
+      assert class_of_element(doc, "#billing_cycle_tab_last_cycle button") =~ "pointer-events-none"
       assert text_of_element(doc, "#billing_cycle_tab_last_cycle") =~ "Not available"
 
-      assert class_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~
+      assert class_of_element(doc, "#billing_cycle_tab_penultimate_cycle button") =~
                "pointer-events-none"
 
       assert text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
