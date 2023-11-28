@@ -7,7 +7,7 @@ defmodule PlausibleWeb.FirstLaunchPlug do
     @moduledoc """
     Test helper for setup blocks allowing to skip the plug processing
     """
-    @spec skip(map()) :: map()
+    @spec skip(map()) :: {:ok, map()}
     def skip(context) do
       conn = Plug.Conn.put_private(context.conn, PlausibleWeb.FirstLaunchPlug, :skip)
       {:ok, Map.put(context, :conn, conn)}
