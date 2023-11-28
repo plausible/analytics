@@ -1,8 +1,11 @@
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+
   alias Plausible.Auth
   alias Plausible.Billing.Quota
+  alias PlausibleWeb.TwoFactor
+
   require Logger
 
   plug(
@@ -51,12 +54,9 @@ defmodule PlausibleWeb.AuthController do
          ]
   )
 
-  @remember_2fa_cookie "remember_2fa"
-  @remember_2fa_days 30
-  @remember_2fa_seconds @remember_2fa_days * 24 * 60 * 60
-
-  @session_2fa_cookie "session_2fa"
-  @session_2fa_seconds 5 * 60
+  defp clear_2fa_user(conn, _opts) do
+    TwoFactor.clear_2fa_user(conn)
+  end
 
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
     with {:ok, user} <- login_user(conn, email, password) do
@@ -224,17 +224,12 @@ defmodule PlausibleWeb.AuthController do
 
   def login(conn, %{"email" => email, "password" => password}) do
     with {:ok, user} <- login_user(conn, email, password) do
-      if Auth.TOTP.enabled?(user) and not remember_2fa?(conn) do
+      if Auth.TOTP.enabled?(user) and not TwoFactor.remember_2fa?(conn) do
         conn
-        |> set_2fa_user(user)
+        |> TwoFactor.set_2fa_user(user)
         |> redirect(to: Routes.auth_path(conn, :verify_2fa))
       else
-        login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
-        conn
-        |> set_user_session(user)
-        |> put_session(:login_dest, nil)
-        |> redirect(to: login_dest)
+        set_user_session_and_redirect(conn, user)
       end
     end
   end
@@ -274,9 +269,22 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  defp redirect_to_login(conn) do
+    redirect(conn, to: Routes.auth_path(conn, :login_form))
+  end
+
+  defp set_user_session_and_redirect(conn, user) do
+    login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+
+    conn
+    |> set_user_session(user)
+    |> put_session(:login_dest, nil)
+    |> redirect(to: login_dest)
+  end
+
   defp set_user_session(conn, user) do
     conn
-    |> clear_2fa_user(nil)
+    |> TwoFactor.clear_2fa_user()
     |> put_session(:current_user_id, user.id)
     |> put_resp_cookie("logged_in", "true",
       http_only: false,
@@ -385,7 +393,7 @@ defmodule PlausibleWeb.AuthController do
     case Auth.TOTP.disable(conn.assigns.current_user, password) do
       {:ok, _} ->
         conn
-        |> clear_remember_2fa()
+        |> TwoFactor.clear_remember_2fa()
         |> put_flash(:success, "Two-factor authentication is disabled")
         |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
 
@@ -416,37 +424,29 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def verify_2fa_form(conn, _) do
-    case get_2fa_user(conn) do
+    case TwoFactor.get_2fa_user(conn) do
       {:ok, user} ->
-        login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
         if Auth.TOTP.enabled?(user) do
           render(conn, "verify_2fa.html",
-            remember_2fa_days: @remember_2fa_days,
+            remember_2fa_days: TwoFactor.remember_2fa_days(),
             layout: {PlausibleWeb.LayoutView, "focus.html"}
           )
         else
-          conn
-          |> redirect(to: login_dest)
+          redirect_to_login(conn)
         end
 
       {:error, :not_found} ->
-        conn
-        |> redirect(to: Routes.auth_path(conn, :login_form))
+        redirect_to_login(conn)
     end
   end
 
   def verify_2fa(conn, %{"code" => code} = params) do
-    login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
     with {:ok, user} <- get_2fa_user_limited(conn) do
       case Auth.TOTP.validate_code(user, code) do
         {:ok, user} ->
           conn
-          |> set_user_session(user)
-          |> put_session(:login_dest, nil)
-          |> maybe_set_remember_2fa(params["remember_2fa"])
-          |> redirect(to: login_dest)
+          |> TwoFactor.maybe_set_remember_2fa(params["remember_2fa"])
+          |> set_user_session_and_redirect(user)
 
         {:error, :invalid_code} ->
           maybe_log_failed_login_attempts(
@@ -456,49 +456,37 @@ defmodule PlausibleWeb.AuthController do
           conn
           |> put_flash(:error, "The provided code is invalid. Please try again")
           |> render("verify_2fa.html",
-            remember_2fa_days: @remember_2fa_days,
+            remember_2fa_days: TwoFactor.remember_2fa_days(),
             layout: {PlausibleWeb.LayoutView, "focus.html"}
           )
 
         {:error, :not_enabled} ->
-          conn
-          |> set_user_session(user)
-          |> put_session(:login_dest, nil)
-          |> redirect(to: login_dest)
+          set_user_session_and_redirect(conn, user)
       end
     end
   end
 
   def verify_2fa_recovery_code_form(conn, _params) do
-    case get_2fa_user(conn) do
+    case TwoFactor.get_2fa_user(conn) do
       {:ok, user} ->
-        login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
         if Auth.TOTP.enabled?(user) do
           render(conn, "verify_2fa_recovery_code.html",
             layout: {PlausibleWeb.LayoutView, "focus.html"}
           )
         else
-          conn
-          |> redirect(to: login_dest)
+          redirect_to_login(conn)
         end
 
       {:error, :not_found} ->
-        conn
-        |> redirect(to: Routes.auth_path(conn, :login_form))
+        redirect_to_login(conn)
     end
   end
 
   def verify_2fa_recovery_code(conn, %{"recovery_code" => recovery_code}) do
     with {:ok, user} <- get_2fa_user_limited(conn) do
-      login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
       case Auth.TOTP.use_recovery_code(user, recovery_code) do
         :ok ->
-          conn
-          |> set_user_session(user)
-          |> put_session(:login_dest, nil)
-          |> redirect(to: login_dest)
+          set_user_session_and_redirect(conn, user)
 
         {:error, :invalid_code} ->
           maybe_log_failed_login_attempts("wrong 2FA recovery code provided for #{user.email}")
@@ -510,40 +498,13 @@ defmodule PlausibleWeb.AuthController do
           )
 
         {:error, :not_enabled} ->
-          conn
-          |> set_user_session(user)
-          |> put_session(:login_dest, nil)
-          |> redirect(to: login_dest)
+          set_user_session_and_redirect(conn, user)
       end
     end
   end
 
-  defp remember_2fa?(conn) do
-    conn = fetch_cookies(conn, signed: [@remember_2fa_cookie])
-
-    conn.cookies[@remember_2fa_cookie] == "true"
-  end
-
-  defp maybe_set_remember_2fa(conn, "true") do
-    put_resp_cookie(conn, @remember_2fa_cookie, "true",
-      sign: true,
-      max_age: @remember_2fa_seconds,
-      same_site: "Lax"
-    )
-  end
-
-  defp maybe_set_remember_2fa(conn, _), do: conn
-
-  defp clear_remember_2fa(conn) do
-    delete_resp_cookie(conn, @remember_2fa_cookie,
-      sign: true,
-      max_age: @remember_2fa_seconds,
-      same_site: "Lax"
-    )
-  end
-
   defp get_2fa_user_limited(conn) do
-    case get_2fa_user(conn) do
+    case TwoFactor.get_2fa_user(conn) do
       {:ok, user} ->
         with :ok <- check_ip_rate_limit(conn),
              :ok <- check_user_rate_limit(user) do
@@ -563,34 +524,6 @@ defmodule PlausibleWeb.AuthController do
         conn
         |> redirect(to: Routes.auth_path(conn, :login_form))
     end
-  end
-
-  defp set_2fa_user(conn, %Auth.User{} = user) do
-    put_resp_cookie(conn, @session_2fa_cookie, %{current_2fa_user_id: user.id},
-      encrypt: true,
-      max_age: @session_2fa_seconds,
-      same_site: "Lax"
-    )
-  end
-
-  defp get_2fa_user(conn) do
-    conn = fetch_cookies(conn, encrypted: [@session_2fa_cookie])
-    session_2fa = conn.cookies[@session_2fa_cookie]
-
-    with id when is_integer(id) <- session_2fa[:current_2fa_user_id],
-         %Auth.User{} = user <- Plausible.Users.with_subscription(id) do
-      {:ok, user}
-    else
-      _ -> {:error, :not_found}
-    end
-  end
-
-  defp clear_2fa_user(conn, _opts) do
-    delete_resp_cookie(conn, @session_2fa_cookie,
-      encrypt: true,
-      max_age: @session_2fa_seconds,
-      same_site: "Lax"
-    )
   end
 
   def save_settings(conn, %{"user" => user_params}) do
