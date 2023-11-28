@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     ~H"""
     <div class="mx-auto mt-6 text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
-        <%= if not full_build?() or @live_action == :register_from_invitation_form do %>
+        <%= if small_build?() or @live_action == :register_from_invitation_form do %>
           Register your Plausible Analytics account
         <% else %>
           Register your 30-day free trial
@@ -162,7 +162,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         <% end %>
 
         <% submit_text =
-          if not full_build?() or @invitation do
+          if small_build?() or @invitation do
             "Create my account →"
           else
             "Start my free trial →"
