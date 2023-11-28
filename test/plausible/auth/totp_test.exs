@@ -1,5 +1,6 @@
 defmodule Plausible.Auth.TOTPTest do
   use Plausible.DataCase, async: true
+  use Bamboo.Test
 
   alias Plausible.Auth.TOTP
   alias Plausible.Auth.TOTP.RecoveryCode
@@ -80,6 +81,11 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert {:ok, user, %{recovery_codes: recovery_codes}} = TOTP.enable(user, code)
 
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Plausible two-factor authentication enabled"
+      )
+
       assert user.totp_enabled
       assert byte_size(user.totp_secret) > 0
 
@@ -128,6 +134,7 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user)
 
       assert {:error, :not_initiated} = TOTP.enable(user, "123456")
+      assert_no_emails_delivered()
     end
 
     test "fails when invalid code is provided" do
@@ -135,6 +142,7 @@ defmodule Plausible.Auth.TOTPTest do
       {:ok, user, _} = TOTP.initiate(user)
 
       assert {:error, :invalid_code} = TOTP.enable(user, "1234")
+      assert_no_emails_delivered()
     end
   end
 
@@ -145,7 +153,17 @@ defmodule Plausible.Auth.TOTPTest do
       code = NimbleTOTP.verification_code(user.totp_secret)
       {:ok, user, _} = TOTP.enable(user, code)
 
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Plausible two-factor authentication enabled"
+      )
+
       assert {:ok, updated_user} = TOTP.disable(user, "VeryStrongVerySecret")
+
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Plausible two-factor authentication disabled"
+      )
 
       assert updated_user.id == user.id
       refute updated_user.totp_enabled
@@ -170,7 +188,14 @@ defmodule Plausible.Auth.TOTPTest do
       code = NimbleTOTP.verification_code(user.totp_secret)
       {:ok, user, _} = TOTP.enable(user, code)
 
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Plausible two-factor authentication enabled"
+      )
+
       assert {:error, :invalid_password} = TOTP.disable(user, "invalid")
+
+      assert_no_emails_delivered()
     end
   end
 
