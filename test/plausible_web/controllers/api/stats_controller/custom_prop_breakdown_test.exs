@@ -177,17 +177,6 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                }
              ]
     end
-
-    test "errors when site owner is on a growth plan", %{conn: conn, site: site, user: user} do
-      insert(:growth_subscription, user: user)
-
-      conn = get(conn, "/api/stats/#{site.domain}/custom-prop-values/prop?period=day")
-
-      assert json_response(conn, 402) == %{
-               "error" =>
-                 "Custom Properties is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
-             }
-    end
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - with goal filter" do
@@ -1056,6 +1045,44 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "percentage" => 33.3
                }
              ]
+    end
+  end
+
+  describe "GET /api/stats/:domain/custom-prop-values/:prop_key - for a Growth subscription" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    setup %{user: user, site: site} do
+      insert(:growth_subscription, user: user)
+
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["url", "path", "author"],
+          "meta.value": ["one", "two", "three"]
+        )
+      ])
+
+      :ok
+    end
+
+    test "returns breakdown for internally used prop keys", %{conn: conn, site: site} do
+      [%{"visitors" => 1, "name" => "one"}] =
+        conn
+        |> get("/api/stats/#{site.domain}/custom-prop-values/url?period=day")
+        |> json_response(200)
+
+      [%{"visitors" => 1, "name" => "two"}] =
+        conn
+        |> get("/api/stats/#{site.domain}/custom-prop-values/path?period=day")
+        |> json_response(200)
+    end
+
+    test "returns 402 'upgrade required' for any other prop key", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/custom-prop-values/prop?period=day")
+
+      assert json_response(conn, 402) == %{
+               "error" =>
+                 "Custom Properties is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+             }
     end
   end
 end
