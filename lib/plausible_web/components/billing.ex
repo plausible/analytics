@@ -102,7 +102,7 @@ defmodule PlausibleWeb.Components.Billing do
     <article id="monthly_pageview_usage_container" x-data={"{ tab: '#{@default_tab}' }"} class="mt-8">
       <h1 class="text-xl mb-6 font-bold dark:text-gray-100">Monthly pageviews usage</h1>
       <div class="mb-3">
-        <ol class="divide-y divide-gray-300 rounded-md border border-gray-300 md:flex md:flex-row-reverse md:divide-y-0">
+        <ol class="divide-y divide-gray-300 rounded-md border border-gray-300 md:flex md:flex-row-reverse md:divide-y-0 md:overflow-hidden">
           <.billing_cycle_tab
             name="Ongoing cycle"
             tab={:current_cycle}
