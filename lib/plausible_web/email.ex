@@ -68,6 +68,22 @@ defmodule PlausibleWeb.Email do
     |> render("password_reset_email.html", reset_link: reset_link)
   end
 
+  def two_factor_enabled_email(user) do
+    priority_email()
+    |> to(user)
+    |> tag("two-factor-enabled-email")
+    |> subject("Plausible two-factor authentication enabled")
+    |> render("two_factor_enabled_email.html", user: user)
+  end
+
+  def two_factor_disabled_email(user) do
+    priority_email()
+    |> to(user)
+    |> tag("two-factor-disabled-email")
+    |> subject("Plausible two-factor authentication disabled")
+    |> render("two_factor_disabled_email.html", user: user)
+  end
+
   def trial_one_week_reminder(user) do
     base_email()
     |> to(user)
