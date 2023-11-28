@@ -102,7 +102,7 @@ defmodule PlausibleWeb.Components.Billing do
     <article id="monthly_pageview_usage_container" x-data={"{ tab: '#{@default_tab}' }"} class="mt-8">
       <h1 class="text-xl mb-6 font-bold dark:text-gray-100">Monthly pageviews usage</h1>
       <div class="mb-3">
-        <ol class="divide-y divide-gray-300 rounded-md border border-gray-300 md:flex md:flex-row-reverse md:divide-y-0 md:overflow-hidden">
+        <ol class="divide-y divide-gray-300 dark:divide-gray-600 rounded-md border dark:border-gray-600 md:flex md:flex-row-reverse md:divide-y-0 md:overflow-hidden">
           <.billing_cycle_tab
             name="Ongoing cycle"
             tab={:current_cycle}
@@ -184,25 +184,25 @@ defmodule PlausibleWeb.Components.Billing do
 
   defp billing_cycle_tab(assigns) do
     ~H"""
-    <li
-      id={"billing_cycle_tab_#{@tab}"}
-      class="relative md:w-1/3"
-    >
-      <button class={["w-full group", @disabled && "pointer-events-none opacity-50"]} x-on:click={"tab = '#{@tab}'"}>
+    <li id={"billing_cycle_tab_#{@tab}"} class="relative md:w-1/3">
+      <button
+        class={["w-full group", @disabled && "pointer-events-none opacity-50 dark:opacity-25"]}
+        x-on:click={"tab = '#{@tab}'"}
+      >
         <span
           class="absolute left-0 top-0 h-full w-1 md:bottom-0 md:top-auto md:h-1 md:w-full"
-          x-bind:class={"tab === '#{@tab}' ? 'bg-indigo-500' : 'bg-transparent group-hover:bg-gray-200'"}
+          x-bind:class={"tab === '#{@tab}' ? 'bg-indigo-500' : 'bg-transparent group-hover:bg-gray-200 dark:group-hover:bg-gray-700 '"}
           aria-hidden="true"
         >
         </span>
         <div class={"flex items-center justify-between md:flex-col md:items-start py-2 pr-2 #{if @with_separator, do: "pl-2 md:pl-4", else: "pl-2"}"}>
           <span
-            class="text-sm"
-            x-bind:class={"tab === '#{@tab}' ? 'text-indigo-600 font-semibold' : 'font-medium'"}
+            class="text-sm dark:text-gray-100"
+            x-bind:class={"tab === '#{@tab}' ? 'text-indigo-600 dark:text-indigo-500 font-semibold' : 'font-medium'"}
           >
             <%= @name %>
           </span>
-          <span class="flex text-xs text-gray-500">
+          <span class="flex text-xs text-gray-500 dark:text-gray-400">
             <%= if @disabled,
               do: "Not available",
               else: PlausibleWeb.TextHelpers.format_date_range(@date_range) %>
@@ -215,7 +215,7 @@ defmodule PlausibleWeb.Components.Billing do
         aria-hidden="true"
       >
         <svg
-          class="h-full w-full text-gray-300"
+          class="h-full w-full text-gray-300 dark:text-gray-600"
           viewBox="0 0 12 82"
           fill="none"
           preserveAspectRatio="none"
