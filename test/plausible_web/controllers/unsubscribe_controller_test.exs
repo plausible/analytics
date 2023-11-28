@@ -2,13 +2,7 @@ defmodule PlausibleWeb.UnsubscribeControllerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plausible.Repo
 
-  if small_build?() do
-    setup do
-      # insert some user to prevent first launch redirect
-      insert(:user)
-      :ok
-    end
-  end
+  setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
 
   describe "GET /sites/:website/weekly-report/unsubscribe" do
     test "removes a recipient from the weekly report without them having to log in", %{conn: conn} do

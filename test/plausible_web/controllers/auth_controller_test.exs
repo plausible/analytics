@@ -13,15 +13,8 @@ defmodule PlausibleWeb.AuthControllerTest do
   alias Plausible.Auth.User
   alias Plausible.Billing.Subscription
 
-  setup :verify_on_exit!
-
-  if small_build?() do
-    setup do
-      # insert some user to prevent first launch redirect
-      insert(:user)
-      :ok
-    end
-  end
+  setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
+  setup [:verify_on_exit!]
 
   @v3_plan_id "749355"
   @v4_plan_id "857097"
@@ -450,7 +443,8 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert location = "/login" = redirected_to(conn, 302)
 
-      conn = get(recycle(conn), location)
+      {:ok, %{conn: conn}} = PlausibleWeb.FirstLaunchPlug.Test.skip(%{conn: recycle(conn)})
+      conn = get(conn, location)
       assert html_response(conn, 200) =~ "Password updated successfully"
     end
   end

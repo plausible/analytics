@@ -2,13 +2,7 @@ defmodule PlausibleWeb.AuthController.LogsTest do
   use PlausibleWeb.ConnCase
   import ExUnit.CaptureLog
 
-  if small_build?() do
-    setup do
-      # insert some user to prevent first launch redirect
-      insert(:user)
-      :ok
-    end
-  end
+  setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
 
   describe "POST /login" do
     setup do
