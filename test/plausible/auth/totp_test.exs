@@ -8,11 +8,22 @@ defmodule Plausible.Auth.TOTPTest do
 
   describe "enabled?/1" do
     test "Returns user's TOTP state" do
-      assert TOTP.enabled?(insert(:user, totp_enabled: true, totp_secret: "secret"))
       refute TOTP.enabled?(insert(:user, totp_enabled: false, totp_secret: nil))
-      # these shouldn't happen under normal circumstances but we do check
-      # totp_secret presence just to be safe and avoid undefined behavior
       refute TOTP.enabled?(insert(:user, totp_enabled: false, totp_secret: "secret"))
+      assert TOTP.enabled?(insert(:user, totp_enabled: true, totp_secret: "secret"))
+      # this shouldn't happen under normal circumstances but we do check
+      # totp_secret presence just to be safe and avoid undefined behavior
+      refute TOTP.enabled?(insert(:user, totp_enabled: true, totp_secret: nil))
+    end
+  end
+
+  describe "initiated?/1" do
+    test "Returns true only when user's TOTP setup is initiated but not finalized" do
+      refute TOTP.initiated?(insert(:user, totp_enabled: false, totp_secret: nil))
+      refute TOTP.initiated?(insert(:user, totp_enabled: true, totp_secret: "secret"))
+      assert TOTP.initiated?(insert(:user, totp_enabled: false, totp_secret: "secret"))
+      # this shouldn't happen under normal circumstances but we do check
+      # totp_secret presence just to be safe and avoid undefined behavior
       refute TOTP.enabled?(insert(:user, totp_enabled: true, totp_secret: nil))
     end
   end
