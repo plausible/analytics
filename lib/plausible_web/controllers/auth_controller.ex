@@ -32,13 +32,31 @@ defmodule PlausibleWeb.AuthController do
            :delete_me,
            :activate_form,
            :activate,
-           :request_activation_code
+           :request_activation_code,
+           :initiate_2fa,
+           :verify_2fa_setup_form,
+           :verify_2fa_setup,
+           :disable_2fa,
+           :generate_2fa_recovery_codes
+         ]
+  )
+
+  plug(
+    :clear_2fa_user
+    when action not in [
+           :verify_2fa_form,
+           :verify_2fa,
+           :verify_2fa_recovery_code_form,
+           :verify_2fa_recovery_code
          ]
   )
 
   @remember_2fa_cookie "remember_2fa"
   @remember_2fa_days 30
   @remember_2fa_seconds @remember_2fa_days * 24 * 60 * 60
+
+  @session_2fa_cookie "session_2fa"
+  @session_2fa_seconds 5 * 60
 
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
     with {:ok, user} <- login_user(conn, email, password) do
@@ -214,7 +232,6 @@ defmodule PlausibleWeb.AuthController do
         login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
 
         conn
-        |> clear_2fa_user()
         |> set_user_session(user)
         |> put_session(:login_dest, nil)
         |> redirect(to: login_dest)
@@ -259,6 +276,7 @@ defmodule PlausibleWeb.AuthController do
 
   defp set_user_session(conn, user) do
     conn
+    |> clear_2fa_user(nil)
     |> put_session(:current_user_id, user.id)
     |> put_resp_cookie("logged_in", "true",
       http_only: false,
@@ -409,13 +427,11 @@ defmodule PlausibleWeb.AuthController do
           )
         else
           conn
-          |> clear_2fa_user()
           |> redirect(to: login_dest)
         end
 
       {:error, :not_found} ->
         conn
-        |> clear_2fa_user()
         |> redirect(to: Routes.auth_path(conn, :login_form))
     end
   end
@@ -427,7 +443,6 @@ defmodule PlausibleWeb.AuthController do
       case Auth.TOTP.validate_code(user, code) do
         {:ok, user} ->
           conn
-          |> clear_2fa_user()
           |> set_user_session(user)
           |> put_session(:login_dest, nil)
           |> maybe_set_remember_2fa(params["remember_2fa"])
@@ -447,7 +462,6 @@ defmodule PlausibleWeb.AuthController do
 
         {:error, :not_enabled} ->
           conn
-          |> clear_2fa_user()
           |> set_user_session(user)
           |> put_session(:login_dest, nil)
           |> redirect(to: login_dest)
@@ -466,13 +480,11 @@ defmodule PlausibleWeb.AuthController do
           )
         else
           conn
-          |> clear_2fa_user()
           |> redirect(to: login_dest)
         end
 
       {:error, :not_found} ->
         conn
-        |> clear_2fa_user()
         |> redirect(to: Routes.auth_path(conn, :login_form))
     end
   end
@@ -484,7 +496,6 @@ defmodule PlausibleWeb.AuthController do
       case Auth.TOTP.use_recovery_code(user, recovery_code) do
         :ok ->
           conn
-          |> clear_2fa_user()
           |> set_user_session(user)
           |> put_session(:login_dest, nil)
           |> redirect(to: login_dest)
@@ -500,7 +511,6 @@ defmodule PlausibleWeb.AuthController do
 
         {:error, :not_enabled} ->
           conn
-          |> clear_2fa_user()
           |> set_user_session(user)
           |> put_session(:login_dest, nil)
           |> redirect(to: login_dest)
@@ -517,7 +527,8 @@ defmodule PlausibleWeb.AuthController do
   defp maybe_set_remember_2fa(conn, "true") do
     put_resp_cookie(conn, @remember_2fa_cookie, "true",
       sign: true,
-      max_age: @remember_2fa_seconds
+      max_age: @remember_2fa_seconds,
+      same_site: "Lax"
     )
   end
 
@@ -526,7 +537,8 @@ defmodule PlausibleWeb.AuthController do
   defp clear_remember_2fa(conn) do
     delete_resp_cookie(conn, @remember_2fa_cookie,
       sign: true,
-      max_age: @remember_2fa_seconds
+      max_age: @remember_2fa_seconds,
+      same_site: "Lax"
     )
   end
 
@@ -549,17 +561,23 @@ defmodule PlausibleWeb.AuthController do
 
       {:error, :not_found} ->
         conn
-        |> clear_2fa_user()
         |> redirect(to: Routes.auth_path(conn, :login_form))
     end
   end
 
   defp set_2fa_user(conn, %Auth.User{} = user) do
-    put_session(conn, :current_2fa_user_id, user.id)
+    put_resp_cookie(conn, @session_2fa_cookie, %{current_2fa_user_id: user.id},
+      encrypt: true,
+      max_age: @session_2fa_seconds,
+      same_site: "Lax"
+    )
   end
 
   defp get_2fa_user(conn) do
-    with id when is_integer(id) <- get_session(conn, :current_2fa_user_id),
+    conn = fetch_cookies(conn, encrypted: [@session_2fa_cookie])
+    session_2fa = conn.cookies[@session_2fa_cookie]
+
+    with id when is_integer(id) <- session_2fa[:current_2fa_user_id],
          %Auth.User{} = user <- Plausible.Users.with_subscription(id) do
       {:ok, user}
     else
@@ -567,8 +585,12 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
-  defp clear_2fa_user(conn) do
-    delete_session(conn, :current_2fa_user_id)
+  defp clear_2fa_user(conn, _opts) do
+    delete_resp_cookie(conn, @session_2fa_cookie,
+      encrypt: true,
+      max_age: @session_2fa_seconds,
+      same_site: "Lax"
+    )
   end
 
   def save_settings(conn, %{"user" => user_params}) do
