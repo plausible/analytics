@@ -343,32 +343,27 @@ defmodule Plausible.Billing.Quota do
   def ensure_can_subscribe_to_plan(_, _), do: :ok
 
   defp exceeded_limits(usage, %Plan{} = plan) do
-    exceeded_limits =
-      for {usage_field, limit_field} <- [
-            {:team_members, :team_member_limit},
-            {:sites, :site_limit}
-          ],
-          !within_limit?(Map.get(usage, usage_field), Map.get(plan, limit_field)) do
-        limit_field
-      end
+    for {limit, exceeded?} <- [
+          {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
+          {:site_limit, not within_limit?(usage.sites, plan.site_limit)},
+          {:monthly_pageview_limit, exceeds_monthly_pageview_limit?(usage, plan)}
+        ],
+        exceeded? do
+      limit
+    end
+  end
 
-    pageview_limit_exceeded? =
-      case usage.monthly_pageviews do
-        %{last_30_days: %{total: total}} ->
-          limit = ceil(plan.monthly_pageview_limit * 1.15)
-          total > 13_000 && !within_limit?(total, limit)
+  defp exceeds_monthly_pageview_limit?(usage, plan) do
+    case usage.monthly_pageviews do
+      %{last_30_days: %{total: total}} ->
+        limit = ceil(plan.monthly_pageview_limit * 1.15)
+        total > 13_000 && !within_limit?(total, limit)
 
-        billing_cycles_usage ->
-          Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
-            billing_cycles_usage,
-            plan.monthly_pageview_limit
-          )
-      end
-
-    if pageview_limit_exceeded? do
-      exceeded_limits ++ [:monthly_pageview_limit]
-    else
-      exceeded_limits
+      billing_cycles_usage ->
+        Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
+          billing_cycles_usage,
+          plan.monthly_pageview_limit
+        )
     end
   end
 
