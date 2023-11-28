@@ -324,7 +324,7 @@ defmodule PlausibleWeb.SiteController do
 
     conn
     |> put_flash(:success, "#{site.domain} stats will be reset in a few minutes")
-    |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/danger-zone")
+    |> redirect(external: Routes.site_path(conn, :settings_danger_zone, site.domain))
   end
 
   def delete_site(conn, _params) do

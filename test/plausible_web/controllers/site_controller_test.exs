@@ -1492,4 +1492,17 @@ defmodule PlausibleWeb.SiteControllerTest do
                "Your domain has been changed. You must update the JavaScript snippet on your site within 72 hours"
     end
   end
+
+  describe "reset stats" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "resets native_stats_start_date", %{conn: conn, site: site} do
+      Plausible.Site.set_stats_start_date(site, ~D[2023-01-01])
+      |> Repo.update!()
+
+      delete(conn, Routes.site_path(conn, :reset_stats, site.domain))
+
+      assert Repo.reload(site).stats_start_date == nil
+    end
+  end
 end
