@@ -1458,17 +1458,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       site: site
     } do
       original_domain = site.domain
+      new_domain = "â-example.com"
 
       conn =
         put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => "foo.example.com"}
+          "site" => %{"domain" => new_domain}
         })
 
       assert redirected_to(conn) ==
-               Routes.site_path(conn, :add_snippet_after_domain_change, "foo.example.com")
+               Routes.site_path(conn, :add_snippet_after_domain_change, new_domain)
 
       site = Repo.reload!(site)
-      assert site.domain == "foo.example.com"
+      assert site.domain == new_domain
       assert site.domain_changed_from == original_domain
     end
 

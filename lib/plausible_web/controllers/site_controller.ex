@@ -861,7 +861,7 @@ defmodule PlausibleWeb.SiteController do
         conn
         |> put_flash(:success, "Website domain changed successfully")
         |> redirect(
-          to: Routes.site_path(conn, :add_snippet_after_domain_change, updated_site.domain)
+          external: Routes.site_path(conn, :add_snippet_after_domain_change, updated_site.domain)
         )
 
       {:error, changeset} ->
