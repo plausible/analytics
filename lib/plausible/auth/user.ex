@@ -30,6 +30,9 @@ defmodule Plausible.Auth.User do
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     field :previous_email, :string
+
+    # A field only used as a manual override - allow subscribing
+    # to any plan, even when exceeding its pageview limit
     field :allow_next_upgrade_override, :boolean
 
     # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
