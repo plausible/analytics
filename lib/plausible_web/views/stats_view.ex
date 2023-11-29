@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.StatsView do
   use PlausibleWeb, :view
+  use Plausible
 
   def base_domain do
     PlausibleWeb.Endpoint.host()

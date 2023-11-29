@@ -6,7 +6,7 @@ if config_env() in [:dev, :test] do
   Envy.load(["config/.env.#{config_env()}"])
 end
 
-if config_env() == :small do
+if config_env() == :small_dev do
   Envy.load(["config/.env.dev"])
 end
 

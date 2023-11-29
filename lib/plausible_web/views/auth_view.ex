@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.AuthView do
+  use Plausible
   use PlausibleWeb, :view
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Plans, Subscription}

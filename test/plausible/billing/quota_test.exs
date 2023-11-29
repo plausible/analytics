@@ -16,6 +16,7 @@ defmodule Plausible.Billing.QuotaTest do
   @v3_business_plan_id "857481"
 
   describe "site_limit/1" do
+    @describetag :full_build_only
     test "returns 50 when user is on an old plan" do
       user_on_v1 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
       user_on_v2 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
@@ -50,8 +51,7 @@ defmodule Plausible.Billing.QuotaTest do
     test "returns 10 when user in on trial" do
       user =
         insert(:user,
-          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
-          inserted_at: ~U[2024-01-01T00:00:00Z]
+          trial_expiry_date: Timex.shift(Timex.now(), days: 7)
         )
 
       assert 10 == Quota.site_limit(user)
@@ -81,8 +81,7 @@ defmodule Plausible.Billing.QuotaTest do
       user =
         insert(:user,
           enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
-          subscription: nil,
-          inserted_at: ~U[2024-01-01T00:00:00Z]
+          subscription: nil
         )
 
       assert 10 == Quota.site_limit(user)
@@ -385,8 +384,7 @@ defmodule Plausible.Billing.QuotaTest do
     test "returns 5 when user in on trial" do
       user =
         insert(:user,
-          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
-          inserted_at: ~U[2024-01-01T00:00:00Z]
+          trial_expiry_date: Timex.shift(Timex.now(), days: 7)
         )
 
       assert 3 == Quota.team_member_limit(user)

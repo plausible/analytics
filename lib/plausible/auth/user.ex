@@ -11,6 +11,7 @@ defimpl FunWithFlags.Actor, for: Plausible.Auth.User do
 end
 
 defmodule Plausible.Auth.User do
+  use Plausible
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -209,10 +210,10 @@ defmodule Plausible.Auth.User do
   end
 
   defp trial_expiry() do
-    if Application.get_env(:plausible, :is_selfhost) do
-      Timex.today() |> Timex.shift(years: 100)
-    else
+    on_full_build do
       Timex.today() |> Timex.shift(days: 30)
+    else
+      Timex.today() |> Timex.shift(years: 100)
     end
   end
 

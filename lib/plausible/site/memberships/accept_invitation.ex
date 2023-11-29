@@ -50,7 +50,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   @spec accept_invitation(String.t(), Auth.User.t(), Keyword.t()) ::
           {:ok, Site.Membership.t()} | {:error, :invitation_not_found | Ecto.Changeset.t()}
   def accept_invitation(invitation_id, user, opts \\ []) do
-    selfhost? = Keyword.get(opts, :selfhost?, Plausible.Release.selfhost?())
+    selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
     with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
       membership = get_or_create_membership(invitation, user)

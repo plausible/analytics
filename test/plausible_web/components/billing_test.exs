@@ -87,6 +87,7 @@ defmodule PlausibleWeb.Components.BillingTest do
     assert rendered =~ "please reach out to the site owner to upgrade their subscription"
   end
 
+  @tag :full_build_only
   test "limit_exceeded_notice/1 when billable user is on trial displays upgrade link" do
     me = insert(:user)
 

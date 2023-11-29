@@ -61,7 +61,7 @@ defmodule PlausibleWeb.SiteController do
 
   def add_snippet(conn, _params) do
     user = conn.assigns[:current_user]
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site]
 
     is_first_site =
       !Repo.exists?(
@@ -121,9 +121,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_general(conn, _params) do
-    site =
-      conn.assigns[:site]
-      |> Repo.preload([:custom_domain])
+    site = conn.assigns[:site]
 
     conn
     |> render("settings_general.html",
@@ -137,7 +135,7 @@ defmodule PlausibleWeb.SiteController do
   def settings_people(conn, _params) do
     site =
       conn.assigns[:site]
-      |> Repo.preload(memberships: :user, invitations: [], custom_domain: [])
+      |> Repo.preload(memberships: :user, invitations: [])
 
     conn
     |> render("settings_people.html",
@@ -148,7 +146,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_visibility(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site]
     shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
 
     conn
@@ -161,7 +159,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_goals(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:custom_domain, :owner])
+    site = Repo.preload(conn.assigns[:site], [:owner])
     owner = Plausible.Users.with_subscription(site.owner)
     site = Map.put(site, :owner, owner)
 
@@ -175,7 +173,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_funnels(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:custom_domain, :owner])
+    site = Repo.preload(conn.assigns[:site], [:owner])
     owner = Plausible.Users.with_subscription(site.owner)
     site = Map.put(site, :owner, owner)
 
@@ -189,7 +187,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_props(conn, _params) do
-    site = Repo.preload(conn.assigns[:site], [:custom_domain, :owner])
+    site = Repo.preload(conn.assigns[:site], [:owner])
     owner = Plausible.Users.with_subscription(site.owner)
     site = Map.put(site, :owner, owner)
 
@@ -203,7 +201,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_email_reports(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site]
 
     conn
     |> render("settings_email_reports.html",
@@ -216,21 +214,8 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_custom_domain(conn, _params) do
-    site =
-      conn.assigns[:site]
-      |> Repo.preload(:custom_domain)
-
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("settings_custom_domain.html",
-      site: site,
-      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
-    )
-  end
-
   def settings_danger_zone(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site]
 
     conn
     |> render("settings_danger_zone.html",
@@ -243,7 +228,7 @@ defmodule PlausibleWeb.SiteController do
   def settings_integrations(conn, _params) do
     site =
       conn.assigns.site
-      |> Repo.preload([:google_auth, :custom_domain])
+      |> Repo.preload([:google_auth])
 
     search_console_domains =
       if site.google_auth do
@@ -295,7 +280,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def update_settings(conn, %{"site" => site_params}) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site]
     changeset = Plausible.Site.update_changeset(site, site_params)
 
     case Repo.update(changeset) do
@@ -624,27 +609,6 @@ defmodule PlausibleWeb.SiteController do
     end
   end
 
-  def delete_custom_domain(conn, %{"id" => domain_id}) do
-    site = conn.assigns[:site]
-    site_id = site.id
-
-    case Repo.delete_all(
-           from d in Plausible.Site.CustomDomain,
-             where: d.site_id == ^site_id,
-             where: d.id == ^domain_id
-         ) do
-      {1, _} ->
-        conn
-        |> put_flash(:success, "Custom domain deleted successfully")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
-
-      {0, _} ->
-        conn
-        |> put_flash(:error, "Failed to delete custom domain")
-        |> redirect(to: "/#{URI.encode_www_form(site.domain)}/settings/general")
-    end
-  end
-
   def import_from_google_user_metric_notice(conn, %{
         "view_id" => view_id,
         "access_token" => access_token,
@@ -874,7 +838,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def add_snippet_after_domain_change(conn, _params) do
-    site = conn.assigns[:site] |> Repo.preload(:custom_domain)
+    site = conn.assigns[:site]
 
     conn
     |> assign(:skip_plausible_tracking, true)

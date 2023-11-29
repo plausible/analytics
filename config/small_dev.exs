@@ -1,6 +1,6 @@
 import Config
 
-import_config "prod.exs"
+import_config "dev.exs"
 
 config :esbuild,
   default: [

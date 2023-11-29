@@ -1,4 +1,4 @@
-<%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
+<%= if full_build?() && !@conn.assigns[:skip_plausible_tracking] do %>
   <script
     defer
     data-api={dogfood_api_destination()}
