@@ -330,7 +330,11 @@ defmodule Plausible.Billing.Quota do
   end
 
   def ensure_can_subscribe_to_plan(%User{} = user, %Plan{} = plan) do
-    ensure_can_subscribe_to_plan(usage(user), plan)
+    if user.allow_next_upgrade_override do
+      :ok
+    else
+      ensure_can_subscribe_to_plan(usage(user), plan)
+    end
   end
 
   def ensure_can_subscribe_to_plan(usage, %Plan{} = plan) do

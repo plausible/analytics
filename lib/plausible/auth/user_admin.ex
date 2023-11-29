@@ -13,7 +13,8 @@ defmodule Plausible.Auth.UserAdmin do
       name: nil,
       email: nil,
       previous_email: nil,
-      trial_expiry_date: nil
+      trial_expiry_date: nil,
+      allow_next_upgrade_override: nil
     ]
   end
 

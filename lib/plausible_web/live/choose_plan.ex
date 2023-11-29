@@ -309,8 +309,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
-    usage_exceeds_plan_limits =
-      Quota.ensure_can_subscribe_to_plan(assigns.usage, assigns.plan_to_render) != :ok
+    usage_within_limits =
+      assigns.user.allow_next_upgrade_override ||
+        Quota.ensure_can_subscribe_to_plan(assigns.usage, assigns.plan_to_render) == :ok
 
     subscription = assigns.user.subscription
 
@@ -328,7 +329,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         change_plan_link_text == "Currently on this plan" && not subscription_cancelled ->
           {true, nil}
 
-        assigns.available && usage_exceeds_plan_limits ->
+        assigns.available && !usage_within_limits ->
           {true, "Your usage exceeds this plan"}
 
         billing_details_expired ->

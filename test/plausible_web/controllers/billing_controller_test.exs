@@ -71,6 +71,28 @@ defmodule PlausibleWeb.BillingControllerTest do
                "Unable to subscribe to this plan because the following limits are exceeded: [:team_member_limit]"
     end
 
+    test "can override allowing to upgrade when limits exceeded", %{conn: conn, user: user} do
+      insert(:subscription, user: user, paddle_plan_id: "123123")
+
+      for _ <- 1..11, do: insert(:site, members: [user])
+
+      conn1 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+
+      assert Phoenix.Flash.get(conn1.assigns.flash, :error) =~ "are exceeded: [:site_limit]"
+      assert subscription.paddle_plan_id == "123123"
+
+      Plausible.Users.allow_next_upgrade_override(user)
+
+      conn2 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+
+      subscription = Plausible.Repo.reload!(subscription)
+
+      assert Phoenix.Flash.get(conn2.assigns.flash, :success) =~ "Plan changed successfully"
+      assert subscription.paddle_plan_id == @v4_growth_plan
+    end
+
     test "calls Paddle API to update subscription", %{conn: conn, user: user} do
       insert(:subscription, user: user)
 

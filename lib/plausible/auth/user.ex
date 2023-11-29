@@ -29,6 +29,7 @@ defmodule Plausible.Auth.User do
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     field :previous_email, :string
+    field :allow_next_upgrade_override, :boolean
 
     # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
     field :totp_enabled, :boolean, default: false
@@ -95,7 +96,14 @@ defmodule Plausible.Auth.User do
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:email, :name, :email_verified, :theme, :trial_expiry_date])
+    |> cast(attrs, [
+      :email,
+      :name,
+      :email_verified,
+      :theme,
+      :trial_expiry_date,
+      :allow_next_upgrade_override
+    ])
     |> validate_required([:email, :name, :email_verified])
     |> unique_constraint(:email)
   end

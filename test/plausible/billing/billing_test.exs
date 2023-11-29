@@ -178,6 +178,15 @@ defmodule Plausible.BillingTest do
       refute Repo.reload!(site).locked
     end
 
+    test "sets user.allow_next_upgrade_override field to false" do
+      user = insert(:user, allow_next_upgrade_override: true)
+
+      %{@subscription_created_params | "passthrough" => user.id}
+      |> Billing.subscription_created()
+
+      refute Repo.reload!(user).allow_next_upgrade_override
+    end
+
     test "if user upgraded to an enterprise plan, their API key limits are automatically adjusted" do
       user = insert(:user)
 
@@ -228,6 +237,20 @@ defmodule Plausible.BillingTest do
       |> Billing.subscription_updated()
 
       refute Repo.reload!(site).locked
+    end
+
+    test "sets user.allow_next_upgrade_override field to false" do
+      user = insert(:user, allow_next_upgrade_override: true)
+      subscription = insert(:subscription, user: user)
+
+      @subscription_updated_params
+      |> Map.merge(%{
+        "subscription_id" => subscription.paddle_subscription_id,
+        "passthrough" => user.id
+      })
+      |> Billing.subscription_updated()
+
+      refute Repo.reload!(user).allow_next_upgrade_override
     end
 
     test "if user upgraded to an enterprise plan, their API key limits are automatically adjusted" do
