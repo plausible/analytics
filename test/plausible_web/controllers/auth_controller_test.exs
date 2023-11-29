@@ -744,6 +744,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute html_response(conn, 200) =~ "Invoices"
     end
 
+    @tag :full_build_only
     test "renders pageview usage for current, last, and penultimate billing cycles", %{
       conn: conn,
       user: user
@@ -806,6 +807,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_element(doc, "#custom_events_penultimate_cycle") =~ "Custom events 1"
     end
 
+    @tag :full_build_only
     test "renders pageview usage per billing cycle for active subscribers", %{
       conn: conn,
       user: user
@@ -848,6 +850,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       get(conn, "/settings") |> html_response(200) |> assert_cycles_rendered.()
     end
 
+    @tag :full_build_only
     test "penultimate cycle is disabled if there's no usage", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -875,6 +878,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
     end
 
+    @tag :full_build_only
     test "penultimate and last cycles are both disabled if there's no usage", %{
       conn: conn,
       user: user
@@ -909,6 +913,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
     end
 
+    @tag :full_build_only
     test "when last cycle usage is 0, it's still not disabled if penultimate cycle has usage", %{
       conn: conn,
       user: user
@@ -942,6 +947,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
     end
 
+    @tag :full_build_only
     test "renders last 30 days pageview usage for trials and non-active/free_10k subscriptions",
          %{
            conn: conn,
@@ -997,6 +1003,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       get(conn, "/settings") |> html_response(200) |> assert_usage.()
     end
 
+    @tag :full_build_only
     test "renders sites usage and limit", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
       insert(:site, members: [user])
@@ -1010,6 +1017,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert site_usage_row_text =~ "Owned sites 1 / 50"
     end
 
+    @tag :full_build_only
     test "renders team members usage and limit", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: @v4_plan_id, user: user)
 
