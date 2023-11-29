@@ -100,7 +100,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
               else: "Upgrade your account" %>
           </p>
         </div>
-        <div class="mt-12 flex flex-col gap-4 lg:flex-row lg:gap-8 items-center lg:items-baseline">
+        <div class="mt-12 flex flex-col gap-8 lg:flex-row items-center lg:items-baseline">
           <.interval_picker selected_interval={@selected_interval} />
           <.slider_output volume={@selected_volume} available_volumes={@available_volumes} />
           <.slider selected_volume={@selected_volume} available_volumes={@available_volumes} />
@@ -240,7 +240,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <form class="max-w-md lg:max-w-none w-full lg:w-1/2 lg:order-2">
       <div class="flex items-baseline space-x-2">
-        <span class="text-xs font-medium text-gray-600">10k</span>
+        <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
+          <%= format_volume(List.first(@available_volumes), @available_volumes) %>
+        </span>
         <div class="flex-1 relative">
           <input
             phx-change="slide"
@@ -259,7 +261,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
             <%= format_volume(@selected_volume, @available_volumes) %>
           </output>
         </div>
-        <span class="text-xs font-medium text-gray-600">10M+</span>
+        <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
+          <%= format_volume(List.last(@available_volumes), @available_volumes) <> "+" %>
+        </span>
       </div>
     </form>
     """
@@ -692,6 +696,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp slider_output(assigns) do
     ~H"""
     <output class="lg:w-1/4 lg:order-1 font-medium text-lg text-gray-600 dark:text-gray-200">
+      <span :if={@volume != :enterprise}>Up to</span>
       <strong id="slider-value" class="text-gray-900 dark:text-gray-100">
         <%= format_volume(@volume, @available_volumes) %>
       </strong>
