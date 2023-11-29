@@ -18,19 +18,17 @@ defmodule Plausible.Auth.TOTP do
   After initiation, user is expected to confirm valid setup with `enable/2`,
   providing TOTP code from their authenticator app. After code validation 
   passes successfully, the `User.totp_enabled` flag is set to `true`.
-
   Finally, the user must be immediately presented with a list of recovery codes
-  generated with `generate_recovery_codes/1`. The codes should be presented
+  returned by the same call of `enable/2`. The codes should be presented
   in copy/paste friendly form, ideally also with a print-friendly view option.
-  The function can be run more than once, giving the user ability to regenerate
-  codes from the final stage of setup if needed.
 
   The `initiate/1` and `enable/1` functions can be safely called multiple
   times, allowing user to abort and restart setup up to these stages.
 
   ## Management
 
-  State of TOTP for a particular user can be chcecked by calling `enabled?/1`.
+  The state of TOTP for a particular user can be chcecked by calling
+  `enabled?/1` or `initiated?/1`.
 
   TOTP can be disabled with `disable/2`. User is expected to provide their
   current password for safety. Once disabled, all TOTP user settings are
@@ -38,9 +36,9 @@ defmodule Plausible.Auth.TOTP do
   can be safely run more than once.
 
   If the user needs to regenerate the recovery codes outside of setup procedure,
-  they must do it via `generate_recovery_codes_protected/2`, providing
-  their current password for safety. They must be warned that any existing
-  recovery codes will be invalidated.
+  they must do it via `generate_recovery_codes/2`, providing their current
+  password for safety. They must be warned that any existing recovery codes
+  will be invalidated.
 
   ## Validation
 
