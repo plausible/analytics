@@ -6,6 +6,7 @@
 
     <div class="text-sm mt-2 text-gray-500 dark:text-gray-200 leading-tight">
       <%= form_for @conn.params, Routes.auth_path(@conn, :verify_2fa_setup), [
+        id: "verify-2fa-form",
         onsubmit: "document.getElementById('verify-button').disabled = true"
       ], fn f -> %>
         Enter the code from your authenticator application before it expires or wait for a new one.
