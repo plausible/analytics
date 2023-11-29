@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert text_of_element(
                html,
-               ~s/li[data-domain="#{site.domain}"] button/
+               ~s/li[data-domain="#{site.domain}"] a[phx-value-domain]/
              ) == "Pin Site"
     end
 
@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      button_selector = ~s/li[data-domain="#{site.domain}"] button/
+      button_selector = ~s/li[data-domain="#{site.domain}"] a[phx-value-domain]/
 
       html =
         lv
@@ -114,7 +114,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      button_selector = ~s/li[data-domain="#{site.domain}"] button/
+      button_selector = ~s/li[data-domain="#{site.domain}"] a[phx-value-domain]/
 
       html =
         lv
