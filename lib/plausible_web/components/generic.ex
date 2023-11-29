@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Components.Generic do
   @moduledoc """
   Generic reusable components
   """
-  use Phoenix.Component
+  use Phoenix.Component, global_prefixes: ~w(x-)
 
   @notice_themes %{
     yellow: %{
