@@ -692,7 +692,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp slider_output(assigns) do
     ~H"""
     <output class="lg:w-1/4 lg:order-1 font-medium text-lg text-gray-600 dark:text-gray-200">
-      <strong class="text-gray-900 dark:text-gray-100">
+      <strong id="slider-value" class="text-gray-900 dark:text-gray-100">
         <%= format_volume(@volume, @available_volumes) %>
       </strong>
       monthly pageviews
