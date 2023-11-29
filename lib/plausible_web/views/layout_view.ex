@@ -83,7 +83,6 @@ defmodule PlausibleWeb.LayoutView do
       [key: "Custom Properties", value: "properties"],
       [key: "Integrations", value: "integrations"],
       [key: "Email Reports", value: "email-reports"],
-      # XXX
       if conn.assigns[:current_user_role] == :owner do
         [key: "Danger zone", value: "danger-zone"]
       end
