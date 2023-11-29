@@ -224,7 +224,7 @@ defmodule PlausibleWeb.AuthController do
 
   def login(conn, %{"email" => email, "password" => password}) do
     with {:ok, user} <- login_user(conn, email, password) do
-      if Auth.TOTP.enabled?(user) and not TwoFactor.remember_2fa?(conn) do
+      if Auth.TOTP.enabled?(user) and not TwoFactor.remember_2fa?(conn, user) do
         conn
         |> TwoFactor.set_2fa_user(user)
         |> redirect(to: Routes.auth_path(conn, :verify_2fa))
@@ -446,7 +446,7 @@ defmodule PlausibleWeb.AuthController do
       case Auth.TOTP.validate_code(user, code) do
         {:ok, user} ->
           conn
-          |> TwoFactor.maybe_set_remember_2fa(params["remember_2fa"])
+          |> TwoFactor.maybe_set_remember_2fa(user, params["remember_2fa"])
           |> set_user_session_and_redirect(user)
 
         {:error, :invalid_code} ->

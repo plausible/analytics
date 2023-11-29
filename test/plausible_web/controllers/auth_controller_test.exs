@@ -342,14 +342,13 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = post(conn, "/login", email: user.email, password: "password")
 
       assert redirected_to(conn, 302) == Routes.auth_path(conn, :verify_2fa_form)
 
-      assert conn.cookies["session_2fa"].current_2fa_user_id == user.id
+      assert fetch_cookies(conn).cookies["session_2fa"].current_2fa_user_id == user.id
       refute get_session(conn)["current_user_id"]
     end
 
@@ -359,10 +358,9 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
-      conn = set_remember_2fa_cookie(conn)
+      conn = set_remember_2fa_cookie(conn, user)
 
       conn = post(conn, "/login", email: user.email, password: "password")
 
@@ -370,6 +368,25 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert conn.resp_cookies["session_2fa"].max_age == 0
       assert get_session(conn, :current_user_id) == user.id
+    end
+
+    test "valid email and password with 2FA enabled and rogue remember 2FA cookie set - logs the user in",
+         %{conn: conn} do
+      user = insert(:user, password: "password")
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      another_user = insert(:user)
+      conn = set_remember_2fa_cookie(conn, another_user)
+
+      conn = post(conn, "/login", email: user.email, password: "password")
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :verify_2fa_form)
+
+      assert fetch_cookies(conn).cookies["session_2fa"].current_2fa_user_id == user.id
+      refute get_session(conn, :current_user_id)
     end
 
     test "email does not exist - renders login form again", %{conn: conn} do
@@ -391,28 +408,28 @@ defmodule PlausibleWeb.AuthControllerTest do
       user = insert(:user, password: "password")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       conn =
         build_conn()
-        |> put_req_header("x-forwarded-for", "1.1.1.1")
+        |> put_req_header("x-forwarded-for", "1.2.3.5")
         |> post("/login", email: user.email, password: "wrong")
 
       assert get_session(conn, :current_user_id) == nil
@@ -1075,8 +1092,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "renders 2FA in enabled state", %{conn: conn, user: user} do
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = get(conn, "/settings")
 
@@ -1447,8 +1463,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "redirects back to settings if 2FA is already setup", %{conn: conn, user: user} do
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = post(conn, Routes.auth_path(conn, :initiate_2fa_setup))
 
@@ -1531,8 +1546,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "disables 2FA when valid password provided", %{conn: conn, user: user} do
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "password"})
 
@@ -1546,8 +1560,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "renders error when invalid password provided", %{conn: conn, user: user} do
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "invalid"})
 
@@ -1562,8 +1575,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "generates new recovery codes when valid password provided", %{conn: conn, user: user} do
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn =
         post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "password"})
@@ -1576,8 +1588,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "renders error when invalid password provided", %{conn: conn, user: user} do
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn =
         post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "invalid"})
@@ -1604,8 +1615,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1630,8 +1640,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = get(conn, Routes.auth_path(conn, :verify_2fa_form))
 
@@ -1640,7 +1649,14 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "redirects to login when 2FA not enabled", %{conn: conn} do
       user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
       conn = login_with_cookie(conn, user.email, "password")
+
+      {:ok, _} = Auth.TOTP.disable(user, "password")
 
       conn = get(conn, Routes.auth_path(conn, :verify_2fa_form))
 
@@ -1654,7 +1670,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      user = user |> Ecto.Changeset.change(totp_enabled: true) |> Repo.update!()
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1667,16 +1683,16 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert get_session(conn)["current_user_id"] == user.id
       # 2FA session terminated
       assert conn.resp_cookies["session_2fa"].max_age == 0
-      # Remember cookie NOT set
-      refute conn.resp_cookies["remember_2fa"]
+      # Remember cookie unset
+      assert conn.resp_cookies["remember_2fa"].max_age == 0
     end
 
-    test "sets cookie when device trusted", %{conn: conn} do
+    test "sets remember cookie when device trusted", %{conn: conn} do
       user = insert(:user)
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      user = user |> Ecto.Changeset.change(totp_enabled: true) |> Repo.update!()
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1693,12 +1709,63 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert conn.resp_cookies["remember_2fa"].max_age > 0
     end
 
+    test "overwrites rogue remember cookie when device trusted", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      another_user = insert(:user, totp_token: "different_token")
+      conn = set_remember_2fa_cookie(conn, another_user)
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code, remember_2fa: "true"})
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert get_session(conn)["current_user_id"] == user.id
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+      # Remember cookie set
+      assert conn.resp_cookies["remember_2fa"].max_age > 0
+      assert fetch_cookies(conn).cookies["remember_2fa"] == user.totp_token
+    end
+
+    test "clears rogue remember cookie when device _not_ trusted", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      another_user = insert(:user, totp_token: "different_token")
+      conn = set_remember_2fa_cookie(conn, another_user)
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert get_session(conn)["current_user_id"] == user.id
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+      # Remember cookie cleared
+      assert conn.resp_cookies["remember_2fa"].max_age == 0
+    end
+
     test "returns error on invalid code", %{conn: conn} do
       user = insert(:user)
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      user = user |> Ecto.Changeset.change(totp_enabled: true) |> Repo.update!()
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1715,8 +1782,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       code = NimbleTOTP.verification_code(user.totp_secret)
 
@@ -1730,7 +1796,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      user = user |> Ecto.Changeset.change(totp_enabled: true) |> Repo.update!()
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1748,11 +1814,11 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "limits verification attempts to 5 per minute", %{conn: conn} do
-      user = insert(:user)
+      user = insert(:user, email: "ratio#{Ecto.UUID.generate()}@example.com")
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      user = user |> Ecto.Changeset.change(totp_enabled: true) |> Repo.update!()
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1794,8 +1860,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1816,8 +1881,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, _} = Auth.TOTP.enable(user, code)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = get(conn, Routes.auth_path(conn, :verify_2fa_recovery_code_form))
 
@@ -1826,7 +1890,14 @@ defmodule PlausibleWeb.AuthControllerTest do
 
     test "redirects to login when 2FA not enabled", %{conn: conn} do
       user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
       conn = login_with_cookie(conn, user.email, "password")
+
+      {:ok, _} = Auth.TOTP.disable(user, "password")
 
       conn = get(conn, Routes.auth_path(conn, :verify_2fa_recovery_code_form))
 
@@ -1840,8 +1911,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      user = user |> Ecto.Changeset.change(totp_enabled: true) |> Repo.update!()
-      {:ok, [recovery_code | _]} = Auth.TOTP.generate_recovery_codes(user, "password")
+      {:ok, user, %{recovery_codes: [recovery_code | _]}} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1862,7 +1932,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      user = user |> Ecto.Changeset.change(totp_enabled: true) |> Repo.update!()
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1880,8 +1950,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, _, %{recovery_codes: [recovery_code | _]}} = Auth.TOTP.enable(user, code)
+      {:ok, _, %{recovery_codes: [recovery_code | _]}} = Auth.TOTP.enable(user, :skip_verify)
 
       conn =
         post(
@@ -1897,8 +1966,7 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      user = user |> Ecto.Changeset.change(totp_enabled: true) |> Repo.update!()
-      {:ok, [recovery_code | _]} = Auth.TOTP.generate_recovery_codes(user, "password")
+      {:ok, user, %{recovery_codes: [recovery_code | _]}} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
@@ -1917,37 +1985,37 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
 
     test "limits verification attempts to 5 per minute", %{conn: conn} do
-      user = insert(:user)
+      user = insert(:user, email: "ratio#{Ecto.UUID.generate()}@example.com")
 
       # enable 2FA
       {:ok, user, _} = Auth.TOTP.initiate(user)
-      user = user |> Ecto.Changeset.change(totp_enabled: true) |> Repo.update!()
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
 
       conn = login_with_cookie(conn, user.email, "password")
 
       conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
       |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
 
       conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
       |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
 
       conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
       |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
 
       conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
       |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
 
       conn
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
       |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
 
       conn =
         conn
-        |> put_req_header("x-forwarded-for", "1.1.1.1")
+        |> put_req_header("x-forwarded-for", "1.2.3.4")
         |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
 
       assert get_session(conn, :current_user_id) == nil
@@ -1958,38 +2026,22 @@ defmodule PlausibleWeb.AuthControllerTest do
   end
 
   defp login_with_cookie(conn, email, password) do
-    # log in
-    login_conn =
-      post(conn, Routes.auth_path(conn, :login), %{
-        email: email,
-        password: password
-      })
-
-    # transfer cookie to next request
-    next_conn =
-      Plug.Conn.put_req_header(
-        conn,
-        "cookie",
-        hd(Plug.Conn.get_resp_header(login_conn, "set-cookie"))
-      )
-
-    next_conn
+    conn
+    |> post(Routes.auth_path(conn, :login), %{
+      email: email,
+      password: password
+    })
+    |> recycle()
+    |> Map.put(:secret_key_base, secret_key_base())
+    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
   end
 
-  defp set_remember_2fa_cookie(conn) do
-    cookie_conn = PlausibleWeb.TwoFactor.maybe_set_remember_2fa(conn, "true")
-
-    login_conn = get(cookie_conn, Routes.auth_path(cookie_conn, :login_form))
-
-    cookie =
-      login_conn
-      |> Plug.Conn.get_resp_header("set-cookie")
-      |> Enum.find(&String.starts_with?(&1, "remember_2fa"))
-
-    # transfer cookie to next request
-    next_conn = Plug.Conn.put_req_header(conn, "cookie", cookie)
-
-    next_conn
+  defp set_remember_2fa_cookie(conn, user) do
+    conn
+    |> PlausibleWeb.TwoFactor.maybe_set_remember_2fa(user, "true")
+    |> recycle()
+    |> Map.put(:secret_key_base, secret_key_base())
+    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
   end
 
   defp mock_captcha_success() do
@@ -2022,5 +2074,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       monthly_pageview_limit: 20_000_000,
       billing_interval: :yearly
     )
+  end
+
+  defp secret_key_base() do
+    :plausible
+    |> Application.fetch_env!(PlausibleWeb.Endpoint)
+    |> Keyword.fetch!(:secret_key_base)
   end
 end

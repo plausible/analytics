@@ -49,23 +49,25 @@ defmodule PlausibleWeb.TwoFactor do
   @spec remember_2fa_days() :: non_neg_integer()
   def remember_2fa_days(), do: @remember_2fa_days
 
-  @spec remember_2fa?(Plug.Conn.t()) :: boolean()
-  def remember_2fa?(conn) do
-    conn = fetch_cookies(conn, signed: [@remember_2fa_cookie])
+  @spec remember_2fa?(Plug.Conn.t(), Auth.User.t()) :: boolean()
+  def remember_2fa?(conn, user) do
+    conn = fetch_cookies(conn, encrypted: [@remember_2fa_cookie])
 
-    conn.cookies[@remember_2fa_cookie] == "true"
+    not is_nil(user.totp_token) and conn.cookies[@remember_2fa_cookie] == user.totp_token
   end
 
-  @spec maybe_set_remember_2fa(Plug.Conn.t(), String.t() | nil) :: Plug.Conn.t()
-  def maybe_set_remember_2fa(conn, "true") do
-    put_resp_cookie(conn, @remember_2fa_cookie, "true",
-      sign: true,
+  @spec maybe_set_remember_2fa(Plug.Conn.t(), Auth.User.t(), String.t() | nil) :: Plug.Conn.t()
+  def maybe_set_remember_2fa(conn, user, "true") do
+    put_resp_cookie(conn, @remember_2fa_cookie, user.totp_token,
+      encrypt: true,
       max_age: @remember_2fa_seconds,
       same_site: "Lax"
     )
   end
 
-  def maybe_set_remember_2fa(conn, _), do: conn
+  def maybe_set_remember_2fa(conn, _, _) do
+    clear_remember_2fa(conn)
+  end
 
   @spec clear_remember_2fa(Plug.Conn.t()) :: Plug.Conn.t()
   def clear_remember_2fa(conn) do
