@@ -68,7 +68,7 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "growth_plans_for/1 shows v4 plans for everyone else" do
-      insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])
+      insert(:user)
       |> Plans.growth_plans_for()
       |> assert_generation(4)
     end
@@ -144,7 +144,7 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "business_plans_for/1 returns v4 business plans for everyone else" do
-      user = insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])
+      user = insert(:user)
       business_plans = Plans.business_plans_for(user)
 
       assert Enum.all?(business_plans, &(&1.kind == :business))
@@ -318,14 +318,14 @@ defmodule Plausible.Billing.PlansTest do
 
   describe "suggest_tier/1" do
     test "suggests Business when user has used a premium feature" do
-      user = insert(:user, inserted_at: ~N[2024-01-01 10:00:00])
+      user = insert(:user)
       insert(:api_key, user: user)
 
       assert Plans.suggest_tier(user) == :business
     end
 
     test "suggests Growth when no premium features used" do
-      user = insert(:user, inserted_at: ~N[2024-01-01 10:00:00])
+      user = insert(:user)
       site = insert(:site, members: [user])
       insert(:goal, site: site, event_name: "goals_is_not_premium")
 

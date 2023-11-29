@@ -74,7 +74,7 @@ defmodule Plausible.Billing.FeatureTest do
   end
 
   test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns error when user trial hasn't started and was created after the business tier launch" do
-    user = insert(:user, inserted_at: ~N[2024-01-01T00:00:00], trial_expiry_date: nil)
+    user = insert(:user, trial_expiry_date: nil)
 
     assert {:error, :upgrade_required} ==
              Plausible.Billing.Feature.StatsAPI.check_availability(user)

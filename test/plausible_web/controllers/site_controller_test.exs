@@ -298,6 +298,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert_no_emails_delivered()
     end
 
+    @tag :full_build_only
     test "does not allow site creation when the user is at their site limit", %{
       conn: conn,
       user: user
@@ -552,7 +553,6 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "deletes the site", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
       insert(:google_auth, user: user, site: site)
-      insert(:custom_domain, site: site)
       insert(:spike_notification, site: site)
 
       delete(conn, "/#{site.domain}")
@@ -563,7 +563,6 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "fails to delete a site with insufficient permissions", %{conn: conn, user: user} do
       site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
       insert(:google_auth, user: user, site: site)
-      insert(:custom_domain, site: site)
       insert(:spike_notification, site: site)
 
       conn = delete(conn, "/#{site.domain}")
@@ -581,7 +580,6 @@ defmodule PlausibleWeb.SiteControllerTest do
         insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       insert(:google_auth, user: other_user, site: other_site)
-      insert(:custom_domain, site: other_site)
       insert(:spike_notification, site: other_site)
 
       my_conn = delete(my_conn, "/#{other_site.domain}")
@@ -1226,35 +1224,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.one(Plausible.Site.SharedLink)
       assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find Shared Link"
-    end
-  end
-
-  describe "DELETE sites/:website/custom-domains/:id" do
-    setup [:create_user, :log_in, :create_site]
-
-    test "deletes custom domain", %{conn: conn, site: site} do
-      domain = insert(:custom_domain, site: site)
-
-      conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
-
-      assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
-               "Custom domain deleted successfully"
-
-      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
-    end
-
-    test "fails to delete custom domain not owning it", %{conn: conn, site: site} do
-      _og_domain = insert(:custom_domain, site: site)
-
-      foreign_site = insert(:site)
-      foreign_domain = insert(:custom_domain, site: foreign_site)
-
-      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
-
-      conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{foreign_domain.id}")
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Failed to delete custom domain"
-
-      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
     end
   end
 

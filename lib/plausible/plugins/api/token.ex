@@ -10,6 +10,7 @@ defmodule Plausible.Plugins.API.Token do
   It is prefixed with a plain text identifier allowing source scanning
   for leaked secrets.
   """
+  use Plausible
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -63,10 +64,15 @@ defmodule Plausible.Plugins.API.Token do
   can scan repositories for accidental secret commits.
   """
   def prefix() do
-    case {Plausible.Release.selfhost?(), Application.get_env(:plausible, :environment)} do
-      {true, _} -> "plausible-plugin-selfhost"
-      {false, "prod"} -> "plausible-plugin"
-      {false, env} -> "plausible-plugin-#{env}"
+    on_full_build do
+      env = Application.get_env(:plausible, :environment)
+
+      case env do
+        "prod" -> "plausible-plugin"
+        env -> "plausible-plugin-#{env}"
+      end
+    else
+      "plausible-plugin-selfhost"
     end
   end
 

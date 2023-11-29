@@ -4,6 +4,8 @@ defmodule PlausibleWeb.AvatarControllerTest do
   import Mox
   setup :verify_on_exit!
 
+  setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
+
   describe "GET /avatar/:hash" do
     test "proxies the request to gravatar", %{conn: conn} do
       expect(

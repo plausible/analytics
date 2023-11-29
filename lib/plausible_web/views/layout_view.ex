@@ -83,9 +83,6 @@ defmodule PlausibleWeb.LayoutView do
       [key: "Custom Properties", value: "properties"],
       [key: "Integrations", value: "integrations"],
       [key: "Email Reports", value: "email-reports"],
-      if !is_selfhost() && conn.assigns[:site].custom_domain do
-        [key: "Custom domain", value: "custom-domain"]
-      end,
       if conn.assigns[:current_user_role] == :owner do
         [key: "Danger zone", value: "danger-zone"]
       end
@@ -122,9 +119,5 @@ defmodule PlausibleWeb.LayoutView do
 
   def is_current_tab(conn, tab) do
     List.last(conn.path_info) == tab
-  end
-
-  defp is_selfhost() do
-    Application.get_env(:plausible, :is_selfhost)
   end
 end

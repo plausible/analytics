@@ -39,7 +39,6 @@ defmodule Plausible.Site do
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
-    has_one :custom_domain, Plausible.Site.CustomDomain
     has_one :spike_notification, Plausible.Site.SpikeNotification
     has_one :ownership, Plausible.Site.Membership, where: [role: :owner]
     has_one :owner, through: [:ownership, :user]
@@ -49,7 +48,7 @@ defmodule Plausible.Site do
     # strictly necessary.
     field :from_cache?, :boolean, virtual: true, default: false
 
-    # Used in the context of paginated sites list to order in relation to 
+    # Used in the context of paginated sites list to order in relation to
     # user's membership state. Currently it can be either "invitation",
     # "pinned_site" or "site", where invitations are first.
     field :entry_type, :string, virtual: true

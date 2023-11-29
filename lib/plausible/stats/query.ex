@@ -1,4 +1,6 @@
 defmodule Plausible.Stats.Query do
+  use Plausible
+
   defstruct date_range: nil,
             interval: nil,
             period: nil,
@@ -7,19 +9,24 @@ defmodule Plausible.Stats.Query do
             imported_data_requested: false,
             include_imported: false
 
-  @default_sample_threshold 20_000_000
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{FilterParser, Interval}
 
   @type t :: %__MODULE__{}
 
   def from(site, params) do
-    query_by_period(site, params)
-    |> put_interval(params)
-    |> put_parsed_filters(params)
-    |> put_imported_opts(site, params)
-    |> put_sample_threshold(params)
-    |> maybe_drop_prop_filter(site)
+    query =
+      query_by_period(site, params)
+      |> put_interval(params)
+      |> put_parsed_filters(params)
+      |> put_imported_opts(site, params)
+      |> maybe_drop_prop_filter(site)
+
+    on_full_build do
+      query = Plausible.Stats.Sampling.put_threshold(query, params)
+    end
+
+    query
   end
 
   defp query_by_period(site, %{"period" => "realtime"}) do
@@ -161,17 +168,6 @@ defmodule Plausible.Stats.Query do
 
   defp put_parsed_filters(query, params) do
     Map.put(query, :filters, FilterParser.parse_filters(params["filters"]))
-  end
-
-  defp put_sample_threshold(query, params) do
-    sample_threshold =
-      case params["sample_threshold"] do
-        nil -> @default_sample_threshold
-        "infinite" -> :infinite
-        value -> String.to_integer(value)
-      end
-
-    Map.put(query, :sample_threshold, sample_threshold)
   end
 
   def put_filter(query, key, val) do

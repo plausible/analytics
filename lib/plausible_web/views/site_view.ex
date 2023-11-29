@@ -23,12 +23,7 @@ defmodule PlausibleWeb.SiteView do
   end
 
   def render_snippet(site) do
-    tracker =
-      if site.custom_domain do
-        "https://" <> site.custom_domain.domain <> "/js/index.js"
-      else
-        "#{plausible_url()}/js/script.js"
-      end
+    tracker = "#{plausible_url()}/js/script.js"
 
     """
     <script defer data-domain="#{site.domain}" src="#{tracker}"></script>
