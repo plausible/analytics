@@ -3,6 +3,7 @@ defmodule Plausible.Plugins.API.TokenTest do
 
   alias Plausible.Plugins.API.Token
 
+  @tag :full_build_only
   test "basic token properties" do
     t1 = Token.generate()
     t2 = Token.generate()
@@ -24,20 +25,23 @@ defmodule Plausible.Plugins.API.TokenTest do
   end
 
   describe "prefix/0" do
-    test "default prefix" do
+    @tag :full_build_only
+    test "default prefix - full build" do
       assert Token.prefix() == "plausible-plugin-test"
     end
 
+    @tag :small_build_only
     test "selfhosted prefix" do
-      patch_env(:is_selfhost, true)
       assert Token.prefix() == "plausible-plugin-selfhost"
     end
 
+    @tag :full_build_only
     test "prod prefix" do
       patch_env(:environment, "prod")
       assert Token.prefix() == "plausible-plugin"
     end
 
+    @tag :full_build_only
     test "staging prefix" do
       patch_env(:environment, "staging")
       assert Token.prefix() == "plausible-plugin-staging"

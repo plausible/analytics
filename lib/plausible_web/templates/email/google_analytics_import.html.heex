@@ -1,19 +1,16 @@
 <%= if @success do %>
-  Your Google Analytics import has completed successfully. The Plausible dashboard for <%= @site.domain %> now contains historical imported data from <%= date_format(@site.imported_data.start_date) %> to <%= date_format(@site.imported_data.end_date) %>
-<br /><br />
-<%= link("Click here", to: @link) %> to view your dashboard.
+  Your Google Analytics import has completed successfully. The Plausible dashboard for <%= @site.domain %> now contains historical imported data from <%= date_format(
+    @site.imported_data.start_date
+  ) %> to <%= date_format(@site.imported_data.end_date) %>
+  <br /><br />
+  <%= link("Click here", to: @link) %> to view your dashboard.
 <% else %>
   Unfortunately, your Google Analytics import for <%= @site.domain %> did not complete successfully. Sorry about that!
   <br /> <br />
-
   This may be due to the user metric setting in your Google Analytics account. We found that changing the user metric setting is necessary to get the correct data out of the Google API.
   <br /> <br />
-
   Please log into your Google Analytics account and go to Admin -> Property Settings -> User Analysis. Then make sure that "Enable User Metric in Reporting" is set to OFF. Then try importing again. You can switch the setting back after the import.
-  <br /> <br />
-
-  If you've already changed that setting, then it is something else:
-  <br />
+  <br /> <br /> If you've already changed that setting, then it is something else: <br />
 
   <ul>
     <li>
@@ -24,10 +21,8 @@
     </li>
   </ul>
   <br />
-
   If all of the above is fine, please try to do the import once again. Sometimes the Google Analytics API just randomly returns empty data. It's intermittent and random. Trying to do the import again may return what you need.
-
-  <%= if !Application.get_env(:plausible, :is_selfhost) do %>
+  <%= if full_build?() do %>
     <br /> <br />
     Please reply to this email to let us know if you're still experiencing issues with the import.
   <% end %>

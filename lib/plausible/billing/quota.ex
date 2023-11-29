@@ -26,44 +26,51 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @limit_sites_since ~D[2021-05-05]
-  @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
   @doc """
   Returns the limit of sites a user can have.
 
   For enterprise customers, returns :unlimited. The site limit is checked in a
   background job so as to avoid service disruption.
   """
-  def site_limit(user) do
-    cond do
-      Application.get_env(:plausible, :is_selfhost) -> :unlimited
-      Timex.before?(user.inserted_at, @limit_sites_since) -> :unlimited
-      true -> get_site_limit_from_plan(user)
-    end
-  end
-
-  @site_limit_for_trials 10
-  @site_limit_for_legacy_trials 50
-  @site_limit_for_free_10k 50
-  defp get_site_limit_from_plan(user) do
-    user = Plausible.Users.with_subscription(user)
-
-    case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{} ->
+  on_full_build do
+    @limit_sites_since ~D[2021-05-05]
+    @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
+    def site_limit(user) do
+      if Timex.before?(user.inserted_at, @limit_sites_since) do
         :unlimited
+      else
+        get_site_limit_from_plan(user)
+      end
+    end
 
-      %Plan{site_limit: site_limit} ->
-        site_limit
+    @site_limit_for_trials 10
+    @site_limit_for_legacy_trials 50
+    @site_limit_for_free_10k 50
+    defp get_site_limit_from_plan(user) do
+      user = Plausible.Users.with_subscription(user)
 
-      :free_10k ->
-        @site_limit_for_free_10k
+      case Plans.get_subscription_plan(user.subscription) do
+        %EnterprisePlan{} ->
+          :unlimited
 
-      nil ->
-        if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
-          @site_limit_for_legacy_trials
-        else
-          @site_limit_for_trials
-        end
+        %Plan{site_limit: site_limit} ->
+          site_limit
+
+        :free_10k ->
+          @site_limit_for_free_10k
+
+        nil ->
+          if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
+            @site_limit_for_legacy_trials
+          else
+            @site_limit_for_trials
+          end
+      end
+    end
+  else
+    @spec site_limit(any()) :: non_neg_integer() | :unlimited
+    def site_limit(_) do
+      :unlimited
     end
   end
 
@@ -203,13 +210,7 @@ defmodule Plausible.Billing.Quota do
     stats_api_usage = from a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id
 
     queries =
-      if Plausible.Release.selfhost?() do
-        [
-          {Props, props_usage_query},
-          {RevenueGoals, revenue_goals_usage},
-          {StatsAPI, stats_api_usage}
-        ]
-      else
+      on_full_build do
         funnels_usage_query =
           from f in "funnels",
             inner_join: os in subquery(owned_sites_query(user)),
@@ -218,6 +219,12 @@ defmodule Plausible.Billing.Quota do
         [
           {Props, props_usage_query},
           {Funnels, funnels_usage_query},
+          {RevenueGoals, revenue_goals_usage},
+          {StatsAPI, stats_api_usage}
+        ]
+      else
+        [
+          {Props, props_usage_query},
           {RevenueGoals, revenue_goals_usage},
           {StatsAPI, stats_api_usage}
         ]

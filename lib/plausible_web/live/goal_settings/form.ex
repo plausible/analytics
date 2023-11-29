@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     site =
       user_id
       |> Plausible.Sites.get_for_user!(domain, [:owner, :admin, :super_admin])
-      |> Repo.preload([:custom_domain, :owner])
+      |> Repo.preload([:owner])
 
     owner = Plausible.Users.with_subscription(site.owner)
     site = Map.put(site, :owner, owner)

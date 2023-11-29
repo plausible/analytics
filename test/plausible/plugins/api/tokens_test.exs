@@ -9,7 +9,6 @@ defmodule Plausible.Plugins.API.TokensTest do
     test "generates and stores the token" do
       site = insert(:site)
       assert {:ok, %Token{} = token, raw} = Tokens.create(site, "My test token")
-      assert <<"plausible-plugin-test-", _::binary-size(40)>> = raw
 
       from_db = Repo.get(Token, token.id)
 
