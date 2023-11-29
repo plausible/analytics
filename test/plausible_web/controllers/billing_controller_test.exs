@@ -52,7 +52,7 @@ defmodule PlausibleWeb.BillingControllerTest do
   describe "POST /change-plan" do
     setup [:create_user, :log_in]
 
-    test "errors if usage exceeds some limit on the new plan", %{conn: conn, user: user} do
+    test "errors if usage exceeds team member limit on the new plan", %{conn: conn, user: user} do
       insert(:subscription, user: user, paddle_plan_id: "123123")
 
       insert(:site,
@@ -71,16 +71,42 @@ defmodule PlausibleWeb.BillingControllerTest do
                "Unable to subscribe to this plan because the following limits are exceeded: [:team_member_limit]"
     end
 
-    test "can override allowing to upgrade when limits exceeded", %{conn: conn, user: user} do
+    test "errors if usage exceeds site limit even when user.next_upgrade_override is true", %{
+      conn: conn,
+      user: user
+    } do
       insert(:subscription, user: user, paddle_plan_id: "123123")
 
       for _ <- 1..11, do: insert(:site, members: [user])
+
+      Plausible.Users.allow_next_upgrade_override(user)
+
+      conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "are exceeded: [:site_limit]"
+      assert subscription.paddle_plan_id == "123123"
+    end
+
+    test "can override allowing to upgrade when pageview limit is exceeded", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:subscription, user: user, paddle_plan_id: "123123")
+      site = insert(:site, members: [user])
+      now = NaiveDateTime.utc_now()
+
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
 
       conn1 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
       subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
 
-      assert Phoenix.Flash.get(conn1.assigns.flash, :error) =~ "are exceeded: [:site_limit]"
+      assert Phoenix.Flash.get(conn1.assigns.flash, :error) =~
+               "are exceeded: [:monthly_pageview_limit]"
+
       assert subscription.paddle_plan_id == "123123"
 
       Plausible.Users.allow_next_upgrade_override(user)

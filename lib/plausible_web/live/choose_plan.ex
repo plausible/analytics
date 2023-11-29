@@ -310,8 +310,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     change_plan_link_text = change_plan_link_text(assigns)
 
     usage_within_limits =
-      assigns.user.allow_next_upgrade_override ||
-        Quota.ensure_can_subscribe_to_plan(assigns.usage, assigns.plan_to_render) == :ok
+      Quota.ensure_can_subscribe_to_plan(assigns.user, assigns.plan_to_render, assigns.usage) ==
+        :ok
 
     subscription = assigns.user.subscription
 

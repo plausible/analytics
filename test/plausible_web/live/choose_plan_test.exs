@@ -476,11 +476,16 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
     end
 
-    test "checkout is not disabled when usage exceeded but next upgrade allowed by override", %{
-      conn: conn,
-      user: user
-    } do
-      for _ <- 1..11, do: insert(:site, members: [user])
+    test "checkout is not disabled when pageview usage exceeded but next upgrade allowed by override",
+         %{
+           conn: conn,
+           user: user
+         } do
+      site = insert(:site, members: [user])
+      now = NaiveDateTime.utc_now()
+
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
 
       Plausible.Users.allow_next_upgrade_override(user)
 

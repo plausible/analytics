@@ -329,35 +329,35 @@ defmodule Plausible.Billing.Quota do
     for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
-  def ensure_can_subscribe_to_plan(%User{} = user, %Plan{} = plan) do
-    if user.allow_next_upgrade_override do
-      :ok
-    else
-      ensure_can_subscribe_to_plan(usage(user), plan)
-    end
-  end
+  def ensure_can_subscribe_to_plan(user, plan, usage \\ nil)
 
-  def ensure_can_subscribe_to_plan(usage, %Plan{} = plan) do
-    case exceeded_limits(usage, plan) do
+  def ensure_can_subscribe_to_plan(%User{} = user, %Plan{} = plan, usage) do
+    usage = if usage, do: usage, else: usage(user)
+
+    case exceeded_limits(user, plan, usage) do
       [] -> :ok
       exceeded_limits -> {:error, %{exceeded_limits: exceeded_limits}}
     end
   end
 
-  def ensure_can_subscribe_to_plan(_, _), do: :ok
+  def ensure_can_subscribe_to_plan(_, _, _), do: :ok
 
-  defp exceeded_limits(usage, %Plan{} = plan) do
+  defp exceeded_limits(%User{} = user, %Plan{} = plan, usage) do
     for {limit, exceeded?} <- [
           {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
           {:site_limit, not within_limit?(usage.sites, plan.site_limit)},
-          {:monthly_pageview_limit, exceeds_monthly_pageview_limit?(usage, plan)}
+          {:monthly_pageview_limit, exceeds_monthly_pageview_limit?(user, plan, usage)}
         ],
         exceeded? do
       limit
     end
   end
 
-  defp exceeds_monthly_pageview_limit?(usage, plan) do
+  defp exceeds_monthly_pageview_limit?(%User{allow_next_upgrade_override: true}, _, _) do
+    false
+  end
+
+  defp exceeds_monthly_pageview_limit?(_user, plan, usage) do
     case usage.monthly_pageviews do
       %{last_30_days: %{total: total}} ->
         limit = ceil(plan.monthly_pageview_limit * 1.15)
