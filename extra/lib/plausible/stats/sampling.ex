@@ -6,8 +6,7 @@ defmodule Plausible.Stats.Sampling do
 
   import Ecto.Query
 
-  @spec add_query_hint(Ecto.Query.t(), Plausible.Stats.Query.t() | pos_integer()) ::
-          Ecto.Query.t()
+  @spec add_query_hint(Ecto.Query.t(), Plausible.Stats.Query.t()) :: Ecto.Query.t()
   def add_query_hint(%Ecto.Query{} = db_query, %Plausible.Stats.Query{} = query) do
     case query.sample_threshold do
       :infinite ->
@@ -18,6 +17,7 @@ defmodule Plausible.Stats.Sampling do
     end
   end
 
+  @spec add_query_hint(Ecto.Query.t(), pos_integer()) :: Ecto.Query.t()
   def add_query_hint(%Ecto.Query{} = query, threshold) when is_integer(threshold) do
     from(x in query, hints: [sample: threshold])
   end
