@@ -1,4 +1,5 @@
 defmodule PlausibleWeb.EmailView do
+  use Plausible
   use PlausibleWeb, :view
 
   def plausible_url do

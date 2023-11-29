@@ -19,6 +19,7 @@ defmodule PlausibleWeb.ConnCase do
     quote do
       # Import conveniences for testing with connections
       use Plausible.TestUtils
+      use Plausible
       import Plug.Conn
       import Phoenix.ConnTest
       alias PlausibleWeb.Router.Helpers, as: Routes
