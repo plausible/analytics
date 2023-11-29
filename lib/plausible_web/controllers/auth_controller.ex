@@ -300,12 +300,20 @@ defmodule PlausibleWeb.AuthController do
 
   @login_interval 60_000
   @login_limit 5
+
   defp check_ip_rate_limit(conn) do
     ip_address = PlausibleWeb.RemoteIp.get(conn)
 
     case Hammer.check_rate("login:ip:#{ip_address}", @login_interval, @login_limit) do
       {:allow, _} -> :ok
       {:deny, _} -> {:rate_limit, :ip_address}
+    end
+  end
+
+  defp check_user_rate_limit(user) do
+    case Hammer.check_rate("login:user:#{user.id}", @login_interval, @login_limit) do
+      {:allow, _} -> :ok
+      {:deny, _} -> {:rate_limit, :user}
     end
   end
 
@@ -318,13 +326,6 @@ defmodule PlausibleWeb.AuthController do
       )
 
     if user, do: {:ok, user}, else: :user_not_found
-  end
-
-  defp check_user_rate_limit(user) do
-    case Hammer.check_rate("login:user:#{user.id}", @login_interval, @login_limit) do
-      {:allow, _} -> :ok
-      {:deny, _} -> {:rate_limit, :user}
-    end
   end
 
   defp check_password(user, password) do
@@ -513,8 +514,9 @@ defmodule PlausibleWeb.AuthController do
           {:rate_limit, _} ->
             maybe_log_failed_login_attempts("too many logging attempts for #{user.email}")
 
-            render_error(
-              conn,
+            conn
+            |> TwoFactor.clear_2fa_user()
+            |> render_error(
               429,
               "Too many login attempts. Wait a minute before trying again."
             )
