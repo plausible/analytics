@@ -367,8 +367,7 @@ defmodule Plausible.Billing.Quota do
   defp exceeds_monthly_pageview_limit?(_user, plan, usage) do
     case usage.monthly_pageviews do
       %{last_30_days: %{total: total}} ->
-        limit = ceil(plan.monthly_pageview_limit * 1.15)
-        total > 13_000 && !within_limit?(total, limit)
+        !within_limit?(total, pageview_limit_with_margin(plan))
 
       billing_cycles_usage ->
         Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
@@ -376,6 +375,11 @@ defmodule Plausible.Billing.Quota do
           plan.monthly_pageview_limit
         )
     end
+  end
+
+  defp pageview_limit_with_margin(%Plan{monthly_pageview_limit: limit}) do
+    allowance_margin = if limit == 10_000, do: 0.3, else: 0.15
+    ceil(limit * (1 + allowance_margin))
   end
 
   @doc """
