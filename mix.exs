@@ -10,7 +10,7 @@ defmodule Plausible.MixProject do
       version: System.get_env("APP_VERSION", "0.0.1"),
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
-      start_permanent: Mix.env() == :prod,
+      start_permanent: Mix.env() in [:prod, :small],
       aliases: aliases(),
       deps: deps(),
       test_coverage: [
