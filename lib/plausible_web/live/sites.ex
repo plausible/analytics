@@ -263,6 +263,7 @@ defmodule PlausibleWeb.Live.Sites do
 
           <.dropdown_link
             href="#"
+            x-on:click.prevent
             phx-click={
               JS.hide(
                 transition: {"duration-500", "opacity-100", "opacity-0"},
