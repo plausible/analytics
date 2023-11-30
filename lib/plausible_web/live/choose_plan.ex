@@ -100,8 +100,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
               else: "Upgrade your account" %>
           </p>
         </div>
-        <div class="mt-12 max-w-md lg:max-w-none mx-auto flex flex-col  lg:flex-row-reverse justify-between">
+        <div class="mt-12 flex flex-col gap-8 lg:flex-row items-center lg:items-baseline">
           <.interval_picker selected_interval={@selected_interval} />
+          <.slider_output volume={@selected_volume} available_volumes={@available_volumes} />
           <.slider selected_volume={@selected_volume} available_volumes={@available_volumes} />
         </div>
         <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
@@ -189,8 +190,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp interval_picker(assigns) do
     ~H"""
-    <div class="mt-4 lg:flex justify-center self-start lg:self-end">
-      <div class="relative ">
+    <div class="lg:flex-1 lg:order-3 lg:justify-end flex">
+      <div class="relative">
         <.two_months_free />
         <fieldset class="grid grid-cols-2 gap-x-1 rounded-full bg-white dark:bg-gray-700 p-1 text-center text-sm font-semibold leading-5 shadow dark:ring-gray-600">
           <label
@@ -217,33 +218,53 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   def two_months_free(assigns) do
     ~H"""
-    <span class="absolute -right-16 -top-3 whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-yellow-100 border border-yellow-300 text-yellow-700">
+    <span class="absolute -right-5 -top-4 whitespace-no-wrap w-max px-2.5 py-0.5 rounded-full text-xs font-medium leading-4 bg-yellow-100 border border-yellow-300 text-yellow-700">
       2 months free
     </span>
     """
   end
 
   defp slider(assigns) do
+    selected_index =
+      Enum.find_index(assigns.available_volumes, &(&1 == assigns.selected_volume)) ||
+        length(assigns.available_volumes)
+
+    slider_percentage = selected_index / length(assigns.available_volumes) * 100
+    bubble_position = "left: calc(#{slider_percentage}% + #{13.87 - slider_percentage * 0.26}px)"
+
+    assigns =
+      assigns
+      |> assign(:selected_index, selected_index)
+      |> assign(:bubble_position, bubble_position)
+
     ~H"""
-    <form class="w-full lg:w-2/5 mt-4 ">
-      <p class="font-medium leading-6 text-gray-600 dark:text-gray-200">
-        <b id="slider-value" class="text-xl text-gray-900 dark:text-gray-100">
-          <%= slider_value(@selected_volume, @available_volumes) %>
-        </b>
-        monthly pageviews
-      </p>
-      <input
-        phx-change="slide"
-        name="slider"
-        class="mt-4 shadow dark:bg-gray-600 dark:border-none"
-        type="range"
-        min="0"
-        max={length(@available_volumes)}
-        step="1"
-        value={
-          Enum.find_index(@available_volumes, &(&1 == @selected_volume)) || length(@available_volumes)
-        }
-      />
+    <form class="max-w-md lg:max-w-none w-full lg:w-1/2 lg:order-2">
+      <div class="flex items-baseline space-x-2">
+        <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
+          <%= format_volume(List.first(@available_volumes), @available_volumes) %>
+        </span>
+        <div class="flex-1 relative">
+          <input
+            phx-change="slide"
+            name="slider"
+            class="shadow mt-8 dark:bg-gray-600 dark:border-none"
+            type="range"
+            min="0"
+            max={length(@available_volumes)}
+            step="1"
+            value={@selected_index}
+          />
+          <output
+            class="absolute bottom-[35px] py-[4px] px-[12px] -translate-x-1/2 rounded-md text-white bg-indigo-600 position text-xs font-medium"
+            style={@bubble_position}
+          >
+            <%= format_volume(@selected_volume, @available_volumes) %>
+          </output>
+        </div>
+        <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
+          <%= format_volume(List.last(@available_volumes), @available_volumes) <> "+" %>
+        </span>
+      </div>
     </form>
     """
   end
@@ -591,8 +612,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         border: 0;
         border-radius: 50%;
         cursor: pointer;
-        height: 28px;
-        width: 28px;
+        height: 26px;
+        width: 26px;
       }
 
       input[type="range"]::-moz-range-thumb {
@@ -604,8 +625,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         border: none;
         border-radius: 50%;
         cursor: pointer;
-        height: 28px;
-        width: 28px;
+        height: 26px;
+        width: 26px;
       }
 
       input[type="range"]::-ms-thumb {
@@ -616,8 +637,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         border: 0;
         border-radius: 50%;
         cursor: pointer;
-        height: 28px;
-        width: 28px;
+        height: 26px;
+        width: 26px;
       }
 
       input[type="range"]::-moz-focus-outer {
@@ -669,14 +690,30 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp get_paddle_product_id(%Plan{monthly_product_id: plan_id}, :monthly), do: plan_id
   defp get_paddle_product_id(%Plan{yearly_product_id: plan_id}, :yearly), do: plan_id
 
-  defp slider_value(:enterprise, available_volumes) do
-    List.last(available_volumes)
-    |> PlausibleWeb.StatsView.large_number_format()
-    |> Kernel.<>("+")
+  attr :volume, :any
+  attr :available_volumes, :list
+
+  defp slider_output(assigns) do
+    ~H"""
+    <output class="lg:w-1/4 lg:order-1 font-medium text-lg text-gray-600 dark:text-gray-200">
+      <span :if={@volume != :enterprise}>Up to</span>
+      <strong id="slider-value" class="text-gray-900 dark:text-gray-100">
+        <%= format_volume(@volume, @available_volumes) %>
+      </strong>
+      monthly pageviews
+    </output>
+    """
   end
 
-  defp slider_value(volume, _) when is_integer(volume) do
-    PlausibleWeb.StatsView.large_number_format(volume)
+  defp format_volume(volume, available_volumes) do
+    if volume == :enterprise do
+      available_volumes
+      |> List.last()
+      |> PlausibleWeb.StatsView.large_number_format()
+      |> Kernel.<>("+")
+    else
+      PlausibleWeb.StatsView.large_number_format(volume)
+    end
   end
 
   defp growth_benefits(plan) do
