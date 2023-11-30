@@ -158,11 +158,14 @@ defmodule Plausible.Stats.Aggregate do
              | filters: Map.delete(query.filters, "event:page")
            }),
            select: %{
-             next_timestamp: over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
-             next_pathname: over(fragment("leadInFrame(?)", e.pathname), :event_horizon),
-             timestamp: e.timestamp,
-             pathname: e.pathname,
-             session_id: e.session_id
+             duration:
+               fragment(
+                 "if(? == 0, 0, ? - ?)",
+                 over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+                 over(fragment("leadInFrame(?)", e.timestamp), :event_horizon),
+                 e.timestamp
+               ),
+             pathname: e.pathname
            },
            windows: [
              event_horizon: [
@@ -172,27 +175,12 @@ defmodule Plausible.Stats.Aggregate do
              ]
            ]
 
-    timed_page_transitions_q =
+    time_q =
       from e in Ecto.Query.subquery(windowed_pages_q),
-        group_by: [e.pathname, e.next_pathname, e.session_id],
         where: ^Plausible.Stats.Base.dynamic_filter_condition(query, "event:page", :pathname),
-        where: e.next_timestamp != 0,
-        select: %{
-          pathname: e.pathname,
-          transition: e.next_pathname != e.pathname,
-          duration: sum(e.next_timestamp - e.timestamp)
-        }
+        select: fragment("avg(?)", e.duration)
 
-    avg_time_per_page_transition_q =
-      from e in Ecto.Query.subquery(timed_page_transitions_q),
-        select: %{avg: fragment("sum(?)/countIf(?)", e.duration, e.transition)},
-        group_by: e.pathname
-
-    time_on_page_q =
-      from e in Ecto.Query.subquery(avg_time_per_page_transition_q),
-        select: fragment("avg(ifNotFinite(?,NULL))", e.avg)
-
-    %{time_on_page: ClickhouseRepo.one(time_on_page_q)}
+    %{time_on_page: ClickhouseRepo.one(time_q)}
   end
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]

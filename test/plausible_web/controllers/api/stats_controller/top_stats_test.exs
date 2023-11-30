@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 900} in res["top_stats"]
+      assert %{"name" => "Time on page", "value" => 450} in res["top_stats"]
     end
 
     test "calculates time on page when filtered for multiple pages", %{
@@ -173,7 +173,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 480} in res["top_stats"]
+      assert %{"name" => "Time on page", "value" => 320} in res["top_stats"]
     end
 
     test "calculates time on page when filtered for multiple negated pages", %{
@@ -294,7 +294,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Time on page", "value" => 600} in res["top_stats"]
+      assert %{"name" => "Time on page", "value" => 200} in res["top_stats"]
     end
 
     test "doesn't calculate time on page with only single page visits", %{conn: conn, site: site} do
@@ -306,7 +306,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!(%{page: "/"})
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
-      assert %{"name" => "Time on page", "value" => 0} ==
+      assert %{"name" => "Time on page", "value" => 300} ==
                conn
                |> get(path)
                |> json_response(200)
@@ -325,7 +325,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!(%{page: "/"})
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
-      assert %{"name" => "Time on page", "value" => _three_minutes = 180} ==
+      assert %{"name" => "Time on page", "value" => _three_minutes = 60} ==
                conn
                |> get(path)
                |> json_response(200)
@@ -362,7 +362,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       filters = Jason.encode!(%{page: "/a"})
       path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
 
-      assert %{"name" => "Time on page", "value" => 100} ==
+      assert %{"name" => "Time on page", "value" => 67} ==
                conn
                |> get(path)
                |> json_response(200)
