@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v5.0.0
         with:
           images: plausible/analytics-private
           tags: |
