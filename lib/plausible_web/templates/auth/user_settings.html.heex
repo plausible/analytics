@@ -45,12 +45,9 @@
           <div class="py-2 text-xl font-medium dark:text-gray-100">
             <%= PlausibleWeb.BillingView.present_currency(@subscription.currency_code) %><%= @subscription.next_bill_amount %>
           </div>
-          <%= if @subscription.update_url do %>
-            <%= link("Update billing info",
-              to: @subscription.update_url,
-              class: "text-sm text-indigo-500 font-medium"
-            ) %>
-          <% end %>
+          <.styled_link :if={@subscription.update_url} href={@subscription.update_url}>
+            Update billing info
+          </.styled_link>
         <% else %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">---</div>
         <% end %>
@@ -65,44 +62,31 @@
           <div class="py-2 text-xl font-medium dark:text-gray-100">
             <%= Timex.format!(@subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %>
           </div>
-          <div class="text-sm font-medium text-gray-600 dark:text-gray-400">
+          <span class="text-gray-600 dark:text-gray-400">
             (<%= subscription_interval(@subscription) %> billing)
-          </div>
+          </span>
         <% else %>
           <div class="py-2 text-xl font-medium dark:text-gray-100">---</div>
         <% end %>
       </div>
     </div>
 
+    <PlausibleWeb.Components.Billing.render_monthly_pageview_usage
+      usage={@pageview_usage}
+      limit={@pageview_limit}
+    />
+
     <article class="mt-8">
-      <h1 class="text-xl font-bold dark:text-gray-100">Usage & Limits</h1>
-      <h2 class="mt-1 mb-3 text-sm text-gray-500 leading-5 dark:text-gray-200">
-        Your usage across all of your sites and the limits of your plan
-      </h2>
+      <h1 class="text-xl mb-3 font-bold dark:text-gray-100">Sites & team members usage</h1>
       <PlausibleWeb.Components.Billing.usage_and_limits_table>
         <PlausibleWeb.Components.Billing.usage_and_limits_row
-          title="Total billable pageviews (last 30 days)"
-          usage={@total_pageview_usage}
-          limit={@total_pageview_limit}
-        />
-        <PlausibleWeb.Components.Billing.usage_and_limits_row
-          pad
-          title="Pageviews"
-          usage={@pageview_usage}
-          class="font-normal text-gray-500 dark:text-gray-400"
-        />
-        <PlausibleWeb.Components.Billing.usage_and_limits_row
-          pad
-          title="Custom events"
-          usage={@custom_event_usage}
-          class="font-normal text-gray-500 dark:text-gray-400"
-        />
-        <PlausibleWeb.Components.Billing.usage_and_limits_row
+          id="site-usage-row"
           title="Owned sites"
           usage={@site_usage}
           limit={@site_limit}
         />
         <PlausibleWeb.Components.Billing.usage_and_limits_row
+          id="team-member-usage-row"
           title="Team members"
           usage={@team_member_usage}
           limit={@team_member_limit}

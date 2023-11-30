@@ -42,16 +42,6 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def usage_breakdown(domains_or_site_ids) do
-    range =
-      Date.range(
-        Timex.shift(Timex.today(), days: -30),
-        Timex.today()
-      )
-
-    usage_breakdown(domains_or_site_ids, range)
-  end
-
   def usage_breakdown([d | _] = domains, date_range) when is_binary(d) do
     Enum.chunk_every(domains, 300)
     |> Enum.reduce({0, 0}, fn domains, {pageviews_total, custom_events_total} ->

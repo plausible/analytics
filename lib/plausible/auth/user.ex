@@ -31,6 +31,10 @@ defmodule Plausible.Auth.User do
     field :email_verified, :boolean
     field :previous_email, :string
 
+    # A field only used as a manual override - allow subscribing
+    # to any plan, even when exceeding its pageview limit
+    field :allow_next_upgrade_override, :boolean
+
     # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
     field :totp_enabled, :boolean, default: false
     field :totp_secret, Plausible.Auth.TOTP.EncryptedBinary
@@ -96,7 +100,14 @@ defmodule Plausible.Auth.User do
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:email, :name, :email_verified, :theme, :trial_expiry_date])
+    |> cast(attrs, [
+      :email,
+      :name,
+      :email_verified,
+      :theme,
+      :trial_expiry_date,
+      :allow_next_upgrade_override
+    ])
     |> validate_required([:email, :name, :email_verified])
     |> unique_constraint(:email)
   end

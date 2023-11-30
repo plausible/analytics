@@ -139,8 +139,8 @@ defmodule Plausible.TestUtils do
     |> Plug.Conn.fetch_session()
   end
 
-  def generate_usage_for(site, i) do
-    events = for _i <- 1..i, do: Factory.build(:pageview)
+  def generate_usage_for(site, i, timestamp \\ NaiveDateTime.utc_now()) do
+    events = for _i <- 1..i, do: Factory.build(:pageview, timestamp: timestamp)
     populate_stats(site, events)
     :ok
   end
