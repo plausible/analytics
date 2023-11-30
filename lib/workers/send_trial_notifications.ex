@@ -55,14 +55,14 @@ defmodule Plausible.Workers.SendTrialNotifications do
   end
 
   defp send_tomorrow_reminder(user) do
-    usage = Plausible.Billing.usage_breakdown(user)
+    usage = Plausible.Billing.Quota.usage_cycle(user, :last_30_days)
 
     PlausibleWeb.Email.trial_upgrade_email(user, "tomorrow", usage)
     |> Plausible.Mailer.send()
   end
 
   defp send_today_reminder(user) do
-    usage = Plausible.Billing.usage_breakdown(user)
+    usage = Plausible.Billing.Quota.usage_cycle(user, :last_30_days)
 
     PlausibleWeb.Email.trial_upgrade_email(user, "today", usage)
     |> Plausible.Mailer.send()
