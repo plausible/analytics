@@ -256,7 +256,10 @@ defmodule PlausibleWeb.Live.Sites do
       </:button>
       <:panel class="absolute top-7 right-3 z-10 mt-2 w-40 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
         <div class="py-1 text-sm" role="none">
-          <.dropdown_link href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}>
+          <.dropdown_link
+            :if={List.first(@site.memberships).role != :viewer}
+            href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
+          >
             <Heroicons.cog_6_tooth class="mr-3 h-5 w-5" />
             <span>Settings</span>
           </.dropdown_link>
