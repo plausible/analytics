@@ -252,15 +252,10 @@ defmodule PlausibleWeb.Components.Generic do
   attr :scale, :integer, default: 4
 
   def qr_code(assigns) do
-    svg_settings = %QRCode.Render.SvgSettings{
-      structure: :readable,
-      scale: assigns.scale
-    }
-
-    {:ok, qr_code} =
+    qr_code =
       assigns.text
-      |> QRCode.create()
-      |> QRCode.render(:svg, svg_settings)
+      |> EQRCode.encode()
+      |> EQRCode.svg(%{width: 160})
 
     assigns = assign(assigns, :code, qr_code)
 
