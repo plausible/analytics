@@ -25,6 +25,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:usage, fn %{user: user} ->
         Quota.usage(user, with_features: true)
       end)
+      |> assign_new(:last_30_days_usage, fn %{user: user, usage: usage} ->
+        case usage do
+          %{last_30_days: usage_cycle} -> usage_cycle.total
+          _ -> Quota.usage_cycle(user, :last_30_days).total
+        end
+      end)
       |> assign_new(:owned_plan, fn %{user: %{subscription: subscription}} ->
         Plans.get_regular_plan(subscription, only_non_expired: true)
       end)
@@ -45,10 +51,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       end)
       |> assign_new(:selected_volume, fn %{
                                            owned_plan: owned_plan,
-                                           usage: usage,
+                                           last_30_days_usage: last_30_days_usage,
                                            available_volumes: available_volumes
                                          } ->
-        default_selected_volume(owned_plan, usage.monthly_pageviews, available_volumes)
+        default_selected_volume(owned_plan, last_30_days_usage, available_volumes)
       end)
       |> assign_new(:selected_interval, fn %{current_interval: current_interval} ->
         current_interval || :monthly
@@ -127,7 +133,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
           <.enterprise_plan_box benefits={@enterprise_benefits} />
         </div>
         <p class="mx-auto mt-8 max-w-2xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
-          You have used <b><%= PlausibleWeb.AuthView.delimit_integer(@usage.monthly_pageviews) %></b>
+          You have used <b><%= PlausibleWeb.AuthView.delimit_integer(@last_30_days_usage) %></b>
           billable pageviews in the last 30 days
         </p>
         <.pageview_limit_notice :if={!@owned_plan} />
@@ -170,8 +176,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   defp default_selected_volume(%Plan{monthly_pageview_limit: limit}, _, _), do: limit
 
-  defp default_selected_volume(_, pageview_usage, available_volumes) do
-    Enum.find(available_volumes, &(pageview_usage < &1)) || :enterprise
+  defp default_selected_volume(_, last_30_days_usage, available_volumes) do
+    Enum.find(available_volumes, &(last_30_days_usage < &1)) || :enterprise
   end
 
   defp current_user_subscription_interval(subscription) do
@@ -324,10 +330,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
-    exceeded_limits = Quota.exceeded_limits(assigns.usage, assigns.plan_to_render)
-
-    usage_exceeds_plan_limits =
-      Enum.any?([:team_member_limit, :site_limit], &(&1 in exceeded_limits))
+    usage_within_limits =
+      Quota.ensure_can_subscribe_to_plan(assigns.user, assigns.plan_to_render, assigns.usage) ==
+        :ok
 
     subscription = assigns.user.subscription
 
@@ -345,7 +350,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         change_plan_link_text == "Currently on this plan" && not subscription_cancelled ->
           {true, nil}
 
-        assigns.available && usage_exceeds_plan_limits ->
+        assigns.available && !usage_within_limits ->
           {true, "Your usage exceeds this plan"}
 
         billing_details_expired ->

@@ -92,8 +92,8 @@ defmodule PlausibleWeb.Email do
     |> render("trial_one_week_reminder.html", user: user)
   end
 
-  def trial_upgrade_email(user, day, {pageviews, custom_events}) do
-    suggested_plan = Plausible.Billing.Plans.suggest(user, pageviews + custom_events)
+  def trial_upgrade_email(user, day, usage) do
+    suggested_plan = Plausible.Billing.Plans.suggest(user, usage.total)
 
     base_email()
     |> to(user)
@@ -102,8 +102,8 @@ defmodule PlausibleWeb.Email do
     |> render("trial_upgrade_email.html",
       user: user,
       day: day,
-      custom_events: custom_events,
-      usage: pageviews + custom_events,
+      custom_events: usage.custom_events,
+      usage: usage.total,
       suggested_plan: suggested_plan
     )
   end

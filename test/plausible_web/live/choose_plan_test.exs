@@ -476,6 +476,25 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
     end
 
+    test "checkout is not disabled when pageview usage exceeded but next upgrade allowed by override",
+         %{
+           conn: conn,
+           user: user
+         } do
+      site = insert(:site, members: [user])
+      now = NaiveDateTime.utc_now()
+
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
+
+      Plausible.Users.allow_next_upgrade_override(user)
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      refute text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+    end
+
     @tag :full_build_only
     test "warns about losing access to a feature", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
