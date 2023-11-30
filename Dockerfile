@@ -61,7 +61,7 @@ LABEL maintainer="plausible.io <hello@plausible.io>"
 ARG BUILD_METADATA={}
 ENV BUILD_METADATA=$BUILD_METADATA
 ENV LANG=C.UTF-8
-ARG MIX_ENV=prod
+ARG MIX_ENV=small
 ENV MIX_ENV=$MIX_ENV
 
 RUN apk upgrade --no-cache
