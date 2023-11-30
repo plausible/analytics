@@ -231,47 +231,62 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   end
 
   defp slider(assigns) do
-    selected_index =
-      Enum.find_index(assigns.available_volumes, &(&1 == assigns.selected_volume)) ||
-        length(assigns.available_volumes)
+    slider_labels =
+      Enum.map(
+        assigns.available_volumes ++ [:enterprise],
+        &format_volume(&1, assigns.available_volumes)
+      )
 
-    slider_percentage = selected_index / length(assigns.available_volumes) * 100
-    bubble_position = "left: calc(#{slider_percentage}% + #{13.87 - slider_percentage * 0.26}px)"
-
-    assigns =
-      assigns
-      |> assign(:selected_index, selected_index)
-      |> assign(:bubble_position, bubble_position)
+    assigns = assign(assigns, :slider_labels, slider_labels)
 
     ~H"""
     <form class="max-w-md lg:max-w-none w-full lg:w-1/2 lg:order-2">
       <div class="flex items-baseline space-x-2">
         <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
-          <%= format_volume(List.first(@available_volumes), @available_volumes) %>
+          <%= List.first(@slider_labels) %>
         </span>
         <div class="flex-1 relative">
           <input
             phx-change="slide"
+            id="slider"
             name="slider"
             class="shadow mt-8 dark:bg-gray-600 dark:border-none"
             type="range"
             min="0"
             max={length(@available_volumes)}
             step="1"
-            value={@selected_index}
+            value={
+              Enum.find_index(@available_volumes, &(&1 == @selected_volume)) ||
+                length(@available_volumes)
+            }
+            oninput="repositionBubble()"
           />
           <output
+            id="slider-bubble"
             class="absolute bottom-[35px] py-[4px] px-[12px] -translate-x-1/2 rounded-md text-white bg-indigo-600 position text-xs font-medium"
-            style={@bubble_position}
-          >
-            <%= format_volume(@selected_volume, @available_volumes) %>
-          </output>
+            phx-update="ignore"
+          />
         </div>
         <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
-          <%= format_volume(List.last(@available_volumes), @available_volumes) <> "+" %>
+          <%= List.last(@slider_labels) %>
         </span>
       </div>
     </form>
+
+    <script>
+      const SLIDER_LABELS = <%= raw Jason.encode!(@slider_labels) %>
+
+      function repositionBubble() {
+        const input = document.getElementById("slider")
+        const percentage = Number((input.value / input.max) * 100)
+        const bubble = document.getElementById("slider-bubble")
+
+        bubble.innerHTML = SLIDER_LABELS[input.value]
+        bubble.style.left = `calc(${percentage}% + (${13.87 - percentage * 0.26}px))`
+      }
+
+      repositionBubble()
+    </script>
     """
   end
 
