@@ -6,10 +6,6 @@ defmodule PlausibleWeb.EmailView do
     PlausibleWeb.Endpoint.url()
   end
 
-  def base_domain() do
-    PlausibleWeb.Endpoint.host()
-  end
-
   def greet_recipient(%{user: %{name: name}}) when is_binary(name) do
     "Hey #{String.split(name) |> List.first()},"
   end
