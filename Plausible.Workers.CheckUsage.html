@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-CA39C431.js"></script>
+    <script src="dist/sidebar_items-DA03832D.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -128,7 +128,7 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_enterprise_subscriber/2" translate="no">check_enterprise_subscriber(subscriber, quota_mod)</a>
+        <a href="#check_enterprise_subscriber/2" translate="no">check_enterprise_subscriber(subscriber, billing_mod)</a>
 
       </div>
 
@@ -137,14 +137,6 @@ Plausible
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#day_of_month/1" translate="no">day_of_month(date)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#exceeds_last_two_usage_cycles?/2" translate="no">exceeds_last_two_usage_cycles?(usage, limit)</a>
 
       </div>
 
@@ -194,9 +186,9 @@ Functions
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">check_enterprise_subscriber(subscriber, quota_mod)</h1>
+    <h1 class="signature" translate="no">check_enterprise_subscriber(subscriber, billing_mod)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L68" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L67" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -218,7 +210,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">day_of_month(date)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L23" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L22" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -233,37 +225,6 @@ Functions
 
   </section>
 </section>
-<section class="detail" id="exceeds_last_two_usage_cycles?/2">
-
-  <div class="detail-header">
-    <a href="#exceeds_last_two_usage_cycles?/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">exceeds_last_two_usage_cycles?(usage, limit)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L132" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> exceeds_last_two_usage_cycles?(
-  <a href="Plausible.Billing.Quota.html#t:monthly_pageview_usage/0">Plausible.Billing.Quota.monthly_pageview_usage</a>(),
-  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()
-) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
 <section class="detail" id="last_day_of_month/1">
 
   <div class="detail-header">
@@ -273,7 +234,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">last_day_of_month(day)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L14" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L13" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -297,7 +258,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">least(left, right)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L29" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L28" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -321,7 +282,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">yesterday()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L8" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L7" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
