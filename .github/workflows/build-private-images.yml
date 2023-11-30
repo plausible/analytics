@@ -47,6 +47,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
+            MIX_ENV=prod
             BUILD_METADATA=${{ steps.meta.outputs.json }}
 
       - name: Image digest
