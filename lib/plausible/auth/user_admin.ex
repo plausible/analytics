@@ -30,6 +30,7 @@ defmodule Plausible.Auth.UserAdmin do
       trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
       subscription_plan: %{value: &subscription_plan/1},
       subscription_status: %{value: &subscription_status/1},
+      usage: %{value: &usage_link/1},
       grace_period: %{value: &grace_period_status/1}
     ]
   end
@@ -43,10 +44,6 @@ defmodule Plausible.Auth.UserAdmin do
       lock: %{
         name: "Lock",
         action: fn _, user -> lock(user) end
-      },
-      calculate_usage: %{
-        name: "Calculate usage",
-        action: fn _, user -> calculate_usage(user) end
       }
     ]
   end
@@ -68,42 +65,6 @@ defmodule Plausible.Auth.UserAdmin do
     else
       {:error, user, "No active grace period on this user"}
     end
-  end
-
-  @separator String.duplicate("_", 200)
-
-  def calculate_usage(user) do
-    user = Plausible.Users.with_subscription(user)
-
-    pageview_limit =
-      case Plausible.Billing.Quota.monthly_pageview_limit(user.subscription) do
-        :unlimited -> "unlimited"
-        integer -> PlausibleWeb.StatsView.large_number_format(integer)
-      end
-
-    pageview_usage =
-      user
-      |> Plausible.Billing.Quota.monthly_pageview_usage()
-      |> Enum.map_join(" #{@separator} ", fn {cycle, usage} ->
-        "#{cycle}: (#{PlausibleWeb.TextHelpers.format_date_range(usage.date_range)}): #{usage.total}"
-      end)
-
-    site_limit = Plausible.Billing.Quota.site_limit(user)
-    site_usage = Plausible.Billing.Quota.site_usage(user)
-
-    team_member_limit = Plausible.Billing.Quota.team_member_limit(user)
-    team_member_usage = Plausible.Billing.Quota.team_member_usage(user)
-
-    msg = """
-    TOTAL PAGEVIEWS (limit: #{pageview_limit})
-    #{@separator}
-    #{pageview_usage}
-    #{@separator}
-    SITES (#{site_usage} / #{site_limit}) #{@separator}
-    TEAM MEMBERS (#{team_member_usage} / #{team_member_limit})
-    """
-
-    {:error, user, msg}
   end
 
   defp grace_period_status(%{grace_period: grace_period}) do
@@ -154,6 +115,11 @@ defmodule Plausible.Auth.UserAdmin do
       true ->
         "Trial expired"
     end
+  end
+
+  defp usage_link(user) do
+    path = PlausibleWeb.Router.Helpers.admin_path(PlausibleWeb.Endpoint, :usage, user.id)
+    {:safe, ~s(<a href="#{path}">Usage</a>)}
   end
 
   defp format_date(nil), do: "--"
