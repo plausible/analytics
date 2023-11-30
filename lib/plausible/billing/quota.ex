@@ -7,6 +7,7 @@ defmodule Plausible.Billing.Quota do
   import Ecto.Query
   alias Plausible.Auth.User
   alias Plausible.Site
+  alias Plausible.Billing
   alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
@@ -111,93 +112,15 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @type monthly_pageview_usage() :: %{period() => usage_cycle()}
-
-  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
-
-  @type usage_cycle :: %{
-          date_range: Date.Range.t(),
-          pageviews: non_neg_integer(),
-          custom_events: non_neg_integer(),
-          total: non_neg_integer()
-        }
-
-  @spec monthly_pageview_usage(User.t()) :: monthly_pageview_usage()
-
+  @spec monthly_pageview_usage(User.t()) :: non_neg_integer()
+  @doc """
+  Returns the amount of pageviews and custom events
+  sent by the sites the user owns in last 30 days.
+  """
   def monthly_pageview_usage(user) do
-    active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
-
-    if active_subscription? && user.subscription.last_bill_date do
-      [:current_cycle, :last_cycle, :penultimate_cycle]
-      |> Task.async_stream(fn cycle ->
-        %{cycle => usage_cycle(user, cycle)}
-      end)
-      |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
-      |> Enum.reduce(%{}, &Map.merge/2)
-    else
-      %{last_30_days: usage_cycle(user, :last_30_days)}
-    end
-  end
-
-  @spec usage_cycle(User.t(), period(), Date.t()) :: usage_cycle()
-
-  def usage_cycle(user, cycle, today \\ Timex.today())
-
-  def usage_cycle(user, :last_30_days, today) do
-    date_range = Date.range(Timex.shift(today, days: -30), today)
-
-    {pageviews, custom_events} =
-      user
-      |> Plausible.Sites.owned_site_ids()
-      |> Plausible.Stats.Clickhouse.usage_breakdown(date_range)
-
-    %{
-      date_range: date_range,
-      pageviews: pageviews,
-      custom_events: custom_events,
-      total: pageviews + custom_events
-    }
-  end
-
-  def usage_cycle(user, cycle, today) do
-    user = Plausible.Users.with_subscription(user)
-    last_bill_date = user.subscription.last_bill_date
-
-    normalized_last_bill_date =
-      Timex.shift(last_bill_date, months: Timex.diff(today, last_bill_date, :months))
-
-    date_range =
-      case cycle do
-        :current_cycle ->
-          Date.range(
-            normalized_last_bill_date,
-            Timex.shift(normalized_last_bill_date, months: 1, days: -1)
-          )
-
-        :last_cycle ->
-          Date.range(
-            Timex.shift(normalized_last_bill_date, months: -1),
-            Timex.shift(normalized_last_bill_date, days: -1)
-          )
-
-        :penultimate_cycle ->
-          Date.range(
-            Timex.shift(normalized_last_bill_date, months: -2),
-            Timex.shift(normalized_last_bill_date, days: -1, months: -1)
-          )
-      end
-
-    {pageviews, custom_events} =
-      user
-      |> Plausible.Sites.owned_site_ids()
-      |> Plausible.Stats.Clickhouse.usage_breakdown(date_range)
-
-    %{
-      date_range: date_range,
-      pageviews: pageviews,
-      custom_events: custom_events,
-      total: pageviews + custom_events
-    }
+    user
+    |> Billing.usage_breakdown()
+    |> Tuple.sum()
   end
 
   @team_member_limit_for_trials 3
@@ -336,50 +259,33 @@ defmodule Plausible.Billing.Quota do
     for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
-  def ensure_can_subscribe_to_plan(user, plan, usage \\ nil)
+  def ensure_can_subscribe_to_plan(user, %Plan{} = plan) do
+    case exceeded_limits(usage(user), plan) do
+      [] ->
+        :ok
 
-  def ensure_can_subscribe_to_plan(%User{} = user, %Plan{} = plan, usage) do
-    usage = if usage, do: usage, else: usage(user)
+      [:monthly_pageview_limit] ->
+        # This is a quick fix. Need to figure out how to handle this case. Only
+        # checking the last 30 days usage is not accurate enough. Needs to be
+        # in sync with the actual locking system.
+        :ok
 
-    case exceeded_limits(user, plan, usage) do
-      [] -> :ok
-      exceeded_limits -> {:error, %{exceeded_limits: exceeded_limits}}
+      exceeded_limits ->
+        {:error, %{exceeded_limits: exceeded_limits}}
     end
   end
 
-  def ensure_can_subscribe_to_plan(_, _, _), do: :ok
+  def ensure_can_subscribe_to_plan(_user, nil), do: :ok
 
-  defp exceeded_limits(%User{} = user, %Plan{} = plan, usage) do
-    for {limit, exceeded?} <- [
-          {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
-          {:site_limit, not within_limit?(usage.sites, plan.site_limit)},
-          {:monthly_pageview_limit, exceeds_monthly_pageview_limit?(user, plan, usage)}
+  def exceeded_limits(usage, %Plan{} = plan) do
+    for {usage_field, limit_field} <- [
+          {:monthly_pageviews, :monthly_pageview_limit},
+          {:team_members, :team_member_limit},
+          {:sites, :site_limit}
         ],
-        exceeded? do
-      limit
+        !within_limit?(Map.get(usage, usage_field), Map.get(plan, limit_field)) do
+      limit_field
     end
-  end
-
-  defp exceeds_monthly_pageview_limit?(%User{allow_next_upgrade_override: true}, _, _) do
-    false
-  end
-
-  defp exceeds_monthly_pageview_limit?(_user, plan, usage) do
-    case usage.monthly_pageviews do
-      %{last_30_days: %{total: total}} ->
-        !within_limit?(total, pageview_limit_with_margin(plan))
-
-      billing_cycles_usage ->
-        Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
-          billing_cycles_usage,
-          plan.monthly_pageview_limit
-        )
-    end
-  end
-
-  defp pageview_limit_with_margin(%Plan{monthly_pageview_limit: limit}) do
-    allowance_margin = if limit == 10_000, do: 0.3, else: 0.15
-    ceil(limit * (1 + allowance_margin))
   end
 
   @doc """

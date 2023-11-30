@@ -2,7 +2,6 @@ defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Auth
-  alias Plausible.Billing.Quota
   require Logger
 
   plug(
@@ -373,6 +372,7 @@ defmodule PlausibleWeb.AuthController do
     email_changeset = Keyword.fetch!(opts, :email_changeset)
 
     user = Plausible.Users.with_subscription(conn.assigns[:current_user])
+    {pageview_usage, custom_event_usage} = Plausible.Billing.usage_breakdown(user)
 
     render(conn, "user_settings.html",
       user: user |> Repo.preload(:api_keys),
@@ -381,12 +381,14 @@ defmodule PlausibleWeb.AuthController do
       subscription: user.subscription,
       invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
       theme: user.theme || "system",
-      team_member_limit: Quota.team_member_limit(user),
-      team_member_usage: Quota.team_member_usage(user),
-      site_limit: Quota.site_limit(user),
-      site_usage: Quota.site_usage(user),
-      pageview_limit: Quota.monthly_pageview_limit(user.subscription),
-      pageview_usage: Quota.monthly_pageview_usage(user)
+      team_member_limit: Plausible.Billing.Quota.team_member_limit(user),
+      team_member_usage: Plausible.Billing.Quota.team_member_usage(user),
+      site_limit: Plausible.Billing.Quota.site_limit(user),
+      site_usage: Plausible.Billing.Quota.site_usage(user),
+      total_pageview_limit: Plausible.Billing.Quota.monthly_pageview_limit(user.subscription),
+      total_pageview_usage: pageview_usage + custom_event_usage,
+      custom_event_usage: custom_event_usage,
+      pageview_usage: pageview_usage
     )
   end
 

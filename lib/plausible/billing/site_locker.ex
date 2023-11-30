@@ -68,16 +68,15 @@ defmodule Plausible.Billing.SiteLocker do
 
   @spec send_grace_period_end_email(Plausible.Auth.User.t()) :: Plausible.Mailer.result()
   def send_grace_period_end_email(user) do
-    last_cycle_usage =
-      Plausible.Billing.Quota.usage_cycle(user, :last_cycle)
-
-    suggested_plan = Plausible.Billing.Plans.suggest(user, last_cycle_usage.total)
+    {_, last_cycle} = Plausible.Billing.last_two_billing_cycles(user)
+    {_, last_cycle_usage} = Plausible.Billing.last_two_billing_months_usage(user)
+    suggested_plan = Plausible.Billing.Plans.suggest(user, last_cycle_usage)
 
     template =
       PlausibleWeb.Email.dashboard_locked(
         user,
-        last_cycle_usage.total,
-        last_cycle_usage.date_range,
+        last_cycle_usage,
+        last_cycle,
         suggested_plan
       )
 
