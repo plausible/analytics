@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Live.Sites do
   LiveView for sites index.
   """
 
-  use Phoenix.LiveView
+  use Phoenix.LiveView, global_prefixes: ~w(x-)
   use PlausibleWeb.Live.Flash
 
   alias Phoenix.LiveView.JS
