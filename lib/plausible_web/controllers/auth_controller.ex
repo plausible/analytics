@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  alias Plausible.Auth
+  alias Plausible.{Auth, RateLimit}
   alias Plausible.Billing.Quota
   require Logger
 
@@ -262,7 +262,7 @@ defmodule PlausibleWeb.AuthController do
   defp check_ip_rate_limit(conn) do
     ip_address = PlausibleWeb.RemoteIp.get(conn)
 
-    case Hammer.check_rate("login:ip:#{ip_address}", @login_interval, @login_limit) do
+    case RateLimit.check_rate("login:ip:#{ip_address}", @login_interval, @login_limit) do
       {:allow, _} -> :ok
       {:deny, _} -> {:rate_limit, :ip_address}
     end
@@ -280,7 +280,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp check_user_rate_limit(user) do
-    case Hammer.check_rate("login:user:#{user.id}", @login_interval, @login_limit) do
+    case RateLimit.check_rate("login:user:#{user.id}", @login_interval, @login_limit) do
       {:allow, _} -> :ok
       {:deny, _} -> {:rate_limit, :user}
     end
