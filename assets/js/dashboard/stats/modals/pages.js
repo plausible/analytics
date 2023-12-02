@@ -8,6 +8,23 @@ import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { trimURL } from '../../util/url'
 
+function ExternalLink({ externalLinkDest }) {
+  if (externalLinkDest) {
+    return (
+      <a
+        target="_blank"
+        rel="noreferrer"
+        href={externalLinkDest}
+        className="w-4 h-4 hidden group-hover:block"
+      >
+        <svg className="inline w-4 h-4 ml-1 -mt-1 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path><path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path></svg>
+      </a>
+    )
+  }
+
+  return null
+}
+
 class PagesModal extends React.Component {
   constructor(props) {
     super(props)
@@ -64,7 +81,10 @@ class PagesModal extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={page.name}>
         <td className="p-2">
-          <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString() }} className="hover:underline block truncate">{trimURL(page.name, 50)}</Link>
+          <div className="flex justify-start px-2 py-1.5 group text-sm dark:text-gray-300 relative z-9 break-all w-full">
+            <Link to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}`, search: query.toString() }} className="hover:underline block truncate">{trimURL(page.name, 50)}</Link>
+            <ExternalLink externalLinkDest={page.name} />
+          </div>
         </td>
         {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{page.total_visitors}</td>}
         <td className="p-2 w-32 font-medium" align="right">{numberFormatter(page.visitors)}</td>
