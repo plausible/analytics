@@ -4,42 +4,12 @@ defmodule PlausibleWeb.LayoutView do
 
   import PlausibleWeb.Components.Billing
 
-  def base_domain do
-    PlausibleWeb.Endpoint.host()
-  end
-
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end
 
   def websocket_url() do
     PlausibleWeb.Endpoint.websocket_url()
-  end
-
-  def dogfood_script_url() do
-    if Application.get_env(:plausible, :environment) in ["prod", "staging"] do
-      "#{plausible_url()}/js/script.manual.pageview-props.tagged-events.js"
-    else
-      "#{plausible_url()}/js/script.local.manual.pageview-props.tagged-events.js"
-    end
-  end
-
-  def dogfood_domain(conn) do
-    if conn.assigns[:embedded] do
-      "embed." <> base_domain()
-    else
-      base_domain()
-    end
-  end
-
-  @doc """
-  Temporary override to do more testing of the new ingest.plausible.io endpoint for accepting events. In staging and locally
-  will fall back to staging.plausible.io/api/event and localhost:8000/api/event respectively.
-  """
-  def dogfood_api_destination() do
-    if Application.get_env(:plausible, :environment) == "prod" do
-      "https://ingest.plausible.io/api/event"
-    end
   end
 
   defmodule JWT do
