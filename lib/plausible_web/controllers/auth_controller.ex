@@ -419,7 +419,7 @@ defmodule PlausibleWeb.AuthController do
 
       {:error, :not_enabled} ->
         conn
-        |> put_flash(:error, "Please enable Two-factor Authentication for this account first.")
+        |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
         |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
     end
   end

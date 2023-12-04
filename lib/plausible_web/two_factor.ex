@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.TwoFactor do
   @moduledoc """
-  Functions for managing session data related to two-factor
-  authentication.
+  Functions for managing session data related to Two-Factor
+  Authentication.
   """
 
   import Plug.Conn

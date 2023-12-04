@@ -1470,7 +1470,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "Two-factor authentication is already setup"
+               "Two-Factor Authentication is already setup"
     end
   end
 
@@ -1537,7 +1537,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "Please enable two-factor authentication"
+               "Please enable Two-Factor Authentication"
     end
   end
 
@@ -1553,7 +1553,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
-               "Two-factor authentication is disabled"
+               "Two-Factor Authentication is disabled"
 
       refute user |> Repo.reload!() |> Auth.TOTP.enabled?()
     end
@@ -1605,7 +1605,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "Please enable two-factor authentication"
+               "Please enable Two-Factor Authentication"
     end
   end
 

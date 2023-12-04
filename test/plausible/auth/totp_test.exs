@@ -85,7 +85,7 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
-        subject: "Plausible two-factor authentication enabled"
+        subject: "Plausible Two-Factor Authentication enabled"
       )
 
       assert user.totp_enabled
@@ -160,14 +160,14 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
-        subject: "Plausible two-factor authentication enabled"
+        subject: "Plausible Two-Factor Authentication enabled"
       )
 
       assert {:ok, updated_user} = TOTP.disable(user, "VeryStrongVerySecret")
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
-        subject: "Plausible two-factor authentication disabled"
+        subject: "Plausible Two-Factor Authentication disabled"
       )
 
       assert updated_user.id == user.id
@@ -197,7 +197,7 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
-        subject: "Plausible two-factor authentication enabled"
+        subject: "Plausible Two-Factor Authentication enabled"
       )
 
       assert {:error, :invalid_password} = TOTP.disable(user, "invalid")
