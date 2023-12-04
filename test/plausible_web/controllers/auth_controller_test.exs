@@ -335,6 +335,19 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn) == "/sites"
     end
 
+    test "valid email and password with login_dest set - redirects properly", %{conn: conn} do
+      user = insert(:user, password: "password")
+
+      conn =
+        conn
+        |> init_session()
+        |> put_session(:login_dest, "/settings")
+
+      conn = post(conn, "/login", email: user.email, password: "password")
+
+      assert redirected_to(conn, 302) == "/settings"
+    end
+
     test "valid email and password with 2FA enabled - sets 2FA session and redirects", %{
       conn: conn
     } do
@@ -1685,6 +1698,27 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert conn.resp_cookies["session_2fa"].max_age == 0
       # Remember cookie unset
       assert conn.resp_cookies["remember_2fa"].max_age == 0
+    end
+
+    test "redirects to login_dest when set", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn =
+        conn
+        |> init_session()
+        |> put_session(:login_dest, "/settings")
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+
+      assert redirected_to(conn, 302) == "/settings"
     end
 
     test "sets remember cookie when device trusted", %{conn: conn} do
