@@ -225,7 +225,6 @@ defmodule Plausible.BillingTest do
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_plan_id == @plan_id_10k
       assert subscription.next_bill_amount == "12.00"
-      assert subscription.last_bill_date == "wat"
     end
 
     test "unlocks sites if subscription is changed from past_due to active" do
