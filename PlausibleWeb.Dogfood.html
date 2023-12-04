@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Google.Api.Mock — Plausible v0.0.1</title>
+    <title>PlausibleWeb.Dogfood — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,16 +102,20 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/test/support/google_api_mock.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible_web/dogfood.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Google.Api.Mock</span> 
+  <span translate="no">PlausibleWeb.Dogfood</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>Plausible tracking itself functions</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -128,7 +132,26 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fetch_stats/3" translate="no">fetch_stats(auth, query, limit)</a>
+        <a href="#api_destination/0" translate="no">api_destination()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Temporary override to do more testing of the new ingest.plausible.io endpoint for accepting events. In staging and locally
+will fall back to staging.plausible.io/api/event and localhost:8000/api/event respectively.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#domain/1" translate="no">domain(conn)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#script_url/0" translate="no">script_url()</a>
 
       </div>
 
@@ -147,16 +170,61 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="fetch_stats/3">
+<section class="detail" id="api_destination/0">
 
   <div class="detail-header">
-    <a href="#fetch_stats/3" class="detail-link" title="Link to this function">
+    <a href="#api_destination/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">fetch_stats(auth, query, limit)</h1>
+    <h1 class="signature" translate="no">api_destination()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/test/support/google_api_mock.ex#L2" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible_web/dogfood.ex#L10" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Temporary override to do more testing of the new ingest.plausible.io endpoint for accepting events. In staging and locally
+will fall back to staging.plausible.io/api/event and localhost:8000/api/event respectively.</p>
+  </section>
+</section>
+<section class="detail" id="domain/1">
+
+  <div class="detail-header">
+    <a href="#domain/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">domain(conn)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible_web/dogfood.ex#L24" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
+  </section>
+</section>
+<section class="detail" id="script_url/0">
+
+  <div class="detail-header">
+    <a href="#script_url/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">script_url()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible_web/dogfood.ex#L16" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
