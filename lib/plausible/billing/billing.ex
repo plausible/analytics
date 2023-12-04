@@ -1,4 +1,5 @@
 defmodule Plausible.Billing do
+  use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Plans, Quota}
@@ -104,72 +105,29 @@ defmodule Plausible.Billing do
     end
   end
 
-  defp subscription_is_active?(%Subscription{status: Subscription.Status.active()}), do: true
-  defp subscription_is_active?(%Subscription{status: Subscription.Status.past_due()}), do: true
+  def subscription_is_active?(%Subscription{status: Subscription.Status.active()}), do: true
+  def subscription_is_active?(%Subscription{status: Subscription.Status.past_due()}), do: true
 
-  defp subscription_is_active?(
-         %Subscription{status: Subscription.Status.deleted()} = subscription
-       ) do
+  def subscription_is_active?(%Subscription{status: Subscription.Status.deleted()} = subscription) do
     subscription.next_bill_date && !Timex.before?(subscription.next_bill_date, Timex.today())
   end
 
-  defp subscription_is_active?(%Subscription{}), do: false
-  defp subscription_is_active?(nil), do: false
+  def subscription_is_active?(%Subscription{}), do: false
+  def subscription_is_active?(nil), do: false
 
-  def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
+  on_full_build do
+    def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
 
-  def on_trial?(user) do
-    user = Plausible.Users.with_subscription(user)
-    !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
+    def on_trial?(user) do
+      user = Plausible.Users.with_subscription(user)
+      !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
+    end
+  else
+    def on_trial?(_), do: false
   end
 
   def trial_days_left(user) do
     Timex.diff(user.trial_expiry_date, Timex.today(), :days)
-  end
-
-  @spec last_two_billing_months_usage(Plausible.Auth.User.t(), Date.t()) ::
-          {non_neg_integer(), non_neg_integer()}
-  def last_two_billing_months_usage(user, today \\ Timex.today()) do
-    {first, second} = last_two_billing_cycles(user, today)
-
-    site_ids = Plausible.Sites.owned_site_ids(user)
-
-    usage_for_sites = fn site_ids, date_range ->
-      {pageviews, custom_events} =
-        Plausible.Stats.Clickhouse.usage_breakdown(site_ids, date_range)
-
-      pageviews + custom_events
-    end
-
-    {
-      usage_for_sites.(site_ids, first),
-      usage_for_sites.(site_ids, second)
-    }
-  end
-
-  def last_two_billing_cycles(user, today \\ Timex.today()) do
-    last_bill_date = user.subscription.last_bill_date
-
-    normalized_last_bill_date =
-      Timex.shift(last_bill_date,
-        months: Timex.diff(today, last_bill_date, :months)
-      )
-
-    {
-      Date.range(
-        Timex.shift(normalized_last_bill_date, months: -2),
-        Timex.shift(normalized_last_bill_date, days: -1, months: -1)
-      ),
-      Date.range(
-        Timex.shift(normalized_last_bill_date, months: -1),
-        Timex.shift(normalized_last_bill_date, days: -1)
-      )
-    }
-  end
-
-  def usage_breakdown(user) do
-    site_ids = Plausible.Sites.owned_site_ids(user)
-    Plausible.Stats.Clickhouse.usage_breakdown(site_ids)
   end
 
   defp handle_subscription_created(params) do
@@ -181,8 +139,10 @@ defmodule Plausible.Billing do
         Map.put(params, "passthrough", user && user.id)
       end
 
+    subscription_params = format_subscription(params) |> add_last_bill_date(params)
+
     %Subscription{}
-    |> Subscription.changeset(format_subscription(params))
+    |> Subscription.changeset(subscription_params)
     |> Repo.insert!()
     |> after_subscription_update()
   end
@@ -254,6 +214,16 @@ defmodule Plausible.Billing do
     }
   end
 
+  defp add_last_bill_date(subscription_params, paddle_params) do
+    with datetime_str when is_binary(datetime_str) <- paddle_params["event_time"],
+         {:ok, datetime} <- NaiveDateTime.from_iso8601(datetime_str),
+         date <- NaiveDateTime.to_date(datetime) do
+      Map.put(subscription_params, :last_bill_date, date)
+    else
+      _ -> subscription_params
+    end
+  end
+
   defp present?(""), do: false
   defp present?(nil), do: false
   defp present?(_), do: true
@@ -301,6 +271,7 @@ defmodule Plausible.Billing do
 
     user
     |> maybe_remove_grace_period()
+    |> Plausible.Users.maybe_reset_next_upgrade_override()
     |> tap(&Plausible.Billing.SiteLocker.update_sites_for/1)
     |> maybe_adjust_api_key_limits()
   end

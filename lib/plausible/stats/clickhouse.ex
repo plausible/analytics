@@ -1,4 +1,5 @@
 defmodule Plausible.Stats.Clickhouse do
+  use Plausible
   use Plausible.Repo
   use Plausible.ClickhouseRepo
   use Plausible.Stats.Fragments
@@ -39,16 +40,6 @@ defmodule Plausible.Stats.Clickhouse do
         select: sum(i.pageviews)
       )
     )
-  end
-
-  def usage_breakdown(domains_or_site_ids) do
-    range =
-      Date.range(
-        Timex.shift(Timex.today(), days: -30),
-        Timex.today()
-      )
-
-    usage_breakdown(domains_or_site_ids, range)
   end
 
   def usage_breakdown([d | _] = domains, date_range) when is_binary(d) do
@@ -236,7 +227,6 @@ defmodule Plausible.Stats.Clickhouse do
     current_q =
       from(
         e in "events_v2",
-        hints: [sample: 20_000_000],
         join: total_q in subquery(total_q),
         on: e.site_id == total_q.site_id,
         where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
@@ -251,6 +241,10 @@ defmodule Plausible.Stats.Clickhouse do
         group_by: [e.site_id, fragment("toStartOfHour(timestamp)")],
         order_by: [e.site_id, fragment("toStartOfHour(timestamp)")]
       )
+
+    on_full_build do
+      current_q = Plausible.Stats.Sampling.add_query_hint(current_q)
+    end
 
     result =
       current_q
@@ -275,17 +269,22 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp visitors_24h_total(now, offset1, offset2, site_id_to_domain_mapping) do
-    from(e in "events_v2",
-      hints: [sample: 20_000_000],
-      where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
-      where: e.timestamp >= ^NaiveDateTime.add(now, offset1, :hour),
-      where: e.timestamp <= ^NaiveDateTime.add(now, offset2, :hour),
-      select: %{
-        site_id: e.site_id,
-        total_visitors: fragment("toUInt64(round(uniq(user_id) * any(_sample_factor)))")
-      },
-      group_by: [e.site_id]
-    )
+    query =
+      from e in "events_v2",
+        where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
+        where: e.timestamp >= ^NaiveDateTime.add(now, offset1, :hour),
+        where: e.timestamp <= ^NaiveDateTime.add(now, offset2, :hour),
+        select: %{
+          site_id: e.site_id,
+          total_visitors: fragment("toUInt64(round(uniq(user_id) * any(_sample_factor)))")
+        },
+        group_by: [e.site_id]
+
+    on_full_build do
+      query = Plausible.Stats.Sampling.add_query_hint(query)
+    end
+
+    query
   end
 
   defp empty_24h_intervals(now) do
@@ -301,16 +300,18 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp base_session_query(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
       from(s in "sessions_v2",
-        hints: ["SAMPLE 10000000"],
         where: s.site_id == ^site.id,
         where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
       )
+
+    on_full_build do
+      q = Plausible.Stats.Sampling.add_query_hint(q, 10_000_000)
+    end
 
     q =
       if query.filters["source"] do
@@ -421,16 +422,18 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp base_query_bare(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
       from(e in "events_v2",
-        hints: ["SAMPLE 10000000"],
         where: e.site_id == ^site.id,
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
+
+    on_full_build do
+      q = Plausible.Stats.Sampling.add_query_hint(q, 10_000_000)
+    end
 
     q =
       if query.filters["screen"] do

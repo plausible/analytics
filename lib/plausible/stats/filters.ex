@@ -54,7 +54,6 @@ defmodule Plausible.Stats.Filters do
   end
 
   @non_escaped_pipe_regex ~r/(?<!\\)\|/
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp filter_value(key, val) do
     {is_negated, val} = parse_negated_prefix(val)
     {is_contains, val} = parse_contains_prefix(val)

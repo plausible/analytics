@@ -11,6 +11,7 @@ defmodule Plausible.Billing.Ecto.Limit do
 
   def cast(-1), do: {:ok, :unlimited}
   def cast(:unlimited), do: {:ok, :unlimited}
+  def cast("unlimited"), do: {:ok, :unlimited}
   def cast(other), do: Ecto.Type.cast(:integer, other)
 
   def load(-1), do: {:ok, :unlimited}

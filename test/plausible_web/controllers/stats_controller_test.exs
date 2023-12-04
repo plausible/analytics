@@ -3,6 +3,8 @@ defmodule PlausibleWeb.StatsControllerTest do
   use Plausible.Repo
   import Plausible.Test.Support.HTML
 
+  @react_container "div#stats-react-container"
+
   describe "GET /:website - anonymous user" do
     test "public site - shows site stats", %{conn: conn} do
       site = insert(:site, public: true)
@@ -10,7 +12,10 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/#{site.domain}")
       resp = html_response(conn, 200)
-      assert element_exists?(resp, "div#stats-react-container")
+      assert element_exists?(resp, @react_container)
+
+      assert text_of_attr(resp, @react_container, "data-domain") == site.domain
+      assert text_of_attr(resp, @react_container, "data-is-dbip") == "false"
 
       assert ["noindex, nofollow"] ==
                resp
@@ -26,7 +31,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       conn = get(conn, "/#{site.domain}")
       resp = html_response(conn, 200)
-      assert element_exists?(resp, "div#stats-react-container")
+      assert element_exists?(resp, @react_container)
 
       assert ["index, nofollow"] ==
                resp
@@ -44,6 +49,7 @@ defmodule PlausibleWeb.StatsControllerTest do
     end
 
     test "can not view stats of a private website", %{conn: conn} do
+      _ = insert(:user)
       conn = get(conn, "/test-site.com")
       assert html_response(conn, 404) =~ "There's nothing here"
     end
@@ -72,6 +78,7 @@ defmodule PlausibleWeb.StatsControllerTest do
   end
 
   describe "GET /:website - as a super admin" do
+    @describetag :full_build_only
     setup [:create_user, :make_user_super_admin, :log_in]
 
     test "can view a private dashboard with stats", %{conn: conn} do

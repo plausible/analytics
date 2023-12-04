@@ -672,6 +672,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :"meta.value") == ["true"]
     end
 
+    @tag :full_build_only
     test "converts revenue values into the goal currency", %{conn: conn, site: site} do
       params = %{
         name: "Payment",
@@ -688,6 +689,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Decimal.equal?(Decimal.new("7.14"), amount)
     end
 
+    @tag :full_build_only
     test "revenue values can be sent with minified keys", %{conn: conn, site: site} do
       params = %{
         "n" => "Payment",
@@ -704,6 +706,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Decimal.equal?(Decimal.new("7.14"), amount)
     end
 
+    @tag :full_build_only
     test "saves the exact same amount when goal currency is the same as the event", %{
       conn: conn,
       site: site

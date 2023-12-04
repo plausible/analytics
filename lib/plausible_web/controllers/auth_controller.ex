@@ -2,6 +2,7 @@ defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Auth
+  alias Plausible.Billing.Quota
   require Logger
 
   plug(
@@ -30,12 +31,6 @@ defmodule PlausibleWeb.AuthController do
            :request_activation_code
          ]
   )
-
-  plug(:assign_is_selfhost)
-
-  defp assign_is_selfhost(conn, _opts) do
-    assign(conn, :is_selfhost, Plausible.Release.selfhost?())
-  end
 
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
     with {:ok, user} <- login_user(conn, email, password) do
@@ -378,7 +373,6 @@ defmodule PlausibleWeb.AuthController do
     email_changeset = Keyword.fetch!(opts, :email_changeset)
 
     user = Plausible.Users.with_subscription(conn.assigns[:current_user])
-    {pageview_usage, custom_event_usage} = Plausible.Billing.usage_breakdown(user)
 
     render(conn, "user_settings.html",
       user: user |> Repo.preload(:api_keys),
@@ -387,14 +381,12 @@ defmodule PlausibleWeb.AuthController do
       subscription: user.subscription,
       invoices: Plausible.Billing.paddle_api().get_invoices(user.subscription),
       theme: user.theme || "system",
-      team_member_limit: Plausible.Billing.Quota.team_member_limit(user),
-      team_member_usage: Plausible.Billing.Quota.team_member_usage(user),
-      site_limit: Plausible.Billing.Quota.site_limit(user),
-      site_usage: Plausible.Billing.Quota.site_usage(user),
-      total_pageview_limit: Plausible.Billing.Quota.monthly_pageview_limit(user.subscription),
-      total_pageview_usage: pageview_usage + custom_event_usage,
-      custom_event_usage: custom_event_usage,
-      pageview_usage: pageview_usage
+      team_member_limit: Quota.team_member_limit(user),
+      team_member_usage: Quota.team_member_usage(user),
+      site_limit: Quota.site_limit(user),
+      site_usage: Quota.site_usage(user),
+      pageview_limit: Quota.monthly_pageview_limit(user.subscription),
+      pageview_usage: Quota.monthly_pageview_usage(user)
     )
   end
 
@@ -462,7 +454,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
         )
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
 
       message when message in ["server_error", "temporarily_unavailable"] ->
         conn
@@ -470,7 +462,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We are unable to authenticate your Google Analytics account because Google's authentication service is temporarily unavailable. Please try again in a few moments."
         )
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
 
       _any ->
         Sentry.capture_message("Google OAuth callback failed. Reason: #{inspect(params)}")
@@ -480,7 +472,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We were unable to authenticate your Google Analytics account. If the problem persists, please contact support for assistance."
         )
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
     end
   end
 
@@ -493,7 +485,7 @@ defmodule PlausibleWeb.AuthController do
     case redirect_to do
       "import" ->
         redirect(conn,
-          to:
+          external:
             Routes.site_path(conn, :import_from_google_view_id_form, site.domain,
               access_token: res["access_token"],
               refresh_token: res["refresh_token"],
@@ -518,7 +510,7 @@ defmodule PlausibleWeb.AuthController do
 
         site = Repo.get(Plausible.Site, site_id)
 
-        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/integrations")
+        redirect(conn, external: "/#{URI.encode_www_form(site.domain)}/settings/integrations")
     end
   end
 end

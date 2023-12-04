@@ -24,7 +24,8 @@ defmodule Plausible.Factory do
   end
 
   def site_factory(attrs) do
-    domain = sequence(:domain, &"example-#{&1}.com")
+    # The é exercises unicode support in domain names
+    domain = sequence(:domain, &"é-#{&1}.example.com")
 
     defined_memberships? =
       Map.has_key?(attrs, :memberships) ||
@@ -132,12 +133,6 @@ defmodule Plausible.Factory do
       refresh_token: "123",
       access_token: "123",
       expires: Timex.now() |> Timex.shift(days: 1)
-    }
-  end
-
-  def custom_domain_factory do
-    %Plausible.Site.CustomDomain{
-      domain: sequence(:custom_domain, &"domain-#{&1}.com")
     }
   end
 

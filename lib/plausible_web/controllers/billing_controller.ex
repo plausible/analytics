@@ -29,7 +29,7 @@ defmodule PlausibleWeb.BillingController do
       true ->
         render(conn, "upgrade.html",
           skip_plausible_tracking: true,
-          usage: Plausible.Billing.Quota.monthly_pageview_usage(user),
+          usage: Plausible.Billing.Quota.usage_cycle(user, :last_30_days).total,
           user: user,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )

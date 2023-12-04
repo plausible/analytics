@@ -13,7 +13,8 @@ defmodule PlausibleWeb.AuthControllerTest do
   alias Plausible.Auth.User
   alias Plausible.Billing.Subscription
 
-  setup :verify_on_exit!
+  setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
+  setup [:verify_on_exit!]
 
   @v3_plan_id "749355"
   @v4_plan_id "857097"
@@ -442,7 +443,8 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert location = "/login" = redirected_to(conn, 302)
 
-      conn = get(recycle(conn), location)
+      {:ok, %{conn: conn}} = PlausibleWeb.FirstLaunchPlug.Test.skip(%{conn: recycle(conn)})
+      conn = get(conn, location)
       assert html_response(conn, 200) =~ "Password updated successfully"
     end
   end
@@ -457,6 +459,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert resp =~ "Change email address"
     end
 
+    @tag :full_build_only
     test "shows subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "558018", user: user)
       conn = get(conn, "/settings")
@@ -464,6 +467,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "monthly billing"
     end
 
+    @tag :full_build_only
     test "shows yearly subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "590752", user: user)
       conn = get(conn, "/settings")
@@ -471,6 +475,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
+    @tag :full_build_only
     test "shows free subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "free_10k", user: user)
       conn = get(conn, "/settings")
@@ -478,6 +483,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "N/A billing"
     end
 
+    @tag :full_build_only
     test "shows enterprise plan subscription", %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: "123", user: user)
 
@@ -488,6 +494,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
+    @tag :full_build_only
     test "shows current enterprise plan subscription when user has a new one to upgrade to", %{
       conn: conn,
       user: user
@@ -511,6 +518,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "yearly billing"
     end
 
+    @tag :full_build_only
     test "renders two links to '/billing/choose-plan` with the text 'Upgrade'", %{conn: conn} do
       doc =
         get(conn, "/settings")
@@ -526,6 +534,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_attr(upgrade_link_2, "href") == Routes.billing_path(conn, :choose_plan)
     end
 
+    @tag :full_build_only
     test "renders a link to '/billing/choose-plan' with the text 'Change plan' + cancel link", %{
       conn: conn,
       user: user
@@ -585,6 +594,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       refute element_exists?(doc, "#upgrade-or-change-plan-link")
     end
 
+    @tag :full_build_only
     test "renders two links to '/billing/choose-plan' with the text 'Upgrade' for a configured enterprise plan",
          %{conn: conn, user: user} do
       configure_enterprise_plan(user)
@@ -607,6 +617,7 @@ defmodule PlausibleWeb.AuthControllerTest do
                Routes.billing_path(conn, :choose_plan)
     end
 
+    @tag :full_build_only
     test "links to '/billing/choose-plan' with the text 'Change plan' for a configured enterprise plan with an existing subscription + renders cancel button",
          %{conn: conn, user: user} do
       insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
@@ -628,6 +639,7 @@ defmodule PlausibleWeb.AuthControllerTest do
                Routes.billing_path(conn, :choose_plan)
     end
 
+    @tag :full_build_only
     test "renders cancelled subscription notice", %{conn: conn, user: user} do
       insert(:subscription,
         paddle_plan_id: @v4_plan_id,
@@ -645,6 +657,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert notice_text =~ "Upgrade your subscription to get access to your stats again"
     end
 
+    @tag :full_build_only
     test "renders cancelled subscription notice with some subscription days still left", %{
       conn: conn,
       user: user
@@ -666,6 +679,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert notice_text =~ "Upgrade your subscription to make sure you don't lose access"
     end
 
+    @tag :full_build_only
     test "renders cancelled subscription notice with a warning about losing grandfathering", %{
       conn: conn,
       user: user
@@ -689,6 +703,7 @@ defmodule PlausibleWeb.AuthControllerTest do
                "by letting your subscription expire, you lose access to our grandfathered terms"
     end
 
+    @tag :full_build_only
     test "shows invoices for subscribed user", %{conn: conn, user: user} do
       insert(:subscription,
         paddle_plan_id: "558018",
@@ -703,6 +718,7 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert html_response(conn, 200) =~ "$22.00"
     end
 
+    @tag :full_build_only
     test "shows 'something went wrong' on failed invoice request'", %{conn: conn, user: user} do
       insert(:subscription,
         paddle_plan_id: "558018",
@@ -726,6 +742,292 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       conn = get(conn, "/settings")
       refute html_response(conn, 200) =~ "Invoices"
+    end
+
+    @tag :full_build_only
+    test "renders pageview usage for current, last, and penultimate billing cycles", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -5)),
+        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -20)),
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -50)),
+        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -50))
+      ])
+
+      last_bill_date = Timex.shift(Timex.today(), days: -10)
+
+      insert(:subscription,
+        paddle_plan_id: @v4_plan_id,
+        user: user,
+        status: :deleted,
+        last_bill_date: last_bill_date
+      )
+
+      doc = get(conn, "/settings") |> html_response(200)
+
+      assert text_of_element(doc, "#billing_cycle_tab_current_cycle") =~
+               Date.range(
+                 last_bill_date,
+                 Timex.shift(last_bill_date, months: 1, days: -1)
+               )
+               |> PlausibleWeb.TextHelpers.format_date_range()
+
+      assert text_of_element(doc, "#billing_cycle_tab_last_cycle") =~
+               Date.range(
+                 Timex.shift(last_bill_date, months: -1),
+                 Timex.shift(last_bill_date, days: -1)
+               )
+               |> PlausibleWeb.TextHelpers.format_date_range()
+
+      assert text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~
+               Date.range(
+                 Timex.shift(last_bill_date, months: -2),
+                 Timex.shift(last_bill_date, months: -1, days: -1)
+               )
+               |> PlausibleWeb.TextHelpers.format_date_range()
+
+      assert text_of_element(doc, "#total_pageviews_current_cycle") =~
+               "Total billable pageviews 1"
+
+      assert text_of_element(doc, "#pageviews_current_cycle") =~ "Pageviews 1"
+      assert text_of_element(doc, "#custom_events_current_cycle") =~ "Custom events 0"
+
+      assert text_of_element(doc, "#total_pageviews_last_cycle") =~ "Total billable pageviews 1"
+      assert text_of_element(doc, "#pageviews_last_cycle") =~ "Pageviews 0"
+      assert text_of_element(doc, "#custom_events_last_cycle") =~ "Custom events 1"
+
+      assert text_of_element(doc, "#total_pageviews_penultimate_cycle") =~
+               "Total billable pageviews 2"
+
+      assert text_of_element(doc, "#pageviews_penultimate_cycle") =~ "Pageviews 1"
+      assert text_of_element(doc, "#custom_events_penultimate_cycle") =~ "Custom events 1"
+    end
+
+    @tag :full_build_only
+    test "renders pageview usage per billing cycle for active subscribers", %{
+      conn: conn,
+      user: user
+    } do
+      assert_cycles_rendered = fn doc ->
+        refute element_exists?(doc, "#total_pageviews_last_30_days")
+
+        assert element_exists?(doc, "#total_pageviews_current_cycle")
+        assert element_exists?(doc, "#total_pageviews_last_cycle")
+        assert element_exists?(doc, "#total_pageviews_penultimate_cycle")
+      end
+
+      # for an active subscription
+      subscription =
+        insert(:subscription,
+          paddle_plan_id: @v4_plan_id,
+          user: user,
+          status: :active,
+          last_bill_date: Timex.shift(Timex.now(), months: -6)
+        )
+
+      get(conn, "/settings") |> html_response(200) |> assert_cycles_rendered.()
+
+      # for a past_due subscription
+      subscription =
+        subscription
+        |> Plausible.Billing.Subscription.changeset(%{status: :past_due})
+        |> Repo.update!()
+
+      get(conn, "/settings") |> html_response(200) |> assert_cycles_rendered.()
+
+      # for a deleted (but not expired) subscription
+      subscription
+      |> Plausible.Billing.Subscription.changeset(%{
+        status: :deleted,
+        next_bill_date: Timex.shift(Timex.now(), months: 6)
+      })
+      |> Repo.update!()
+
+      get(conn, "/settings") |> html_response(200) |> assert_cycles_rendered.()
+    end
+
+    @tag :full_build_only
+    test "penultimate cycle is disabled if there's no usage", %{conn: conn, user: user} do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -5)),
+        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -20))
+      ])
+
+      last_bill_date = Timex.shift(Timex.today(), days: -10)
+
+      insert(:subscription,
+        paddle_plan_id: @v4_plan_id,
+        user: user,
+        last_bill_date: last_bill_date
+      )
+
+      doc = get(conn, "/settings") |> html_response(200)
+
+      assert text_of_attr(find(doc, "#monthly_pageview_usage_container"), "x-data") ==
+               "{ tab: 'current_cycle' }"
+
+      assert class_of_element(doc, "#billing_cycle_tab_penultimate_cycle button") =~
+               "pointer-events-none"
+
+      assert text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
+    end
+
+    @tag :full_build_only
+    test "penultimate and last cycles are both disabled if there's no usage", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -5))
+      ])
+
+      last_bill_date = Timex.shift(Timex.today(), days: -10)
+
+      insert(:subscription,
+        paddle_plan_id: @v4_plan_id,
+        user: user,
+        last_bill_date: last_bill_date
+      )
+
+      doc = get(conn, "/settings") |> html_response(200)
+
+      assert text_of_attr(find(doc, "#monthly_pageview_usage_container"), "x-data") ==
+               "{ tab: 'current_cycle' }"
+
+      assert class_of_element(doc, "#billing_cycle_tab_last_cycle button") =~
+               "pointer-events-none"
+
+      assert text_of_element(doc, "#billing_cycle_tab_last_cycle") =~ "Not available"
+
+      assert class_of_element(doc, "#billing_cycle_tab_penultimate_cycle button") =~
+               "pointer-events-none"
+
+      assert text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
+    end
+
+    @tag :full_build_only
+    test "when last cycle usage is 0, it's still not disabled if penultimate cycle has usage", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -5)),
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -50))
+      ])
+
+      last_bill_date = Timex.shift(Timex.today(), days: -10)
+
+      insert(:subscription,
+        paddle_plan_id: @v4_plan_id,
+        user: user,
+        last_bill_date: last_bill_date
+      )
+
+      doc = get(conn, "/settings") |> html_response(200)
+
+      assert text_of_attr(find(doc, "#monthly_pageview_usage_container"), "x-data") ==
+               "{ tab: 'current_cycle' }"
+
+      refute class_of_element(doc, "#billing_cycle_tab_last_cycle") =~ "pointer-events-none"
+      refute text_of_element(doc, "#billing_cycle_tab_last_cycle") =~ "Not available"
+
+      refute class_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~
+               "pointer-events-none"
+
+      refute text_of_element(doc, "#billing_cycle_tab_penultimate_cycle") =~ "Not available"
+    end
+
+    @tag :full_build_only
+    test "renders last 30 days pageview usage for trials and non-active/free_10k subscriptions",
+         %{
+           conn: conn,
+           user: user
+         } do
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, name: "pageview", timestamp: Timex.shift(Timex.now(), days: -1)),
+        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -10)),
+        build(:event, name: "customevent", timestamp: Timex.shift(Timex.now(), days: -20))
+      ])
+
+      assert_usage = fn doc ->
+        refute element_exists?(doc, "#total_pageviews_current_cycle")
+
+        assert text_of_element(doc, "#total_pageviews_last_30_days") =~
+                 "Total billable pageviews (last 30 days) 3"
+
+        assert text_of_element(doc, "#pageviews_last_30_days") =~ "Pageviews 1"
+        assert text_of_element(doc, "#custom_events_last_30_days") =~ "Custom events 2"
+      end
+
+      # for a trial user
+      get(conn, "/settings") |> html_response(200) |> assert_usage.()
+
+      # for an expired subscription
+      subscription =
+        insert(:subscription,
+          paddle_plan_id: @v4_plan_id,
+          user: user,
+          status: :deleted,
+          last_bill_date: ~D[2022-01-01],
+          next_bill_date: ~D[2022-02-01]
+        )
+
+      get(conn, "/settings") |> html_response(200) |> assert_usage.()
+
+      # for a paused subscription
+      subscription =
+        subscription
+        |> Plausible.Billing.Subscription.changeset(%{status: :paused})
+        |> Repo.update!()
+
+      get(conn, "/settings") |> html_response(200) |> assert_usage.()
+
+      # for a free_10k subscription (without a `last_bill_date`)
+      Repo.delete!(subscription)
+
+      Plausible.Billing.Subscription.free(%{user_id: user.id})
+      |> Repo.insert!()
+
+      get(conn, "/settings") |> html_response(200) |> assert_usage.()
+    end
+
+    @tag :full_build_only
+    test "renders sites usage and limit", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
+      insert(:site, members: [user])
+
+      site_usage_row_text =
+        conn
+        |> get("/settings")
+        |> html_response(200)
+        |> text_of_element("#site-usage-row")
+
+      assert site_usage_row_text =~ "Owned sites 1 / 50"
+    end
+
+    @tag :full_build_only
+    test "renders team members usage and limit", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: @v4_plan_id, user: user)
+
+      team_member_usage_row_text =
+        conn
+        |> get("/settings")
+        |> html_response(200)
+        |> text_of_element("#team-member-usage-row")
+
+      assert team_member_usage_row_text =~ "Team members 0 / 3"
     end
   end
 

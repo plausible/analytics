@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> assert_schema("SharedLink", spec())
 
       assert resp.shared_link.href ==
-               "http://localhost:8000/share/#{site.domain}?auth=#{shared_link.slug}"
+               "http://localhost:8000/share/#{URI.encode_www_form(site.domain)}?auth=#{shared_link.slug}"
 
       assert resp.shared_link.id == shared_link.id
       assert resp.shared_link.password_protected == false
@@ -107,7 +107,9 @@ defmodule PlausibleWeb.Plugins.API.Controllers.SharedLinksTest do
         |> assert_schema("SharedLink", spec())
 
       assert resp.shared_link.name == "My Shared Link"
-      assert resp.shared_link.href =~ "http://localhost:8000/share/#{site.domain}?auth="
+
+      assert resp.shared_link.href =~
+               "http://localhost:8000/share/#{URI.encode_www_form(site.domain)}?auth="
 
       [location] = get_resp_header(conn, "location")
 

@@ -6,7 +6,7 @@ if config_env() in [:dev, :test] do
   Envy.load(["config/.env.#{config_env()}"])
 end
 
-if config_env() == :small do
+if config_env() == :small_dev do
   Envy.load(["config/.env.dev"])
 end
 
@@ -21,7 +21,7 @@ log_format =
 
 log_level =
   config_dir
-  |> get_var_from_path_or_env("LOG_LEVEL", "warn")
+  |> get_var_from_path_or_env("LOG_LEVEL", "warning")
   |> String.to_existing_atom()
 
 config :logger,

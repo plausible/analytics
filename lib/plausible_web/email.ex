@@ -68,6 +68,22 @@ defmodule PlausibleWeb.Email do
     |> render("password_reset_email.html", reset_link: reset_link)
   end
 
+  def two_factor_enabled_email(user) do
+    priority_email()
+    |> to(user)
+    |> tag("two-factor-enabled-email")
+    |> subject("Plausible two-factor authentication enabled")
+    |> render("two_factor_enabled_email.html", user: user)
+  end
+
+  def two_factor_disabled_email(user) do
+    priority_email()
+    |> to(user)
+    |> tag("two-factor-disabled-email")
+    |> subject("Plausible two-factor authentication disabled")
+    |> render("two_factor_disabled_email.html", user: user)
+  end
+
   def trial_one_week_reminder(user) do
     base_email()
     |> to(user)
@@ -76,8 +92,8 @@ defmodule PlausibleWeb.Email do
     |> render("trial_one_week_reminder.html", user: user)
   end
 
-  def trial_upgrade_email(user, day, {pageviews, custom_events}) do
-    suggested_plan = Plausible.Billing.Plans.suggest(user, pageviews + custom_events)
+  def trial_upgrade_email(user, day, usage) do
+    suggested_plan = Plausible.Billing.Plans.suggest(user, usage.total)
 
     base_email()
     |> to(user)
@@ -86,8 +102,8 @@ defmodule PlausibleWeb.Email do
     |> render("trial_upgrade_email.html",
       user: user,
       day: day,
-      custom_events: custom_events,
-      usage: pageviews + custom_events,
+      custom_events: usage.custom_events,
+      usage: usage.total,
       suggested_plan: suggested_plan
     )
   end

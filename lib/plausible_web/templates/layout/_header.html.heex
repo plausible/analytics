@@ -24,15 +24,16 @@
         <%= cond do %>
           <% @conn.assigns[:current_user] -> %>
             <ul class="flex items-center w-full sm:w-auto">
-              <%= if Plausible.Billing.on_trial?(@conn.assigns[:current_user]) && !Application.get_env(:plausible, :is_selfhost) do %>
-                <li class="hidden mr-6 sm:block">
-                  <%= link(trial_notificaton(@conn.assigns[:current_user]),
-                    to: "/settings",
-                    class:
-                      "text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
-                  ) %>
-                </li>
-              <% end %>
+              <li
+                :if={Plausible.Billing.on_trial?(@conn.assigns[:current_user])}
+                class="hidden mr-6 sm:block"
+              >
+                <%= link(trial_notificaton(@conn.assigns[:current_user]),
+                  to: "/settings",
+                  class:
+                    "text-sm text-yellow-900 dark:text-yellow-900 rounded px-3 py-2 rounded-md bg-yellow-100 dark:bg-yellow-100"
+                ) %>
+              </li>
               <li class="w-full sm:w-auto">
                 <.dropdown>
                   <:button class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
@@ -57,16 +58,16 @@
                       <.dropdown_link new_tab href="https://plausible.io/docs">
                         Help Center
                       </.dropdown_link>
-                      <%= if Application.get_env(:plausible, :is_selfhost) do %>
-                        <.dropdown_link new_tab href="https://github.com/plausible/analytics">
-                          Github Repo
-                        </.dropdown_link>
-                      <% else %>
+                      <%= if full_build?() do %>
                         <.dropdown_link new_tab href="https://plausible.io/contact">
                           Contact Support
                         </.dropdown_link>
                         <.dropdown_link new_tab href={feedback_link(@conn.assigns[:current_user])}>
                           Feature Requests
+                        </.dropdown_link>
+                      <% else %>
+                        <.dropdown_link new_tab href="https://github.com/plausible/analytics">
+                          Github Repo
                         </.dropdown_link>
                       <% end %>
                     </div>
@@ -76,7 +77,7 @@
                   </:panel>
                 </.dropdown>
               </li>
-              <%= if @conn.assigns[:current_user] && !Application.get_env(:plausible, :is_selfhost) do %>
+              <%= if @conn.assigns[:current_user] && full_build?() do %>
                 <li id="changelog-notification" class="relative py-2"></li>
               <% end %>
             </ul>

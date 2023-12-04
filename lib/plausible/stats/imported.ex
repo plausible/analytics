@@ -56,7 +56,6 @@ defmodule Plausible.Stats.Imported do
   # GA only has 'source'
   def merge_imported(q, _, _, "utm_source", _), do: q
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def merge_imported(q, site, query, property, metrics)
       when property in [
              "visit:source",

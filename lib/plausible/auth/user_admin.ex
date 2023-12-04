@@ -13,7 +13,8 @@ defmodule Plausible.Auth.UserAdmin do
       name: nil,
       email: nil,
       previous_email: nil,
-      trial_expiry_date: nil
+      trial_expiry_date: nil,
+      allow_next_upgrade_override: nil
     ]
   end
 
@@ -42,6 +43,10 @@ defmodule Plausible.Auth.UserAdmin do
       lock: %{
         name: "Lock",
         action: fn _, user -> lock(user) end
+      },
+      calculate_usage: %{
+        name: "Calculate usage",
+        action: fn _, user -> calculate_usage(user) end
       }
     ]
   end
@@ -63,6 +68,42 @@ defmodule Plausible.Auth.UserAdmin do
     else
       {:error, user, "No active grace period on this user"}
     end
+  end
+
+  @separator String.duplicate("_", 200)
+
+  def calculate_usage(user) do
+    user = Plausible.Users.with_subscription(user)
+
+    pageview_limit =
+      case Plausible.Billing.Quota.monthly_pageview_limit(user.subscription) do
+        :unlimited -> "unlimited"
+        integer -> PlausibleWeb.StatsView.large_number_format(integer)
+      end
+
+    pageview_usage =
+      user
+      |> Plausible.Billing.Quota.monthly_pageview_usage()
+      |> Enum.map_join(" #{@separator} ", fn {cycle, usage} ->
+        "#{cycle}: (#{PlausibleWeb.TextHelpers.format_date_range(usage.date_range)}): #{usage.total}"
+      end)
+
+    site_limit = Plausible.Billing.Quota.site_limit(user)
+    site_usage = Plausible.Billing.Quota.site_usage(user)
+
+    team_member_limit = Plausible.Billing.Quota.team_member_limit(user)
+    team_member_usage = Plausible.Billing.Quota.team_member_usage(user)
+
+    msg = """
+    TOTAL PAGEVIEWS (limit: #{pageview_limit})
+    #{@separator}
+    #{pageview_usage}
+    #{@separator}
+    SITES (#{site_usage} / #{site_limit}) #{@separator}
+    TEAM MEMBERS (#{team_member_usage} / #{team_member_limit})
+    """
+
+    {:error, user, msg}
   end
 
   defp grace_period_status(%{grace_period: grace_period}) do
