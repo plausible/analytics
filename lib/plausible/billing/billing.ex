@@ -139,8 +139,10 @@ defmodule Plausible.Billing do
         Map.put(params, "passthrough", user && user.id)
       end
 
+    subscription_params = format_subscription(params) |> add_last_bill_date(params)
+
     %Subscription{}
-    |> Subscription.changeset(format_subscription(params))
+    |> Subscription.changeset(subscription_params)
     |> Repo.insert!()
     |> after_subscription_update()
   end
@@ -210,6 +212,16 @@ defmodule Plausible.Billing do
       next_bill_amount: params["unit_price"] || params["new_unit_price"],
       currency_code: params["currency"]
     }
+  end
+
+  defp add_last_bill_date(subscription_params, paddle_params) do
+    with datetime_str when is_binary(datetime_str) <- paddle_params["event_time"],
+         {:ok, datetime} <- NaiveDateTime.from_iso8601(datetime_str),
+         date <- NaiveDateTime.to_date(datetime) do
+      Map.put(subscription_params, :last_bill_date, date)
+    else
+      _ -> subscription_params
+    end
   end
 
   defp present?(""), do: false
