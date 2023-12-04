@@ -279,7 +279,7 @@ defmodule PlausibleWeb.AuthController do
     conn
     |> set_user_session(user)
     |> put_session(:login_dest, nil)
-    |> redirect(to: login_dest)
+    |> redirect(external: login_dest)
   end
 
   defp set_user_session(conn, user) do
