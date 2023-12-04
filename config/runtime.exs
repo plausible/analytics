@@ -21,7 +21,7 @@ log_format =
 
 log_level =
   config_dir
-  |> get_var_from_path_or_env("LOG_LEVEL", "warn")
+  |> get_var_from_path_or_env("LOG_LEVEL", "warning")
   |> String.to_existing_atom()
 
 config :logger,
