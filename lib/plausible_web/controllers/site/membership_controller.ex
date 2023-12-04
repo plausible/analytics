@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Site.MembershipController do
           :success,
           "#{email} has been invited to #{site_domain} as #{PlausibleWeb.SiteView.with_indefinite_article("#{invitation.role}")}"
         )
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
 
       {:error, :already_a_member} ->
         render(conn, "invite_member_form.html",
@@ -86,7 +86,7 @@ defmodule PlausibleWeb.Site.MembershipController do
 
         conn
         |> put_flash(:error, error_msg)
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
@@ -111,14 +111,14 @@ defmodule PlausibleWeb.Site.MembershipController do
       {:ok, _invitation} ->
         conn
         |> put_flash(:success, "Site transfer request has been sent to #{email}")
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
 
       {:error, :transfer_to_self} ->
         conn
         |> put_flash(:ttl, :timer.seconds(5))
         |> put_flash(:error_title, "Transfer error")
         |> put_flash(:error, "Can't transfer ownership to existing owner")
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
 
       {:error, :upgrade_required} ->
         conn
@@ -128,7 +128,7 @@ defmodule PlausibleWeb.Site.MembershipController do
           :error,
           "The site you're trying to transfer exceeds the invitee's subscription plan. To proceed, please contact us at hello@plausible.io for further assistance."
         )
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
 
       {:error, changeset} ->
         errors = Plausible.ChangesetHelpers.traverse_errors(changeset)
@@ -143,7 +143,7 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> put_flash(:ttl, :timer.seconds(5))
         |> put_flash(:error_title, "Transfer error")
         |> put_flash(:error, message)
-        |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
@@ -191,11 +191,11 @@ defmodule PlausibleWeb.Site.MembershipController do
         :success,
         "#{membership.user.name} is now #{PlausibleWeb.SiteView.with_indefinite_article(new_role_str)}"
       )
-      |> redirect(to: redirect_target)
+      |> redirect(external: redirect_target)
     else
       conn
       |> put_flash(:error, "You are not allowed to grant the #{new_role} role")
-      |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+      |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 
@@ -241,14 +241,14 @@ defmodule PlausibleWeb.Site.MembershipController do
         :success,
         "#{membership.user.name} has been removed from #{site.domain}"
       )
-      |> redirect(to: redirect_target)
+      |> redirect(external: redirect_target)
     else
       conn
       |> put_flash(
         :error,
         "Failed to find membership to remove"
       )
-      |> redirect(to: Routes.site_path(conn, :settings_people, site.domain))
+      |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
     end
   end
 end
