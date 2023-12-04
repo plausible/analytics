@@ -358,7 +358,7 @@ defmodule PlausibleWeb.AuthController do
 
       {:error, :already_setup} ->
         conn
-        |> put_flash(:error, "Two-factor authentication is already setup for this account.")
+        |> put_flash(:error, "Two-Factor Authentication is already setup for this account.")
         |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
     end
   end
@@ -375,7 +375,7 @@ defmodule PlausibleWeb.AuthController do
     case Auth.TOTP.enable(conn.assigns.current_user, code) do
       {:ok, _, %{recovery_codes: codes}} ->
         conn
-        |> put_flash(:success, "Two-factor authentication is fully enabled now")
+        |> put_flash(:success, "Two-Factor Authentication is fully enabled")
         |> render("generate_2fa_recovery_codes.html", recovery_codes: codes, from_setup: true)
 
       {:error, :invalid_code} ->
@@ -385,7 +385,7 @@ defmodule PlausibleWeb.AuthController do
 
       {:error, :not_initiated} ->
         conn
-        |> put_flash(:error, "Please enable two-factor authentication for this account first.")
+        |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
         |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
     end
   end
@@ -395,7 +395,7 @@ defmodule PlausibleWeb.AuthController do
       {:ok, _} ->
         conn
         |> TwoFactor.clear_remember_2fa()
-        |> put_flash(:success, "Two-factor authentication is disabled")
+        |> put_flash(:success, "Two-Factor Authentication is disabled")
         |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
 
       {:error, :invalid_password} ->
@@ -409,7 +409,7 @@ defmodule PlausibleWeb.AuthController do
     case Auth.TOTP.generate_recovery_codes(conn.assigns.current_user, password) do
       {:ok, codes} ->
         conn
-        |> put_flash(:success, "New recovery codes generated")
+        |> put_flash(:success, "New Recovery Codes generated")
         |> render("generate_2fa_recovery_codes.html", recovery_codes: codes, from_setup: false)
 
       {:error, :invalid_password} ->
@@ -419,7 +419,7 @@ defmodule PlausibleWeb.AuthController do
 
       {:error, :not_enabled} ->
         conn
-        |> put_flash(:error, "Please enable two-factor authentication for this account first.")
+        |> put_flash(:error, "Please enable Two-factor Authentication for this account first.")
         |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
     end
   end
