@@ -248,22 +248,6 @@ defmodule PlausibleWeb.Components.Generic do
     end
   end
 
-  attr :text, :string, required: true
-  attr :scale, :integer, default: 4
-
-  def qr_code(assigns) do
-    qr_code =
-      assigns.text
-      |> EQRCode.encode()
-      |> EQRCode.svg(%{width: 160})
-
-    assigns = assign(assigns, :code, qr_code)
-
-    ~H"""
-    <%= Phoenix.HTML.raw(@code) %>
-    """
-  end
-
   attr :class, :any, default: ""
 
   def spinner(assigns) do
