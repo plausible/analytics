@@ -119,12 +119,13 @@ defmodule PlausibleWeb.EmailTest do
   describe "over_limit_email/3" do
     test "renders usage, suggested plan, and links to upgrade and account settings" do
       user = build(:user)
-      date_range = Date.range(~D[2023-04-01], ~D[2023-04-30])
+      penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
+      last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
       suggested_plan = %Plausible.Billing.Plan{volume: "100k"}
 
       usage = %{
-        penultimate_cycle: %{total: 12_300},
-        last_cycle: %{date_range: date_range, total: 32_100}
+        penultimate_cycle: %{date_range: penultimate_cycle, total: 12_300},
+        last_cycle: %{date_range: last_cycle, total: 32_100}
       }
 
       %{html_body: html_body, subject: subject} =
@@ -132,22 +133,26 @@ defmodule PlausibleWeb.EmailTest do
 
       assert subject == "[Action required] You have outgrown your Plausible subscription tier"
 
-      assert html_body =~ PlausibleWeb.TextHelpers.format_date_range(date_range)
+      assert html_body =~ PlausibleWeb.TextHelpers.format_date_range(last_cycle)
       assert html_body =~ "We recommend you upgrade to the 100k/mo plan"
       assert html_body =~ "your account recorded 32,100 billable pageviews"
-      assert html_body =~ "cycle before that, your account used 12,300 billable pageviews"
+
+      assert html_body =~
+               "cycle before that (#{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}), your account used 12,300 billable pageviews"
+
       assert html_body =~ "/billing/choose-plan\">Click here to upgrade your subscription</a>"
       assert html_body =~ "/settings\">account settings</a>"
     end
 
     test "asks enterprise level usage to contact us" do
       user = build(:user)
-      date_range = Date.range(~D[2023-04-01], ~D[2023-04-30])
+      penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
+      last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
       suggested_plan = :enterprise
 
       usage = %{
-        penultimate_cycle: %{total: 12_300},
-        last_cycle: %{date_range: date_range, total: 32_100}
+        penultimate_cycle: %{date_range: penultimate_cycle, total: 12_300},
+        last_cycle: %{date_range: last_cycle, total: 32_100}
       }
 
       %{html_body: html_body} = PlausibleWeb.Email.over_limit_email(user, usage, suggested_plan)
@@ -160,12 +165,13 @@ defmodule PlausibleWeb.EmailTest do
   describe "dashboard_locked/3" do
     test "renders usage, suggested plan, and links to upgrade and account settings" do
       user = build(:user)
-      date_range = Date.range(~D[2023-04-01], ~D[2023-04-30])
+      penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
+      last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
       suggested_plan = %Plausible.Billing.Plan{volume: "100k"}
 
       usage = %{
-        penultimate_cycle: %{total: 12_300},
-        last_cycle: %{date_range: date_range, total: 32_100}
+        penultimate_cycle: %{date_range: penultimate_cycle, total: 12_300},
+        last_cycle: %{date_range: last_cycle, total: 32_100}
       }
 
       %{html_body: html_body, subject: subject} =
@@ -173,22 +179,26 @@ defmodule PlausibleWeb.EmailTest do
 
       assert subject == "[Action required] Your Plausible dashboard is now locked"
 
-      assert html_body =~ PlausibleWeb.TextHelpers.format_date_range(date_range)
+      assert html_body =~ PlausibleWeb.TextHelpers.format_date_range(last_cycle)
       assert html_body =~ "We recommend you upgrade to the 100k/mo plan"
       assert html_body =~ "your account recorded 32,100 billable pageviews"
-      assert html_body =~ "cycle before that, the usage was 12,300 billable pageviews"
+
+      assert html_body =~
+               "cycle before that (#{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}), the usage was 12,300 billable pageviews"
+
       assert html_body =~ "/billing/choose-plan\">Click here to upgrade your subscription</a>"
       assert html_body =~ "/settings\">account settings</a>"
     end
 
     test "asks enterprise level usage to contact us" do
       user = build(:user)
-      date_range = Date.range(~D[2023-04-01], ~D[2023-04-30])
+      penultimate_cycle = Date.range(~D[2023-03-01], ~D[2023-03-31])
+      last_cycle = Date.range(~D[2023-04-01], ~D[2023-04-30])
       suggested_plan = :enterprise
 
       usage = %{
-        penultimate_cycle: %{total: 12_300},
-        last_cycle: %{date_range: date_range, total: 32_100}
+        penultimate_cycle: %{date_range: penultimate_cycle, total: 12_300},
+        last_cycle: %{date_range: last_cycle, total: 32_100}
       }
 
       %{html_body: html_body} = PlausibleWeb.Email.dashboard_locked(user, usage, suggested_plan)
