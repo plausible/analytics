@@ -165,16 +165,8 @@ defmodule PlausibleWeb.Components.Generic do
       x-data="dropdown"
       x-on:keydown.escape.prevent.stop="close($refs.button)"
       x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
-      x-id="['dropdown-button']"
     >
-      <button
-        x-ref="button"
-        x-on:click="toggle()"
-        x-bind:aria-expanded="open"
-        x-bind:aria-controls="$id('dropdown-button')"
-        type="button"
-        class={List.first(@button).class}
-      >
+      <button x-ref="button" x-on:click="toggle()" type="button" class={List.first(@button).class}>
         <%= render_slot(List.first(@button)) %>
       </button>
       <div
@@ -187,7 +179,6 @@ defmodule PlausibleWeb.Components.Generic do
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
         x-on:click.outside="close($refs.button)"
-        x-bind:id="$id('dropdown-panel')"
         style="display: none;"
         class={List.first(@panel).class}
       >
