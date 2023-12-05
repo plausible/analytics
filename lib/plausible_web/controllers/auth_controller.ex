@@ -55,7 +55,7 @@ defmodule PlausibleWeb.AuthController do
   )
 
   defp clear_2fa_user(conn, _opts) do
-    TwoFactor.clear_2fa_user(conn)
+    TwoFactor.Session.clear_2fa_user(conn)
   end
 
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
@@ -224,9 +224,9 @@ defmodule PlausibleWeb.AuthController do
 
   def login(conn, %{"email" => email, "password" => password}) do
     with {:ok, user} <- login_user(conn, email, password) do
-      if Auth.TOTP.enabled?(user) and not TwoFactor.remember_2fa?(conn, user) do
+      if Auth.TOTP.enabled?(user) and not TwoFactor.Session.remember_2fa?(conn, user) do
         conn
-        |> TwoFactor.set_2fa_user(user)
+        |> TwoFactor.Session.set_2fa_user(user)
         |> redirect(to: Routes.auth_path(conn, :verify_2fa))
       else
         set_user_session_and_redirect(conn, user)
@@ -284,7 +284,7 @@ defmodule PlausibleWeb.AuthController do
 
   defp set_user_session(conn, user) do
     conn
-    |> TwoFactor.clear_2fa_user()
+    |> TwoFactor.Session.clear_2fa_user()
     |> put_session(:current_user_id, user.id)
     |> put_resp_cookie("logged_in", "true",
       http_only: false,
@@ -394,7 +394,7 @@ defmodule PlausibleWeb.AuthController do
     case Auth.TOTP.disable(conn.assigns.current_user, password) do
       {:ok, _} ->
         conn
-        |> TwoFactor.clear_remember_2fa()
+        |> TwoFactor.Session.clear_remember_2fa()
         |> put_flash(:success, "Two-Factor Authentication is disabled")
         |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
 
@@ -425,11 +425,11 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def verify_2fa_form(conn, _) do
-    case TwoFactor.get_2fa_user(conn) do
+    case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
           render(conn, "verify_2fa.html",
-            remember_2fa_days: TwoFactor.remember_2fa_days(),
+            remember_2fa_days: TwoFactor.Session.remember_2fa_days(),
             layout: {PlausibleWeb.LayoutView, "focus.html"}
           )
         else
@@ -446,7 +446,7 @@ defmodule PlausibleWeb.AuthController do
       case Auth.TOTP.validate_code(user, code) do
         {:ok, user} ->
           conn
-          |> TwoFactor.maybe_set_remember_2fa(user, params["remember_2fa"])
+          |> TwoFactor.Session.maybe_set_remember_2fa(user, params["remember_2fa"])
           |> set_user_session_and_redirect(user)
 
         {:error, :invalid_code} ->
@@ -457,7 +457,7 @@ defmodule PlausibleWeb.AuthController do
           conn
           |> put_flash(:error, "The provided code is invalid. Please try again")
           |> render("verify_2fa.html",
-            remember_2fa_days: TwoFactor.remember_2fa_days(),
+            remember_2fa_days: TwoFactor.Session.remember_2fa_days(),
             layout: {PlausibleWeb.LayoutView, "focus.html"}
           )
 
@@ -468,7 +468,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def verify_2fa_recovery_code_form(conn, _params) do
-    case TwoFactor.get_2fa_user(conn) do
+    case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         if Auth.TOTP.enabled?(user) do
           render(conn, "verify_2fa_recovery_code.html",
@@ -505,7 +505,7 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp get_2fa_user_limited(conn) do
-    case TwoFactor.get_2fa_user(conn) do
+    case TwoFactor.Session.get_2fa_user(conn) do
       {:ok, user} ->
         with :ok <- check_ip_rate_limit(conn),
              :ok <- check_user_rate_limit(user) do
@@ -515,7 +515,7 @@ defmodule PlausibleWeb.AuthController do
             maybe_log_failed_login_attempts("too many logging attempts for #{user.email}")
 
             conn
-            |> TwoFactor.clear_2fa_user()
+            |> TwoFactor.Session.clear_2fa_user()
             |> render_error(
               429,
               "Too many login attempts. Wait a minute before trying again."

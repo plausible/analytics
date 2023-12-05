@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.TwoFactor do
+defmodule PlausibleWeb.TwoFactor.Session do
   @moduledoc """
   Functions for managing session data related to Two-Factor
   Authentication.
