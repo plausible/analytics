@@ -134,8 +134,8 @@ defmodule PlausibleWeb.EmailTest do
 
       assert html_body =~ PlausibleWeb.TextHelpers.format_date_range(date_range)
       assert html_body =~ "We recommend you upgrade to the 100k/mo plan"
-      assert html_body =~ "your account recorded 32.1k billable pageviews"
-      assert html_body =~ "cycle before that, your account used 12.3k billable pageviews"
+      assert html_body =~ "your account recorded 32,100 billable pageviews"
+      assert html_body =~ "cycle before that, your account used 12,300 billable pageviews"
       assert html_body =~ "/billing/choose-plan\">Click here to upgrade your subscription</a>"
       assert html_body =~ "/settings\">account settings</a>"
     end
@@ -175,8 +175,8 @@ defmodule PlausibleWeb.EmailTest do
 
       assert html_body =~ PlausibleWeb.TextHelpers.format_date_range(date_range)
       assert html_body =~ "We recommend you upgrade to the 100k/mo plan"
-      assert html_body =~ "your account recorded 32.1k billable pageviews"
-      assert html_body =~ "cycle before that, the usage was 12.3k billable pageviews"
+      assert html_body =~ "your account recorded 32,100 billable pageviews"
+      assert html_body =~ "cycle before that, the usage was 12,300 billable pageviews"
       assert html_body =~ "/billing/choose-plan\">Click here to upgrade your subscription</a>"
       assert html_body =~ "/settings\">account settings</a>"
     end
@@ -214,10 +214,15 @@ defmodule PlausibleWeb.EmailTest do
 
       assert subject == "#{user.email} has outgrown their enterprise plan"
 
-      assert html_body =~ "Last billing cycle: #{PlausibleWeb.TextHelpers.format_date_range(last_cycle)}"
-      assert html_body =~ "Last cycle pageview usage: 100M billable pageviews"
-      assert html_body =~ "Penultimate billing cycle: #{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}"
-      assert html_body =~ "Penultimate cycle pageview usage: 100M billable pageviews"
+      assert html_body =~
+               "Last billing cycle: #{PlausibleWeb.TextHelpers.format_date_range(last_cycle)}"
+
+      assert html_body =~ "Last cycle pageview usage: 100,222,999 billable pageviews"
+
+      assert html_body =~
+               "Penultimate billing cycle: #{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}"
+
+      assert html_body =~ "Penultimate cycle pageview usage: 100,141,888 billable pageviews"
       assert html_body =~ "Site usage: 80 / 50 allowed sites"
     end
   end
