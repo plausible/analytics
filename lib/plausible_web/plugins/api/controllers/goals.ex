@@ -135,13 +135,27 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
 
   @spec delete(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def delete(%{private: %{open_api_spex: %{params: %{id: id}}}} = conn, _params) do
-    case Plausible.Goals.delete(id, conn.assigns.authorized_site) do
-      :ok ->
-        send_resp(conn, :no_content, "")
+    :ok = API.Goals.delete(conn.assigns.authorized_site, id)
+    send_resp(conn, :no_content, "")
+  end
 
-      {:error, :not_found} ->
-        send_resp(conn, :no_content, "")
-    end
+  operation(:delete_bulk,
+    id: "Goal.DeleteBulk",
+    summary: "Delete Goals in bulk",
+    request_body: {"Goal params", "application/json", Schemas.Goal.DeleteBulkRequest},
+    responses: %{
+      no_content: {"NoContent", nil, nil},
+      unauthorized: {"Unauthorized", "application/json", Schemas.Unauthorized}
+    }
+  )
+
+  @spec delete_bulk(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def delete_bulk(
+        %{private: %{open_api_spex: %{body_params: %{goal_ids: goal_ids}}}} = conn,
+        _params
+      ) do
+    :ok = API.Goals.delete(conn.assigns.authorized_site, goal_ids)
+    send_resp(conn, :no_content, "")
   end
 
   defp payment_required(conn) do
