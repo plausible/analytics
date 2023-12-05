@@ -128,9 +128,11 @@ defmodule Plausible.Billing.Quota do
     active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
 
     if active_subscription? && user.subscription.last_bill_date do
+      owned_site_ids = Plausible.Sites.owned_site_ids(user)
+
       [:current_cycle, :last_cycle, :penultimate_cycle]
       |> Task.async_stream(fn cycle ->
-        %{cycle => usage_cycle(user, cycle)}
+        %{cycle => usage_cycle(user, cycle, owned_site_ids)}
       end)
       |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
       |> Enum.reduce(%{}, &Map.merge/2)
@@ -139,17 +141,19 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @spec usage_cycle(User.t(), period(), Date.t()) :: usage_cycle()
+  @spec usage_cycle(User.t(), period(), list() | nil, Date.t()) :: usage_cycle()
 
-  def usage_cycle(user, cycle, today \\ Timex.today())
+  def usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Timex.today())
 
-  def usage_cycle(user, :last_30_days, today) do
+  def usage_cycle(user, cycle, nil, today) do
+    usage_cycle(user, cycle, Plausible.Sites.owned_site_ids(user), today)
+  end
+
+  def usage_cycle(_user, :last_30_days, owned_site_ids, today) do
     date_range = Date.range(Timex.shift(today, days: -30), today)
 
     {pageviews, custom_events} =
-      user
-      |> Plausible.Sites.owned_site_ids()
-      |> Plausible.Stats.Clickhouse.usage_breakdown(date_range)
+      Plausible.Stats.Clickhouse.usage_breakdown(owned_site_ids, date_range)
 
     %{
       date_range: date_range,
@@ -159,7 +163,7 @@ defmodule Plausible.Billing.Quota do
     }
   end
 
-  def usage_cycle(user, cycle, today) do
+  def usage_cycle(user, cycle, owned_site_ids, today) do
     user = Plausible.Users.with_subscription(user)
     last_bill_date = user.subscription.last_bill_date
 
@@ -188,9 +192,7 @@ defmodule Plausible.Billing.Quota do
       end
 
     {pageviews, custom_events} =
-      user
-      |> Plausible.Sites.owned_site_ids()
-      |> Plausible.Stats.Clickhouse.usage_breakdown(date_range)
+      Plausible.Stats.Clickhouse.usage_breakdown(owned_site_ids, date_range)
 
     %{
       date_range: date_range,

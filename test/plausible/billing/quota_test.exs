@@ -654,13 +654,13 @@ defmodule Plausible.Billing.QuotaTest do
       insert(:subscription, user_id: user.id, last_bill_date: last_bill_date)
 
       assert %{date_range: penultimate_cycle, pageviews: 2, custom_events: 3, total: 5} =
-               Quota.usage_cycle(user, :penultimate_cycle, today)
+               Quota.usage_cycle(user, :penultimate_cycle, nil, today)
 
       assert %{date_range: last_cycle, pageviews: 3, custom_events: 2, total: 5} =
-               Quota.usage_cycle(user, :last_cycle, today)
+               Quota.usage_cycle(user, :last_cycle, nil, today)
 
       assert %{date_range: current_cycle, pageviews: 0, custom_events: 3, total: 3} =
-               Quota.usage_cycle(user, :current_cycle, today)
+               Quota.usage_cycle(user, :current_cycle, nil, today)
 
       assert penultimate_cycle == Date.range(~D[2023-04-03], ~D[2023-05-02])
       assert last_cycle == Date.range(~D[2023-05-03], ~D[2023-06-02])
@@ -671,7 +671,7 @@ defmodule Plausible.Billing.QuotaTest do
       today = ~D[2023-06-01]
 
       assert %{date_range: last_30_days, pageviews: 4, custom_events: 1, total: 5} =
-               Quota.usage_cycle(user, :last_30_days, today)
+               Quota.usage_cycle(user, :last_30_days, nil, today)
 
       assert last_30_days == Date.range(~D[2023-05-02], ~D[2023-06-01])
     end
@@ -694,7 +694,7 @@ defmodule Plausible.Billing.QuotaTest do
       insert(:subscription, user_id: user.id, last_bill_date: last_bill_date)
 
       assert %{date_range: last_cycle, pageviews: 3, custom_events: 2, total: 5} =
-               Quota.usage_cycle(user, :last_cycle, today)
+               Quota.usage_cycle(user, :last_cycle, nil, today)
 
       assert last_cycle == Date.range(~D[2023-05-03], ~D[2023-06-02])
     end
@@ -706,13 +706,13 @@ defmodule Plausible.Billing.QuotaTest do
       user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
 
       assert %{date_range: penultimate_cycle} =
-               Quota.usage_cycle(user, :penultimate_cycle, today)
+               Quota.usage_cycle(user, :penultimate_cycle, nil, today)
 
       assert %{date_range: last_cycle} =
-               Quota.usage_cycle(user, :last_cycle, today)
+               Quota.usage_cycle(user, :last_cycle, nil, today)
 
       assert %{date_range: current_cycle} =
-               Quota.usage_cycle(user, :current_cycle, today)
+               Quota.usage_cycle(user, :current_cycle, nil, today)
 
       assert penultimate_cycle == Date.range(~D[2020-12-01], ~D[2020-12-31])
       assert last_cycle == Date.range(~D[2021-01-01], ~D[2021-01-31])
@@ -726,13 +726,13 @@ defmodule Plausible.Billing.QuotaTest do
       user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
 
       assert %{date_range: penultimate_cycle, total: 0} =
-               Quota.usage_cycle(user, :penultimate_cycle, today)
+               Quota.usage_cycle(user, :penultimate_cycle, nil, today)
 
       assert %{date_range: last_cycle, total: 0} =
-               Quota.usage_cycle(user, :last_cycle, today)
+               Quota.usage_cycle(user, :last_cycle, nil, today)
 
       assert %{date_range: current_cycle, total: 0} =
-               Quota.usage_cycle(user, :current_cycle, today)
+               Quota.usage_cycle(user, :current_cycle, nil, today)
 
       assert penultimate_cycle == Date.range(~D[2020-11-01], ~D[2020-11-30])
       assert last_cycle == Date.range(~D[2020-12-01], ~D[2020-12-31])
