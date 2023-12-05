@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       invitation = Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
 
       assert invitation.role == :admin
-      assert redirected_to(conn) == "/#{site.domain}/settings/people"
+      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/settings/people"
     end
 
     test "fails to create invitation when is over limit", %{conn: conn, user: user} do
@@ -214,7 +214,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       invitation = Repo.get_by(Plausible.Auth.Invitation, email: "john.doe@example.com")
 
       assert invitation.role == :owner
-      assert redirected_to(conn) == "/#{site.domain}/settings/people"
+      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/settings/people"
     end
 
     test "sends ownership transfer email for new user", %{conn: conn, user: user} do
@@ -316,7 +316,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       membership = Repo.reload!(membership)
 
       assert membership.role == :viewer
-      assert redirected_to(conn) == "/#{site.domain}"
+      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}"
     end
 
     test "owner cannot make anyone else owner", %{
@@ -384,7 +384,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       viewer_membership = Repo.reload!(viewer_membership)
 
       assert viewer_membership.role == :admin
-      assert redirected_to(conn) == "/#{site.domain}/settings/people"
+      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/settings/people"
     end
 
     test "admin can't make themselves an owner", %{conn: conn, user: user} do

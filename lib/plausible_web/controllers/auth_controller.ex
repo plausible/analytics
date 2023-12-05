@@ -454,7 +454,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
         )
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
 
       message when message in ["server_error", "temporarily_unavailable"] ->
         conn
@@ -462,7 +462,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We are unable to authenticate your Google Analytics account because Google's authentication service is temporarily unavailable. Please try again in a few moments."
         )
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
 
       _any ->
         Sentry.capture_message("Google OAuth callback failed. Reason: #{inspect(params)}")
@@ -472,7 +472,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We were unable to authenticate your Google Analytics account. If the problem persists, please contact support for assistance."
         )
-        |> redirect(to: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
     end
   end
 
@@ -485,7 +485,7 @@ defmodule PlausibleWeb.AuthController do
     case redirect_to do
       "import" ->
         redirect(conn,
-          to:
+          external:
             Routes.site_path(conn, :import_from_google_view_id_form, site.domain,
               access_token: res["access_token"],
               refresh_token: res["refresh_token"],
@@ -510,7 +510,7 @@ defmodule PlausibleWeb.AuthController do
 
         site = Repo.get(Plausible.Site, site_id)
 
-        redirect(conn, to: "/#{URI.encode_www_form(site.domain)}/settings/integrations")
+        redirect(conn, external: "/#{URI.encode_www_form(site.domain)}/settings/integrations")
     end
   end
 end

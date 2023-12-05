@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       resp = html_response(conn, 200)
       assert resp =~ "Define actions that you want your users to take"
       assert resp =~ "compose Goals into Funnels"
-      assert resp =~ "/#{site.domain}/settings/funnels"
+      assert resp =~ "/#{URI.encode_www_form(site.domain)}/settings/funnels"
       assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/goal-conversions"]|)
 
       assert resp =~ to_string(g1)
