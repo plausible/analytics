@@ -4,6 +4,49 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
   """
   use PlausibleWeb, :plugins_api_controller
 
+  operation(:create,
+    id: "Goal.GetOrCreate",
+    summary: "Get or create Goal",
+    request_body: {"Goal params", "application/json", Schemas.Goal.CreateRequest},
+    responses: %{
+      created: {"Goal", "application/json", Schemas.Goal.ListResponse},
+      unauthorized: {"Unauthorized", "application/json", Schemas.Unauthorized},
+      payment_required: {"Payment required", "application/json", Schemas.PaymentRequired},
+      unprocessable_entity:
+        {"Unprocessable entity", "application/json", Schemas.UnprocessableEntity}
+    }
+  )
+
+  def create(
+        %{private: %{open_api_spex: %{body_params: body_params}}} = conn,
+        _params
+      ) do
+    site = conn.assigns.authorized_site
+
+    goals =
+      case body_params do
+        %{goals: goals} -> goals
+        %{goal: _} = single_goal -> List.wrap(single_goal)
+      end
+
+    case API.Goals.create(site, goals) do
+      {:ok, goals} ->
+        location_headers = Enum.map(goals, &{"location", goals_url(base_uri(), :get, &1.id)})
+
+        conn
+        |> prepend_resp_headers(location_headers)
+        |> put_view(Views.Goal)
+        |> put_status(:created)
+        |> render("index.json", goals: goals, authorized_site: site)
+
+      {:error, :upgrade_required} ->
+        payment_required(conn)
+
+      {:error, changeset} ->
+        Errors.error(conn, 422, changeset)
+    end
+  end
+
   operation(:index,
     summary: "Retrieve Goals",
     parameters: [
@@ -24,70 +67,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
       unauthorized: {"Unauthorized", "application/json", Schemas.Unauthorized}
     }
   )
-
-  operation(:create,
-    id: "Goal.GetOrCreate",
-    summary: "Get or create Goal",
-    request_body: {"Goal params", "application/json", Schemas.Goal.CreateRequest},
-    responses: %{
-      created:
-        {"Goal", "application/json",
-         %OpenApiSpex.Schema{
-           oneOf: [Schemas.Goal.ListResponse, Schemas.Goal]
-         }},
-      unauthorized: {"Unauthorized", "application/json", Schemas.Unauthorized},
-      payment_required: {"Payment required", "application/json", Schemas.PaymentRequired},
-      unprocessable_entity:
-        {"Unprocessable entity", "application/json", Schemas.UnprocessableEntity}
-    }
-  )
-
-  @spec create(Plug.Conn.t(), map()) :: Plug.Conn.t()
-  def create(
-        %{private: %{open_api_spex: %{body_params: %{goal: _} = goal}}} = conn,
-        _params
-      ) do
-    site = conn.assigns.authorized_site
-
-    case API.Goals.create(site, goal) do
-      {:ok, [goal]} ->
-        conn
-        |> put_view(Views.Goal)
-        |> put_status(:created)
-        |> put_resp_header("location", goals_url(base_uri(), :get, goal.id))
-        |> render("goal.json", goal: goal, authorized_site: site)
-
-      {:error, :upgrade_required} ->
-        payment_required(conn)
-
-      {:error, changeset} ->
-        Errors.error(conn, 422, changeset)
-    end
-  end
-
-  def create(
-        %{private: %{open_api_spex: %{body_params: %{goals: goals}}}} = conn,
-        _params
-      ) do
-    site = conn.assigns.authorized_site
-
-    case API.Goals.create(site, goals) do
-      {:ok, goals} ->
-        location_headers = Enum.map(goals, &{"location", goals_url(base_uri(), :get, &1.id)})
-
-        conn
-        |> prepend_resp_headers(location_headers)
-        |> put_view(Views.Goal)
-        |> put_status(:created)
-        |> render("index.json", goals: goals, authorized_site: site)
-
-      {:error, :upgrade_required} ->
-        payment_required(conn)
-
-      {:error, changeset} ->
-        Errors.error(conn, 422, changeset)
-    end
-  end
 
   @spec index(Plug.Conn.t(), %{}) :: Plug.Conn.t()
   def index(conn, _params) do

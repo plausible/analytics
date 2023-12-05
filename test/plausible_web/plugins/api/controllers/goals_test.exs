@@ -138,13 +138,16 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       resp =
         conn
         |> json_response(201)
-        |> assert_schema("Goal", spec())
-        |> assert_schema("Goal.CustomEvent", spec())
+        |> assert_schema("Goal.ListResponse", spec())
+
+      resp.goals
+      |> List.first()
+      |> assert_schema("Goal.CustomEvent", spec())
 
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.goals_url(base_uri(), :get, resp.goal.id)
+               Routes.goals_url(base_uri(), :get, List.first(resp.goals).goal.id)
 
       assert [%{event_name: "Signup"}] = Plausible.Goals.for_site(site)
     end
@@ -169,13 +172,16 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       resp =
         conn
         |> json_response(201)
-        |> assert_schema("Goal", spec())
-        |> assert_schema("Goal.Revenue", spec())
+        |> assert_schema("Goal.ListResponse", spec())
+
+      resp.goals
+      |> List.first()
+      |> assert_schema("Goal.Revenue", spec())
 
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.goals_url(base_uri(), :get, resp.goal.id)
+               Routes.goals_url(base_uri(), :get, List.first(resp.goals).goal.id)
 
       assert [%{event_name: "Purchase", currency: :EUR}] = Plausible.Goals.for_site(site)
     end
@@ -249,13 +255,16 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       resp =
         conn
         |> json_response(201)
-        |> assert_schema("Goal", spec())
-        |> assert_schema("Goal.Pageview", spec())
+        |> assert_schema("Goal.ListResponse", spec())
+
+      resp.goals
+      |> List.first()
+      |> assert_schema("Goal.Pageview", spec())
 
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.goals_url(base_uri(), :get, resp.goal.id)
+               Routes.goals_url(base_uri(), :get, List.first(resp.goals).goal.id)
 
       assert [%{page_path: "/checkout"}] = Plausible.Goals.for_site(site)
     end
@@ -272,12 +281,16 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         initial_conn
         |> put(url, %{goal_type: "Goal.Pageview", goal: %{path: "/checkout"}})
         |> json_response(201)
-        |> assert_schema("Goal.Pageview", spec())
+        |> assert_schema("Goal.ListResponse", spec())
+
+      resp1.goals
+      |> List.first()
+      |> assert_schema("Goal.Pageview", spec())
 
       assert initial_conn
              |> put(url, %{goal_type: "Goal.Pageview", goal: %{path: "/checkout"}})
              |> json_response(201)
-             |> assert_schema("Goal.Pageview", spec()) == resp1
+             |> assert_schema("Goal.ListResponse", spec()) == resp1
     end
   end
 
