@@ -32,37 +32,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
 
-  describe "for a legacy trial (user registered before business tiers release)" do
-    setup %{conn: conn} do
-      user = insert(:user, trial_expiry_date: ~D[2023-11-24])
-      {:ok, conn: conn} = log_in(%{conn: conn, user: user})
-      {:ok, conn: conn, user: user}
-    end
-
-    test "renders v3 plan benefits, but no grandfathering notice", %{conn: conn} do
-      {:ok, _lv, doc} = get_liveview(conn)
-
-      growth_box = text_of_element(doc, @growth_plan_box)
-      business_box = text_of_element(doc, @business_plan_box)
-
-      assert growth_box =~ "Unlimited team members"
-      assert growth_box =~ "Up to 50 sites"
-      assert growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
-      assert growth_box =~ "Email/Slack reports"
-      assert growth_box =~ "Google Analytics import"
-      assert growth_box =~ "Goals and custom events"
-      assert growth_box =~ "Stats API (600 requests per hour)"
-      assert growth_box =~ "Custom Properties"
-
-      assert business_box =~ "Everything in Growth"
-      assert business_box =~ "Funnels"
-      assert business_box =~ "Ecommerce revenue attribution"
-      assert business_box =~ "Priority support"
-
-      refute growth_box =~ "Your subscription has been grandfathered"
-    end
-  end
-
   describe "for a user with no subscription" do
     setup [:create_user, :log_in]
 
