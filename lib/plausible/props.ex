@@ -39,18 +39,18 @@ defmodule Plausible.Props do
     changeset(site, new_props)
   end
 
-  @spec disallow(Plausible.Site.t(), prop()) ::
+  @spec disallow(Plausible.Site.t(), [prop()] | prop()) ::
           {:ok, Plausible.Site.t()} | {:error, Ecto.Changeset.t()}
   @doc """
-  Removes a previously allowed prop key from the allow list. This means this
+  Removes previously allowed prop key(s) from the allow list. This means this
   prop key won't be included in ClickHouse queries. This doesn't drop any
   ClickHouse data, nor affects ingestion.
   """
-  def disallow(site, prop) do
+  def disallow(site, prop_or_props) do
     allowed_event_props = site.allowed_event_props || []
 
     site
-    |> changeset(allowed_event_props -- [prop])
+    |> changeset(allowed_event_props -- List.wrap(prop_or_props))
     |> Plausible.Repo.update()
   end
 
