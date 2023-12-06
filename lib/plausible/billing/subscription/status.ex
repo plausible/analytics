@@ -37,6 +37,16 @@ defmodule Plausible.Billing.Subscription.Status do
 
   for status <- @statuses do
     defmacro unquote(status)(), do: unquote(status)
+
+    def unquote(:"#{status}?")(nil), do: false
+    def unquote(:"#{status}?")(subscription), do: subscription.status == unquote(status)
+  end
+
+  def in?(subscription, expected) do
+    if expected -- Plausible.Billing.Subscription.Status.valid_statuses() != [],
+      do: raise(ArgumentError, "Invalid subscription statuses provided: #{inspect(expected)}")
+
+    if is_nil(subscription), do: false, else: subscription.status in expected
   end
 
   def valid_statuses() do

@@ -352,17 +352,16 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     subscription = assigns.user.subscription
 
     billing_details_expired =
-      subscription &&
-        subscription.status in [
-          Subscription.Status.paused(),
-          Subscription.Status.past_due()
-        ]
+      Subscription.Status.in?(subscription, [
+        Subscription.Status.paused(),
+        Subscription.Status.past_due()
+      ])
 
-    subscription_cancelled = subscription && subscription.status == Subscription.Status.deleted()
+    subscription_deleted = Subscription.Status.deleted?(subscription)
 
     {checkout_disabled, disabled_message} =
       cond do
-        change_plan_link_text == "Currently on this plan" && not subscription_cancelled ->
+        change_plan_link_text == "Currently on this plan" && not subscription_deleted ->
           {true, nil}
 
         assigns.available && !usage_within_limits ->
