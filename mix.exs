@@ -90,7 +90,6 @@ defmodule Plausible.MixProject do
       {:locus, "~> 2.3"},
       {:gen_cycle, "~> 1.0.4"},
       {:hackney, "~> 1.8"},
-      {:hammer, "~> 6.0"},
       {:httpoison, "~> 1.4"},
       {:jason, "~> 1.3"},
       {:kaffy, "~> 0.10.2", only: [:dev, :test, :staging, :prod]},
