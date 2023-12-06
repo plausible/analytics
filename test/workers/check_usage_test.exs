@@ -127,7 +127,7 @@ defmodule Plausible.Workers.CheckUsageTest do
     assert_delivered_email_matches(%{html_body: html_body})
 
     assert html_body =~
-             "This is more than our standard plans, so please reply back to this email to get a quote for your volume."
+             "Your usage exceeds our standard plans, so please reply back to this email for a tailored quote"
   end
 
   test "skips checking users who already have a grace period", %{user: user} do
@@ -178,8 +178,7 @@ defmodule Plausible.Workers.CheckUsageTest do
       html_body: html_body
     })
 
-    # Should find 2 visiors
-    assert html_body =~ ~s(Based on that we recommend you select a 100k/mo plan.)
+    assert html_body =~ "We recommend you upgrade to the 100k/mo plan"
   end
 
   describe "enterprise customers" do
