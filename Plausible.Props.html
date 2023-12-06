@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-63EE7CF0.js"></script>
+    <script src="dist/sidebar_items-5A19F749.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -187,11 +187,11 @@ the past 6 months.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#disallow/2" translate="no">disallow(site, prop)</a>
+        <a href="#disallow/2" translate="no">disallow(site, prop_or_props)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Removes a previously allowed prop key from the allow list. This means this
+        <div class="summary-synopsis"><p>Removes previously allowed prop key(s) from the allow list. This means this
 prop key won't be included in ClickHouse queries. This doesn't drop any
 ClickHouse data, nor affects ingestion.</p></div>
 
@@ -418,7 +418,7 @@ the past 6 months.</p>
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">disallow(site, prop)</h1>
+    <h1 class="signature" translate="no">disallow(site, prop_or_props)</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L49" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -432,12 +432,12 @@ the past 6 months.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> disallow(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="#t:prop/0">prop</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> disallow(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), [<a href="#t:prop/0">prop</a>()] | <a href="#t:prop/0">prop</a>()) ::
   {:ok, <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 
-<p>Removes a previously allowed prop key from the allow list. This means this
+<p>Removes previously allowed prop key(s) from the allow list. This means this
 prop key won't be included in ClickHouse queries. This doesn't drop any
 ClickHouse data, nor affects ingestion.</p>
   </section>
