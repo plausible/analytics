@@ -1,8 +1,11 @@
 defmodule PlausibleWeb.AuthController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+
   alias Plausible.Auth
   alias Plausible.Billing.Quota
+  alias PlausibleWeb.TwoFactor
+
   require Logger
 
   plug(
@@ -11,7 +14,11 @@ defmodule PlausibleWeb.AuthController do
            :register,
            :register_from_invitation,
            :login_form,
-           :login
+           :login,
+           :verify_2fa_form,
+           :verify_2fa,
+           :verify_2fa_recovery_code_form,
+           :verify_2fa_recovery_code
          ]
   )
 
@@ -28,9 +35,28 @@ defmodule PlausibleWeb.AuthController do
            :delete_me,
            :activate_form,
            :activate,
-           :request_activation_code
+           :request_activation_code,
+           :initiate_2fa,
+           :verify_2fa_setup_form,
+           :verify_2fa_setup,
+           :disable_2fa,
+           :generate_2fa_recovery_codes
          ]
   )
+
+  plug(
+    :clear_2fa_user
+    when action not in [
+           :verify_2fa_form,
+           :verify_2fa,
+           :verify_2fa_recovery_code_form,
+           :verify_2fa_recovery_code
+         ]
+  )
+
+  defp clear_2fa_user(conn, _opts) do
+    TwoFactor.Session.clear_2fa_user(conn)
+  end
 
   def register(conn, %{"user" => %{"email" => email, "password" => password}}) do
     with {:ok, user} <- login_user(conn, email, password) do
@@ -198,12 +224,13 @@ defmodule PlausibleWeb.AuthController do
 
   def login(conn, %{"email" => email, "password" => password}) do
     with {:ok, user} <- login_user(conn, email, password) do
-      login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
-
-      conn
-      |> set_user_session(user)
-      |> put_session(:login_dest, nil)
-      |> redirect(to: login_dest)
+      if Auth.TOTP.enabled?(user) and not TwoFactor.Session.remember_2fa?(conn, user) do
+        conn
+        |> TwoFactor.Session.set_2fa_user(user)
+        |> redirect(to: Routes.auth_path(conn, :verify_2fa))
+      else
+        set_user_session_and_redirect(conn, user)
+      end
     end
   end
 
@@ -242,8 +269,22 @@ defmodule PlausibleWeb.AuthController do
     end
   end
 
+  defp redirect_to_login(conn) do
+    redirect(conn, to: Routes.auth_path(conn, :login_form))
+  end
+
+  defp set_user_session_and_redirect(conn, user) do
+    login_dest = get_session(conn, :login_dest) || Routes.site_path(conn, :index)
+
+    conn
+    |> set_user_session(user)
+    |> put_session(:login_dest, nil)
+    |> redirect(external: login_dest)
+  end
+
   defp set_user_session(conn, user) do
     conn
+    |> TwoFactor.Session.clear_2fa_user()
     |> put_session(:current_user_id, user.id)
     |> put_resp_cookie("logged_in", "true",
       http_only: false,
@@ -259,12 +300,20 @@ defmodule PlausibleWeb.AuthController do
 
   @login_interval 60_000
   @login_limit 5
+
   defp check_ip_rate_limit(conn) do
     ip_address = PlausibleWeb.RemoteIp.get(conn)
 
     case Hammer.check_rate("login:ip:#{ip_address}", @login_interval, @login_limit) do
       {:allow, _} -> :ok
       {:deny, _} -> {:rate_limit, :ip_address}
+    end
+  end
+
+  defp check_user_rate_limit(user) do
+    case Hammer.check_rate("login:user:#{user.id}", @login_interval, @login_limit) do
+      {:allow, _} -> :ok
+      {:deny, _} -> {:rate_limit, :user}
     end
   end
 
@@ -277,13 +326,6 @@ defmodule PlausibleWeb.AuthController do
       )
 
     if user, do: {:ok, user}, else: :user_not_found
-  end
-
-  defp check_user_rate_limit(user) do
-    case Hammer.check_rate("login:user:#{user.id}", @login_interval, @login_limit) do
-      {:allow, _} -> :ok
-      {:deny, _} -> {:rate_limit, :user}
-    end
   end
 
   defp check_password(user, password) do
@@ -299,8 +341,9 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def user_settings(conn, _params) do
-    settings_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
-    email_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
+    user = conn.assigns.current_user
+    settings_changeset = Auth.User.settings_changeset(user)
+    email_changeset = Auth.User.settings_changeset(user)
 
     render_settings(conn,
       settings_changeset: settings_changeset,
@@ -308,8 +351,186 @@ defmodule PlausibleWeb.AuthController do
     )
   end
 
+  def initiate_2fa_setup(conn, _params) do
+    case Auth.TOTP.initiate(conn.assigns.current_user) do
+      {:ok, user, %{totp_uri: totp_uri, secret: secret}} ->
+        render(conn, "initiate_2fa_setup.html", user: user, totp_uri: totp_uri, secret: secret)
+
+      {:error, :already_setup} ->
+        conn
+        |> put_flash(:error, "Two-Factor Authentication is already setup for this account.")
+        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+    end
+  end
+
+  def verify_2fa_setup_form(conn, _params) do
+    if Auth.TOTP.initiated?(conn.assigns.current_user) do
+      render(conn, "verify_2fa_setup.html")
+    else
+      redirect(conn, to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+    end
+  end
+
+  def verify_2fa_setup(conn, %{"code" => code}) do
+    case Auth.TOTP.enable(conn.assigns.current_user, code) do
+      {:ok, _, %{recovery_codes: codes}} ->
+        conn
+        |> put_flash(:success, "Two-Factor Authentication is fully enabled")
+        |> render("generate_2fa_recovery_codes.html", recovery_codes: codes, from_setup: true)
+
+      {:error, :invalid_code} ->
+        conn
+        |> put_flash(:error, "The provided code is invalid. Please try again")
+        |> render("verify_2fa_setup.html")
+
+      {:error, :not_initiated} ->
+        conn
+        |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
+        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+    end
+  end
+
+  def disable_2fa(conn, %{"password" => password}) do
+    case Auth.TOTP.disable(conn.assigns.current_user, password) do
+      {:ok, _} ->
+        conn
+        |> TwoFactor.Session.clear_remember_2fa()
+        |> put_flash(:success, "Two-Factor Authentication is disabled")
+        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+
+      {:error, :invalid_password} ->
+        conn
+        |> put_flash(:error, "Incorrect password provided")
+        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+    end
+  end
+
+  def generate_2fa_recovery_codes(conn, %{"password" => password}) do
+    case Auth.TOTP.generate_recovery_codes(conn.assigns.current_user, password) do
+      {:ok, codes} ->
+        conn
+        |> put_flash(:success, "New Recovery Codes generated")
+        |> render("generate_2fa_recovery_codes.html", recovery_codes: codes, from_setup: false)
+
+      {:error, :invalid_password} ->
+        conn
+        |> put_flash(:error, "Incorrect password provided")
+        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+
+      {:error, :not_enabled} ->
+        conn
+        |> put_flash(:error, "Please enable Two-Factor Authentication for this account first.")
+        |> redirect(to: Routes.auth_path(conn, :user_settings) <> "#setup-2fa")
+    end
+  end
+
+  def verify_2fa_form(conn, _) do
+    case TwoFactor.Session.get_2fa_user(conn) do
+      {:ok, user} ->
+        if Auth.TOTP.enabled?(user) do
+          render(conn, "verify_2fa.html",
+            remember_2fa_days: TwoFactor.Session.remember_2fa_days(),
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
+        else
+          redirect_to_login(conn)
+        end
+
+      {:error, :not_found} ->
+        redirect_to_login(conn)
+    end
+  end
+
+  def verify_2fa(conn, %{"code" => code} = params) do
+    with {:ok, user} <- get_2fa_user_limited(conn) do
+      case Auth.TOTP.validate_code(user, code) do
+        {:ok, user} ->
+          conn
+          |> TwoFactor.Session.maybe_set_remember_2fa(user, params["remember_2fa"])
+          |> set_user_session_and_redirect(user)
+
+        {:error, :invalid_code} ->
+          maybe_log_failed_login_attempts(
+            "wrong 2FA verification code provided for #{user.email}"
+          )
+
+          conn
+          |> put_flash(:error, "The provided code is invalid. Please try again")
+          |> render("verify_2fa.html",
+            remember_2fa_days: TwoFactor.Session.remember_2fa_days(),
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
+
+        {:error, :not_enabled} ->
+          set_user_session_and_redirect(conn, user)
+      end
+    end
+  end
+
+  def verify_2fa_recovery_code_form(conn, _params) do
+    case TwoFactor.Session.get_2fa_user(conn) do
+      {:ok, user} ->
+        if Auth.TOTP.enabled?(user) do
+          render(conn, "verify_2fa_recovery_code.html",
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
+        else
+          redirect_to_login(conn)
+        end
+
+      {:error, :not_found} ->
+        redirect_to_login(conn)
+    end
+  end
+
+  def verify_2fa_recovery_code(conn, %{"recovery_code" => recovery_code}) do
+    with {:ok, user} <- get_2fa_user_limited(conn) do
+      case Auth.TOTP.use_recovery_code(user, recovery_code) do
+        :ok ->
+          set_user_session_and_redirect(conn, user)
+
+        {:error, :invalid_code} ->
+          maybe_log_failed_login_attempts("wrong 2FA recovery code provided for #{user.email}")
+
+          conn
+          |> put_flash(:error, "The provided recovery code is invalid. Please try another one")
+          |> render("verify_2fa_recovery_code.html",
+            layout: {PlausibleWeb.LayoutView, "focus.html"}
+          )
+
+        {:error, :not_enabled} ->
+          set_user_session_and_redirect(conn, user)
+      end
+    end
+  end
+
+  defp get_2fa_user_limited(conn) do
+    case TwoFactor.Session.get_2fa_user(conn) do
+      {:ok, user} ->
+        with :ok <- check_ip_rate_limit(conn),
+             :ok <- check_user_rate_limit(user) do
+          {:ok, user}
+        else
+          {:rate_limit, _} ->
+            maybe_log_failed_login_attempts("too many logging attempts for #{user.email}")
+
+            conn
+            |> TwoFactor.Session.clear_2fa_user()
+            |> render_error(
+              429,
+              "Too many login attempts. Wait a minute before trying again."
+            )
+        end
+
+      {:error, :not_found} ->
+        conn
+        |> redirect(to: Routes.auth_path(conn, :login_form))
+    end
+  end
+
   def save_settings(conn, %{"user" => user_params}) do
-    changes = Auth.User.settings_changeset(conn.assigns[:current_user], user_params)
+    user = conn.assigns.current_user
+    changes = Auth.User.settings_changeset(user, user_params)
 
     case Repo.update(changes) do
       {:ok, _user} ->
@@ -318,14 +539,18 @@ defmodule PlausibleWeb.AuthController do
         |> redirect(to: Routes.auth_path(conn, :user_settings))
 
       {:error, changeset} ->
-        email_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
+        email_changeset = Auth.User.settings_changeset(user)
 
-        render_settings(conn, settings_changeset: changeset, email_changeset: email_changeset)
+        render_settings(conn,
+          settings_changeset: changeset,
+          email_changeset: email_changeset
+        )
     end
   end
 
   def update_email(conn, %{"user" => user_params}) do
-    changes = Auth.User.email_changeset(conn.assigns[:current_user], user_params)
+    user = conn.assigns.current_user
+    changes = Auth.User.email_changeset(user, user_params)
 
     case Repo.update(changes) do
       {:ok, user} ->
@@ -337,9 +562,12 @@ defmodule PlausibleWeb.AuthController do
         end
 
       {:error, changeset} ->
-        settings_changeset = Auth.User.settings_changeset(conn.assigns[:current_user])
+        settings_changeset = Auth.User.settings_changeset(user)
 
-        render_settings(conn, settings_changeset: settings_changeset, email_changeset: changeset)
+        render_settings(conn,
+          settings_changeset: settings_changeset,
+          email_changeset: changeset
+        )
     end
   end
 
@@ -386,7 +614,8 @@ defmodule PlausibleWeb.AuthController do
       site_limit: Quota.site_limit(user),
       site_usage: Quota.site_usage(user),
       pageview_limit: Quota.monthly_pageview_limit(user.subscription),
-      pageview_usage: Quota.monthly_pageview_usage(user)
+      pageview_usage: Quota.monthly_pageview_usage(user),
+      totp_enabled?: Auth.TOTP.enabled?(user)
     )
   end
 

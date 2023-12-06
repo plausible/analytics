@@ -37,6 +37,7 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert updated_user.id == user.id
       refute updated_user.totp_enabled
+      assert is_nil(updated_user.totp_token)
       assert byte_size(updated_user.totp_secret) > 0
 
       assert Regex.match?(~r/[0-9A-Z]+/, params.secret)
@@ -53,6 +54,7 @@ defmodule Plausible.Auth.TOTPTest do
       assert new_params.secret != params.secret
 
       refute updated_user.totp_enabled
+      assert is_nil(updated_user.totp_token)
       assert byte_size(updated_user.totp_secret) > 0
       assert updated_user.totp_secret != user.totp_secret
     end
@@ -83,10 +85,11 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
-        subject: "Plausible two-factor authentication enabled"
+        subject: "Plausible Two-Factor Authentication enabled"
       )
 
       assert user.totp_enabled
+      assert byte_size(user.totp_token) > 0
       assert byte_size(user.totp_secret) > 0
 
       persisted_recovery_codes = Repo.all(RecoveryCode)
@@ -117,6 +120,8 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert updated_user.id == user.id
       assert updated_user.totp_enabled
+      assert byte_size(updated_user.totp_token) > 0
+      assert updated_user.totp_token != user.totp_token
       assert updated_user.totp_secret == user.totp_secret
 
       assert Enum.uniq(recovery_codes ++ new_recovery_codes) ==
@@ -155,18 +160,19 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
-        subject: "Plausible two-factor authentication enabled"
+        subject: "Plausible Two-Factor Authentication enabled"
       )
 
       assert {:ok, updated_user} = TOTP.disable(user, "VeryStrongVerySecret")
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
-        subject: "Plausible two-factor authentication disabled"
+        subject: "Plausible Two-Factor Authentication disabled"
       )
 
       assert updated_user.id == user.id
       refute updated_user.totp_enabled
+      assert is_nil(updated_user.totp_token)
       assert is_nil(updated_user.totp_secret)
 
       assert Repo.all(RecoveryCode) == []
@@ -179,6 +185,7 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert updated_user.id == user.id
       refute updated_user.totp_enabled
+      assert is_nil(updated_user.totp_token)
       assert is_nil(updated_user.totp_secret)
     end
 
@@ -190,12 +197,45 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert_email_delivered_with(
         to: [{user.name, user.email}],
-        subject: "Plausible two-factor authentication enabled"
+        subject: "Plausible Two-Factor Authentication enabled"
       )
 
       assert {:error, :invalid_password} = TOTP.disable(user, "invalid")
 
       assert_no_emails_delivered()
+    end
+  end
+
+  describe "reset_token/1" do
+    test "generates new token when TOTP enabled" do
+      user = insert(:user, password: "VeryStrongVerySecret")
+      {:ok, user, _} = TOTP.initiate(user)
+      code = NimbleTOTP.verification_code(user.totp_secret)
+      {:ok, user, _} = TOTP.enable(user, code)
+
+      assert %{totp_token: new_token} = TOTP.reset_token(user)
+
+      assert byte_size(new_token) > 0
+      assert new_token != user.totp_token
+    end
+
+    test "sets to nil when TOTP disabled" do
+      user = insert(:user)
+
+      assert %{totp_token: nil} = TOTP.reset_token(user)
+
+      user2 = insert(:user, password: "VeryStrongVerySecret")
+      {:ok, user2, _} = TOTP.initiate(user2)
+      code = NimbleTOTP.verification_code(user2.totp_secret)
+      {:ok, user2, _} = TOTP.enable(user2, code)
+      {:ok, user2} = TOTP.disable(user2, "VeryStrongVerySecret")
+
+      assert %{totp_token: nil} = TOTP.reset_token(user2)
+
+      user3 = insert(:user)
+      {:ok, user3, _} = TOTP.initiate(user3)
+
+      assert %{totp_token: nil} = TOTP.reset_token(user3)
     end
   end
 

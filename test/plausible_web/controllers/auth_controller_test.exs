@@ -335,6 +335,73 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert redirected_to(conn) == "/sites"
     end
 
+    test "valid email and password with login_dest set - redirects properly", %{conn: conn} do
+      user = insert(:user, password: "password")
+
+      conn =
+        conn
+        |> init_session()
+        |> put_session(:login_dest, "/settings")
+
+      conn = post(conn, "/login", email: user.email, password: "password")
+
+      assert redirected_to(conn, 302) == "/settings"
+    end
+
+    test "valid email and password with 2FA enabled - sets 2FA session and redirects", %{
+      conn: conn
+    } do
+      user = insert(:user, password: "password")
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = post(conn, "/login", email: user.email, password: "password")
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :verify_2fa_form)
+
+      assert fetch_cookies(conn).cookies["session_2fa"].current_2fa_user_id == user.id
+      refute get_session(conn)["current_user_id"]
+    end
+
+    test "valid email and password with 2FA enabled and remember 2FA cookie set - logs the user in",
+         %{conn: conn} do
+      user = insert(:user, password: "password")
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = set_remember_2fa_cookie(conn, user)
+
+      conn = post(conn, "/login", email: user.email, password: "password")
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+      assert get_session(conn, :current_user_id) == user.id
+    end
+
+    test "valid email and password with 2FA enabled and rogue remember 2FA cookie set - logs the user in",
+         %{conn: conn} do
+      user = insert(:user, password: "password")
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      another_user = insert(:user)
+      conn = set_remember_2fa_cookie(conn, another_user)
+
+      conn = post(conn, "/login", email: user.email, password: "password")
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :verify_2fa_form)
+
+      assert fetch_cookies(conn).cookies["session_2fa"].current_2fa_user_id == user.id
+      refute get_session(conn, :current_user_id)
+    end
+
     test "email does not exist - renders login form again", %{conn: conn} do
       conn = post(conn, "/login", email: "user@example.com", password: "password")
 
@@ -354,28 +421,28 @@ defmodule PlausibleWeb.AuthControllerTest do
       user = insert(:user, password: "password")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       build_conn()
-      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> put_req_header("x-forwarded-for", "1.2.3.5")
       |> post("/login", email: user.email, password: "wrong")
 
       conn =
         build_conn()
-        |> put_req_header("x-forwarded-for", "1.1.1.1")
+        |> put_req_header("x-forwarded-for", "1.2.3.5")
         |> post("/login", email: user.email, password: "wrong")
 
       assert get_session(conn, :current_user_id) == nil
@@ -1029,6 +1096,21 @@ defmodule PlausibleWeb.AuthControllerTest do
 
       assert team_member_usage_row_text =~ "Team members 0 / 3"
     end
+
+    test "redners 2FA section in disabled state", %{conn: conn} do
+      conn = get(conn, "/settings")
+
+      assert html_response(conn, 200) =~ "Enable 2FA"
+    end
+
+    test "renders 2FA in enabled state", %{conn: conn, user: user} do
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = get(conn, "/settings")
+
+      assert html_response(conn, 200) =~ "Disable 2FA"
+    end
   end
 
   describe "PUT /settings" do
@@ -1375,6 +1457,627 @@ defmodule PlausibleWeb.AuthControllerTest do
     end
   end
 
+  describe "POST /2fa/setup/initiate" do
+    setup [:create_user, :log_in]
+
+    test "initiates setup rendering QR and human friendly versions of secret", %{
+      conn: conn,
+      user: user
+    } do
+      conn = post(conn, Routes.auth_path(conn, :initiate_2fa_setup))
+
+      secret = Base.encode32(Repo.reload!(user).totp_secret)
+
+      assert html = html_response(conn, 200)
+
+      assert element_exists?(html, "svg")
+      assert html =~ secret
+    end
+
+    test "redirects back to settings if 2FA is already setup", %{conn: conn, user: user} do
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = post(conn, Routes.auth_path(conn, :initiate_2fa_setup))
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Two-Factor Authentication is already setup"
+    end
+  end
+
+  describe "GET /2fa/setup/verify" do
+    setup [:create_user, :log_in]
+
+    test "renders form when 2FA setup is initiated", %{conn: conn, user: user} do
+      {:ok, _, _} = Auth.TOTP.initiate(user)
+
+      conn = get(conn, Routes.auth_path(conn, :verify_2fa_setup))
+
+      assert html = html_response(conn, 200)
+
+      assert text_of_attr(html, "form#verify-2fa-form", "action") ==
+               Routes.auth_path(conn, :verify_2fa_setup)
+
+      assert element_exists?(html, "input[name=code]")
+
+      assert text_of_attr(html, "form#start-over-form", "action") ==
+               Routes.auth_path(conn, :initiate_2fa_setup)
+    end
+
+    test "redirects back to settings if 2FA not initiated", %{conn: conn} do
+      conn = get(conn, Routes.auth_path(conn, :verify_2fa_setup))
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+    end
+  end
+
+  describe "POST /2fa/setup/verify" do
+    setup [:create_user, :log_in]
+
+    test "enables 2FA and renders recovery codes when valid code provided", %{
+      conn: conn,
+      user: user
+    } do
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa_setup), %{code: code})
+
+      assert html = html_response(conn, 200)
+
+      assert list = [_ | _] = find(html, "#recovery-codes-list > *")
+      assert length(list) == 10
+
+      assert user |> Repo.reload!() |> Auth.TOTP.enabled?()
+    end
+
+    test "renders error on invalid code provided", %{conn: conn, user: user} do
+      {:ok, _, _} = Auth.TOTP.initiate(user)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa_setup), %{code: "invalid"})
+
+      assert html_response(conn, 200)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "The provided code is invalid."
+    end
+
+    test "redirects to settings when 2FA is not initiated", %{conn: conn} do
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa_setup), %{code: "123123"})
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Please enable Two-Factor Authentication"
+    end
+  end
+
+  describe "POST /2fa/disable" do
+    setup [:create_user, :log_in]
+
+    test "disables 2FA when valid password provided", %{conn: conn, user: user} do
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "password"})
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
+               "Two-Factor Authentication is disabled"
+
+      refute user |> Repo.reload!() |> Auth.TOTP.enabled?()
+    end
+
+    test "renders error when invalid password provided", %{conn: conn, user: user} do
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = post(conn, Routes.auth_path(conn, :disable_2fa), %{password: "invalid"})
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
+    end
+  end
+
+  describe "POST /2fa/recovery_codes" do
+    setup [:create_user, :log_in]
+
+    test "generates new recovery codes when valid password provided", %{conn: conn, user: user} do
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn =
+        post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "password"})
+
+      assert html = html_response(conn, 200)
+
+      assert list = [_ | _] = find(html, "#recovery-codes-list > *")
+      assert length(list) == 10
+    end
+
+    test "renders error when invalid password provided", %{conn: conn, user: user} do
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn =
+        post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "invalid"})
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "Incorrect password provided"
+    end
+
+    test "renders error when 2FA is not enabled", %{conn: conn} do
+      conn =
+        post(conn, Routes.auth_path(conn, :generate_2fa_recovery_codes), %{password: "password"})
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :user_settings) <> "#setup-2fa"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Please enable Two-Factor Authentication"
+    end
+  end
+
+  describe "GET /2fa/verify" do
+    test "renders verification form when 2FA session present", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      conn = get(conn, Routes.auth_path(conn, :verify_2fa_form))
+
+      assert html = html_response(conn, 200)
+
+      assert text_of_attr(html, "form", "action") == Routes.auth_path(conn, :verify_2fa)
+
+      assert element_exists?(html, "input[name=code]")
+
+      assert element_exists?(html, "input[name=remember_2fa]")
+
+      assert element_exists?(
+               html,
+               "a[href='#{Routes.auth_path(conn, :verify_2fa_recovery_code_form)}']"
+             )
+    end
+
+    test "redirects to login when cookie not found", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = get(conn, Routes.auth_path(conn, :verify_2fa_form))
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+    end
+
+    test "redirects to login when 2FA not enabled", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      {:ok, _} = Auth.TOTP.disable(user, "password")
+
+      conn = get(conn, Routes.auth_path(conn, :verify_2fa_form))
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+    end
+  end
+
+  describe "POST /2fa/verify" do
+    test "redirects to sites when code verification succeeds", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert get_session(conn)["current_user_id"] == user.id
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+      # Remember cookie unset
+      assert conn.resp_cookies["remember_2fa"].max_age == 0
+    end
+
+    test "redirects to login_dest when set", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn =
+        conn
+        |> init_session()
+        |> put_session(:login_dest, "/settings")
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+
+      assert redirected_to(conn, 302) == "/settings"
+    end
+
+    test "sets remember cookie when device trusted", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code, remember_2fa: "true"})
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert get_session(conn)["current_user_id"] == user.id
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+      # Remember cookie set
+      assert conn.resp_cookies["remember_2fa"].max_age > 0
+    end
+
+    test "overwrites rogue remember cookie when device trusted", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      another_user = insert(:user, totp_token: "different_token")
+      conn = set_remember_2fa_cookie(conn, another_user)
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code, remember_2fa: "true"})
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert get_session(conn)["current_user_id"] == user.id
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+      # Remember cookie set
+      assert conn.resp_cookies["remember_2fa"].max_age > 0
+      assert fetch_cookies(conn).cookies["remember_2fa"] == user.totp_token
+    end
+
+    test "clears rogue remember cookie when device _not_ trusted", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      another_user = insert(:user, totp_token: "different_token")
+      conn = set_remember_2fa_cookie(conn, another_user)
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert get_session(conn)["current_user_id"] == user.id
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+      # Remember cookie cleared
+      assert conn.resp_cookies["remember_2fa"].max_age == 0
+    end
+
+    test "returns error on invalid code", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+
+      assert html_response(conn, 200)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "The provided code is invalid"
+    end
+
+    test "redirects to login when cookie not found", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa, %{code: code}))
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+    end
+
+    test "passes through when 2FA is disabled", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      code = NimbleTOTP.verification_code(user.totp_secret)
+
+      {:ok, _} = Auth.TOTP.disable(user, "password")
+
+      conn = post(conn, Routes.auth_path(conn, :verify_2fa), %{code: code})
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert get_session(conn)["current_user_id"] == user.id
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+    end
+
+    test "limits verification attempts to 5 per minute", %{conn: conn} do
+      user = insert(:user, email: "ratio#{Ecto.UUID.generate()}@example.com")
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.1.1.1")
+      |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+
+      conn =
+        conn
+        |> put_req_header("x-forwarded-for", "1.1.1.1")
+        |> post(Routes.auth_path(conn, :verify_2fa), %{code: "invalid"})
+
+      assert get_session(conn, :current_user_id) == nil
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+      assert html_response(conn, 429) =~ "Too many login attempts"
+    end
+  end
+
+  describe "GET /2fa/use_recovery_code" do
+    test "renders recovery verification form when 2FA session present", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      conn = get(conn, Routes.auth_path(conn, :verify_2fa_recovery_code_form))
+
+      assert html = html_response(conn, 200)
+
+      assert text_of_attr(html, "form", "action") ==
+               Routes.auth_path(conn, :verify_2fa_recovery_code)
+
+      assert element_exists?(html, "input[name=recovery_code]")
+
+      assert element_exists?(html, "a[href='#{Routes.auth_path(conn, :verify_2fa_form)}']")
+    end
+
+    test "redirects to login when cookie not found", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = get(conn, Routes.auth_path(conn, :verify_2fa_recovery_code_form))
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+    end
+
+    test "redirects to login when 2FA not enabled", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      {:ok, _} = Auth.TOTP.disable(user, "password")
+
+      conn = get(conn, Routes.auth_path(conn, :verify_2fa_recovery_code_form))
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+    end
+  end
+
+  describe "POST /2fa/use_recovery_code" do
+    test "redirects to sites when recovery code verification succeeds", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, %{recovery_codes: [recovery_code | _]}} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      conn =
+        post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+          recovery_code: recovery_code
+        })
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert get_session(conn)["current_user_id"] == user.id
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+    end
+
+    test "returns error on invalid recovery code", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      conn =
+        post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
+
+      assert html_response(conn, 200)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "The provided recovery code is invalid"
+    end
+
+    test "redirects to login when cookie not found", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, _, %{recovery_codes: [recovery_code | _]}} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn =
+        post(
+          conn,
+          Routes.auth_path(conn, :verify_2fa_recovery_code, %{recovery_code: recovery_code})
+        )
+
+      assert redirected_to(conn, 302) == Routes.auth_path(conn, :login_form)
+    end
+
+    test "passes through when 2FA is disabled", %{conn: conn} do
+      user = insert(:user)
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, %{recovery_codes: [recovery_code | _]}} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      {:ok, _} = Auth.TOTP.disable(user, "password")
+
+      conn =
+        post(conn, Routes.auth_path(conn, :verify_2fa_recovery_code), %{
+          recovery_code: recovery_code
+        })
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert get_session(conn)["current_user_id"] == user.id
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+    end
+
+    test "limits verification attempts to 5 per minute", %{conn: conn} do
+      user = insert(:user, email: "ratio#{Ecto.UUID.generate()}@example.com")
+
+      # enable 2FA
+      {:ok, user, _} = Auth.TOTP.initiate(user)
+      {:ok, user, _} = Auth.TOTP.enable(user, :skip_verify)
+
+      conn = login_with_cookie(conn, user.email, "password")
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
+      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
+      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
+      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
+      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
+
+      conn
+      |> put_req_header("x-forwarded-for", "1.2.3.4")
+      |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
+
+      conn =
+        conn
+        |> put_req_header("x-forwarded-for", "1.2.3.4")
+        |> post(Routes.auth_path(conn, :verify_2fa_recovery_code), %{recovery_code: "invalid"})
+
+      assert get_session(conn, :current_user_id) == nil
+      # 2FA session terminated
+      assert conn.resp_cookies["session_2fa"].max_age == 0
+      assert html_response(conn, 429) =~ "Too many login attempts"
+    end
+  end
+
+  defp login_with_cookie(conn, email, password) do
+    conn
+    |> post(Routes.auth_path(conn, :login), %{
+      email: email,
+      password: password
+    })
+    |> recycle()
+    |> Map.put(:secret_key_base, secret_key_base())
+    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+  end
+
+  defp set_remember_2fa_cookie(conn, user) do
+    conn
+    |> PlausibleWeb.TwoFactor.Session.maybe_set_remember_2fa(user, "true")
+    |> recycle()
+    |> Map.put(:secret_key_base, secret_key_base())
+    |> Plug.Conn.put_req_header("x-forwarded-for", Plausible.TestUtils.random_ip())
+  end
+
   defp mock_captcha_success() do
     mock_captcha(true)
   end
@@ -1405,5 +2108,11 @@ defmodule PlausibleWeb.AuthControllerTest do
       monthly_pageview_limit: 20_000_000,
       billing_interval: :yearly
     )
+  end
+
+  defp secret_key_base() do
+    :plausible
+    |> Application.fetch_env!(PlausibleWeb.Endpoint)
+    |> Keyword.fetch!(:secret_key_base)
   end
 end

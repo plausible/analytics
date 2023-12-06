@@ -18,19 +18,17 @@ defmodule Plausible.Auth.TOTP do
   After initiation, user is expected to confirm valid setup with `enable/2`,
   providing TOTP code from their authenticator app. After code validation 
   passes successfully, the `User.totp_enabled` flag is set to `true`.
-
   Finally, the user must be immediately presented with a list of recovery codes
-  generated with `generate_recovery_codes/1`. The codes should be presented
+  returned by the same call of `enable/2`. The codes should be presented
   in copy/paste friendly form, ideally also with a print-friendly view option.
-  The function can be run more than once, giving the user ability to regenerate
-  codes from the final stage of setup if needed.
 
   The `initiate/1` and `enable/1` functions can be safely called multiple
   times, allowing user to abort and restart setup up to these stages.
 
   ## Management
 
-  State of TOTP for a particular user can be chcecked by calling `enabled?/1`.
+  The state of TOTP for a particular user can be chcecked by calling
+  `enabled?/1` or `initiated?/1`.
 
   TOTP can be disabled with `disable/2`. User is expected to provide their
   current password for safety. Once disabled, all TOTP user settings are
@@ -38,9 +36,9 @@ defmodule Plausible.Auth.TOTP do
   can be safely run more than once.
 
   If the user needs to regenerate the recovery codes outside of setup procedure,
-  they must do it via `generate_recovery_codes_protected/2`, providing
-  their current password for safety. They must be warned that any existing
-  recovery codes will be invalidated.
+  they must do it via `generate_recovery_codes/2`, providing their current
+  password for safety. They must be warned that any existing recovery codes
+  will be invalidated.
 
   ## Validation
 
@@ -64,6 +62,18 @@ defmodule Plausible.Auth.TOTP do
 
   In case of recovery codes, each code is deleted immediately after use.
   They are strictly one-time use only.
+
+  ## TOTP Token
+
+  TOTP token is an alternate method of authenticating  user session.
+  It's main use case is "trust this device" functionality, where user
+  can decide to skip 2FA verification for a particular browser session 
+  for next N days. The token should then be stored in an encrypted,
+  signed cookie with a proper expiration timestamp.
+
+  The token should be reset each time it either fails to match
+  or when other credentials (like password) are reset. This should
+  effectively invalidate all trusted devices for a given user.
 
   """
 
@@ -106,14 +116,15 @@ defmodule Plausible.Auth.TOTP do
       user
       |> change(
         totp_enabled: false,
-        totp_secret: secret
+        totp_secret: secret,
+        totp_token: nil
       )
       |> Repo.update!()
 
     {:ok, user, %{totp_uri: totp_uri(user), secret: readable_secret(user)}}
   end
 
-  @spec enable(Auth.User.t(), String.t(), Keyword.t()) ::
+  @spec enable(Auth.User.t(), String.t() | :skip_verify, Keyword.t()) ::
           {:ok, Auth.User.t(), %{recovery_codes: [String.t()]}}
           | {:error, :invalid_code | :not_initiated}
   def enable(user, code, opts \\ [])
@@ -122,26 +133,37 @@ defmodule Plausible.Auth.TOTP do
     {:error, :not_initiated}
   end
 
+  def enable(user, :skip_verify, _opts) do
+    do_enable(user)
+  end
+
   def enable(user, code, opts) do
     with {:ok, user} <- do_validate_code(user, code, opts) do
-      {:ok, {user, recovery_codes}} =
-        Repo.transaction(fn ->
-          user =
-            user
-            |> change(totp_enabled: true)
-            |> Repo.update!()
-
-          {:ok, recovery_codes} = do_generate_recovery_codes(user)
-
-          {user, recovery_codes}
-        end)
-
-      user
-      |> Email.two_factor_enabled_email()
-      |> Plausible.Mailer.send()
-
-      {:ok, user, %{recovery_codes: recovery_codes}}
+      do_enable(user)
     end
+  end
+
+  defp do_enable(user) do
+    {:ok, {user, recovery_codes}} =
+      Repo.transaction(fn ->
+        user =
+          user
+          |> change(
+            totp_enabled: true,
+            totp_token: generate_token()
+          )
+          |> Repo.update!()
+
+        {:ok, recovery_codes} = do_generate_recovery_codes(user)
+
+        {user, recovery_codes}
+      end)
+
+    user
+    |> Email.two_factor_enabled_email()
+    |> Plausible.Mailer.send()
+
+    {:ok, user, %{recovery_codes: recovery_codes}}
   end
 
   @spec disable(Auth.User.t(), String.t()) :: {:ok, Auth.User.t()} | {:error, :invalid_password}
@@ -157,6 +179,7 @@ defmodule Plausible.Auth.TOTP do
           user
           |> change(
             totp_enabled: false,
+            totp_token: nil,
             totp_secret: nil,
             totp_last_used_at: nil
           )
@@ -171,6 +194,18 @@ defmodule Plausible.Auth.TOTP do
     else
       {:error, :invalid_password}
     end
+  end
+
+  @spec reset_token(Auth.User.t()) :: Auth.User.t()
+  def reset_token(user) do
+    new_token =
+      if user.totp_enabled do
+        generate_token()
+      end
+
+    user
+    |> change(totp_token: new_token)
+    |> Repo.update!()
   end
 
   @spec generate_recovery_codes(Auth.User.t(), String.t()) ::
@@ -302,5 +337,11 @@ defmodule Plausible.Auth.TOTP do
     user
     |> change(totp_last_used_at: now)
     |> Repo.update!()
+  end
+
+  defp generate_token() do
+    20
+    |> :crypto.strong_rand_bytes()
+    |> Base.encode64(padding: false)
   end
 end
