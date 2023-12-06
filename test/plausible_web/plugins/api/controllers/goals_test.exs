@@ -33,7 +33,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
           {:get, Routes.goals_url(base_uri(), :index)},
           {:get, Routes.goals_url(base_uri(), :get, 1)},
           {:put, Routes.goals_url(base_uri(), :create, %{})},
-          {:delete, Routes.goals_url(base_uri(), :delete, 1)}
+          {:delete, Routes.goals_url(base_uri(), :delete, 1)},
+          {:delete, Routes.goals_url(base_uri(), :delete_bulk, %{})}
         ] do
       test "unauthorized call: #{method} #{url}", %{conn: conn} do
         conn
@@ -138,13 +139,16 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       resp =
         conn
         |> json_response(201)
-        |> assert_schema("Goal", spec())
-        |> assert_schema("Goal.CustomEvent", spec())
+        |> assert_schema("Goal.ListResponse", spec())
+
+      resp.goals
+      |> List.first()
+      |> assert_schema("Goal.CustomEvent", spec())
 
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.goals_url(base_uri(), :get, resp.goal.id)
+               Routes.goals_url(base_uri(), :get, List.first(resp.goals).goal.id)
 
       assert [%{event_name: "Signup"}] = Plausible.Goals.for_site(site)
     end
@@ -169,13 +173,16 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       resp =
         conn
         |> json_response(201)
-        |> assert_schema("Goal", spec())
-        |> assert_schema("Goal.Revenue", spec())
+        |> assert_schema("Goal.ListResponse", spec())
+
+      resp.goals
+      |> List.first()
+      |> assert_schema("Goal.Revenue", spec())
 
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.goals_url(base_uri(), :get, resp.goal.id)
+               Routes.goals_url(base_uri(), :get, List.first(resp.goals).goal.id)
 
       assert [%{event_name: "Purchase", currency: :EUR}] = Plausible.Goals.for_site(site)
     end
@@ -249,13 +256,16 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       resp =
         conn
         |> json_response(201)
-        |> assert_schema("Goal", spec())
-        |> assert_schema("Goal.Pageview", spec())
+        |> assert_schema("Goal.ListResponse", spec())
+
+      resp.goals
+      |> List.first()
+      |> assert_schema("Goal.Pageview", spec())
 
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.goals_url(base_uri(), :get, resp.goal.id)
+               Routes.goals_url(base_uri(), :get, List.first(resp.goals).goal.id)
 
       assert [%{page_path: "/checkout"}] = Plausible.Goals.for_site(site)
     end
@@ -272,12 +282,16 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         initial_conn
         |> put(url, %{goal_type: "Goal.Pageview", goal: %{path: "/checkout"}})
         |> json_response(201)
-        |> assert_schema("Goal.Pageview", spec())
+        |> assert_schema("Goal.ListResponse", spec())
+
+      resp1.goals
+      |> List.first()
+      |> assert_schema("Goal.Pageview", spec())
 
       assert initial_conn
              |> put(url, %{goal_type: "Goal.Pageview", goal: %{path: "/checkout"}})
              |> json_response(201)
-             |> assert_schema("Goal.Pageview", spec()) == resp1
+             |> assert_schema("Goal.ListResponse", spec()) == resp1
     end
   end
 
@@ -606,6 +620,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       |> authenticate(site.domain, token)
       |> delete(url)
       |> response(204)
+
+      refute Plausible.Repo.exists?(Plausible.Goal)
     end
 
     test "is idempotent", %{conn: conn, site: site, token: token} do
@@ -615,6 +631,37 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       |> authenticate(site.domain, token)
       |> delete(url)
       |> response(204)
+    end
+  end
+
+  describe "delete - bulk" do
+    test "delete multiple goals", %{conn: conn, site: site, token: token} do
+      {:ok, g1} =
+        Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
+
+      {:ok, g2} =
+        Plausible.Goals.create(site, %{"event_name" => "Signup"})
+
+      {:ok, g3} =
+        Plausible.Goals.create(site, %{"page_path" => "/home"})
+
+      url = Routes.goals_url(base_uri(), :delete_bulk)
+
+      payload = %{
+        goal_ids: [
+          g1.id,
+          g2.id,
+          g3.id
+        ]
+      }
+
+      conn
+      |> authenticate(site.domain, token)
+      |> put_req_header("content-type", "application/json")
+      |> delete(url, payload)
+      |> response(204)
+
+      refute Plausible.Repo.exists?(Plausible.Goal)
     end
   end
 end

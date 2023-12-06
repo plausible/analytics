@@ -24,7 +24,8 @@ defmodule Plausible.Factory do
   end
 
   def site_factory(attrs) do
-    domain = sequence(:domain, &"example-#{&1}.com")
+    # The é exercises unicode support in domain names
+    domain = sequence(:domain, &"é-#{&1}.example.com")
 
     defined_memberships? =
       Map.has_key?(attrs, :memberships) ||

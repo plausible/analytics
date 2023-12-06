@@ -116,6 +116,7 @@ defmodule Plausible.BillingTest do
   @plan_id_100k "654178"
 
   @subscription_created_params %{
+    "event_time" => "2019-05-01 01:03:52",
     "alert_name" => "subscription_created",
     "passthrough" => "",
     "email" => "",
@@ -153,6 +154,7 @@ defmodule Plausible.BillingTest do
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_subscription_id == @subscription_id
       assert subscription.next_bill_date == ~D[2019-06-01]
+      assert subscription.last_bill_date == ~D[2019-05-01]
       assert subscription.next_bill_amount == "6.00"
       assert subscription.currency_code == "EUR"
     end
@@ -166,6 +168,7 @@ defmodule Plausible.BillingTest do
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
       assert subscription.paddle_subscription_id == @subscription_id
       assert subscription.next_bill_date == ~D[2019-06-01]
+      assert subscription.last_bill_date == ~D[2019-05-01]
       assert subscription.next_bill_amount == "6.00"
     end
 

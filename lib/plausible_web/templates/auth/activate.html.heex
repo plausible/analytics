@@ -27,7 +27,9 @@
             required: "required"
           ) %>
         </div>
-        <button id="submit" class="button rounded-l-none">Activate &rarr;</button>
+        <PlausibleWeb.Components.Generic.button id="submit" type="submit" class="rounded-l-none">
+          Activate &rarr;
+        </PlausibleWeb.Components.Generic.button>
       </div>
       <%= error_tag(assigns, :error) %>
 

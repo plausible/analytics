@@ -42,6 +42,19 @@ defmodule Plausible.Plugins.API.Goals do
     |> Repo.one()
   end
 
+  @spec delete(Plausible.Site.t(), [pos_integer()] | pos_integer()) :: :ok
+  def delete(site, id_or_ids) do
+    Plausible.Repo.transaction(fn ->
+      id_or_ids
+      |> List.wrap()
+      |> Enum.each(fn id when is_integer(id) ->
+        Plausible.Goals.delete(id, site)
+      end)
+    end)
+
+    :ok
+  end
+
   defp get_query(site) do
     from g in Plausible.Goal,
       where: g.site_id == ^site.id,

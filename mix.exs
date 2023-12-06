@@ -80,6 +80,7 @@ defmodule Plausible.MixProject do
       {:ecto, "~> 3.10.0"},
       {:ecto_sql, "~> 3.10.0"},
       {:envy, "~> 1.1.1"},
+      {:eqrcode, "~> 0.1.10"},
       {:ex_machina, "~> 2.3", only: [:dev, :test, :small_dev, :small_test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:finch, "~> 0.16.0"},

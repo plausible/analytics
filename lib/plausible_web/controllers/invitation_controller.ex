@@ -10,7 +10,7 @@ defmodule PlausibleWeb.InvitationController do
       {:ok, membership} ->
         conn
         |> put_flash(:success, "You now have access to #{membership.site.domain}")
-        |> redirect(to: "/#{URI.encode_www_form(membership.site.domain)}")
+        |> redirect(external: "/#{URI.encode_www_form(membership.site.domain)}")
 
       {:error, :invitation_not_found} ->
         conn
@@ -43,12 +43,12 @@ defmodule PlausibleWeb.InvitationController do
       {:ok, invitation} ->
         conn
         |> put_flash(:success, "You have removed the invitation for #{invitation.email}")
-        |> redirect(to: Routes.site_path(conn, :settings_people, invitation.site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, invitation.site.domain))
 
       {:error, :invitation_not_found} ->
         conn
         |> put_flash(:error, "Invitation missing or already removed")
-        |> redirect(to: Routes.site_path(conn, :settings_people, conn.assigns.site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, conn.assigns.site.domain))
     end
   end
 end
