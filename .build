@@ -177,6 +177,7 @@ Plausible.Workers.SendSiteSetupEmails.html
 Plausible.Workers.SendTrialNotifications.html
 Plausible.Workers.SpikeNotifier.html
 Plausible.html
+PlausibleWeb.AdminController.html
 PlausibleWeb.Api.ExternalController.html
 PlausibleWeb.Api.ExternalSitesController.html
 PlausibleWeb.Api.ExternalStatsController.html
@@ -322,8 +323,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-C938D564.js
-dist/sidebar_items-D658F878.js
+dist/search_data-4FA3820E.js
+dist/sidebar_items-C2C9067E.js
 index.html
 readme.html
 search.html
