@@ -73,41 +73,32 @@ defmodule Plausible.Workers.CheckUsage do
       {{:below_limit, _}, {:below_limit, _}} ->
         nil
 
-      {{_, {last_cycle, last_cycle_usage}}, {_, {site_usage, site_allowance}}} ->
-        template =
-          PlausibleWeb.Email.enterprise_over_limit_internal_email(
-            subscriber,
-            last_cycle_usage,
-            last_cycle,
-            site_usage,
-            site_allowance
-          )
-
-        Plausible.Mailer.send(template)
+      {{_, pageview_usage}, {_, {site_usage, site_allowance}}} ->
+        PlausibleWeb.Email.enterprise_over_limit_internal_email(
+          subscriber,
+          pageview_usage,
+          site_usage,
+          site_allowance
+        )
+        |> Plausible.Mailer.send()
 
         subscriber
-        |> Plausible.Auth.GracePeriod.start_manual_lock_changeset(last_cycle_usage)
+        |> Plausible.Auth.GracePeriod.start_manual_lock_changeset(pageview_usage.last_cycle.total)
         |> Repo.update()
     end
   end
 
   defp check_regular_subscriber(subscriber, quota_mod) do
     case check_pageview_usage(subscriber, quota_mod) do
-      {:over_limit, {last_cycle, last_cycle_usage}} ->
-        suggested_plan = Plausible.Billing.Plans.suggest(subscriber, last_cycle_usage)
+      {:over_limit, pageview_usage} ->
+        suggested_plan =
+          Plausible.Billing.Plans.suggest(subscriber, pageview_usage.last_cycle.total)
 
-        template =
-          PlausibleWeb.Email.over_limit_email(
-            subscriber,
-            last_cycle_usage,
-            last_cycle,
-            suggested_plan
-          )
-
-        Plausible.Mailer.send(template)
+        PlausibleWeb.Email.over_limit_email(subscriber, pageview_usage, suggested_plan)
+        |> Plausible.Mailer.send()
 
         subscriber
-        |> Plausible.Auth.GracePeriod.start_changeset(last_cycle_usage)
+        |> Plausible.Auth.GracePeriod.start_changeset(pageview_usage.last_cycle.total)
         |> Repo.update()
 
       _ ->
@@ -120,9 +111,9 @@ defmodule Plausible.Workers.CheckUsage do
     limit = Quota.monthly_pageview_limit(subscriber.subscription)
 
     if exceeds_last_two_usage_cycles?(usage, limit) do
-      {:over_limit, {usage.last_cycle.date_range, usage.last_cycle.total}}
+      {:over_limit, usage}
     else
-      {:below_limit, {usage.last_cycle.date_range, usage.last_cycle.total}}
+      {:below_limit, usage}
     end
   end
 
