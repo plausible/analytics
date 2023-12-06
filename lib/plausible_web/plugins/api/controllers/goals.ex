@@ -23,13 +23,13 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
       ) do
     site = conn.assigns.authorized_site
 
-    goals =
+    goal_or_goals =
       case body_params do
         %{goals: goals} -> goals
-        %{goal: _} = single_goal -> List.wrap(single_goal)
+        %{goal: _} = single_goal -> single_goal
       end
 
-    case API.Goals.create(site, goals) do
+    case API.Goals.create(site, goal_or_goals) do
       {:ok, goals} ->
         location_headers = Enum.map(goals, &{"location", goals_url(base_uri(), :get, &1.id)})
 
