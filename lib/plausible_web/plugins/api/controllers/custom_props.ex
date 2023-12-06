@@ -18,6 +18,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomProps do
     }
   )
 
+  @spec enable(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def enable(
         %{private: %{open_api_spex: %{body_params: body_params}}} = conn,
         _params
@@ -62,6 +63,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomProps do
     }
   )
 
+  @spec disable(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def disable(
         %{private: %{open_api_spex: %{body_params: body_params}}} = conn,
         _params
