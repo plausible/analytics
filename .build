@@ -200,6 +200,7 @@ PlausibleWeb.Components.Generic.html
 PlausibleWeb.Components.Google.html
 PlausibleWeb.Components.Settings.html
 PlausibleWeb.Components.Site.Feature.html
+PlausibleWeb.Components.TwoFactor.html
 PlausibleWeb.ConnCase.html
 PlausibleWeb.ControllerHelpers.html
 PlausibleWeb.Controllers.API.Revenue.html
@@ -289,6 +290,7 @@ PlausibleWeb.SiteView.html
 PlausibleWeb.StatsController.html
 PlausibleWeb.StatsView.html
 PlausibleWeb.Tracker.html
+PlausibleWeb.TwoFactor.Session.html
 PlausibleWeb.UnsubscribeController.html
 PlausibleWeb.UnsubscribeView.html
 PlausibleWeb.html
@@ -323,8 +325,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-4FA3820E.js
-dist/sidebar_items-C2C9067E.js
+dist/search_data-30FA772F.js
+dist/sidebar_items-63EE7CF0.js
 index.html
 readme.html
 search.html
