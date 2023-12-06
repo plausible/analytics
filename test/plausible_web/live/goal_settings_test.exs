@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
   describe "GET /:website/settings/goals" do
     setup [:create_user, :log_in, :create_site]
 
+    @tag :full_build_only
     test "lists goals for the site and renders links", %{conn: conn, site: site} do
       {:ok, [g1, g2, g3]} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")
@@ -13,7 +14,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       resp = html_response(conn, 200)
       assert resp =~ "Define actions that you want your users to take"
       assert resp =~ "compose Goals into Funnels"
-      assert resp =~ "/#{site.domain}/settings/funnels"
+      assert resp =~ "/#{URI.encode_www_form(site.domain)}/settings/funnels"
       assert element_exists?(resp, ~s|a[href="https://plausible.io/docs/goal-conversions"]|)
 
       assert resp =~ to_string(g1)

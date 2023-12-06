@@ -4,72 +4,41 @@ defmodule PlausibleWeb.Components.Billing do
   use Phoenix.Component
   import PlausibleWeb.Components.Generic
   require Plausible.Billing.Subscription.Status
-  alias Plausible.Billing.Feature.{RevenueGoals, Funnels}
-  alias Plausible.Billing.Feature.{Props, StatsAPI}
+  alias Plausible.Auth.User
   alias PlausibleWeb.Router.Helpers, as: Routes
-  alias Plausible.Billing.{Subscription, Plans, Plan, Subscriptions}
+  alias Plausible.Billing.{Subscription, Plans, Subscriptions}
 
-  attr(:billable_user, Plausible.Auth.User, required: true)
-  attr(:current_user, Plausible.Auth.User, required: true)
+  attr(:billable_user, User, required: true)
+  attr(:current_user, User, required: true)
   attr(:feature_mod, :atom, required: true, values: Plausible.Billing.Feature.list())
   attr(:grandfathered?, :boolean, default: false)
   attr(:size, :atom, default: :sm)
   attr(:rest, :global)
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def premium_feature_notice(assigns) do
-    legacy_feature_access? =
-      Timex.before?(assigns.billable_user.inserted_at, Plans.business_tier_launch()) &&
-        assigns.feature_mod in [StatsAPI, Props]
-
-    has_access? = assigns.feature_mod.check_availability(assigns.billable_user) == :ok
-
-    cond do
-      legacy_feature_access? ->
-        ~H""
-
-      Plausible.Billing.on_trial?(assigns.billable_user) ->
-        ~H"""
-        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
-          <%= @feature_mod.display_name() %> is part of the Plausible Business plan. You can access it during your trial, but you'll need to subscribe to the Business plan to retain access after the trial ends."
-        </.notice>
-        """
-
-      not has_access? ->
-        ~H"""
-        <.notice class="rounded-t-md rounded-b-none" size={@size} {@rest}>
-          <%= account_label(@current_user, @billable_user) %> does not have access to <%= assigns.feature_mod.display_name() %>. To get access to this feature,
-          <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
-        </.notice>
-        """
-
-      true ->
-        ~H""
-    end
+    ~H"""
+    <.notice
+      :if={@feature_mod.check_availability(@billable_user) !== :ok}
+      class="rounded-t-md rounded-b-none"
+      size={@size}
+      title="Notice"
+      {@rest}
+    >
+      <%= account_label(@current_user, @billable_user) %> does not have access to <%= @feature_mod.display_name() %>. To get access to this feature,
+      <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
+    </.notice>
+    """
   end
 
-  defp private_preview_end do
-    private_preview_ends_at = Timex.shift(Plausible.Billing.Plans.business_tier_launch(), days: 8)
-
-    days_remaining = Timex.diff(private_preview_ends_at, NaiveDateTime.utc_now(), :day)
-
-    cond do
-      days_remaining <= 0 -> "today"
-      days_remaining == 1 -> "tomorrow"
-      true -> "in #{days_remaining} days"
-    end
-  end
-
-  attr(:billable_user, Plausible.Auth.User, required: true)
-  attr(:current_user, Plausible.Auth.User, required: true)
+  attr(:billable_user, User, required: true)
+  attr(:current_user, User, required: true)
   attr(:limit, :integer, required: true)
   attr(:resource, :string, required: true)
   attr(:rest, :global)
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def limit_exceeded_notice(assigns) do
     ~H"""
-    <.notice {@rest}>
+    <.notice {@rest} title="Notice">
       <%= account_label(@current_user, @billable_user) %> is limited to <%= @limit %> <%= @resource %>. To increase this limit,
       <.upgrade_call_to_action current_user={@current_user} billable_user={@billable_user} />.
     </.notice>
@@ -111,6 +80,147 @@ defmodule PlausibleWeb.Components.Billing do
     else
       "The owner of this site"
     end
+  end
+
+  def render_monthly_pageview_usage(%{usage: usage} = assigns)
+      when is_map_key(usage, :last_30_days) do
+    ~H"""
+    <.monthly_pageview_usage_table usage={@usage.last_30_days} limit={@limit} period={:last_30_days} />
+    """
+  end
+
+  def render_monthly_pageview_usage(assigns) do
+    ~H"""
+    <article id="monthly_pageview_usage_container" x-data="{ tab: 'current_cycle' }" class="mt-8">
+      <h1 class="text-xl mb-6 font-bold dark:text-gray-100">Monthly pageviews usage</h1>
+      <div class="mb-3">
+        <ol class="divide-y divide-gray-300 dark:divide-gray-600 rounded-md border dark:border-gray-600 md:flex md:flex-row-reverse md:divide-y-0 md:overflow-hidden">
+          <.billing_cycle_tab
+            name="Ongoing cycle"
+            tab={:current_cycle}
+            date_range={@usage.current_cycle.date_range}
+            with_separator={true}
+          />
+          <.billing_cycle_tab
+            name="Last cycle"
+            tab={:last_cycle}
+            date_range={@usage.last_cycle.date_range}
+            disabled={@usage.last_cycle.total == 0 && @usage.penultimate_cycle.total == 0}
+            with_separator={true}
+          />
+          <.billing_cycle_tab
+            name="Penultimate cycle"
+            tab={:penultimate_cycle}
+            date_range={@usage.penultimate_cycle.date_range}
+            disabled={@usage.penultimate_cycle.total == 0}
+          />
+        </ol>
+      </div>
+      <div x-show="tab === 'current_cycle'">
+        <.monthly_pageview_usage_table
+          usage={@usage.current_cycle}
+          limit={@limit}
+          period={:current_cycle}
+        />
+      </div>
+      <div x-show="tab === 'last_cycle'">
+        <.monthly_pageview_usage_table usage={@usage.last_cycle} limit={@limit} period={:last_cycle} />
+      </div>
+      <div x-show="tab === 'penultimate_cycle'">
+        <.monthly_pageview_usage_table
+          usage={@usage.penultimate_cycle}
+          limit={@limit}
+          period={:penultimate_cycle}
+        />
+      </div>
+    </article>
+    """
+  end
+
+  attr(:usage, :map, required: true)
+  attr(:limit, :any, required: true)
+  attr(:period, :atom, required: true)
+
+  defp monthly_pageview_usage_table(assigns) do
+    ~H"""
+    <.usage_and_limits_table>
+      <.usage_and_limits_row
+        id={"total_pageviews_#{@period}"}
+        title={"Total billable pageviews#{if @period == :last_30_days, do: " (last 30 days)"}"}
+        usage={@usage.total}
+        limit={@limit}
+      />
+      <.usage_and_limits_row
+        id={"pageviews_#{@period}"}
+        pad
+        title="Pageviews"
+        usage={@usage.pageviews}
+        class="font-normal text-gray-500 dark:text-gray-400"
+      />
+      <.usage_and_limits_row
+        id={"custom_events_#{@period}"}
+        pad
+        title="Custom events"
+        usage={@usage.custom_events}
+        class="font-normal text-gray-500 dark:text-gray-400"
+      />
+    </.usage_and_limits_table>
+    """
+  end
+
+  attr(:name, :string, required: true)
+  attr(:date_range, :any, required: true)
+  attr(:tab, :atom, required: true)
+  attr(:disabled, :boolean, default: false)
+  attr(:with_separator, :boolean, default: false)
+
+  defp billing_cycle_tab(assigns) do
+    ~H"""
+    <li id={"billing_cycle_tab_#{@tab}"} class="relative md:w-1/3">
+      <button
+        class={["w-full group", @disabled && "pointer-events-none opacity-50 dark:opacity-25"]}
+        x-on:click={"tab = '#{@tab}'"}
+      >
+        <span
+          class="absolute left-0 top-0 h-full w-1 md:bottom-0 md:top-auto md:h-1 md:w-full"
+          x-bind:class={"tab === '#{@tab}' ? 'bg-indigo-500' : 'bg-transparent group-hover:bg-gray-200 dark:group-hover:bg-gray-700 '"}
+          aria-hidden="true"
+        >
+        </span>
+        <div class={"flex items-center justify-between md:flex-col md:items-start py-2 pr-2 #{if @with_separator, do: "pl-2 md:pl-4", else: "pl-2"}"}>
+          <span
+            class="text-sm dark:text-gray-100"
+            x-bind:class={"tab === '#{@tab}' ? 'text-indigo-600 dark:text-indigo-500 font-semibold' : 'font-medium'"}
+          >
+            <%= @name %>
+          </span>
+          <span class="flex text-xs text-gray-500 dark:text-gray-400">
+            <%= if @disabled,
+              do: "Not available",
+              else: PlausibleWeb.TextHelpers.format_date_range(@date_range) %>
+          </span>
+        </div>
+      </button>
+      <div
+        :if={@with_separator}
+        class="absolute inset-0 left-0 top-0 w-3 hidden md:block"
+        aria-hidden="true"
+      >
+        <svg
+          class="h-full w-full text-gray-300 dark:text-gray-600"
+          viewBox="0 0 12 82"
+          fill="none"
+          preserveAspectRatio="none"
+        >
+          <path
+            d="M0.5 0V31L10.5 41L0.5 51V82"
+            stroke="currentcolor"
+            vector-effect="non-scaling-stroke"
+          />
+        </svg>
+      </div>
+    </li>
+    """
   end
 
   slot(:inner_block, required: true)
@@ -219,133 +329,123 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
+  attr(:user, :map, required: true)
+  attr(:dismissable, :boolean, default: true)
+
+  @doc """
+  Given a user with a cancelled subscription, this component renders a cancelled
+  subscription notice. If the given user does not have a subscription or it has a
+  different status, this function returns an empty template.
+
+  It also takes a dismissable argument which renders the notice dismissable (with
+  the help of JavaScript and localStorage). We show a dismissable notice about a
+  cancelled subscription across the app, but when the user dismisses it, we will
+  start displaying it in the account settings > subscription section instead.
+
+  So it's either shown across the app, or only on the /settings page. Depending
+  on whether the localStorage flag to dismiss it has been set or not.
+  """
+  def subscription_cancelled_notice(assigns)
+
+  def subscription_cancelled_notice(
+        %{
+          dismissable: true,
+          user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
+        } = assigns
+      ) do
+    ~H"""
+    <aside id="global-subscription-cancelled-notice" class="container">
+      <PlausibleWeb.Components.Generic.notice
+        dismissable_id={Plausible.Billing.cancelled_subscription_notice_dismiss_id(@user)}
+        title="Subscription cancelled"
+        theme={:red}
+        class="shadow-md dark:shadow-none"
+      >
+        <.subscription_cancelled_notice_body user={@user} />
+      </PlausibleWeb.Components.Generic.notice>
+    </aside>
+    """
+  end
+
+  def subscription_cancelled_notice(
+        %{
+          dismissable: false,
+          user: %User{subscription: %Subscription{status: Subscription.Status.deleted()}}
+        } = assigns
+      ) do
+    assigns = assign(assigns, :container_id, "local-subscription-cancelled-notice")
+
+    ~H"""
+    <aside id={@container_id} class="hidden">
+      <PlausibleWeb.Components.Generic.notice
+        title="Subscription cancelled"
+        theme={:red}
+        class="shadow-md dark:shadow-none"
+      >
+        <.subscription_cancelled_notice_body user={@user} />
+      </PlausibleWeb.Components.Generic.notice>
+    </aside>
+    <script
+      data-localstorage-key={"notice_dismissed__#{Plausible.Billing.cancelled_subscription_notice_dismiss_id(assigns.user)}"}
+      data-container-id={@container_id}
+    >
+      const dataset = document.currentScript.dataset
+
+      if (localStorage[dataset.localstorageKey]) {
+        document.getElementById(dataset.containerId).classList.remove('hidden')
+      }
+    </script>
+    """
+  end
+
+  def subscription_cancelled_notice(assigns), do: ~H""
+
+  attr(:class, :string, default: "")
+  attr(:subscription, :any, default: nil)
+
   def subscription_past_due_notice(
         %{subscription: %Subscription{status: Subscription.Status.past_due()}} = assigns
       ) do
     ~H"""
     <aside class={@class}>
-      <div class="shadow-md dark:shadow-none rounded-lg bg-yellow-100 p-4">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg
-              class="w-5 h-5 mt-0.5 text-yellow-800"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          <div class="ml-3 flex-1 md:flex md:justify-between">
-            <p class="text-yellow-700">
-              There was a problem with your latest payment. Please update your payment information to keep using Plausible.
-            </p>
-            <.link
-              href={@subscription.update_url}
-              class="whitespace-nowrap font-medium text-yellow-700 hover:text-yellow-600"
-            >
-              Update billing info <span aria-hidden="true"> &rarr;</span>
-            </.link>
-          </div>
-        </div>
-      </div>
+      <PlausibleWeb.Components.Generic.notice
+        title="Payment failed"
+        class="shadow-md dark:shadow-none"
+      >
+        There was a problem with your latest payment. Please update your payment information to keep using Plausible.<.link
+          href={@subscription.update_url}
+          class="whitespace-nowrap font-semibold"
+        > Update billing info <span aria-hidden="true"> &rarr;</span></.link>
+      </PlausibleWeb.Components.Generic.notice>
     </aside>
     """
   end
 
   def subscription_past_due_notice(assigns), do: ~H""
 
+  attr(:class, :string, default: "")
+  attr(:subscription, :any, default: nil)
+
   def subscription_paused_notice(
         %{subscription: %Subscription{status: Subscription.Status.paused()}} = assigns
       ) do
     ~H"""
     <aside class={@class}>
-      <div class="shadow-md dark:shadow-none rounded-lg bg-red-100 p-4">
-        <div class="flex">
-          <div class="flex-shrink-0">
-            <svg
-              class="w-5 h-5 mt-0.5 text-yellow-800"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0378 2.66667 10.268 4L3.33978 16C2.56998 17.3333 3.53223 19 5.07183 19Z"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </div>
-          <div class="ml-3 flex-1 md:flex md:justify-between">
-            <p class="text-red-700">
-              Your subscription is paused due to failed payments. Please provide valid payment details to keep using Plausible.
-            </p>
-            <.link
-              href={@subscription.update_url}
-              class="whitespace-nowrap font-medium text-red-700 hover:text-red-600"
-            >
-              Update billing info <span aria-hidden="true"> &rarr;</span>
-            </.link>
-          </div>
-        </div>
-      </div>
+      <PlausibleWeb.Components.Generic.notice
+        title="Subscription paused"
+        theme={:red}
+        class="shadow-md dark:shadow-none"
+      >
+        Your subscription is paused due to failed payments. Please provide valid payment details to keep using Plausible.<.link
+          href={@subscription.update_url}
+          class="whitespace-nowrap font-semibold"
+        > Update billing info <span aria-hidden="true"> &rarr;</span></.link>
+      </PlausibleWeb.Components.Generic.notice>
     </aside>
     """
   end
 
   def subscription_paused_notice(assigns), do: ~H""
-
-  def private_preview_end_notice(assigns) do
-    user = assigns.user |> Plausible.Users.with_subscription()
-
-    features_to_lose =
-      case Plans.get_subscription_plan(user.subscription) do
-        nil ->
-          []
-
-        %Plan{kind: :business} ->
-          []
-
-        _free_10k_or_enterprise_or_growth ->
-          used_features = Plausible.Billing.Quota.features_usage(assigns.user)
-          Enum.filter([Funnels, RevenueGoals], &(&1 in used_features))
-      end
-
-    assigns = assign(assigns, :features_to_lose, features_to_lose)
-
-    ~H"""
-    <div
-      :if={FunWithFlags.enabled?(:premium_features_private_preview) && @features_to_lose != []}
-      class="container mt-2"
-    >
-      <.notice
-        class="shadow-md dark:shadow-none"
-        dismissable_id={"premium_features_private_preview_end__#{@user.id}"}
-      >
-        Business plans are now live! The private preview of <%= PlausibleWeb.TextHelpers.pretty_join(
-          Enum.map(@features_to_lose, & &1.display_name())
-        ) %> ends <b><%= private_preview_end() %></b>. If you wish to continue using <%= if length(
-                                                                                              @features_to_lose
-                                                                                            ) == 1,
-                                                                                            do:
-                                                                                              "this feature",
-                                                                                            else:
-                                                                                              "these features" %>,
-        <.upgrade_call_to_action current_user={@user} billable_user={@user} />.
-      </.notice>
-    </div>
-    """
-  end
 
   def present_enterprise_plan(assigns) do
     ~H"""
@@ -433,6 +533,47 @@ defmodule PlausibleWeb.Components.Billing do
     }>
       Upgrade
     </PlausibleWeb.Components.Generic.button_link>
+    """
+  end
+
+  defp subscription_cancelled_notice_body(assigns) do
+    if Plausible.Billing.Subscriptions.expired?(assigns.user.subscription) do
+      ~H"""
+      <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
+        Upgrade your subscription
+      </.link>
+      to get access to your stats again.
+      """
+    else
+      ~H"""
+      <p>
+        You have access to your stats until <span class="font-semibold inline"><%= Timex.format!(@user.subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></span>.
+        <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
+          Upgrade your subscription
+        </.link>
+        to make sure you don't lose access.
+      </p>
+      <.lose_grandfathering_warning user={@user} />
+      """
+    end
+  end
+
+  defp lose_grandfathering_warning(%{user: %{subscription: subscription} = user} = assigns) do
+    business_tiers_available? = FunWithFlags.enabled?(:business_tier, for: user)
+    plan = Plans.get_regular_plan(subscription, only_non_expired: true)
+    loses_grandfathering = business_tiers_available? && plan && plan.generation < 4
+
+    assigns = assign(assigns, :loses_grandfathering, loses_grandfathering)
+
+    ~H"""
+    <p :if={@loses_grandfathering} class="mt-2">
+      Please also note that by letting your subscription expire, you lose access to our grandfathered terms. If you want to subscribe again after that, your account will be offered the <.link
+        href="https://plausible.io/#pricing"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline"
+      >latest pricing</.link>.
+    </p>
     """
   end
 

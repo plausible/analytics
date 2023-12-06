@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.FirstLaunchPlugTest do
   use PlausibleWeb.ConnCase
+  @moduletag :small_build_only
   import Plug.Test
 
   alias PlausibleWeb.FirstLaunchPlug
@@ -25,7 +26,6 @@ defmodule PlausibleWeb.FirstLaunchPlugTest do
       refute conn.halted
 
       # even when it's the first launch
-      patch_env(:is_selfhost, true)
       assert Release.should_be_first_launch?()
 
       conn = conn("GET", "/register")
@@ -34,6 +34,7 @@ defmodule PlausibleWeb.FirstLaunchPlugTest do
     end
 
     test "no-op when not first launch" do
+      insert(:user)
       refute Release.should_be_first_launch?()
       conn = conn("GET", "/sites")
       conn = FirstLaunchPlug.call(conn, @opts)
@@ -41,7 +42,6 @@ defmodule PlausibleWeb.FirstLaunchPlugTest do
     end
 
     test "redirects to :redirect_to when first launch" do
-      patch_env(:is_selfhost, true)
       assert Release.should_be_first_launch?()
 
       conn = conn("GET", "/sites")
@@ -53,21 +53,10 @@ defmodule PlausibleWeb.FirstLaunchPlugTest do
 
   describe "first launch plug in :browser pipeline" do
     test "redirects to /register on first launch", %{conn: conn} do
-      patch_env(:is_selfhost, true)
       assert Release.should_be_first_launch?()
 
       conn = get(conn, "/")
       assert redirected_to(conn) == "/register"
-    end
-
-    test "no-op when not first launch", %{conn: conn} do
-      patch_env(:is_selfhost, false)
-      refute Release.should_be_first_launch?()
-
-      # gets redirected to login by auth plugs
-      # "first launch" doesn't interfere
-      conn = get(conn, "/sites")
-      assert redirected_to(conn) == "/login"
     end
   end
 end

@@ -1,14 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { Link } from 'react-router-dom'
 import { withRouter } from 'react-router-dom'
-import Money from "../behaviours/money";
 
 import Modal from './modal'
 import * as api from '../../api'
 import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
-import {parseQuery} from '../../query'
+import { parseQuery } from '../../query'
 import { escapeFilterValue } from '../../util/filters'
+
+/*global BUILD_EXTRA*/
+/*global require*/
+function maybeRequire() {
+  if (BUILD_EXTRA) {
+    return require('../../extra/money')
+  } else {
+    return { default: null }
+  }
+}
+
+const Money = maybeRequire().default
 
 function ConversionsModal(props) {
   const site = props.site
@@ -24,7 +35,7 @@ function ConversionsModal(props) {
   }, [])
 
   function fetchData() {
-    api.get(url.apiPath(site, `/conversions`), query, {limit: 100, page})
+    api.get(url.apiPath(site, `/conversions`), query, { limit: 100, page })
       .then((res) => {
         setLoading(false)
         setList(list.concat(res))
@@ -59,16 +70,16 @@ function ConversionsModal(props) {
       <tr className="text-sm dark:text-gray-200" key={listItem.name}>
         <td className="p-2">
           <Link
-            to={{pathname: url.siteBasePath(site), search: filterSearchLink(listItem)}}
+            to={{ pathname: url.siteBasePath(site), search: filterSearchLink(listItem) }}
             className="hover:underline block truncate">
-              {listItem.name}
+            {listItem.name}
           </Link>
         </td>
         <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.visitors)}</td>
         <td className="p-2 w-24 font-medium" align="right">{numberFormatter(listItem.events)}</td>
         <td className="p-2 w-24 font-medium" align="right">{listItem.conversion_rate}%</td>
-        { hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.total_revenue}/></td> }
-        { hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.average_revenue}/></td> }
+        {hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.total_revenue} /></td>}
+        {hasRevenue && <td className="p-2 w-24 font-medium" align="right"><Money formatted={listItem.average_revenue} /></td>}
       </tr>
     )
   }
@@ -78,7 +89,7 @@ function ConversionsModal(props) {
   }
 
   function renderBody() {
-    const hasRevenue = list.some((goal) => goal.total_revenue)
+    const hasRevenue = BUILD_EXTRA && list.some((goal) => goal.total_revenue)
 
     return (
       <>
@@ -98,7 +109,7 @@ function ConversionsModal(props) {
               </tr>
             </thead>
             <tbody>
-              { list.map((item) => renderListItem(item, hasRevenue)) }
+              {list.map((item) => renderListItem(item, hasRevenue))}
             </tbody>
           </table>
         </main>
@@ -108,9 +119,9 @@ function ConversionsModal(props) {
 
   return (
     <Modal site={site}>
-      { renderBody() }
-      { loading && renderLoading() }
-      { !loading && moreResultsAvailable && renderLoadMore() }
+      {renderBody()}
+      {loading && renderLoading()}
+      {!loading && moreResultsAvailable && renderLoadMore()}
     </Modal>
   )
 }

@@ -219,6 +219,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert resp == []
     end
 
+    @tag :full_build_only
     test "returns formatted average and total values for a conversion with revenue value", %{
       conn: conn,
       site: site
@@ -259,6 +260,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    @tag :full_build_only
     test "returns revenue metrics as nil for non-revenue goals", %{
       conn: conn,
       site: site

@@ -13,7 +13,8 @@ defmodule Plausible.Auth.UserAdmin do
       name: nil,
       email: nil,
       previous_email: nil,
-      trial_expiry_date: nil
+      trial_expiry_date: nil,
+      allow_next_upgrade_override: nil
     ]
   end
 
@@ -29,6 +30,7 @@ defmodule Plausible.Auth.UserAdmin do
       trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
       subscription_plan: %{value: &subscription_plan/1},
       subscription_status: %{value: &subscription_status/1},
+      usage: %{value: &usage_link/1},
       grace_period: %{value: &grace_period_status/1}
     ]
   end
@@ -113,6 +115,11 @@ defmodule Plausible.Auth.UserAdmin do
       true ->
         "Trial expired"
     end
+  end
+
+  defp usage_link(user) do
+    path = PlausibleWeb.Router.Helpers.admin_path(PlausibleWeb.Endpoint, :usage, user.id)
+    {:safe, ~s(<a href="#{path}">Usage</a>)}
   end
 
   defp format_date(nil), do: "--"

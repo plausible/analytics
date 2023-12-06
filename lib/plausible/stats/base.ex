@@ -1,10 +1,9 @@
 defmodule Plausible.Stats.Base do
   use Plausible.ClickhouseRepo
+  use Plausible
   alias Plausible.Stats.{Query, Filters}
   import Ecto.Query
 
-  # Ecto typespec has not been updated for this PR: https://github.com/elixir-ecto/ecto/pull/3592
-  @dialyzer {:nowarn_function, add_sample_hint: 2}
   @no_ref "Direct / None"
   @not_set "(not set)"
 
@@ -30,7 +29,6 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def query_events(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
@@ -40,7 +38,10 @@ defmodule Plausible.Stats.Base do
         where: e.site_id == ^site.id,
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
-      |> add_sample_hint(query)
+
+    on_full_build do
+      q = Plausible.Stats.Sampling.add_query_hint(q, query)
+    end
 
     q = from(e in q, where: ^dynamic_filter_condition(query, "event:page", :pathname))
 
@@ -211,8 +212,12 @@ defmodule Plausible.Stats.Base do
         where: s.site_id == ^site.id,
         where: s.start >= ^first_datetime and s.start < ^last_datetime
       )
-      |> add_sample_hint(query)
-      |> filter_by_entry_props(query)
+
+    on_full_build do
+      sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
+    end
+
+    sessions_q = filter_by_entry_props(sessions_q, query)
 
     Enum.reduce(Filters.visit_props(), sessions_q, fn prop_name, sessions_q ->
       filter_key = "visit:" <> prop_name
@@ -301,24 +306,18 @@ defmodule Plausible.Stats.Base do
     |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, [:total_revenue | rest]) do
-    from(e in q,
-      select_merge: %{
-        total_revenue:
-          fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-      }
-    )
-    |> select_event_metrics(rest)
-  end
+  on_full_build do
+    def select_event_metrics(q, [:total_revenue | rest]) do
+      q
+      |> Plausible.Stats.Goal.Revenue.total_revenue_query()
+      |> select_event_metrics(rest)
+    end
 
-  def select_event_metrics(q, [:average_revenue | rest]) do
-    from(e in q,
-      select_merge: %{
-        average_revenue:
-          fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-      }
-    )
-    |> select_event_metrics(rest)
+    def select_event_metrics(q, [:average_revenue | rest]) do
+      q
+      |> Plausible.Stats.Goal.Revenue.average_revenue_query()
+      |> select_event_metrics(rest)
+    end
   end
 
   def select_event_metrics(q, [:sample_percent | rest]) do
@@ -331,7 +330,7 @@ defmodule Plausible.Stats.Base do
     |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(_, [unknown | _]), do: raise("Unknown metric " <> unknown)
+  def select_event_metrics(_, [unknown | _]), do: raise("Unknown metric: #{unknown}")
 
   def select_session_metrics(q, [], _query), do: q
 
@@ -424,8 +423,7 @@ defmodule Plausible.Stats.Base do
     |> select_session_metrics(rest, query)
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-  defp dynamic_filter_condition(query, filter_key, db_field) do
+  def dynamic_filter_condition(query, filter_key, db_field) do
     case query && query.filters && query.filters[filter_key] do
       {:is, value} ->
         value = db_field_val(db_field, value)
@@ -554,16 +552,6 @@ defmodule Plausible.Stats.Base do
     Enum.reduce(@replaces, "^#{expr}$", fn {pattern, replacement}, regex ->
       String.replace(regex, pattern, replacement)
     end)
-  end
-
-  defp add_sample_hint(db_q, query) do
-    case query.sample_threshold do
-      :infinite ->
-        db_q
-
-      threshold ->
-        from(e in db_q, hints: [sample: threshold])
-    end
   end
 
   defp split_goals(clauses, map_fn \\ &Function.identity/1) do

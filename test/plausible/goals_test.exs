@@ -1,5 +1,6 @@
 defmodule Plausible.GoalsTest do
   use Plausible.DataCase
+  use Plausible
   alias Plausible.Goals
 
   test "create/2 creates goals and trims input" do
@@ -47,6 +48,7 @@ defmodule Plausible.GoalsTest do
     assert {"has already been taken", _} = changeset.errors[:event_name]
   end
 
+  @tag :full_build_only
   test "create/2 sets site.updated_at for revenue goal" do
     site_1 = insert(:site, updated_at: DateTime.add(DateTime.utc_now(), -3600))
 
@@ -62,6 +64,7 @@ defmodule Plausible.GoalsTest do
              :eq
   end
 
+  @tag :full_build_only
   test "create/2 creates revenue goal" do
     site = insert(:site)
     {:ok, goal} = Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
@@ -70,6 +73,7 @@ defmodule Plausible.GoalsTest do
     assert goal.currency == :EUR
   end
 
+  @tag :full_build_only
   test "create/2 returns error when site does not have access to revenue goals" do
     user = insert(:user, subscription: build(:growth_subscription))
     site = insert(:site, members: [user])
@@ -78,6 +82,7 @@ defmodule Plausible.GoalsTest do
       Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
   end
 
+  @tag :full_build_only
   test "create/2 fails for unknown currency code" do
     site = insert(:site)
 
@@ -132,79 +137,81 @@ defmodule Plausible.GoalsTest do
     assert [] = Goals.for_site(site)
   end
 
-  test "goals can be fetched with funnel count preloaded" do
-    site = insert(:site)
+  on_full_build do
+    test "goals can be fetched with funnel count preloaded" do
+      site = insert(:site)
 
-    goals =
-      Enum.map(1..4, fn i ->
-        {:ok, g} = Goals.create(site, %{"page_path" => "/#{i}"})
-        g
-      end)
+      goals =
+        Enum.map(1..4, fn i ->
+          {:ok, g} = Goals.create(site, %{"page_path" => "/#{i}"})
+          g
+        end)
 
-    {:ok, %{id: funnel_id1}} =
-      Plausible.Funnels.create(
-        site,
-        "Funnel1",
-        [
-          %{"goal_id" => Enum.at(goals, 1).id},
-          %{"goal_id" => Enum.at(goals, 2).id},
-          %{"goal_id" => Enum.at(goals, 3).id}
-        ]
-      )
+      {:ok, %{id: funnel_id1}} =
+        Plausible.Funnels.create(
+          site,
+          "Funnel1",
+          [
+            %{"goal_id" => Enum.at(goals, 1).id},
+            %{"goal_id" => Enum.at(goals, 2).id},
+            %{"goal_id" => Enum.at(goals, 3).id}
+          ]
+        )
 
-    {:ok, %{id: funnel_id2}} =
-      Plausible.Funnels.create(
-        site,
-        "Funnel2",
-        [
-          %{"goal_id" => Enum.at(goals, 1).id},
-          %{"goal_id" => Enum.at(goals, 3).id}
-        ]
-      )
+      {:ok, %{id: funnel_id2}} =
+        Plausible.Funnels.create(
+          site,
+          "Funnel2",
+          [
+            %{"goal_id" => Enum.at(goals, 1).id},
+            %{"goal_id" => Enum.at(goals, 3).id}
+          ]
+        )
 
-    assert [goal, _, _, _] = Goals.for_site(site, preload_funnels?: false)
-    assert %Ecto.Association.NotLoaded{} = goal.funnels
+      assert [goal, _, _, _] = Goals.for_site(site, preload_funnels?: false)
+      assert %Ecto.Association.NotLoaded{} = goal.funnels
 
-    assert [goal, _, _, _] = Goals.for_site(site, preload_funnels?: true)
-    assert [%{id: ^funnel_id1}, %{id: ^funnel_id2}] = goal.funnels
-  end
+      assert [goal, _, _, _] = Goals.for_site(site, preload_funnels?: true)
+      assert [%{id: ^funnel_id1}, %{id: ^funnel_id2}] = goal.funnels
+    end
 
-  test "deleting goals with funnels triggers funnel reduction" do
-    site = insert(:site)
-    {:ok, g1} = Goals.create(site, %{"page_path" => "/1"})
-    {:ok, g2} = Goals.create(site, %{"page_path" => "/2"})
-    {:ok, g3} = Goals.create(site, %{"page_path" => "/3"})
+    test "deleting goals with funnels triggers funnel reduction" do
+      site = insert(:site)
+      {:ok, g1} = Goals.create(site, %{"page_path" => "/1"})
+      {:ok, g2} = Goals.create(site, %{"page_path" => "/2"})
+      {:ok, g3} = Goals.create(site, %{"page_path" => "/3"})
 
-    {:ok, f1} =
-      Plausible.Funnels.create(
-        site,
-        "Funnel 3 steps",
-        [
-          %{"goal_id" => g1.id},
-          %{"goal_id" => g2.id},
-          %{"goal_id" => g3.id}
-        ]
-      )
+      {:ok, f1} =
+        Plausible.Funnels.create(
+          site,
+          "Funnel 3 steps",
+          [
+            %{"goal_id" => g1.id},
+            %{"goal_id" => g2.id},
+            %{"goal_id" => g3.id}
+          ]
+        )
 
-    {:ok, f2} =
-      Plausible.Funnels.create(
-        site,
-        "Funnel 2 steps",
-        [
-          %{"goal_id" => g1.id},
-          %{"goal_id" => g2.id}
-        ]
-      )
+      {:ok, f2} =
+        Plausible.Funnels.create(
+          site,
+          "Funnel 2 steps",
+          [
+            %{"goal_id" => g1.id},
+            %{"goal_id" => g2.id}
+          ]
+        )
 
-    :ok = Goals.delete(g1.id, site)
+      :ok = Goals.delete(g1.id, site)
 
-    assert f1 = Plausible.Funnels.get(site.id, f1.id)
-    assert Enum.count(f1.steps) == 2
+      assert f1 = Plausible.Funnels.get(site.id, f1.id)
+      assert Enum.count(f1.steps) == 2
 
-    refute Plausible.Funnels.get(site.id, f2.id)
-    assert Repo.all(from(fs in Plausible.Funnel.Step, where: fs.funnel_id == ^f2.id)) == []
+      refute Plausible.Funnels.get(site.id, f2.id)
+      assert Repo.all(from(fs in Plausible.Funnel.Step, where: fs.funnel_id == ^f2.id)) == []
 
-    assert [^g3, ^g2] = Goals.for_site(site)
+      assert [^g3, ^g2] = Goals.for_site(site)
+    end
   end
 
   test "must be either page_path or event_name" do

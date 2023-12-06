@@ -846,6 +846,55 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              }
     end
 
+    test "shows events for last 7d", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-07 23:59:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "7d",
+          "metrics" => "events",
+          "date" => "2021-01-07"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "date" => "2021-01-01",
+                   "events" => 2
+                 },
+                 %{
+                   "date" => "2021-01-02",
+                   "events" => 0
+                 },
+                 %{
+                   "date" => "2021-01-03",
+                   "events" => 0
+                 },
+                 %{
+                   "date" => "2021-01-04",
+                   "events" => 0
+                 },
+                 %{
+                   "date" => "2021-01-05",
+                   "events" => 0
+                 },
+                 %{
+                   "date" => "2021-01-06",
+                   "events" => 0
+                 },
+                 %{
+                   "date" => "2021-01-07",
+                   "events" => 1
+                 }
+               ]
+             }
+    end
+
     test "rounds views_per_visit to two decimal places", %{
       conn: conn,
       site: site

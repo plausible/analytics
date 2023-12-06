@@ -68,6 +68,22 @@ defmodule PlausibleWeb.Email do
     |> render("password_reset_email.html", reset_link: reset_link)
   end
 
+  def two_factor_enabled_email(user) do
+    priority_email()
+    |> to(user)
+    |> tag("two-factor-enabled-email")
+    |> subject("Plausible Two-Factor Authentication enabled")
+    |> render("two_factor_enabled_email.html", user: user)
+  end
+
+  def two_factor_disabled_email(user) do
+    priority_email()
+    |> to(user)
+    |> tag("two-factor-disabled-email")
+    |> subject("Plausible Two-Factor Authentication disabled")
+    |> render("two_factor_disabled_email.html", user: user)
+  end
+
   def trial_one_week_reminder(user) do
     base_email()
     |> to(user)
@@ -76,8 +92,8 @@ defmodule PlausibleWeb.Email do
     |> render("trial_one_week_reminder.html", user: user)
   end
 
-  def trial_upgrade_email(user, day, {pageviews, custom_events}) do
-    suggested_plan = Plausible.Billing.Plans.suggest(user, pageviews + custom_events)
+  def trial_upgrade_email(user, day, usage) do
+    suggested_plan = Plausible.Billing.Plans.suggest(user, usage.total)
 
     base_email()
     |> to(user)
@@ -86,8 +102,8 @@ defmodule PlausibleWeb.Email do
     |> render("trial_upgrade_email.html",
       user: user,
       day: day,
-      custom_events: custom_events,
-      usage: pageviews + custom_events,
+      custom_events: usage.custom_events,
+      usage: usage.total,
       suggested_plan: suggested_plan
     )
   end
@@ -123,7 +139,7 @@ defmodule PlausibleWeb.Email do
     })
   end
 
-  def over_limit_email(user, usage, last_cycle, suggested_plan) do
+  def over_limit_email(user, usage, suggested_plan) do
     priority_email()
     |> to(user)
     |> tag("over-limit")
@@ -131,26 +147,24 @@ defmodule PlausibleWeb.Email do
     |> render("over_limit.html", %{
       user: user,
       usage: usage,
-      last_cycle: last_cycle,
       suggested_plan: suggested_plan
     })
   end
 
-  def enterprise_over_limit_internal_email(user, usage, last_cycle, site_usage, site_allowance) do
+  def enterprise_over_limit_internal_email(user, pageview_usage, site_usage, site_allowance) do
     base_email(%{layout: nil})
     |> to("enterprise@plausible.io")
     |> tag("enterprise-over-limit")
     |> subject("#{user.email} has outgrown their enterprise plan")
     |> render("enterprise_over_limit_internal.html", %{
       user: user,
-      usage: usage,
-      last_cycle: last_cycle,
+      pageview_usage: pageview_usage,
       site_usage: site_usage,
       site_allowance: site_allowance
     })
   end
 
-  def dashboard_locked(user, usage, last_cycle, suggested_plan) do
+  def dashboard_locked(user, usage, suggested_plan) do
     priority_email()
     |> to(user)
     |> tag("dashboard-locked")
@@ -158,7 +172,6 @@ defmodule PlausibleWeb.Email do
     |> render("dashboard_locked.html", %{
       user: user,
       usage: usage,
-      last_cycle: last_cycle,
       suggested_plan: suggested_plan
     })
   end

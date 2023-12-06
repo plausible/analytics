@@ -11,6 +11,7 @@ defimpl FunWithFlags.Actor, for: Plausible.Auth.User do
 end
 
 defmodule Plausible.Auth.User do
+  use Plausible
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -29,6 +30,17 @@ defmodule Plausible.Auth.User do
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     field :previous_email, :string
+
+    # A field only used as a manual override - allow subscribing
+    # to any plan, even when exceeding its pageview limit
+    field :allow_next_upgrade_override, :boolean
+
+    # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
+    field :totp_enabled, :boolean, default: false
+    field :totp_secret, Plausible.Auth.TOTP.EncryptedBinary
+    field :totp_token, :string
+    field :totp_last_used_at, :naive_datetime
+
     embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
 
     has_many :site_memberships, Plausible.Site.Membership
@@ -89,7 +101,14 @@ defmodule Plausible.Auth.User do
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:email, :name, :email_verified, :theme, :trial_expiry_date])
+    |> cast(attrs, [
+      :email,
+      :name,
+      :email_verified,
+      :theme,
+      :trial_expiry_date,
+      :allow_next_upgrade_override
+    ])
     |> validate_required([:email, :name, :email_verified])
     |> unique_constraint(:email)
   end
@@ -203,10 +222,10 @@ defmodule Plausible.Auth.User do
   end
 
   defp trial_expiry() do
-    if Application.get_env(:plausible, :is_selfhost) do
-      Timex.today() |> Timex.shift(years: 100)
-    else
+    on_full_build do
       Timex.today() |> Timex.shift(days: 30)
+    else
+      Timex.today() |> Timex.shift(years: 100)
     end
   end
 

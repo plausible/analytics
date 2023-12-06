@@ -4,6 +4,21 @@ defmodule PlausibleWeb.Components.Generic do
   """
   use Phoenix.Component
 
+  @notice_themes %{
+    yellow: %{
+      bg: "bg-yellow-50 dark:bg-yellow-100",
+      icon: "text-yellow-400",
+      title_text: "text-yellow-800 dark:text-yellow-900",
+      body_text: "text-yellow-700 dark:text-yellow-800"
+    },
+    red: %{
+      bg: "bg-red-100",
+      icon: "text-red-700",
+      title_text: "text-red-800 dark:text-red-900",
+      body_text: "text-red-700 dark:text-red-800"
+    }
+  }
+
   attr(:type, :string, default: "button")
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
@@ -17,7 +32,7 @@ defmodule PlausibleWeb.Components.Generic do
       type={@type}
       disabled={@disabled}
       class={[
-        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
+        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700",
         @class
       ]}
       {@rest}
@@ -38,7 +53,7 @@ defmodule PlausibleWeb.Components.Generic do
     <.link
       href={@href}
       class={[
-        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
+        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400 dark:disabled:bg-gray-800",
         @class
       ]}
       {@rest}
@@ -58,28 +73,31 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
-  attr(:title, :string, default: "Notice")
+  attr(:title, :any, default: nil)
   attr(:size, :atom, default: :sm)
+  attr(:theme, :atom, default: :yellow)
   attr(:dismissable_id, :any, default: nil)
   attr(:class, :string, default: "")
   attr(:rest, :global)
   slot(:inner_block)
 
   def notice(assigns) do
+    assigns = assign(assigns, :theme, Map.fetch!(@notice_themes, assigns.theme))
+
     ~H"""
     <div id={@dismissable_id} class={@dismissable_id && "hidden"}>
-      <div class={"rounded-md bg-yellow-50 dark:bg-yellow-100 p-4 relative #{@class}"} {@rest}>
+      <div class={["rounded-md p-4 relative", @theme.bg, @class]} {@rest}>
         <button
           :if={@dismissable_id}
-          class="absolute right-0 top-0 m-2 text-yellow-800 dark:text-yellow-900"
+          class={"absolute right-0 top-0 m-2 #{@theme.title_text}"}
           onclick={"localStorage['notice_dismissed__#{@dismissable_id}'] = 'true'; document.getElementById('#{@dismissable_id}').classList.add('hidden')"}
         >
           <Heroicons.x_mark class="h-4 w-4 hover:stroke-2" />
         </button>
         <div class="flex">
-          <div :if={@size !== :xs} class="flex-shrink-0">
+          <div :if={@title} class="flex-shrink-0">
             <svg
-              class="h-5 w-5 text-yellow-400"
+              class={"h-5 w-5 #{@theme.icon}"}
               viewBox="0 0 20 20"
               fill="currentColor"
               aria-hidden="true"
@@ -91,14 +109,11 @@ defmodule PlausibleWeb.Components.Generic do
               />
             </svg>
           </div>
-          <div class="ml-3">
-            <h3
-              :if={@size !== :xs}
-              class={"text-#{@size} font-medium text-yellow-800 dark:text-yellow-900 mb-2"}
-            >
+          <div class={["w-full", @title && "ml-3"]}>
+            <h3 :if={@title} class={"text-#{@size} font-medium #{@theme.title_text} mb-2"}>
               <%= @title %>
             </h3>
-            <div class={"text-#{@size} text-yellow-700 dark:text-yellow-800"}>
+            <div class={"text-#{@size} #{@theme.body_text}"}>
               <p>
                 <%= render_slot(@inner_block) %>
               </p>
@@ -107,7 +122,7 @@ defmodule PlausibleWeb.Components.Generic do
         </div>
       </div>
     </div>
-    <script data-key={@dismissable_id}>
+    <script :if={@dismissable_id} data-key={@dismissable_id}>
       const dismissId = document.currentScript.dataset.key
       const localStorageKey = `notice_dismissed__${dismissId}`
 
@@ -231,6 +246,28 @@ defmodule PlausibleWeb.Components.Generic do
       </.link>
       """
     end
+  end
+
+  attr :class, :any, default: ""
+
+  def spinner(assigns) do
+    ~H"""
+    <svg
+      class={["animate-spin h-4 w-4 text-indigo-500", @class]}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4">
+      </circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      >
+      </path>
+    </svg>
+    """
   end
 
   defp icon_class(link_assigns) do

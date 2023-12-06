@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Router do
   use PlausibleWeb, :router
+  use Plausible
   import Phoenix.LiveView.Router
   @two_weeks_in_seconds 60 * 60 * 24 * 14
 
@@ -9,7 +10,7 @@ defmodule PlausibleWeb.Router do
     plug :fetch_live_flash
     plug :put_secure_browser_headers
     plug PlausibleWeb.Plugs.NoRobots
-    plug PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"
+    on_full_build(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.LastSeenPlug
@@ -50,25 +51,39 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
   end
 
-  pipeline :flags do
-    plug :accepts, ["html"]
-    plug :put_secure_browser_headers
-    plug PlausibleWeb.Plugs.NoRobots
-    plug :fetch_session
-    plug PlausibleWeb.CRMAuthPlug
+  on_full_build do
+    pipeline :flags do
+      plug :accepts, ["html"]
+      plug :put_secure_browser_headers
+      plug PlausibleWeb.Plugs.NoRobots
+      plug :fetch_session
+
+      plug PlausibleWeb.CRMAuthPlug
+    end
   end
 
   if Mix.env() == :dev do
     forward "/sent-emails", Bamboo.SentEmailViewerPlug
   end
 
-  use Kaffy.Routes,
-    scope: "/crm",
-    pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
+  on_full_build do
+    use Kaffy.Routes,
+      scope: "/crm",
+      pipe_through: [PlausibleWeb.Plugs.NoRobots, PlausibleWeb.CRMAuthPlug]
+  end
 
-  scope path: "/flags" do
-    pipe_through :flags
-    forward "/", FunWithFlags.UI.Router, namespace: "flags"
+  on_full_build do
+    scope "/crm", PlausibleWeb do
+      pipe_through :flags
+      get "/auth/user/:user_id/usage", AdminController, :usage
+    end
+  end
+
+  on_full_build do
+    scope path: "/flags" do
+      pipe_through :flags
+      forward "/", FunWithFlags.UI.Router, namespace: "flags"
+    end
   end
 
   scope path: "/api/plugins" do
@@ -77,7 +92,11 @@ defmodule PlausibleWeb.Router do
 
   scope "/api/stats", PlausibleWeb.Api do
     pipe_through :internal_stats_api
-    get "/:domain/funnels/:id", StatsController, :funnel
+
+    on_full_build do
+      get "/:domain/funnels/:id", StatsController, :funnel
+    end
+
     get "/:domain/current-visitors", StatsController, :current_visitors
     get "/:domain/main-graph", StatsController, :main_graph
     get "/:domain/top-stats", StatsController, :top_stats
@@ -113,16 +132,18 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
-  scope "/api/v1/sites", PlausibleWeb.Api do
-    pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
+  on_full_build do
+    scope "/api/v1/sites", PlausibleWeb.Api do
+      pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
 
-    post "/", ExternalSitesController, :create_site
-    put "/shared-links", ExternalSitesController, :find_or_create_shared_link
-    put "/goals", ExternalSitesController, :find_or_create_goal
-    delete "/goals/:goal_id", ExternalSitesController, :delete_goal
-    get "/:site_id", ExternalSitesController, :get_site
-    put "/:site_id", ExternalSitesController, :update_site
-    delete "/:site_id", ExternalSitesController, :delete_site
+      post "/", ExternalSitesController, :create_site
+      put "/shared-links", ExternalSitesController, :find_or_create_shared_link
+      put "/goals", ExternalSitesController, :find_or_create_goal
+      delete "/goals/:goal_id", ExternalSitesController, :delete_goal
+      get "/:site_id", ExternalSitesController, :get_site
+      put "/:site_id", ExternalSitesController, :update_site
+      delete "/:site_id", ExternalSitesController, :delete_site
+    end
   end
 
   scope "/api", PlausibleWeb do
@@ -173,6 +194,15 @@ defmodule PlausibleWeb.Router do
     post "/login", AuthController, :login
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
+    post "/2fa/setup/initiate", AuthController, :initiate_2fa_setup
+    get "/2fa/setup/verify", AuthController, :verify_2fa_setup_form
+    post "/2fa/setup/verify", AuthController, :verify_2fa_setup
+    post "/2fa/disable", AuthController, :disable_2fa
+    post "/2fa/recovery_codes", AuthController, :generate_2fa_recovery_codes
+    get "/2fa/verify", AuthController, :verify_2fa_form
+    post "/2fa/verify", AuthController, :verify_2fa
+    get "/2fa/use_recovery_code", AuthController, :verify_2fa_recovery_code_form
+    post "/2fa/use_recovery_code", AuthController, :verify_2fa_recovery_code
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
     get "/avatar/:hash", AvatarController, :avatar
@@ -264,8 +294,6 @@ defmodule PlausibleWeb.Router do
     put "/sites/:website/shared-links/:slug", SiteController, :update_shared_link
     delete "/sites/:website/shared-links/:slug", SiteController, :delete_shared_link
 
-    delete "/sites/:website/custom-domains/:id", SiteController, :delete_custom_domain
-
     get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
     post "/sites/:website/memberships/invite", Site.MembershipController, :invite_member
 
@@ -291,10 +319,12 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/visibility", SiteController, :settings_visibility
     get "/:website/settings/goals", SiteController, :settings_goals
     get "/:website/settings/properties", SiteController, :settings_props
-    get "/:website/settings/funnels", SiteController, :settings_funnels
+
+    on_full_build do
+      get "/:website/settings/funnels", SiteController, :settings_funnels
+    end
 
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
-    get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:website/settings/integrations", SiteController, :settings_integrations
 

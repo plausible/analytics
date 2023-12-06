@@ -10,7 +10,7 @@ defmodule Plausible.MixProject do
       version: System.get_env("APP_VERSION", "0.0.1"),
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
-      start_permanent: Mix.env() == :prod,
+      start_permanent: Mix.env() in [:prod, :small],
       aliases: aliases(),
       deps: deps(),
       test_coverage: [
@@ -46,8 +46,14 @@ defmodule Plausible.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(env) when env in [:test, :dev], do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
+  defp elixirc_paths(env) when env in [:test, :dev],
+    do: ["lib", "test/support", "extra/lib"]
+
+  defp elixirc_paths(env) when env in [:small_test, :small_dev],
+    do: ["lib", "test/support"]
+
+  defp elixirc_paths(:small), do: ["lib"]
+  defp elixirc_paths(_), do: ["lib", "extra/lib"]
 
   # Specifies your project dependencies.
   #
@@ -59,35 +65,38 @@ defmodule Plausible.MixProject do
       {:bamboo_postmark, git: "https://github.com/plausible/bamboo_postmark.git", branch: "main"},
       {:bamboo_smtp, "~> 4.1"},
       {:bcrypt_elixir, "~> 3.0"},
-      {:bypass, "~> 2.1", only: [:dev, :test]},
+      {:bypass, "~> 2.1", only: [:dev, :test, :small_test]},
       {:cachex, "~> 3.4"},
       {:ecto_ch, "~> 0.1.10"},
+      {:cloak, "~> 1.1"},
+      {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
       {:connection, "~> 1.1", override: true},
       {:cors_plug, "~> 3.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:csv, "~> 2.3"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
-      {:double, "~> 0.8.0", only: :test},
+      {:double, "~> 0.8.0", only: [:test, :small_test]},
       {:ecto, "~> 3.10.0"},
       {:ecto_sql, "~> 3.10.0"},
       {:envy, "~> 1.1.1"},
-      {:ex_machina, "~> 2.3", only: [:dev, :test]},
+      {:eqrcode, "~> 0.1.10"},
+      {:ex_machina, "~> 2.3", only: [:dev, :test, :small_dev, :small_test]},
       {:excoveralls, "~> 0.10", only: :test},
       {:finch, "~> 0.16.0"},
-      {:floki, "~> 0.34.3", only: [:dev, :test]},
+      {:floki, "~> 0.34.3", only: [:dev, :test, :small_dev, :small_test]},
       {:fun_with_flags, "~> 1.9.0"},
       {:fun_with_flags_ui, "~> 0.8"},
       {:locus, "~> 2.3"},
       {:gen_cycle, "~> 1.0.4"},
       {:hackney, "~> 1.8"},
-      {:hammer, "~> 6.0"},
       {:httpoison, "~> 1.4"},
       {:jason, "~> 1.3"},
-      {:kaffy, "~> 0.9.4"},
+      {:kaffy, "~> 0.10.2", only: [:dev, :test, :staging, :prod]},
       {:location, git: "https://github.com/plausible/location.git"},
-      {:mox, "~> 1.0", only: :test},
+      {:mox, "~> 1.0", only: [:test, :small_test]},
       {:nanoid, "~> 2.0.2"},
+      {:nimble_totp, "~> 1.0"},
       {:oauther, "~> 1.3"},
       {:oban, "~> 2.12.0"},
       {:observer_cli, "~> 1.7"},
@@ -101,7 +110,7 @@ defmodule Plausible.MixProject do
       {:phoenix_view, "~> 2.0"},
       {:phoenix_ecto, "~> 4.0"},
       {:phoenix_html, "~> 3.3", override: true},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
+      {:phoenix_live_reload, "~> 1.2", only: [:dev, :small_dev]},
       {:phoenix_pubsub, "~> 2.0"},
       {:phoenix_live_view, "~> 0.18"},
       {:php_serializer, "~> 2.0"},
@@ -125,8 +134,8 @@ defmodule Plausible.MixProject do
       {:joken, "~> 2.5"},
       {:paginator, git: "https://github.com/duffelhq/paginator.git"},
       {:scrivener_ecto, "~> 2.0"},
-      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :small_dev]},
+      {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :small_dev]},
       {:ex_json_logger, "~> 1.3.0"}
     ]
   end
@@ -139,7 +148,10 @@ defmodule Plausible.MixProject do
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
       sentry_recompile: ["compile", "deps.compile sentry --force"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind default", "esbuild default"],
+      "assets.build": [
+        "tailwind default",
+        "esbuild default"
+      ],
       "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
     ]
   end

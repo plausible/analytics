@@ -6,6 +6,14 @@ if config_env() in [:dev, :test] do
   Envy.load(["config/.env.#{config_env()}"])
 end
 
+if config_env() == :small_dev do
+  Envy.load(["config/.env.dev"])
+end
+
+if config_env() == :small_test do
+  Envy.load(["config/.env.test"])
+end
+
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
 
 log_format =
@@ -13,7 +21,7 @@ log_format =
 
 log_level =
   config_dir
-  |> get_var_from_path_or_env("LOG_LEVEL", "warn")
+  |> get_var_from_path_or_env("LOG_LEVEL", "warning")
   |> String.to_existing_atom()
 
 config :logger,
@@ -137,6 +145,20 @@ ch_db_url =
   |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE", "100000")
   |> Integer.parse()
 
+# Can be generated  with `Base.encode64(:crypto.strong_rand_bytes(32))` from
+# iex shell or `openssl rand -base64 32` from command line.
+totp_vault_key = get_var_from_path_or_env(config_dir, "TOTP_VAULT_KEY", nil)
+
+case totp_vault_key do
+  nil ->
+    raise "TOTP_VAULT_KEY configuration option is required. See https://plausible.io/docs/self-hosting-configuration#server"
+
+  key ->
+    if byte_size(Base.decode64!(key)) != 32 do
+      raise "TOTP_VAULT_KEY must exactly 32 bytes long. See https://plausible.io/docs/self-hosting-configuration#server"
+    end
+end
+
 ### Mandatory params End
 
 build_metadata_raw = get_var_from_path_or_env(config_dir, "BUILD_METADATA", "{}")
@@ -168,6 +190,8 @@ runtime_metadata = [
 ]
 
 config :plausible, :runtime_metadata, runtime_metadata
+
+config :plausible, Plausible.Auth.TOTP, vault_key: totp_vault_key
 
 sentry_dsn = get_var_from_path_or_env(config_dir, "SENTRY_DSN")
 honeycomb_api_key = get_var_from_path_or_env(config_dir, "HONEYCOMB_API_KEY")
@@ -546,35 +570,34 @@ config :ref_inspector,
 config :ua_inspector,
   init: {Plausible.Release, :configure_ua_inspector}
 
-config :hammer,
-  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10]}
-
-config :kaffy,
-  otp_app: :plausible,
-  ecto_repo: Plausible.Repo,
-  router: PlausibleWeb.Router,
-  admin_title: "Plausible Admin",
-  resources: [
-    auth: [
-      resources: [
-        user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin],
-        api_key: [schema: Plausible.Auth.ApiKey, admin: Plausible.Auth.ApiKeyAdmin]
-      ]
-    ],
-    sites: [
-      resources: [
-        site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
-      ]
-    ],
-    billing: [
-      resources: [
-        enterprise_plan: [
-          schema: Plausible.Billing.EnterprisePlan,
-          admin: Plausible.Billing.EnterprisePlanAdmin
+if config_env() in [:dev, :staging, :prod] do
+  config :kaffy,
+    otp_app: :plausible,
+    ecto_repo: Plausible.Repo,
+    router: PlausibleWeb.Router,
+    admin_title: "Plausible Admin",
+    resources: [
+      auth: [
+        resources: [
+          user: [schema: Plausible.Auth.User, admin: Plausible.Auth.UserAdmin],
+          api_key: [schema: Plausible.Auth.ApiKey, admin: Plausible.Auth.ApiKeyAdmin]
+        ]
+      ],
+      sites: [
+        resources: [
+          site: [schema: Plausible.Site, admin: Plausible.SiteAdmin]
+        ]
+      ],
+      billing: [
+        resources: [
+          enterprise_plan: [
+            schema: Plausible.Billing.EnterprisePlan,
+            admin: Plausible.Billing.EnterprisePlanAdmin
+          ]
         ]
       ]
     ]
-  ]
+end
 
 geo_opts =
   cond do

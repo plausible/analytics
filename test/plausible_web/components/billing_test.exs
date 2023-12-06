@@ -3,15 +3,14 @@ defmodule PlausibleWeb.Components.BillingTest do
   import Phoenix.LiveViewTest
   alias PlausibleWeb.Components.Billing
 
-  test "premium_feature_notice/1 renders a message when user is on trial" do
+  test "premium_feature_notice/1 does not render a notice when user is on trial" do
     me = insert(:user)
 
     assert render_component(&Billing.premium_feature_notice/1,
              billable_user: me,
              current_user: me,
              feature_mod: Plausible.Billing.Feature.Props
-           ) =~
-             "Custom Properties is part of the Plausible Business plan. You can access it during your trial"
+           ) == ""
   end
 
   test "premium_feature_notice/1 renders an upgrade link when user is the site owner and does not have access to the feature" do
@@ -88,6 +87,7 @@ defmodule PlausibleWeb.Components.BillingTest do
     assert rendered =~ "please reach out to the site owner to upgrade their subscription"
   end
 
+  @tag :full_build_only
   test "limit_exceeded_notice/1 when billable user is on trial displays upgrade link" do
     me = insert(:user)
 

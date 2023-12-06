@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Add last 24h plots to /sites view
 - Add site pinning to /sites view
 - Add support for JSON logger, via LOG_FORMAT=json environment variable
+- Add support for 2FA authentication
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
@@ -39,6 +40,8 @@ All notable changes to this project will be documented in this file.
 - Update bot detection (matomo 6.1.4, ua_inspector 3.4.0)
 - Improved the Goal Settings page (search, autcompletion etc.)
 - Log mailer errors plausible/analytics#3336
+- Allow custom event timeseries in stats API plausible/analytics#3505
+- Fixes for sites with UTF characters in domain plausible/analytics#3560
 
 ## v2.0.0 - 2023-07-12
 

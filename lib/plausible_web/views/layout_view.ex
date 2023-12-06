@@ -1,10 +1,8 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
-  import PlausibleWeb.Components.Billing
+  use Plausible
 
-  def base_domain do
-    PlausibleWeb.Endpoint.host()
-  end
+  import PlausibleWeb.Components.Billing
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()
@@ -12,32 +10,6 @@ defmodule PlausibleWeb.LayoutView do
 
   def websocket_url() do
     PlausibleWeb.Endpoint.websocket_url()
-  end
-
-  def dogfood_script_url() do
-    if Application.get_env(:plausible, :environment) in ["prod", "staging"] do
-      "#{plausible_url()}/js/script.manual.pageview-props.tagged-events.js"
-    else
-      "#{plausible_url()}/js/script.local.manual.pageview-props.tagged-events.js"
-    end
-  end
-
-  def dogfood_domain(conn) do
-    if conn.assigns[:embedded] do
-      "embed." <> base_domain()
-    else
-      base_domain()
-    end
-  end
-
-  @doc """
-  Temporary override to do more testing of the new ingest.plausible.io endpoint for accepting events. In staging and locally
-  will fall back to staging.plausible.io/api/event and localhost:8000/api/event respectively.
-  """
-  def dogfood_api_destination() do
-    if Application.get_env(:plausible, :environment) == "prod" do
-      "https://ingest.plausible.io/api/event"
-    end
   end
 
   defmodule JWT do
@@ -75,13 +47,12 @@ defmodule PlausibleWeb.LayoutView do
       [key: "People", value: "people"],
       [key: "Visibility", value: "visibility"],
       [key: "Goals", value: "goals"],
-      [key: "Funnels", value: "funnels"],
+      on_full_build do
+        [key: "Funnels", value: "funnels"]
+      end,
       [key: "Custom Properties", value: "properties"],
       [key: "Integrations", value: "integrations"],
       [key: "Email Reports", value: "email-reports"],
-      if !is_selfhost() && conn.assigns[:site].custom_domain do
-        [key: "Custom domain", value: "custom-domain"]
-      end,
       if conn.assigns[:current_user_role] == :owner do
         [key: "Danger zone", value: "danger-zone"]
       end
@@ -118,9 +89,5 @@ defmodule PlausibleWeb.LayoutView do
 
   def is_current_tab(conn, tab) do
     List.last(conn.path_info) == tab
-  end
-
-  defp is_selfhost() do
-    Application.get_env(:plausible, :is_selfhost)
   end
 end

@@ -4,6 +4,8 @@ defmodule PlausibleWeb.Live.Sites do
   """
 
   use Phoenix.LiveView
+  use PlausibleWeb.Live.Flash
+
   alias Phoenix.LiveView.JS
   use Phoenix.HTML
 
@@ -59,7 +61,7 @@ defmodule PlausibleWeb.Live.Sites do
     assigns = assign(assigns, :invitations, invitations)
 
     ~H"""
-    <.live_component id="embedded_liveview_flash" module={PlausibleWeb.Live.Flash} flash={@flash} />
+    <.flash_messages flash={@flash} />
     <div
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
       x-on:keydown.escape.window="invitationOpen = false"
@@ -281,7 +283,7 @@ defmodule PlausibleWeb.Live.Sites do
         <div class="py-1 text-sm" role="none">
           <.unstyled_link
             :if={List.first(@site.memberships).role != :viewer}
-            href={"/#{URI.encode_www_form(@site.domain)}/settings"}
+            href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
             class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
             role="menuitem"
             tabindex="-1"
@@ -556,28 +558,6 @@ defmodule PlausibleWeb.Live.Sites do
     """
   end
 
-  attr :class, :any, default: ""
-
-  def spinner(assigns) do
-    ~H"""
-    <svg
-      class={["animate-spin h-4 w-4 text-indigo-500", @class]}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4">
-      </circle>
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      >
-      </path>
-    </svg>
-    """
-  end
-
   def handle_event("pin-toggle", %{"domain" => domain}, socket) do
     site = Enum.find(socket.assigns.sites.entries, &(&1.domain == domain))
 
@@ -593,7 +573,7 @@ defmodule PlausibleWeb.Live.Sites do
               end
 
             socket
-            |> put_flash(:success, flash_message)
+            |> put_live_flash(:success, flash_message)
             |> load_sites()
             |> push_event("js-exec", %{
               to: "#site-card-#{hash_domain(site.domain)}",
@@ -606,14 +586,12 @@ defmodule PlausibleWeb.Live.Sites do
                 "Please unpin one of your pinned sites to make room for new pins"
 
             socket
-            |> put_flash(:error, flash_message)
+            |> put_live_flash(:error, flash_message)
             |> push_event("js-exec", %{
               to: "#site-card-#{hash_domain(site.domain)}",
               attr: "data-pin-failed"
             })
         end
-
-      Process.send_after(self(), :clear_flash, 5000)
 
       {:noreply, socket}
     else
@@ -649,10 +627,6 @@ defmodule PlausibleWeb.Live.Sites do
       |> set_filter_text("")
 
     {:noreply, socket}
-  end
-
-  def handle_info(:clear_flash, socket) do
-    {:noreply, clear_flash(socket)}
   end
 
   defp load_sites(%{assigns: assigns} = socket) do

@@ -31,6 +31,22 @@ defmodule Plausible.Users do
     Auth.EmailVerification.any?(user)
   end
 
+  def allow_next_upgrade_override(%Auth.User{} = user) do
+    user
+    |> Auth.User.changeset(%{allow_next_upgrade_override: true})
+    |> Repo.update!()
+  end
+
+  def maybe_reset_next_upgrade_override(%Auth.User{} = user) do
+    if user.allow_next_upgrade_override do
+      user
+      |> Auth.User.changeset(%{allow_next_upgrade_override: false})
+      |> Repo.update!()
+    else
+      user
+    end
+  end
+
   defp last_subscription_query(user_id) do
     from(subscription in Plausible.Billing.Subscription,
       where: subscription.user_id == ^user_id,

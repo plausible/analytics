@@ -23,6 +23,7 @@ defmodule Plausible.Ingestion.Request do
   """
 
   use Ecto.Schema
+  use Plausible
   alias Ecto.Changeset
 
   @max_url_size 2_000
@@ -36,10 +37,15 @@ defmodule Plausible.Ingestion.Request do
     field :hostname, :string
     field :referrer, :string
     field :domains, {:array, :string}
+    field :ip_classification, :string
     field :hash_mode, :integer
     field :pathname, :string
     field :props, :map
-    field :revenue_source, :map
+
+    on_full_build do
+      field :revenue_source, :map
+    end
+
     field :query_params, :map
 
     field :timestamp, :naive_datetime
@@ -63,6 +69,7 @@ defmodule Plausible.Ingestion.Request do
     case parse_body(conn) do
       {:ok, request_body} ->
         changeset
+        |> put_ip_classification(conn)
         |> put_remote_ip(conn)
         |> put_uri(request_body)
         |> put_hostname()
@@ -86,6 +93,14 @@ defmodule Plausible.Ingestion.Request do
       {:error, :invalid_json} ->
         {:error, Changeset.add_error(changeset, :request, "Unable to parse request body as json")}
     end
+  end
+
+  on_full_build do
+    defp put_revenue_source(changeset, request_body) do
+      Plausible.Ingestion.Request.Revenue.put_revenue_source(changeset, request_body)
+    end
+  else
+    defp put_revenue_source(changeset, _request_body), do: changeset
   end
 
   defp put_remote_ip(changeset, conn) do
@@ -190,7 +205,7 @@ defmodule Plausible.Ingestion.Request do
   defp put_props(changeset, %{} = request_body) do
     props =
       (request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"])
-      |> decode_json_or_fallback()
+      |> Plausible.Helpers.JSON.decode_or_fallback()
       |> Enum.reject(fn {_k, v} -> is_nil(v) || is_list(v) || is_map(v) || v == "" end)
       |> Enum.take(@max_props)
       |> Map.new()
@@ -222,46 +237,6 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
-  defp put_revenue_source(%Ecto.Changeset{} = changeset, %{} = request_body) do
-    with revenue_source <- request_body["revenue"] || request_body["$"],
-         %{"amount" => _, "currency" => _} = revenue_source <-
-           decode_json_or_fallback(revenue_source) do
-      parse_revenue_source(changeset, revenue_source)
-    else
-      _any -> changeset
-    end
-  end
-
-  @valid_currencies Plausible.Goal.valid_currencies()
-  defp parse_revenue_source(changeset, %{"amount" => amount, "currency" => currency}) do
-    with true <- currency in @valid_currencies,
-         {%Decimal{} = amount, _rest} <- parse_decimal(amount),
-         %Money{} = amount <- Money.new(currency, amount) do
-      Changeset.put_change(changeset, :revenue_source, amount)
-    else
-      _any -> changeset
-    end
-  end
-
-  defp decode_json_or_fallback(raw) do
-    with raw when is_binary(raw) <- raw,
-         {:ok, %{} = decoded} <- Jason.decode(raw) do
-      decoded
-    else
-      already_a_map when is_map(already_a_map) -> already_a_map
-      _any -> %{}
-    end
-  end
-
-  defp parse_decimal(value) do
-    case value do
-      value when is_binary(value) -> Decimal.parse(value)
-      value when is_float(value) -> {Decimal.from_float(value), nil}
-      value when is_integer(value) -> {Decimal.new(value), nil}
-      _any -> :error
-    end
-  end
-
   defp put_query_params(changeset) do
     case Changeset.get_field(changeset, :uri) do
       %{query: query} when is_binary(query) ->
@@ -270,6 +245,15 @@ defmodule Plausible.Ingestion.Request do
       _any ->
         changeset
     end
+  end
+
+  defp put_ip_classification(changeset, %Plug.Conn{} = conn) do
+    value =
+      conn
+      |> Plug.Conn.get_req_header("x-plausible-ip-type")
+      |> List.first()
+
+    Changeset.put_change(changeset, :ip_classification, value)
   end
 
   defp put_user_agent(changeset, %Plug.Conn{} = conn) do

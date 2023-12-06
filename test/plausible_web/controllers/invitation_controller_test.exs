@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
                "You now have access to #{site.domain}"
 
-      assert redirected_to(conn) == "/#{site.domain}"
+      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}"
 
       refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
 
@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         )
 
       c1 = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
-      assert redirected_to(c1) == "/#{site.domain}"
+      assert redirected_to(c1) == "/#{URI.encode_www_form(site.domain)}"
 
       assert Phoenix.Flash.get(c1.assigns.flash, :success) ==
                "You now have access to #{site.domain}"
@@ -126,7 +126,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
           Routes.invitation_path(conn, :remove_invitation, site.domain, invitation.invitation_id)
         )
 
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/people"
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/people"
 
       refute Repo.reload(invitation)
     end
@@ -192,7 +192,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       conn = delete(conn, remove_invitation_path)
 
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/people"
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/people"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "Invitation missing or already removed"

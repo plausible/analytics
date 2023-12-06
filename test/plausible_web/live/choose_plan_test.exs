@@ -32,37 +32,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
 
-  describe "for a legacy trial (user registered before business tiers release)" do
-    setup %{conn: conn} do
-      user = insert(:user, inserted_at: ~N[2023-10-25 12:00:00])
-      {:ok, conn: conn} = log_in(%{conn: conn, user: user})
-      {:ok, conn: conn, user: user}
-    end
-
-    test "renders v3 plan benefits, but no grandfathering notice", %{conn: conn} do
-      {:ok, _lv, doc} = get_liveview(conn)
-
-      growth_box = text_of_element(doc, @growth_plan_box)
-      business_box = text_of_element(doc, @business_plan_box)
-
-      assert growth_box =~ "Unlimited team members"
-      assert growth_box =~ "Up to 50 sites"
-      assert growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
-      assert growth_box =~ "Email/Slack reports"
-      assert growth_box =~ "Google Analytics import"
-      assert growth_box =~ "Goals and custom events"
-      assert growth_box =~ "Stats API (600 requests per hour)"
-      assert growth_box =~ "Custom Properties"
-
-      assert business_box =~ "Everything in Growth"
-      assert business_box =~ "Funnels"
-      assert business_box =~ "Ecommerce revenue attribution"
-      assert business_box =~ "Priority support"
-
-      refute growth_box =~ "Your subscription has been grandfathered"
-    end
-  end
-
   describe "for a user with no subscription" do
     setup [:create_user, :log_in]
 
@@ -254,6 +223,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute text_of_element(doc, @business_plan_box) =~ "Recommended"
     end
 
+    @tag :full_build_only
     test "recommends Business tier when Revenue Goals were used during trial", %{
       conn: conn,
       user: user
@@ -475,6 +445,26 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
     end
 
+    test "checkout is not disabled when pageview usage exceeded but next upgrade allowed by override",
+         %{
+           conn: conn,
+           user: user
+         } do
+      site = insert(:site, members: [user])
+      now = NaiveDateTime.utc_now()
+
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
+
+      Plausible.Users.allow_next_upgrade_override(user)
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      refute text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+    end
+
+    @tag :full_build_only
     test "warns about losing access to a feature", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -710,6 +700,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute element_exists?(doc, @business_highlight_pill)
     end
 
+    @tag :full_build_only
     test "recommends Business tier when premium features used", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
