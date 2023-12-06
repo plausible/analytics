@@ -15,4 +15,13 @@ defmodule Plausible.Plugins.API.CustomProps do
         error
     end
   end
+
+  @spec disable(Plausible.Site.t(), String.t() | [String.t()]) ::
+          :ok | {:error, Ecto.Changeset.t()}
+  def disable(site, prop_or_props) do
+    case Plausible.Props.disallow(site, prop_or_props) do
+      {:ok, _site} -> :ok
+      error -> error
+    end
+  end
 end

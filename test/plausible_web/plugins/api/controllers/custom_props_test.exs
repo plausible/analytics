@@ -22,7 +22,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
 
   describe "unauthorized calls" do
     for {method, url} <- [
-          {:put, Routes.custom_props_url(base_uri(), :enable)}
+          {:put, Routes.custom_props_url(base_uri(), :enable)},
+          {:delete, Routes.custom_props_url(base_uri(), :disable)}
         ] do
       test "unauthorized call: #{method} #{url}", %{conn: conn} do
         conn
@@ -203,6 +204,46 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
                "rating",
                "category"
              ] = Plausible.Repo.reload!(site).allowed_event_props
+    end
+  end
+
+  describe "delete /custom_props" do
+    test "disable one prop", %{conn: conn, site: site, token: token} do
+      {:ok, ["author"]} = Plausible.Plugins.API.CustomProps.enable(site, "author")
+
+      url = Routes.custom_props_url(base_uri(), :enable)
+
+      payload = %{custom_prop: %{key: "author"}}
+
+      conn
+      |> authenticate(site.domain, token)
+      |> put_req_header("content-type", "application/json")
+      |> delete(url, payload)
+      |> response(204)
+
+      assert Plausible.Repo.reload!(site).allowed_event_props == []
+    end
+
+    test "disable many props", %{conn: conn, site: site, token: token} do
+      {:ok, [_, _, _]} =
+        Plausible.Plugins.API.CustomProps.enable(site, ["author", "category", "third"])
+
+      url = Routes.custom_props_url(base_uri(), :enable)
+
+      payload = %{
+        custom_props: [
+          %{custom_prop: %{key: "author"}},
+          %{custom_prop: %{key: "category"}}
+        ]
+      }
+
+      conn
+      |> authenticate(site.domain, token)
+      |> put_req_header("content-type", "application/json")
+      |> delete(url, payload)
+      |> response(204)
+
+      assert Plausible.Repo.reload!(site).allowed_event_props == ["third"]
     end
   end
 end

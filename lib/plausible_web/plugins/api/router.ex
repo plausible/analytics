@@ -31,5 +31,6 @@ defmodule PlausibleWeb.Plugins.API.Router do
     delete("/goals", Goals, :delete_bulk)
 
     put("/custom_props", CustomProps, :enable)
+    delete("/custom_props", CustomProps, :disable)
   end
 end
