@@ -12,6 +12,7 @@ defmodule Plausible.Application do
       Plausible.IngestRepo,
       Plausible.AsyncInsertRepo,
       Plausible.ImportDeletionRepo,
+      {Plausible.RateLimit, clean_period: :timer.minutes(10)},
       Plausible.Ingestion.Counters,
       {Finch, name: Plausible.Finch, pools: finch_pool_config()},
       {Phoenix.PubSub, name: Plausible.PubSub},

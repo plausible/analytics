@@ -5,7 +5,7 @@ defmodule Plausible.Site.GateKeeper do
   @type t() :: {:allow, Plausible.Site.t()} | {:deny, policy()}
 
   @moduledoc """
-  Thin wrapper around Hammer for gate keeping domain-specific events
+  Thin wrapper around `Plausible.RateLimit` for gate keeping domain-specific events
   during the ingestion phase. When the site is allowed, gate keeping
   check returns `:allow`, otherwise a `:deny` tagged tuple is returned
   with one of the following policy markers:
@@ -24,7 +24,7 @@ defmodule Plausible.Site.GateKeeper do
     * when the underlying rate limiting mechanism returns
       an internal error: :allow
   """
-  alias Plausible.Site
+  alias Plausible.{Site, RateLimit}
   alias Plausible.Site.Cache
 
   require Logger
@@ -68,19 +68,9 @@ defmodule Plausible.Site.GateKeeper do
     key = Keyword.get(opts, :key, key(site.domain))
     scale_ms = site.ingest_rate_limit_scale_seconds * 1_000
 
-    case Hammer.check_rate(key, scale_ms, threshold) do
-      {:deny, _} ->
-        :throttle
-
-      {:allow, _} ->
-        {:allow, site}
-
-      {:error, reason} ->
-        Logger.error(
-          "Error checking rate limit for '#{key}': #{inspect(reason)}. Falling back to: :allow"
-        )
-
-        {:allow, site}
+    case RateLimit.check_rate(key, scale_ms, threshold) do
+      {:deny, _} -> :throttle
+      {:allow, _} -> {:allow, site}
     end
   end
 end
