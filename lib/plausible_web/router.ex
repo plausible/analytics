@@ -73,6 +73,13 @@ defmodule PlausibleWeb.Router do
   end
 
   on_full_build do
+    scope "/crm", PlausibleWeb do
+      pipe_through :flags
+      get "/auth/user/:user_id/usage", AdminController, :usage
+    end
+  end
+
+  on_full_build do
     scope path: "/flags" do
       pipe_through :flags
       forward "/", FunWithFlags.UI.Router, namespace: "flags"
