@@ -18,6 +18,8 @@ defmodule PlausibleWeb.TwoFactor.Session do
   @spec set_2fa_user(Plug.Conn.t(), Auth.User.t()) :: Plug.Conn.t()
   def set_2fa_user(conn, %Auth.User{} = user) do
     put_resp_cookie(conn, @session_2fa_cookie, %{current_2fa_user_id: user.id},
+      domain: domain(),
+      secure: secure_cookie?(),
       encrypt: true,
       max_age: @session_2fa_seconds,
       same_site: "Lax"
@@ -40,6 +42,8 @@ defmodule PlausibleWeb.TwoFactor.Session do
   @spec clear_2fa_user(Plug.Conn.t()) :: Plug.Conn.t()
   def clear_2fa_user(conn) do
     delete_resp_cookie(conn, @session_2fa_cookie,
+      domain: domain(),
+      secure: secure_cookie?(),
       encrypt: true,
       max_age: @session_2fa_seconds,
       same_site: "Lax"
@@ -59,6 +63,8 @@ defmodule PlausibleWeb.TwoFactor.Session do
   @spec maybe_set_remember_2fa(Plug.Conn.t(), Auth.User.t(), String.t() | nil) :: Plug.Conn.t()
   def maybe_set_remember_2fa(conn, user, "true") do
     put_resp_cookie(conn, @remember_2fa_cookie, user.totp_token,
+      domain: domain(),
+      secure: secure_cookie?(),
       encrypt: true,
       max_age: @remember_2fa_seconds,
       same_site: "Lax"
@@ -72,9 +78,19 @@ defmodule PlausibleWeb.TwoFactor.Session do
   @spec clear_remember_2fa(Plug.Conn.t()) :: Plug.Conn.t()
   def clear_remember_2fa(conn) do
     delete_resp_cookie(conn, @remember_2fa_cookie,
-      sign: true,
+      domain: domain(),
+      secure: secure_cookie?(),
+      encrypt: true,
       max_age: @remember_2fa_seconds,
       same_site: "Lax"
     )
+  end
+
+  defp domain(), do: PlausibleWeb.Endpoint.host()
+
+  defp secure_cookie?() do
+    :plausible
+    |> Application.fetch_env!(PlausibleWeb.Endpoint)
+    |> Keyword.fetch!(:secure_cookie)
   end
 end
