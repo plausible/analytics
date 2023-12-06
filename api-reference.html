@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-742B23D6.js"></script>
+    <script src="dist/sidebar_items-A241F97C.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -1006,6 +1006,16 @@ Exposes high-level operation for token-based authentication flows.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="Plausible.RateLimit.html" translate="no">Plausible.RateLimit</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Thin wrapper around <a href="https://www.erlang.org/doc/man/ets.html#update_counter-4"><code class="inline">:ets.update_counter/4</code></a> and a
+clean-up process to act as a rate limiter.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="Plausible.Release.html" translate="no">Plausible.Release</a>
 
   </div>
@@ -1120,7 +1130,7 @@ with recently updated sites every 30 seconds.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>Thin wrapper around Hammer for gate keeping domain-specific events
+    <div class="summary-synopsis"><p>Thin wrapper around <a href="Plausible.RateLimit.html"><code class="inline">Plausible.RateLimit</code></a> for gate keeping domain-specific events
 during the ingestion phase. When the site is allowed, gate keeping
 check returns <code class="inline">:allow</code>, otherwise a <code class="inline">:deny</code> tagged tuple is returned
 with one of the following policy markers</p></div>

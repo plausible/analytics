@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-742B23D6.js"></script>
+    <script src="dist/sidebar_items-A241F97C.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -114,7 +114,7 @@ Plausible
 
 
   <section id="moduledoc">
-<p>Thin wrapper around Hammer for gate keeping domain-specific events
+<p>Thin wrapper around <a href="Plausible.RateLimit.html"><code class="inline">Plausible.RateLimit</code></a> for gate keeping domain-specific events
 during the ingestion phase. When the site is allowed, gate keeping
 check returns <code class="inline">:allow</code>, otherwise a <code class="inline">:deny</code> tagged tuple is returned
 with one of the following policy markers:</p><ul><li><code class="inline">:not_found</code> (indicates site not found in cache)</li><li><code class="inline">:block</code> (indicates disabled sites)</li><li><code class="inline">:throttle</code> (indicates rate limiting)</li></ul><p>Rate Limiting buckets are configured per site (externally via the CRM).

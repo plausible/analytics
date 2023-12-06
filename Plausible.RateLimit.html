@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>PlausibleWeb.Live.PropsSettings — Plausible v0.0.1</title>
+    <title>Plausible.RateLimit — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,19 +102,20 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/rate_limit.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">PlausibleWeb.Live.PropsSettings</span> 
+  <span translate="no">Plausible.RateLimit</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>LiveView allowing listing, allowing and disallowing custom event properties.</p>
+<p>Thin wrapper around <a href="https://www.erlang.org/doc/man/ets.html#update_counter-4"><code class="inline">:ets.update_counter/4</code></a> and a
+clean-up process to act as a rate limiter.</p>
   </section>
 
 
@@ -132,41 +133,31 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_event/3" translate="no">handle_event(binary, arg2, socket)</a>
+        <a href="#check_rate/5" translate="no">check_rate(table \\ __MODULE__, key, scale, limit, increment \\ 1)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Checks the rate-limit for a key.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#handle_info/2" translate="no">handle_info(arg1, socket)</a>
+        <a href="#child_spec/1" translate="no">child_spec(init_arg)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:handle_info/2"><code class="inline">Phoenix.LiveView.handle_info/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Returns a specification to start this module under a supervisor.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#mount/3" translate="no">mount(params, map, socket)</a>
+        <a href="#start_link/1" translate="no">start_link(opts)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#render/1" translate="no">render(assigns)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Starts the process that creates and cleans the ETS table.</p></div>
 
     </div>
 
@@ -183,16 +174,20 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="handle_event/3">
+<section class="detail" id="check_rate/5">
+
+    <span id="check_rate/3"></span>
+
+    <span id="check_rate/4"></span>
 
   <div class="detail-header">
-    <a href="#handle_event/3" class="detail-link" title="Link to this function">
+    <a href="#check_rate/5" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">handle_event(binary, arg2, socket)</h1>
+    <h1 class="signature" translate="no">check_rate(table \\ __MODULE__, key, scale, limit, increment \\ 1)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings.ex#L68" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/rate_limit.ex#L35" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -202,19 +197,31 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:handle_event/3"><code class="inline">Phoenix.LiveView.handle_event/3</code></a>.</p>
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> check_rate(<a href="https://www.erlang.org/doc/man/ets.html#type-table">:ets.table</a>(), key, scale, limit, increment) ::
+  {:allow, count} | {:deny, limit}
+when key: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+     scale: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(),
+     limit: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(),
+     increment: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>(),
+     count: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()</pre>
+
+      </div>
+
+<p>Checks the rate-limit for a key.</p>
   </section>
 </section>
-<section class="detail" id="handle_info/2">
+<section class="detail" id="child_spec/1">
 
   <div class="detail-header">
-    <a href="#handle_info/2" class="detail-link" title="Link to this function">
+    <a href="#child_spec/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">handle_info(arg1, socket)</h1>
+    <h1 class="signature" translate="no">child_spec(init_arg)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings.ex#L8" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/rate_limit.ex#L7" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -224,19 +231,19 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:handle_info/2"><code class="inline">Phoenix.LiveView.handle_info/2</code></a>.</p>
+<p>Returns a specification to start this module under a supervisor.</p><p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="mount/3">
+<section class="detail" id="start_link/1">
 
   <div class="detail-header">
-    <a href="#mount/3" class="detail-link" title="Link to this function">
+    <a href="#start_link/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">mount(params, map, socket)</h1>
+    <h1 class="signature" translate="no">start_link(opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings.ex#L12" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/rate_limit.ex#L19" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -246,29 +253,16 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:mount/3"><code class="inline">Phoenix.LiveView.mount/3</code></a>.</p>
-  </section>
-</section>
-<section class="detail" id="render/1">
+      <div class="specs">
 
-  <div class="detail-header">
-    <a href="#render/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">render(assigns)</h1>
+          <pre translate="no"><span class="attribute">@spec</span> start_link([
+  <a href="https://hexdocs.pm/elixir/GenServer.html#t:option/0">GenServer.option</a>() | {:table, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()} | {:clean_period, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()}
+]) ::
+  <a href="https://hexdocs.pm/elixir/GenServer.html#t:on_start/0">GenServer.on_start</a>()</pre>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/props_settings.ex#L39" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
+      </div>
 
-
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveView.html#c:render/1"><code class="inline">Phoenix.LiveView.render/1</code></a>.</p>
+<p>Starts the process that creates and cleans the ETS table.</p><p>Accepts the following options:</p><ul><li><code class="inline">GenServer.options()</code></li><li><code class="inline">:table</code> for the ETS table name, defaults to <a href="Plausible.RateLimit.html#content"><code class="inline">Elixir.Plausible.RateLimit</code></a></li><li><code class="inline">:clean_period</code> for how often to perform garbage collection</li></ul>
   </section>
 </section>
 
