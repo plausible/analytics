@@ -373,13 +373,15 @@ defmodule PlausibleWeb.StatsControllerTest do
         utm_term: "term",
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
-        browser: "ABrowserName"
+        browser: "Firefox",
+        browser_version: "120"
       ),
       build(:pageview,
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], months: -1) |> NaiveDateTime.truncate(:second),
         country_code: "EE",
-        browser: "ABrowserName"
+        browser: "Firefox",
+        browser_version: "120"
       ),
       build(:pageview,
         timestamp:
@@ -387,7 +389,7 @@ defmodule PlausibleWeb.StatsControllerTest do
         utm_campaign: "ads",
         country_code: "EE",
         referrer_source: "Google",
-        browser: "ABrowserName"
+        browser: "FirefoxNoVersion"
       ),
       build(:event,
         timestamp:

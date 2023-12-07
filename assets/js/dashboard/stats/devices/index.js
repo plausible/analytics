@@ -12,7 +12,7 @@ function Browsers({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { browser: listItem['name']}
+    return { browser: listItem['name'] }
   }
 
   return (
@@ -35,7 +35,7 @@ function BrowserVersions({ query, site }) {
     if (query.filters.browser === '(not set)') {
       return {}
     }
-    return { browser_version: listItem['name']}
+    return { browser_version: listItem['name'] }
   }
 
   return (
@@ -56,7 +56,7 @@ function OperatingSystems({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { os: listItem['name']}
+    return { os: listItem['name'] }
   }
 
   return (
@@ -79,7 +79,7 @@ function OperatingSystemVersions({ query, site }) {
     if (query.filters.os === '(not set)') {
       return {}
     }
-    return { os_version: listItem['name']}
+    return { os_version: listItem['name'] }
   }
 
   return (
@@ -104,7 +104,7 @@ function ScreenSizes({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { screen: listItem['name']}
+    return { screen: listItem['name'] }
   }
 
   return (
