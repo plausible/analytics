@@ -355,7 +355,7 @@ defmodule Plausible.BillingTest do
       })
 
       subscription = Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
-      assert subscription.status == Subscription.Status.deleted()
+      assert Subscription.Status.deleted?(subscription)
     end
 
     test "ignores if the subscription cannot be found" do
