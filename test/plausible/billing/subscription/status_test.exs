@@ -31,7 +31,16 @@ defmodule Plausible.Billing.Subscription.StatusTest do
 
   test "in?/2 raises ArgumentError when list includes invalid statuses" do
     assert_raise ArgumentError, fn ->
-      in?(%Plausible.Billing.Subscription{status: past_due()}, [active(), past_due(), :invalid])
+      Macro.expand(
+        quote do
+          in?(%Plausible.Billing.Subscription{status: past_due()}, [
+            active(),
+            past_due(),
+            :invalid
+          ])
+        end,
+        __ENV__
+      )
     end
   end
 end
