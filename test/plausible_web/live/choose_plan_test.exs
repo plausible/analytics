@@ -728,6 +728,22 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
+  describe "for an invited user (with trial_expiry_date=nil)" do
+    setup context do
+      context
+      |> Map.put(:user, insert(:user, trial_expiry_date: nil))
+      |> log_in()
+    end
+
+    test "does not allow to subscribe and renders notice", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, "#upgrade-eligible-notice") =~ "You cannot start a subscription"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
+  end
+
   defp subscribe_v4_growth(%{user: user}) do
     create_subscription_for(user, paddle_plan_id: @v4_growth_200k_yearly_plan_id)
   end
