@@ -23,7 +23,7 @@ defmodule PlausibleWeb.BillingController do
       FunWithFlags.enabled?(:business_tier, for: user) ->
         redirect(conn, to: Routes.billing_path(conn, :choose_plan))
 
-      user.subscription && user.subscription.status == Subscription.Status.active() ->
+      Subscription.Status.active?(user.subscription) ->
         redirect(conn, to: Routes.billing_path(conn, :change_plan_form))
 
       true ->
@@ -70,11 +70,10 @@ defmodule PlausibleWeb.BillingController do
         user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
 
     cond do
-      user.subscription &&
-          user.subscription.status in [
-            Subscription.Status.past_due(),
-            Subscription.Status.paused()
-          ] ->
+      Subscription.Status.in?(user.subscription, [
+        Subscription.Status.past_due(),
+        Subscription.Status.paused()
+      ]) ->
         redirect(conn, to: Routes.auth_path(conn, :user_settings))
 
       subscribed_to_latest? ->

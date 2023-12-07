@@ -89,8 +89,7 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp subscription_plan(user) do
-    if user.subscription && user.subscription.status == Subscription.Status.active() &&
-         user.subscription.paddle_subscription_id do
+    if Subscription.Status.active?(user.subscription) && user.subscription.paddle_subscription_id do
       quota = PlausibleWeb.AuthView.subscription_quota(user.subscription)
       interval = PlausibleWeb.AuthView.subscription_interval(user.subscription)
 
