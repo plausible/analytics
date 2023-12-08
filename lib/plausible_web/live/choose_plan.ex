@@ -37,8 +37,8 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign_new(:owned_tier, fn %{owned_plan: owned_plan} ->
         if owned_plan, do: Map.get(owned_plan, :kind), else: nil
       end)
-      |> assign_new(:recommended_tier, fn %{owned_plan: owned_plan, user: user} ->
-        if owned_plan || is_nil(user.trial_expiry_date), do: nil, else: Plans.suggest_tier(user)
+      |> assign_new(:recommended_tier, fn %{owned_plan: owned_plan, user: user, usage: usage} ->
+        if owned_plan || usage.sites == 0, do: nil, else: Plans.suggest_tier(user)
       end)
       |> assign_new(:current_interval, fn %{user: user} ->
         current_user_subscription_interval(user.subscription)
@@ -99,7 +99,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <div class="mx-auto max-w-7xl px-6 lg:px-20">
         <.subscription_past_due_notice class="pb-6" subscription={@user.subscription} />
         <.subscription_paused_notice class="pb-6" subscription={@user.subscription} />
-        <.upgrade_ineligible_notice user={@user} />
+        <.upgrade_ineligible_notice :if={@usage.sites == 0} />
         <div class="mx-auto max-w-4xl text-center">
           <p class="text-4xl font-bold tracking-tight lg:text-5xl">
             <%= if @owned_plan,
@@ -362,7 +362,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
     {checkout_disabled, disabled_message} =
       cond do
-        is_nil(assigns.user.trial_expiry_date) ->
+        assigns.usage.sites == 0 ->
           {true, nil}
 
         change_plan_link_text == "Currently on this plan" && not subscription_deleted ->

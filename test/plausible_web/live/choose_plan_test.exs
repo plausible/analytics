@@ -718,12 +718,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
-  describe "for an invited user (with trial_expiry_date=nil)" do
-    setup context do
-      context
-      |> Map.put(:user, insert(:user, trial_expiry_date: nil))
-      |> log_in()
-    end
+  describe "for a user with no sites" do
+    setup [:create_user, :log_in]
 
     test "does not allow to subscribe and renders notice", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)

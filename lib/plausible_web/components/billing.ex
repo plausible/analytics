@@ -447,7 +447,7 @@ defmodule PlausibleWeb.Components.Billing do
 
   def subscription_paused_notice(assigns), do: ~H""
 
-  def upgrade_ineligible_notice(%{user: %User{trial_expiry_date: nil}} = assigns) do
+  def upgrade_ineligible_notice(assigns) do
     ~H"""
     <aside id="upgrade-eligible-notice" class="pb-6">
       <PlausibleWeb.Components.Generic.notice
@@ -464,8 +464,6 @@ defmodule PlausibleWeb.Components.Billing do
     </aside>
     """
   end
-
-  def upgrade_ineligible_notice(assigns), do: ~H""
 
   def present_enterprise_plan(assigns) do
     ~H"""
