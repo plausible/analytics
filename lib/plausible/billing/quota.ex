@@ -43,27 +43,15 @@ defmodule Plausible.Billing.Quota do
     end
 
     @site_limit_for_trials 10
-    @site_limit_for_legacy_trials 50
     @site_limit_for_free_10k 50
     defp get_site_limit_from_plan(user) do
       user = Plausible.Users.with_subscription(user)
 
       case Plans.get_subscription_plan(user.subscription) do
-        %EnterprisePlan{} ->
-          :unlimited
-
-        %Plan{site_limit: site_limit} ->
-          site_limit
-
-        :free_10k ->
-          @site_limit_for_free_10k
-
-        nil ->
-          if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
-            @site_limit_for_legacy_trials
-          else
-            @site_limit_for_trials
-          end
+        %EnterprisePlan{} -> :unlimited
+        %Plan{site_limit: site_limit} -> site_limit
+        :free_10k -> @site_limit_for_free_10k
+        nil -> @site_limit_for_trials
       end
     end
   else
@@ -203,7 +191,6 @@ defmodule Plausible.Billing.Quota do
   end
 
   @team_member_limit_for_trials 3
-  @team_member_limit_for_legacy_trials :unlimited
   @spec team_member_limit(User.t()) :: non_neg_integer()
   @doc """
   Returns the limit of team members a user can have in their sites.
@@ -212,21 +199,10 @@ defmodule Plausible.Billing.Quota do
     user = Plausible.Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{team_member_limit: limit} ->
-        limit
-
-      %Plan{team_member_limit: limit} ->
-        limit
-
-      :free_10k ->
-        :unlimited
-
-      nil ->
-        if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
-          @team_member_limit_for_legacy_trials
-        else
-          @team_member_limit_for_trials
-        end
+      %EnterprisePlan{team_member_limit: limit} -> limit
+      %Plan{team_member_limit: limit} -> limit
+      :free_10k -> :unlimited
+      nil -> @team_member_limit_for_trials
     end
   end
 

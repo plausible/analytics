@@ -38,22 +38,6 @@ defmodule Plausible.Billing.PlansTest do
       |> assert_generation(4)
     end
 
-    test "growth_plans_for/1 returns v3 plans for pre business tier trials only if their trial is active or expired less than 10 days ago" do
-      trial_start = ~D[2023-10-27]
-      trial_expiry = Timex.shift(trial_start, days: 30)
-      expiry_datetime = Timex.to_datetime(trial_expiry)
-
-      user = insert(:user, trial_expiry_date: trial_expiry)
-
-      now1 = Timex.shift(expiry_datetime, days: -1)
-      now2 = Timex.shift(expiry_datetime, days: 10)
-      now3 = Timex.shift(expiry_datetime, days: 11)
-
-      Plans.growth_plans_for(user, now1) |> assert_generation(3)
-      Plans.growth_plans_for(user, now2) |> assert_generation(3)
-      Plans.growth_plans_for(user, now3) |> assert_generation(4)
-    end
-
     test "growth_plans_for/1 returns v4 plans for expired legacy subscriptions" do
       subscription =
         build(:subscription,
@@ -112,22 +96,6 @@ defmodule Plausible.Billing.PlansTest do
       insert(:user, trial_expiry_date: ~D[2023-12-24])
       |> Plans.business_plans_for()
       |> assert_generation(4)
-    end
-
-    test "business_plans_for/1 returns v3 plans for pre business tier trials only if their trial is active or expired less than 10 days ago" do
-      trial_start = ~D[2023-10-27]
-      trial_expiry = Timex.shift(trial_start, days: 30)
-      expiry_datetime = Timex.to_datetime(trial_expiry)
-
-      user = insert(:user, trial_expiry_date: trial_expiry)
-
-      now1 = Timex.shift(expiry_datetime, days: -1)
-      now2 = Timex.shift(expiry_datetime, days: 10)
-      now3 = Timex.shift(expiry_datetime, days: 11)
-
-      Plans.business_plans_for(user, now1) |> assert_generation(3)
-      Plans.business_plans_for(user, now2) |> assert_generation(3)
-      Plans.business_plans_for(user, now3) |> assert_generation(4)
     end
 
     test "business_plans_for/1 returns v4 plans for expired legacy subscriptions" do
