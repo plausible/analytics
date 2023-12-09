@@ -33,20 +33,13 @@ defmodule Plausible.Billing.QuotaTest do
       assert 50 == Quota.site_limit(user)
     end
 
-    test "returns unlimited when user is on an enterprise plan" do
+    test "returns the configured site limit for enterprise plan" do
       user = insert(:user)
 
-      enterprise_plan =
-        insert(:enterprise_plan,
-          user_id: user.id,
-          monthly_pageview_limit: 100_000,
-          site_limit: 500
-        )
+      enterprise_plan = insert(:enterprise_plan, user_id: user.id, site_limit: 500)
+      insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
 
-      _subscription =
-        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
-
-      assert :unlimited == Quota.site_limit(user)
+      assert enterprise_plan.site_limit == Quota.site_limit(user)
     end
 
     test "returns 10 when user in on trial" do
@@ -76,27 +69,6 @@ defmodule Plausible.Billing.QuotaTest do
         )
 
       assert 10 == Quota.site_limit(user)
-    end
-
-    test "is unlimited for enterprise customers" do
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
-          subscription: build(:subscription, paddle_plan_id: "123321")
-        )
-
-      assert :unlimited == Quota.site_limit(user)
-    end
-
-    test "is unlimited for enterprise customers who are due to change a plan" do
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: "old-paddle-plan-id"),
-          subscription: build(:subscription, paddle_plan_id: "old-paddle-plan-id")
-        )
-
-      insert(:enterprise_plan, user_id: user.id, paddle_plan_id: "new-paddle-plan-id")
-      assert :unlimited == Quota.site_limit(user)
     end
   end
 

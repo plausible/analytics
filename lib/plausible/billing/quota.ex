@@ -25,12 +25,6 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @doc """
-  Returns the limit of sites a user can have.
-
-  For enterprise customers, returns :unlimited. The site limit is checked in a
-  background job so as to avoid service disruption.
-  """
   on_full_build do
     @limit_sites_since ~D[2021-05-05]
     @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
@@ -48,8 +42,7 @@ defmodule Plausible.Billing.Quota do
       user = Plausible.Users.with_subscription(user)
 
       case Plans.get_subscription_plan(user.subscription) do
-        %EnterprisePlan{} -> :unlimited
-        %Plan{site_limit: site_limit} -> site_limit
+        %{site_limit: site_limit} -> site_limit
         :free_10k -> @site_limit_for_free_10k
         nil -> @site_limit_for_trials
       end
@@ -67,6 +60,26 @@ defmodule Plausible.Billing.Quota do
   """
   def site_usage(user) do
     Plausible.Sites.owned_sites_count(user)
+  end
+
+  @doc """
+  Enterprise plans are always allowed to add more sites (even when
+  over limit) to avoid service disruption. Their usage is checked
+  in a background job instead (see `check_usage.ex`).
+  """
+  def ensure_can_add_new_site(user) do
+    user = Plausible.Users.with_subscription(user)
+
+    case Plans.get_subscription_plan(user.subscription) do
+      %EnterprisePlan{} ->
+        :ok
+
+      _ ->
+        usage = site_usage(user)
+        limit = site_limit(user)
+
+        if below_limit?(usage, limit), do: :ok, else: {:error, {:over_limit, limit}}
+    end
   end
 
   @monthly_pageview_limit_for_free_10k 10_000

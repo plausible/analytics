@@ -2,6 +2,7 @@ defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Sites
+  alias Plausible.Billing.Quota
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -11,23 +12,23 @@ defmodule PlausibleWeb.SiteController do
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
 
-    limit = Plausible.Billing.Quota.site_limit(current_user)
-    usage = Plausible.Billing.Quota.site_usage(current_user)
-    below_limit? = Plausible.Billing.Quota.below_limit?(usage, limit)
+    exceeded_limit =
+      case Quota.ensure_can_add_new_site(current_user) do
+        :ok -> nil
+        {:error, {:over_limit, limit}} -> limit
+      end
 
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      is_first_site: usage == 0,
-      is_at_limit: !below_limit?,
-      site_limit: limit,
+      is_first_site: Quota.site_usage(current_user) == 0,
+      exceeded_limit: exceeded_limit,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    usage = Plausible.Billing.Quota.site_usage(user)
-    is_first_site = usage == 0
+    is_first_site = Quota.site_usage(user) == 0
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
@@ -40,12 +41,11 @@ defmodule PlausibleWeb.SiteController do
         |> put_session(site.domain <> "_offer_email_report", true)
         |> redirect(external: Routes.site_path(conn, :add_snippet, site.domain))
 
-      {:error, :limit, limit, _} ->
+      {:error, {:over_limit, limit}} ->
         render(conn, "new.html",
           changeset: Plausible.Site.changeset(%Plausible.Site{}),
           is_first_site: is_first_site,
-          is_at_limit: true,
-          site_limit: limit,
+          exceeded_limit: limit,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
@@ -53,7 +53,6 @@ defmodule PlausibleWeb.SiteController do
         render(conn, "new.html",
           changeset: changeset,
           is_first_site: is_first_site,
-          is_at_limit: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
