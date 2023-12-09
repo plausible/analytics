@@ -72,11 +72,13 @@ defmodule Plausible.Billing.Quota do
   @monthly_pageview_limit_for_free_10k 10_000
   @monthly_pageview_limit_for_trials :unlimited
 
-  @spec monthly_pageview_limit(Subscription.t()) ::
+  @spec monthly_pageview_limit(User.t() | Subscription.t()) ::
           non_neg_integer() | :unlimited
-  @doc """
-  Returns the limit of pageviews for a subscription.
-  """
+  def monthly_pageview_limit(%User{} = user) do
+    user = Plausible.Users.with_subscription(user)
+    monthly_pageview_limit(user.subscription)
+  end
+
   def monthly_pageview_limit(subscription) do
     case Plans.get_subscription_plan(subscription) do
       %EnterprisePlan{monthly_pageview_limit: limit} ->
