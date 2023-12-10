@@ -262,6 +262,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert growth_box =~ "Email/Slack reports"
       assert growth_box =~ "Google Analytics import"
       assert growth_box =~ "Goals and custom events"
+      assert growth_box =~ "3 years of data retention"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Up to 10 team members"
@@ -271,6 +272,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert business_box =~ "Funnels"
       assert business_box =~ "Ecommerce revenue attribution"
       assert business_box =~ "Priority support"
+      assert business_box =~ "5 years of data retention"
 
       refute business_box =~ "Goals and custom events"
 
@@ -280,6 +282,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "5+ years of data retention"
 
       assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
                "https://plausible.io/white-label-web-analytics"

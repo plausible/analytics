@@ -739,29 +739,34 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     [
       team_member_limit_benefit(plan),
       site_limit_benefit(plan),
+      data_retention_benefit(plan),
       "Intuitive, fast and privacy-friendly dashboard",
       "Email/Slack reports",
       "Google Analytics import"
     ]
     |> Kernel.++(feature_benefits(plan))
+    |> Enum.filter(& &1)
   end
 
   defp business_benefits(plan, growth_benefits) do
     [
       "Everything in Growth",
       team_member_limit_benefit(plan),
-      site_limit_benefit(plan)
+      site_limit_benefit(plan),
+      data_retention_benefit(plan)
     ]
     |> Kernel.++(feature_benefits(plan))
     |> Kernel.--(growth_benefits)
     |> Kernel.++(["Priority support"])
+    |> Enum.filter(& &1)
   end
 
   defp enterprise_benefits(business_benefits) do
     team_members =
-      if "Up to 10 team members" in business_benefits,
-        do: "10+ team members",
-        else: nil
+      if "Up to 10 team members" in business_benefits, do: "10+ team members"
+
+    data_retention =
+      if "5 years of data retention" in business_benefits, do: "5+ years of data retention"
 
     [
       "Everything in Business",
@@ -769,9 +774,14 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       "50+ sites",
       "600+ Stats API requests per hour",
       &sites_api_benefit/1,
+      data_retention,
       "Technical onboarding"
     ]
     |> Enum.filter(& &1)
+  end
+
+  defp data_retention_benefit(%Plan{} = plan) do
+    if plan.data_retention_in_years, do: "#{plan.data_retention_in_years} years of data retention"
   end
 
   defp team_member_limit_benefit(%Plan{} = plan) do
