@@ -291,7 +291,8 @@ config :plausible,
   super_admin_user_ids: super_admin_user_ids,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
-  log_failed_login_attempts: log_failed_login_attempts
+  log_failed_login_attempts: log_failed_login_attempts,
+  persistent_cache_dir: maxmind_cache_dir
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
