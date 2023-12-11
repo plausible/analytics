@@ -7,9 +7,10 @@
       Export aggregated data for this site. It can then be imported into another Plausible instance.
     </p>
   </header>
-  <%= link("Download ZIP archive!1",
-    to: "/#{URI.encode_www_form(@site.domain)}/full-export",
-    class:
-      "inline-block py-2 px-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium text-gray-600 dark:text-gray-50"
-  ) %>
+  <.link
+    href={~p"/#{@site.domain}/wip-export"}
+    class="inline-block py-2 px-4 items-center border border-gray-100 shadow rounded-md focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-gray-200 mt-8 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium text-gray-600 dark:text-gray-50"
+  >
+    Download ZIP archive!1
+  </.link>
 </div>

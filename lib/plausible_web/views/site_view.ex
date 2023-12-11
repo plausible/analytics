@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.SiteView do
   use PlausibleWeb, :view
   use Plausible
+  use Phoenix.VerifiedRoutes, endpoint: PlausibleWeb.Endpoint, router: PlausibleWeb.Router
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()

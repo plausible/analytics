@@ -15,6 +15,8 @@ if config_env() == :small_test do
 end
 
 config_dir = System.get_env("CONFIG_DIR", "/run/secrets")
+storage_dir = get_var_from_path_or_env(config_dir, "STORAGE_DIR", System.tmp_dir!())
+tzdata_dir = Path.join(storage_dir, "tzdata")
 
 log_format =
   get_var_from_path_or_env(config_dir, "LOG_FORMAT", "standard")
@@ -291,7 +293,8 @@ config :plausible,
   super_admin_user_ids: super_admin_user_ids,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
-  log_failed_login_attempts: log_failed_login_attempts
+  log_failed_login_attempts: log_failed_login_attempts,
+  storage_dir: storage_dir
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -657,9 +660,7 @@ else
     traces_exporter: :none
 end
 
-config :tzdata,
-       :data_dir,
-       get_var_from_path_or_env(config_dir, "STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
+config :tzdata, :data_dir, tzdata_dir
 
 promex_disabled? =
   config_dir

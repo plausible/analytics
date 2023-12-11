@@ -194,7 +194,7 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  def full_export(plug_conn, _params) do
+  def wip_export(plug_conn, _params) do
     %{id: site_id, domain: site_domain} = plug_conn.assigns.site
 
     queries =
@@ -222,6 +222,40 @@ defmodule PlausibleWeb.StatsController do
       )
 
     plug_conn
+  end
+
+  def wip_import(conn, %{"file" => %Plug.Upload{path: tmp_path}}) do
+    storage_dir = Application.fetch_env!(:plausible, :storage_dir)
+    imports_dir = Path.join(storage_dir, "imports")
+    File.mkdir_p!(imports_dir)
+    target_path = Path.join(imports_dir, Path.basename(tmp_path))
+    File.cp!(tmp_path, target_path)
+
+    %Oban.Job{id: job_id} =
+      Oban.insert!(
+        Plausible.Workers.ImportFile.new(%{
+          "path" => target_path,
+          "site_id" => conn.assigns.site.id,
+          "user_id" => conn.assigns.current_user.id
+        })
+      )
+
+    conn
+    |> put_status(201)
+    |> json(%{"job_id" => job_id})
+  end
+
+  def wip_import_status(conn, %{"id" => job_id, "site_id" => site_id}) do
+    import Ecto.Query
+
+    job =
+      Oban.Job
+      |> where(id: ^job_id)
+      |> where([j], json_extract_path(j.args, ["site_id"]) == ^site_id)
+      |> select([j], map(j, [:state]))
+      |> Plausible.Repo.one!()
+
+    json(conn, %{"state" => job.state})
   end
 
   @doc """
