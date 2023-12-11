@@ -100,15 +100,6 @@ defmodule Plausible.Ingestion.WriteBuffer do
         Logger.info("Flushing #{buffer_size} byte(s) RowBinary from #{name}")
         IngestRepo.query!(insert_sql, [header | buffer], insert_opts)
     end
-  rescue
-    _ ->
-      path =
-        Path.join(
-          Application.get_env(:plausible, :persistent_cache_dir) || System.tmp_dir!(),
-          "insert_error.dump"
-        )
-
-      File.write!(path, state.buffer)
   end
 
   defp default_flush_interval_ms do
