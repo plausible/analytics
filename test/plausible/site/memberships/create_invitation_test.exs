@@ -342,7 +342,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
               build_list(3, :site_membership, role: :admin)
         )
 
-      assert {:error, :over_team_member_limit} =
+      assert {:error, [:over_team_member_limit]} =
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
@@ -372,7 +372,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       site = insert(:site, members: [old_owner])
 
-      assert {:error, :over_site_limit} =
+      assert {:error, [:over_site_limit]} =
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
@@ -387,7 +387,26 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
           allowed_event_props: ["author"]
         )
 
-      assert {:error, :no_feature_access} =
+      assert {:error, [:no_feature_access]} =
+               CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
+    end
+
+    test "does not allow transferring ownership when many limits exceeded at once" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      insert_list(10, :site, members: [new_owner])
+
+      site =
+        insert(:site,
+          props_enabled: true,
+          allowed_event_props: ["author"],
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(3, :site_membership, role: :admin)
+        )
+
+      assert {:error, [:over_team_member_limit, :over_site_limit, :no_feature_access]} =
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
   end

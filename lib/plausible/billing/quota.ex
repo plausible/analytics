@@ -140,22 +140,50 @@ defmodule Plausible.Billing.Quota do
           total: non_neg_integer()
         }
 
-  @spec monthly_pageview_usage(User.t()) :: monthly_pageview_usage()
+  @spec monthly_pageview_usage(User.t(), list() | nil) :: monthly_pageview_usage()
 
-  def monthly_pageview_usage(user) do
+  @doc """
+  Queries the ClickHouse database for the monthly pageview usage. If the given user's
+  subscription is `active`, `past_due`, or a `deleted` (but not yet expired), a map
+  with the following structure is returned:
+
+  ```elixir
+  %{
+    current_cycle: usage_cycle(),
+    last_cycle: usage_cycle(),
+    penultimate_cycle: usage_cycle()
+  }
+  ```
+
+  In all other cases of the subscription status (or a `free_10k` subscription which
+  does not have a `last_bill_date` defined) - the following structure is returned:
+
+  ```elixir
+  %{last_30_days: usage_cycle()}
+  ```
+
+  Given only a user as input, the usage is queried from across all the sites that the
+  user owns. Alternatively, given an optional argument of `site_ids`, the usage from
+  across all those sites is queried instead.
+  """
+  def monthly_pageview_usage(user, site_ids \\ nil)
+
+  def monthly_pageview_usage(user, nil) do
+    monthly_pageview_usage(user, Plausible.Sites.owned_site_ids(user))
+  end
+
+  def monthly_pageview_usage(user, site_ids) do
     active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
 
     if active_subscription? && user.subscription.last_bill_date do
-      owned_site_ids = Plausible.Sites.owned_site_ids(user)
-
       [:current_cycle, :last_cycle, :penultimate_cycle]
       |> Task.async_stream(fn cycle ->
-        %{cycle => usage_cycle(user, cycle, owned_site_ids)}
+        %{cycle => usage_cycle(user, cycle, site_ids)}
       end)
       |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
       |> Enum.reduce(%{}, &Map.merge/2)
     else
-      %{last_30_days: usage_cycle(user, :last_30_days)}
+      %{last_30_days: usage_cycle(user, :last_30_days, site_ids)}
     end
   end
 
@@ -347,11 +375,12 @@ defmodule Plausible.Billing.Quota do
 
   def ensure_can_subscribe_to_plan(_, _, _), do: :ok
 
-  defp exceeded_limits(%User{} = user, %Plan{} = plan, usage) do
+  def exceeded_limits(%User{} = user, plan, usage) do
     for {limit, exceeded?} <- [
           {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
           {:site_limit, not within_limit?(usage.sites, plan.site_limit)},
-          {:monthly_pageview_limit, exceeds_monthly_pageview_limit?(user, plan, usage)}
+          {:monthly_pageview_limit,
+           exceeds_monthly_pageview_limit?(user, plan, usage.monthly_pageviews)}
         ],
         exceeded? do
       limit
@@ -363,7 +392,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   defp exceeds_monthly_pageview_limit?(_user, plan, usage) do
-    case usage.monthly_pageviews do
+    case usage do
       %{last_30_days: %{total: total}} ->
         !within_limit?(total, pageview_limit_with_margin(plan))
 
@@ -375,7 +404,7 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  defp pageview_limit_with_margin(%Plan{monthly_pageview_limit: limit}) do
+  defp pageview_limit_with_margin(%{monthly_pageview_limit: limit}) do
     allowance_margin = if limit == 10_000, do: 0.3, else: 0.15
     ceil(limit * (1 + allowance_margin))
   end

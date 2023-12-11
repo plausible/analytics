@@ -540,7 +540,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
           role: :owner
         )
 
-      assert {:error, :over_team_member_limit} =
+      assert {:error, [:over_team_member_limit]} =
                AcceptInvitation.accept_invitation(
                  invitation.invitation_id,
                  new_owner
@@ -592,7 +592,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
           role: :owner
         )
 
-      assert {:error, :over_site_limit} =
+      assert {:error, [:over_site_limit]} =
                AcceptInvitation.accept_invitation(
                  invitation.invitation_id,
                  new_owner
@@ -618,11 +618,66 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
           role: :owner
         )
 
-      assert {:error, :no_feature_access} =
+      assert {:error, [:no_feature_access]} =
                AcceptInvitation.accept_invitation(
                  invitation.invitation_id,
                  new_owner
                )
+    end
+
+    test "does not allow transferring ownership when pageview limit exceeded" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      new_owner_site = insert(:site, members: [new_owner])
+      old_owner_site = insert(:site, members: [old_owner])
+
+      somewhere_last_month = NaiveDateTime.utc_now() |> Timex.shift(days: -5)
+      somewhere_penultimate_month = NaiveDateTime.utc_now() |> Timex.shift(days: -35)
+
+      generate_usage_for(new_owner_site, 5_000, somewhere_last_month)
+      generate_usage_for(new_owner_site, 1_000, somewhere_penultimate_month)
+
+      generate_usage_for(old_owner_site, 6_000, somewhere_last_month)
+      generate_usage_for(old_owner_site, 10_000, somewhere_penultimate_month)
+
+      invitation =
+        insert(:invitation,
+          site_id: old_owner_site.id,
+          inviter: old_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:error, [:over_monthly_pageview_limit]} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
+    end
+
+    test "does not allow transferring ownership when many limits exceeded at once" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      insert_list(10, :site, members: [new_owner])
+
+      site =
+        insert(:site,
+          props_enabled: true,
+          allowed_event_props: ["author"],
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(3, :site_membership, role: :admin)
+        )
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: old_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:error, [:over_team_member_limit, :over_site_limit, :no_feature_access]} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
     end
   end
 end

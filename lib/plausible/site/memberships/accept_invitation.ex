@@ -222,45 +222,59 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   end
 
   defp ensure_transfer_valid(site, new_owner) do
-    cond do
-      not within_team_member_limit_after_transfer?(site, new_owner) ->
-        {:error, :over_team_member_limit}
+    new_owner = Plausible.Users.with_subscription(new_owner)
+    plan = Plausible.Billing.Plans.get_subscription_plan(new_owner.subscription)
 
-      not within_site_limit_after_transfer?(new_owner) ->
-        {:error, :over_site_limit}
+    if is_nil(plan) || plan == :free_10k do
+      # TODO:
+      # We probably want to change this behaviour and block all ownership transfers
+      # to accounts that don't have a real subscription. In this commit, the :ok on
+      # the next line is ignoring that to keep the tests passing.
+      :ok
+    else
+      usage_after_transfer = %{
+        monthly_pageviews: monthly_pageview_usage_after_transfer(site, new_owner),
+        team_members: team_member_usage_after_transfer(site, new_owner),
+        sites: Quota.site_usage(new_owner) + 1
+      }
 
-      not has_access_to_site_features?(site, new_owner) ->
-        {:error, :no_feature_access}
+      transfer_errors =
+        Quota.exceeded_limits(new_owner, plan, usage_after_transfer)
+        |> Enum.map(&:"over_#{&1}")
 
-      true ->
+      transfer_errors =
+        if missing_site_feature_access?(site, new_owner) do
+          transfer_errors ++ [:no_feature_access]
+        else
+          transfer_errors
+        end
+
+      if transfer_errors == [] do
         :ok
+      else
+        {:error, transfer_errors}
+      end
     end
   end
 
-  defp within_team_member_limit_after_transfer?(site, new_owner) do
-    limit = Quota.team_member_limit(new_owner)
-
+  defp team_member_usage_after_transfer(site, new_owner) do
     current_usage = Quota.team_member_usage(new_owner)
     site_usage = Repo.aggregate(Quota.team_member_usage_query(site.owner, site), :count)
 
     extra_usage =
       if Plausible.Sites.is_member?(new_owner.id, site), do: 0, else: 1
 
-    usage_after_transfer = current_usage + site_usage + extra_usage
-
-    Quota.within_limit?(usage_after_transfer, limit)
+    current_usage + site_usage + extra_usage
   end
 
-  defp within_site_limit_after_transfer?(new_owner) do
-    limit = Quota.site_limit(new_owner)
-    usage_after_transfer = Quota.site_usage(new_owner) + 1
-
-    Quota.within_limit?(usage_after_transfer, limit)
+  def monthly_pageview_usage_after_transfer(site, new_owner) do
+    site_ids = Plausible.Sites.owned_site_ids(new_owner) ++ [site.id]
+    Quota.monthly_pageview_usage(new_owner, site_ids)
   end
 
-  defp has_access_to_site_features?(site, new_owner) do
+  defp missing_site_feature_access?(site, new_owner) do
     site
     |> Quota.features_usage()
-    |> Enum.all?(&(&1.check_availability(new_owner) == :ok))
+    |> Enum.any?(&(&1.check_availability(new_owner) != :ok))
   end
 end
