@@ -17,8 +17,8 @@ defmodule Plausible.Application do
       {Finch, name: Plausible.Finch, pools: finch_pool_config()},
       {Phoenix.PubSub, name: Plausible.PubSub},
       Plausible.Session.Salts,
-      Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
-      Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
+      Plausible.Event.WriteBuffer,
+      Plausible.Session.WriteBuffer,
       ReferrerBlocklist,
       Supervisor.child_spec({Cachex, name: :user_agents, limit: 10_000, stats: true},
         id: :cachex_user_agents
