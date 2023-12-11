@@ -101,7 +101,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
         IngestRepo.query!(insert_sql, [header | buffer], insert_opts)
     end
   rescue
-    e ->
+    _ ->
       path =
         Path.join(
           Application.get_env(:plausible, :persistent_cache_dir, System.tmp_dir!()),
