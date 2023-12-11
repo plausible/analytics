@@ -104,7 +104,7 @@ defmodule Plausible.Ingestion.WriteBuffer do
     _ ->
       path =
         Path.join(
-          Application.get_env(:plausible, :persistent_cache_dir, System.tmp_dir!()),
+          Application.get_env(:plausible, :persistent_cache_dir) || System.tmp_dir!(),
           "insert_error.dump"
         )
 
