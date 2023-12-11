@@ -1,5 +1,6 @@
 defmodule Plausible.Auth.UserAdmin do
   use Plausible.Repo
+  use Plausible
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
@@ -88,8 +89,7 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp subscription_plan(user) do
-    if user.subscription && user.subscription.status == Subscription.Status.active() &&
-         user.subscription.paddle_subscription_id do
+    if Subscription.Status.active?(user.subscription) && user.subscription.paddle_subscription_id do
       quota = PlausibleWeb.AuthView.subscription_quota(user.subscription)
       interval = PlausibleWeb.AuthView.subscription_interval(user.subscription)
 
@@ -117,9 +117,13 @@ defmodule Plausible.Auth.UserAdmin do
     end
   end
 
-  defp usage_link(user) do
-    path = PlausibleWeb.Router.Helpers.admin_path(PlausibleWeb.Endpoint, :usage, user.id)
-    {:safe, ~s(<a href="#{path}">Usage</a>)}
+  on_full_build do
+    defp usage_link(user) do
+      path = PlausibleWeb.Router.Helpers.admin_path(PlausibleWeb.Endpoint, :usage, user.id)
+      {:safe, ~s(<a href="#{path}">Usage</a>)}
+    end
+  else
+    defp usage_link(_), do: nil
   end
 
   defp format_date(nil), do: "--"

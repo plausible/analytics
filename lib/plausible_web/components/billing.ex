@@ -302,7 +302,7 @@ defmodule PlausibleWeb.Components.Billing do
         </div>
 
         <.styled_link
-          :if={@subscription.status == Subscription.Status.active()}
+          :if={Subscription.Status.active?(@subscription)}
           href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_form)}
           class="text-sm font-medium"
         >
@@ -310,7 +310,7 @@ defmodule PlausibleWeb.Components.Billing do
         </.styled_link>
 
         <span
-          :if={@subscription.status == Subscription.Status.past_due()}
+          :if={Subscription.Status.past_due?(@subscription)}
           class="text-sm text-gray-600 dark:text-gray-400 font-medium"
           tooltip="Please update your billing details before changing plans"
         >
