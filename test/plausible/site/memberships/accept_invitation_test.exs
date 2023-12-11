@@ -520,5 +520,109 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
         subject: "[Action required] Your Plausible dashboard is now locked"
       )
     end
+
+    test "does not allow transferring ownership to a non-member user when at team members limit" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      site =
+        insert(:site,
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(3, :site_membership, role: :admin)
+        )
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: old_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:error, :over_team_member_limit} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
+    end
+
+    test "allows transferring ownership to existing site member when at team members limit" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      site =
+        insert(:site,
+          memberships:
+            [
+              build(:site_membership, user: old_owner, role: :owner),
+              build(:site_membership, user: new_owner, role: :admin)
+            ] ++
+              build_list(2, :site_membership, role: :admin)
+        )
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: old_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:ok, _} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
+    end
+
+    test "does not allow transferring ownership when sites limit exceeded" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      insert_list(10, :site, members: [new_owner])
+
+      site = insert(:site, members: [old_owner])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: old_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:error, :over_site_limit} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
+    end
+
+    test "does not allow transferring ownership without feature access" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      site =
+        insert(:site,
+          memberships: [build(:site_membership, user: old_owner, role: :owner)],
+          props_enabled: true,
+          allowed_event_props: ["author"]
+        )
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: old_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:error, :no_feature_access} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
+    end
   end
 end

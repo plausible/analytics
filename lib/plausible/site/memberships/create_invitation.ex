@@ -110,36 +110,11 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     Plausible.Mailer.send(email)
   end
 
-  defp within_team_member_limit_after_transfer?(site, new_owner) do
-    limit = Quota.team_member_limit(new_owner)
-
-    current_usage = Quota.team_member_usage(new_owner)
-    site_usage = Plausible.Repo.aggregate(Quota.team_member_usage_query(site.owner, site), :count)
-    usage_after_transfer = current_usage + site_usage + 1
-
-    Quota.within_limit?(usage_after_transfer, limit)
-  end
-
-  defp within_site_limit_after_transfer?(new_owner) do
-    limit = Quota.site_limit(new_owner)
-    usage_after_transfer = Quota.site_usage(new_owner) + 1
-
-    Quota.within_limit?(usage_after_transfer, limit)
-  end
-
-  defp has_access_to_site_features?(site, new_owner) do
-    site
-    |> Plausible.Billing.Quota.features_usage()
-    |> Enum.all?(&(&1.check_availability(new_owner) == :ok))
-  end
-
   defp ensure_transfer_valid(%Site{} = site, %User{} = new_owner, :owner) do
-    cond do
-      Sites.role(new_owner.id, site) == :owner -> {:error, :transfer_to_self}
-      not within_team_member_limit_after_transfer?(site, new_owner) -> {:error, :upgrade_required}
-      not within_site_limit_after_transfer?(new_owner) -> {:error, :upgrade_required}
-      not has_access_to_site_features?(site, new_owner) -> {:error, :upgrade_required}
-      true -> :ok
+    if Sites.role(new_owner.id, site) == :owner do
+      {:error, :transfer_to_self}
+    else
+      :ok
     end
   end
 

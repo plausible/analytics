@@ -18,51 +18,24 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   alias Plausible.Auth
   alias Plausible.Billing
   alias Plausible.Memberships.Invitations
+  alias Plausible.Billing.Quota
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Site.Memberships.Invitations
 
   require Logger
 
+  @type transfer_error() :: :over_team_member_limit | :over_site_limit | :no_feature_access
+
   @spec transfer_ownership(Site.t(), Auth.User.t(), Keyword.t()) ::
-          {:ok, Site.Membership.t()} | {:error, Ecto.Changeset.t()}
+          {:ok, Site.Membership.t()} | {:error, transfer_error() | Ecto.Changeset.t()}
   def transfer_ownership(site, user, opts \\ []) do
-    selfhost? = Keyword.get(opts, :selfhost?, small_build?())
-    membership = get_or_create_owner_membership(site, user)
-    multi = add_and_transfer_ownership(site, membership, user, selfhost?)
-
-    case Repo.transaction(multi) do
-      {:ok, changes} ->
-        if changes[:site_locker] == {:locked, :grace_period_ended_now} do
-          user = Plausible.Users.with_subscription(changes.user)
-          Billing.SiteLocker.send_grace_period_end_email(user)
-        end
-
-        membership = Repo.preload(changes.membership, [:site, :user])
-
-        {:ok, membership}
-
-      {:error, _operation, error, _changes} ->
-        {:error, error}
-    end
-  end
-
-  @spec accept_invitation(String.t(), Auth.User.t(), Keyword.t()) ::
-          {:ok, Site.Membership.t()} | {:error, :invitation_not_found | Ecto.Changeset.t()}
-  def accept_invitation(invitation_id, user, opts \\ []) do
+    site = Repo.preload(site, :owner)
     selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
-    with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
-      membership = get_or_create_membership(invitation, user)
-
-      multi =
-        if invitation.role == :owner do
-          invitation.site
-          |> add_and_transfer_ownership(membership, user, selfhost?)
-          |> Multi.delete(:invitation, invitation)
-        else
-          add(invitation, membership, user)
-        end
+    with :ok <- ensure_transfer_valid(site, user) do
+      membership = get_or_create_owner_membership(site, user)
+      multi = add_and_transfer_ownership(site, membership, user, selfhost?)
 
       case Repo.transaction(multi) do
         {:ok, changes} ->
@@ -71,8 +44,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
             Billing.SiteLocker.send_grace_period_end_email(user)
           end
 
-          notify_invitation_accepted(invitation)
-
           membership = Repo.preload(changes.membership, [:site, :user])
 
           {:ok, membership}
@@ -80,6 +51,60 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
         {:error, _operation, error, _changes} ->
           {:error, error}
       end
+    end
+  end
+
+  @spec accept_invitation(String.t(), Auth.User.t(), Keyword.t()) ::
+          {:ok, Site.Membership.t()}
+          | {:error, :invitation_not_found | transfer_error() | Ecto.Changeset.t()}
+  def accept_invitation(invitation_id, user, opts \\ []) do
+    selfhost? = Keyword.get(opts, :selfhost?, small_build?())
+
+    with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
+      if invitation.role == :owner do
+        do_accept_ownership_transfer(invitation, user, selfhost?)
+      else
+        do_accept_invitation(invitation, user)
+      end
+    end
+  end
+
+  defp do_accept_ownership_transfer(invitation, user, selfhost?) do
+    membership = get_or_create_membership(invitation, user)
+    site = Repo.preload(invitation.site, :owner)
+
+    with :ok <- ensure_transfer_valid(site, user) do
+      site
+      |> add_and_transfer_ownership(membership, user, selfhost?)
+      |> Multi.delete(:invitation, invitation)
+      |> finalize_invitation(invitation)
+    end
+  end
+
+  defp do_accept_invitation(invitation, user) do
+    membership = get_or_create_membership(invitation, user)
+
+    invitation
+    |> add(membership, user)
+    |> finalize_invitation(invitation)
+  end
+
+  defp finalize_invitation(multi, invitation) do
+    case Repo.transaction(multi) do
+      {:ok, changes} ->
+        if changes[:site_locker] == {:locked, :grace_period_ended_now} do
+          user = Plausible.Users.with_subscription(changes.user)
+          Billing.SiteLocker.send_grace_period_end_email(user)
+        end
+
+        notify_invitation_accepted(invitation)
+
+        membership = Repo.preload(changes.membership, [:site, :user])
+
+        {:ok, membership}
+
+      {:error, _operation, error, _changes} ->
+        {:error, error}
     end
   end
 
@@ -194,5 +219,48 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   defp notify_invitation_accepted(invitation) do
     PlausibleWeb.Email.invitation_accepted(invitation)
     |> Plausible.Mailer.send()
+  end
+
+  defp ensure_transfer_valid(site, new_owner) do
+    cond do
+      not within_team_member_limit_after_transfer?(site, new_owner) ->
+        {:error, :over_team_member_limit}
+
+      not within_site_limit_after_transfer?(new_owner) ->
+        {:error, :over_site_limit}
+
+      not has_access_to_site_features?(site, new_owner) ->
+        {:error, :no_feature_access}
+
+      true ->
+        :ok
+    end
+  end
+
+  defp within_team_member_limit_after_transfer?(site, new_owner) do
+    limit = Quota.team_member_limit(new_owner)
+
+    current_usage = Quota.team_member_usage(new_owner)
+    site_usage = Repo.aggregate(Quota.team_member_usage_query(site.owner, site), :count)
+
+    extra_usage =
+      if Plausible.Sites.is_member?(new_owner.id, site), do: 0, else: 1
+
+    usage_after_transfer = current_usage + site_usage + extra_usage
+
+    Quota.within_limit?(usage_after_transfer, limit)
+  end
+
+  defp within_site_limit_after_transfer?(new_owner) do
+    limit = Quota.site_limit(new_owner)
+    usage_after_transfer = Quota.site_usage(new_owner) + 1
+
+    Quota.within_limit?(usage_after_transfer, limit)
+  end
+
+  defp has_access_to_site_features?(site, new_owner) do
+    site
+    |> Quota.features_usage()
+    |> Enum.all?(&(&1.check_availability(new_owner) == :ok))
   end
 end

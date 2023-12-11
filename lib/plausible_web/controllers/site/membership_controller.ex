@@ -120,16 +120,6 @@ defmodule PlausibleWeb.Site.MembershipController do
         |> put_flash(:error, "Can't transfer ownership to existing owner")
         |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
 
-      {:error, :upgrade_required} ->
-        conn
-        |> put_flash(:ttl, :timer.seconds(5))
-        |> put_flash(:error_title, "Transfer error")
-        |> put_flash(
-          :error,
-          "The site you're trying to transfer exceeds the invitee's subscription plan. To proceed, please contact us at hello@plausible.io for further assistance."
-        )
-        |> redirect(external: Routes.site_path(conn, :settings_people, site.domain))
-
       {:error, changeset} ->
         errors = Plausible.ChangesetHelpers.traverse_errors(changeset)
 
