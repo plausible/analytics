@@ -31,16 +31,16 @@ defmodule Plausible.Billing.Plan do
     field :yearly_product_id, :string
   end
 
-  @fields ~w(generation kind features monthly_pageview_limit site_limit team_member_limit volume data_retention_in_years monthly_cost monthly_product_id yearly_cost yearly_product_id)a
-  @required @fields --
-              ~w(monthly_cost yearly_cost monthly_product_id yearly_product_id data_retention_in_years)a
+  @required_fields ~w(generation kind features monthly_pageview_limit site_limit team_member_limit volume)a
+  @optional_fields ~w(monthly_cost yearly_cost monthly_product_id yearly_product_id data_retention_in_years)a
+  @fields @required_fields ++ @optional_fields
 
   def changeset(plan, attrs) do
     plan
     |> cast(attrs, @fields)
     |> put_volume()
     |> validate_required_either([:monthly_product_id, :yearly_product_id])
-    |> validate_required(@required)
+    |> validate_required(@required_fields)
   end
 
   defp put_volume(changeset) do
