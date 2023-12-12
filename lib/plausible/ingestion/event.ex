@@ -213,9 +213,12 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_props(%__MODULE__{request: %{props: %{} = props}} = event) do
+    # defensive: ensuring the keys/values are always in the same order
+    {keys, values} = Enum.unzip(props)
+
     update_attrs(event, %{
-      "meta.key": Map.keys(props),
-      "meta.value": Enum.map(props, fn {_, v} -> to_string(v) end)
+      "meta.key": keys,
+      "meta.value": values
     })
   end
 

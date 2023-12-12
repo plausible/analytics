@@ -78,8 +78,7 @@ defmodule Plausible.ClickhouseEventV2 do
         :revenue_source_currency,
         :revenue_reporting_amount,
         :revenue_reporting_currency
-      ],
-      empty_values: [nil, ""]
+      ]
     )
     |> validate_required([:name, :site_id, :hostname, :pathname, :user_id, :timestamp])
   end

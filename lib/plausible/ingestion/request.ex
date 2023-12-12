@@ -206,13 +206,21 @@ defmodule Plausible.Ingestion.Request do
     props =
       (request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"])
       |> Plausible.Helpers.JSON.decode_or_fallback()
-      |> Enum.reject(fn {_k, v} -> is_nil(v) || is_list(v) || is_map(v) || v == "" end)
+      |> Enum.reduce([], &filter_bad_props/2)
       |> Enum.take(@max_props)
       |> Map.new()
 
     changeset
     |> Changeset.put_change(:props, props)
     |> validate_props()
+  end
+
+  defp filter_bad_props({k, v}, acc) do
+    cond do
+      Enum.any?([k, v], &(is_list(&1) or is_map(&1))) -> acc
+      Enum.any?([k, v], &(String.trim_leading(to_string(&1)) == "")) -> acc
+      true -> [{to_string(k), to_string(v)} | acc]
+    end
   end
 
   @max_prop_key_length Plausible.Props.max_prop_key_length()
