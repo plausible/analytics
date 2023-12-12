@@ -47,9 +47,25 @@ defmodule Plausible.Billing.Quota do
         nil -> @site_limit_for_trials
       end
     end
+
+    @team_member_limit_for_trials 3
+    @spec team_member_limit(User.t()) :: non_neg_integer()
+    def team_member_limit(user) do
+      user = Plausible.Users.with_subscription(user)
+
+      case Plans.get_subscription_plan(user.subscription) do
+        %EnterprisePlan{team_member_limit: limit} -> limit
+        %Plan{team_member_limit: limit} -> limit
+        :free_10k -> :unlimited
+        nil -> @team_member_limit_for_trials
+      end
+    end
   else
-    @spec site_limit(any()) :: non_neg_integer() | :unlimited
     def site_limit(_) do
+      :unlimited
+    end
+
+    def team_member_limit(_) do
       :unlimited
     end
   end
@@ -203,22 +219,6 @@ defmodule Plausible.Billing.Quota do
       custom_events: custom_events,
       total: pageviews + custom_events
     }
-  end
-
-  @team_member_limit_for_trials 3
-  @spec team_member_limit(User.t()) :: non_neg_integer()
-  @doc """
-  Returns the limit of team members a user can have in their sites.
-  """
-  def team_member_limit(user) do
-    user = Plausible.Users.with_subscription(user)
-
-    case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{team_member_limit: limit} -> limit
-      %Plan{team_member_limit: limit} -> limit
-      :free_10k -> :unlimited
-      nil -> @team_member_limit_for_trials
-    end
   end
 
   @spec team_member_usage(User.t()) :: integer()
