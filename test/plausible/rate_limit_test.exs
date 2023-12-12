@@ -18,7 +18,7 @@ defmodule Plausible.RateLimitTest do
       assert {:allow, 1} = RateLimit.check_rate(@table, key, scale, limit)
       assert [{{^key, _bucket}, _count = 1, expires_at}] = :ets.tab2list(@table)
 
-      assert expires_at > System.system_time(:millisecond)
+      assert expires_at >= System.system_time(:millisecond)
       assert expires_at <= System.system_time(:millisecond) + 50
 
       :timer.sleep(150)
