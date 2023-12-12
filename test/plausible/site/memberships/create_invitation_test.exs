@@ -342,7 +342,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
               build_list(3, :site_membership, role: :admin)
         )
 
-      assert {:error, [:over_team_member_limit]} =
+      assert {:error, {:over_plan_limits, [:team_member_limit]}} =
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
@@ -372,7 +372,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       site = insert(:site, members: [old_owner])
 
-      assert {:error, [:over_site_limit]} =
+      assert {:error, {:over_plan_limits, [:site_limit]}} =
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
@@ -387,7 +387,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
           allowed_event_props: ["author"]
         )
 
-      assert {:error, [:no_feature_access]} =
+      assert {:error, {:over_plan_limits, [:feature_access]}} =
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
@@ -406,7 +406,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
               build_list(3, :site_membership, role: :admin)
         )
 
-      assert {:error, [:over_team_member_limit, :over_site_limit, :no_feature_access]} =
+      assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit, :feature_access]}} =
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
   end

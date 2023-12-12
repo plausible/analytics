@@ -25,15 +25,17 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   require Logger
 
-  @type transfer_error() :: :over_team_member_limit | :over_site_limit | :no_feature_access
+  @type plan_limit_error() ::
+          :team_member_limit | :site_limit | :monthly_pageview_limit | :feature_access
 
   @spec transfer_ownership(Site.t(), Auth.User.t(), Keyword.t()) ::
-          {:ok, Site.Membership.t()} | {:error, transfer_error() | Ecto.Changeset.t()}
+          {:ok, Site.Membership.t()}
+          | {:error, {:over_plan_limits, plan_limit_error()} | Ecto.Changeset.t()}
   def transfer_ownership(site, user, opts \\ []) do
     site = Repo.preload(site, :owner)
     selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
-    with :ok <- ensure_transfer_valid(site, user) do
+    with :ok <- ensure_within_plan_limits(site, user) do
       membership = get_or_create_owner_membership(site, user)
       multi = add_and_transfer_ownership(site, membership, user, selfhost?)
 
@@ -56,7 +58,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   @spec accept_invitation(String.t(), Auth.User.t(), Keyword.t()) ::
           {:ok, Site.Membership.t()}
-          | {:error, :invitation_not_found | transfer_error() | Ecto.Changeset.t()}
+          | {:error,
+             :invitation_not_found | {:over_plan_limits, plan_limit_error()} | Ecto.Changeset.t()}
   def accept_invitation(invitation_id, user, opts \\ []) do
     selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
@@ -73,7 +76,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     membership = get_or_create_membership(invitation, user)
     site = Repo.preload(invitation.site, :owner)
 
-    with :ok <- ensure_transfer_valid(site, user) do
+    with :ok <- ensure_within_plan_limits(site, user) do
       site
       |> add_and_transfer_ownership(membership, user, selfhost?)
       |> Multi.delete(:invitation, invitation)
@@ -221,7 +224,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     |> Plausible.Mailer.send()
   end
 
-  defp ensure_transfer_valid(site, new_owner) do
+  defp ensure_within_plan_limits(site, new_owner) do
     new_owner = Plausible.Users.with_subscription(new_owner)
     plan = Plausible.Billing.Plans.get_subscription_plan(new_owner.subscription)
 
@@ -239,12 +242,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
       }
 
       transfer_errors =
-        Quota.exceeded_limits(new_owner, plan, usage_after_transfer)
-        |> Enum.map(&:"over_#{&1}")
+        case Quota.ensure_within_plan_limits(new_owner, plan, usage_after_transfer) do
+          :ok -> []
+          {:error, %{exceeded_limits: limits}} -> limits
+        end
 
       transfer_errors =
         if missing_site_feature_access?(site, new_owner) do
-          transfer_errors ++ [:no_feature_access]
+          transfer_errors ++ [:feature_access]
         else
           transfer_errors
         end
@@ -252,7 +257,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
       if transfer_errors == [] do
         :ok
       else
-        {:error, transfer_errors}
+        {:error, {:over_plan_limits, transfer_errors}}
       end
     end
   end

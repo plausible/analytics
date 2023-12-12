@@ -362,9 +362,9 @@ defmodule Plausible.Billing.Quota do
     for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
-  def ensure_can_subscribe_to_plan(user, plan, usage \\ nil)
+  def ensure_within_plan_limits(user, plan, usage \\ nil)
 
-  def ensure_can_subscribe_to_plan(%User{} = user, %Plan{} = plan, usage) do
+  def ensure_within_plan_limits(%User{} = user, %Plan{} = plan, usage) do
     usage = if usage, do: usage, else: usage(user)
 
     case exceeded_limits(user, plan, usage) do
@@ -373,9 +373,9 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  def ensure_can_subscribe_to_plan(_, _, _), do: :ok
+  def ensure_within_plan_limits(_, _, _), do: :ok
 
-  def exceeded_limits(%User{} = user, plan, usage) do
+  defp exceeded_limits(%User{} = user, plan, usage) do
     for {limit, exceeded?} <- [
           {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
           {:site_limit, not within_limit?(usage.sites, plan.site_limit)},

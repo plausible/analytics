@@ -17,25 +17,11 @@ defmodule PlausibleWeb.InvitationController do
         |> put_flash(:error, "Invitation missing or already accepted")
         |> redirect(to: "/sites")
 
-      {:error, :over_team_member_limit} ->
+      {:error, {:over_plan_limits, limits}} ->
         conn
         |> put_flash(
           :error,
-          "Team member limit exceeded."
-        )
-
-      {:error, :over_site_limit} ->
-        conn
-        |> put_flash(
-          :error,
-          "Site limit exceeded."
-        )
-
-      {:error, :no_feature_access} ->
-        conn
-        |> put_flash(
-          :error,
-          "Plan does not support features used by the site."
+          "Plan limits exceeded: #{Enum.join(limits, ", ")}."
         )
 
       {:error, _} ->
