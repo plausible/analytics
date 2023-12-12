@@ -218,7 +218,7 @@ defmodule Plausible.Ingestion.Event do
 
     update_attrs(event, %{
       "meta.key": keys,
-      "meta.value": Enum.map(values, &to_string/1)
+      "meta.value": values
     })
   end
 

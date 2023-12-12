@@ -566,7 +566,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert Map.get(event, :"meta.value") == ["true", "12"]
     end
 
-    test "immune to props payload causing uneven arrays", %{conn: conn, site: site} do
+    test "filters out bad props", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
         url: "http://gigride.live/",
@@ -574,7 +574,10 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         props: %{
           false: nil,
           nil: false,
-          good: true
+          good: true,
+          "      ": "    ",
+          "    ": "value",
+          key: "    "
         }
       }
 
