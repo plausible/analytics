@@ -206,7 +206,14 @@ defmodule Plausible.Ingestion.Request do
     props =
       (request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"])
       |> Plausible.Helpers.JSON.decode_or_fallback()
-      |> Enum.reject(fn {_k, v} -> is_nil(v) || is_list(v) || is_map(v) || v == "" end)
+      |> Enum.filter(fn {k, v} ->
+        non_empty_key = is_binary(k) and byte_size(k) > 0
+
+        valid_value =
+          (is_binary(v) and byte_size(v) > 0) or is_number(v) or (is_atom(v) and not is_nil(v))
+
+        non_empty_key and valid_value
+      end)
       |> Enum.take(@max_props)
       |> Map.new()
 
