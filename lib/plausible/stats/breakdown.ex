@@ -649,8 +649,9 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:browser_version") do
     from(
       s in q,
-      group_by: s.browser_version,
+      group_by: [s.browser, s.browser_version],
       select_merge: %{
+        browser: fragment("if(empty(?), ?, ?)", s.browser, @not_set, s.browser),
         browser_version:
           fragment("if(empty(?), ?, ?)", s.browser_version, @not_set, s.browser_version)
       },

@@ -155,6 +155,7 @@ defmodule PlausibleWeb.StatsController do
         ~c"regions.csv" => fn -> Api.StatsController.regions(conn, params) end,
         ~c"cities.csv" => fn -> Api.StatsController.cities(conn, params) end,
         ~c"browsers.csv" => fn -> Api.StatsController.browsers(conn, params) end,
+        ~c"browser_versions.csv" => fn -> Api.StatsController.browser_versions(conn, params) end,
         ~c"operating_systems.csv" => fn -> Api.StatsController.operating_systems(conn, params) end,
         ~c"devices.csv" => fn -> Api.StatsController.screen_sizes(conn, params) end,
         ~c"conversions.csv" => fn -> Api.StatsController.conversions(conn, params) end,

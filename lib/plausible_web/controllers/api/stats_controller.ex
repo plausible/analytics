@@ -1061,7 +1061,23 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{browser_version: :name})
       |> add_percentages(site, query)
 
-    json(conn, versions)
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        versions
+        |> transform_keys(%{
+          name: :version,
+          browser: :name,
+          visitors: :conversions
+        })
+        |> to_csv([:name, :version, :conversions, :conversion_rate])
+      else
+        versions
+        |> transform_keys(%{name: :version, browser: :name})
+        |> to_csv([:name, :version, :visitors])
+      end
+    else
+      json(conn, versions)
+    end
   end
 
   def operating_systems(conn, params) do

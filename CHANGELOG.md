@@ -1,8 +1,6 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
-
 ### Added
 - Add `referrers.csv` to CSV export
 - Add a new Properties section in the dashboard to break down by custom properties
@@ -17,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - Add site pinning to /sites view
 - Add support for JSON logger, via LOG_FORMAT=json environment variable
 - Add support for 2FA authentication
+- Add 'browser_versions.csv' to CSV export
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions

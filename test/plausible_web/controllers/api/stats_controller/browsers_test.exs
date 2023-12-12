@@ -188,8 +188,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "78.0", "visitors" => 2, "percentage" => 66.7},
-               %{"name" => "77.0", "visitors" => 1, "percentage" => 33.3}
+               %{"name" => "78.0", "visitors" => 2, "percentage" => 66.7, "browser" => "Chrome"},
+               %{"name" => "77.0", "visitors" => 1, "percentage" => 33.3, "browser" => "Chrome"}
              ]
     end
 
@@ -207,7 +207,12 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "(not set)", "visitors" => 1, "percentage" => 100}
+               %{
+                 "name" => "(not set)",
+                 "visitors" => 1,
+                 "percentage" => 100,
+                 "browser" => "(not set)"
+               }
              ]
     end
   end

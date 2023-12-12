@@ -517,8 +517,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"browser_version" => "56", "visitors" => 2},
-               %{"browser_version" => "57", "visitors" => 1}
+               %{"browser_version" => "56", "visitors" => 2, "browser" => "(not set)"},
+               %{"browser_version" => "57", "visitors" => 1, "browser" => "(not set)"}
              ]
            }
   end
