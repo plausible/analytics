@@ -37,7 +37,8 @@
     "yearly_product_id":"63862",
     "site_limit":10,
     "team_member_limit":3,
-    "features":["goals"]
+    "features":["goals"],
+    "data_retention_in_years": 3
   },
   {
     "kind":"growth",
@@ -47,7 +48,8 @@
     "yearly_product_id":"63863",
     "site_limit":10,
     "team_member_limit":3,
-    "features":["goals"]
+    "features":["goals"],
+    "data_retention_in_years": 3
   },
   {
     "kind":"growth",
@@ -57,7 +59,8 @@
     "yearly_product_id":"63864",
     "site_limit":10,
     "team_member_limit":3,
-    "features":["goals"]
+    "features":["goals"],
+    "data_retention_in_years": 3
   },
   {
     "kind":"growth",
@@ -67,7 +70,8 @@
     "yearly_product_id":"63865",
     "site_limit":10,
     "team_member_limit":3,
-    "features":["goals"]
+    "features":["goals"],
+    "data_retention_in_years": 3
   },
   {
     "kind":"growth",
@@ -77,7 +81,8 @@
     "yearly_product_id":"63866",
     "site_limit":10,
     "team_member_limit":3,
-    "features":["goals"]
+    "features":["goals"],
+    "data_retention_in_years": 3
   },
   {
     "kind":"business",
@@ -117,7 +122,8 @@
     "yearly_product_id":"63870",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props", "revenue_goals", "funnels","stats_api"]
+    "features":["goals","props", "revenue_goals", "funnels","stats_api"],
+    "data_retention_in_years": 5
   },
   {
     "kind":"business",
@@ -127,7 +133,8 @@
     "yearly_product_id":"63871",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props", "revenue_goals", "funnels","stats_api"]
+    "features":["goals","props", "revenue_goals", "funnels","stats_api"],
+    "data_retention_in_years": 5
   },
   {
     "kind":"business",
@@ -137,7 +144,8 @@
     "yearly_product_id":"63872",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props", "revenue_goals", "funnels","stats_api"]
+    "features":["goals","props", "revenue_goals", "funnels","stats_api"],
+    "data_retention_in_years": 5
   },
   {
     "kind":"business",
@@ -147,7 +155,8 @@
     "yearly_product_id":"63873",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props", "revenue_goals", "funnels","stats_api"]
+    "features":["goals","props", "revenue_goals", "funnels","stats_api"],
+    "data_retention_in_years": 5
   },
   {
     "kind":"business",
@@ -157,6 +166,7 @@
     "yearly_product_id":"63874",
     "site_limit":50,
     "team_member_limit":10,
-    "features":["goals","props", "revenue_goals", "funnels","stats_api"]
+    "features":["goals","props", "revenue_goals", "funnels","stats_api"],
+    "data_retention_in_years": 5
   }
 ]

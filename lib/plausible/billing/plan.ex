@@ -23,6 +23,7 @@ defmodule Plausible.Billing.Plan do
     field :site_limit, :integer
     field :team_member_limit, Plausible.Billing.Ecto.Limit
     field :volume, :string
+    field :data_retention_in_years, :integer
 
     field :monthly_cost
     field :monthly_product_id, :string
@@ -30,16 +31,16 @@ defmodule Plausible.Billing.Plan do
     field :yearly_product_id, :string
   end
 
-  @fields ~w(generation kind features monthly_pageview_limit site_limit team_member_limit volume monthly_cost monthly_product_id yearly_cost yearly_product_id)a
+  @required_fields ~w(generation kind features monthly_pageview_limit site_limit team_member_limit volume)a
+  @optional_fields ~w(monthly_cost yearly_cost monthly_product_id yearly_product_id data_retention_in_years)a
+  @fields @required_fields ++ @optional_fields
 
   def changeset(plan, attrs) do
     plan
     |> cast(attrs, @fields)
     |> put_volume()
     |> validate_required_either([:monthly_product_id, :yearly_product_id])
-    |> validate_required(
-      @fields -- [:monthly_cost, :yearly_cost, :monthly_product_id, :yearly_product_id]
-    )
+    |> validate_required(@required_fields)
   end
 
   defp put_volume(changeset) do
@@ -51,9 +52,10 @@ defmodule Plausible.Billing.Plan do
   end
 
   def validate_required_either(changeset, fields) do
-    if Enum.any?(fields, &get_field(changeset, &1)),
-      do: changeset,
-      else:
-        add_error(changeset, hd(fields), "one of these fields must be present #{inspect(fields)}")
+    if Enum.any?(fields, &get_field(changeset, &1)) do
+      changeset
+    else
+      add_error(changeset, hd(fields), "one of these fields must be present #{inspect(fields)}")
+    end
   end
 end
