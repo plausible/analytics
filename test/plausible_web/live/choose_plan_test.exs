@@ -33,7 +33,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
 
   describe "for a user with no subscription" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -206,8 +206,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                @v4_business_5m_monthly_plan_id
     end
 
-    test "warns about losing access to a feature", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+    test "warns about losing access to a feature", %{conn: conn, site: site} do
       Plausible.Props.allow(site, ["author"])
 
       {:ok, _lv, doc} = get_liveview(conn)
@@ -224,11 +223,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
 
     @tag :full_build_only
-    test "recommends Business tier when Revenue Goals were used during trial", %{
-      conn: conn,
-      user: user
-    } do
-      site = insert(:site, members: [user])
+    test "recommends Business when Revenue Goals used during trial", %{conn: conn, site: site} do
       insert(:goal, site: site, currency: :USD, event_name: "Purchase")
 
       {:ok, _lv, doc} = get_liveview(conn)
@@ -239,7 +234,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a v4 growth subscription plan" do
-    setup [:create_user, :log_in, :subscribe_v4_growth]
+    setup [:create_user, :create_site, :log_in, :subscribe_v4_growth]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -288,9 +283,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "https://plausible.io/white-label-web-analytics"
     end
 
-    test "displays usage", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
-
+    test "displays usage", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview),
         build(:pageview)
@@ -376,7 +369,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a v4 business subscription plan" do
-    setup [:create_user, :log_in, :subscribe_v4_business]
+    setup [:create_user, :create_site, :log_in, :subscribe_v4_business]
 
     test "gets default pageview limit from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -451,9 +444,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     test "checkout is not disabled when pageview usage exceeded but next upgrade allowed by override",
          %{
            conn: conn,
-           user: user
+           user: user,
+           site: site
          } do
-      site = insert(:site, members: [user])
       now = NaiveDateTime.utc_now()
 
       generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
@@ -468,9 +461,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
 
     @tag :full_build_only
-    test "warns about losing access to a feature", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
-
+    test "warns about losing access to a feature", %{conn: conn, user: user, site: site} do
       Plausible.Props.allow(site, ["author"])
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
       insert(:api_key, user: user)
@@ -483,7 +474,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a v3 business (unlimited team members) subscription plan" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     setup %{user: user} = context do
       create_subscription_for(user, paddle_plan_id: @v3_business_10k_monthly_plan_id)
@@ -529,7 +520,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a past_due subscription" do
-    setup [:create_user, :log_in, :create_past_due_subscription]
+    setup [:create_user, :create_site, :log_in, :create_past_due_subscription]
 
     test "renders failed payment notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -559,7 +550,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a paused subscription" do
-    setup [:create_user, :log_in, :create_paused_subscription]
+    setup [:create_user, :create_site, :log_in, :create_paused_subscription]
 
     test "renders subscription paused notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -589,7 +580,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a cancelled subscription" do
-    setup [:create_user, :log_in, :create_cancelled_subscription]
+    setup [:create_user, :create_site, :log_in, :create_cancelled_subscription]
 
     test "checkout buttons are paddle buttons", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -622,7 +613,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a grandfathered user" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     setup %{user: user} = context do
       create_subscription_for(user, paddle_plan_id: @v1_10k_yearly_plan_id)
@@ -695,7 +686,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a free_10k subscription" do
-    setup [:create_user, :log_in, :subscribe_free_10k]
+    setup [:create_user, :create_site, :log_in, :subscribe_free_10k]
 
     test "recommends growth tier when no premium features used", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -704,8 +695,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
 
     @tag :full_build_only
-    test "recommends Business tier when premium features used", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+    test "recommends Business tier when premium features used", %{conn: conn, site: site} do
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
       {:ok, _lv, doc} = get_liveview(conn)
@@ -728,6 +718,18 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
+    end
+  end
+
+  describe "for a user with no sites" do
+    setup [:create_user, :log_in]
+
+    test "does not allow to subscribe and renders notice", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, "#upgrade-eligible-notice") =~ "You cannot start a subscription"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
     end
   end
 

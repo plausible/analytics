@@ -447,6 +447,24 @@ defmodule PlausibleWeb.Components.Billing do
 
   def subscription_paused_notice(assigns), do: ~H""
 
+  def upgrade_ineligible_notice(assigns) do
+    ~H"""
+    <aside id="upgrade-eligible-notice" class="pb-6">
+      <PlausibleWeb.Components.Generic.notice
+        title="No sites owned"
+        theme={:yellow}
+        class="shadow-md dark:shadow-none"
+      >
+        You cannot start a subscription as your account doesn't own any sites. The account that owns the sites is responsible for the billing. Please either
+        <.styled_link href="https://plausible.io/docs/transfer-ownership">
+          transfer the sites
+        </.styled_link>
+        to your account or start a subscription from the account that owns your sites.
+      </PlausibleWeb.Components.Generic.notice>
+    </aside>
+    """
+  end
+
   def present_enterprise_plan(assigns) do
     ~H"""
     <ul class="w-full py-4">
