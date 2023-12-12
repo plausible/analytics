@@ -27,6 +27,9 @@ defmodule Plausible.Billing.Quota do
 
   on_full_build do
     @limit_sites_since ~D[2021-05-05]
+    @site_limit_for_trials 10
+    @team_member_limit_for_trials 3
+
     @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
     def site_limit(user) do
       if Timex.before?(user.inserted_at, @limit_sites_since) do
@@ -36,26 +39,22 @@ defmodule Plausible.Billing.Quota do
       end
     end
 
-    @site_limit_for_trials 10
-    @site_limit_for_free_10k 50
     defp get_site_limit_from_plan(user) do
       user = Plausible.Users.with_subscription(user)
 
       case Plans.get_subscription_plan(user.subscription) do
         %{site_limit: site_limit} -> site_limit
-        :free_10k -> @site_limit_for_free_10k
+        :free_10k -> 50
         nil -> @site_limit_for_trials
       end
     end
 
-    @team_member_limit_for_trials 3
     @spec team_member_limit(User.t()) :: non_neg_integer()
     def team_member_limit(user) do
       user = Plausible.Users.with_subscription(user)
 
       case Plans.get_subscription_plan(user.subscription) do
-        %EnterprisePlan{team_member_limit: limit} -> limit
-        %Plan{team_member_limit: limit} -> limit
+        %{team_member_limit: limit} -> limit
         :free_10k -> :unlimited
         nil -> @team_member_limit_for_trials
       end
