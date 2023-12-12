@@ -223,8 +223,14 @@ defmodule Plausible.Billing.Quota do
 
   @spec team_member_usage(User.t()) :: integer()
   @doc """
-  Returns the total count of team members and pending invitations associated
-  with the user's sites.
+  Returns the total count of team members associated with the user's sites.
+
+  * The given user (i.e. the owner) is not counted as a team member.
+
+  * Pending invitations are counted as team members even before accepted.
+
+  * Users are counted uniquely - i.e. even if an account is associated with
+    many sites owned by the given user, they still count as one team member.
   """
   def team_member_usage(user) do
     Plausible.Repo.aggregate(team_member_usage_query(user), :count)
