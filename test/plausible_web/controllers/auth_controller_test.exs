@@ -863,7 +863,9 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_element(doc, "#pageviews_current_cycle") =~ "Pageviews 1"
       assert text_of_element(doc, "#custom_events_current_cycle") =~ "Custom events 0"
 
-      assert text_of_element(doc, "#total_pageviews_last_cycle") =~ "Total billable pageviews 1 / 10,000"
+      assert text_of_element(doc, "#total_pageviews_last_cycle") =~
+               "Total billable pageviews 1 / 10,000"
+
       assert text_of_element(doc, "#pageviews_last_cycle") =~ "Pageviews 0"
       assert text_of_element(doc, "#custom_events_last_cycle") =~ "Custom events 1"
 
