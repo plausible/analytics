@@ -47,7 +47,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     Plausible.Repo.transaction(fn ->
       for site <- sites do
         with site <- Plausible.Repo.preload(site, :owner),
-             :ok <- ensure_transfer_valid(site, new_owner, :owner),
              {:ok, membership} <- Site.Memberships.transfer_ownership(site, new_owner) do
           membership
         else
@@ -74,7 +73,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
          :ok <- check_invitation_permissions(site, inviter, role, opts),
          :ok <- check_team_member_limit(site, role),
          invitee <- Plausible.Auth.find_user_by(email: invitee_email),
-         :ok <- ensure_transfer_valid(site, invitee, role),
+         :ok <- Invitations.ensure_transfer_valid(site, invitee, role),
          :ok <- ensure_new_membership(site, invitee, role),
          %Ecto.Changeset{} = changeset <- Invitation.new(attrs),
          {:ok, invitation} <- Plausible.Repo.insert(changeset) do
@@ -113,18 +112,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
       end
 
     Plausible.Mailer.send(email)
-  end
-
-  defp ensure_transfer_valid(%Site{} = site, %User{} = new_owner, :owner) do
-    if Sites.role(new_owner.id, site) == :owner do
-      {:error, :transfer_to_self}
-    else
-      :ok
-    end
-  end
-
-  defp ensure_transfer_valid(_site, _invitee, _role) do
-    :ok
   end
 
   defp ensure_new_membership(_site, _invitee, :owner) do

@@ -28,12 +28,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           | {:error,
              Invitations.missing_features_error()
              | Billing.Quota.over_limits_error()
-             | Ecto.Changeset.t()}
+             | Ecto.Changeset.t()
+             | :transfer_to_self}
   def transfer_ownership(site, user, opts \\ []) do
     site = Repo.preload(site, :owner)
     selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
-    with :ok <- Invitations.ensure_can_take_ownership(site, user) do
+    with :ok <- Invitations.ensure_transfer_valid(site, user, :owner),
+         :ok <- Invitations.ensure_can_take_ownership(site, user) do
       membership = get_or_create_owner_membership(site, user)
       multi = add_and_transfer_ownership(site, membership, user, selfhost?)
 

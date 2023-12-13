@@ -55,15 +55,13 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       end
     end
 
-    test "does not degrade or alter trial when accepting ownership transfer by self" do
+    test "does not degrade or alter trial when transferring ownership to the owner" do
       owner = insert(:user, trial_expiry_date: nil)
       site = insert(:site, memberships: [build(:site_membership, user: owner, role: :owner)])
 
-      assert {:ok, %{id: membership_id}} = AcceptInvitation.transfer_ownership(site, owner)
+      assert {:error, :transfer_to_self} = AcceptInvitation.transfer_ownership(site, owner)
 
-      assert %{id: ^membership_id, role: :owner} =
-               Plausible.Repo.get_by(Plausible.Site.Membership, user_id: owner.id)
-
+      assert %{role: :owner} = Plausible.Repo.get_by(Plausible.Site.Membership, user_id: owner.id)
       assert Repo.reload!(owner).trial_expiry_date == nil
     end
 

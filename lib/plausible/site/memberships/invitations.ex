@@ -48,6 +48,18 @@ defmodule Plausible.Site.Memberships.Invitations do
     :ok
   end
 
+  def ensure_transfer_valid(%Site{} = site, %Auth.User{} = new_owner, :owner) do
+    if Plausible.Sites.role(new_owner.id, site) == :owner do
+      {:error, :transfer_to_self}
+    else
+      :ok
+    end
+  end
+
+  def ensure_transfer_valid(_site, _invitee, _role) do
+    :ok
+  end
+
   @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) ::
           :ok | {:error, Quota.over_limits_error() | missing_features_error()}
   def ensure_can_take_ownership(site, new_owner) do
