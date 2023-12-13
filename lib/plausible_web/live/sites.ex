@@ -390,7 +390,7 @@ defmodule PlausibleWeb.Live.Sites do
           x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           class="inline-block align-bottom bg-white dark:bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
         >
-          <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="bg-white dark:bg-gray-850 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
               <button
                 x-on:click="invitationOpen = false"
@@ -448,28 +448,38 @@ defmodule PlausibleWeb.Live.Sites do
             <.notice
               x-show="selectedInvitation && selectedInvitation.exceeded_limits"
               title="Exceeded limits"
-              class="mt-4 shadow-sm"
+              class="mt-4 shadow-sm dark:shadow-none"
             >
-              You are unable to take the ownership of this site because doing so, the following limits would be exceeded: <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>.
-              You can review your limits and usage in
-              <.styled_link
-                class="inline-block"
-                href={Routes.auth_path(PlausibleWeb.Endpoint, :user_settings)}
-              >
-                account settings
-              </.styled_link>.
+              <p>
+                You are unable to accept the ownership of this site because doing so would exceed the <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span> of your subscription.
+                You can review your usage in the
+                <.styled_link
+                  class="inline-block"
+                  href={Routes.auth_path(PlausibleWeb.Endpoint, :user_settings)}
+                >
+                  account settings
+                </.styled_link>.
+              </p>
+              <p class="mt-3">To become the owner of this site, you should either reduce your usage, or upgrade your subscription.</p>
             </.notice>
           </div>
           <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <.button
+              x-show="selectedInvitation && !selectedInvitation.exceeded_limits"
               class="sm:ml-3 w-full sm:w-auto sm:text-sm"
               data-method="post"
               data-csrf={Plug.CSRFProtection.get_csrf_token()}
-              x-bind:disabled="selectedInvitation && !!selectedInvitation.exceeded_limits"
               x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/accept')"
             >
               Accept &amp; Continue
             </.button>
+            <.button_link
+              x-show="selectedInvitation && selectedInvitation.exceeded_limits"
+              href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+              class="sm:ml-3 w-full sm:w-auto sm:text-sm"
+            >
+              Upgrade
+            </.button_link>
             <button
               type="button"
               class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
