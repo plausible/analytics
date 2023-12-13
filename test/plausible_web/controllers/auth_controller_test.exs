@@ -863,12 +863,14 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert text_of_element(doc, "#pageviews_current_cycle") =~ "Pageviews 1"
       assert text_of_element(doc, "#custom_events_current_cycle") =~ "Custom events 0"
 
-      assert text_of_element(doc, "#total_pageviews_last_cycle") =~ "Total billable pageviews 1"
+      assert text_of_element(doc, "#total_pageviews_last_cycle") =~
+               "Total billable pageviews 1 / 10,000"
+
       assert text_of_element(doc, "#pageviews_last_cycle") =~ "Pageviews 0"
       assert text_of_element(doc, "#custom_events_last_cycle") =~ "Custom events 1"
 
       assert text_of_element(doc, "#total_pageviews_penultimate_cycle") =~
-               "Total billable pageviews 2"
+               "Total billable pageviews 2 / 10,000"
 
       assert text_of_element(doc, "#pageviews_penultimate_cycle") =~ "Pageviews 1"
       assert text_of_element(doc, "#custom_events_penultimate_cycle") =~ "Custom events 1"
@@ -1095,6 +1097,19 @@ defmodule PlausibleWeb.AuthControllerTest do
         |> text_of_element("#team-member-usage-row")
 
       assert team_member_usage_row_text =~ "Team members 0 / 3"
+    end
+
+    @tag :full_build_only
+    test "renders team member usage without limit if it's unlimited", %{conn: conn, user: user} do
+      insert(:subscription, paddle_plan_id: @v3_plan_id, user: user)
+
+      team_member_usage_row_text =
+        conn
+        |> get("/settings")
+        |> html_response(200)
+        |> text_of_element("#team-member-usage-row")
+
+      assert team_member_usage_row_text == "Team members 0"
     end
 
     test "redners 2FA section in disabled state", %{conn: conn} do

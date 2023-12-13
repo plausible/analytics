@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Live.Sites do
   LiveView for sites index.
   """
 
-  use Phoenix.LiveView
+  use Phoenix.LiveView, global_prefixes: ~w(x-)
   use PlausibleWeb.Live.Flash
 
   alias Phoenix.LiveView.JS
@@ -250,54 +250,23 @@ defmodule PlausibleWeb.Live.Sites do
 
   def ellipsis_menu(assigns) do
     ~H"""
-    <div x-data="dropdown">
-      <a
-        x-on:click="toggle()"
-        x-ref="button"
-        x-bind:aria-expanded="open"
-        x-bind:aria-controls="$id('dropdown-button')"
-        class="absolute top-0 right-0 h-10 w-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400"
-      >
-        <Heroicons.ellipsis_vertical
-          class="absolute top-3 right-3 w-4 h-4"
-          aria-expanded="false"
-          aria-haspopup="true"
-        />
-      </a>
-
-      <div
-        x-ref="panel"
-        x-show="open"
-        x-bind:id="$id('dropdown-button')"
-        x-on:click.outside="close($refs.button)"
-        x-on:click="onPanelClick"
-        x-transition.origin.top.right
-        x-transition.duration.100ms
-        class="absolute top-7 right-3 z-10 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-        style="display: none;"
-        role="menu"
-        aria-orientation="vertical"
-        aria-label={"#{@site.domain} menu button"}
-        tabindex="-1"
-      >
+    <.dropdown>
+      <:button class="absolute top-0 right-0 h-10 w-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400">
+        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 w-4 h-4" />
+      </:button>
+      <:panel class="absolute top-7 right-3 z-10 mt-2 w-40 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
         <div class="py-1 text-sm" role="none">
-          <.unstyled_link
+          <.dropdown_link
             :if={List.first(@site.memberships).role != :viewer}
             href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
-            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
-            role="menuitem"
-            tabindex="-1"
           >
             <Heroicons.cog_6_tooth class="mr-3 h-5 w-5" />
             <span>Settings</span>
-          </.unstyled_link>
+          </.dropdown_link>
 
-          <button
-            type="button"
-            class="w-full text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
-            role="menuitem"
-            tabindex="-1"
-            x-on:click="close($refs.button)"
+          <.dropdown_link
+            href="#"
+            x-on:click.prevent
             phx-click={
               JS.hide(
                 transition: {"duration-500", "opacity-100", "opacity-0"},
@@ -316,10 +285,10 @@ defmodule PlausibleWeb.Live.Sites do
 
             <.icon_pin :if={!@site.pinned_at} class="pt-1 mr-3 h-5 w-5" />
             <span :if={!@site.pinned_at}>Pin Site</span>
-          </button>
+          </.dropdown_link>
         </div>
-      </div>
-    </div>
+      </:panel>
+    </.dropdown>
     """
   end
 

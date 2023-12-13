@@ -12,7 +12,7 @@ defmodule PlausibleWeb.AdminController do
     usage = Quota.usage(user, with_features: true)
 
     limits = %{
-      monthly_pageviews: Quota.monthly_pageview_limit(user.subscription),
+      monthly_pageviews: Quota.monthly_pageview_limit(user),
       sites: Quota.site_limit(user),
       team_members: Quota.team_member_limit(user)
     }
