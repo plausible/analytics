@@ -116,4 +116,63 @@ defmodule Plausible.Session.CacheStoreTest do
     assert_receive({WriteBuffer, :insert, [[session, _negative_record]]})
     assert session.duration == 10
   end
+
+  describe "collapse order" do
+    defp flush(events) do
+      for e <- events, do: CacheStore.on_event(e, nil)
+      Plausible.Session.WriteBuffer.flush()
+    end
+
+    test "across parts" do
+      e = build(:event, name: "pageview")
+
+      flush([%{e | pathname: "/"}])
+      flush([%{e | pathname: "/exit"}])
+
+      session_q = from s in Plausible.ClickhouseSessionV2, where: s.site_id == ^e.site_id
+      session = Plausible.ClickhouseRepo.one!(session_q, settings: [final: true])
+
+      refute session.is_bounce
+      assert session.entry_page == "/"
+      assert session.exit_page == "/exit"
+    end
+
+    test "within parts" do
+      e = build(:event, name: "pageview")
+
+      flush([
+        %{e | pathname: "/"},
+        %{e | pathname: "/exit"}
+      ])
+
+      session_q = from s in Plausible.ClickhouseSessionV2, where: s.site_id == ^e.site_id
+      session = Plausible.ClickhouseRepo.one!(session_q)
+
+      refute session.is_bounce
+      assert session.entry_page == "/"
+      assert session.exit_page == "/exit"
+    end
+
+    test "across and within parts" do
+      e = build(:event, name: "pageview")
+
+      flush([
+        %{e | pathname: "/"},
+        %{e | pathname: "/about"}
+      ])
+
+      flush([
+        %{e | pathname: "/login"},
+        %{e | pathname: "/exit"}
+      ])
+
+      session_q = from s in Plausible.ClickhouseSessionV2, where: s.site_id == ^e.site_id
+      session = Plausible.ClickhouseRepo.one!(session_q, settings: [final: true])
+
+      refute session.is_bounce
+      assert session.entry_page == "/"
+      assert session.exit_page == "/exit"
+      assert session.events == 4
+    end
+  end
 end
