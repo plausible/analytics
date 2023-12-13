@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-1AED098E.js"></script>
+    <script src="dist/sidebar_items-DE3AC244.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -184,6 +184,18 @@ Returns false if usage is equal to the limit.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#ensure_can_add_new_site/1" translate="no">ensure_can_add_new_site(user)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Enterprise plans are always allowed to add more sites (even when
+over limit) to avoid service disruption. Their usage is checked
+in a background job instead (see <code class="inline">check_usage.ex</code>).</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#ensure_can_subscribe_to_plan/3" translate="no">ensure_can_subscribe_to_plan(user, plan, usage \\ nil)</a>
 
       </div>
@@ -203,11 +215,9 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#monthly_pageview_limit/1" translate="no">monthly_pageview_limit(subscription)</a>
+        <a href="#monthly_pageview_limit/1" translate="no">monthly_pageview_limit(user)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Returns the limit of pageviews for a subscription.</p></div>
 
     </div>
 
@@ -224,8 +234,6 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p></div>
         <a href="#site_limit/1" translate="no">site_limit(user)</a>
 
       </div>
-
-        <div class="summary-synopsis"><p>Returns the limit of sites a user can have.</p></div>
 
     </div>
 
@@ -245,8 +253,6 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns the limit of team members a user can have in their sites.</p></div>
-
     </div>
 
     <div class="summary-row">
@@ -255,8 +261,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Returns the total count of team members and pending invitations associated
-with the user's sites.</p></div>
+        <div class="summary-synopsis"><p>Returns the total count of team members associated with the user's sites.</p></div>
 
     </div>
 
@@ -309,7 +314,7 @@ Types
     </a>
     <h1 class="signature" translate="no">monthly_pageview_usage()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L114" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L132" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -337,7 +342,7 @@ Types
     </a>
     <h1 class="signature" translate="no">period()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L116" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L134" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -365,7 +370,7 @@ Types
     </a>
     <h1 class="signature" translate="no">usage_cycle()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L118" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L136" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -410,7 +415,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">allowed_features_for(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L391" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L387" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -433,7 +438,7 @@ ability to use all features during their trial.</p>
     </a>
     <h1 class="signature" translate="no">below_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L413" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L409" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -453,6 +458,30 @@ ability to use all features during their trial.</p>
 Returns false if usage is equal to the limit.</p>
   </section>
 </section>
+<section class="detail" id="ensure_can_add_new_site/1">
+
+  <div class="detail-header">
+    <a href="#ensure_can_add_new_site/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">ensure_can_add_new_site(user)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L85" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Enterprise plans are always allowed to add more sites (even when
+over limit) to avoid service disruption. Their usage is checked
+in a background job instead (see <code class="inline">check_usage.ex</code>).</p>
+  </section>
+</section>
 <section class="detail" id="ensure_can_subscribe_to_plan/3">
 
     <span id="ensure_can_subscribe_to_plan/2"></span>
@@ -464,7 +493,7 @@ Returns false if usage is equal to the limit.</p>
     </a>
     <h1 class="signature" translate="no">ensure_can_subscribe_to_plan(user, plan, usage \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L341" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L337" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -486,7 +515,7 @@ Returns false if usage is equal to the limit.</p>
     </a>
     <h1 class="signature" translate="no">features_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L276" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L272" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -513,9 +542,9 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">monthly_pageview_limit(subscription)</h1>
+    <h1 class="signature" translate="no">monthly_pageview_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L92" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L105" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -527,12 +556,15 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> monthly_pageview_limit(Plausible.Billing.Subscription.t()) ::
+          <pre translate="no"><span class="attribute">@spec</span> monthly_pageview_limit(
+  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()
+  | Plausible.Billing.Subscription.t()
+) ::
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>() | :unlimited</pre>
 
       </div>
 
-<p>Returns the limit of pageviews for a subscription.</p>
+
   </section>
 </section>
 <section class="detail" id="monthly_pageview_usage/1">
@@ -544,7 +576,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
     </a>
     <h1 class="signature" translate="no">monthly_pageview_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L127" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L145" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -572,7 +604,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
     </a>
     <h1 class="signature" translate="no">site_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L37" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L34" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -588,8 +620,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
 
       </div>
 
-<p>Returns the limit of sites a user can have.</p><p>For enterprise customers, returns :unlimited. The site limit is checked in a
-background job so as to avoid service disruption.</p>
+
   </section>
 </section>
 <section class="detail" id="site_usage/1">
@@ -601,7 +632,7 @@ background job so as to avoid service disruption.</p>
     </a>
     <h1 class="signature" translate="no">site_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L80" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L76" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -629,7 +660,7 @@ background job so as to avoid service disruption.</p>
     </a>
     <h1 class="signature" translate="no">team_member_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L211" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L53" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -645,7 +676,7 @@ background job so as to avoid service disruption.</p>
 
       </div>
 
-<p>Returns the limit of team members a user can have in their sites.</p>
+
   </section>
 </section>
 <section class="detail" id="team_member_usage/1">
@@ -657,7 +688,7 @@ background job so as to avoid service disruption.</p>
     </a>
     <h1 class="signature" translate="no">team_member_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L238" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L234" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -673,8 +704,8 @@ background job so as to avoid service disruption.</p>
 
       </div>
 
-<p>Returns the total count of team members and pending invitations associated
-with the user's sites.</p>
+<p>Returns the total count of team members associated with the user's sites.</p><ul><li><p>The given user (i.e. the owner) is not counted as a team member.</p></li><li><p>Pending invitations are counted as team members even before accepted.</p></li><li><p>Users are counted uniquely - i.e. even if an account is associated with
+many sites owned by the given user, they still count as one team member.</p></li></ul>
   </section>
 </section>
 <section class="detail" id="usage/2">
@@ -714,7 +745,7 @@ with the user's sites.</p>
     </a>
     <h1 class="signature" translate="no">usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Timex.today())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L146" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L164" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -743,7 +774,7 @@ with the user's sites.</p>
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L422" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L418" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
