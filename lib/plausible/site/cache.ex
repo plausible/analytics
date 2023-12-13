@@ -56,6 +56,7 @@ defmodule Plausible.Site.Cache do
     domain_changed_from
     ingest_rate_limit_scale_seconds
     ingest_rate_limit_threshold
+    accept_traffic_until
    )a
 
   @type t() :: Site.t()
