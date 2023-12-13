@@ -5,6 +5,7 @@ defmodule PlausibleWeb.Live.Sites do
 
   use Phoenix.LiveView, global_prefixes: ~w(x-)
   use PlausibleWeb.Live.Flash
+  use Plausible
 
   alias Phoenix.LiveView.JS
   use Phoenix.HTML
@@ -424,23 +425,10 @@ defmodule PlausibleWeb.Live.Sites do
                     >Admin</b>.
                   </p>
                   <div
-                    x-show="selectedInvitation && !selectedInvitation.exceeded_limits && selectedInvitation.invitation.role === 'owner'"
+                    x-show="selectedInvitation && !(selectedInvitation.exceeded_limits || selectedInvitation.no_plan) && selectedInvitation.invitation.role === 'owner'"
                     class="mt-2 text-sm text-gray-500 dark:text-gray-200"
                   >
                     If you accept the ownership transfer, you will be responsible for billing going forward.
-                    <div
-                      :if={is_nil(@user.trial_expiry_date) and is_nil(@user.subscription)}
-                      class="mt-4"
-                    >
-                      You will have to enter your card details immediately with no 30-day trial.
-                    </div>
-
-                    <div :if={Plausible.Billing.on_trial?(@user)} class="mt-4">
-                      <Heroicons.exclamation_triangle class="w-4 h-4 inline-block text-red-500" />
-                      Your 30-day free trial will end immediately and
-                      <strong>you will have to enter your card details</strong>
-                      to keep using Plausible.
-                    </div>
                   </div>
                 </div>
               </div>
@@ -451,7 +439,9 @@ defmodule PlausibleWeb.Live.Sites do
               class="mt-4 shadow-sm dark:shadow-none"
             >
               <p>
-                You are unable to accept the ownership of this site because doing so would exceed the <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span> of your subscription.
+                You are unable to accept the ownership of this site because doing so would exceed the
+                <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>
+                of your subscription.
                 You can review your usage in the
                 <.styled_link
                   class="inline-block"
@@ -460,12 +450,21 @@ defmodule PlausibleWeb.Live.Sites do
                   account settings
                 </.styled_link>.
               </p>
-              <p class="mt-3">To become the owner of this site, you should either reduce your usage, or upgrade your subscription.</p>
+              <p class="mt-3">
+                To become the owner of this site, you should either reduce your usage, or upgrade your subscription.
+              </p>
+            </.notice>
+            <.notice
+              x-show="selectedInvitation && selectedInvitation.no_plan"
+              title="No subscription"
+              class="mt-4 shadow-sm dark:shadow-none"
+            >
+              You are unable to accept the ownership of this site because your account does not have a subscription. To become the owner of this site, you should upgrade to a suitable plan.
             </.notice>
           </div>
           <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
             <.button
-              x-show="selectedInvitation && !selectedInvitation.exceeded_limits"
+              x-show="selectedInvitation && !(selectedInvitation.exceeded_limits || selectedInvitation.no_plan)"
               class="sm:ml-3 w-full sm:w-auto sm:text-sm"
               data-method="post"
               data-csrf={Plug.CSRFProtection.get_csrf_token()}
@@ -474,7 +473,7 @@ defmodule PlausibleWeb.Live.Sites do
               Accept &amp; Continue
             </.button>
             <.button_link
-              x-show="selectedInvitation && selectedInvitation.exceeded_limits"
+              x-show="selectedInvitation && (selectedInvitation.exceeded_limits || selectedInvitation.no_plan)"
               href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
               class="sm:ml-3 w-full sm:w-auto sm:text-sm"
             >
@@ -655,9 +654,12 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp check_limits(%{role: :owner, site: site} = invitation, user) do
-    case Plausible.Site.Memberships.Invitations.ensure_can_take_ownership(site, user) do
+    case Plausible.Site.Memberships.Invitations.ensure_can_take_ownership(site, user, small_build?()) do
       :ok ->
         %{invitation: invitation}
+
+      {:error, :no_plan} ->
+        %{invitation: invitation, no_plan: true}
 
       {:error, {:over_plan_limits, limits}} ->
         limits = PlausibleWeb.TextHelpers.pretty_list(limits)

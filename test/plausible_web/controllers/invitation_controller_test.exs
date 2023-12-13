@@ -60,6 +60,8 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       old_owner = insert(:user)
       site = insert(:site, members: [old_owner])
 
+      insert(:growth_subscription, user: user)
+
       invitation =
         insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
 

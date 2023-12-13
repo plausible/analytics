@@ -29,13 +29,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
              Invitations.missing_features_error()
              | Billing.Quota.over_limits_error()
              | Ecto.Changeset.t()
-             | :transfer_to_self}
+             | :transfer_to_self
+             | :no_plan}
   def transfer_ownership(site, user, opts \\ []) do
     site = Repo.preload(site, :owner)
     selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
     with :ok <- Invitations.ensure_transfer_valid(site, user, :owner),
-         :ok <- Invitations.ensure_can_take_ownership(site, user) do
+         :ok <- Invitations.ensure_can_take_ownership(site, user, selfhost?) do
       membership = get_or_create_owner_membership(site, user)
       multi = add_and_transfer_ownership(site, membership, user, selfhost?)
 
@@ -62,7 +63,8 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
              :invitation_not_found
              | Invitations.missing_features_error()
              | Billing.Quota.over_limits_error()
-             | Ecto.Changeset.t()}
+             | Ecto.Changeset.t()
+             | :no_plan}
   def accept_invitation(invitation_id, user, opts \\ []) do
     selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
@@ -79,7 +81,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     membership = get_or_create_membership(invitation, user)
     site = Repo.preload(invitation.site, :owner)
 
-    with :ok <- Invitations.ensure_can_take_ownership(site, user) do
+    with :ok <- Invitations.ensure_can_take_ownership(site, user, selfhost?) do
       site
       |> add_and_transfer_ownership(membership, user, selfhost?)
       |> Multi.delete(:invitation, invitation)
@@ -118,14 +120,14 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     multi =
       Multi.new()
       |> downgrade_previous_owner(site, user)
-      |> maybe_end_trial_of_new_owner(user, selfhost?)
       |> Multi.insert_or_update(:membership, membership)
 
     if selfhost? do
       multi
     else
-      Multi.run(multi, :site_locker, fn _, %{user: updated_user} ->
-        {:ok, Billing.SiteLocker.update_sites_for(updated_user, send_email?: false)}
+      Multi.run(multi, :site_locker, fn _, %{membership: membership} ->
+        membership = Repo.preload(membership, :user)
+        {:ok, Billing.SiteLocker.update_sites_for(membership.user, send_email?: false)}
       end)
     end
   end
@@ -192,28 +194,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           :previous_owner_membership,
           Site.Membership.set_role(previous_owner, :admin)
         )
-    end
-  end
-
-  # If the new owner is the same as the old owner, it's a no-op
-  defp maybe_end_trial_of_new_owner(multi, new_owner, selfhost?) do
-    new_owner_id = new_owner.id
-
-    cond do
-      selfhost? ->
-        Multi.put(multi, :user, new_owner)
-
-      Billing.on_trial?(new_owner) or is_nil(new_owner.trial_expiry_date) ->
-        Multi.update(multi, :user, fn
-          %{previous_owner_membership: %{user_id: ^new_owner_id}} ->
-            Ecto.Changeset.change(new_owner)
-
-          _ ->
-            Auth.User.end_trial(new_owner)
-        end)
-
-      true ->
-        Multi.put(multi, :user, new_owner)
     end
   end
 

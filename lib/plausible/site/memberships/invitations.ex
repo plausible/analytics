@@ -60,20 +60,20 @@ defmodule Plausible.Site.Memberships.Invitations do
     :ok
   end
 
-  @spec ensure_can_take_ownership(Site.t(), Auth.User.t()) ::
-          :ok | {:error, Quota.over_limits_error() | missing_features_error()}
-  def ensure_can_take_ownership(site, new_owner) do
+  @spec ensure_can_take_ownership(Site.t(), Auth.User.t(), boolean()) ::
+          :ok | {:error, Quota.over_limits_error() | missing_features_error() | :no_plan}
+  def ensure_can_take_ownership(_site, _new_owner, true) do
+    :ok
+  end
+
+  def ensure_can_take_ownership(site, new_owner, false) do
     site = Repo.preload(site, :owner)
     new_owner = Plausible.Users.with_subscription(new_owner)
     plan = Plausible.Billing.Plans.get_subscription_plan(new_owner.subscription)
 
-    if is_nil(plan) || plan == :free_10k do
-      # TODO:
-      # We probably want to change this behaviour and block all ownership transfers
-      # to accounts that don't have a real subscription. In this commit, the :ok on
-      # the next line is ignoring that to keep the tests passing.
-      :ok
-    else
+    active_subscription? = Plausible.Billing.subscription_is_active?(new_owner.subscription)
+
+    if active_subscription? && plan != :free_10k do
       usage_after_transfer = %{
         monthly_pageviews: monthly_pageview_usage_after_transfer(site, new_owner),
         team_members: team_member_usage_after_transfer(site, new_owner),
@@ -83,6 +83,8 @@ defmodule Plausible.Site.Memberships.Invitations do
       with :ok <- Quota.ensure_within_plan_limits(new_owner, plan, usage_after_transfer) do
         ensure_feature_access(site, new_owner)
       end
+    else
+      {:error, :no_plan}
     end
   end
 

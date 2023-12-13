@@ -272,6 +272,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     test "transfers ownership for multiple sites in one action" do
       current_owner = insert(:user)
       new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
 
       site1 =
         insert(:site, memberships: [build(:site_membership, user: current_owner, role: :owner)])
@@ -309,6 +310,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     test "returns error when user is already an owner for one of the sites" do
       current_owner = insert(:user)
       new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
 
       site1 =
         insert(:site, memberships: [build(:site_membership, user: current_owner, role: :owner)])

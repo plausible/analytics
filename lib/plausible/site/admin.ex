@@ -111,6 +111,9 @@ defmodule Plausible.SiteAdmin do
         {:error, :transfer_to_self} ->
           {:error, "User is already an owner of one of the sites"}
 
+        {:error, :no_plan} ->
+          {:error, "The new owner does not have a subscription"}
+
         {:error, {:over_plan_limits, limits}} ->
           {:error, "Plan limits exceeded for one of the sites: #{Enum.join(limits, ", ")}"}
       end
