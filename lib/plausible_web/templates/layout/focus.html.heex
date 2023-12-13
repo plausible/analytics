@@ -9,7 +9,7 @@
       content="A lightweight, non-intrusive alternative to Google Analytics."
     />
     <meta name="robots" content={@conn.private.robots} />
-    <%= if @conn.assigns[:connect_live_socket] do %>
+    <%= if assigns[:connect_live_socket] do %>
       <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
       <meta name="websocket-url" content={websocket_url()} />
     <% end %>
@@ -50,7 +50,7 @@
       © <%= DateTime.utc_now().year() %> Plausible Analytics. All rights reserved.
     </p>
 
-    <PlausibleWeb.Components.Layout.theme_script current_user={@conn.assigns[:current_user]} />
+    <PlausibleWeb.Components.Layout.theme_script current_user={assigns[:current_user]} />
 
     <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
     </script>
