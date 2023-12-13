@@ -14,6 +14,15 @@ defmodule Plausible.Site.GateKeeperTest do
     assert {:deny, :not_found} = GateKeeper.check("example.com", opts)
   end
 
+  test "sites with accepted_traffic_until < now are denied", %{test: test, opts: opts} do
+    domain = "expired.example.com"
+    yesterday = NaiveDateTime.utc_now() |> NaiveDateTime.add(-1, :day)
+
+    %{id: _} = add_site_and_refresh_cache(test, domain: domain, accept_traffic_until: yesterday)
+
+    assert {:deny, :payment_required} = GateKeeper.check(domain, opts)
+  end
+
   test "site from cache with no ingest_rate_limit_threshold is allowed", %{test: test, opts: opts} do
     domain = "site1.example.com"
 
@@ -92,6 +101,7 @@ defmodule Plausible.Site.GateKeeperTest do
 
   defp add_site_and_refresh_cache(cache_name, site_data) do
     site = insert(:site, site_data)
+
     Cache.refresh_updated_recently(cache_name: cache_name, force?: true)
     site
   end
