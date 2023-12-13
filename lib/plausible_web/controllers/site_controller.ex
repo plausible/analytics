@@ -12,27 +12,22 @@ defmodule PlausibleWeb.SiteController do
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
 
-    exceeded_limit =
-      case Quota.ensure_can_add_new_site(current_user) do
-        :ok -> nil
-        {:error, {:over_limit, limit}} -> limit
-      end
-
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      is_first_site: Quota.site_usage(current_user) == 0,
-      exceeded_limit: exceeded_limit,
+      first_site?: Quota.site_usage(current_user) == 0,
+      site_limit: Quota.site_limit(current_user),
+      site_limit_exceeded?: Quota.ensure_can_add_new_site(current_user) != :ok,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    is_first_site = Quota.site_usage(user) == 0
+    first_site? = Quota.site_usage(user) == 0
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
-        if is_first_site do
+        if first_site? do
           PlausibleWeb.Email.welcome_email(user)
           |> Plausible.Mailer.send()
         end
@@ -44,15 +39,18 @@ defmodule PlausibleWeb.SiteController do
       {:error, {:over_limit, limit}} ->
         render(conn, "new.html",
           changeset: Plausible.Site.changeset(%Plausible.Site{}),
-          is_first_site: is_first_site,
-          exceeded_limit: limit,
+          first_site?: first_site?,
+          site_limit: limit,
+          site_limit_exceeded?: true,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
       {:error, _, changeset, _} ->
         render(conn, "new.html",
           changeset: changeset,
-          is_first_site: is_first_site,
+          first_site?: first_site?,
+          site_limit: Quota.site_limit(user),
+          site_limit_exceeded?: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end
