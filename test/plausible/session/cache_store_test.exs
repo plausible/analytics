@@ -118,13 +118,20 @@ defmodule Plausible.Session.CacheStoreTest do
   end
 
   describe "collapse order" do
+    defp new_site_id() do
+      [[site_id]] =
+        Plausible.ClickhouseRepo.query!("select max(site_id) + rand() from sessions_v2 FINAL").rows
+
+      site_id
+    end
+
     defp flush(events) do
       for e <- events, do: CacheStore.on_event(e, nil)
       Plausible.Session.WriteBuffer.flush()
     end
 
     test "across parts" do
-      e = build(:event, name: "pageview")
+      e = build(:event, name: "pageview", site_id: new_site_id())
 
       flush([%{e | pathname: "/"}])
       flush([%{e | pathname: "/exit"}])
@@ -138,7 +145,7 @@ defmodule Plausible.Session.CacheStoreTest do
     end
 
     test "within parts" do
-      e = build(:event, name: "pageview")
+      e = build(:event, name: "pageview", site_id: new_site_id())
 
       flush([
         %{e | pathname: "/"},
@@ -154,7 +161,7 @@ defmodule Plausible.Session.CacheStoreTest do
     end
 
     test "across and within parts" do
-      e = build(:event, name: "pageview")
+      e = build(:event, name: "pageview", site_id: new_site_id())
 
       flush([
         %{e | pathname: "/"},
