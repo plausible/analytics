@@ -8,7 +8,7 @@
       name="description"
       content="Plausible is a lightweight and open-source web analytics tool. Your website data is 100% yours and the privacy of your visitors is respected."
     />
-    <%= if @conn.assigns[:connect_live_socket] do %>
+    <%= if assigns[:connect_live_socket] do %>
       <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
       <meta name="websocket-url" content={websocket_url()} />
     <% end %>
@@ -30,13 +30,13 @@
   <body
     class={[
       "flex flex-col bg-gray-50 dark:bg-gray-850",
-      if !@conn.assigns[:embedded] do
+      if !assigns[:embedded] do
         "h-full"
       end
     ]}
-    style={if @conn.assigns[:background], do: "background-color: #{@conn.assigns[:background]}"}
+    style={if assigns[:background], do: "background-color: #{assigns[:background]}"}
   >
-    <%= if !@conn.assigns[:embedded] do %>
+    <%= if !assigns[:embedded] do %>
       <%= render("_header.html", assigns) %>
       <%= render("_notice.html", assigns) %>
     <% end %>
@@ -47,7 +47,7 @@
 
     <PlausibleWeb.Components.Layout.theme_script conn={@conn} />
 
-    <%= if @conn.assigns[:embedded] do %>
+    <%= if assigns[:embedded] do %>
       <div data-iframe-height></div>
       <script type="text/javascript" src={Routes.static_path(@conn, "/js/embed.content.js")}>
       </script>
@@ -56,7 +56,7 @@
     <% end %>
     <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
     </script>
-    <%= if @conn.assigns[:load_dashboard_js] do %>
+    <%= if assigns[:load_dashboard_js] do %>
       <script type="text/javascript" src={Routes.static_path(@conn, "/js/dashboard.js")}>
       </script>
     <% end %>
