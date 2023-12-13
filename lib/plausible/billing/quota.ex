@@ -10,6 +10,21 @@ defmodule Plausible.Billing.Quota do
   alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
+  @type limit() :: :site_limit | :pageview_limit | :team_member_limit
+
+  @type over_limits_error() :: {:over_plan_limits, [limit()]}
+
+  @type monthly_pageview_usage() :: %{period() => usage_cycle()}
+
+  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
+
+  @type usage_cycle :: %{
+          date_range: Date.Range.t(),
+          pageviews: non_neg_integer(),
+          custom_events: non_neg_integer(),
+          total: non_neg_integer()
+        }
+
   def usage(user, opts \\ []) do
     basic_usage = %{
       monthly_pageviews: monthly_pageview_usage(user),
@@ -129,19 +144,6 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @type monthly_pageview_usage() :: %{period() => usage_cycle()}
-
-  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
-
-  @type usage_cycle :: %{
-          date_range: Date.Range.t(),
-          pageviews: non_neg_integer(),
-          custom_events: non_neg_integer(),
-          total: non_neg_integer()
-        }
-
-  @spec monthly_pageview_usage(User.t(), list() | nil) :: monthly_pageview_usage()
-
   @doc """
   Queries the ClickHouse database for the monthly pageview usage. If the given user's
   subscription is `active`, `past_due`, or a `deleted` (but not yet expired), a map
@@ -166,6 +168,7 @@ defmodule Plausible.Billing.Quota do
   user owns. Alternatively, given an optional argument of `site_ids`, the usage from
   across all those sites is queried instead.
   """
+  @spec monthly_pageview_usage(User.t(), list() | nil) :: monthly_pageview_usage()
   def monthly_pageview_usage(user, site_ids \\ nil)
 
   def monthly_pageview_usage(user, nil) do
@@ -362,14 +365,17 @@ defmodule Plausible.Billing.Quota do
     for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
+  @spec ensure_within_plan_limits(User.t(), struct() | atom() | nil, map() | nil) ::
+          :ok | {:error, over_limits_error()}
   def ensure_within_plan_limits(user, plan, usage \\ nil)
 
-  def ensure_within_plan_limits(%User{} = user, %Plan{} = plan, usage) do
+  def ensure_within_plan_limits(%User{} = user, %plan_mod{} = plan, usage)
+      when plan_mod in [Plan, EnterprisePlan] do
     usage = if usage, do: usage, else: usage(user)
 
     case exceeded_limits(user, plan, usage) do
       [] -> :ok
-      exceeded_limits -> {:error, %{exceeded_limits: exceeded_limits}}
+      exceeded_limits -> {:error, {:over_plan_limits, exceeded_limits}}
     end
   end
 

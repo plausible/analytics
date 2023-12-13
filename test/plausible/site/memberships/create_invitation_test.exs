@@ -387,11 +387,11 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
           allowed_event_props: ["author"]
         )
 
-      assert {:error, {:over_plan_limits, [:feature_access]}} =
+      assert {:error, {:missing_features, [Plausible.Billing.Feature.Props]}} =
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
-    test "does not allow transferring ownership when many limits exceeded at once" do
+    test "exceeding limits error takes precedence over missing features" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
 
@@ -406,7 +406,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
               build_list(3, :site_membership, role: :admin)
         )
 
-      assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit, :feature_access]}} =
+      assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit]}} =
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
   end

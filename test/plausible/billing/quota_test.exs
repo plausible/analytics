@@ -126,7 +126,7 @@ defmodule Plausible.Billing.QuotaTest do
 
       plan = Plans.find(@v4_1m_plan_id)
 
-      {:error, %{exceeded_limits: exceeded_limits}} =
+      {:error, {:over_plan_limits, exceeded_limits}} =
         Quota.ensure_within_plan_limits(user, plan, usage)
 
       assert :monthly_pageview_limit in exceeded_limits
@@ -154,7 +154,7 @@ defmodule Plausible.Billing.QuotaTest do
       assert Quota.ensure_within_plan_limits(user, plan, usage_within_pageview_limit) == :ok
 
       assert Quota.ensure_within_plan_limits(user, plan, usage_over_pageview_limit) ==
-               {:error, %{exceeded_limits: [:monthly_pageview_limit]}}
+               {:error, {:over_plan_limits, [:monthly_pageview_limit]}}
     end
 
     test "by the last 30 days usage, pageview limit for all plans above 10k is exceeded when 15% over the limit" do
@@ -177,7 +177,7 @@ defmodule Plausible.Billing.QuotaTest do
       assert Quota.ensure_within_plan_limits(user, plan, usage_within_pageview_limit) == :ok
 
       assert Quota.ensure_within_plan_limits(user, plan, usage_over_pageview_limit) ==
-               {:error, %{exceeded_limits: [:monthly_pageview_limit]}}
+               {:error, {:over_plan_limits, [:monthly_pageview_limit]}}
     end
 
     test "by billing cycles usage, pageview limit is exceeded when last two billing cycles exceed by 10%" do
@@ -200,7 +200,27 @@ defmodule Plausible.Billing.QuotaTest do
       assert Quota.ensure_within_plan_limits(user, plan, usage_within_pageview_limit) == :ok
 
       assert Quota.ensure_within_plan_limits(user, plan, usage_over_pageview_limit) ==
-               {:error, %{exceeded_limits: [:monthly_pageview_limit]}}
+               {:error, {:over_plan_limits, [:monthly_pageview_limit]}}
+    end
+
+    test "returns error with exceeded limits for enterprise plans" do
+      user = insert(:user)
+
+      usage = %{
+        monthly_pageviews: %{penultimate_cycle: %{total: 1}, last_cycle: %{total: 1}},
+        team_members: 1,
+        sites: 2
+      }
+
+      enterprise_plan =
+        insert(:enterprise_plan,
+          user: user,
+          paddle_plan_id: "whatever",
+          site_limit: 1
+        )
+
+      assert Quota.ensure_within_plan_limits(user, enterprise_plan, usage) ==
+               {:error, {:over_plan_limits, [:site_limit]}}
     end
   end
 

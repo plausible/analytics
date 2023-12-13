@@ -6,7 +6,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
 
   alias Plausible.Auth.{User, Invitation}
   alias Plausible.{Site, Sites, Site.Membership}
-  alias Plausible.Site.Memberships.AcceptInvitation
+  alias Plausible.Site.Memberships.Invitations
   alias Plausible.Billing.Quota
   import Ecto.Query
 
@@ -39,7 +39,10 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
 
   @spec bulk_transfer_ownership_direct([Site.t()], User.t()) ::
           {:ok, [Membership.t()]}
-          | {:error, invite_error() | {:over_plan_limits, AcceptInvitation.plan_limit_error()}}
+          | {:error,
+             invite_error()
+             | Invitations.missing_features_error()
+             | Quota.over_limits_error()}
   def bulk_transfer_ownership_direct(sites, new_owner) do
     Plausible.Repo.transaction(fn ->
       for site <- sites do

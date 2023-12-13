@@ -618,7 +618,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
           role: :owner
         )
 
-      assert {:error, {:over_plan_limits, [:feature_access]}} =
+      assert {:error, {:missing_features, [Plausible.Billing.Feature.Props]}} =
                AcceptInvitation.accept_invitation(
                  invitation.invitation_id,
                  new_owner
@@ -676,7 +676,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
           role: :owner
         )
 
-      assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit, :feature_access]}} =
+      assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit]}} =
                AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
     end
   end

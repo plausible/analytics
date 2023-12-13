@@ -17,25 +17,23 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   alias Ecto.Multi
   alias Plausible.Auth
   alias Plausible.Billing
-  alias Plausible.Memberships.Invitations
-  alias Plausible.Billing.Quota
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Site.Memberships.Invitations
 
   require Logger
 
-  @type plan_limit_error() ::
-          :team_member_limit | :site_limit | :monthly_pageview_limit | :feature_access
-
   @spec transfer_ownership(Site.t(), Auth.User.t(), Keyword.t()) ::
           {:ok, Site.Membership.t()}
-          | {:error, {:over_plan_limits, plan_limit_error()} | Ecto.Changeset.t()}
+          | {:error,
+             Invitations.missing_features_error()
+             | Billing.Quota.over_limits_error()
+             | Ecto.Changeset.t()}
   def transfer_ownership(site, user, opts \\ []) do
     site = Repo.preload(site, :owner)
     selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
-    with :ok <- ensure_within_plan_limits(site, user) do
+    with :ok <- Invitations.ensure_can_take_ownership(site, user) do
       membership = get_or_create_owner_membership(site, user)
       multi = add_and_transfer_ownership(site, membership, user, selfhost?)
 
@@ -59,7 +57,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   @spec accept_invitation(String.t(), Auth.User.t(), Keyword.t()) ::
           {:ok, Site.Membership.t()}
           | {:error,
-             :invitation_not_found | {:over_plan_limits, plan_limit_error()} | Ecto.Changeset.t()}
+             :invitation_not_found
+             | Invitations.missing_features_error()
+             | Billing.Quota.over_limits_error()
+             | Ecto.Changeset.t()}
   def accept_invitation(invitation_id, user, opts \\ []) do
     selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
@@ -76,7 +77,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     membership = get_or_create_membership(invitation, user)
     site = Repo.preload(invitation.site, :owner)
 
-    with :ok <- ensure_within_plan_limits(site, user) do
+    with :ok <- Invitations.ensure_can_take_ownership(site, user) do
       site
       |> add_and_transfer_ownership(membership, user, selfhost?)
       |> Multi.delete(:invitation, invitation)
@@ -222,64 +223,5 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   defp notify_invitation_accepted(invitation) do
     PlausibleWeb.Email.invitation_accepted(invitation)
     |> Plausible.Mailer.send()
-  end
-
-  defp ensure_within_plan_limits(site, new_owner) do
-    new_owner = Plausible.Users.with_subscription(new_owner)
-    plan = Plausible.Billing.Plans.get_subscription_plan(new_owner.subscription)
-
-    if is_nil(plan) || plan == :free_10k do
-      # TODO:
-      # We probably want to change this behaviour and block all ownership transfers
-      # to accounts that don't have a real subscription. In this commit, the :ok on
-      # the next line is ignoring that to keep the tests passing.
-      :ok
-    else
-      usage_after_transfer = %{
-        monthly_pageviews: monthly_pageview_usage_after_transfer(site, new_owner),
-        team_members: team_member_usage_after_transfer(site, new_owner),
-        sites: Quota.site_usage(new_owner) + 1
-      }
-
-      transfer_errors =
-        case Quota.ensure_within_plan_limits(new_owner, plan, usage_after_transfer) do
-          :ok -> []
-          {:error, %{exceeded_limits: limits}} -> limits
-        end
-
-      transfer_errors =
-        if missing_site_feature_access?(site, new_owner) do
-          transfer_errors ++ [:feature_access]
-        else
-          transfer_errors
-        end
-
-      if transfer_errors == [] do
-        :ok
-      else
-        {:error, {:over_plan_limits, transfer_errors}}
-      end
-    end
-  end
-
-  defp team_member_usage_after_transfer(site, new_owner) do
-    current_usage = Quota.team_member_usage(new_owner)
-    site_usage = Repo.aggregate(Quota.team_member_usage_query(site.owner, site), :count)
-
-    extra_usage =
-      if Plausible.Sites.is_member?(new_owner.id, site), do: 0, else: 1
-
-    current_usage + site_usage + extra_usage
-  end
-
-  def monthly_pageview_usage_after_transfer(site, new_owner) do
-    site_ids = Plausible.Sites.owned_site_ids(new_owner) ++ [site.id]
-    Quota.monthly_pageview_usage(new_owner, site_ids)
-  end
-
-  defp missing_site_feature_access?(site, new_owner) do
-    site
-    |> Quota.features_usage()
-    |> Enum.any?(&(&1.check_availability(new_owner) != :ok))
   end
 end

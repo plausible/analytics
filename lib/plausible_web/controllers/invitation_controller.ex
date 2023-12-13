@@ -23,6 +23,12 @@ defmodule PlausibleWeb.InvitationController do
           :error,
           "Plan limits exceeded: #{Enum.join(limits, ", ")}."
         )
+        |> redirect(to: "/sites")
+
+      {:error, {:missing_features, features}} ->
+        conn
+        |> put_flash(:error, "Missing features: #{inspect(features)}")
+        |> redirect(to: "/sites")
 
       {:error, _} ->
         conn
