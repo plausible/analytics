@@ -55,34 +55,18 @@
                     </div>
                     <div class="py-1.5" role="none">
                       <.dropdown_link href="/settings">Account Settings</.dropdown_link>
-                      <.dropdown_link
-                        new_tab
-                        class="justify-between"
-                        href="https://plausible.io/docs"
-                      >
+                      <.dropdown_link new_tab href="https://plausible.io/docs">
                         Help Center
                       </.dropdown_link>
                       <%= if full_build?() do %>
-                        <.dropdown_link
-                          new_tab
-                          class="justify-between"
-                          href="https://plausible.io/contact"
-                        >
+                        <.dropdown_link new_tab href="https://plausible.io/contact">
                           Contact Support
                         </.dropdown_link>
-                        <.dropdown_link
-                          new_tab
-                          class="justify-between"
-                          href={feedback_link(@conn.assigns[:current_user])}
-                        >
+                        <.dropdown_link new_tab href={feedback_link(@conn.assigns[:current_user])}>
                           Feature Requests
                         </.dropdown_link>
                       <% else %>
-                        <.dropdown_link
-                          new_tab
-                          class="justify-between"
-                          href="https://github.com/plausible/analytics"
-                        >
+                        <.dropdown_link new_tab href="https://github.com/plausible/analytics">
                           Github Repo
                         </.dropdown_link>
                       <% end %>
