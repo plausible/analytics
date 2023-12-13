@@ -6,13 +6,13 @@ defmodule PlausibleWeb.Components.Layout do
   def theme_script(assigns) do
     ~H"""
     <script>
-      var userPref = '<%= current_theme(@conn) %>';
+      var userPref = '<%= current_theme(assigns[:current_user]) %>';
       function reapplyTheme() {
-       var mediaPref = window.matchMedia('(prefers-color-scheme: dark)').matches;
+       var darkMediaPref = window.matchMedia('(prefers-color-scheme: dark)').matches;
        var htmlRef = document.querySelector('html');
        var hcaptchaRefs = document.getElementsByClassName('h-captcha');
 
-       var isDark = userPref === 'dark' || (userPref === 'system' && mediaPref)
+       var isDark = userPref === 'dark' || (userPref === 'system' && darkMediaPref)
 
        if (isDark) {
           htmlRef.classList.add('dark')
@@ -33,8 +33,6 @@ defmodule PlausibleWeb.Components.Layout do
     """
   end
 
-  defp current_theme(conn) do
-    theme = conn.assigns[:current_user] && conn.assigns[:current_user].theme
-    theme || "system"
-  end
+  defp current_theme(nil), do: "system"
+  defp current_theme(user), do: user.theme
 end
