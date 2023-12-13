@@ -237,7 +237,7 @@ defmodule PlausibleWeb.Components.Billing do
   end
 
   attr(:title, :string, required: true)
-  attr(:usage, :any, required: true)
+  attr(:usage, :integer, required: true)
   attr(:limit, :integer, default: nil)
   attr(:pad, :boolean, default: false)
   attr(:rest, :global)
@@ -249,19 +249,11 @@ defmodule PlausibleWeb.Components.Billing do
         <%= @title %>
       </td>
       <td class="py-4 text-sm sm:whitespace-nowrap text-right">
-        <%= render_quota(@usage) %>
-        <%= if @limit, do: "/ #{render_quota(@limit)}" %>
+        <%= Cldr.Number.to_string!(@usage) %>
+        <%= if is_number(@limit), do: "/ #{Cldr.Number.to_string!(@limit)}" %>
       </td>
     </tr>
     """
-  end
-
-  defp render_quota(quota) do
-    case quota do
-      quota when is_number(quota) -> Cldr.Number.to_string!(quota)
-      :unlimited -> "∞"
-      nil -> ""
-    end
   end
 
   def monthly_quota_box(%{business_tier: true} = assigns) do

@@ -87,7 +87,7 @@ defmodule Plausible.Sites do
             selected_as(
               fragment(
                 """
-                CASE 
+                CASE
                   WHEN ? IS NOT NULL THEN 'pinned_site'
                   ELSE 'site'
                 END
@@ -124,7 +124,7 @@ defmodule Plausible.Sites do
               selected_as(
                 fragment(
                   """
-                  CASE 
+                  CASE
                     WHEN ? IS NOT NULL THEN 'invitation'
                     WHEN ? IS NOT NULL THEN 'pinned_site'
                     ELSE 'site'
@@ -167,21 +167,15 @@ defmodule Plausible.Sites do
   defp maybe_filter_by_domain(query, _), do: query
 
   def create(user, params) do
-    site_changeset = Site.changeset(%Site{}, params)
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.run(:limit, fn _, _ ->
-      limit = Quota.site_limit(user)
-      usage = Quota.site_usage(user)
-
-      if Quota.below_limit?(usage, limit), do: {:ok, usage}, else: {:error, limit}
-    end)
-    |> Ecto.Multi.insert(:site, site_changeset)
-    |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
-      Site.Membership.new(site, user)
-    end)
-    |> maybe_start_trial(user)
-    |> Repo.transaction()
+    with :ok <- Quota.ensure_can_add_new_site(user) do
+      Ecto.Multi.new()
+      |> Ecto.Multi.insert(:site, Site.new(params))
+      |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
+        Site.Membership.new(site, user)
+      end)
+      |> maybe_start_trial(user)
+      |> Repo.transaction()
+    end
   end
 
   defp maybe_start_trial(multi, user) do

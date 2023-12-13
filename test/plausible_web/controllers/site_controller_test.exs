@@ -8,6 +8,8 @@ defmodule PlausibleWeb.SiteControllerTest do
   import Mox
   import Plausible.Test.Support.HTML
 
+  @v4_business_plan_id "857105"
+
   setup :verify_on_exit!
 
   describe "GET /sites/new" do
@@ -302,7 +304,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn: conn,
       user: user
     } do
-      insert_list(50, :site, members: [user])
+      insert_list(10, :site, members: [user])
 
       conn =
         post(conn, "/sites", %{
@@ -317,18 +319,15 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute Repo.get_by(Plausible.Site, domain: "over-limit.example.com")
     end
 
-    test "allows accounts registered before 2021-05-05 to go over the limit", %{
+    test "does not limit accounts registered before 2021-05-05", %{
       conn: conn,
       user: user
     } do
-      Repo.update_all(from(u in "users", where: u.id == ^user.id),
-        set: [inserted_at: ~N[2020-01-01 00:00:00]]
-      )
+      insert(:subscription, paddle_plan_id: @v4_business_plan_id, user: user)
+      insert_list(51, :site, members: [user])
 
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
+      Ecto.Changeset.change(user, %{inserted_at: ~N[2021-05-04 00:00:00]})
+      |> Repo.update()
 
       conn =
         post(conn, "/sites", %{
@@ -342,16 +341,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
-    test "allows enterprise accounts to create unlimited sites", %{
+    test "does not limit enterprise accounts", %{
       conn: conn,
       user: user
     } do
-      ep = insert(:enterprise_plan, user: user)
+      ep = insert(:enterprise_plan, user: user, site_limit: 1)
       insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
-
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
+      insert_list(2, :site, members: [user])
 
       conn =
         post(conn, "/sites", %{
@@ -362,7 +358,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.get_by(Plausible.Site, domain: "example.com")
+      assert Plausible.Billing.Quota.site_usage(user) == 3
     end
 
     for url <- ["https://Example.com/", "HTTPS://EXAMPLE.COM/", "/Example.com/", "//Example.com/"] do

@@ -66,6 +66,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       )
     end
 
+    @tag :full_build_only
     test "returns error when owner is over their team member limit" do
       [owner, inviter, invitee] = insert_list(3, :user)
 
@@ -186,6 +187,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :admin)
     end
 
+    @tag :full_build_only
     test "does not allow transferring ownership when site does not fit the new owner subscription" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))

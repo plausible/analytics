@@ -25,14 +25,11 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @doc """
-  Returns the limit of sites a user can have.
-
-  For enterprise customers, returns :unlimited. The site limit is checked in a
-  background job so as to avoid service disruption.
-  """
   on_full_build do
     @limit_sites_since ~D[2021-05-05]
+    @site_limit_for_trials 10
+    @team_member_limit_for_trials 3
+
     @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
     def site_limit(user) do
       if Timex.before?(user.inserted_at, @limit_sites_since) do
@@ -42,33 +39,32 @@ defmodule Plausible.Billing.Quota do
       end
     end
 
-    @site_limit_for_trials 10
-    @site_limit_for_legacy_trials 50
-    @site_limit_for_free_10k 50
     defp get_site_limit_from_plan(user) do
       user = Plausible.Users.with_subscription(user)
 
       case Plans.get_subscription_plan(user.subscription) do
-        %EnterprisePlan{} ->
-          :unlimited
+        %{site_limit: site_limit} -> site_limit
+        :free_10k -> 50
+        nil -> @site_limit_for_trials
+      end
+    end
 
-        %Plan{site_limit: site_limit} ->
-          site_limit
+    @spec team_member_limit(User.t()) :: non_neg_integer()
+    def team_member_limit(user) do
+      user = Plausible.Users.with_subscription(user)
 
-        :free_10k ->
-          @site_limit_for_free_10k
-
-        nil ->
-          if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
-            @site_limit_for_legacy_trials
-          else
-            @site_limit_for_trials
-          end
+      case Plans.get_subscription_plan(user.subscription) do
+        %{team_member_limit: limit} -> limit
+        :free_10k -> :unlimited
+        nil -> @team_member_limit_for_trials
       end
     end
   else
-    @spec site_limit(any()) :: non_neg_integer() | :unlimited
     def site_limit(_) do
+      :unlimited
+    end
+
+    def team_member_limit(_) do
       :unlimited
     end
   end
@@ -81,14 +77,36 @@ defmodule Plausible.Billing.Quota do
     Plausible.Sites.owned_sites_count(user)
   end
 
+  @doc """
+  Enterprise plans are always allowed to add more sites (even when
+  over limit) to avoid service disruption. Their usage is checked
+  in a background job instead (see `check_usage.ex`).
+  """
+  def ensure_can_add_new_site(user) do
+    user = Plausible.Users.with_subscription(user)
+
+    case Plans.get_subscription_plan(user.subscription) do
+      %EnterprisePlan{} ->
+        :ok
+
+      _ ->
+        usage = site_usage(user)
+        limit = site_limit(user)
+
+        if below_limit?(usage, limit), do: :ok, else: {:error, {:over_limit, limit}}
+    end
+  end
+
   @monthly_pageview_limit_for_free_10k 10_000
   @monthly_pageview_limit_for_trials :unlimited
 
-  @spec monthly_pageview_limit(Subscription.t()) ::
+  @spec monthly_pageview_limit(User.t() | Subscription.t()) ::
           non_neg_integer() | :unlimited
-  @doc """
-  Returns the limit of pageviews for a subscription.
-  """
+  def monthly_pageview_limit(%User{} = user) do
+    user = Plausible.Users.with_subscription(user)
+    monthly_pageview_limit(user.subscription)
+  end
+
   def monthly_pageview_limit(subscription) do
     case Plans.get_subscription_plan(subscription) do
       %EnterprisePlan{monthly_pageview_limit: limit} ->
@@ -202,38 +220,16 @@ defmodule Plausible.Billing.Quota do
     }
   end
 
-  @team_member_limit_for_trials 3
-  @team_member_limit_for_legacy_trials :unlimited
-  @spec team_member_limit(User.t()) :: non_neg_integer()
-  @doc """
-  Returns the limit of team members a user can have in their sites.
-  """
-  def team_member_limit(user) do
-    user = Plausible.Users.with_subscription(user)
-
-    case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{team_member_limit: limit} ->
-        limit
-
-      %Plan{team_member_limit: limit} ->
-        limit
-
-      :free_10k ->
-        :unlimited
-
-      nil ->
-        if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
-          @team_member_limit_for_legacy_trials
-        else
-          @team_member_limit_for_trials
-        end
-    end
-  end
-
   @spec team_member_usage(User.t()) :: integer()
   @doc """
-  Returns the total count of team members and pending invitations associated
-  with the user's sites.
+  Returns the total count of team members associated with the user's sites.
+
+  * The given user (i.e. the owner) is not counted as a team member.
+
+  * Pending invitations are counted as team members even before accepted.
+
+  * Users are counted uniquely - i.e. even if an account is associated with
+    many sites owned by the given user, they still count as one team member.
   """
   def team_member_usage(user) do
     Plausible.Repo.aggregate(team_member_usage_query(user), :count)

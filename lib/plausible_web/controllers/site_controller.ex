@@ -2,6 +2,7 @@ defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   alias Plausible.Sites
+  alias Plausible.Billing.Quota
 
   plug PlausibleWeb.RequireAccountPlug
 
@@ -11,27 +12,22 @@ defmodule PlausibleWeb.SiteController do
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
 
-    limit = Plausible.Billing.Quota.site_limit(current_user)
-    usage = Plausible.Billing.Quota.site_usage(current_user)
-    below_limit? = Plausible.Billing.Quota.below_limit?(usage, limit)
-
     render(conn, "new.html",
       changeset: Plausible.Site.changeset(%Plausible.Site{}),
-      is_first_site: usage == 0,
-      is_at_limit: !below_limit?,
-      site_limit: limit,
+      first_site?: Quota.site_usage(current_user) == 0,
+      site_limit: Quota.site_limit(current_user),
+      site_limit_exceeded?: Quota.ensure_can_add_new_site(current_user) != :ok,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
   def create_site(conn, %{"site" => site_params}) do
     user = conn.assigns[:current_user]
-    usage = Plausible.Billing.Quota.site_usage(user)
-    is_first_site = usage == 0
+    first_site? = Quota.site_usage(user) == 0
 
     case Sites.create(user, site_params) do
       {:ok, %{site: site}} ->
-        if is_first_site do
+        if first_site? do
           PlausibleWeb.Email.welcome_email(user)
           |> Plausible.Mailer.send()
         end
@@ -40,20 +36,21 @@ defmodule PlausibleWeb.SiteController do
         |> put_session(site.domain <> "_offer_email_report", true)
         |> redirect(external: Routes.site_path(conn, :add_snippet, site.domain))
 
-      {:error, :limit, limit, _} ->
+      {:error, {:over_limit, limit}} ->
         render(conn, "new.html",
           changeset: Plausible.Site.changeset(%Plausible.Site{}),
-          is_first_site: is_first_site,
-          is_at_limit: true,
+          first_site?: first_site?,
           site_limit: limit,
+          site_limit_exceeded?: true,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
       {:error, _, changeset, _} ->
         render(conn, "new.html",
           changeset: changeset,
-          is_first_site: is_first_site,
-          is_at_limit: false,
+          first_site?: first_site?,
+          site_limit: Quota.site_limit(user),
+          site_limit_exceeded?: false,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
     end

@@ -57,6 +57,8 @@ defmodule Plausible.Site do
     timestamps()
   end
 
+  def new(params), do: changeset(%__MODULE__{}, params)
+
   @domain_unique_error """
   This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
   """

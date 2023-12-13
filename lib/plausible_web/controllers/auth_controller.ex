@@ -613,7 +613,7 @@ defmodule PlausibleWeb.AuthController do
       team_member_usage: Quota.team_member_usage(user),
       site_limit: Quota.site_limit(user),
       site_usage: Quota.site_usage(user),
-      pageview_limit: Quota.monthly_pageview_limit(user.subscription),
+      pageview_limit: Quota.monthly_pageview_limit(user),
       pageview_usage: Quota.monthly_pageview_usage(user),
       totp_enabled?: Auth.TOTP.enabled?(user)
     )
