@@ -194,14 +194,20 @@ defmodule PlausibleWeb.Components.Generic do
   slot :inner_block, required: true
 
   def dropdown_link(assigns) do
+    class =
+      "w-full inline-flex text-gray-700 dark:text-gray-300 px-3.5 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+
+    class =
+      if assigns.new_tab do
+        "#{class} justify-between"
+      else
+        class
+      end
+
+    assigns = assign(assigns, :class, class)
+
     ~H"""
-    <.unstyled_link
-      new_tab={@new_tab}
-      href={@href}
-      x-on:click="close()"
-      class="w-full inline-flex text-gray-700 dark:text-gray-300 px-3.5 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-      {@rest}
-    >
+    <.unstyled_link new_tab={@new_tab} href={@href} x-on:click="close()" class={@class} {@rest}>
       <%= render_slot(@inner_block) %>
     </.unstyled_link>
     """
@@ -222,7 +228,7 @@ defmodule PlausibleWeb.Components.Generic do
       <.link
         id={@id}
         class={[
-          "justify-between items-center gap-x-0.5",
+          "inline-flex items-center gap-x-0.5",
           @class
         ]}
         href={@href}
