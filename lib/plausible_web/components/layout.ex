@@ -6,29 +6,27 @@ defmodule PlausibleWeb.Components.Layout do
   def theme_script(assigns) do
     ~H"""
     <script>
-      var userPref = '<%= current_theme(assigns[:current_user]) %>';
-      function reapplyTheme() {
-       var darkMediaPref = window.matchMedia('(prefers-color-scheme: dark)').matches;
-       var htmlRef = document.querySelector('html');
-       var hcaptchaRefs = document.getElementsByClassName('h-captcha');
+      (function(){
+        var userPref = '<%= current_theme(assigns[:current_user]) %>';
+        function reapplyTheme() {
+          var darkMediaPref = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var htmlRef = document.querySelector('html');
+          var hcaptchaRefs = Array.from(document.getElementsByClassName('h-captcha'));
 
-       var isDark = userPref === 'dark' || (userPref === 'system' && darkMediaPref)
+          var isDark = userPref === 'dark' || (userPref === 'system' && darkMediaPref);
 
-       if (isDark) {
-          htmlRef.classList.add('dark')
-        for (let i = 0; i < hcaptchaRefs.length; i++) {
-           hcaptchaRefs[i].dataset.theme = "dark";
-        }
-       } else {
-          htmlRef.classList.remove('dark');
-          for (let i = 0; i < hcaptchaRefs.length; i++) {
-           hcaptchaRefs[i].dataset.theme = "light";
+          if (isDark) {
+              htmlRef.classList.add('dark')
+              hcaptchaRefs.forEach(function(ref) { ref.dataset.theme = "dark"; });
+          } else {
+              htmlRef.classList.remove('dark');
+              hcaptchaRefs.forEach(function(ref) { ref.dataset.theme = "light"; });
           }
-       }
-      }
+        }
 
-      reapplyTheme();
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', reapplyTheme);
+        reapplyTheme();
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', reapplyTheme);
+      })()
     </script>
     """
   end
