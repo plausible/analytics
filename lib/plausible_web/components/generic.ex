@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Components.Generic do
     <.unstyled_link
       new_tab={@new_tab}
       href={@href}
-      class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600"
+      class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 " <> @class}
     >
       <%= render_slot(@inner_block) %>
     </.unstyled_link>

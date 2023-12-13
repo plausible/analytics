@@ -25,7 +25,7 @@
     </p>
     <p class="text-sm text-gray-700 dark:text-gray-300 mt-4">
       Visit our
-      <.styled_link new_tab class="text-sm" href="https://plausible.io/docs/change-domain-name/">
+      <.styled_link new_tab href="https://plausible.io/docs/change-domain-name/">
         documentation
       </.styled_link>
       for details.
@@ -36,10 +36,7 @@
     </PlausibleWeb.Components.Generic.button>
 
     <div class="text-center mt-4">
-      <.styled_link
-        href={Routes.site_path(@conn, :settings_general, @site.domain)}
-        class="w-full text-center"
-      >
+      <.styled_link href={Routes.site_path(@conn, :settings_general, @site.domain)}>
         Back to Site Settings
       </.styled_link>
     </div>
