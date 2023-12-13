@@ -1,5 +1,5 @@
 defmodule Plausible.Session.CacheStoreTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, asyc: true
   alias Plausible.Session.CacheStore
 
   defmodule FakeBuffer do
@@ -123,8 +123,16 @@ defmodule Plausible.Session.CacheStoreTest do
       Plausible.Session.WriteBuffer.flush()
     end
 
+    defp random_user_id() do
+      SipHash.hash!(:crypto.strong_rand_bytes(16), Ecto.UUID.generate())
+    end
+
     test "across parts" do
-      e = build(:event, name: "pageview")
+      e =
+        build(:event,
+          name: "pageview",
+          user_id: random_user_id()
+        )
 
       flush([%{e | pathname: "/"}])
       flush([%{e | pathname: "/exit"}])
@@ -138,7 +146,11 @@ defmodule Plausible.Session.CacheStoreTest do
     end
 
     test "within parts" do
-      e = build(:event, name: "pageview")
+      e =
+        build(:event,
+          name: "pageview",
+          user_id: random_user_id()
+        )
 
       flush([
         %{e | pathname: "/"},
@@ -154,7 +166,7 @@ defmodule Plausible.Session.CacheStoreTest do
     end
 
     test "across and within parts" do
-      e = build(:event, name: "pageview")
+      e = build(:event, name: "pageview", user_id: random_user_id())
 
       flush([
         %{e | pathname: "/"},
