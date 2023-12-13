@@ -12,6 +12,11 @@ defmodule PlausibleWeb.LayoutView do
     PlausibleWeb.Endpoint.websocket_url()
   end
 
+  def current_theme(conn) do
+    theme = conn.assigns[:current_user] && conn.assigns[:current_user].theme
+    theme || "system"
+  end
+
   defmodule JWT do
     use Joken.Config
   end
