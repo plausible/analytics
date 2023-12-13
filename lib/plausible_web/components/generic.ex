@@ -222,7 +222,7 @@ defmodule PlausibleWeb.Components.Generic do
       <.link
         id={@id}
         class={[
-          "justify-between items-center gap-x-0.5",
+          "inline-flex items-center gap-x-0.5",
           @class
         ]}
         href={@href}
