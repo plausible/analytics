@@ -16,6 +16,7 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Sites
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(params, %{"current_user_id" => user_id}, socket) do
     uri =
@@ -53,17 +54,11 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    invitations =
-      assigns.sites.entries
-      |> Enum.filter(&(&1.entry_type == "invitation"))
-      |> Enum.flat_map(& &1.invitations)
-
-    assigns = assign(assigns, :invitations, invitations)
-
     ~H"""
     <.flash_messages flash={@flash} />
     <div
-      x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
+      x-init="$watch('selectedInvitation', value => console.log(selectedInvitation.exceeded_limit))"
+      x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
       x-on:keydown.escape.window="invitationOpen = false"
       class="container pt-6"
     >
@@ -415,19 +410,21 @@ defmodule PlausibleWeb.Live.Sites do
                   id="modal-title"
                 >
                   Invitation for
-                  <span x-text="selectedInvitation && selectedInvitation.site.domain"></span>
+                  <span x-text="selectedInvitation && selectedInvitation.invitation.site.domain">
+                  </span>
                 </h3>
                 <div class="mt-2">
                   <p class="text-sm text-gray-500 dark:text-gray-200">
                     You've been invited to the
-                    <span x-text="selectedInvitation && selectedInvitation.site.domain"></span>
+                    <span x-text="selectedInvitation && selectedInvitation.invitation.site.domain">
+                    </span>
                     analytics dashboard as <b
                       class="capitalize"
-                      x-text="selectedInvitation && selectedInvitation.role"
+                      x-text="selectedInvitation && selectedInvitation.invitation.role"
                     >Admin</b>.
                   </p>
                   <div
-                    x-show="selectedInvitation && selectedInvitation.role === 'owner'"
+                    x-show="selectedInvitation && !selectedInvitation.exceeded_limits && selectedInvitation.invitation.role === 'owner'"
                     class="mt-2 text-sm text-gray-500 dark:text-gray-200"
                   >
                     If you accept the ownership transfer, you will be responsible for billing going forward.
@@ -437,6 +434,7 @@ defmodule PlausibleWeb.Live.Sites do
                     >
                       You will have to enter your card details immediately with no 30-day trial.
                     </div>
+
                     <div :if={Plausible.Billing.on_trial?(@user)} class="mt-4">
                       <Heroicons.exclamation_triangle class="w-4 h-4 inline-block text-red-500" />
                       Your 30-day free trial will end immediately and
@@ -447,22 +445,37 @@ defmodule PlausibleWeb.Live.Sites do
                 </div>
               </div>
             </div>
+            <.notice
+              x-show="selectedInvitation && selectedInvitation.exceeded_limits"
+              title="Exceeded limits"
+              class="mt-4 shadow-sm"
+            >
+              You are unable to take the ownership of this site because doing so, the following limits would be exceeded: <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>.
+              You can review your limits and usage in
+              <.styled_link
+                class="inline-block"
+                href={Routes.auth_path(PlausibleWeb.Endpoint, :user_settings)}
+              >
+                account settings
+              </.styled_link>.
+            </.notice>
           </div>
           <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700 sm:ml-3 sm:w-auto sm:text-sm"
+            <.button
+              class="sm:ml-3 w-full sm:w-auto sm:text-sm"
               data-method="post"
               data-csrf={Plug.CSRFProtection.get_csrf_token()}
-              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation_id + '/accept')"
+              x-bind:disabled="selectedInvitation && !!selectedInvitation.exceeded_limits"
+              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/accept')"
             >
               Accept &amp; Continue
-            </button>
+            </.button>
             <button
               type="button"
               class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
               data-method="post"
               data-csrf={Plug.CSRFProtection.get_csrf_token()}
-              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation_id + '/reject')"
+              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/reject')"
             >
               Reject
             </button>
@@ -614,12 +627,38 @@ defmodule PlausibleWeb.Live.Sites do
         end)
       end
 
+    invitations = extract_invitations(sites.entries, assigns.user)
+
     assign(
       socket,
       sites: sites,
+      invitations: invitations,
       hourly_stats: hourly_stats
     )
   end
+
+  defp extract_invitations(sites, user) do
+    sites
+    |> Enum.filter(&(&1.entry_type == "invitation"))
+    |> Enum.flat_map(& &1.invitations)
+    |> Enum.map(&check_limits(&1, user))
+  end
+
+  defp check_limits(%{role: :owner, site: site} = invitation, user) do
+    case Plausible.Site.Memberships.Invitations.ensure_can_take_ownership(site, user) do
+      :ok ->
+        %{invitation: invitation}
+
+      {:error, {:over_plan_limits, limits}} ->
+        limits = PlausibleWeb.TextHelpers.pretty_list(limits)
+        %{invitation: invitation, exceeded_limits: limits}
+
+      {:error, {:missing_features, features}} ->
+        %{invitation: invitation, missing_features: features}
+    end
+  end
+
+  defp check_limits(invitation, _), do: %{invitation: invitation}
 
   defp set_filter_text(socket, filter_text) do
     uri = socket.assigns.uri
