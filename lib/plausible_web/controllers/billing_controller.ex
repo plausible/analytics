@@ -72,15 +72,16 @@ defmodule PlausibleWeb.BillingController do
   def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
     user = conn.assigns.current_user
 
-    with {:ok, {subscription, preview_info}} <- preview_subscription(user, new_plan_id) do
-      render(conn, "change_plan_preview.html",
-        back_link: Routes.billing_path(conn, :choose_plan),
-        skip_plausible_tracking: true,
-        subscription: subscription,
-        preview_info: preview_info,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
-    else
+    case preview_subscription(user, new_plan_id) do
+      {:ok, {subscription, preview_info}} ->
+        render(conn, "change_plan_preview.html",
+          back_link: Routes.billing_path(conn, :choose_plan),
+          skip_plausible_tracking: true,
+          subscription: subscription,
+          preview_info: preview_info,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
       _ ->
         msg =
           "Something went wrong with loading your plan change information. Please try again, or contact us at support@plausible.io if the issue persists."
