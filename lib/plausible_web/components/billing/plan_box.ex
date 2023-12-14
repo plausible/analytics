@@ -47,7 +47,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       <%= if @owned && @kind == :growth && @plan_to_render.generation < 4 do %>
         <Notice.growth_grandfathered />
       <% else %>
-        <PlanBenefits.render benefits={@benefits} />
+        <PlanBenefits.render benefits={@benefits} class="text-gray-600 dark:text-gray-100" />
       <% end %>
     </div>
     """
@@ -67,7 +67,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       </p>
       <p class="h-4 mt-1"></p>
       <.contact_button class="" />
-      <PlanBenefits.render benefits={@benefits} />
+      <PlanBenefits.render benefits={@benefits} class="text-gray-300 dark:text-gray-100" />
     </div>
     """
   end

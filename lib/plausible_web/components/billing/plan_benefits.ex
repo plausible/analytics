@@ -8,6 +8,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
   alias Plausible.Billing.Plan
 
   attr :benefits, :list, required: true
+  attr :class, :string, default: nil
 
   @doc """
   This function takes a list of benefits returned by either one of:
@@ -24,7 +25,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBenefits do
   """
   def render(assigns) do
     ~H"""
-    <ul role="list" class="mt-8 space-y-3 text-sm leading-6 xl:mt-10 text-gray-300 dark:text-gray-100">
+    <ul role="list" class={["mt-8 space-y-3 text-sm leading-6 xl:mt-10", @class]}>
       <li :for={benefit <- @benefits} class="flex gap-x-3">
         <Heroicons.check class="h-6 w-5 text-indigo-600 dark:text-green-600" />
         <%= if is_binary(benefit), do: benefit, else: benefit.(assigns) %>
