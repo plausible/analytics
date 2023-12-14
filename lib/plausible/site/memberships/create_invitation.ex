@@ -17,7 +17,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           | :no_plan
           | {:over_limit, non_neg_integer()}
           | :forbidden
-          | :upgrade_required
 
   @spec create_invitation(Site.t(), User.t(), String.t(), atom()) ::
           {:ok, Invitation.t()} | {:error, invite_error()}
