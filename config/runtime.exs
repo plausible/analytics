@@ -140,7 +140,7 @@ ch_db_url =
   |> get_var_from_path_or_env("CLICKHOUSE_FLUSH_INTERVAL_MS", "5000")
   |> Integer.parse()
 
-if get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE") do
+if get_var_from_path_or_env(config_dir, "CLICKHOUSE_MAX_BUFFER_SIZE") do
   Logger.warning(
     "CLICKHOUSE_MAX_BUFFER_SIZE is deprecated, please use CLICKHOUSE_MAX_BUFFER_SIZE_BYTES instead"
   )
