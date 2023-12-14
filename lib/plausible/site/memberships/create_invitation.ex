@@ -41,7 +41,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           {:ok, [Membership.t()]}
           | {:error,
              invite_error()
-             | Invitations.missing_features_error()
              | Quota.over_limits_error()}
   def bulk_transfer_ownership_direct(sites, new_owner) do
     Plausible.Repo.transaction(fn ->

@@ -30,11 +30,6 @@ defmodule PlausibleWeb.InvitationController do
         )
         |> redirect(to: "/sites")
 
-      {:error, {:missing_features, features}} ->
-        conn
-        |> put_flash(:error, "Missing features: #{inspect(features)}")
-        |> redirect(to: "/sites")
-
       {:error, _} ->
         conn
         |> put_flash(:error, "Something went wrong, please try again")

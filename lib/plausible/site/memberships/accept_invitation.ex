@@ -26,8 +26,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   @spec transfer_ownership(Site.t(), Auth.User.t(), Keyword.t()) ::
           {:ok, Site.Membership.t()}
           | {:error,
-             Invitations.missing_features_error()
-             | Billing.Quota.over_limits_error()
+             Billing.Quota.over_limits_error()
              | Ecto.Changeset.t()
              | :transfer_to_self
              | :no_plan}
@@ -61,7 +60,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
           {:ok, Site.Membership.t()}
           | {:error,
              :invitation_not_found
-             | Invitations.missing_features_error()
              | Billing.Quota.over_limits_error()
              | Ecto.Changeset.t()
              | :no_plan}

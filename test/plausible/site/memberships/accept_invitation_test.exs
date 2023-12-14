@@ -448,33 +448,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     @tag :full_build_only
-    test "does not allow transferring ownership without feature access" do
-      old_owner = insert(:user, subscription: build(:business_subscription))
-      new_owner = insert(:user, subscription: build(:growth_subscription))
-
-      site =
-        insert(:site,
-          memberships: [build(:site_membership, user: old_owner, role: :owner)],
-          props_enabled: true,
-          allowed_event_props: ["author"]
-        )
-
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: old_owner,
-          email: new_owner.email,
-          role: :owner
-        )
-
-      assert {:error, {:missing_features, [Plausible.Billing.Feature.Props]}} =
-               AcceptInvitation.accept_invitation(
-                 invitation.invitation_id,
-                 new_owner
-               )
-    end
-
-    @tag :full_build_only
     test "does not allow transferring ownership when pageview limit exceeded" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))

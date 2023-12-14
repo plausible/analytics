@@ -382,22 +382,6 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     end
 
     @tag :full_build_only
-    test "does not allow transferring ownership without feature access" do
-      old_owner = insert(:user, subscription: build(:business_subscription))
-      new_owner = insert(:user, subscription: build(:growth_subscription))
-
-      site =
-        insert(:site,
-          memberships: [build(:site_membership, user: old_owner, role: :owner)],
-          props_enabled: true,
-          allowed_event_props: ["author"]
-        )
-
-      assert {:error, {:missing_features, [Plausible.Billing.Feature.Props]}} =
-               CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
-    end
-
-    @tag :full_build_only
     test "exceeding limits error takes precedence over missing features" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))

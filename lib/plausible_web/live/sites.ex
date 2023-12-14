@@ -17,6 +17,7 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Sites
+  alias Plausible.Site.Memberships.Invitations
   alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(params, %{"current_user_id" => user_id}, socket) do
@@ -434,6 +435,23 @@ defmodule PlausibleWeb.Live.Sites do
               </div>
             </div>
             <.notice
+              x-show="selectedInvitation && selectedInvitation.missing_features"
+              title="Missing features"
+              class="mt-4 shadow-sm dark:shadow-none"
+            >
+              <p>
+                The site uses <span x-text="selectedInvitation && selectedInvitation.missing_features"></span>,
+                which your current subscription does not support. After accepting ownership of this site,
+                you will not be able to access them unless you
+                <.styled_link
+                  class="inline-block"
+                  href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+                >
+                  upgrade to a suitable plan
+                </.styled_link>.
+              </p>
+            </.notice>
+            <.notice
               x-show="selectedInvitation && selectedInvitation.exceeded_limits"
               title="Exceeded limits"
               class="mt-4 shadow-sm dark:shadow-none"
@@ -654,13 +672,9 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp check_limits(%{role: :owner, site: site} = invitation, user) do
-    case Plausible.Site.Memberships.Invitations.ensure_can_take_ownership(
-           site,
-           user,
-           small_build?()
-         ) do
+    case Invitations.ensure_can_take_ownership(site, user, small_build?()) do
       :ok ->
-        %{invitation: invitation}
+        check_features(invitation, user)
 
       {:error, :no_plan} ->
         %{invitation: invitation, no_plan: true}
@@ -668,13 +682,25 @@ defmodule PlausibleWeb.Live.Sites do
       {:error, {:over_plan_limits, limits}} ->
         limits = PlausibleWeb.TextHelpers.pretty_list(limits)
         %{invitation: invitation, exceeded_limits: limits}
-
-      {:error, {:missing_features, features}} ->
-        %{invitation: invitation, missing_features: features}
     end
   end
 
   defp check_limits(invitation, _), do: %{invitation: invitation}
+
+  defp check_features(%{role: :owner, site: site} = invitation, user) do
+    case Invitations.check_feature_access(site, user, small_build?()) do
+      :ok ->
+        %{invitation: invitation}
+
+      {:error, {:missing_features, features}} ->
+        feature_names =
+          features
+          |> Enum.map(& &1.display_name())
+          |> PlausibleWeb.TextHelpers.pretty_list()
+
+        %{invitation: invitation, missing_features: feature_names}
+    end
+  end
 
   defp set_filter_text(socket, filter_text) do
     uri = socket.assigns.uri
