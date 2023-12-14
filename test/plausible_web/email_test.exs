@@ -141,6 +141,10 @@ defmodule PlausibleWeb.EmailTest do
                "cycle before that (#{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}), your account used 12,300 billable pageviews"
 
       assert html_body =~ "/billing/choose-plan\">Click here to upgrade your subscription</a>"
+
+      assert html_body =~
+               PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)
+
       assert html_body =~ "/settings\">account settings</a>"
     end
 
@@ -187,6 +191,10 @@ defmodule PlausibleWeb.EmailTest do
                "cycle before that (#{PlausibleWeb.TextHelpers.format_date_range(penultimate_cycle)}), the usage was 12,300 billable pageviews"
 
       assert html_body =~ "/billing/choose-plan\">Click here to upgrade your subscription</a>"
+
+      assert html_body =~
+               PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)
+
       assert html_body =~ "/settings\">account settings</a>"
     end
 
