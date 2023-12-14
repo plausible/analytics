@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Components.BillingTest do
+defmodule PlausibleWeb.Components.Billing.NoticeTest do
   use Plausible.DataCase
   import Phoenix.LiveViewTest
   alias PlausibleWeb.Components.Billing.Notice
