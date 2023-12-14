@@ -14,6 +14,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           Ecto.Changeset.t()
           | :already_a_member
           | :transfer_to_self
+          | :no_plan
           | {:over_limit, non_neg_integer()}
           | :forbidden
           | :upgrade_required
