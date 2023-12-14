@@ -333,6 +333,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
              )
     end
 
+    @tag :full_build_only
     test "does not allow transferring ownership to a non-member user when at team members limit" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -348,6 +349,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
+    @tag :full_build_only
     test "allows transferring ownership to existing site member when at team members limit" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -366,6 +368,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
+    @tag :full_build_only
     test "does not allow transferring ownership when sites limit exceeded" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -378,6 +381,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
+    @tag :full_build_only
     test "does not allow transferring ownership without feature access" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
@@ -393,6 +397,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
 
+    @tag :full_build_only
     test "exceeding limits error takes precedence over missing features" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))
