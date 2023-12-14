@@ -654,7 +654,11 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   defp check_limits(%{role: :owner, site: site} = invitation, user) do
-    case Plausible.Site.Memberships.Invitations.ensure_can_take_ownership(site, user, small_build?()) do
+    case Plausible.Site.Memberships.Invitations.ensure_can_take_ownership(
+           site,
+           user,
+           small_build?()
+         ) do
       :ok ->
         %{invitation: invitation}
 

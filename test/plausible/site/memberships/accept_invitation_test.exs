@@ -131,13 +131,19 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert {:ok, _} = AcceptInvitation.transfer_ownership(site, trial_user, selfhost?: true)
       assert {:ok, _} = AcceptInvitation.transfer_ownership(site, invited_user, selfhost?: true)
-      assert {:ok, _} = AcceptInvitation.transfer_ownership(site, user_on_free_10k, selfhost?: true)
 
       assert {:ok, _} =
-               AcceptInvitation.transfer_ownership(site, user_on_expired_subscription, selfhost?: true)
+               AcceptInvitation.transfer_ownership(site, user_on_free_10k, selfhost?: true)
 
       assert {:ok, _} =
-               AcceptInvitation.transfer_ownership(site, user_on_paused_subscription, selfhost?: true)
+               AcceptInvitation.transfer_ownership(site, user_on_expired_subscription,
+                 selfhost?: true
+               )
+
+      assert {:ok, _} =
+               AcceptInvitation.transfer_ownership(site, user_on_paused_subscription,
+                 selfhost?: true
+               )
     end
   end
 
