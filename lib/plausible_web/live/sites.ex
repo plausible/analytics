@@ -59,7 +59,6 @@ defmodule PlausibleWeb.Live.Sites do
     ~H"""
     <.flash_messages flash={@flash} />
     <div
-      x-init="$watch('selectedInvitation', value => console.log(selectedInvitation.exceeded_limit))"
       x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
       x-on:keydown.escape.window="invitationOpen = false"
       class="container pt-6"
