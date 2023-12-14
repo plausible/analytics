@@ -583,7 +583,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       id={"#{@kind}-price-tag-amount"}
       class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
     >
-      <%= @plan_to_render.monthly_cost |> format_price() %>
+      <%= @plan_to_render.monthly_cost |> Plausible.Billing.format_price() %>
     </span>
     <span
       id={"#{@kind}-price-tag-interval"}
@@ -597,13 +597,13 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   defp price_tag(%{selected_interval: :yearly} = assigns) do
     ~H"""
     <span class="text-2xl font-bold w-max tracking-tight line-through text-gray-500 dark:text-gray-600 mr-1">
-      <%= @plan_to_render.monthly_cost |> Money.mult!(12) |> format_price() %>
+      <%= @plan_to_render.monthly_cost |> Money.mult!(12) |> Plausible.Billing.format_price() %>
     </span>
     <span
       id={"#{@kind}-price-tag-amount"}
       class="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100"
     >
-      <%= @plan_to_render.yearly_cost |> format_price() %>
+      <%= @plan_to_render.yearly_cost |> Plausible.Billing.format_price() %>
     </span>
     <span id={"#{@kind}-price-tag-interval"} class="text-sm font-semibold leading-6 text-gray-600">
       /year

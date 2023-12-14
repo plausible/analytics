@@ -244,6 +244,11 @@ defmodule Plausible.Billing do
     end
   end
 
+  @spec format_price(Money.t()) :: String.t()
+  def format_price(money) do
+    Money.to_string!(money, fractional_digits: 2, no_fraction_if_integer: true)
+  end
+
   def paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 
   def cancelled_subscription_notice_dismiss_id(%Plausible.Auth.User{} = user) do
