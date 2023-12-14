@@ -63,7 +63,6 @@ Plausible.DataMigration.Repo.html
 Plausible.DataMigration.html
 Plausible.DebugReplayInfo.html
 Plausible.Ecto.EventName.html
-Plausible.Event.WriteBuffer.html
 Plausible.Factory.html
 Plausible.Funnel.Const.html
 Plausible.Funnel.Step.html
@@ -113,7 +112,6 @@ Plausible.Sentry.Client.html
 Plausible.SentryFilter.html
 Plausible.Session.CacheStore.html
 Plausible.Session.Salts.html
-Plausible.Session.WriteBuffer.html
 Plausible.Site.Cache.Warmer.All.html
 Plausible.Site.Cache.Warmer.RecentlyUpdated.html
 Plausible.Site.Cache.Warmer.html
@@ -334,8 +332,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-09827771.js
-dist/sidebar_items-DE3AC244.js
+dist/search_data-24EB78F8.js
+dist/sidebar_items-439016AE.js
 index.html
 readme.html
 search.html
