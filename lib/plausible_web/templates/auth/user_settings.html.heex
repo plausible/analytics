@@ -35,7 +35,6 @@
         <PlausibleWeb.Components.Billing.monthly_quota_box
           user={@user}
           subscription={@subscription}
-          business_tier={FunWithFlags.enabled?(:business_tier, for: @user)}
         />
         <div
           class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900"
@@ -106,10 +105,7 @@
           </div>
         <% true -> %>
           <div class="mt-8">
-            <PlausibleWeb.Components.Billing.upgrade_link
-              user={@user}
-              business_tier={FunWithFlags.enabled?(:business_tier, for: @user)}
-            />
+            <PlausibleWeb.Components.Billing.upgrade_link user={@user} />
           </div>
       <% end %>
     </div>

@@ -64,7 +64,10 @@ defmodule PlausibleWeb.Components.Billing do
       growth? || trial? ->
         ~H"""
         please
-        <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@current_user)}>
+        <.link
+          class="underline inline-block"
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+        >
           upgrade your subscription
         </.link>
         """
@@ -256,7 +259,7 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  def monthly_quota_box(%{business_tier: true} = assigns) do
+  def monthly_quota_box(assigns) do
     ~H"""
     <div
       id="monthly-quota-box"
@@ -276,42 +279,6 @@ defmodule PlausibleWeb.Components.Billing do
       >
         <%= change_plan_or_upgrade_text(@subscription) %>
       </.styled_link>
-    </div>
-    """
-  end
-
-  def monthly_quota_box(%{business_tier: false} = assigns) do
-    ~H"""
-    <div
-      class="h-32 px-2 py-4 my-4 text-center bg-gray-100 rounded dark:bg-gray-900"
-      style="width: 11.75rem;"
-    >
-      <h4 class="font-black dark:text-gray-100">Monthly quota</h4>
-      <%= if @subscription do %>
-        <div class="py-2 text-xl font-medium dark:text-gray-100">
-          <%= PlausibleWeb.AuthView.subscription_quota(@subscription) %> pageviews
-        </div>
-
-        <.styled_link
-          :if={Subscription.Status.active?(@subscription)}
-          href={Routes.billing_path(PlausibleWeb.Endpoint, :change_plan_form)}
-        >
-          Change plan
-        </.styled_link>
-
-        <span
-          :if={Subscription.Status.past_due?(@subscription)}
-          class="text-sm text-gray-600 dark:text-gray-400 font-medium"
-          tooltip="Please update your billing details before changing plans"
-        >
-          Change plan
-        </span>
-      <% else %>
-        <div class="py-2 text-xl font-medium dark:text-gray-100">Free trial</div>
-        <.styled_link href={Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)}>
-          Upgrade
-        </.styled_link>
-      <% end %>
     </div>
     """
   end
@@ -520,7 +487,7 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  def upgrade_link(%{business_tier: true} = assigns) do
+  def upgrade_link(assigns) do
     ~H"""
     <PlausibleWeb.Components.Generic.button_link
       id="upgrade-link-2"
@@ -531,20 +498,13 @@ defmodule PlausibleWeb.Components.Billing do
     """
   end
 
-  def upgrade_link(assigns) do
-    ~H"""
-    <PlausibleWeb.Components.Generic.button_link href={
-      Routes.billing_path(PlausibleWeb.Endpoint, :upgrade)
-    }>
-      Upgrade
-    </PlausibleWeb.Components.Generic.button_link>
-    """
-  end
-
   defp subscription_cancelled_notice_body(assigns) do
     if Plausible.Billing.Subscriptions.expired?(assigns.user.subscription) do
       ~H"""
-      <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
+      <.link
+        class="underline inline-block"
+        href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+      >
         Upgrade your subscription
       </.link>
       to get access to your stats again.
@@ -553,7 +513,10 @@ defmodule PlausibleWeb.Components.Billing do
       ~H"""
       <p>
         You have access to your stats until <span class="font-semibold inline"><%= Timex.format!(@user.subscription.next_bill_date, "{Mshort} {D}, {YYYY}") %></span>.
-        <.link class="underline inline-block" href={Plausible.Billing.upgrade_route_for(@user)}>
+        <.link
+          class="underline inline-block"
+          href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+        >
           Upgrade your subscription
         </.link>
         to make sure you don't lose access.
@@ -563,10 +526,9 @@ defmodule PlausibleWeb.Components.Billing do
     end
   end
 
-  defp lose_grandfathering_warning(%{user: %{subscription: subscription} = user} = assigns) do
-    business_tiers_available? = FunWithFlags.enabled?(:business_tier, for: user)
+  defp lose_grandfathering_warning(%{user: %{subscription: subscription}} = assigns) do
     plan = Plans.get_regular_plan(subscription, only_non_expired: true)
-    loses_grandfathering = business_tiers_available? && plan && plan.generation < 4
+    loses_grandfathering = plan && plan.generation < 4
 
     assigns = assign(assigns, :loses_grandfathering, loses_grandfathering)
 
