@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   require Plausible.Billing.Subscription.Status
 
-  alias PlausibleWeb.Components.Billing.Notice
+  alias PlausibleWeb.Components.Billing.{PlanBenefits, Notice}
   alias Plausible.Users
   alias Plausible.Billing.{Plans, Plan, Quota, Subscription}
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -81,9 +81,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     business_plan_to_render =
       assigns.selected_business_plan || List.last(assigns.available_plans.business)
 
-    growth_benefits = growth_benefits(growth_plan_to_render)
-
-    business_benefits = business_benefits(business_plan_to_render, growth_benefits)
+    growth_benefits = PlanBenefits.for_growth(growth_plan_to_render)
+    business_benefits = PlanBenefits.for_business(business_plan_to_render, growth_benefits)
+    enterprise_benefits = PlanBenefits.for_enterprise(business_benefits)
 
     assigns =
       assigns
@@ -91,7 +91,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> assign(:business_plan_to_render, business_plan_to_render)
       |> assign(:growth_benefits, growth_benefits)
       |> assign(:business_benefits, business_benefits)
-      |> assign(:enterprise_benefits, enterprise_benefits(business_benefits))
+      |> assign(:enterprise_benefits, enterprise_benefits)
 
     ~H"""
     <div class="bg-gray-100 dark:bg-gray-900 pt-1 pb-12 sm:pb-16 text-gray-900 dark:text-gray-100">
@@ -330,12 +330,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       <%= if @owned && @kind == :growth && @plan_to_render.generation < 4 do %>
         <Notice.growth_grandfathered />
       <% else %>
-        <ul
-          role="list"
-          class="mt-8 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-100 xl:mt-10"
-        >
-          <.plan_benefit :for={benefit <- @benefits}><%= benefit %></.plan_benefit>
-        </ul>
+        <PlanBenefits.render benefits={@benefits} />
       <% end %>
     </div>
     """
@@ -457,18 +452,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  slot :inner_block, required: true
-  attr :icon_color, :string, default: "indigo-600"
-
-  defp plan_benefit(assigns) do
-    ~H"""
-    <li class="flex gap-x-3">
-      <.check_icon class={"text-#{@icon_color} dark:text-green-600"} />
-      <%= render_slot(@inner_block) %>
-    </li>
-    """
-  end
-
   defp contact_button(assigns) do
     ~H"""
     <.link
@@ -497,14 +480,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       </p>
       <p class="h-4 mt-1"></p>
       <.contact_button class="" />
-      <ul
-        role="list"
-        class="mt-8 space-y-3 text-sm leading-6 xl:mt-10 text-gray-300 dark:text-gray-100"
-      >
-        <.plan_benefit :for={benefit <- @benefits}>
-          <%= if is_binary(benefit), do: benefit, else: benefit.(assigns) %>
-        </.plan_benefit>
-      </ul>
+      <PlanBenefits.render benefits={@benefits} />
     </div>
     """
   end
@@ -519,18 +495,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <%= @text %>
       </p>
     </div>
-    """
-  end
-
-  defp check_icon(assigns) do
-    ~H"""
-    <svg {%{class: "h-6 w-5 flex-none #{@class}", viewBox: "0 0 20 20",fill: "currentColor","aria-hidden": "true"}}>
-      <path
-        fill-rule="evenodd"
-        d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
-        clip-rule="evenodd"
-      />
-    </svg>
     """
   end
 
@@ -730,89 +694,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     else
       PlausibleWeb.StatsView.large_number_format(volume)
     end
-  end
-
-  defp growth_benefits(plan) do
-    [
-      team_member_limit_benefit(plan),
-      site_limit_benefit(plan),
-      data_retention_benefit(plan),
-      "Intuitive, fast and privacy-friendly dashboard",
-      "Email/Slack reports",
-      "Google Analytics import"
-    ]
-    |> Kernel.++(feature_benefits(plan))
-    |> Enum.filter(& &1)
-  end
-
-  defp business_benefits(plan, growth_benefits) do
-    [
-      "Everything in Growth",
-      team_member_limit_benefit(plan),
-      site_limit_benefit(plan),
-      data_retention_benefit(plan)
-    ]
-    |> Kernel.++(feature_benefits(plan))
-    |> Kernel.--(growth_benefits)
-    |> Kernel.++(["Priority support"])
-    |> Enum.filter(& &1)
-  end
-
-  defp enterprise_benefits(business_benefits) do
-    team_members =
-      if "Up to 10 team members" in business_benefits, do: "10+ team members"
-
-    data_retention =
-      if "5 years of data retention" in business_benefits, do: "5+ years of data retention"
-
-    [
-      "Everything in Business",
-      team_members,
-      "50+ sites",
-      "600+ Stats API requests per hour",
-      &sites_api_benefit/1,
-      data_retention,
-      "Technical onboarding"
-    ]
-    |> Enum.filter(& &1)
-  end
-
-  defp data_retention_benefit(%Plan{} = plan) do
-    if plan.data_retention_in_years, do: "#{plan.data_retention_in_years} years of data retention"
-  end
-
-  defp team_member_limit_benefit(%Plan{} = plan) do
-    case plan.team_member_limit do
-      :unlimited -> "Unlimited team members"
-      number -> "Up to #{number} team members"
-    end
-  end
-
-  defp site_limit_benefit(%Plan{} = plan), do: "Up to #{plan.site_limit} sites"
-
-  defp feature_benefits(%Plan{} = plan) do
-    Enum.map(plan.features, fn feature_mod ->
-      case feature_mod.name() do
-        :goals -> "Goals and custom events"
-        :stats_api -> "Stats API (600 requests per hour)"
-        :revenue_goals -> "Ecommerce revenue attribution"
-        _ -> feature_mod.display_name()
-      end
-    end)
-  end
-
-  defp sites_api_benefit(assigns) do
-    ~H"""
-    <p>
-      Sites API access for
-      <.link
-        class="text-indigo-500 hover:text-indigo-400"
-        href="https://plausible.io/white-label-web-analytics"
-      >
-        reselling
-      </.link>
-    </p>
-    """
   end
 
   defp contact_link(), do: @contact_link
