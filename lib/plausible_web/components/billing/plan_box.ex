@@ -156,7 +156,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     change_plan_link_text = change_plan_link_text(assigns)
 
     usage_within_limits =
-      Quota.ensure_can_subscribe_to_plan(assigns.user, assigns.plan_to_render, assigns.usage) ==
+      Quota.ensure_within_plan_limits(assigns.user, assigns.plan_to_render, assigns.usage) ==
         :ok
 
     subscription = assigns.user.subscription
@@ -171,7 +171,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
 
     {checkout_disabled, disabled_message} =
       cond do
-        assigns.usage.sites == 0 ->
+        not assigns.eligible_for_upgrade? ->
           {true, nil}
 
         change_plan_link_text == "Currently on this plan" && not subscription_deleted ->

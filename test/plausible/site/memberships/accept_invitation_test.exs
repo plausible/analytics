@@ -69,7 +69,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     @tag :full_build_only
-    test "does not allow transferring to an account without a subscription" do
+    test "does not allow transferring to an account without an active subscription" do
       current_owner = insert(:user)
       site = insert(:site, members: [current_owner])
 
