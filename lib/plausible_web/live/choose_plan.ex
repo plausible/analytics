@@ -328,7 +328,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <% end %>
       </div>
       <%= if @owned && @kind == :growth && @plan_to_render.generation < 4 do %>
-        <.growth_grandfathering_notice />
+        <Notice.growth_grandfathered />
       <% else %>
         <ul
           role="list"
@@ -410,14 +410,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       |> PlausibleWeb.TextHelpers.pretty_join()
 
     "This plan does not support #{features_list_str}, which you are currently using. Please note that by subscribing to this plan you will lose access to #{if length(features_to_lose) == 1, do: "this feature", else: "these features"}."
-  end
-
-  defp growth_grandfathering_notice(assigns) do
-    ~H"""
-    <ul class="mt-8 space-y-3 text-sm leading-6 text-gray-600 text-justify dark:text-gray-100 xl:mt-10">
-      Your subscription has been grandfathered in at the same rate and terms as when you first joined. If you don't need the "Business" features, you're welcome to stay on this plan. You can adjust the pageview limit or change the billing frequency of this grandfathered plan. If you're interested in business features, you can upgrade to the new "Business" plan.
-    </ul>
-    """
   end
 
   def render_price_info(%{available: false} = assigns) do
