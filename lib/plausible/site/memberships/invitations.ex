@@ -64,11 +64,11 @@ defmodule Plausible.Site.Memberships.Invitations do
 
   @spec ensure_can_take_ownership(Site.t(), Auth.User.t(), boolean()) ::
           :ok | {:error, Quota.over_limits_error() | missing_features_error() | :no_plan}
-  def ensure_can_take_ownership(_site, _new_owner, true) do
+  def ensure_can_take_ownership(_site, _new_owner, true = _selfhost?) do
     :ok
   end
 
-  def ensure_can_take_ownership(site, new_owner, false) do
+  def ensure_can_take_ownership(site, new_owner, false = _selfhost?) do
     site = Repo.preload(site, :owner)
     new_owner = Plausible.Users.with_subscription(new_owner)
     plan = Plausible.Billing.Plans.get_subscription_plan(new_owner.subscription)
