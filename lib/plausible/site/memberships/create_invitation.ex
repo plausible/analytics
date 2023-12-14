@@ -47,11 +47,14 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   def bulk_transfer_ownership_direct(sites, new_owner) do
     Plausible.Repo.transaction(fn ->
       for site <- sites do
-        with site <- Plausible.Repo.preload(site, :owner),
-             {:ok, membership} <- Site.Memberships.transfer_ownership(site, new_owner) do
-          membership
-        else
-          {:error, error} -> Plausible.Repo.rollback(error)
+        site = Plausible.Repo.preload(site, :owner)
+
+        case Site.Memberships.transfer_ownership(site, new_owner) do
+          {:ok, membership} ->
+            membership
+
+          {:error, error} ->
+            Plausible.Repo.rollback(error)
         end
       end
     end)
