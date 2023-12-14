@@ -2,8 +2,6 @@ defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
   use Plausible
 
-  import PlausibleWeb.Components.Billing
-
   def plausible_url do
     PlausibleWeb.Endpoint.url()
   end

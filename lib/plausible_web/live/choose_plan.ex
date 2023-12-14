@@ -5,10 +5,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   use Phoenix.LiveView
   use Phoenix.HTML
 
-  import PlausibleWeb.Components.Billing
-
   require Plausible.Billing.Subscription.Status
 
+  alias PlausibleWeb.Components.Billing.Notice
   alias Plausible.Users
   alias Plausible.Billing.{Plans, Plan, Quota, Subscription}
   alias PlausibleWeb.Router.Helpers, as: Routes
@@ -97,9 +96,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     ~H"""
     <div class="bg-gray-100 dark:bg-gray-900 pt-1 pb-12 sm:pb-16 text-gray-900 dark:text-gray-100">
       <div class="mx-auto max-w-7xl px-6 lg:px-20">
-        <.subscription_past_due_notice class="pb-6" subscription={@user.subscription} />
-        <.subscription_paused_notice class="pb-6" subscription={@user.subscription} />
-        <.upgrade_ineligible_notice :if={@usage.sites == 0} />
+        <Notice.subscription_past_due class="pb-6" subscription={@user.subscription} />
+        <Notice.subscription_paused class="pb-6" subscription={@user.subscription} />
+        <Notice.upgrade_ineligible :if={@usage.sites == 0} />
         <div class="mx-auto max-w-4xl text-center">
           <p class="text-4xl font-bold tracking-tight lg:text-5xl">
             <%= if @owned_plan,
@@ -142,7 +141,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
       </div>
     </div>
     <.slider_styles />
-    <.paddle_script />
+    <PlausibleWeb.Components.Billing.paddle_script />
     """
   end
 
@@ -392,7 +391,9 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     <%= if @owned_plan && Plausible.Billing.Subscriptions.resumable?(@user.subscription) do %>
       <.change_plan_link {assigns} />
     <% else %>
-      <.paddle_button {assigns}>Upgrade</.paddle_button>
+      <PlausibleWeb.Components.Billing.paddle_button {assigns}>
+        Upgrade
+      </PlausibleWeb.Components.Billing.paddle_button>
     <% end %>
     <p :if={@disabled_message} class="h-0 text-center text-sm text-red-700 dark:text-red-500">
       <%= @disabled_message %>
