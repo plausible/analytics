@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
 
   require Plausible.Billing.Subscription.Status
 
-  alias PlausibleWeb.Components.Billing.{PlanBox, PlanBenefits, Notice}
+  alias PlausibleWeb.Components.Billing.{PlanBox, PlanBenefits, Notice, PageviewSlider}
   alias Plausible.Users
   alias Plausible.Billing.{Plans, Plan, Quota}
 
@@ -107,8 +107,10 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         </div>
         <div class="mt-12 flex flex-col gap-8 lg:flex-row items-center lg:items-baseline">
           <.interval_picker selected_interval={@selected_interval} />
-          <.slider_output volume={@selected_volume} available_volumes={@available_volumes} />
-          <.slider selected_volume={@selected_volume} available_volumes={@available_volumes} />
+          <PageviewSlider.render
+            selected_volume={@selected_volume}
+            available_volumes={@available_volumes}
+          />
         </div>
         <div class="mt-6 isolate mx-auto grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           <PlanBox.standard
@@ -139,7 +141,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
         <.help_links />
       </div>
     </div>
-    <.slider_styles />
     <PlausibleWeb.Components.Billing.paddle_script />
     """
   end
@@ -229,66 +230,6 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  defp slider(assigns) do
-    slider_labels =
-      Enum.map(
-        assigns.available_volumes ++ [:enterprise],
-        &format_volume(&1, assigns.available_volumes)
-      )
-
-    assigns = assign(assigns, :slider_labels, slider_labels)
-
-    ~H"""
-    <form class="max-w-md lg:max-w-none w-full lg:w-1/2 lg:order-2">
-      <div class="flex items-baseline space-x-2">
-        <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
-          <%= List.first(@slider_labels) %>
-        </span>
-        <div class="flex-1 relative">
-          <input
-            phx-change="slide"
-            id="slider"
-            name="slider"
-            class="shadow mt-8 dark:bg-gray-600 dark:border-none"
-            type="range"
-            min="0"
-            max={length(@available_volumes)}
-            step="1"
-            value={
-              Enum.find_index(@available_volumes, &(&1 == @selected_volume)) ||
-                length(@available_volumes)
-            }
-            oninput="repositionBubble()"
-          />
-          <output
-            id="slider-bubble"
-            class="absolute bottom-[35px] py-[4px] px-[12px] -translate-x-1/2 rounded-md text-white bg-indigo-600 position text-xs font-medium"
-            phx-update="ignore"
-          />
-        </div>
-        <span class="text-xs font-medium text-gray-600 dark:text-gray-200">
-          <%= List.last(@slider_labels) %>
-        </span>
-      </div>
-    </form>
-
-    <script>
-      const SLIDER_LABELS = <%= raw Jason.encode!(@slider_labels) %>
-
-      function repositionBubble() {
-        const input = document.getElementById("slider")
-        const percentage = Number((input.value / input.max) * 100)
-        const bubble = document.getElementById("slider-bubble")
-
-        bubble.innerHTML = SLIDER_LABELS[input.value]
-        bubble.style.left = `calc(${percentage}% + (${13.87 - percentage * 0.26}px))`
-      }
-
-      repositionBubble()
-    </script>
-    """
-  end
-
   defp pageview_limit_notice(assigns) do
     ~H"""
     <div class="mt-12 mx-auto mt-6 max-w-2xl">
@@ -317,98 +258,12 @@ defmodule PlausibleWeb.Live.ChoosePlan do
     """
   end
 
-  defp slider_styles(assigns) do
-    ~H"""
-    <style>
-      input[type="range"] {
-        -moz-appearance: none;
-        -webkit-appearance: none;
-        background: white;
-        border-radius: 3px;
-        height: 6px;
-        width: 100%;
-        margin-bottom: 9px;
-        outline: none;
-      }
-
-      input[type="range"]::-webkit-slider-thumb {
-        appearance: none;
-        -webkit-appearance: none;
-        background-color: #5f48ff;
-        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M8%20.5v7L12%204zM0%204l4%203.5v-7z%22%20fill%3D%22%23FFFFFF%22%20fill-rule%3D%22nonzero%22%2F%3E%3C%2Fsvg%3E");
-        background-position: center;
-        background-repeat: no-repeat;
-        border: 0;
-        border-radius: 50%;
-        cursor: pointer;
-        height: 26px;
-        width: 26px;
-      }
-
-      input[type="range"]::-moz-range-thumb {
-        background-color: #5f48ff;
-        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M8%20.5v7L12%204zM0%204l4%203.5v-7z%22%20fill%3D%22%23FFFFFF%22%20fill-rule%3D%22nonzero%22%2F%3E%3C%2Fsvg%3E");
-        background-position: center;
-        background-repeat: no-repeat;
-        border: 0;
-        border: none;
-        border-radius: 50%;
-        cursor: pointer;
-        height: 26px;
-        width: 26px;
-      }
-
-      input[type="range"]::-ms-thumb {
-        background-color: #5f48ff;
-        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M8%20.5v7L12%204zM0%204l4%203.5v-7z%22%20fill%3D%22%23FFFFFF%22%20fill-rule%3D%22nonzero%22%2F%3E%3C%2Fsvg%3E");
-        background-position: center;
-        background-repeat: no-repeat;
-        border: 0;
-        border-radius: 50%;
-        cursor: pointer;
-        height: 26px;
-        width: 26px;
-      }
-
-      input[type="range"]::-moz-focus-outer {
-        border: 0;
-      }
-    </style>
-    """
-  end
-
   defp get_available_volumes(%{business: business_plans, growth: growth_plans}) do
     growth_volumes = Enum.map(growth_plans, & &1.monthly_pageview_limit)
     business_volumes = Enum.map(business_plans, & &1.monthly_pageview_limit)
 
     (growth_volumes ++ business_volumes)
     |> Enum.uniq()
-  end
-
-  attr :volume, :any
-  attr :available_volumes, :list
-
-  defp slider_output(assigns) do
-    ~H"""
-    <output class="lg:w-1/4 lg:order-1 font-medium text-lg text-gray-600 dark:text-gray-200">
-      <span :if={@volume != :enterprise}>Up to</span>
-      <strong id="slider-value" class="text-gray-900 dark:text-gray-100">
-        <%= format_volume(@volume, @available_volumes) %>
-      </strong>
-      monthly pageviews
-    </output>
-    """
-  end
-
-  defp format_volume(volume, available_volumes) do
-    if volume == :enterprise do
-      available_volumes
-      |> List.last()
-      |> PlausibleWeb.StatsView.large_number_format()
-      |> Kernel.<>("+")
-    else
-      PlausibleWeb.StatsView.large_number_format(volume)
-    end
   end
 
   defp contact_link(), do: @contact_link
