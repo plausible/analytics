@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Stats.Util — Plausible v0.0.1</title>
+    <title>PlausibleWeb.Components.Billing.PlanBenefits — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,19 +102,20 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Stats.Util</span> 
+  <span translate="no">PlausibleWeb.Components.Billing.PlanBenefits</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>Utilities for modifying stat results</p>
+<p>This module exposes functions for rendering and returning plan
+benefits for Growth, Business, and Enterprise plans.</p>
   </section>
 
 
@@ -132,21 +133,45 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove_internal_visits_metric/1" translate="no">remove_internal_visits_metric(result)</a>
+        <a href="#for_business/2" translate="no">for_business(plan, growth_benefits)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Returns Business benefits for the given Business plan.</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#remove_internal_visits_metric/2" translate="no">remove_internal_visits_metric(results, metrics)</a>
+        <a href="#for_enterprise/1" translate="no">for_enterprise(business_benefits)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p><code class="inline">__internal_visits</code> is fetched when querying bounce rate and visit duration, as it
-is needed to calculate these from imported data. This function removes that metric
-from all entries in the results list.</p></div>
+        <div class="summary-synopsis"><p>This function only takes a list of business benefits. Since all
+limits and features of enterprise plans are configurable, we can
+say on the upgrade page that enterprise plans include everything
+in Business.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#for_growth/1" translate="no">for_growth(plan)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>This function takes a growth plan and returns a list representing
+the different benefits a user gets when subscribing to this plan.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#render/1" translate="no">render(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>This function takes a list of benefits returned by either one of</p></div>
 
     </div>
 
@@ -163,16 +188,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="remove_internal_visits_metric/1">
+<section class="detail" id="for_business/2">
 
   <div class="detail-header">
-    <a href="#remove_internal_visits_metric/1" class="detail-link" title="Link to this function">
+    <a href="#for_business/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">remove_internal_visits_metric(result)</h1>
+    <h1 class="signature" translate="no">for_business(plan, growth_benefits)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L20" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L61" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -182,19 +207,21 @@ Functions
 
   <section class="docstring">
 
-
+<p>Returns Business benefits for the given Business plan.</p><p>A second argument is also required - list of Growth benefits. This
+is because we don't want to list the same benefits in both Growth
+and Business. Everything in Growth is also included in Business.</p>
   </section>
 </section>
-<section class="detail" id="remove_internal_visits_metric/2">
+<section class="detail" id="for_enterprise/1">
 
   <div class="detail-header">
-    <a href="#remove_internal_visits_metric/2" class="detail-link" title="Link to this function">
+    <a href="#for_enterprise/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">remove_internal_visits_metric(results, metrics)</h1>
+    <h1 class="signature" translate="no">for_enterprise(business_benefits)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L11" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -204,9 +231,63 @@ Functions
 
   <section class="docstring">
 
-<p><code class="inline">__internal_visits</code> is fetched when querying bounce rate and visit duration, as it
-is needed to calculate these from imported data. This function removes that metric
-from all entries in the results list.</p>
+<p>This function only takes a list of business benefits. Since all
+limits and features of enterprise plans are configurable, we can
+say on the upgrade page that enterprise plans include everything
+in Business.</p>
+  </section>
+</section>
+<section class="detail" id="for_growth/1">
+
+  <div class="detail-header">
+    <a href="#for_growth/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">for_growth(plan)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L41" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>This function takes a growth plan and returns a list representing
+the different benefits a user gets when subscribing to this plan.</p>
+  </section>
+</section>
+<section class="detail" id="render/1">
+
+  <div class="detail-header">
+    <a href="#render/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">render(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/components/billing/plan_benefits.ex#L1" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>This function takes a list of benefits returned by either one of:</p><ul><li><a href="#for_growth/1"><code class="inline">for_growth/1</code></a></li><li><a href="#for_business/2"><code class="inline">for_business/2</code></a></li><li><a href="#for_enterprise/1"><code class="inline">for_enterprise/1</code></a>.</li></ul><p>and renders them as HTML.</p><p>The benefits in the given list can be either strings or functions
+returning a Phoenix component. This allows, for example, to render
+links within the plan benefit text.</p><h2 id="render/1-attributes" class="section-heading">
+  <a href="#render/1-attributes">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    Attributes
+  </a>
+</h2>
+<ul><li><code class="inline">benefits</code> (<code class="inline">:list</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">nil</code>.</li></ul>
   </section>
 </section>
 
