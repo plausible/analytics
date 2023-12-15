@@ -45,7 +45,7 @@
       <%= Map.get(assigns, :inner_layout) || @inner_content %>
     </main>
 
-    <PlausibleWeb.Components.Layout.theme_script current_user={@conn.assigns[:current_user]} />
+    <PlausibleWeb.Components.Layout.theme_script {Map.take(assigns, [:current_user, :theme])} />
 
     <%= if assigns[:embedded] do %>
       <div data-iframe-height></div>
