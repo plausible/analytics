@@ -97,14 +97,16 @@
 
 <%= if @conn.assigns[:current_user] do %>
   <div class="flex flex-col gap-y-2">
-    <.subscription_cancelled_notice user={@conn.assigns.current_user} />
+    <PlausibleWeb.Components.Billing.Notice.subscription_cancelled user={
+      @conn.assigns.current_user
+    } />
 
-    <.subscription_past_due_notice
+    <PlausibleWeb.Components.Billing.Notice.subscription_past_due
       subscription={@conn.assigns.current_user.subscription}
       class="container"
     />
 
-    <.subscription_paused_notice
+    <PlausibleWeb.Components.Billing.Notice.subscription_paused
       subscription={@conn.assigns.current_user.subscription}
       class="container"
     />
