@@ -3,9 +3,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   Live view for the goal creation form
   """
   use PlausibleWeb, :live_view
-  import PlausibleWeb.Live.Components.Form
-  alias PlausibleWeb.Live.Components.ComboBox
 
+  import PlausibleWeb.Live.Components.Form
+
+  alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Repo
 
   def mount(
@@ -46,39 +47,47 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def render(assigns) do
     ~H"""
     <div
-      class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50"
-      phx-window-keydown="cancel-add-goal"
-      phx-key="Escape"
+      id={"#{@socket.id}-modal"}
+      data-modal
+      x-data="{ modalOpen: false }"
+      x-on:open-modal.window={"if ($event.detail == '#{@socket.id}') modalOpen = true"}
+      x-on:close-modal.window={"if ($event.detail == '#{@socket.id}') modalOpen = false"}
+      x-on:keydown.escape.window="modalOpen = false"
     >
-    </div>
-    <div class="fixed inset-0 flex items-center justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden">
-      <div class="w-1/2 h-full">
-        <.form
-          :let={f}
-          for={@form}
-          class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
-          phx-submit="save-goal"
-          phx-click-away="cancel-add-goal"
-        >
-          <h2 class="text-xl font-black dark:text-gray-100">Add Goal for <%= @domain %></h2>
+      <div x-show="modalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
+      </div>
+      <div
+        x-show="modalOpen"
+        class="fixed inset-0 flex items-center justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden"
+      >
+        <div class="w-1/2 h-full">
+          <.form
+            :let={f}
+            for={@form}
+            class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
+            phx-submit="save-goal"
+            x-on:click.outside="modalOpen = false"
+          >
+            <h2 class="text-xl font-black dark:text-gray-100">Add Goal for <%= @domain %></h2>
 
-          <.tabs tabs={@tabs} />
+            <.tabs tabs={@tabs} />
 
-          <.custom_event_fields
-            :if={@tabs.custom_events}
-            f={f}
-            current_user={@current_user}
-            site={@site}
-            has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
-          />
-          <.pageview_fields :if={@tabs.pageviews} f={f} site={@site} />
+            <.custom_event_fields
+              :if={@tabs.custom_events}
+              f={f}
+              current_user={@current_user}
+              site={@site}
+              has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+            />
+            <.pageview_fields :if={@tabs.pageviews} f={f} site={@site} />
 
-          <div class="py-4">
-            <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-              Add Goal →
-            </PlausibleWeb.Components.Generic.button>
-          </div>
-        </.form>
+            <div class="py-4">
+              <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
+                Add Goal →
+              </PlausibleWeb.Components.Generic.button>
+            </div>
+          </.form>
+        </div>
       </div>
     </div>
     """
@@ -291,11 +300,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end
-  end
-
-  def handle_event("cancel-add-goal", _value, socket) do
-    send(socket.assigns.rendered_by, :cancel_add_goal)
-    {:noreply, socket}
   end
 
   def suggest_page_paths(input, _options, site) do

@@ -26,7 +26,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
        site_id: site_id,
        domain: domain,
        displayed_goals: socket.assigns.all_goals,
-       add_goal?: false,
        current_user_id: user_id,
        filter_text: ""
      )}
@@ -38,19 +37,17 @@ defmodule PlausibleWeb.Live.GoalSettings do
     ~H"""
     <div id="goal-settings-main">
       <.flash_messages flash={@flash} />
-      <%= if @add_goal? do %>
-        <%= live_render(
-          @socket,
-          PlausibleWeb.Live.GoalSettings.Form,
-          id: "goals-form",
-          session: %{
-            "current_user_id" => @current_user_id,
-            "domain" => @domain,
-            "site_id" => @site_id,
-            "rendered_by" => self()
-          }
-        ) %>
-      <% end %>
+      <%= live_render(
+        @socket,
+        PlausibleWeb.Live.GoalSettings.Form,
+        id: "goals-form",
+        session: %{
+          "current_user_id" => @current_user_id,
+          "domain" => @domain,
+          "site_id" => @site_id,
+          "rendered_by" => self()
+        }
+      ) %>
       <.live_component
         module={PlausibleWeb.Live.GoalSettings.List}
         id="goals-list"
@@ -76,10 +73,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
     {:noreply, assign(socket, displayed_goals: new_list, filter_text: filter_text)}
   end
 
-  def handle_event("add-goal", _value, socket) do
-    {:noreply, assign(socket, add_goal?: true)}
-  end
-
   def handle_event("delete-goal", %{"goal-id" => goal_id}, socket) do
     goal_id = String.to_integer(goal_id)
 
@@ -100,20 +93,16 @@ defmodule PlausibleWeb.Live.GoalSettings do
     end
   end
 
-  def handle_info(:cancel_add_goal, socket) do
-    {:noreply, assign(socket, add_goal?: false)}
-  end
-
   def handle_info({:goal_added, goal}, socket) do
     socket =
       socket
       |> assign(
-        add_goal?: false,
         filter_text: "",
         all_goals: [goal | socket.assigns.all_goals],
         displayed_goals: [goal | socket.assigns.all_goals]
       )
       |> put_live_flash(:success, "Goal saved successfully")
+      |> push_event("close-modal", %{id: "goals-form"})
 
     {:noreply, socket}
   end
