@@ -192,7 +192,12 @@ defmodule PlausibleWeb.Email do
   end
 
   def yearly_expiration_notification(user) do
-    date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
+    next_bill_date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
+
+    accept_traffic_until =
+      user
+      |> Plausible.Sites.accept_traffic_until()
+      |> Timex.format!("{Mfull} {D}, {YYYY}")
 
     priority_email()
     |> to(user)
@@ -200,7 +205,8 @@ defmodule PlausibleWeb.Email do
     |> subject("Your Plausible subscription is about to expire")
     |> render("yearly_expiration_notification.html", %{
       user: user,
-      date: date
+      next_bill_date: next_bill_date,
+      accept_traffic_until: accept_traffic_until
     })
   end
 

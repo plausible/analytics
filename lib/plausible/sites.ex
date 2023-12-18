@@ -187,8 +187,6 @@ defmodule Plausible.Sites do
 
   @spec update_accept_traffic_until(Auth.User.t()) :: {:ok, non_neg_integer()}
   def update_accept_traffic_until(user) do
-    user = Plausible.Users.with_subscription(user)
-
     {num_updated, _} =
       user
       |> owned_sites_query()
@@ -350,11 +348,10 @@ defmodule Plausible.Sites do
     end
   end
 
-  defp set_accept_traffic_until(site, user) do
-    Site.set_accept_traffic_until(site, accept_traffic_until(user))
-  end
+  @spec accept_traffic_until(Auth.User.t()) :: Date.t()
+  def accept_traffic_until(user) do
+    user = Plausible.Users.with_subscription(user)
 
-  defp accept_traffic_until(user) do
     cond do
       Plausible.Billing.on_trial?(user) ->
         Timex.shift(user.trial_expiry_date, days: 14)
@@ -365,5 +362,9 @@ defmodule Plausible.Sites do
       user.subscription.next_bill_date ->
         Timex.shift(user.subscription.next_bill_date, days: 30)
     end
+  end
+
+  defp set_accept_traffic_until(site, user) do
+    Site.set_accept_traffic_until(site, accept_traffic_until(user))
   end
 end
