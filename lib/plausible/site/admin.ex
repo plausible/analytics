@@ -81,7 +81,7 @@ defmodule Plausible.SiteAdmin do
     inviter = conn.assigns[:current_user]
 
     if new_owner do
-      {:ok, _} =
+      result =
         Plausible.Site.Memberships.bulk_create_invitation(
           sites,
           inviter,
@@ -90,7 +90,13 @@ defmodule Plausible.SiteAdmin do
           check_permissions: false
         )
 
-      :ok
+      case result do
+        {:ok, _} ->
+          :ok
+
+        {:error, :transfer_to_self} ->
+          {:error, "User is already an owner of one of the sites"}
+      end
     else
       {:error, "User could not be found"}
     end
