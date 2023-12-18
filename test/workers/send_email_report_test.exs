@@ -6,6 +6,9 @@ defmodule Plausible.Workers.SendEmailReportTest do
   alias Plausible.Workers.SendEmailReport
   alias Timex.Timezone
 
+  @green "#15803d"
+  @red "#b91c1c"
+
   describe "weekly reports" do
     test "sends weekly report to all recipients" do
       site = insert(:site, domain: "test-site.com", timezone: "US/Eastern")
@@ -97,6 +100,109 @@ defmodule Plausible.Workers.SendEmailReportTest do
       assert text_of_element(html_body, ".referrer-count") == "1"
       assert text_of_element(html_body, ".page-name") == "/"
       assert text_of_element(html_body, ".page-count") == "2"
+    end
+
+    test "renders correct signs (+/-) and trend colors for positive percentage changes" do
+      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      week_ago = now |> Timex.shift(days: -7)
+      two_weeks_ago = now |> Timex.shift(days: -14)
+
+      site = insert(:site, inserted_at: Timex.shift(now, days: -15))
+      insert(:weekly_report, site: site, recipients: ["user@email.com"])
+
+      populate_stats(site, [
+        build(:pageview, timestamp: two_weeks_ago),
+        build(:pageview, user_id: 1, timestamp: week_ago),
+        build(:pageview, user_id: 2, timestamp: week_ago),
+        build(:pageview, user_id: 2, timestamp: week_ago)
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      visitors_change_container = find(html_body, ".change-visitors div")
+      assert text(visitors_change_container) == "+100%"
+      assert text_of_attr(visitors_change_container, "style") =~ @green
+
+      pageviews_change_container = find(html_body, ".change-pageviews div")
+      assert text(pageviews_change_container) == "+200%"
+      assert text_of_attr(pageviews_change_container, "style") =~ @green
+
+      bounce_rate_change_container = find(html_body, ".change-bounce-rate div")
+      assert text(bounce_rate_change_container) == "-50%"
+      assert text_of_attr(bounce_rate_change_container, "style") =~ @green
+    end
+
+    test "renders correct signs (+/-) and trend colors for negative percentage changes" do
+      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      week_ago = now |> Timex.shift(days: -7)
+      two_weeks_ago = now |> Timex.shift(days: -14)
+
+      site = insert(:site, inserted_at: Timex.shift(now, days: -15))
+      insert(:weekly_report, site: site, recipients: ["user@email.com"])
+
+      populate_stats(site, [
+        build(:pageview, user_id: 1, timestamp: two_weeks_ago),
+        build(:pageview, user_id: 2, timestamp: two_weeks_ago),
+        build(:pageview, user_id: 2, timestamp: two_weeks_ago),
+        build(:pageview, timestamp: week_ago)
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      visitors_change_container = find(html_body, ".change-visitors div")
+      assert text(visitors_change_container) == "-50%"
+      assert text_of_attr(visitors_change_container, "style") =~ @red
+
+      pageviews_change_container = find(html_body, ".change-pageviews div")
+      assert text(pageviews_change_container) == "-67%"
+      assert text_of_attr(pageviews_change_container, "style") =~ @red
+
+      bounce_rate_change_container = find(html_body, ".change-bounce-rate div")
+      assert text(bounce_rate_change_container) == "+50%"
+      assert text_of_attr(bounce_rate_change_container, "style") =~ @red
+    end
+
+    test "renders 0% changes with a green color and without a sign" do
+      now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+      week_ago = now |> Timex.shift(days: -7)
+      two_weeks_ago = now |> Timex.shift(days: -14)
+
+      site = insert(:site, inserted_at: Timex.shift(now, days: -15))
+      insert(:weekly_report, site: site, recipients: ["user@email.com"])
+
+      populate_stats(site, [
+        build(:pageview, timestamp: two_weeks_ago),
+        build(:pageview, timestamp: week_ago)
+      ])
+
+      perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
+
+      assert_delivered_email_matches(%{
+        to: [nil: "user@email.com"],
+        html_body: html_body
+      })
+
+      visitors_change_container = find(html_body, ".change-visitors div")
+      assert text(visitors_change_container) == "0%"
+      assert text_of_attr(visitors_change_container, "style") =~ @green
+
+      pageviews_change_container = find(html_body, ".change-pageviews div")
+      assert text(pageviews_change_container) == "0%"
+      assert text_of_attr(pageviews_change_container, "style") =~ @green
+
+      bounce_rate_change_container = find(html_body, ".change-bounce-rate div")
+      assert text(bounce_rate_change_container) == "0%"
+      assert text_of_attr(bounce_rate_change_container, "style") =~ @green
     end
   end
 

@@ -41,13 +41,13 @@
         </mj-text>
         <%= cond do %>
           <% @change_visitors == nil -> %>
-            <mj-text mj-class="text-sm">N/A</mj-text>
+            <mj-text css-class="change-visitors" mj-class="text-sm">N/A</mj-text>
           <% @change_visitors >= 0 -> %>
-            <mj-text mj-class="text-sm trend-good">
-            +<%= @change_visitors %>%
+            <mj-text css-class="change-visitors" mj-class="text-sm trend-good">
+            <%= "#{if @change_visitors != 0, do: "+"}#{@change_visitors}%" %>
             </mj-text>
           <% @change_visitors < 0 -> %>
-            <mj-text mj-class="text-sm trend-bad">
+            <mj-text css-class="change-visitors" mj-class="text-sm trend-bad">
             <%= @change_visitors %>%
             </mj-text>
         <% end %>
@@ -60,13 +60,13 @@
         </mj-text>
         <%= cond do %>
           <% is_nil(@change_pageviews) -> %>
-            <mj-text mj-class="text-sm">N/A</mj-text>
+            <mj-text css-class="change-pageviews" mj-class="text-sm">N/A</mj-text>
           <% @change_pageviews >= 0 -> %>
-            <mj-text mj-class="text-sm trend-good">
-            +<%= @change_pageviews %>%
+            <mj-text css-class="change-pageviews" mj-class="text-sm trend-good">
+            <%= "#{if @change_pageviews != 0, do: "+"}#{@change_pageviews}%" %>
             </mj-text>
           <% @change_pageviews < 0 -> %>
-            <mj-text mj-class="text-sm trend-bad">
+            <mj-text css-class="change-pageviews" mj-class="text-sm trend-bad">
             <%= @change_pageviews %>%
             </mj-text>
         <% end %>
@@ -81,13 +81,13 @@
 
         <%= cond do %>
           <% @change_bounce_rate == nil -> %>
-            <mj-text mj-class="text-sm">N/A</mj-text>
+            <mj-text css-class="change-bounce-rate" mj-class="text-sm">N/A</mj-text>
           <% @change_bounce_rate <= 0 -> %>
-            <mj-text mj-class="text-sm trend-good">
+            <mj-text css-class="change-bounce-rate" mj-class="text-sm trend-good">
             <%= @change_bounce_rate %>%
             </mj-text>
           <% @change_bounce_rate > 0 -> %>
-            <mj-text mj-class="text-sm trend-bad">
+            <mj-text css-class="change-bounce-rate" mj-class="text-sm trend-bad">
             +<%= @change_bounce_rate %>%
             </mj-text>
         <% end %>
