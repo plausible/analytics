@@ -26,7 +26,7 @@ defmodule PlausibleWeb.InvitationController do
         conn
         |> put_flash(
           :error,
-          "Plan limits exceeded: #{PlausibleWeb.TextHelpers.pretty_list(limits)}}."
+          "Plan limits exceeded: #{PlausibleWeb.TextHelpers.pretty_list(limits)}."
         )
         |> redirect(to: "/sites")
 
