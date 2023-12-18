@@ -73,7 +73,7 @@ defmodule Plausible.Workers.SendEmailReport do
     login_link = user && Plausible.Sites.is_member?(user.id, site)
 
     template =
-      PlausibleWeb.Email.weekly_report(email, site,
+      PlausibleWeb.Email.stats_report(email, site,
         unique_visitors: curr_period[:visitors][:value],
         change_visitors: change_visitors,
         pageviews: curr_period[:pageviews][:value],
