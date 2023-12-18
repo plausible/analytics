@@ -595,6 +595,144 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
+  describe "monthly_pageview_usage/2" do
+    test "returns empty usage for user without subscription and without any sites" do
+      user =
+        insert(:user)
+        |> Plausible.Users.with_subscription()
+
+      assert %{
+               last_30_days: %{
+                 total: 0,
+                 custom_events: 0,
+                 pageviews: 0,
+                 date_range: date_range
+               }
+             } = Quota.monthly_pageview_usage(user)
+
+      assert date_range.last == Date.utc_today()
+      assert Date.compare(date_range.first, date_range.last) == :lt
+    end
+
+    test "returns usage for user without subscription with a site" do
+      user =
+        insert(:user)
+        |> Plausible.Users.with_subscription()
+
+      site = insert(:site, members: [user])
+
+      now = NaiveDateTime.utc_now()
+
+      populate_stats(site, [
+        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
+        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
+        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+      ])
+
+      assert %{
+               last_30_days: %{
+                 total: 5,
+                 custom_events: 2,
+                 pageviews: 3,
+                 date_range: %{}
+               }
+             } = Quota.monthly_pageview_usage(user)
+    end
+
+    test "returns usage for user with subscription and a site" do
+      today = Date.utc_today()
+
+      user =
+        insert(:user,
+          subscription: build(:subscription, last_bill_date: Timex.shift(today, days: -8))
+        )
+
+      site = insert(:site, members: [user])
+
+      now = NaiveDateTime.utc_now()
+
+      populate_stats(site, [
+        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
+        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
+        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+      ])
+
+      assert %{
+               current_cycle: %{
+                 total: 3,
+                 custom_events: 1,
+                 pageviews: 2,
+                 date_range: %{}
+               },
+               last_cycle: %{
+                 total: 2,
+                 custom_events: 1,
+                 pageviews: 1,
+                 date_range: %{}
+               },
+               penultimate_cycle: %{
+                 total: 1,
+                 custom_events: 1,
+                 pageviews: 0,
+                 date_range: %{}
+               }
+             } = Quota.monthly_pageview_usage(user)
+    end
+
+    test "returns usage for only a subset of site IDs" do
+      today = Date.utc_today()
+
+      user =
+        insert(:user,
+          subscription: build(:subscription, last_bill_date: Timex.shift(today, days: -8))
+        )
+
+      site1 = insert(:site, members: [user])
+      site2 = insert(:site, members: [user])
+      site3 = insert(:site, members: [user])
+
+      now = NaiveDateTime.utc_now()
+
+      for site <- [site1, site2, site3] do
+        populate_stats(site, [
+          build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
+          build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
+          build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
+          build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
+          build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
+          build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+        ])
+      end
+
+      assert %{
+               current_cycle: %{
+                 total: 6,
+                 custom_events: 2,
+                 pageviews: 4,
+                 date_range: %{}
+               },
+               last_cycle: %{
+                 total: 4,
+                 custom_events: 2,
+                 pageviews: 2,
+                 date_range: %{}
+               },
+               penultimate_cycle: %{
+                 total: 2,
+                 custom_events: 2,
+                 pageviews: 0,
+                 date_range: %{}
+               }
+             } = Quota.monthly_pageview_usage(user, [site1.id, site3.id])
+    end
+  end
+
   describe "usage_cycle/1" do
     setup do
       user = insert(:user)
