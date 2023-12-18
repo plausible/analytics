@@ -2,6 +2,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
   use Plausible.DataCase
   use Bamboo.Test
   use Oban.Testing, repo: Plausible.Repo
+  import Plausible.Test.Support.HTML
   alias Plausible.Workers.SendEmailReport
   alias Timex.Timezone
 
@@ -65,9 +66,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
       })
 
       # Should find 2 visiors
-
-      page_count = html_body |> Floki.find(".page-count") |> Floki.text() |> String.trim()
-      assert page_count == "2"
+      assert text_of_element(html_body, ".page-count") == "2"
     end
 
     test "includes the correct stats" do
@@ -92,33 +91,12 @@ defmodule Plausible.Workers.SendEmailReportTest do
         html_body: html_body
       })
 
-      {:ok, document} = Floki.parse_document(html_body)
-
-      visitors =
-        Floki.find(document, ".visitors")
-        |> List.first()
-        |> Floki.text()
-        |> String.trim()
-
-      assert visitors == "2"
-
-      pageviews = Floki.find(document, ".pageviews") |> Floki.text() |> String.trim()
-      assert pageviews == "3"
-
-      referrer_name =
-        document |> Floki.find(".referrer-name") |> List.first() |> Floki.text() |> String.trim()
-
-      referrer_count =
-        document |> Floki.find(".referrer-count") |> List.first() |> Floki.text() |> String.trim()
-
-      assert referrer_name == "Google"
-      assert referrer_count == "1"
-
-      page_name = document |> Floki.find(".page-name") |> Floki.text() |> String.trim()
-      page_count = document |> Floki.find(".page-count") |> Floki.text() |> String.trim()
-
-      assert page_name == "/"
-      assert page_count == "2"
+      assert text_of_element(html_body, ".visitors") == "2"
+      assert text_of_element(html_body, ".pageviews") == "3"
+      assert text_of_element(html_body, ".referrer-name") == "Google"
+      assert text_of_element(html_body, ".referrer-count") == "1"
+      assert text_of_element(html_body, ".page-name") == "/"
+      assert text_of_element(html_body, ".page-count") == "2"
     end
   end
 
