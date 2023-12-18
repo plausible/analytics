@@ -4,6 +4,7 @@ defmodule Plausible.SitesTest do
   alias Plausible.Sites
 
   describe "create a site" do
+    @tag :full_build_only
     test "sets accept_traffic_until for trial + 14 days" do
       user = insert(:user)
 
@@ -24,6 +25,7 @@ defmodule Plausible.SitesTest do
       assert site.accept_traffic_until == ~D[2035-01-01]
     end
 
+    @tag :full_build_only
     test "sets accept_traffic_until to +30d for subscriptions" do
       future = Date.add(Date.utc_today(), 30)
       user = insert(:user, subscription: build(:subscription, next_bill_date: future))
@@ -36,6 +38,7 @@ defmodule Plausible.SitesTest do
   end
 
   describe "update_accept_traffic_until" do
+    @tag :full_build_only
     test "updates owned sites" do
       user = insert(:user)
 

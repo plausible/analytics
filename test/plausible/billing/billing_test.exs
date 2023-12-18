@@ -182,6 +182,7 @@ defmodule Plausible.BillingTest do
       refute Repo.reload!(site).locked
     end
 
+    @tag :full_build_only
     test "updates accept_traffic_until" do
       user = insert(:user)
       site = insert(:site, locked: true, members: [user], accept_traffic_until: ~D[2000-01-01])
@@ -256,6 +257,7 @@ defmodule Plausible.BillingTest do
       refute Repo.reload!(site).locked
     end
 
+    @tag :full_build_only
     test "updates accept_traffic_until" do
       user = insert(:user)
       site = insert(:site, locked: true, members: [user], accept_traffic_until: ~D[2000-01-01])

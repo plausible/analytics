@@ -3,6 +3,7 @@ defmodule Plausible.Sites do
   Sites context functions.
   """
 
+  use Plausible
   import Ecto.Query
 
   alias Plausible.Auth
@@ -13,7 +14,7 @@ defmodule Plausible.Sites do
 
   require Plausible.Site.UserPreference
 
-  @accept_traffic_until_free10k ~D[2035-01-01]
+  @accept_traffic_until_free ~D[2035-01-01]
   @type list_opt() :: {:filter_by_domain, String.t()}
 
   def get_by_domain(domain) do
@@ -349,18 +350,24 @@ defmodule Plausible.Sites do
   end
 
   @spec accept_traffic_until(Auth.User.t()) :: Date.t()
-  def accept_traffic_until(user) do
-    user = Plausible.Users.with_subscription(user)
+  on_full_build do
+    def accept_traffic_until(user) do
+      user = Plausible.Users.with_subscription(user)
 
-    cond do
-      Plausible.Billing.on_trial?(user) ->
-        Timex.shift(user.trial_expiry_date, days: 14)
+      cond do
+        Plausible.Billing.on_trial?(user) ->
+          Timex.shift(user.trial_expiry_date, days: 14)
 
-      user.subscription.paddle_plan_id == "free_10k" ->
-        @accept_traffic_until_free10k
+        user.subscription.paddle_plan_id == "free_10k" ->
+          @accept_traffic_until_free
 
-      user.subscription.next_bill_date ->
-        Timex.shift(user.subscription.next_bill_date, days: 30)
+        user.subscription.next_bill_date ->
+          Timex.shift(user.subscription.next_bill_date, days: 30)
+      end
+    end
+  else
+    def accept_traffic_until(_user) do
+      @accept_traffic_until_free
     end
   end
 
