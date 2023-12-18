@@ -167,13 +167,19 @@ defmodule Plausible.Sites do
   defp maybe_filter_by_domain(query, _), do: query
 
   def create(user, params) do
+    user = Plausible.Users.with_subscription(user)
+
     with :ok <- Quota.ensure_can_add_new_site(user) do
       Ecto.Multi.new()
-      |> Ecto.Multi.insert(:site, Site.new(params))
-      |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
+      |> maybe_start_trial(user)
+      |> Ecto.Multi.insert(:site, fn %{user: user} ->
+        params
+        |> Site.new()
+        |> set_accept_traffic_until(user)
+      end)
+      |> Ecto.Multi.insert(:site_membership, fn %{site: site, user: user} ->
         Site.Membership.new(site, user)
       end)
-      |> maybe_start_trial(user)
       |> Repo.transaction()
     end
   end
@@ -185,8 +191,24 @@ defmodule Plausible.Sites do
         Ecto.Multi.update(multi, :user, changeset)
 
       _ ->
-        multi
+        Ecto.Multi.put(multi, :user, user)
     end
+  end
+
+  defp set_accept_traffic_until(site, user) do
+    accept_traffic_until =
+      cond do
+        Plausible.Billing.on_trial?(user) ->
+          Timex.shift(user.trial_expiry_date, days: 14)
+
+        user.subscription.paddle_plan_id == "free_10k" ->
+          Timex.shift(user.trial_expiry_date, years: 10)
+
+        user.subscription.next_bill_date ->
+          Timex.shift(user.subscription.next_bill_date, days: 30)
+      end
+
+    Site.set_accept_traffic_until(site, accept_traffic_until)
   end
 
   @spec stats_start_date(Site.t()) :: Date.t() | nil

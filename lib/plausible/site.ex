@@ -145,6 +145,10 @@ defmodule Plausible.Site do
     change(site, native_stats_start_at: val)
   end
 
+  def set_accept_traffic_until(site, date) do
+    change(site, accept_traffic_until: date)
+  end
+
   def start_import(site, start_date, end_date, imported_source, status \\ "importing") do
     change(site,
       imported_data: %{

@@ -3,6 +3,39 @@ defmodule Plausible.SitesTest do
 
   alias Plausible.Sites
 
+  describe "create a site" do
+    test "sets accept_traffic_until for trial + 14 days" do
+      user = insert(:user)
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      {:ok, %{site: site}} = Sites.create(user, params)
+
+      expiry = user.trial_expiry_date
+      assert Date.after?(expiry, Date.utc_today())
+      assert Date.diff(site.accept_traffic_until, expiry) == 14
+    end
+
+    test "sets accept_traffic_until to some time in the future for free accounts" do
+      user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      {:ok, %{site: site}} = Sites.create(user, params)
+
+      assert Date.diff(site.accept_traffic_until, Date.utc_today()) > 3000
+    end
+
+    test "sets accept_traffic_until to +30d for subscriptions" do
+      future = Date.add(Date.utc_today(), 30)
+      user = insert(:user, subscription: build(:subscription, next_bill_date: future))
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      {:ok, %{site: site}} = Sites.create(user, params)
+
+      assert Date.diff(site.accept_traffic_until, Date.utc_today()) == 60
+    end
+  end
+
   describe "is_member?" do
     test "is true if user is a member of the site" do
       user = insert(:user)
