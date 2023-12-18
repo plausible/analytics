@@ -105,6 +105,29 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                AcceptInvitation.transfer_ownership(site, user_on_paused_subscription)
     end
 
+    test "does not allow transferring to self" do
+      current_owner = insert(:user)
+      site = insert(:site, members: [current_owner])
+
+      assert {:error, :transfer_to_self} =
+               AcceptInvitation.transfer_ownership(site, current_owner)
+    end
+
+    @tag :full_build_only
+    test "does not allow transferring to and account without suitable plan" do
+      current_owner = insert(:user)
+      site = insert(:site, members: [current_owner])
+
+      new_owner =
+        insert(:user, subscription: build(:growth_subscription))
+
+      # fill site quota
+      insert_list(10, :site, members: [new_owner])
+
+      assert {:error, {:over_plan_limits, [:site_limit]}} =
+               AcceptInvitation.transfer_ownership(site, new_owner)
+    end
+
     test "allows transferring to an account without a subscription on self hosted" do
       current_owner = insert(:user)
       site = insert(:site, members: [current_owner])
