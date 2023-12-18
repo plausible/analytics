@@ -150,8 +150,4 @@ defmodule PlausibleWeb.BillingController do
       {:error, :no_subscription}
     end
   end
-
-  def preview_susbcription(_, _) do
-    {:error, :no_user_id}
-  end
 end
