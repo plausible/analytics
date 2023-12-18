@@ -5,3 +5,5 @@ You need to <%= link("renew your subscription", to: PlausibleWeb.Router.Helpers.
 If you don't want to continue your subscription, there's no action required. You will lose access to the stats on <%= @date %>.
 <br /><br />
 Have a question, feedback or need some guidance? Just reply to this email to get in touch!
+
+Note that we'll stop accepting stats at <%= @accept_traffic_until %>. We're an independent, bootstrapped service and we don't sell your data, so this will reduce our server costs and help keep us sustainable. If you'd like to continue counting your site stats in a privacy-friendly way, please login to your Plausible account and renew your subscription.
