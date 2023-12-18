@@ -271,6 +271,7 @@ defmodule Plausible.Billing do
 
     user
     |> maybe_remove_grace_period()
+    |> tap(&Plausible.Sites.update_accept_traffic_until/1)
     |> Plausible.Users.maybe_reset_next_upgrade_override()
     |> tap(&Plausible.Billing.SiteLocker.update_sites_for/1)
     |> maybe_adjust_api_key_limits()

@@ -13,6 +13,7 @@ defmodule Plausible.Sites do
 
   require Plausible.Site.UserPreference
 
+  @accept_traffic_until_free10k ~D[2035-01-01]
   @type list_opt() :: {:filter_by_domain, String.t()}
 
   def get_by_domain(domain) do
@@ -184,31 +185,21 @@ defmodule Plausible.Sites do
     end
   end
 
-  defp maybe_start_trial(multi, user) do
-    case user.trial_expiry_date do
-      nil ->
-        changeset = Auth.User.start_trial(user)
-        Ecto.Multi.update(multi, :user, changeset)
+  @spec update_accept_traffic_until(Auth.User.t()) :: {:ok, non_neg_integer()}
+  def update_accept_traffic_until(user) do
+    user = Plausible.Users.with_subscription(user)
 
-      _ ->
-        Ecto.Multi.put(multi, :user, user)
-    end
-  end
+    {num_updated, _} =
+      user
+      |> owned_sites_query()
+      |> Repo.update_all(
+        set: [
+          accept_traffic_until: accept_traffic_until(user),
+          updated_at: DateTime.utc_now()
+        ]
+      )
 
-  defp set_accept_traffic_until(site, user) do
-    accept_traffic_until =
-      cond do
-        Plausible.Billing.on_trial?(user) ->
-          Timex.shift(user.trial_expiry_date, days: 14)
-
-        user.subscription.paddle_plan_id == "free_10k" ->
-          Timex.shift(user.trial_expiry_date, years: 10)
-
-        user.subscription.next_bill_date ->
-          Timex.shift(user.subscription.next_bill_date, days: 30)
-      end
-
-    Site.set_accept_traffic_until(site, accept_traffic_until)
+    {:ok, num_updated}
   end
 
   @spec stats_start_date(Site.t()) :: Date.t() | nil
@@ -346,5 +337,33 @@ defmodule Plausible.Sites do
       where: sm.role == :owner,
       where: sm.user_id == ^user.id
     )
+  end
+
+  defp maybe_start_trial(multi, user) do
+    case user.trial_expiry_date do
+      nil ->
+        changeset = Auth.User.start_trial(user)
+        Ecto.Multi.update(multi, :user, changeset)
+
+      _ ->
+        Ecto.Multi.put(multi, :user, user)
+    end
+  end
+
+  defp set_accept_traffic_until(site, user) do
+    Site.set_accept_traffic_until(site, accept_traffic_until(user))
+  end
+
+  defp accept_traffic_until(user) do
+    cond do
+      Plausible.Billing.on_trial?(user) ->
+        Timex.shift(user.trial_expiry_date, days: 14)
+
+      user.subscription.paddle_plan_id == "free_10k" ->
+        @accept_traffic_until_free10k
+
+      user.subscription.next_bill_date ->
+        Timex.shift(user.subscription.next_bill_date, days: 30)
+    end
   end
 end
