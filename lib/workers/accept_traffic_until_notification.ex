@@ -24,7 +24,7 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
     # send at most one notification per user, per day
     sent_today =
       from s in "sent_accept_traffic_until_notifications",
-        where: s.sent_at == ^today
+        where: s.sent_on == ^today
 
     notifications =
       Repo.all(
@@ -86,7 +86,7 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
     Repo.insert_all("sent_accept_traffic_until_notifications", [
       %{
         user_id: notification.id,
-        sent_at: today
+        sent_on: today
       }
     ])
   end
