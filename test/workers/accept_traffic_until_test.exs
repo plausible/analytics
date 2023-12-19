@@ -1,4 +1,5 @@
 defmodule Plausible.Workers.AcceptTrafficUntilTest do
+  @moduletag :full_build_only
   use Plausible.DataCase, async: true
   use Bamboo.Test
 
