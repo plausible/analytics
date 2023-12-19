@@ -1,9 +1,10 @@
 defmodule Plausible.Workers.AcceptTrafficUntilTest do
-  @moduletag :full_build_only
   use Plausible.DataCase, async: true
   use Bamboo.Test
 
   alias Plausible.Workers.AcceptTrafficUntil
+
+  @moduletag :full_build_only
 
   test "does not send any notifications when sites have no stats" do
     today = Date.utc_today()
