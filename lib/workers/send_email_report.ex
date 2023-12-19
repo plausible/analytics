@@ -1,8 +1,7 @@
 defmodule Plausible.Workers.SendEmailReport do
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
-  alias Plausible.Stats.{Query, Comparisons, Compare}
-  alias Plausible.Stats
+  alias Plausible.Stats.Query
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"interval" => "weekly", "site_id" => site_id}}) do
@@ -13,7 +12,7 @@ defmodule Plausible.Workers.SendEmailReport do
       |> Map.put(:type, :weekly)
       |> Map.put(:name, "Weekly")
       |> put_last_week_query()
-      |> put_stats_report()
+      |> put_stats()
       |> send_report_for_all(site.weekly_report.recipients)
     else
       :discard
@@ -29,7 +28,7 @@ defmodule Plausible.Workers.SendEmailReport do
       |> Map.put(:type, :monthly)
       |> put_last_month_query()
       |> put_monthly_report_name()
-      |> put_stats_report()
+      |> put_stats()
       |> send_report_for_all(site.monthly_report.recipients)
     else
       :discard
@@ -81,23 +80,7 @@ defmodule Plausible.Workers.SendEmailReport do
     Map.put(assigns, :name, Timex.format!(query.date_range.first, "{Mfull}"))
   end
 
-  defp put_stats_report(%{site: site, query: query} = assigns) do
-    {:ok, prev_query} = Comparisons.compare(site, query, "previous_period")
-    curr_period = Stats.aggregate(site, query, [:pageviews, :visitors, :bounce_rate])
-    prev_period = Stats.aggregate(site, prev_query, [:pageviews, :visitors, :bounce_rate])
-
-    source_query = Query.put_filter(query, "visit:source", {:is_not, "Direct / None"})
-
-    assigns
-    |> Map.merge(%{
-      pageviews: curr_period[:pageviews][:value],
-      change_pageviews: Compare.calculate_change(:pageviews, prev_period, curr_period),
-      unique_visitors: curr_period[:visitors][:value],
-      change_visitors: Compare.calculate_change(:visitors, prev_period, curr_period),
-      bounce_rate: curr_period[:bounce_rate][:value],
-      change_bounce_rate: Compare.calculate_change(:bounce_rate, prev_period, curr_period),
-      pages: Stats.breakdown(site, query, "event:page", [:visitors], {5, 1}),
-      sources: Stats.breakdown(site, source_query, "visit:source", [:visitors], {5, 1})
-    })
+  defp put_stats(%{site: site, query: query} = assigns) do
+    Map.put(assigns, :stats, Plausible.Stats.EmailReport.get(site, query))
   end
 end
