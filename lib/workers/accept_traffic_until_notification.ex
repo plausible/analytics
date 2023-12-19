@@ -83,11 +83,16 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
   end
 
   defp store_sent(notification, today) do
-    Repo.insert_all("sent_accept_traffic_until_notifications", [
-      %{
-        user_id: notification.id,
-        sent_on: today
-      }
-    ])
+    Repo.insert_all(
+      "sent_accept_traffic_until_notifications",
+      [
+        %{
+          user_id: notification.id,
+          sent_on: today
+        }
+      ],
+      on_conflict: :nothing,
+      conflict_target: [:user_id, :sent_on]
+    )
   end
 end
