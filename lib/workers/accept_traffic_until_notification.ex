@@ -1,4 +1,13 @@
 defmodule Plausible.Workers.AcceptTrafficUntil do
+  @moduledoc """
+  A worker meant to be run once a day that sends out e-mail notifications to site
+  owners assuming:
+    - their sites still receive traffic (i.e. have stats for yesterday)
+    - `site.accept_traffic_until` is approaching either tomorrow or exactly in 7 days
+
+  Users having no sites or sites that receive no traffic, won't be notified.
+  We make a tiny effort here to make sure we send the same notification at most once a day.
+  """
   use Oban.Worker, queue: :check_accept_traffic_until
   import Ecto.Query
 
