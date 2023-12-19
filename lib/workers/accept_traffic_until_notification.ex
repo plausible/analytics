@@ -22,9 +22,10 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
     next_week = today |> Date.add(+7)
 
     # send at most one notification per user, per day
-    sent_today =
+    sent_today_query =
       from s in "sent_accept_traffic_until_notifications",
-        where: s.sent_on == ^today
+        where: s.user_id == parent_as(:user).id and s.sent_on == ^today,
+        select: true
 
     notifications =
       Repo.all(
@@ -32,13 +33,12 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
           join: sm in Site.Membership,
           on: sm.site_id == s.id,
           join: u in User,
+          as: :user,
           on: u.id == sm.user_id,
           where: sm.role == :owner,
           where: sm.user_id == u.id,
           where: s.accept_traffic_until == ^tomorrow or s.accept_traffic_until == ^next_week,
-          left_join: sent in ^sent_today,
-          on: sent.user_id == u.id,
-          where: is_nil(sent.user_id),
+          where: not exists(sent_today_query),
           select: %{
             id: u.id,
             email: u.email,
