@@ -269,7 +269,7 @@ defmodule PlausibleWeb.EmailTest do
       assert body =~ plausible_link()
 
       assert body =~
-               "We've noticed that you're still sending us stats so we're writing to inform you that we'll stop accepting stats from your sites next week."
+               "We've noticed that you're still sending us stats so we're writing to inform you that we'll stop accepting stats from your sites tomorrow."
     end
   end
 
