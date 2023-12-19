@@ -352,6 +352,22 @@ defmodule PlausibleWeb.Email do
     })
   end
 
+  def approaching_accept_traffic_until(user) do
+    base_email()
+    |> to(user.email)
+    |> tag("drop-traffic-warning-first")
+    |> subject("We'll stop counting your stats")
+    |> render("approaching_accept_traffic_until.html", user: user)
+  end
+
+  def approaching_accept_traffic_until_tomorrow(user) do
+    base_email()
+    |> to(user.email)
+    |> tag("drop-traffic-warning-final")
+    |> subject("A reminder that we'll stop counting your stats tomorrow")
+    |> render("approaching_accept_traffic_until.html", user: user)
+  end
+
   @doc """
     Unlike the default 'base' emails, priority emails cannot be unsubscribed from. This is achieved
     by sending them through a dedicated 'priority' message stream in Postmark.
