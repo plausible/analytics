@@ -52,17 +52,15 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
       case {has_stats?(notification.site_ids, today), notification.deadline} do
         {true, ^tomorrow} ->
           notification
+          |> store_sent(today)
           |> PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow()
           |> Plausible.Mailer.send()
 
-          store_sent(notification, today)
-
         {true, ^next_week} ->
           notification
+          |> store_sent(today)
           |> PlausibleWeb.Email.approaching_accept_traffic_until()
           |> Plausible.Mailer.send()
-
-          store_sent(notification, today)
 
         _ ->
           nil
@@ -94,5 +92,7 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
       on_conflict: :nothing,
       conflict_target: [:user_id, :sent_on]
     )
+
+    notification
   end
 end
