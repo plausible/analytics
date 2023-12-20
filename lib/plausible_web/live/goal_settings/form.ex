@@ -9,86 +9,56 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   alias PlausibleWeb.Live.Components.ComboBox
   alias Plausible.Repo
 
-  def mount(
-        _params,
-        %{
-          "site_id" => _site_id,
-          "current_user_id" => user_id,
-          "domain" => domain,
-          "rendered_by" => pid
-        },
-        socket
-      ) do
-    form = to_form(Plausible.Goal.changeset(%Plausible.Goal{}))
-
-    site =
-      user_id
-      |> Plausible.Sites.get_for_user!(domain, [:owner, :admin, :super_admin])
-      |> Repo.preload([:owner])
-
+  def update(assigns, socket) do
+    site = Repo.preload(assigns.site, [:owner])
     owner = Plausible.Users.with_subscription(site.owner)
-    site = Map.put(site, :owner, owner)
+    site = %{site | owner: owner}
 
     has_access_to_revenue_goals? =
       Plausible.Billing.Feature.RevenueGoals.check_availability(owner) == :ok
 
     {:ok,
      assign(socket,
-       current_user: Repo.get(Plausible.Auth.User, user_id),
-       form: form,
-       domain: domain,
-       rendered_by: pid,
+       current_user: assigns.current_user,
+       form: new_form(),
+       domain: assigns.domain,
        tabs: %{custom_events: true, pageviews: false},
        site: site,
-       has_access_to_revenue_goals?: has_access_to_revenue_goals?
+       has_access_to_revenue_goals?: has_access_to_revenue_goals?,
+       on_save_goal: assigns.on_save_goal
      )}
   end
 
   def render(assigns) do
     ~H"""
-    <div
-      id={"#{@socket.id}-modal"}
-      data-modal
-      x-data="{ modalOpen: false }"
-      x-on:open-modal.window={"if ($event.detail == '#{@socket.id}') modalOpen = true"}
-      x-on:close-modal.window={"if ($event.detail == '#{@socket.id}') modalOpen = false"}
-      x-on:keydown.escape.window="modalOpen = false"
-    >
-      <div x-show="modalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
-      </div>
-      <div
-        x-show="modalOpen"
-        class="fixed inset-0 flex items-center justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden"
+    <div class="w-1/2 h-full">
+      <.form
+        :let={f}
+        for={@form}
+        class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
+        phx-submit="save-goal"
+        phx-target={@myself}
+        x-on:click.outside="modalOpen = false"
       >
-        <div class="w-1/2 h-full">
-          <.form
-            :let={f}
-            for={@form}
-            class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
-            phx-submit="save-goal"
-            x-on:click.outside="modalOpen = false"
-          >
-            <h2 class="text-xl font-black dark:text-gray-100">Add Goal for <%= @domain %></h2>
+        <h2 class="text-xl font-black dark:text-gray-100">Add Goal for <%= @domain %></h2>
 
-            <.tabs tabs={@tabs} />
+        <.tabs tabs={@tabs} myself={@myself} />
 
-            <.custom_event_fields
-              :if={@tabs.custom_events}
-              f={f}
-              current_user={@current_user}
-              site={@site}
-              has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
-            />
-            <.pageview_fields :if={@tabs.pageviews} f={f} site={@site} />
+        <.custom_event_fields
+          :if={@tabs.custom_events}
+          f={f}
+          current_user={@current_user}
+          site={@site}
+          has_access_to_revenue_goals?={@has_access_to_revenue_goals?}
+        />
+        <.pageview_fields :if={@tabs.pageviews} f={f} site={@site} />
 
-            <div class="py-4">
-              <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
-                Add Goal →
-              </PlausibleWeb.Components.Generic.button>
-            </div>
-          </.form>
+        <div class="py-4">
+          <PlausibleWeb.Components.Generic.button type="submit" class="w-full">
+            Add Goal →
+          </PlausibleWeb.Components.Generic.button>
         </div>
-      </div>
+      </.form>
     </div>
     """
   end
@@ -238,8 +208,8 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     ~H"""
     <div class="mt-6 font-medium dark:text-gray-100">Goal Trigger</div>
     <div class="my-3 w-full flex rounded border border-gray-300 dark:border-gray-500">
-      <.custom_events_tab tabs={@tabs} />
-      <.pageviews_tab tabs={@tabs} />
+      <.custom_events_tab tabs={@tabs} myself={@myself} />
+      <.pageviews_tab tabs={@tabs} myself={@myself} />
     </div>
     """
   end
@@ -255,6 +225,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       ]}
       id="event-tab"
       phx-click="switch-tab"
+      phx-target={@myself}
     >
       Custom Event
     </a>
@@ -271,6 +242,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       ]}
       id="pageview-tab"
       phx-click="switch-tab"
+      phx-target={@myself}
     >
       Pageview
     </a>
@@ -294,8 +266,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def handle_event("save-goal", %{"goal" => goal}, socket) do
     case Plausible.Goals.create(socket.assigns.site, goal) do
       {:ok, goal} ->
-        send(socket.assigns.rendered_by, {:goal_added, Map.put(goal, :funnels, [])})
-        {:noreply, socket}
+        goal
+        |> Map.put(:funnels, [])
+        |> socket.assigns.on_save_goal.()
+
+        {:noreply, assign(socket, form: new_form())}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
@@ -308,5 +283,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     site
     |> Plausible.Stats.filter_suggestions(query, "page", input)
     |> Enum.map(fn %{label: label, value: value} -> {label, value} end)
+  end
+
+  defp new_form() do
+    %Plausible.Goal{}
+    |> Plausible.Goal.changeset()
+    |> to_form()
   end
 end

@@ -20,13 +20,15 @@ defmodule PlausibleWeb.Live.GoalSettings do
       |> assign_new(:all_goals, fn %{site: site} ->
         Goals.for_site(site, preload_funnels?: true)
       end)
+      |> assign_new(:current_user, fn ->
+        Plausible.Repo.get(Plausible.Auth.User, user_id)
+      end)
 
     {:ok,
      assign(socket,
        site_id: site_id,
        domain: domain,
        displayed_goals: socket.assigns.all_goals,
-       current_user_id: user_id,
        filter_text: ""
      )}
   end
@@ -37,17 +39,16 @@ defmodule PlausibleWeb.Live.GoalSettings do
     ~H"""
     <div id="goal-settings-main">
       <.flash_messages flash={@flash} />
-      <%= live_render(
-        @socket,
-        PlausibleWeb.Live.GoalSettings.Form,
-        id: "goals-form",
-        session: %{
-          "current_user_id" => @current_user_id,
-          "domain" => @domain,
-          "site_id" => @site_id,
-          "rendered_by" => self()
-        }
-      ) %>
+      <.live_modal id="goals-form-modal">
+        <.live_component
+          module={PlausibleWeb.Live.GoalSettings.Form}
+          id="goals-form"
+          domain={@domain}
+          site={@site}
+          current_user={@current_user}
+          on_save_goal={fn goal -> send(self(), {:goal_added, goal}) end}
+        />
+      </.live_modal>
       <.live_component
         module={PlausibleWeb.Live.GoalSettings.List}
         id="goals-list"
@@ -55,6 +56,29 @@ defmodule PlausibleWeb.Live.GoalSettings do
         domain={@domain}
         filter_text={@filter_text}
       />
+    </div>
+    """
+  end
+
+  def live_modal(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      data-modal
+      x-cloak
+      x-data="{ modalOpen: false }"
+      x-on:open-modal.window={"if ($event.detail === '#{@id}') modalOpen = true"}
+      x-on:close-modal.window={"if ($event.detail === '#{@id}') modalOpen = false"}
+      x-on:keydown.escape.window="modalOpen = false"
+    >
+      <div x-show="modalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
+      </div>
+      <div
+        x-show="modalOpen"
+        class="fixed inset-0 flex items-center justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden"
+      >
+        <%= render_slot(@inner_block) %>
+      </div>
     </div>
     """
   end
@@ -102,7 +126,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
         displayed_goals: [goal | socket.assigns.all_goals]
       )
       |> put_live_flash(:success, "Goal saved successfully")
-      |> push_event("close-modal", %{id: "goals-form"})
+      |> push_event("close-modal", %{id: "goals-form-modal"})
 
     {:noreply, socket}
   end
