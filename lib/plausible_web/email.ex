@@ -113,7 +113,10 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("trial-over-email")
     |> subject("Your Plausible trial has ended")
-    |> render("trial_over_email.html", user: user)
+    |> render("trial_over_email.html",
+      user: user,
+      extra_offset: Plausible.Auth.User.trial_accept_traffic_until_offset_days()
+    )
   end
 
   def weekly_report(email, site, assigns) do
