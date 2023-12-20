@@ -70,6 +70,9 @@ defmodule Plausible.Billing.Feature do
     Plausible.Billing.Feature.RevenueGoals
   ]
 
+  # Generate a union type for features
+  @type t() :: unquote(Enum.reduce(@features, &{:|, [], [&1, &2]}))
+
   @doc """
   Lists all available feature modules.
   """

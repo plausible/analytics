@@ -733,6 +733,23 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
     end
   end
 
+  describe "for a user with no sites but pending ownership transfer" do
+    setup [:create_user, :log_in]
+
+    test "allows to subscribe and does not render a notice", %{conn: conn, user: user} do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner])
+      insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      refute text_of_element(doc, "#upgrade-eligible-notice") =~ "You cannot start a subscription"
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+      assert text_of_element(doc, @growth_plan_box) =~ "Recommended"
+    end
+  end
+
   defp subscribe_v4_growth(%{user: user}) do
     create_subscription_for(user, paddle_plan_id: @v4_growth_200k_yearly_plan_id)
   end

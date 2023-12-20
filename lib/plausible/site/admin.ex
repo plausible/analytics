@@ -81,7 +81,7 @@ defmodule Plausible.SiteAdmin do
     inviter = conn.assigns[:current_user]
 
     if new_owner do
-      {:ok, _} =
+      result =
         Plausible.Site.Memberships.bulk_create_invitation(
           sites,
           inviter,
@@ -90,7 +90,13 @@ defmodule Plausible.SiteAdmin do
           check_permissions: false
         )
 
-      :ok
+      case result do
+        {:ok, _} ->
+          :ok
+
+        {:error, :transfer_to_self} ->
+          {:error, "User is already an owner of one of the sites"}
+      end
     else
       {:error, "User could not be found"}
     end
@@ -105,8 +111,17 @@ defmodule Plausible.SiteAdmin do
 
     if new_owner do
       case Plausible.Site.Memberships.bulk_transfer_ownership_direct(sites, new_owner) do
-        {:ok, _} -> :ok
-        {:error, :transfer_to_self} -> {:error, "User is already an owner of one of the sites"}
+        {:ok, _} ->
+          :ok
+
+        {:error, :transfer_to_self} ->
+          {:error, "User is already an owner of one of the sites"}
+
+        {:error, :no_plan} ->
+          {:error, "The new owner does not have a subscription"}
+
+        {:error, {:over_plan_limits, limits}} ->
+          {:error, "Plan limits exceeded for one of the sites: #{Enum.join(limits, ", ")}"}
       end
     else
       {:error, "User could not be found"}

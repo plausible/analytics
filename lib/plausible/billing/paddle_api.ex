@@ -148,16 +148,18 @@ defmodule Plausible.Billing.PaddleApi do
   end
 
   def checkout_domain() do
-    case Application.get_env(:plausible, :environment) do
-      "dev" -> "https://sandbox-checkout.paddle.com"
-      _ -> "https://checkout.paddle.com"
+    if Application.get_env(:plausible, :environment) in ["dev", "staging"] do
+      "https://sandbox-checkout.paddle.com"
+    else
+      "https://checkout.paddle.com"
     end
   end
 
   def vendors_domain() do
-    case Application.get_env(:plausible, :environment) do
-      "dev" -> "https://sandbox-vendors.paddle.com"
-      _ -> "https://vendors.paddle.com"
+    if Application.get_env(:plausible, :environment) in ["dev", "staging"] do
+      "https://sandbox-vendors.paddle.com"
+    else
+      "https://vendors.paddle.com"
     end
   end
 
