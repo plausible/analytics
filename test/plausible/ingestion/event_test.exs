@@ -100,6 +100,23 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :throttle
   end
 
+  test "event pipeline drops a request when header x-plausible-ip-type is dc_ip" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    conn = Plug.Conn.put_req_header(conn, "x-plausible-ip-type", "dc_ip")
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :dc_ip
+  end
+
   test "event pipeline drops events for site with accept_trafic_until in the past" do
     yesterday = NaiveDateTime.add(NaiveDateTime.utc_now(), -1, :day)
     site = insert(:site, ingest_rate_limit_threshold: 1, accept_traffic_until: yesterday)
