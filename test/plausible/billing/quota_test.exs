@@ -134,6 +134,20 @@ defmodule Plausible.Billing.QuotaTest do
       assert :site_limit in exceeded_limits
     end
 
+    test "skips pageview limit check when `allow_next_upgrade_override` is set for user" do
+      user = insert(:user, allow_next_upgrade_override: true)
+
+      usage = %{
+        monthly_pageviews: %{last_30_days: %{total: 1_150_001}},
+        team_members: 2,
+        sites: 8
+      }
+
+      plan = Plans.find(@v4_1m_plan_id)
+
+      assert :ok = Quota.ensure_within_plan_limits(user, plan, usage)
+    end
+
     test "by the last 30 days usage, pageview limit for 10k plan is only exceeded when 30% over the limit" do
       user = insert(:user)
 
