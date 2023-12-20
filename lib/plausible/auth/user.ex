@@ -123,7 +123,7 @@ defmodule Plausible.Auth.User do
     expiry_change = get_change(changeset, :trial_expiry_date)
 
     if expiry_change do
-      put_change(changeset, :accept_traffic_until, Date.add(expiry_change, 14))
+      put_change(changeset, :accept_traffic_until, Date.add(expiry_change, @trial_accept_traffic_until_offset_days))
     else
       changeset
     end
