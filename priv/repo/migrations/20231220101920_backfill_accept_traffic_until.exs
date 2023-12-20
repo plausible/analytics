@@ -60,8 +60,6 @@ defmodule Plausible.Repo.Migrations.BackfillAcceptTrafficUntil do
       s.user_id = u1.id
     AND
       s.paddle_plan_id != 'free_10k'
-    AND
-      u1.trial_expiry_date IS NULL
     """
 
     # abandoned accounts (no trial, subscription cancelled, current period needs payment)
@@ -73,8 +71,6 @@ defmodule Plausible.Repo.Migrations.BackfillAcceptTrafficUntil do
       SELECT * FROM subscriptions sub WHERE u2.id = sub.user_id ORDER BY sub.inserted_at DESC LIMIT 1
     ) s ON (true)
     WHERE
-      u1.trial_expiry_date IS NULL
-    AND
       u1.id = u2.id
     AND
       s.status = 'deleted'
