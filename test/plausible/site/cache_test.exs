@@ -38,7 +38,20 @@ defmodule Plausible.Site.CacheTest do
       _ =
         insert(:site,
           domain: "site2.example.com",
-          members: [build(:user, accept_traffic_until: ~D[2021-01-01])]
+          memberships: [
+            build(:site_membership,
+              user: build(:user, accept_traffic_until: ~D[2022-01-01]),
+              role: :viewer
+            ),
+            build(:site_membership,
+              user: build(:user, accept_traffic_until: ~D[2021-01-01]),
+              role: :owner
+            ),
+            build(:site_membership,
+              user: build(:user, accept_traffic_until: ~D[2020-01-01]),
+              role: :admin
+            )
+          ]
         )
 
       :ok = Cache.refresh_all(cache_name: test)
