@@ -30,6 +30,7 @@ defmodule Plausible.Auth.User do
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     field :previous_email, :string
+    field :accept_traffic_until, :date
 
     # A field only used as a manual override - allow subscribing
     # to any plan, even when exceeding its pageview limit
@@ -107,7 +108,8 @@ defmodule Plausible.Auth.User do
       :email_verified,
       :theme,
       :trial_expiry_date,
-      :allow_next_upgrade_override
+      :allow_next_upgrade_override,
+      :accept_traffic_until
     ])
     |> validate_required([:email, :name, :email_verified])
     |> unique_constraint(:email)
@@ -135,7 +137,12 @@ defmodule Plausible.Auth.User do
   end
 
   def start_trial(user) do
-    change(user, trial_expiry_date: trial_expiry())
+    trial_expiry = trial_expiry()
+
+    change(user,
+      trial_expiry_date: trial_expiry,
+      accept_traffic_until: Date.add(trial_expiry, 14)
+    )
   end
 
   def end_trial(user) do

@@ -4,68 +4,13 @@ defmodule Plausible.SitesTest do
   alias Plausible.Sites
 
   describe "create a site" do
-    @tag :full_build_only
-    test "sets accept_traffic_until for trial + 14 days" do
+    test "creates a site" do
       user = insert(:user)
 
       params = %{"domain" => "example.com", "timezone" => "Europe/London"}
-      {:ok, %{site: site}} = Sites.create(user, params)
 
-      expiry = user.trial_expiry_date
-      assert Date.after?(expiry, Date.utc_today())
-      assert Date.diff(site.accept_traffic_until, expiry) == 14
-    end
-
-    test "sets accept_traffic_until to some time in the future for free accounts" do
-      user = insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
-
-      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
-      {:ok, %{site: site}} = Sites.create(user, params)
-
-      assert site.accept_traffic_until == ~D[2035-01-01]
-    end
-
-    @tag :full_build_only
-    test "sets accept_traffic_until to +30d for subscriptions" do
-      future = Date.add(Date.utc_today(), 30)
-      user = insert(:user, subscription: build(:subscription, next_bill_date: future))
-
-      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
-      {:ok, %{site: site}} = Sites.create(user, params)
-
-      assert Date.diff(site.accept_traffic_until, Date.utc_today()) == 60
-    end
-  end
-
-  describe "update_accept_traffic_until" do
-    @tag :full_build_only
-    test "updates owned sites" do
-      user = insert(:user)
-
-      params = %{"domain" => "1.example.com", "timezone" => "Europe/London"}
-      {:ok, %{site: site1}} = Sites.create(user, params)
-
-      params = %{"domain" => "2.example.com", "timezone" => "Europe/London"}
-      {:ok, %{site: site2}} = Sites.create(user, params)
-
-      rogue_site = insert(:site) |> Repo.reload!()
-
-      future = Date.add(Date.utc_today(), 30)
-      insert(:subscription, user: user, next_bill_date: future)
-
-      Process.sleep(1000)
-
-      assert {:ok, 2} = Sites.update_accept_traffic_until(user)
-
-      updated1 = Repo.reload!(site1)
-      updated2 = Repo.reload!(site2)
-
-      assert ^rogue_site = Repo.reload!(rogue_site)
-
-      assert updated1.updated_at != site1.updated_at
-      assert updated2.updated_at != site2.updated_at
-      assert updated1.accept_traffic_until == updated2.accept_traffic_until
-      assert Date.after?(updated1.accept_traffic_until, site1.accept_traffic_until)
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+               Sites.create(user, params)
     end
   end
 

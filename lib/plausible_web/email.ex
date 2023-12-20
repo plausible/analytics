@@ -196,7 +196,7 @@ defmodule PlausibleWeb.Email do
 
     accept_traffic_until =
       user
-      |> Plausible.Sites.accept_traffic_until()
+      |> Plausible.Users.accept_traffic_until()
       |> Timex.format!("{Mfull} {D}, {YYYY}")
 
     priority_email()

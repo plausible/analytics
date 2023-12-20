@@ -3,7 +3,6 @@ defmodule Plausible.Sites do
   Sites context functions.
   """
 
-  use Plausible
   import Ecto.Query
 
   alias Plausible.Auth
@@ -14,7 +13,6 @@ defmodule Plausible.Sites do
 
   require Plausible.Site.UserPreference
 
-  @accept_traffic_until_free ~D[2035-01-01]
   @type list_opt() :: {:filter_by_domain, String.t()}
 
   def get_by_domain(domain) do
@@ -169,36 +167,26 @@ defmodule Plausible.Sites do
   defp maybe_filter_by_domain(query, _), do: query
 
   def create(user, params) do
-    user = Plausible.Users.with_subscription(user)
-
     with :ok <- Quota.ensure_can_add_new_site(user) do
       Ecto.Multi.new()
-      |> maybe_start_trial(user)
-      |> Ecto.Multi.insert(:site, fn %{user: user} ->
-        params
-        |> Site.new()
-        |> set_accept_traffic_until(user)
-      end)
-      |> Ecto.Multi.insert(:site_membership, fn %{site: site, user: user} ->
+      |> Ecto.Multi.insert(:site, Site.new(params))
+      |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
         Site.Membership.new(site, user)
       end)
+      |> maybe_start_trial(user)
       |> Repo.transaction()
     end
   end
 
-  @spec update_accept_traffic_until(Auth.User.t()) :: {:ok, non_neg_integer()}
-  def update_accept_traffic_until(user) do
-    {num_updated, _} =
-      user
-      |> owned_sites_query()
-      |> Repo.update_all(
-        set: [
-          accept_traffic_until: accept_traffic_until(user),
-          updated_at: DateTime.utc_now()
-        ]
-      )
+  defp maybe_start_trial(multi, user) do
+    case user.trial_expiry_date do
+      nil ->
+        changeset = Auth.User.start_trial(user)
+        Ecto.Multi.update(multi, :user, changeset)
 
-    {:ok, num_updated}
+      _ ->
+        multi
+    end
   end
 
   @spec stats_start_date(Site.t()) :: Date.t() | nil
@@ -336,42 +324,5 @@ defmodule Plausible.Sites do
       where: sm.role == :owner,
       where: sm.user_id == ^user.id
     )
-  end
-
-  defp maybe_start_trial(multi, user) do
-    case user.trial_expiry_date do
-      nil ->
-        changeset = Auth.User.start_trial(user)
-        Ecto.Multi.update(multi, :user, changeset)
-
-      _ ->
-        Ecto.Multi.put(multi, :user, user)
-    end
-  end
-
-  @spec accept_traffic_until(Auth.User.t()) :: Date.t()
-  on_full_build do
-    def accept_traffic_until(user) do
-      user = Plausible.Users.with_subscription(user)
-
-      cond do
-        Plausible.Billing.on_trial?(user) ->
-          Timex.shift(user.trial_expiry_date, days: 14)
-
-        user.subscription.paddle_plan_id == "free_10k" ->
-          @accept_traffic_until_free
-
-        user.subscription.next_bill_date ->
-          Timex.shift(user.subscription.next_bill_date, days: 30)
-      end
-    end
-  else
-    def accept_traffic_until(_user) do
-      @accept_traffic_until_free
-    end
-  end
-
-  defp set_accept_traffic_until(site, user) do
-    Site.set_accept_traffic_until(site, accept_traffic_until(user))
   end
 end

@@ -29,23 +29,20 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
 
     notifications =
       Repo.all(
-        from s in Site,
-          join: sm in Site.Membership,
-          on: sm.site_id == s.id,
-          join: u in User,
+        from u in User,
           as: :user,
-          on: u.id == sm.user_id,
+          join: sm in Site.Membership,
+          on: sm.user_id == u.id,
           where: sm.role == :owner,
-          where: sm.user_id == u.id,
-          where: s.accept_traffic_until == ^tomorrow or s.accept_traffic_until == ^next_week,
+          where: u.accept_traffic_until == ^tomorrow or u.accept_traffic_until == ^next_week,
           where: not exists(sent_today_query),
           select: %{
             id: u.id,
             email: u.email,
-            deadline: s.accept_traffic_until,
-            site_ids: fragment("array_agg(?.id)", s)
+            deadline: u.accept_traffic_until,
+            site_ids: fragment("array_agg(?.site_id)", sm)
           },
-          group_by: [u.id, s.accept_traffic_until]
+          group_by: u.id
       )
 
     for notification <- notifications do

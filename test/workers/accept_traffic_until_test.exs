@@ -11,12 +11,12 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     next_week = today |> Date.add(+7)
     tomorrow = today |> Date.add(+1)
 
-    user1 = insert(:user)
-    user2 = insert(:user)
+    user1 = insert(:user, accept_traffic_until: next_week)
+    user2 = insert(:user, accept_traffic_until: tomorrow)
 
-    _site1 = insert(:site, accept_traffic_until: next_week, members: [user1])
+    _site1 = insert(:site, members: [user1])
 
-    _site2 = insert(:site, accept_traffic_until: tomorrow, members: [user2])
+    _site2 = insert(:site, members: [user2])
 
     {:ok, 2} = AcceptTrafficUntil.perform(nil)
 
@@ -24,33 +24,21 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     refute_notifications(user2.email)
   end
 
-  test "tomorrow: sends one e-mail even if multiple sites are expiring" do
-    user = insert(:user)
+  test "tomorrow: sends one e-mail" do
     tomorrow = Date.utc_today() |> Date.add(+1)
+    user = insert(:user, accept_traffic_until: tomorrow)
 
-    _site1 =
-      insert(:site, accept_traffic_until: tomorrow, members: [user])
-      |> populate_stats([build(:pageview)])
-
-    _site2 =
-      insert(:site, accept_traffic_until: tomorrow, members: [user])
-      |> populate_stats([build(:pageview)])
+    :site |> insert(members: [user]) |> populate_stats([build(:pageview)])
 
     {:ok, 1} = AcceptTrafficUntil.perform(nil)
     assert_final_notification(user.email)
   end
 
-  test "next week: sends one e-mail even if multiple sites are expiring" do
-    user = insert(:user)
+  test "next week: sends one e-mail" do
     next_week = Date.utc_today() |> Date.add(+7)
+    user = insert(:user, accept_traffic_until: next_week)
 
-    _site1 =
-      insert(:site, accept_traffic_until: next_week, members: [user])
-      |> populate_stats([build(:pageview)])
-
-    _site2 =
-      insert(:site, accept_traffic_until: next_week, members: [user])
-      |> populate_stats([build(:pageview)])
+    :site |> insert(members: [user]) |> populate_stats([build(:pageview)])
 
     {:ok, 1} = AcceptTrafficUntil.perform(nil)
     assert_weekly_notification(user.email)
@@ -62,30 +50,15 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     tomorrow = today |> Date.add(+1)
     in_8_days = today |> Date.add(+8)
 
-    user1 = insert(:user)
-    user2 = insert(:user)
+    user1 = insert(:user, accept_traffic_until: next_week)
+    user2 = insert(:user, accept_traffic_until: tomorrow)
+    user3 = insert(:user, accept_traffic_until: in_8_days, email: "nope@example.com")
+    user4 = insert(:user, accept_traffic_until: today, email: "nope2@example.com")
 
-    _site1 =
-      insert(:site, accept_traffic_until: next_week, members: [user1])
-      |> populate_stats([build(:pageview)])
-
-    _site2 =
-      insert(:site, accept_traffic_until: tomorrow, members: [user2])
-      |> populate_stats([build(:pageview)])
-
-    _site3 =
-      insert(:site,
-        accept_traffic_until: in_8_days,
-        members: [build(:user, email: "nope@example.com")]
-      )
-      |> populate_stats([build(:pageview)])
-
-    _site4 =
-      insert(:site,
-        accept_traffic_until: today,
-        members: [build(:user, email: "nope2@example.com")]
-      )
-      |> populate_stats([build(:pageview)])
+    :site |> insert(members: [user1]) |> populate_stats([build(:pageview)])
+    :site |> insert(members: [user2]) |> populate_stats([build(:pageview)])
+    :site |> insert(members: [user3]) |> populate_stats([build(:pageview)])
+    :site |> insert(members: [user4]) |> populate_stats([build(:pageview)])
 
     {:ok, 2} = AcceptTrafficUntil.perform(nil)
     assert_weekly_notification(user1.email)
@@ -97,13 +70,8 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
   test "sends multiple notifications per recipient as the time passes" do
     today = Date.utc_today()
     email = "cycle@example.com"
-    user = insert(:user, email: email)
-
-    {:ok, %{site: site}} =
-      Plausible.Sites.create(
-        user,
-        %{"domain" => "lifecycle.example.com", "timezone" => "Europe/London"}
-      )
+    user = insert(:user, email: email) |> Plausible.Auth.User.start_trial() |> Repo.update!()
+    site = insert(:site, members: [user])
 
     populate_stats(site, [
       build(:pageview, timestamp: today),

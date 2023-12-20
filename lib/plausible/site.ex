@@ -21,7 +21,6 @@ defmodule Plausible.Site do
     field :conversions_enabled, :boolean, default: true
     field :props_enabled, :boolean, default: true
     field :funnels_enabled, :boolean, default: true
-    field :accept_traffic_until, :date
 
     field :ingest_rate_limit_scale_seconds, :integer, default: 60
     # default is set via changeset/2
@@ -143,10 +142,6 @@ defmodule Plausible.Site do
 
   def set_native_stats_start_at(site, val) do
     change(site, native_stats_start_at: val)
-  end
-
-  def set_accept_traffic_until(site, date) do
-    change(site, accept_traffic_until: date)
   end
 
   def start_import(site, start_date, end_date, imported_source, status \\ "importing") do
