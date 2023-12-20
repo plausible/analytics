@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-E147D7A7.js"></script>
+    <script src="dist/sidebar_items-A7CD9084.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -132,7 +132,23 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#t:limit/0" translate="no">limit()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#t:monthly_pageview_usage/0" translate="no">monthly_pageview_usage()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:over_limits_error/0" translate="no">over_limits_error()</a>
 
       </div>
 
@@ -196,9 +212,12 @@ in a background job instead (see <code class="inline">check_usage.ex</code>).</p
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#ensure_can_subscribe_to_plan/3" translate="no">ensure_can_subscribe_to_plan(user, plan, usage \\ nil)</a>
+        <a href="#ensure_within_plan_limits/3" translate="no">ensure_within_plan_limits(user_or_usage, plan, opts \\ [])</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Ensures that the given user (or the usage map) is within the limits
+of the given plan.</p></div>
 
     </div>
 
@@ -223,9 +242,13 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#monthly_pageview_usage/1" translate="no">monthly_pageview_usage(user)</a>
+        <a href="#monthly_pageview_usage/2" translate="no">monthly_pageview_usage(user, site_ids \\ nil)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Queries the ClickHouse database for the monthly pageview usage. If the given user's
+subscription is <code class="inline">active</code>, <code class="inline">past_due</code>, or a <code class="inline">deleted</code> (but not yet expired), a map
+with the following structure is returned</p></div>
 
     </div>
 
@@ -305,6 +328,34 @@ Types
       </a>
     </h1>
     <div class="types-list">
+<section class="detail" id="t:limit/0">
+
+  <div class="detail-header">
+    <a href="#t:limit/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">limit()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L13" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> limit() :: :site_limit | :pageview_limit | :team_member_limit</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="t:monthly_pageview_usage/0">
 
   <div class="detail-header">
@@ -314,7 +365,7 @@ Types
     </a>
     <h1 class="signature" translate="no">monthly_pageview_usage()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L132" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L17" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -333,6 +384,34 @@ Types
 
   </section>
 </section>
+<section class="detail" id="t:over_limits_error/0">
+
+  <div class="detail-header">
+    <a href="#t:over_limits_error/0" class="detail-link" title="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this type</span>
+    </a>
+    <h1 class="signature" translate="no">over_limits_error()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L15" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> over_limits_error() :: {:over_plan_limits, [<a href="#t:limit/0">limit</a>()]}</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="t:period/0">
 
   <div class="detail-header">
@@ -342,7 +421,7 @@ Types
     </a>
     <h1 class="signature" translate="no">period()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L134" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L19" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -370,7 +449,7 @@ Types
     </a>
     <h1 class="signature" translate="no">usage_cycle()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L136" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L21" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -415,7 +494,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">allowed_features_for(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L387" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L433" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -438,7 +517,7 @@ ability to use all features during their trial.</p>
     </a>
     <h1 class="signature" translate="no">below_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L409" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L455" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -467,7 +546,7 @@ Returns false if usage is equal to the limit.</p>
     </a>
     <h1 class="signature" translate="no">ensure_can_add_new_site(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L85" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L100" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -482,18 +561,18 @@ over limit) to avoid service disruption. Their usage is checked
 in a background job instead (see <code class="inline">check_usage.ex</code>).</p>
   </section>
 </section>
-<section class="detail" id="ensure_can_subscribe_to_plan/3">
+<section class="detail" id="ensure_within_plan_limits/3">
 
-    <span id="ensure_can_subscribe_to_plan/2"></span>
+    <span id="ensure_within_plan_limits/2"></span>
 
   <div class="detail-header">
-    <a href="#ensure_can_subscribe_to_plan/3" class="detail-link" title="Link to this function">
+    <a href="#ensure_within_plan_limits/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">ensure_can_subscribe_to_plan(user, plan, usage \\ nil)</h1>
+    <h1 class="signature" translate="no">ensure_within_plan_limits(user_or_usage, plan, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L337" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L378" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -503,7 +582,21 @@ in a background job instead (see <code class="inline">check_usage.ex</code>).</p
 
   <section class="docstring">
 
+      <div class="specs">
 
+          <pre translate="no"><span class="attribute">@spec</span> ensure_within_plan_limits(
+  <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">struct</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | nil,
+  <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()
+) ::
+  :ok | {:error, <a href="#t:over_limits_error/0">over_limits_error</a>()}</pre>
+
+      </div>
+
+<p>Ensures that the given user (or the usage map) is within the limits
+of the given plan.</p><p>An <code class="inline">opts</code> argument can be passed with <code class="inline">ignore_pageview_limit: true</code>
+which bypasses the pageview limit check and returns <code class="inline">:ok</code> as long as
+the other limits are not exceeded.</p>
   </section>
 </section>
 <section class="detail" id="features_usage/1">
@@ -515,7 +608,7 @@ in a background job instead (see <code class="inline">check_usage.ex</code>).</p
     </a>
     <h1 class="signature" translate="no">features_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L272" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L303" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -544,7 +637,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
     </a>
     <h1 class="signature" translate="no">monthly_pageview_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L105" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L120" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -567,16 +660,18 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
 
   </section>
 </section>
-<section class="detail" id="monthly_pageview_usage/1">
+<section class="detail" id="monthly_pageview_usage/2">
+
+    <span id="monthly_pageview_usage/1"></span>
 
   <div class="detail-header">
-    <a href="#monthly_pageview_usage/1" class="detail-link" title="Link to this function">
+    <a href="#monthly_pageview_usage/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">monthly_pageview_usage(user)</h1>
+    <h1 class="signature" translate="no">monthly_pageview_usage(user, site_ids \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L145" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L172" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -588,11 +683,21 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> monthly_pageview_usage(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="#t:monthly_pageview_usage/0">monthly_pageview_usage</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> monthly_pageview_usage(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>() | nil) ::
+  <a href="#t:monthly_pageview_usage/0">monthly_pageview_usage</a>()</pre>
 
       </div>
 
-
+<p>Queries the ClickHouse database for the monthly pageview usage. If the given user's
+subscription is <code class="inline">active</code>, <code class="inline">past_due</code>, or a <code class="inline">deleted</code> (but not yet expired), a map
+with the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="6823438999-1">%{</span><span class="w">
+  </span><span class="ss">current_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="6823438999-2">(</span><span class="p" data-group-id="6823438999-2">)</span><span class="p">,</span><span class="w">
+  </span><span class="ss">last_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="6823438999-3">(</span><span class="p" data-group-id="6823438999-3">)</span><span class="p">,</span><span class="w">
+  </span><span class="ss">penultimate_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="6823438999-4">(</span><span class="p" data-group-id="6823438999-4">)</span><span class="w">
+</span><span class="p" data-group-id="6823438999-1">}</span></code></pre><p>In all other cases of the subscription status (or a <code class="inline">free_10k</code> subscription which
+does not have a <code class="inline">last_bill_date</code> defined) - the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="1668633904-1">%{</span><span class="ss">last_30_days</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="1668633904-2">(</span><span class="p" data-group-id="1668633904-2">)</span><span class="p" data-group-id="1668633904-1">}</span></code></pre><p>Given only a user as input, the usage is queried from across all the sites that the
+user owns. Alternatively, given an optional argument of <code class="inline">site_ids</code>, the usage from
+across all those sites is queried instead.</p>
   </section>
 </section>
 <section class="detail" id="site_limit/1">
@@ -604,7 +709,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
     </a>
     <h1 class="signature" translate="no">site_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L34" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L49" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -632,7 +737,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
     </a>
     <h1 class="signature" translate="no">site_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L76" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L91" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -660,7 +765,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
     </a>
     <h1 class="signature" translate="no">team_member_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L53" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L68" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -688,7 +793,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
     </a>
     <h1 class="signature" translate="no">team_member_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L234" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L265" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -719,7 +824,7 @@ many sites owned by the given user, they still count as one team member.</p></li
     </a>
     <h1 class="signature" translate="no">usage(user, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L13" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L28" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -745,7 +850,7 @@ many sites owned by the given user, they still count as one team member.</p></li
     </a>
     <h1 class="signature" translate="no">usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Timex.today())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L164" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L195" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -774,7 +879,7 @@ many sites owned by the given user, they still count as one team member.</p></li
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L418" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L464" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-E147D7A7.js"></script>
+    <script src="dist/sidebar_items-A7CD9084.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -195,7 +195,7 @@ Types
     </a>
     <h1 class="signature" translate="no">invite_error()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L12" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L13" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -211,9 +211,9 @@ Types
   <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()
   | :already_a_member
   | :transfer_to_self
+  | :no_plan
   | {:over_limit, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}
-  | :forbidden
-  | :upgrade_required</pre>
+  | :forbidden</pre>
 
       </div>
 
@@ -243,7 +243,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">bulk_create_invitation(sites, inviter, invitee_email, role, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L57" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L63" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -277,7 +277,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">bulk_transfer_ownership_direct(sites, new_owner)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L41" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L45" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -290,7 +290,8 @@ Functions
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> bulk_transfer_ownership_direct([<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()], <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) ::
-  {:ok, [<a href="Plausible.Site.Membership.html#t:t/0">Plausible.Site.Membership.t</a>()]} | {:error, <a href="#t:invite_error/0">invite_error</a>()}</pre>
+  {:ok, [<a href="Plausible.Site.Membership.html#t:t/0">Plausible.Site.Membership.t</a>()]}
+  | {:error, <a href="#t:invite_error/0">invite_error</a>() | <a href="Plausible.Billing.Quota.html#t:over_limits_error/0">Plausible.Billing.Quota.over_limits_error</a>()}</pre>
 
       </div>
 
@@ -306,7 +307,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">create_invitation(site, inviter, invitee_email, role)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L33" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/memberships/create_invitation.ex#L34" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
