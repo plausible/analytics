@@ -14,7 +14,11 @@ defmodule Plausible.SiteAdmin do
   end
 
   def custom_index_query(_conn, _schema, query) do
-    from(r in query, preload: [memberships: :user])
+    from(r in query,
+      inner_join: o in assoc(r, :owner),
+      inner_join: m in assoc(r, :memberships),
+      preload: [owner: o, memberships: {m, :user}]
+    )
   end
 
   def form_fields(_) do
@@ -50,11 +54,11 @@ defmodule Plausible.SiteAdmin do
               n -> "⏱ #{n}/#{site.ingest_rate_limit_scale_seconds}s (per server)"
             end
 
-          owner = Enum.find(site.memberships, fn m -> m.role == :owner end)
+          owner = site.owner
 
           owner_limits =
-            if owner && owner.user.accept_traffic_until &&
-                 Date.after?(Date.utc_today(), owner.user.accept_traffic_until) do
+            if owner.accept_traffic_until &&
+                 Date.after?(Date.utc_today(), owner.accept_traffic_until) do
               "💸 Rejecting traffic"
             end
 
@@ -129,14 +133,14 @@ defmodule Plausible.SiteAdmin do
   end
 
   defp get_owner(site) do
-    owner = Enum.find(site.memberships, fn m -> m.role == :owner end)
+    owner = site.owner
 
     if owner do
       {:safe,
        """
-        <a href="/crm/auth/user/#{owner.user.id}">#{owner.user.name}</a>
+        <a href="/crm/auth/user/#{owner.id}">#{owner.name}</a>
         <br/><br/>
-        #{owner.user.email}
+        #{owner.email}
        """}
     end
   end
