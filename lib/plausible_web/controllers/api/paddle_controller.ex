@@ -29,8 +29,6 @@ defmodule PlausibleWeb.Api.PaddleController do
     send_resp(conn, 404, "") |> halt
   end
 
-  @paddle_key File.read!("priv/paddle.pem")
-
   def verify_signature(conn, _opts) do
     signature = Base.decode64!(conn.params["p_signature"])
 
@@ -40,7 +38,8 @@ defmodule PlausibleWeb.Api.PaddleController do
       |> List.keysort(0)
       |> PhpSerializer.serialize()
 
-    [key_entry] = :public_key.pem_decode(@paddle_key)
+    [key_entry] = :public_key.pem_decode(get_paddle_key())
+
     public_key = :public_key.pem_entry_decode(key_entry)
 
     if :public_key.verify(msg, :sha, signature, public_key) do
@@ -59,9 +58,20 @@ defmodule PlausibleWeb.Api.PaddleController do
       |> List.keysort(0)
       |> PhpSerializer.serialize()
 
-    [key_entry] = :public_key.pem_decode(@paddle_key)
+    [key_entry] = :public_key.pem_decode(get_paddle_key())
     public_key = :public_key.pem_entry_decode(key_entry)
     :public_key.verify(msg, :sha, signature, public_key)
+  end
+
+  @paddle_prod_key File.read!("priv/paddle.pem")
+  @paddle_sandbox_key File.read!("priv/paddle_sandbox.pem")
+
+  defp get_paddle_key() do
+    if Application.get_env(:plausible, :environment) in ["dev", "staging"] do
+      @paddle_sandbox_key
+    else
+      @paddle_prod_key
+    end
   end
 
   defp webhook_response({:ok, _}, conn, _params) do
