@@ -464,6 +464,40 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
     end
 
     @tag :full_build_only
+    test "allow_next_upgrade_override field has no effect when checking the pageview limit on ownership transfer" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+
+      new_owner =
+        insert(:user,
+          subscription: build(:growth_subscription),
+          allow_next_upgrade_override: true
+        )
+
+      new_owner_site = insert(:site, members: [new_owner])
+      old_owner_site = insert(:site, members: [old_owner])
+
+      somewhere_last_month = NaiveDateTime.utc_now() |> Timex.shift(days: -5)
+      somewhere_penultimate_month = NaiveDateTime.utc_now() |> Timex.shift(days: -35)
+
+      generate_usage_for(new_owner_site, 5_000, somewhere_last_month)
+      generate_usage_for(new_owner_site, 1_000, somewhere_penultimate_month)
+
+      generate_usage_for(old_owner_site, 6_000, somewhere_last_month)
+      generate_usage_for(old_owner_site, 10_000, somewhere_penultimate_month)
+
+      invitation =
+        insert(:invitation,
+          site_id: old_owner_site.id,
+          inviter: old_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:error, {:over_plan_limits, [:monthly_pageview_limit]}} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
+    end
+
+    @tag :full_build_only
     test "does not allow transferring ownership when many limits exceeded at once" do
       old_owner = insert(:user, subscription: build(:business_subscription))
       new_owner = insert(:user, subscription: build(:growth_subscription))

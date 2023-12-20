@@ -365,15 +365,26 @@ defmodule Plausible.Billing.Quota do
     for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
-  @spec ensure_within_plan_limits(User.t(), struct() | atom() | nil, map() | nil) ::
+  @doc """
+  Ensures that the given user (or the usage map) is within the limits
+  of the given plan.
+
+  An `opts` argument can be passed with `ignore_pageview_limit: true`
+  which bypasses the pageview limit check and returns `:ok` as long as
+  the other limits are not exceeded.
+  """
+  @spec ensure_within_plan_limits(User.t() | map(), struct() | atom() | nil, Keyword.t()) ::
           :ok | {:error, over_limits_error()}
-  def ensure_within_plan_limits(user, plan, usage \\ nil)
+  def ensure_within_plan_limits(user_or_usage, plan, opts \\ [])
 
-  def ensure_within_plan_limits(%User{} = user, %plan_mod{} = plan, usage)
+  def ensure_within_plan_limits(%User{} = user, %plan_mod{} = plan, opts)
       when plan_mod in [Plan, EnterprisePlan] do
-    usage = if usage, do: usage, else: usage(user)
+    ensure_within_plan_limits(usage(user), plan, opts)
+  end
 
-    case exceeded_limits(user, plan, usage) do
+  def ensure_within_plan_limits(usage, %plan_mod{} = plan, opts)
+      when plan_mod in [Plan, EnterprisePlan] do
+    case exceeded_limits(usage, plan, opts) do
       [] -> :ok
       exceeded_limits -> {:error, {:over_plan_limits, exceeded_limits}}
     end
@@ -381,32 +392,32 @@ defmodule Plausible.Billing.Quota do
 
   def ensure_within_plan_limits(_, _, _), do: :ok
 
-  defp exceeded_limits(%User{} = user, plan, usage) do
+  defp exceeded_limits(usage, plan, opts) do
     for {limit, exceeded?} <- [
           {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
           {:site_limit, not within_limit?(usage.sites, plan.site_limit)},
           {:monthly_pageview_limit,
-           exceeds_monthly_pageview_limit?(user, plan, usage.monthly_pageviews)}
+           exceeds_monthly_pageview_limit?(usage.monthly_pageviews, plan, opts)}
         ],
         exceeded? do
       limit
     end
   end
 
-  defp exceeds_monthly_pageview_limit?(%User{allow_next_upgrade_override: true}, _, _) do
-    false
-  end
+  defp exceeds_monthly_pageview_limit?(usage, plan, opts) do
+    if Keyword.get(opts, :ignore_pageview_limit) do
+      false
+    else
+      case usage do
+        %{last_30_days: %{total: total}} ->
+          !within_limit?(total, pageview_limit_with_margin(plan))
 
-  defp exceeds_monthly_pageview_limit?(_user, plan, usage) do
-    case usage do
-      %{last_30_days: %{total: total}} ->
-        !within_limit?(total, pageview_limit_with_margin(plan))
-
-      billing_cycles_usage ->
-        Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
-          billing_cycles_usage,
-          plan.monthly_pageview_limit
-        )
+        billing_cycles_usage ->
+          Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
+            billing_cycles_usage,
+            plan.monthly_pageview_limit
+          )
+      end
     end
   end
 

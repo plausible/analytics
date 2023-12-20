@@ -155,8 +155,15 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
+    limit_checking_opts =
+      if assigns.user.allow_next_upgrade_override do
+        [ignore_pageview_limit: true]
+      else
+        []
+      end
+
     usage_within_limits =
-      Quota.ensure_within_plan_limits(assigns.user, assigns.plan_to_render, assigns.usage) ==
+      Quota.ensure_within_plan_limits(assigns.usage, assigns.plan_to_render, limit_checking_opts) ==
         :ok
 
     subscription = assigns.user.subscription

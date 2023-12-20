@@ -102,8 +102,6 @@ defmodule Plausible.Billing.QuotaTest do
 
   describe "ensure_within_plan_limits/2" do
     test "returns :ok when site and team member limits are reached but not exceeded" do
-      user = insert(:user)
-
       usage = %{
         monthly_pageviews: %{last_30_days: %{total: 1}},
         team_members: 3,
@@ -112,12 +110,10 @@ defmodule Plausible.Billing.QuotaTest do
 
       plan = Plans.find(@v4_1m_plan_id)
 
-      assert Quota.ensure_within_plan_limits(user, plan, usage) == :ok
+      assert Quota.ensure_within_plan_limits(usage, plan) == :ok
     end
 
     test "returns all exceeded limits" do
-      user = insert(:user)
-
       usage = %{
         monthly_pageviews: %{last_30_days: %{total: 1_150_001}},
         team_members: 4,
@@ -127,16 +123,14 @@ defmodule Plausible.Billing.QuotaTest do
       plan = Plans.find(@v4_1m_plan_id)
 
       {:error, {:over_plan_limits, exceeded_limits}} =
-        Quota.ensure_within_plan_limits(user, plan, usage)
+        Quota.ensure_within_plan_limits(usage, plan)
 
       assert :monthly_pageview_limit in exceeded_limits
       assert :team_member_limit in exceeded_limits
       assert :site_limit in exceeded_limits
     end
 
-    test "skips pageview limit check when `allow_next_upgrade_override` is set for user" do
-      user = insert(:user, allow_next_upgrade_override: true)
-
+    test "can skip checking the pageview limit" do
       usage = %{
         monthly_pageviews: %{last_30_days: %{total: 1_150_001}},
         team_members: 2,
@@ -145,12 +139,10 @@ defmodule Plausible.Billing.QuotaTest do
 
       plan = Plans.find(@v4_1m_plan_id)
 
-      assert :ok = Quota.ensure_within_plan_limits(user, plan, usage)
+      assert :ok = Quota.ensure_within_plan_limits(usage, plan, ignore_pageview_limit: true)
     end
 
     test "by the last 30 days usage, pageview limit for 10k plan is only exceeded when 30% over the limit" do
-      user = insert(:user)
-
       usage_within_pageview_limit = %{
         monthly_pageviews: %{last_30_days: %{total: 13_000}},
         team_members: 1,
@@ -165,15 +157,13 @@ defmodule Plausible.Billing.QuotaTest do
 
       plan = Plans.find(@v3_plan_id)
 
-      assert Quota.ensure_within_plan_limits(user, plan, usage_within_pageview_limit) == :ok
+      assert Quota.ensure_within_plan_limits(usage_within_pageview_limit, plan) == :ok
 
-      assert Quota.ensure_within_plan_limits(user, plan, usage_over_pageview_limit) ==
+      assert Quota.ensure_within_plan_limits(usage_over_pageview_limit, plan) ==
                {:error, {:over_plan_limits, [:monthly_pageview_limit]}}
     end
 
     test "by the last 30 days usage, pageview limit for all plans above 10k is exceeded when 15% over the limit" do
-      user = insert(:user)
-
       usage_within_pageview_limit = %{
         monthly_pageviews: %{last_30_days: %{total: 1_150_000}},
         team_members: 1,
@@ -188,15 +178,13 @@ defmodule Plausible.Billing.QuotaTest do
 
       plan = Plans.find(@v4_1m_plan_id)
 
-      assert Quota.ensure_within_plan_limits(user, plan, usage_within_pageview_limit) == :ok
+      assert Quota.ensure_within_plan_limits(usage_within_pageview_limit, plan) == :ok
 
-      assert Quota.ensure_within_plan_limits(user, plan, usage_over_pageview_limit) ==
+      assert Quota.ensure_within_plan_limits(usage_over_pageview_limit, plan) ==
                {:error, {:over_plan_limits, [:monthly_pageview_limit]}}
     end
 
     test "by billing cycles usage, pageview limit is exceeded when last two billing cycles exceed by 10%" do
-      user = insert(:user)
-
       usage_within_pageview_limit = %{
         monthly_pageviews: %{penultimate_cycle: %{total: 11_000}, last_cycle: %{total: 10_999}},
         team_members: 1,
@@ -211,9 +199,9 @@ defmodule Plausible.Billing.QuotaTest do
 
       plan = Plans.find(@v3_plan_id)
 
-      assert Quota.ensure_within_plan_limits(user, plan, usage_within_pageview_limit) == :ok
+      assert Quota.ensure_within_plan_limits(usage_within_pageview_limit, plan) == :ok
 
-      assert Quota.ensure_within_plan_limits(user, plan, usage_over_pageview_limit) ==
+      assert Quota.ensure_within_plan_limits(usage_over_pageview_limit, plan) ==
                {:error, {:over_plan_limits, [:monthly_pageview_limit]}}
     end
 
@@ -233,7 +221,7 @@ defmodule Plausible.Billing.QuotaTest do
           site_limit: 1
         )
 
-      assert Quota.ensure_within_plan_limits(user, enterprise_plan, usage) ==
+      assert Quota.ensure_within_plan_limits(usage, enterprise_plan) ==
                {:error, {:over_plan_limits, [:site_limit]}}
     end
   end

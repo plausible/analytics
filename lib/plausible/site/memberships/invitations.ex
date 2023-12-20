@@ -81,7 +81,7 @@ defmodule Plausible.Site.Memberships.Invitations do
           sites: Quota.site_usage(new_owner) + 1
         }
 
-        Quota.ensure_within_plan_limits(new_owner, plan, usage_after_transfer)
+        Quota.ensure_within_plan_limits(usage_after_transfer, plan)
       else
         {:error, :no_plan}
       end
