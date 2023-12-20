@@ -23,29 +23,23 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
 
   require Logger
 
-  @spec transfer_ownership(Site.t(), Auth.User.t(), Keyword.t()) ::
+  @spec transfer_ownership(Site.t(), Auth.User.t()) ::
           {:ok, Site.Membership.t()}
           | {:error,
              Billing.Quota.over_limits_error()
              | Ecto.Changeset.t()
              | :transfer_to_self
              | :no_plan}
-  def transfer_ownership(site, user, opts \\ []) do
+  def transfer_ownership(site, user) do
     site = Repo.preload(site, :owner)
-    selfhost? = Keyword.get(opts, :selfhost?, small_build?())
 
     with :ok <- Invitations.ensure_transfer_valid(site, user, :owner),
-         :ok <- Invitations.ensure_can_take_ownership(site, user, selfhost?) do
+         :ok <- Invitations.ensure_can_take_ownership(site, user) do
       membership = get_or_create_owner_membership(site, user)
-      multi = add_and_transfer_ownership(site, membership, user, selfhost?)
+      multi = add_and_transfer_ownership(site, membership, user)
 
       case Repo.transaction(multi) do
         {:ok, changes} ->
-          if changes[:site_locker] == {:locked, :grace_period_ended_now} do
-            user = Plausible.Users.with_subscription(changes.user)
-            Billing.SiteLocker.send_grace_period_end_email(user)
-          end
-
           membership = Repo.preload(changes.membership, [:site, :user])
 
           {:ok, membership}
@@ -56,32 +50,30 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  @spec accept_invitation(String.t(), Auth.User.t(), Keyword.t()) ::
+  @spec accept_invitation(String.t(), Auth.User.t()) ::
           {:ok, Site.Membership.t()}
           | {:error,
              :invitation_not_found
              | Billing.Quota.over_limits_error()
              | Ecto.Changeset.t()
              | :no_plan}
-  def accept_invitation(invitation_id, user, opts \\ []) do
-    selfhost? = Keyword.get(opts, :selfhost?, small_build?())
-
+  def accept_invitation(invitation_id, user) do
     with {:ok, invitation} <- Invitations.find_for_user(invitation_id, user) do
       if invitation.role == :owner do
-        do_accept_ownership_transfer(invitation, user, selfhost?)
+        do_accept_ownership_transfer(invitation, user)
       else
         do_accept_invitation(invitation, user)
       end
     end
   end
 
-  defp do_accept_ownership_transfer(invitation, user, selfhost?) do
+  defp do_accept_ownership_transfer(invitation, user) do
     membership = get_or_create_membership(invitation, user)
     site = Repo.preload(invitation.site, :owner)
 
-    with :ok <- Invitations.ensure_can_take_ownership(site, user, selfhost?) do
+    with :ok <- Invitations.ensure_can_take_ownership(site, user) do
       site
-      |> add_and_transfer_ownership(membership, user, selfhost?)
+      |> add_and_transfer_ownership(membership, user)
       |> Multi.delete(:invitation, invitation)
       |> finalize_invitation(invitation)
     end
@@ -98,11 +90,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
   defp finalize_invitation(multi, invitation) do
     case Repo.transaction(multi) do
       {:ok, changes} ->
-        if changes[:site_locker] == {:locked, :grace_period_ended_now} do
-          user = Plausible.Users.with_subscription(changes.user)
-          Billing.SiteLocker.send_grace_period_end_email(user)
-        end
-
         notify_invitation_accepted(invitation)
 
         membership = Repo.preload(changes.membership, [:site, :user])
@@ -114,20 +101,10 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     end
   end
 
-  defp add_and_transfer_ownership(site, membership, user, selfhost?) do
-    multi =
-      Multi.new()
-      |> downgrade_previous_owner(site, user)
-      |> Multi.insert_or_update(:membership, membership)
-
-    if selfhost? do
-      multi
-    else
-      Multi.run(multi, :site_locker, fn _, %{membership: membership} ->
-        membership = Repo.preload(membership, :user)
-        {:ok, Billing.SiteLocker.update_sites_for(membership.user, send_email?: false)}
-      end)
-    end
+  defp add_and_transfer_ownership(site, membership, user) do
+    Multi.new()
+    |> downgrade_previous_owner(site, user)
+    |> Multi.insert_or_update(:membership, membership)
   end
 
   # If there's an existing membership, we DO NOT change the role

@@ -7,31 +7,29 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   alias Plausible.Site.Memberships.AcceptInvitation
 
   describe "transfer_ownership/3" do
-    for {label, opts} <- [{"cloud", []}, {"selfhosted", [selfhost?: true]}] do
-      test "transfers ownership on #{label} instance" do
-        site = insert(:site, memberships: [])
-        existing_owner = insert(:user)
+    test "transfers ownership succeeds" do
+      site = insert(:site, memberships: [])
+      existing_owner = insert(:user)
 
-        existing_membership =
-          insert(:site_membership, user: existing_owner, site: site, role: :owner)
+      existing_membership =
+        insert(:site_membership, user: existing_owner, site: site, role: :owner)
 
-        new_owner = insert(:user)
-        insert(:growth_subscription, user: new_owner)
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
 
-        assert {:ok, new_membership} =
-                 AcceptInvitation.transfer_ownership(site, new_owner, unquote(opts))
+      assert {:ok, new_membership} =
+               AcceptInvitation.transfer_ownership(site, new_owner)
 
-        assert new_membership.site_id == site.id
-        assert new_membership.user_id == new_owner.id
-        assert new_membership.role == :owner
+      assert new_membership.site_id == site.id
+      assert new_membership.user_id == new_owner.id
+      assert new_membership.role == :owner
 
-        existing_membership = Repo.reload!(existing_membership)
-        assert existing_membership.user_id == existing_owner.id
-        assert existing_membership.site_id == site.id
-        assert existing_membership.role == :admin
+      existing_membership = Repo.reload!(existing_membership)
+      assert existing_membership.user_id == existing_owner.id
+      assert existing_membership.site_id == site.id
+      assert existing_membership.role == :admin
 
-        assert_no_emails_delivered()
-      end
+      assert_no_emails_delivered()
     end
 
     for role <- [:viewer, :admin] do
@@ -128,6 +126,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
                AcceptInvitation.transfer_ownership(site, new_owner)
     end
 
+    @tag :small_build_only
     test "allows transferring to an account without a subscription on self hosted" do
       current_owner = insert(:user)
       site = insert(:site, members: [current_owner])
@@ -153,21 +152,17 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
             build(:growth_subscription, status: Plausible.Billing.Subscription.Status.paused())
         )
 
-      assert {:ok, _} = AcceptInvitation.transfer_ownership(site, trial_user, selfhost?: true)
-      assert {:ok, _} = AcceptInvitation.transfer_ownership(site, invited_user, selfhost?: true)
+      assert {:ok, _} = AcceptInvitation.transfer_ownership(site, trial_user)
+      assert {:ok, _} = AcceptInvitation.transfer_ownership(site, invited_user)
 
       assert {:ok, _} =
-               AcceptInvitation.transfer_ownership(site, user_on_free_10k, selfhost?: true)
+               AcceptInvitation.transfer_ownership(site, user_on_free_10k)
 
       assert {:ok, _} =
-               AcceptInvitation.transfer_ownership(site, user_on_expired_subscription,
-                 selfhost?: true
-               )
+               AcceptInvitation.transfer_ownership(site, user_on_expired_subscription)
 
       assert {:ok, _} =
-               AcceptInvitation.transfer_ownership(site, user_on_paused_subscription,
-                 selfhost?: true
-               )
+               AcceptInvitation.transfer_ownership(site, user_on_paused_subscription)
     end
   end
 
@@ -259,48 +254,45 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   end
 
   describe "accept_invitation/3 - ownership transfers" do
-    for {label, opts} <- [{"cloud", []}, {"selfhosted", [selfhost?: true]}] do
-      test "converts an ownership transfer into a membership on #{label} instance" do
-        site = insert(:site, memberships: [])
-        existing_owner = insert(:user)
+    test "converts an ownership transfer into a membership" do
+      site = insert(:site, memberships: [])
+      existing_owner = insert(:user)
 
-        existing_membership =
-          insert(:site_membership, user: existing_owner, site: site, role: :owner)
+      existing_membership =
+        insert(:site_membership, user: existing_owner, site: site, role: :owner)
 
-        new_owner = insert(:user)
-        insert(:growth_subscription, user: new_owner)
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
 
-        invitation =
-          insert(:invitation,
-            site_id: site.id,
-            inviter: existing_owner,
-            email: new_owner.email,
-            role: :owner
-          )
-
-        assert {:ok, new_membership} =
-                 AcceptInvitation.accept_invitation(
-                   invitation.invitation_id,
-                   new_owner,
-                   unquote(opts)
-                 )
-
-        assert new_membership.site_id == site.id
-        assert new_membership.user_id == new_owner.id
-        assert new_membership.role == :owner
-        refute Repo.reload(invitation)
-
-        existing_membership = Repo.reload!(existing_membership)
-        assert existing_membership.user_id == existing_owner.id
-        assert existing_membership.site_id == site.id
-        assert existing_membership.role == :admin
-
-        assert_email_delivered_with(
-          to: [nil: existing_owner.email],
-          subject:
-            "[Plausible Analytics] #{new_owner.email} accepted the ownership transfer of #{site.domain}"
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: existing_owner,
+          email: new_owner.email,
+          role: :owner
         )
-      end
+
+      assert {:ok, new_membership} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
+
+      assert new_membership.site_id == site.id
+      assert new_membership.user_id == new_owner.id
+      assert new_membership.role == :owner
+      refute Repo.reload(invitation)
+
+      existing_membership = Repo.reload!(existing_membership)
+      assert existing_membership.user_id == existing_owner.id
+      assert existing_membership.site_id == site.id
+      assert existing_membership.role == :admin
+
+      assert_email_delivered_with(
+        to: [nil: existing_owner.email],
+        subject:
+          "[Plausible Analytics] #{new_owner.email} accepted the ownership transfer of #{site.domain}"
+      )
     end
 
     for role <- [:viewer, :admin] do
@@ -359,34 +351,6 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
       assert Repo.reload!(owner).trial_expiry_date == nil
       refute Repo.reload(invitation)
-    end
-
-    test "does not lock the site or set trial expiry date if the instance is selfhosted" do
-      existing_owner = insert(:user)
-
-      site =
-        insert(:site,
-          locked: false,
-          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
-        )
-
-      new_owner = insert(:user, trial_expiry_date: nil)
-
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: existing_owner,
-          email: new_owner.email,
-          role: :owner
-        )
-
-      assert {:ok, _membership} =
-               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner,
-                 selfhost?: true
-               )
-
-      assert Repo.reload!(new_owner).trial_expiry_date == nil
-      refute Repo.reload!(site).locked
     end
 
     @tag :full_build_only
