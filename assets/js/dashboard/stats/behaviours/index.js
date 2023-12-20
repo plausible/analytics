@@ -84,7 +84,7 @@ export default function Behaviours(props) {
   }
 
   function hasFunnels() {
-    return site.funnels.length > 0
+    return site.funnels.length > 0 && site.funnelsAvailable
   }
 
   function tabFunnelPicker() {
@@ -156,7 +156,7 @@ export default function Behaviours(props) {
   }
 
   function renderConversions() {
-    if (site.hasGoals) {
+    if (site.hasGoals && site.goalsAvailable) {
       return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
     }
     else if (adminAccess) {
@@ -179,7 +179,7 @@ export default function Behaviours(props) {
     if (Funnel === null) {
       return featureUnavailable()
     }
-    else if (Funnel && selectedFunnel) {
+    else if (Funnel && selectedFunnel && site.funnelsAvailable) {
       return <Funnel site={site} query={query} funnelName={selectedFunnel} />
     }
     else if (Funnel && adminAccess) {
@@ -199,7 +199,7 @@ export default function Behaviours(props) {
   }
 
   function renderProps() {
-    if (site.hasProps) {
+    if (site.hasProps && site.propsAvailable) {
       return <Properties site={site} query={query} />
     } else if (adminAccess) {
       return (
@@ -261,15 +261,10 @@ export default function Behaviours(props) {
   function getEnabledModes() {
     let enabledModes = []
 
-    if (site.conversionsEnabled) {
-      enabledModes.push(CONVERSIONS)
-    }
-    if (site.propsEnabled) {
-      enabledModes.push(PROPS)
-    }
-    if (site.funnelsEnabled && !isRealtime()) {
-      enabledModes.push(FUNNELS)
-    }
+    if (!site.conversionsOptedOut) enabledModes.push(CONVERSIONS)
+    if (!site.propsOptedOut) enabledModes.push(PROPS)
+    if (!site.funnelsOptedOut) enabledModes.push(FUNNELS)
+
     return enabledModes
   }
 

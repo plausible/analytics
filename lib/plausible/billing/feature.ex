@@ -57,6 +57,13 @@ defmodule Plausible.Billing.Feature do
   @callback enabled?(Plausible.Site.t()) :: boolean()
 
   @doc """
+  Returns whether the site explicitly opted out of the feature. This function
+  is different from enabled/1, because enabled/1 returns false when the site
+  owner does not have access to the feature.
+  """
+  @callback opted_out?(Plausible.Site.t()) :: boolean()
+
+  @doc """
   Checks whether the site owner or the user plan includes the given feature.
   """
   @callback check_availability(Plausible.Auth.User.t()) ::
@@ -104,6 +111,11 @@ defmodule Plausible.Billing.Feature do
           is_nil(toggle_field()) -> true
           true -> Map.fetch!(site, toggle_field())
         end
+      end
+
+      @impl true
+      def opted_out?(%Plausible.Site{} = site) do
+        if is_nil(toggle_field()), do: false, else: not Map.fetch!(site, toggle_field())
       end
 
       @impl true
