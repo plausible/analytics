@@ -88,7 +88,7 @@ defmodule Plausible.Session.CacheStoreTest do
 
     CacheStore.on_event(event1, nil, buffer)
     CacheStore.on_event(event2, nil, buffer)
-    assert_receive({WriteBuffer, :insert, [[session, _negative_record]]})
+    assert_receive({WriteBuffer, :insert, [[_negative_record, session]]})
     assert session.is_bounce == false
     assert session.duration == 10
     assert session.pageviews == 2
@@ -113,7 +113,7 @@ defmodule Plausible.Session.CacheStoreTest do
     CacheStore.on_event(event1, nil, buffer)
     CacheStore.on_event(event2, nil, buffer)
 
-    assert_receive({WriteBuffer, :insert, [[session, _negative_record]]})
+    assert_receive({WriteBuffer, :insert, [[_negative_record, session]]})
     assert session.duration == 10
   end
 

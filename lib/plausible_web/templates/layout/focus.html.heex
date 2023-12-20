@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A lightweight, non-intrusive alternative to Google Analytics."
+    />
+    <meta name="robots" content={@conn.private.robots} />
+    <%= if assigns[:connect_live_socket] do %>
+      <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
+      <meta name="websocket-url" content={websocket_url()} />
+    <% end %>
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png")}
+    />
+    <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
+    <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
+    <%= render("_tracking.html", assigns) %>
+  </head>
+  <body class="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
+    <div class="w-full my-8 text-center">
+      <a href={home_dest(@conn)}>
+        <%= img_tag(
+          PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo_dark.png"),
+          class: "hidden dark:inline",
+          style: "height: 2.5rem;",
+          alt: "Plausible logo"
+        ) %>
+        <%= img_tag(
+          PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"),
+          class: "inline dark:hidden",
+          style: "height: 2.5rem;",
+          alt: "Plausible logo"
+        ) %>
+      </a>
+    </div>
+
+    <%= if assigns[:flash] do %>
+      <%= render("_flash.html", assigns) %>
+    <% end %>
+    <%= @inner_content %>
+
+    <p class="text-center text-gray-500 text-xs py-8">
+      © <%= DateTime.utc_now().year() %> Plausible Analytics. All rights reserved.
+    </p>
+
+    <PlausibleWeb.Components.Layout.theme_script current_user={assigns[:current_user]} />
+
+    <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
+    </script>
+  </body>
+</html>

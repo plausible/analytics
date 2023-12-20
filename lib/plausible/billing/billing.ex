@@ -4,11 +4,6 @@ defmodule Plausible.Billing do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Plans, Quota}
 
-  def upgrade_route_for(user) do
-    action = if FunWithFlags.enabled?(:business_tier, for: user), do: :choose_plan, else: :upgrade
-    PlausibleWeb.Router.Helpers.billing_path(PlausibleWeb.Endpoint, action)
-  end
-
   @spec active_subscription_for(integer()) :: Subscription.t() | nil
   def active_subscription_for(user_id) do
     user_id |> active_subscription_query() |> Repo.one()
@@ -247,6 +242,11 @@ defmodule Plausible.Billing do
       _ ->
         user
     end
+  end
+
+  @spec format_price(Money.t()) :: String.t()
+  def format_price(money) do
+    Money.to_string!(money, fractional_digits: 2, no_fraction_if_integer: true)
   end
 
   def paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)

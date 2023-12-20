@@ -38,13 +38,11 @@ defmodule Plausible.Billing.Plans do
   """
   def growth_plans_for(%User{} = user) do
     user = Plausible.Users.with_subscription(user)
-    v4_available = FunWithFlags.enabled?(:business_tier, for: user)
     owned_plan = get_regular_plan(user.subscription)
 
     cond do
       Application.get_env(:plausible, :environment) == "dev" -> @sandbox_plans
-      is_nil(owned_plan) && v4_available -> @plans_v4
-      is_nil(owned_plan) -> @plans_v3
+      is_nil(owned_plan) -> @plans_v4
       user.subscription && Subscriptions.expired?(user.subscription) -> @plans_v4
       owned_plan.kind == :business -> @plans_v4
       owned_plan.generation == 1 -> @plans_v1

@@ -306,8 +306,8 @@ export default function ListReport(props) {
     const moreResultsAvailable = state.list.length >= MAX_ITEMS
     const hideDetails = props.maybeHideDetails && !moreResultsAvailable
 
-    const showDetails = props.detailsLink && !state.loading && !hideDetails 
-    return showDetails && <MoreLink className={'mt-2'} url={props.detailsLink} list={state.list} onClick={props.onClick}/>
+    const showDetails = props.detailsLink && !state.loading && !hideDetails
+    return showDetails && <MoreLink className={'mt-2'} url={props.detailsLink} list={state.list} />
   }
 
   return (

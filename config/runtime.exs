@@ -140,9 +140,15 @@ ch_db_url =
   |> get_var_from_path_or_env("CLICKHOUSE_FLUSH_INTERVAL_MS", "5000")
   |> Integer.parse()
 
+if get_var_from_path_or_env(config_dir, "CLICKHOUSE_MAX_BUFFER_SIZE") do
+  Logger.warning(
+    "CLICKHOUSE_MAX_BUFFER_SIZE is deprecated, please use CLICKHOUSE_MAX_BUFFER_SIZE_BYTES instead"
+  )
+end
+
 {ch_max_buffer_size, ""} =
   config_dir
-  |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000")
+  |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE_BYTES", "100000")
   |> Integer.parse()
 
 # Can be generated  with `Base.encode64(:crypto.strong_rand_bytes(32))` from

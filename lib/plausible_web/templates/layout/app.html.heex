@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Plausible is a lightweight and open-source web analytics tool. Your website data is 100% yours and the privacy of your visitors is respected."
+    />
+    <%= if assigns[:connect_live_socket] do %>
+      <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
+      <meta name="websocket-url" content={websocket_url()} />
+    <% end %>
+    <meta name="robots" content={@conn.private.robots} />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png")}
+    />
+    <link rel="apple-touch-icon" href="/images/icon/apple-touch-icon.png" />
+    <title>
+      <%= assigns[:title] ||
+        "Plausible · Simple, privacy-friendly alternative to Google Analytics" %>
+    </title>
+    <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
+    <%= render("_tracking.html", assigns) %>
+  </head>
+  <body
+    class={[
+      "flex flex-col bg-gray-50 dark:bg-gray-850",
+      if !assigns[:embedded] do
+        "h-full"
+      end
+    ]}
+    style={if assigns[:background], do: "background-color: #{assigns[:background]}"}
+  >
+    <%= if !assigns[:embedded] do %>
+      <%= render("_header.html", assigns) %>
+      <%= render("_notice.html", assigns) %>
+    <% end %>
+
+    <main class="flex-1">
+      <%= Map.get(assigns, :inner_layout) || @inner_content %>
+    </main>
+
+    <PlausibleWeb.Components.Layout.theme_script {Map.take(assigns, [:current_user, :theme])} />
+
+    <%= if assigns[:embedded] do %>
+      <div data-iframe-height></div>
+      <script type="text/javascript" src={Routes.static_path(@conn, "/js/embed.content.js")}>
+      </script>
+    <% else %>
+      <%= render("_footer.html", assigns) %>
+    <% end %>
+    <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
+    </script>
+    <%= if assigns[:load_dashboard_js] do %>
+      <script type="text/javascript" src={Routes.static_path(@conn, "/js/dashboard.js")}>
+      </script>
+    <% end %>
+  </body>
+</html>

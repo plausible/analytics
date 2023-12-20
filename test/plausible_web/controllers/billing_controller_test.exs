@@ -7,19 +7,6 @@ defmodule PlausibleWeb.BillingControllerTest do
   @v4_growth_plan "857097"
   @v4_business_plan "857105"
 
-  describe "GET /upgrade" do
-    setup [:create_user, :log_in]
-
-    test "redirects user to enteprise plan page if they are configured with one", %{
-      conn: conn,
-      user: user
-    } do
-      insert(:enterprise_plan, user: user)
-      conn = get(conn, Routes.billing_path(conn, :upgrade))
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
-    end
-  end
-
   describe "GET /choose-plan" do
     setup [:create_user, :log_in]
 
@@ -27,24 +14,6 @@ defmodule PlausibleWeb.BillingControllerTest do
          %{conn: conn, user: user} do
       insert(:enterprise_plan, user: user, paddle_plan_id: "123")
       conn = get(conn, Routes.billing_path(conn, :choose_plan))
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
-    end
-  end
-
-  describe "GET /upgrade/enterprise/:plan_id (deprecated)" do
-    setup [:create_user, :log_in]
-
-    test "redirects to the new :upgrade_to_enterprise_plan action", %{conn: conn} do
-      conn = get(conn, Routes.billing_path(conn, :upgrade_enterprise_plan, "123"))
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
-    end
-  end
-
-  describe "GET /change-plan/enterprise/:plan_id (deprecated)" do
-    setup [:create_user, :log_in]
-
-    test "redirects to the new :upgrade_to_enterprise_plan action", %{conn: conn} do
-      conn = get(conn, Routes.billing_path(conn, :change_enterprise_plan, "123"))
       assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
     end
   end
