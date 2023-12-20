@@ -39,15 +39,26 @@ defmodule Plausible.SiteAdmin do
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
       timezone: nil,
       public: nil,
-      owner: %{value: &get_owner_email/1},
+      owner: %{value: &get_owner/1},
       other_members: %{value: &get_other_members/1},
       limits: %{
         value: fn site ->
-          case site.ingest_rate_limit_threshold do
-            nil -> ""
-            0 -> "🛑 BLOCKED"
-            n -> "⏱ #{n}/#{site.ingest_rate_limit_scale_seconds}s (per server)"
-          end
+          rate_limiting_status =
+            case site.ingest_rate_limit_threshold do
+              nil -> ""
+              0 -> "🛑 BLOCKED"
+              n -> "⏱ #{n}/#{site.ingest_rate_limit_scale_seconds}s (per server)"
+            end
+
+          owner = Enum.find(site.memberships, fn m -> m.role == :owner end)
+
+          owner_limits =
+            if owner && owner.user.accept_traffic_until &&
+                 Date.after?(Date.utc_today(), owner.user.accept_traffic_until) do
+              "💸 Rejecting traffic"
+            end
+
+          {:safe, Enum.join([rate_limiting_status, owner_limits], "<br/><br/>")}
         end
       }
     ]
@@ -117,11 +128,16 @@ defmodule Plausible.SiteAdmin do
     Timex.format!(date, "{Mshort} {D}, {YYYY}")
   end
 
-  defp get_owner_email(site) do
+  defp get_owner(site) do
     owner = Enum.find(site.memberships, fn m -> m.role == :owner end)
 
     if owner do
-      owner.user.email
+      {:safe,
+       """
+        <a href="/crm/auth/user/#{owner.user.id}">#{owner.user.name}</a>
+        <br/><br/>
+        #{owner.user.email}
+       """}
     end
   end
 

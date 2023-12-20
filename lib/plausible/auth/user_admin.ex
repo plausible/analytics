@@ -14,8 +14,13 @@ defmodule Plausible.Auth.UserAdmin do
       name: nil,
       email: nil,
       previous_email: nil,
-      trial_expiry_date: nil,
-      allow_next_upgrade_override: nil
+      trial_expiry_date: %{
+        help_text: "Change will also update Accept Traffic Until date"
+      },
+      allow_next_upgrade_override: nil,
+      accept_traffic_until: %{
+        help_text: "Change will take up to 15 minutes to propagate"
+      }
     ]
   end
 
@@ -32,7 +37,11 @@ defmodule Plausible.Auth.UserAdmin do
       subscription_plan: %{value: &subscription_plan/1},
       subscription_status: %{value: &subscription_status/1},
       usage: %{value: &usage_link/1},
-      grace_period: %{value: &grace_period_status/1}
+      grace_period: %{value: &grace_period_status/1},
+      accept_traffic_until: %{
+        name: "Accept traffic until",
+        value: &format_date(&1.accept_traffic_until)
+      }
     ]
   end
 

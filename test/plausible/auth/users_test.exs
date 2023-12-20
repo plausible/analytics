@@ -10,25 +10,31 @@ defmodule Plausible.UsersTest do
     test "update" do
       user = insert(:user) |> User.start_trial() |> Repo.update!()
       # 30 for trial + 14
-      assert Date.diff(user.accept_traffic_until, Date.utc_today()) == 44
+      assert Date.diff(user.accept_traffic_until, Date.utc_today()) ==
+               30 + User.trial_accept_traffic_until_offset_days()
 
       future = Date.add(Date.utc_today(), 30)
       insert(:subscription, user: user, next_bill_date: future)
 
       assert updated_user = Users.update_accept_traffic_until(user)
-      assert Date.diff(updated_user.accept_traffic_until, future) == 30
+
+      assert Date.diff(updated_user.accept_traffic_until, future) ==
+               User.subscription_accept_traffic_until_offset_days()
     end
 
     test "retrieve: trial + 14 days" do
       user = insert(:user)
-      assert Users.accept_traffic_until(user) == Date.utc_today() |> Date.add(44)
+
+      assert Users.accept_traffic_until(user) ==
+               Date.utc_today() |> Date.add(30 + User.trial_accept_traffic_until_offset_days())
     end
 
     test "retrieve: last_bill_date + 30 days" do
       future = Date.add(Date.utc_today(), 30)
       user = insert(:user, subscription: build(:subscription, next_bill_date: future))
 
-      assert Users.accept_traffic_until(user) == future |> Date.add(30)
+      assert Users.accept_traffic_until(user) ==
+               future |> Date.add(User.subscription_accept_traffic_until_offset_days())
     end
 
     test "retrieve: free plan" do

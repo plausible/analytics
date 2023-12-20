@@ -11,7 +11,7 @@ defmodule Plausible.Users do
   alias Plausible.Billing.Subscription
   alias Plausible.Repo
 
-  @spec update_accept_traffic_until(Auth.User.t()) :: {:ok, Auth.User.t()}
+  @spec update_accept_traffic_until(Auth.User.t()) :: Auth.User.t()
   def update_accept_traffic_until(user) do
     user
     |> Auth.User.changeset(%{accept_traffic_until: accept_traffic_until(user)})
@@ -25,13 +25,17 @@ defmodule Plausible.Users do
 
       cond do
         Plausible.Billing.on_trial?(user) ->
-          Timex.shift(user.trial_expiry_date, days: 14)
+          Timex.shift(user.trial_expiry_date,
+            days: Auth.User.trial_accept_traffic_until_offset_days()
+          )
 
         user.subscription && user.subscription.paddle_plan_id == "free_10k" ->
           @accept_traffic_until_free
 
         user.subscription && user.subscription.next_bill_date ->
-          Timex.shift(user.subscription.next_bill_date, days: 30)
+          Timex.shift(user.subscription.next_bill_date,
+            days: Auth.User.subscription_accept_traffic_until_offset_days()
+          )
 
         true ->
           raise "This user is neither on trial or has a valid subscription. Manual intervention required."
