@@ -3,6 +3,7 @@ defmodule Plausible.Billing do
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.{Subscription, Plans, Quota}
+  alias Plausible.Auth.User
 
   @spec active_subscription_for(integer()) :: Subscription.t() | nil
   def active_subscription_for(user_id) do
@@ -42,7 +43,14 @@ defmodule Plausible.Billing do
     subscription = active_subscription_for(user.id)
     plan = Plans.find(new_plan_id)
 
-    with :ok <- Quota.ensure_can_subscribe_to_plan(user, plan),
+    limit_checking_opts =
+      if user.allow_next_upgrade_override do
+        [ignore_pageview_limit: true]
+      else
+        []
+      end
+
+    with :ok <- Quota.ensure_within_plan_limits(user, plan, limit_checking_opts),
          do: do_change_plan(subscription, new_plan_id)
   end
 
@@ -81,10 +89,10 @@ defmodule Plausible.Billing do
     end
   end
 
-  @spec check_needs_to_upgrade(Plausible.Auth.User.t()) ::
+  @spec check_needs_to_upgrade(User.t()) ::
           {:needs_to_upgrade, :no_trial | :no_active_subscription | :grace_period_ended}
           | :no_upgrade_needed
-  def check_needs_to_upgrade(%Plausible.Auth.User{trial_expiry_date: nil}) do
+  def check_needs_to_upgrade(%User{trial_expiry_date: nil}) do
     {:needs_to_upgrade, :no_trial}
   end
 
@@ -111,7 +119,7 @@ defmodule Plausible.Billing do
   def subscription_is_active?(nil), do: false
 
   on_full_build do
-    def on_trial?(%Plausible.Auth.User{trial_expiry_date: nil}), do: false
+    def on_trial?(%User{trial_expiry_date: nil}), do: false
 
     def on_trial?(user) do
       user = Plausible.Users.with_subscription(user)
@@ -130,7 +138,7 @@ defmodule Plausible.Billing do
       if present?(params["passthrough"]) do
         params
       else
-        user = Repo.get_by(Plausible.Auth.User, email: params["email"])
+        user = Repo.get_by(User, email: params["email"])
         Map.put(params, "passthrough", user && user.id)
       end
 
@@ -223,7 +231,7 @@ defmodule Plausible.Billing do
   defp present?(nil), do: false
   defp present?(_), do: true
 
-  defp maybe_remove_grace_period(%Plausible.Auth.User{} = user) do
+  defp maybe_remove_grace_period(%User{} = user) do
     alias Plausible.Auth.GracePeriod
 
     case user.grace_period do
@@ -251,7 +259,7 @@ defmodule Plausible.Billing do
 
   def paddle_api(), do: Application.fetch_env!(:plausible, :paddle_api)
 
-  def cancelled_subscription_notice_dismiss_id(%Plausible.Auth.User{} = user) do
+  def cancelled_subscription_notice_dismiss_id(%User{} = user) do
     "subscription_cancelled__#{user.id}"
   end
 
@@ -265,7 +273,7 @@ defmodule Plausible.Billing do
 
   defp after_subscription_update(subscription) do
     user =
-      Plausible.Auth.User
+      User
       |> Repo.get!(subscription.user_id)
       |> Map.put(:subscription, subscription)
 

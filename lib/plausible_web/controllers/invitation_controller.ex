@@ -17,6 +17,19 @@ defmodule PlausibleWeb.InvitationController do
         |> put_flash(:error, "Invitation missing or already accepted")
         |> redirect(to: "/sites")
 
+      {:error, :no_plan} ->
+        conn
+        |> put_flash(:error, "No existing subscription")
+        |> redirect(to: "/sites")
+
+      {:error, {:over_plan_limits, limits}} ->
+        conn
+        |> put_flash(
+          :error,
+          "Plan limits exceeded: #{PlausibleWeb.TextHelpers.pretty_list(limits)}."
+        )
+        |> redirect(to: "/sites")
+
       {:error, _} ->
         conn
         |> put_flash(:error, "Something went wrong, please try again")

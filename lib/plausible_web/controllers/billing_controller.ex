@@ -110,8 +110,8 @@ defmodule PlausibleWeb.BillingController do
       {:error, e} ->
         msg =
           case e do
-            %{exceeded_limits: exceeded_limits} ->
-              "Unable to subscribe to this plan because the following limits are exceeded: #{inspect(exceeded_limits)}"
+            {:over_plan_limits, exceeded_limits} ->
+              "Unable to subscribe to this plan because the following limits are exceeded: #{PlausibleWeb.TextHelpers.pretty_list(exceeded_limits)}"
 
             %{"code" => 147} ->
               # https://developer.paddle.com/api-reference/intro/api-error-codes

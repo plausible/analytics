@@ -259,7 +259,7 @@ defmodule PlausibleWeb.Components.Billing do
     ~H"""
     <script type="text/javascript" src="https://cdn.paddle.com/paddle/paddle.js">
     </script>
-    <script :if={Application.get_env(:plausible, :environment) == "dev"}>
+    <script :if={Application.get_env(:plausible, :environment) in ["dev", "staging"]}>
       Paddle.Environment.set('sandbox')
     </script>
     <script>

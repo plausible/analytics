@@ -37,7 +37,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "Unable to subscribe to this plan because the following limits are exceeded: [:team_member_limit]"
+               "Unable to subscribe to this plan because the following limits are exceeded: team member limit"
     end
 
     test "errors if usage exceeds site limit even when user.next_upgrade_override is true", %{
@@ -54,7 +54,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "are exceeded: [:site_limit]"
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "are exceeded: site limit"
       assert subscription.paddle_plan_id == "123123"
     end
 
@@ -74,7 +74,7 @@ defmodule PlausibleWeb.BillingControllerTest do
       subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
 
       assert Phoenix.Flash.get(conn1.assigns.flash, :error) =~
-               "are exceeded: [:monthly_pageview_limit]"
+               "are exceeded: monthly pageview limit"
 
       assert subscription.paddle_plan_id == "123123"
 

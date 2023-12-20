@@ -10,6 +10,21 @@ defmodule Plausible.Billing.Quota do
   alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
+  @type limit() :: :site_limit | :pageview_limit | :team_member_limit
+
+  @type over_limits_error() :: {:over_plan_limits, [limit()]}
+
+  @type monthly_pageview_usage() :: %{period() => usage_cycle()}
+
+  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
+
+  @type usage_cycle :: %{
+          date_range: Date.Range.t(),
+          pageviews: non_neg_integer(),
+          custom_events: non_neg_integer(),
+          total: non_neg_integer()
+        }
+
   def usage(user, opts \\ []) do
     basic_usage = %{
       monthly_pageviews: monthly_pageview_usage(user),
@@ -129,33 +144,49 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @type monthly_pageview_usage() :: %{period() => usage_cycle()}
+  @doc """
+  Queries the ClickHouse database for the monthly pageview usage. If the given user's
+  subscription is `active`, `past_due`, or a `deleted` (but not yet expired), a map
+  with the following structure is returned:
 
-  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
+  ```elixir
+  %{
+    current_cycle: usage_cycle(),
+    last_cycle: usage_cycle(),
+    penultimate_cycle: usage_cycle()
+  }
+  ```
 
-  @type usage_cycle :: %{
-          date_range: Date.Range.t(),
-          pageviews: non_neg_integer(),
-          custom_events: non_neg_integer(),
-          total: non_neg_integer()
-        }
+  In all other cases of the subscription status (or a `free_10k` subscription which
+  does not have a `last_bill_date` defined) - the following structure is returned:
 
-  @spec monthly_pageview_usage(User.t()) :: monthly_pageview_usage()
+  ```elixir
+  %{last_30_days: usage_cycle()}
+  ```
 
-  def monthly_pageview_usage(user) do
+  Given only a user as input, the usage is queried from across all the sites that the
+  user owns. Alternatively, given an optional argument of `site_ids`, the usage from
+  across all those sites is queried instead.
+  """
+  @spec monthly_pageview_usage(User.t(), list() | nil) :: monthly_pageview_usage()
+  def monthly_pageview_usage(user, site_ids \\ nil)
+
+  def monthly_pageview_usage(user, nil) do
+    monthly_pageview_usage(user, Plausible.Sites.owned_site_ids(user))
+  end
+
+  def monthly_pageview_usage(user, site_ids) do
     active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
 
     if active_subscription? && user.subscription.last_bill_date do
-      owned_site_ids = Plausible.Sites.owned_site_ids(user)
-
       [:current_cycle, :last_cycle, :penultimate_cycle]
       |> Task.async_stream(fn cycle ->
-        %{cycle => usage_cycle(user, cycle, owned_site_ids)}
+        %{cycle => usage_cycle(user, cycle, site_ids)}
       end)
       |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
       |> Enum.reduce(%{}, &Map.merge/2)
     else
-      %{last_30_days: usage_cycle(user, :last_30_days)}
+      %{last_30_days: usage_cycle(user, :last_30_days, site_ids)}
     end
   end
 
@@ -334,48 +365,63 @@ defmodule Plausible.Billing.Quota do
     for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
-  def ensure_can_subscribe_to_plan(user, plan, usage \\ nil)
+  @doc """
+  Ensures that the given user (or the usage map) is within the limits
+  of the given plan.
 
-  def ensure_can_subscribe_to_plan(%User{} = user, %Plan{} = plan, usage) do
-    usage = if usage, do: usage, else: usage(user)
+  An `opts` argument can be passed with `ignore_pageview_limit: true`
+  which bypasses the pageview limit check and returns `:ok` as long as
+  the other limits are not exceeded.
+  """
+  @spec ensure_within_plan_limits(User.t() | map(), struct() | atom() | nil, Keyword.t()) ::
+          :ok | {:error, over_limits_error()}
+  def ensure_within_plan_limits(user_or_usage, plan, opts \\ [])
 
-    case exceeded_limits(user, plan, usage) do
+  def ensure_within_plan_limits(%User{} = user, %plan_mod{} = plan, opts)
+      when plan_mod in [Plan, EnterprisePlan] do
+    ensure_within_plan_limits(usage(user), plan, opts)
+  end
+
+  def ensure_within_plan_limits(usage, %plan_mod{} = plan, opts)
+      when plan_mod in [Plan, EnterprisePlan] do
+    case exceeded_limits(usage, plan, opts) do
       [] -> :ok
-      exceeded_limits -> {:error, %{exceeded_limits: exceeded_limits}}
+      exceeded_limits -> {:error, {:over_plan_limits, exceeded_limits}}
     end
   end
 
-  def ensure_can_subscribe_to_plan(_, _, _), do: :ok
+  def ensure_within_plan_limits(_, _, _), do: :ok
 
-  defp exceeded_limits(%User{} = user, %Plan{} = plan, usage) do
+  defp exceeded_limits(usage, plan, opts) do
     for {limit, exceeded?} <- [
           {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
           {:site_limit, not within_limit?(usage.sites, plan.site_limit)},
-          {:monthly_pageview_limit, exceeds_monthly_pageview_limit?(user, plan, usage)}
+          {:monthly_pageview_limit,
+           exceeds_monthly_pageview_limit?(usage.monthly_pageviews, plan, opts)}
         ],
         exceeded? do
       limit
     end
   end
 
-  defp exceeds_monthly_pageview_limit?(%User{allow_next_upgrade_override: true}, _, _) do
-    false
-  end
+  defp exceeds_monthly_pageview_limit?(usage, plan, opts) do
+    if Keyword.get(opts, :ignore_pageview_limit) do
+      false
+    else
+      case usage do
+        %{last_30_days: %{total: total}} ->
+          !within_limit?(total, pageview_limit_with_margin(plan))
 
-  defp exceeds_monthly_pageview_limit?(_user, plan, usage) do
-    case usage.monthly_pageviews do
-      %{last_30_days: %{total: total}} ->
-        !within_limit?(total, pageview_limit_with_margin(plan))
-
-      billing_cycles_usage ->
-        Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
-          billing_cycles_usage,
-          plan.monthly_pageview_limit
-        )
+        billing_cycles_usage ->
+          Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
+            billing_cycles_usage,
+            plan.monthly_pageview_limit
+          )
+      end
     end
   end
 
-  defp pageview_limit_with_margin(%Plan{monthly_pageview_limit: limit}) do
+  defp pageview_limit_with_margin(%{monthly_pageview_limit: limit}) do
     allowance_margin = if limit == 10_000, do: 0.3, else: 0.15
     ceil(limit * (1 + allowance_margin))
   end
