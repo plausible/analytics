@@ -128,11 +128,18 @@ defmodule Plausible.Billing.FeatureTest do
       refute unquote(mod).enabled?(site)
     end
 
-    test "#{mod}.toggle/2 errors when site owner does not have access to the feature" do
+    test "#{mod}.toggle/2 errors when enabling a feature the site owner does not have access to the feature" do
       user = insert(:user, subscription: build(:growth_subscription))
       site = insert(:site, [{:members, [user]}, {unquote(property), false}])
       {:error, :upgrade_required} = unquote(mod).toggle(site)
       refute unquote(mod).enabled?(site)
+    end
+
+    test "#{mod}.toggle/2 does not error when disabling a feature the site owner does not have access to" do
+      user = insert(:user, subscription: build(:growth_subscription))
+      site = insert(:site, [{:members, [user]}, {unquote(property), true}])
+      {:ok, site} = unquote(mod).toggle(site)
+      assert unquote(mod).opted_out?(site)
     end
   end
 

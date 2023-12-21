@@ -127,18 +127,23 @@ defmodule Plausible.Billing.Feature do
 
       @impl true
       def toggle(%Plausible.Site{} = site, opts \\ []) do
-        with key when not is_nil(key) <- toggle_field(),
-             site <- Plausible.Repo.preload(site, :owner),
-             :ok <- check_availability(site.owner) do
-          override = Keyword.get(opts, :override)
-          toggle = if is_boolean(override), do: override, else: !Map.fetch!(site, toggle_field())
+        if toggle_field(), do: do_toggle(site, opts), else: :ok
+      end
 
-          site
-          |> Ecto.Changeset.change(%{toggle_field() => toggle})
-          |> Plausible.Repo.update()
-        else
-          nil = _feature_not_togglable -> :ok
-          {:error, :upgrade_required} -> {:error, :upgrade_required}
+      defp do_toggle(%Plausible.Site{} = site, opts) do
+        site = Plausible.Repo.preload(site, :owner)
+        override = Keyword.get(opts, :override)
+        toggle = if is_boolean(override), do: override, else: !Map.fetch!(site, toggle_field())
+        availability = if toggle, do: check_availability(site.owner), else: :ok
+
+        case availability do
+          :ok ->
+            site
+            |> Ecto.Changeset.change(%{toggle_field() => toggle})
+            |> Plausible.Repo.update()
+
+          error ->
+            error
         end
       end
 
