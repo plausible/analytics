@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Live.GoalSettings do
   use PlausibleWeb, :live_view
   use Phoenix.HTML
 
+  import PlausibleWeb.Live.Components.Modal
+
   alias Plausible.{Sites, Goals}
 
   def mount(
@@ -39,7 +41,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
     ~H"""
     <div id="goal-settings-main">
       <.flash_messages flash={@flash} />
-      <.live_modal id="goals-form-modal">
+      <.live_modal id="goals-form-modal" target="#goals-form">
         <.live_component
           module={PlausibleWeb.Live.GoalSettings.Form}
           id="goals-form"
@@ -56,29 +58,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
         domain={@domain}
         filter_text={@filter_text}
       />
-    </div>
-    """
-  end
-
-  def live_modal(assigns) do
-    ~H"""
-    <div
-      id={@id}
-      data-modal
-      x-cloak
-      x-data="{ modalOpen: false }"
-      x-on:open-modal.window={"if ($event.detail === '#{@id}') modalOpen = true"}
-      x-on:close-modal.window={"if ($event.detail === '#{@id}') modalOpen = false"}
-      x-on:keydown.escape.window="modalOpen = false"
-    >
-      <div x-show="modalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
-      </div>
-      <div
-        x-show="modalOpen"
-        class="fixed inset-0 flex items-center justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden"
-      >
-        <%= render_slot(@inner_block) %>
-      </div>
     </div>
     """
   end
