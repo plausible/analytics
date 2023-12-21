@@ -21,7 +21,6 @@
     data-conversions-opted-out="<%= Plausible.Billing.Feature.Goals.opted_out?(@site) %>"
     data-funnels-opted-out="<%= Plausible.Billing.Feature.Funnels.opted_out?(@site) %>"
     data-props-opted-out="<%= Plausible.Billing.Feature.Props.opted_out?(@site) %>"
-    data-conversions-available="<%= Plausible.Billing.Feature.Goals.check_availability(@site.owner) == :ok %>"
     data-funnels-available="<%= Plausible.Billing.Feature.Funnels.check_availability(@site.owner) == :ok %>"
     data-props-available="<%= Plausible.Billing.Feature.Props.check_availability(@site.owner) == :ok %>"
     data-funnels="<%= Jason.encode!(@funnels) %>"

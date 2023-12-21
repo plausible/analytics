@@ -156,7 +156,7 @@ export default function Behaviours(props) {
   }
 
   function renderConversions() {
-    if (site.hasGoals && site.goalsAvailable) {
+    if (site.hasGoals) {
       return <GoalConversions site={site} query={query} onGoalFilterClick={onGoalFilterClick} />
     }
     else if (adminAccess) {

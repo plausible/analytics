@@ -17,7 +17,6 @@ if (container) {
     offset: container.dataset.offset,
     hasGoals: container.dataset.hasGoals === 'true',
     hasProps: container.dataset.hasProps === 'true',
-    conversionsAvailable: container.dataset.conversionsAvailable === 'true',
     funnelsAvailable: container.dataset.funnelsAvailable === 'true',
     propsAvailable: container.dataset.propsAvailable === 'true',
     conversionsOptedOut: container.dataset.conversionsOptedOut === 'true',
