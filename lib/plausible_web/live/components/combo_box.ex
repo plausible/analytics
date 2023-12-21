@@ -69,6 +69,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:creatable, :boolean, default: false)
   attr(:errors, :list, default: [])
   attr(:async, :boolean, default: Mix.env() != :test)
+  attr(:on_selection_made, :any)
 
   def render(assigns) do
     assigns =
@@ -306,14 +307,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       |> assign(:display_value, display_value)
       |> assign(:submit_value, submit_value)
 
-    send(
-      self(),
-      {:selection_made,
-       %{
-         by: id,
-         submit_value: submit_value
-       }}
-    )
+    if socket.assigns[:on_selection_made] do
+      socket.assigns.on_selection_made.(submit_value, id)
+    end
 
     socket
   end

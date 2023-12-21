@@ -113,10 +113,6 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
     {:noreply, assign(socket, prop_key_options_count: count)}
   end
 
-  def handle_info({:selection_made, %{submit_value: _prop}}, socket) do
-    {:noreply, socket}
-  end
-
   def handle_event("allow-prop", %{"prop" => prop}, socket) do
     case Plausible.Props.allow(socket.assigns.site, prop) do
       {:ok, site} ->
