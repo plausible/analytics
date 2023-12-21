@@ -17,17 +17,23 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     has_access_to_revenue_goals? =
       Plausible.Billing.Feature.RevenueGoals.check_availability(owner) == :ok
 
+    form =
+      %Plausible.Goal{}
+      |> Plausible.Goal.changeset()
+      |> to_form()
+
     socket =
       socket
       |> assign(
         id: assigns.id,
+        form: form,
         current_user: assigns.current_user,
         domain: assigns.domain,
+        tabs: %{custom_events: true, pageviews: false},
         site: site,
         has_access_to_revenue_goals?: has_access_to_revenue_goals?,
         on_save_goal: assigns.on_save_goal
       )
-      |> reset()
 
     {:ok, socket}
   end
@@ -37,7 +43,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     <div id={@id}>
       <.form
         :let={f}
-        id={@form_id}
         for={@form}
         class="max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
         phx-submit="save-goal"
@@ -281,29 +286,11 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     end
   end
 
-  def handle_event("reset", _, socket) do
-    {:noreply, reset(socket)}
-  end
-
   def suggest_page_paths(input, _options, site) do
     query = Plausible.Stats.Query.from(site, %{})
 
     site
     |> Plausible.Stats.filter_suggestions(query, "page", input)
     |> Enum.map(fn %{label: label, value: value} -> {label, value} end)
-  end
-
-  defp reset(socket) do
-    form =
-      %Plausible.Goal{}
-      |> Plausible.Goal.changeset()
-      |> to_form()
-
-    assign(
-      socket,
-      form_id: socket.assigns.id <> "-" <> Ecto.UUID.generate(),
-      form: form,
-      tabs: %{custom_events: true, pageviews: false}
-    )
   end
 end

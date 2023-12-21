@@ -5,6 +5,8 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   use Phoenix.LiveComponent, global_prefixes: ~w(x-)
   use Phoenix.HTML
 
+  alias PlausibleWeb.Live.Components.Modal
+
   attr(:goals, :list, required: true)
   attr(:domain, :string, required: true)
   attr(:filter_text, :string)
@@ -37,8 +39,8 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
             />
           </div>
         </form>
-        <div class="mt-4 flex sm:ml-4 sm:mt-0" x-data>
-          <PlausibleWeb.Components.Generic.button x-on:click="$dispatch('open-modal', 'goals-form-modal')">
+        <div class="mt-4 flex sm:ml-4 sm:mt-0">
+          <PlausibleWeb.Components.Generic.button x-on:click={Modal.JS.open("goals-form-modal")}>
             + Add Goal
           </PlausibleWeb.Components.Generic.button>
         </div>
