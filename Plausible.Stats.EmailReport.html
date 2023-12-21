@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Pagination — Plausible v0.0.1</title>
+    <title>Plausible.Stats.EmailReport — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,19 +102,21 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/pagination.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/email_report.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Pagination</span> 
+  <span translate="no">Plausible.Stats.EmailReport</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>Cursor-based pagination.</p>
+<p>This module exposes a <a href="#get/2"><code class="inline">get/2</code></a> function that returns a map
+of stats needed for email reports. These stats include:</p><ul><li>Total pageviews</li><li>Unique visitors</li><li>Bounce rate</li><li>A list of Top 5 sources (excluding &quot;Direct / None&quot;)</li><li>A list of Top 5 pages</li></ul><p>where total pageviews, unique visitors, and bounce rate
+also include the change compared to previous period.</p>
   </section>
 
 
@@ -132,7 +134,7 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#paginate/4" translate="no">paginate(queryable, params, opts, repo_opts \\ [])</a>
+        <a href="#get/2" translate="no">get(site, query)</a>
 
       </div>
 
@@ -151,18 +153,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="paginate/4">
-
-    <span id="paginate/3"></span>
+<section class="detail" id="get/2">
 
   <div class="detail-header">
-    <a href="#paginate/4" class="detail-link" title="Link to this function">
+    <a href="#get/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">paginate(queryable, params, opts, repo_opts \\ [])</h1>
+    <h1 class="signature" translate="no">get(site, query)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/pagination.ex#L10" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/email_report.ex#L19" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -171,13 +171,6 @@ Functions
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> paginate(<a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Queryable.html#t:t/0">Ecto.Queryable.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
-  <a href="https://hexdocs.pm/paginator/1.2.0/Paginator.Page.html#t:t/0">Paginator.Page.t</a>()</pre>
-
-      </div>
 
 
   </section>

@@ -143,6 +143,7 @@ Plausible.Stats.Compare.html
 Plausible.Stats.Comparisons.html
 Plausible.Stats.CurrentVisitors.html
 Plausible.Stats.CustomProps.html
+Plausible.Stats.EmailReport.html
 Plausible.Stats.FilterParser.html
 Plausible.Stats.FilterSuggestions.html
 Plausible.Stats.Filters.html
@@ -241,7 +242,7 @@ PlausibleWeb.Live.PropsSettings.html
 PlausibleWeb.Live.RegisterForm.html
 PlausibleWeb.Live.ResetPasswordForm.html
 PlausibleWeb.Live.Sites.html
-PlausibleWeb.MJML.WeeklyReport.html
+PlausibleWeb.MJML.StatsReport.html
 PlausibleWeb.PageController.html
 PlausibleWeb.PageView.html
 PlausibleWeb.Plugins.API.Controllers.CustomProps.html
@@ -333,8 +334,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-B9C5D3A6.js
-dist/sidebar_items-A7CD9084.js
+dist/search_data-6A405325.js
+dist/sidebar_items-10305333.js
 index.html
 readme.html
 search.html
