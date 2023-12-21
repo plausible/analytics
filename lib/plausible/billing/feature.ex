@@ -108,17 +108,12 @@ defmodule Plausible.Billing.Feature do
       @impl true
       def enabled?(%Plausible.Site{} = site) do
         site = Plausible.Repo.preload(site, :owner)
-
-        cond do
-          check_availability(site.owner) !== :ok -> false
-          is_nil(toggle_field()) -> true
-          true -> Map.fetch!(site, toggle_field())
-        end
+        check_availability(site.owner) == :ok && !opted_out?(site)
       end
 
       @impl true
       def opted_out?(%Plausible.Site{} = site) do
-        if is_nil(toggle_field()), do: false, else: not Map.fetch!(site, toggle_field())
+        if is_nil(toggle_field()), do: false, else: !Map.fetch!(site, toggle_field())
       end
 
       @impl true
