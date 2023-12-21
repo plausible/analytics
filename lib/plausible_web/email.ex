@@ -116,14 +116,12 @@ defmodule PlausibleWeb.Email do
     |> render("trial_over_email.html", user: user)
   end
 
-  def weekly_report(email, site, assigns) do
-    assigns = Keyword.put(assigns, :site, site)
-
+  def stats_report(email, assigns) do
     base_email(%{layout: nil})
     |> to(email)
-    |> tag("weekly-report")
-    |> subject("#{assigns[:name]} report for #{site.domain}")
-    |> html_body(PlausibleWeb.MJML.WeeklyReport.render(assigns))
+    |> tag("#{assigns.type}-report")
+    |> subject("#{assigns.name} report for #{assigns.site.domain}")
+    |> html_body(PlausibleWeb.MJML.StatsReport.render(assigns))
   end
 
   def spike_notification(email, site, current_visitors, sources, dashboard_link) do

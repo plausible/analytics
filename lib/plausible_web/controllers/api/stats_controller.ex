@@ -447,7 +447,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
       if prev_results do
         prev_value = get_in(prev_results, [key, :value])
-        change = calculate_change(key, prev_value, value)
+        change = Stats.Compare.calculate_change(key, prev_value, value)
 
         %{
           name: name,
@@ -459,14 +459,6 @@ defmodule PlausibleWeb.Api.StatsController do
         %{name: name, value: formatter.(value)}
       end
     end
-  end
-
-  def calculate_change(:bounce_rate, old_count, new_count) do
-    if old_count > 0, do: new_count - old_count
-  end
-
-  def calculate_change(_metric, old_count, new_count) do
-    Stats.Compare.percent_change(old_count, new_count)
   end
 
   def sources(conn, params) do
