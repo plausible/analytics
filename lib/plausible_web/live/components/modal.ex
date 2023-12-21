@@ -43,4 +43,8 @@ defmodule PlausibleWeb.Live.Components.Modal do
     </div>
     """
   end
+
+  def close(socket, id) do
+    Phoenix.LiveView.push_event(socket, "close-modal", %{id: id})
+  end
 end

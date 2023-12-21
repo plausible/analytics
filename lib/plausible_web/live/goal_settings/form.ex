@@ -269,9 +269,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   def handle_event("save-goal", %{"goal" => goal}, socket) do
     case Plausible.Goals.create(socket.assigns.site, goal) do
       {:ok, goal} ->
-        goal
-        |> Map.put(:funnels, [])
-        |> socket.assigns.on_save_goal.()
+        socket =
+          goal
+          |> Map.put(:funnels, [])
+          |> socket.assigns.on_save_goal.(socket)
 
         {:noreply, socket}
 

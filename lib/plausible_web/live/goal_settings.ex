@@ -5,9 +5,9 @@ defmodule PlausibleWeb.Live.GoalSettings do
   use PlausibleWeb, :live_view
   use Phoenix.HTML
 
-  import PlausibleWeb.Live.Components.Modal
 
   alias Plausible.{Sites, Goals}
+  alias PlausibleWeb.Live.Components.Modal
 
   def mount(
         _params,
@@ -41,16 +41,19 @@ defmodule PlausibleWeb.Live.GoalSettings do
     ~H"""
     <div id="goal-settings-main">
       <.flash_messages flash={@flash} />
-      <.live_modal id="goals-form-modal" target="#goals-form">
+      <Modal.live_modal id="goals-form-modal" target="#goals-form">
         <.live_component
           module={PlausibleWeb.Live.GoalSettings.Form}
           id="goals-form"
           domain={@domain}
           site={@site}
           current_user={@current_user}
-          on_save_goal={fn goal -> send(self(), {:goal_added, goal}) end}
+          on_save_goal={fn goal, socket -> 
+            send(self(), {:goal_added, goal}) 
+            Modal.close(socket, "goals-form-modal")
+          end}
         />
-      </.live_modal>
+      </Modal.live_modal>
       <.live_component
         module={PlausibleWeb.Live.GoalSettings.List}
         id="goals-list"
@@ -105,7 +108,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
         displayed_goals: [goal | socket.assigns.all_goals]
       )
       |> put_live_flash(:success, "Goal saved successfully")
-      |> push_event("close-modal", %{id: "goals-form-modal"})
 
     {:noreply, socket}
   end
