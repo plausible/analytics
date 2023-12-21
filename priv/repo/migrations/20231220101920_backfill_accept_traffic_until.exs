@@ -62,7 +62,7 @@ defmodule Plausible.Repo.Migrations.BackfillAcceptTrafficUntil do
       s.paddle_plan_id != 'free_10k'
     """
 
-    # abandoned accounts (no trial, subscription cancelled, current period needs payment)
+    # subscription for which current period needs payment)
     execute """
     UPDATE users u1
     SET accept_traffic_until = CURRENT_DATE + TRUNC(RANDOM() * (20 - 8 + 1) + 8)::int
@@ -71,9 +71,9 @@ defmodule Plausible.Repo.Migrations.BackfillAcceptTrafficUntil do
       SELECT * FROM subscriptions sub WHERE u2.id = sub.user_id ORDER BY sub.inserted_at DESC LIMIT 1
     ) s ON (true)
     WHERE
-      u1.id = u2.id
+      s.user_id = u1.id
     AND
-      s.status = 'deleted'
+      u1.id = u2.id
     AND
       s.next_bill_date < CURRENT_DATE
     """
