@@ -58,6 +58,13 @@ defmodule Plausible.BillingTest do
       assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_trial}
     end
 
+    test "is false for user with empty trial expiry date but with an active subscription" do
+      user = insert(:user, trial_expiry_date: nil)
+      insert(:subscription, user: user)
+
+      assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
+    end
+
     test "is false for a user with an expired trial but an active subscription" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user)
