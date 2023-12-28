@@ -92,16 +92,13 @@ defmodule Plausible.Billing do
   @spec check_needs_to_upgrade(User.t()) ::
           {:needs_to_upgrade, :no_trial | :no_active_subscription | :grace_period_ended}
           | :no_upgrade_needed
-  def check_needs_to_upgrade(%User{trial_expiry_date: nil}) do
-    {:needs_to_upgrade, :no_trial}
-  end
-
   def check_needs_to_upgrade(user) do
     user = Plausible.Users.with_subscription(user)
-    trial_is_over = Timex.before?(user.trial_expiry_date, Timex.today())
+    trial_is_over = user.trial_expiry_date && Timex.before?(user.trial_expiry_date, Timex.today())
     subscription_active = subscription_is_active?(user.subscription)
 
     cond do
+      !user.trial_expiry_date && !subscription_active -> {:needs_to_upgrade, :no_trial}
       trial_is_over && !subscription_active -> {:needs_to_upgrade, :no_active_subscription}
       Plausible.Auth.GracePeriod.expired?(user) -> {:needs_to_upgrade, :grace_period_ended}
       true -> :no_upgrade_needed
