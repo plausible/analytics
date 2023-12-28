@@ -523,7 +523,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
-  test "pageviews breakdown by event:page - imported data having pageviews=0 and visits=n should be bypassed",
+  test "pageviews breakdown by event:page - imported data having pageviews=0 and visitors=n should be bypassed",
        %{conn: conn, site: site} do
     site =
       site
@@ -538,9 +538,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         timestamp: ~N[2021-01-01 00:00:00]
       ),
       build(:imported_pages,
-        page: "/some-other-page",
+        page: "/skip-me",
         date: ~D[2021-01-01],
-        time_on_page: 60,
         visitors: 1,
         pageviews: 0
       )
