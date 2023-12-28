@@ -113,7 +113,10 @@ defmodule PlausibleWeb.Email do
     |> to(user)
     |> tag("trial-over-email")
     |> subject("Your Plausible trial has ended")
-    |> render("trial_over_email.html", user: user)
+    |> render("trial_over_email.html",
+      user: user,
+      extra_offset: Plausible.Auth.User.trial_accept_traffic_until_offset_days()
+    )
   end
 
   def stats_report(email, assigns) do
@@ -190,7 +193,12 @@ defmodule PlausibleWeb.Email do
   end
 
   def yearly_expiration_notification(user) do
-    date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
+    next_bill_date = Timex.format!(user.subscription.next_bill_date, "{Mfull} {D}, {YYYY}")
+
+    accept_traffic_until =
+      user
+      |> Plausible.Users.accept_traffic_until()
+      |> Timex.format!("{Mfull} {D}, {YYYY}")
 
     priority_email()
     |> to(user)
@@ -198,7 +206,8 @@ defmodule PlausibleWeb.Email do
     |> subject("Your Plausible subscription is about to expire")
     |> render("yearly_expiration_notification.html", %{
       user: user,
-      date: date
+      next_bill_date: next_bill_date,
+      accept_traffic_until: accept_traffic_until
     })
   end
 
@@ -342,6 +351,22 @@ defmodule PlausibleWeb.Email do
       feedback: feedback,
       trace_id: trace_id
     })
+  end
+
+  def approaching_accept_traffic_until(user) do
+    base_email()
+    |> to(user.email)
+    |> tag("drop-traffic-warning-first")
+    |> subject("We'll stop counting your stats")
+    |> render("approaching_accept_traffic_until.html", time: "next week")
+  end
+
+  def approaching_accept_traffic_until_tomorrow(user) do
+    base_email()
+    |> to(user.email)
+    |> tag("drop-traffic-warning-final")
+    |> subject("A reminder that we'll stop counting your stats tomorrow")
+    |> render("approaching_accept_traffic_until.html", time: "tomorrow")
   end
 
   @doc """

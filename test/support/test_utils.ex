@@ -213,6 +213,10 @@ defmodule Plausible.TestUtils do
     NaiveDateTime.truncate(naive, :second)
   end
 
+  def to_naive_truncate(%Date{} = date) do
+    NaiveDateTime.new!(date, ~T[00:00:00])
+  end
+
   def eventually(expectation, wait_time_ms \\ 50, retries \\ 10) do
     Enum.reduce_while(1..retries, nil, fn attempt, _acc ->
       case expectation.() do

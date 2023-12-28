@@ -275,6 +275,7 @@ defmodule Plausible.Billing do
       |> Map.put(:subscription, subscription)
 
     user
+    |> Plausible.Users.update_accept_traffic_until()
     |> maybe_remove_grace_period()
     |> Plausible.Users.maybe_reset_next_upgrade_override()
     |> tap(&Plausible.Billing.SiteLocker.update_sites_for/1)

@@ -118,8 +118,13 @@ defmodule Plausible.Ingestion.EventTest do
   end
 
   test "event pipeline drops events for site with accept_trafic_until in the past" do
-    yesterday = NaiveDateTime.add(NaiveDateTime.utc_now(), -1, :day)
-    site = insert(:site, ingest_rate_limit_threshold: 1, accept_traffic_until: yesterday)
+    yesterday = Date.add(Date.utc_today(), -1)
+
+    site =
+      insert(:site,
+        ingest_rate_limit_threshold: 1,
+        members: [build(:user, accept_traffic_until: yesterday)]
+      )
 
     payload = %{
       name: "pageview",

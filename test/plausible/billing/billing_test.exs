@@ -189,6 +189,19 @@ defmodule Plausible.BillingTest do
       refute Repo.reload!(site).locked
     end
 
+    @tag :full_build_only
+    test "updates accept_traffic_until" do
+      user = insert(:user)
+
+      %{@subscription_created_params | "passthrough" => user.id}
+      |> Billing.subscription_created()
+
+      next_bill = Date.from_iso8601!(@subscription_created_params["next_bill_date"])
+
+      assert Repo.reload!(user).accept_traffic_until ==
+               Date.add(next_bill, 30)
+    end
+
     test "sets user.allow_next_upgrade_override field to false" do
       user = insert(:user, allow_next_upgrade_override: true)
 
@@ -248,6 +261,24 @@ defmodule Plausible.BillingTest do
       |> Billing.subscription_updated()
 
       refute Repo.reload!(site).locked
+    end
+
+    @tag :full_build_only
+    test "updates accept_traffic_until" do
+      user = insert(:user)
+      subscription = insert(:subscription, user: user)
+
+      @subscription_updated_params
+      |> Map.merge(%{
+        "subscription_id" => subscription.paddle_subscription_id,
+        "passthrough" => user.id
+      })
+      |> Billing.subscription_updated()
+
+      next_bill = Date.from_iso8601!(@subscription_updated_params["next_bill_date"])
+
+      assert Repo.reload!(user).accept_traffic_until ==
+               Date.add(next_bill, 30)
     end
 
     test "sets user.allow_next_upgrade_override field to false" do

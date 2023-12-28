@@ -3,6 +3,17 @@ defmodule Plausible.SitesTest do
 
   alias Plausible.Sites
 
+  describe "create a site" do
+    test "creates a site" do
+      user = insert(:user)
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+               Sites.create(user, params)
+    end
+  end
+
   describe "is_member?" do
     test "is true if user is a member of the site" do
       user = insert(:user)

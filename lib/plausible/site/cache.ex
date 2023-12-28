@@ -56,7 +56,6 @@ defmodule Plausible.Site.Cache do
     domain_changed_from
     ingest_rate_limit_scale_seconds
     ingest_rate_limit_threshold
-    accept_traffic_until
    )a
 
   @type t() :: Site.t()
@@ -117,12 +116,13 @@ defmodule Plausible.Site.Cache do
   defp sites_by_domain_query do
     from s in Site,
       left_join: rg in assoc(s, :revenue_goals),
+      inner_join: owner in assoc(s, :owner),
       select: {
         s.domain,
         s.domain_changed_from,
         %{struct(s, ^@cached_schema_fields) | from_cache?: true}
       },
-      preload: [revenue_goals: rg]
+      preload: [revenue_goals: rg, owner: owner]
   end
 
   @spec merge(new_items :: [Site.t()], opts :: Keyword.t()) :: :ok
