@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.Auth.Invitation — Plausible v0.0.1</title>
+    <title>Plausible.Workers.AcceptTrafficUntil — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,144 +102,24 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/invitation.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/workers/accept_traffic_until_notification.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Auth.Invitation</span> 
+  <span translate="no">Plausible.Workers.AcceptTrafficUntil</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
-
-  <section id="summary" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#summary">
-        <i class="ri-link-m" aria-hidden="true"></i>
-        Summary
-      </a>
-    </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:t/0" translate="no">t()</a>
-
-      </div>
-
-    </div>
-
-</div>
-<div class="summary-functions summary">
-  <h2>
-    <a href="#functions">Functions</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#new/1" translate="no">new(attrs \\ %{})</a>
-
-      </div>
-
-    </div>
-
-</div>
-
+  <section id="moduledoc">
+<p>A worker meant to be run once a day that sends out e-mail notifications to site
+owners assuming:</p><ul><li>their sites still receive traffic (i.e. have stats for yesterday)</li><li><code class="inline">site.accept_traffic_until</code> is approaching either tomorrow or exactly in 7 days</li></ul><p>Users having no sites or sites that receive no traffic, won't be notified.
+We make a tiny effort here to make sure we send the same notification at most once a day.</p>
   </section>
 
 
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-Types
-      </a>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:t/0">
-
-  <div class="detail-header">
-    <a href="#t:t/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">t()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/invitation.ex#L5" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Auth.Invitation{
-  __meta__: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  email: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  invitation_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  inviter: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  inviter_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  role: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  site: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
-  updated_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()
-}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
-
-  <section id="functions" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#functions">
-        <i class="ri-link-m" aria-hidden="true"></i>
-Functions
-      </a>
-    </h1>
-    <div class="functions-list">
-<section class="detail" id="new/1">
-
-    <span id="new/0"></span>
-
-  <div class="detail-header">
-    <a href="#new/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">new(attrs \\ %{})</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/invitation.ex#L20" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
 
       <footer class="footer">
         <p>
