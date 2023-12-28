@@ -542,6 +542,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         date: ~D[2021-01-01],
         visitors: 1,
         pageviews: 0
+      ),
+      build(:imported_pages,
+        page: "/include-me",
+        date: ~D[2021-01-01],
+        visitors: 1,
+        pageviews: 1
       )
     ])
 
@@ -558,7 +564,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     assert json_response(conn, 200) == %{
              "results" => [
                %{"page" => "/", "pageviews" => 2},
-               %{"page" => "/plausible.io", "pageviews" => 1}
+               %{"page" => "/plausible.io", "pageviews" => 1},
+               %{"page" => "/include-me", "pageviews" => 1}
              ]
            }
   end
