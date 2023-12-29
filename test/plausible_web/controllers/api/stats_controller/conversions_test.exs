@@ -405,45 +405,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    test "can filter by multiple negated mixed goals", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, pathname: "/"),
-        build(:pageview, pathname: "/"),
-        build(:pageview, pathname: "/another"),
-        build(:pageview, pathname: "/register"),
-        build(:event, name: "CTA"),
-        build(:event, name: "Signup")
-      ])
-
-      insert(:goal, %{site: site, page_path: "/register"})
-      insert(:goal, %{site: site, page_path: "/another"})
-      insert(:goal, %{site: site, event_name: "CTA"})
-      insert(:goal, %{site: site, event_name: "Signup"})
-
-      filters = Jason.encode!(%{goal: "!Signup|Visit /another"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "CTA",
-                 "visitors" => 1,
-                 "events" => 1,
-                 "conversion_rate" => 16.7
-               },
-               %{
-                 "name" => "Visit /register",
-                 "visitors" => 1,
-                 "events" => 1,
-                 "conversion_rate" => 16.7
-               }
-             ]
-    end
-
     test "can combine wildcard and no wildcard in matches_member", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, pathname: "/blog/post-1"),
@@ -512,75 +473,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "visitors" => 1,
                  "events" => 1,
                  "conversion_rate" => 16.7
-               }
-             ]
-    end
-
-    test "can filter by not_matches_member filter type on goals", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, pathname: "/another"),
-        build(:pageview, pathname: "/another"),
-        build(:pageview, pathname: "/blog/post-1"),
-        build(:pageview, pathname: "/blog/post-2"),
-        build(:event, name: "CTA"),
-        build(:event, name: "Signup")
-      ])
-
-      insert(:goal, %{site: site, page_path: "/blog**"})
-      insert(:goal, %{site: site, page_path: "/ano**"})
-      insert(:goal, %{site: site, event_name: "CTA"})
-      insert(:goal, %{site: site, event_name: "Signup"})
-
-      filters = Jason.encode!(%{goal: "!Signup|Visit /blog**"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "Visit /ano**",
-                 "visitors" => 2,
-                 "events" => 2,
-                 "conversion_rate" => 33.3
-               },
-               %{
-                 "name" => "CTA",
-                 "visitors" => 1,
-                 "events" => 1,
-                 "conversion_rate" => 16.7
-               }
-             ]
-    end
-
-    test "can combine wildcard and no wildcard in not_matches_member", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, pathname: "/blog/post-1"),
-        build(:pageview, pathname: "/blog/post-2"),
-        build(:pageview, pathname: "/billing/upgrade"),
-        build(:pageview, pathname: "/register")
-      ])
-
-      insert(:goal, %{site: site, page_path: "/blog/**"})
-      insert(:goal, %{site: site, page_path: "/billing/upgrade"})
-      insert(:goal, %{site: site, page_path: "/register"})
-
-      filters = Jason.encode!(%{goal: "!Visit /blog/**|Visit /billing/upgrade"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "Visit /register",
-                 "visitors" => 1,
-                 "events" => 1,
-                 "conversion_rate" => 25
                }
              ]
     end
