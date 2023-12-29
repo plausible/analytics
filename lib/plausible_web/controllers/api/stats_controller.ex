@@ -1218,7 +1218,7 @@ defmodule PlausibleWeb.Api.StatsController do
       if Plausible.Billing.Feature.Props.enabled?(site) do
         prop_names
       else
-        prop_names |> Enum.filter(& &1 in Plausible.Props.internal_keys())
+        prop_names |> Enum.filter(&(&1 in Plausible.Props.internal_keys()))
       end
 
     if prop_names == [] do
