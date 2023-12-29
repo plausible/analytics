@@ -36,7 +36,23 @@ defmodule Plausible.Site.CacheTest do
       %{id: first_id} = site1 = insert(:site, domain: "site1.example.com")
 
       _ =
-        insert(:site, domain: "site2.example.com", accept_traffic_until: ~N[2021-01-01 00:00:00])
+        insert(:site,
+          domain: "site2.example.com",
+          memberships: [
+            build(:site_membership,
+              user: build(:user, accept_traffic_until: ~D[2022-01-01]),
+              role: :viewer
+            ),
+            build(:site_membership,
+              user: build(:user, accept_traffic_until: ~D[2021-01-01]),
+              role: :owner
+            ),
+            build(:site_membership,
+              user: build(:user, accept_traffic_until: ~D[2020-01-01]),
+              role: :admin
+            )
+          ]
+        )
 
       :ok = Cache.refresh_all(cache_name: test)
 
@@ -50,7 +66,7 @@ defmodule Plausible.Site.CacheTest do
       assert %Site{from_cache?: true} =
                Cache.get("site2.example.com", force?: true, cache_name: test)
 
-      assert %Site{from_cache?: false, accept_traffic_until: ~N[2021-01-01 00:00:00]} =
+      assert %Site{from_cache?: false, owner: %{accept_traffic_until: ~D[2021-01-01]}} =
                Cache.get("site2.example.com", cache_name: test)
 
       refute Cache.get("site3.example.com", cache_name: test, force?: true)

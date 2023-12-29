@@ -58,6 +58,13 @@ defmodule Plausible.BillingTest do
       assert Billing.check_needs_to_upgrade(user) == {:needs_to_upgrade, :no_trial}
     end
 
+    test "is false for user with empty trial expiry date but with an active subscription" do
+      user = insert(:user, trial_expiry_date: nil)
+      insert(:subscription, user: user)
+
+      assert Billing.check_needs_to_upgrade(user) == :no_upgrade_needed
+    end
+
     test "is false for a user with an expired trial but an active subscription" do
       user = insert(:user, trial_expiry_date: Timex.shift(Timex.today(), days: -1))
       insert(:subscription, user: user)
@@ -182,6 +189,19 @@ defmodule Plausible.BillingTest do
       refute Repo.reload!(site).locked
     end
 
+    @tag :full_build_only
+    test "updates accept_traffic_until" do
+      user = insert(:user)
+
+      %{@subscription_created_params | "passthrough" => user.id}
+      |> Billing.subscription_created()
+
+      next_bill = Date.from_iso8601!(@subscription_created_params["next_bill_date"])
+
+      assert Repo.reload!(user).accept_traffic_until ==
+               Date.add(next_bill, 30)
+    end
+
     test "sets user.allow_next_upgrade_override field to false" do
       user = insert(:user, allow_next_upgrade_override: true)
 
@@ -241,6 +261,24 @@ defmodule Plausible.BillingTest do
       |> Billing.subscription_updated()
 
       refute Repo.reload!(site).locked
+    end
+
+    @tag :full_build_only
+    test "updates accept_traffic_until" do
+      user = insert(:user)
+      subscription = insert(:subscription, user: user)
+
+      @subscription_updated_params
+      |> Map.merge(%{
+        "subscription_id" => subscription.paddle_subscription_id,
+        "passthrough" => user.id
+      })
+      |> Billing.subscription_updated()
+
+      next_bill = Date.from_iso8601!(@subscription_updated_params["next_bill_date"])
+
+      assert Repo.reload!(user).accept_traffic_until ==
+               Date.add(next_bill, 30)
     end
 
     test "sets user.allow_next_upgrade_override field to false" do

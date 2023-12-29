@@ -144,8 +144,7 @@ defmodule Plausible.Ingestion.Event do
   defp put_ip_classification(%__MODULE__{} = event) do
     case event.request.ip_classification do
       "dc_ip" ->
-        emit_telemetry_dropped(event, :dc_ip)
-        event
+        drop(event, :dc_ip)
 
       _any ->
         event

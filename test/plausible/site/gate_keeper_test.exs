@@ -16,9 +16,13 @@ defmodule Plausible.Site.GateKeeperTest do
 
   test "sites with accepted_traffic_until < now are denied", %{test: test, opts: opts} do
     domain = "expired.example.com"
-    yesterday = NaiveDateTime.utc_now() |> NaiveDateTime.add(-1, :day)
+    yesterday = Date.utc_today() |> Date.add(-1)
 
-    %{id: _} = add_site_and_refresh_cache(test, domain: domain, accept_traffic_until: yesterday)
+    %{id: _} =
+      add_site_and_refresh_cache(test,
+        domain: domain,
+        members: [build(:user, accept_traffic_until: yesterday)]
+      )
 
     assert {:deny, :payment_required} = GateKeeper.check(domain, opts)
   end

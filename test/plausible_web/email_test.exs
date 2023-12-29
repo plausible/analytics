@@ -245,6 +245,34 @@ defmodule PlausibleWeb.EmailTest do
     end
   end
 
+  describe "approaching accept_traffic_until" do
+    test "renders first warning" do
+      user = build(:user)
+
+      %{html_body: body, subject: subject} =
+        PlausibleWeb.Email.approaching_accept_traffic_until(user)
+
+      assert subject == "We'll stop counting your stats"
+      assert body =~ plausible_link()
+
+      assert body =~
+               "We've noticed that you're still sending us stats so we're writing to inform you that we'll stop accepting stats from your sites next week."
+    end
+
+    test "renders final warning" do
+      user = build(:user)
+
+      %{html_body: body, subject: subject} =
+        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(user)
+
+      assert subject == "A reminder that we'll stop counting your stats tomorrow"
+      assert body =~ plausible_link()
+
+      assert body =~
+               "We've noticed that you're still sending us stats so we're writing to inform you that we'll stop accepting stats from your sites tomorrow."
+    end
+  end
+
   def plausible_link() do
     plausible_url = PlausibleWeb.EmailView.plausible_url()
     "<a href=\"#{plausible_url}\">#{plausible_url}</a>"

@@ -37,18 +37,18 @@
       <mj-column>
         <mj-text mj-class="text-label">UNIQUE VISITORS</mj-text>
         <mj-text mj-class="text-lg" css-class="visitors">
-          <%= PlausibleWeb.StatsView.large_number_format(@unique_visitors) %>
+          <%= PlausibleWeb.StatsView.large_number_format(@stats.visitors.value) %>
         </mj-text>
         <%= cond do %>
-          <% @change_visitors == nil -> %>
-            <mj-text mj-class="text-sm">N/A</mj-text>
-          <% @change_visitors >= 0 -> %>
-            <mj-text mj-class="text-sm trend-good">
-            +<%= @change_visitors %>%
+          <% @stats.visitors.change == nil -> %>
+            <mj-text css-class="change-visitors" mj-class="text-sm">N/A</mj-text>
+          <% @stats.visitors.change >= 0 -> %>
+            <mj-text css-class="change-visitors" mj-class="text-sm trend-good">
+            <%= "#{if @stats.visitors.change != 0, do: "+"}#{@stats.visitors.change}%" %>
             </mj-text>
-          <% @change_visitors < 0 -> %>
-            <mj-text mj-class="text-sm trend-bad">
-            <%= @change_visitors %>%
+          <% @stats.visitors.change < 0 -> %>
+            <mj-text css-class="change-visitors" mj-class="text-sm trend-bad">
+            <%= @stats.visitors.change %>%
             </mj-text>
         <% end %>
         <mj-spacer height="30px" />
@@ -56,18 +56,18 @@
       <mj-column>
         <mj-text mj-class="text-label">PAGEVIEWS</mj-text>
         <mj-text mj-class="text-lg" css-class="pageviews">
-          <%= PlausibleWeb.StatsView.large_number_format(@pageviews) %>
+          <%= PlausibleWeb.StatsView.large_number_format(@stats.pageviews.value) %>
         </mj-text>
         <%= cond do %>
-          <% is_nil(@change_pageviews) -> %>
-            <mj-text mj-class="text-sm">N/A</mj-text>
-          <% @change_pageviews >= 0 -> %>
-            <mj-text mj-class="text-sm trend-good">
-            +<%= @change_pageviews %>%
+          <% is_nil(@stats.pageviews.change) -> %>
+            <mj-text css-class="change-pageviews" mj-class="text-sm">N/A</mj-text>
+          <% @stats.pageviews.change >= 0 -> %>
+            <mj-text css-class="change-pageviews" mj-class="text-sm trend-good">
+            <%= "#{if @stats.pageviews.change != 0, do: "+"}#{@stats.pageviews.change}%" %>
             </mj-text>
-          <% @change_pageviews < 0 -> %>
-            <mj-text mj-class="text-sm trend-bad">
-            <%= @change_pageviews %>%
+          <% @stats.pageviews.change < 0 -> %>
+            <mj-text css-class="change-pageviews" mj-class="text-sm trend-bad">
+            <%= @stats.pageviews.change %>%
             </mj-text>
         <% end %>
         <mj-spacer height="30px" />
@@ -76,19 +76,19 @@
       <mj-column>
         <mj-text mj-class="text-label">BOUNCE RATE</mj-text>
         <mj-text mj-class="text-lg">
-          <%= @bounce_rate %>
+          <%= @stats.bounce_rate.value %>
         </mj-text>
 
         <%= cond do %>
-          <% @change_bounce_rate == nil -> %>
-            <mj-text mj-class="text-sm">N/A</mj-text>
-          <% @change_bounce_rate <= 0 -> %>
-            <mj-text mj-class="text-sm trend-good">
-            <%= @change_bounce_rate %>%
+          <% @stats.bounce_rate.change == nil -> %>
+            <mj-text css-class="change-bounce-rate" mj-class="text-sm">N/A</mj-text>
+          <% @stats.bounce_rate.change <= 0 -> %>
+            <mj-text css-class="change-bounce-rate" mj-class="text-sm trend-good">
+            <%= @stats.bounce_rate.change %>%
             </mj-text>
-          <% @change_bounce_rate > 0 -> %>
-            <mj-text mj-class="text-sm trend-bad">
-            +<%= @change_bounce_rate %>%
+          <% @stats.bounce_rate.change > 0 -> %>
+            <mj-text css-class="change-bounce-rate" mj-class="text-sm trend-bad">
+            +<%= @stats.bounce_rate.change %>%
             </mj-text>
         <% end %>
         <mj-spacer height="30px" />
@@ -106,7 +106,7 @@
         <mj-column>
           <mj-text font-weight="bold">Referrer</mj-text>
 
-          <%= for source <- @sources do %>
+          <%= for source <- @stats.sources do %>
           <mj-text css-class="referrer-name">
           <%= source[:source] %>
           </mj-text>
@@ -115,7 +115,7 @@
         <mj-column>
           <mj-text font-weight="bold" align="right">Visitors</mj-text>
 
-          <%= for source <- @sources do %>
+          <%= for source <- @stats.sources do %>
           <mj-text align="right" css-class="referrer-count">
           <%= PlausibleWeb.StatsView.large_number_format(source[:visitors]) %>
           </mj-text>
@@ -137,7 +137,7 @@
             Page
           </mj-text>
 
-          <%= for page <- @pages do %>
+          <%= for page <- @stats.pages do %>
           <mj-text css-class="page-name">
             <%= page[:page] %>
           </mj-text>
@@ -148,7 +148,7 @@
             Visitors
           </mj-text>
 
-          <%= for page <- @pages do %>
+          <%= for page <- @stats.pages do %>
             <mj-text align="right" css-class="page-count">
             <%= PlausibleWeb.StatsView.large_number_format(page[:visitors]) %>
             </mj-text>

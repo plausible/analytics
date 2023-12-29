@@ -19,6 +19,9 @@ defmodule Plausible.Auth.User do
 
   @required [:email, :name, :password]
 
+  @trial_accept_traffic_until_offset_days 14
+  @susbscription_accept_traffic_until_offset_days 30
+
   schema "users" do
     field :email, :string
     field :password_hash
@@ -30,6 +33,7 @@ defmodule Plausible.Auth.User do
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     field :previous_email, :string
+    field :accept_traffic_until, :date
 
     # A field only used as a manual override - allow subscribing
     # to any plan, even when exceeding its pageview limit
@@ -107,10 +111,26 @@ defmodule Plausible.Auth.User do
       :email_verified,
       :theme,
       :trial_expiry_date,
-      :allow_next_upgrade_override
+      :allow_next_upgrade_override,
+      :accept_traffic_until
     ])
     |> validate_required([:email, :name, :email_verified])
+    |> maybe_bump_accept_traffic_until()
     |> unique_constraint(:email)
+  end
+
+  defp maybe_bump_accept_traffic_until(changeset) do
+    expiry_change = get_change(changeset, :trial_expiry_date)
+
+    if expiry_change do
+      put_change(
+        changeset,
+        :accept_traffic_until,
+        Date.add(expiry_change, @trial_accept_traffic_until_offset_days)
+      )
+    else
+      changeset
+    end
   end
 
   def set_password(user, password) do
@@ -135,7 +155,12 @@ defmodule Plausible.Auth.User do
   end
 
   def start_trial(user) do
-    change(user, trial_expiry_date: trial_expiry())
+    trial_expiry = trial_expiry()
+
+    change(user,
+      trial_expiry_date: trial_expiry,
+      accept_traffic_until: Date.add(trial_expiry, @trial_accept_traffic_until_offset_days)
+    )
   end
 
   def end_trial(user) do
@@ -182,6 +207,11 @@ defmodule Plausible.Auth.User do
 
     Path.join(PlausibleWeb.Endpoint.url(), ["avatar/", hash])
   end
+
+  def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
+
+  def subscription_accept_traffic_until_offset_days(),
+    do: @susbscription_accept_traffic_until_offset_days
 
   defp validate_email_changed(changeset) do
     if !get_change(changeset, :email) && !changeset.errors[:email] do
