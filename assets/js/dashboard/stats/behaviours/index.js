@@ -164,10 +164,12 @@ export default function Behaviours(props) {
         <FeatureSetupNotice
           site={site}
           feature={CONVERSIONS}
-          shortFeatureName={'goals'}
           title={'Measure how often visitors complete specific actions'}
           info={'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.'}
-          settingsLink={`/${encodeURIComponent(site.domain)}/settings/goals`}
+          callToAction={{
+            action: "Set up goals",
+            link: `/${encodeURIComponent(site.domain)}/settings/goals`
+          }}
           onHideAction={onHideAction(CONVERSIONS)}
         />
       )
@@ -183,14 +185,21 @@ export default function Behaviours(props) {
       return <Funnel site={site} query={query} funnelName={selectedFunnel} />
     }
     else if (Funnel && adminAccess) {
+      let callToAction
+      
+      if (site.funnelsAvailable) {
+        callToAction = {action: 'Set up funnels', link: `/${encodeURIComponent(site.domain)}/settings/funnels`}
+      } else {
+        callToAction = {action: 'Upgrade', link: '/billing/choose-plan'}
+      }
+
       return (
         <FeatureSetupNotice
           site={site}
           feature={FUNNELS}
-          shortFeatureName={'funnels'}
           title={'Follow the visitor journey from entry to conversion'}
           info={'Funnels allow you to analyze the user flow through your website, uncover possible issues, optimize your site and increase the conversion rate.'}
-          settingsLink={`/${encodeURIComponent(site.domain)}/settings/funnels`}
+          callToAction={callToAction}
           onHideAction={onHideAction(FUNNELS)}
         />
       )
@@ -202,14 +211,21 @@ export default function Behaviours(props) {
     if (site.hasProps && site.propsAvailable) {
       return <Properties site={site} query={query} />
     } else if (adminAccess) {
+      let callToAction
+
+      if (site.propsAvailable) {
+        callToAction = {action: 'Set up props', link: `/${encodeURIComponent(site.domain)}/settings/properties`}
+      } else {
+        callToAction = {action: 'Upgrade', link: '/billing/choose-plan'}
+      }
+
       return (
         <FeatureSetupNotice
           site={site}
           feature={PROPS}
-          shortFeatureName={'props'}
-          title={'No custom properties found'}
+          title={'Send custom data to create your own metrics'}
           info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
-          settingsLink={`/${encodeURIComponent(site.domain)}/settings/properties`}
+          callToAction={callToAction}
           onHideAction={onHideAction(PROPS)}
         />
       )
@@ -261,9 +277,19 @@ export default function Behaviours(props) {
   function getEnabledModes() {
     let enabledModes = []
 
-    if (!site.conversionsOptedOut) enabledModes.push(CONVERSIONS)
-    if (!site.propsOptedOut) enabledModes.push(PROPS)
-    if (!site.funnelsOptedOut) enabledModes.push(FUNNELS)
+    for (feature of Object.keys(sectionTitles)) {
+      const isOptedOut = site[feature + 'OptedOut']
+      const isAvailable = site[feature + 'Available'] !== false
+
+      // If the feature is not supported by the site owner's subscription,
+      // it only makes sense to display the feature tab to the owner itself
+      // as only they can upgrade to make the feature available.
+      const callToActionIsMissing = !isAvailable && currentUserRole !== 'owner'
+
+      if (!isOptedOut && !callToActionIsMissing) {
+        enabledModes.push(feature)
+      }
+    }
 
     return enabledModes
   }

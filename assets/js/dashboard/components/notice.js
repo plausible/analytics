@@ -2,7 +2,7 @@ import React from "react"
 import { sectionTitles } from "../stats/behaviours"
 import * as api from '../api'
 
-export function FeatureSetupNotice({ site, feature, shortFeatureName, title, info, settingsLink, onHideAction }) {
+export function FeatureSetupNotice({ site, feature, title, info, callToAction, onHideAction }) {
   const sectionTitle = sectionTitles[feature]
 
   const requestHideSection = () => {
@@ -14,10 +14,19 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
     }
   }
 
-  function setupButton() {
+  function renderActionButtons() {
     return (
-      <a href={settingsLink} className="ml-2 sm:ml-4 button px-2 sm:px-4">
-        <p className="flex flex-col justify-center text-xs sm:text-sm">Set up {shortFeatureName}</p>
+      <div className="text-xs sm:text-sm flex my-6 justify-center">
+        {hideButton()}
+        {setupButton()}
+      </div>
+    )
+  }
+
+  function setupButton() {
+    return callToAction && (
+      <a href={callToAction.link} className="ml-2 sm:ml-4 button px-2 sm:px-4">
+        <p className="flex flex-col justify-center text-xs sm:text-sm">{callToAction.action}</p>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="ml-2 w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
         </svg>
@@ -35,6 +44,17 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
     )
   }
 
+  function renderInfo() {
+    if (callToAction) {
+      return info
+    } else {
+      return (<p>
+        {info}
+        <p class="mt-2">In order to use this feature you should ask the owner of this site to upgrade to a Business plan</p>
+      </p>)
+    }
+  }
+
   return (
     <div className="sm:mx-32 mt-6 mb-3" >
       <div className="py-3">
@@ -43,13 +63,9 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
         </div>
 
         <div className="text-justify mt-4 font-small text-sm text-gray-500 dark:text-gray-200">
-          {info}
+          {renderInfo()}
         </div>
-
-        <div className="text-xs sm:text-sm flex my-6 justify-center">
-          {hideButton()}
-          {setupButton()}
-        </div>
+        {renderActionButtons()}
       </div>
     </div>
   )
