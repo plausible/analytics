@@ -277,7 +277,7 @@ export default function Behaviours(props) {
   function getEnabledModes() {
     let enabledModes = []
 
-    for (feature of Object.keys(sectionTitles)) {
+    for (const feature of Object.keys(sectionTitles)) {
       const isOptedOut = site[feature + 'OptedOut']
       const isAvailable = site[feature + 'Available'] !== false
 

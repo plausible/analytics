@@ -50,7 +50,7 @@ export function FeatureSetupNotice({ site, feature, title, info, callToAction, o
     } else {
       return (<p>
         {info}
-        <p class="mt-2">In order to use this feature you should ask the owner of this site to upgrade to a Business plan</p>
+        <p className="mt-2">In order to use this feature you should ask the owner of this site to upgrade to a Business plan</p>
       </p>)
     }
   }
