@@ -358,7 +358,7 @@ defmodule PlausibleWeb.Email do
     |> to(user.email)
     |> tag("drop-traffic-warning-first")
     |> subject("We'll stop counting your stats")
-    |> render("approaching_accept_traffic_until.html", time: "next week")
+    |> render("approaching_accept_traffic_until.html", time: "next week", user: user)
   end
 
   def approaching_accept_traffic_until_tomorrow(user) do
