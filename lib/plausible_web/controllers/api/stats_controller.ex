@@ -1221,9 +1221,7 @@ defmodule PlausibleWeb.Api.StatsController do
         prop_names |> Enum.filter(&(&1 in Plausible.Props.internal_keys()))
       end
 
-    if prop_names == [] do
-      nil
-    else
+   if not Enum.empty?(prop_names) do
       values =
         prop_names
         |> Enum.map(fn prop_key ->
