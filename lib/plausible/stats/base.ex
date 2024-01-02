@@ -562,10 +562,16 @@ defmodule Plausible.Stats.Base do
     }
   end
 
-  defp try_timezone_to_utc(dt, timezone) do
-    case Timex.to_datetime(dt, timezone) do
-      %DateTime{} = dt -> Timex.Timezone.convert(dt, "UTC")
-      {:error, {:could_not_resolve_timezone, _, _, _}} -> dt
+  defp try_timezone_to_utc(naive_date_time, timezone) do
+    case Timex.to_datetime(naive_date_time, timezone) do
+      %DateTime{} = dt ->
+        Timex.Timezone.convert(dt, "UTC")
+
+      %Timex.AmbiguousDateTime{} ->
+        naive_date_time
+
+      {:error, {:could_not_resolve_timezone, _, _, _}} ->
+        naive_date_time
     end
   end
 end

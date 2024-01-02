@@ -73,5 +73,25 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
       assert resp = response(conn, 400)
       assert resp =~ "Failed to parse 'to' argument."
     end
+
+    test "bugfix: don't crash on ambiguous date time", %{conn: conn, user: user} do
+      # The site has timezone set to Azores.
+      # Given it's 28th Nov and there's 30 day range, the starting day falls on 29th Oct
+      # which coincides with daylight savings time change there:
+      # https://www.timeanddate.com/time/change/portugal/ponta-delgada-azores.
+      site = insert(:site, members: [user], timezone: "Atlantic/Azores")
+
+      populate_stats(site, [
+        build(:pageview, timestamp: relative_time(minutes: -5))
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/regions?period=30d&date=2023-11-28&with_imported=true"
+        )
+
+      assert json_response(conn, 200)
+    end
   end
 end
