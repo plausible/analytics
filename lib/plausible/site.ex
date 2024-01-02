@@ -68,6 +68,7 @@ defmodule Plausible.Site do
     |> cast(attrs, [:domain, :timezone])
     |> clean_domain()
     |> validate_required([:domain, :timezone])
+    |> validate_timezone()
     |> validate_domain_format()
     |> validate_domain_reserved_characters()
     |> unique_constraint(:domain,
@@ -263,6 +264,16 @@ defmodule Plausible.Site do
       )
     else
       changeset
+    end
+  end
+
+  defp validate_timezone(changeset) do
+    tz = get_field(changeset, :timezone)
+
+    if Timex.is_valid_timezone?(tz) do
+      changeset
+    else
+      add_error(changeset, :timezone, "is invalid")
     end
   end
 end

@@ -12,6 +12,15 @@ defmodule Plausible.SitesTest do
       assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
                Sites.create(user, params)
     end
+
+    test "fails on invalid timezone" do
+      user = insert(:user)
+
+      params = %{"domain" => "example.com", "timezone" => "blah"}
+
+      assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
+               Sites.create(user, params)
+    end
   end
 
   describe "is_member?" do
