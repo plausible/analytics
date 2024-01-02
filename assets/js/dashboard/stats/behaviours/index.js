@@ -43,7 +43,7 @@ export default function Behaviours(props) {
   const [mode, setMode] = useState(defaultMode())
 
   const [funnelNames, _setFunnelNames] = useState(site.funnels.map(({ name }) => name))
-  const [selectedFunnel, setSelectedFunnel] = useState(storage.getItem(funnelKey))
+  const [selectedFunnel, setSelectedFunnel] = useState(defaultSelectedFunnel())
 
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] = useState(false)
 
@@ -80,6 +80,20 @@ export default function Behaviours(props) {
       storage.setItem(funnelKey, selectedFunnel)
       setMode(FUNNELS)
       setSelectedFunnel(selectedFunnel)
+    }
+  }
+
+  function defaultSelectedFunnel() {
+    const stored = storage.getItem(funnelKey)
+    const storedExists = stored && site.funnels.some((f) => f.name === stored)
+
+    if (storedExists) {
+      return stored
+    } else if (site.funnels.length > 0) {
+      const firstAvailable = site.funnels[0].name
+
+      storage.setItem(funnelKey, firstAvailable)
+      return firstAvailable
     }
   }
 
