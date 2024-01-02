@@ -14,17 +14,8 @@ export function FeatureSetupNotice({ site, feature, title, info, callToAction, o
     }
   }
 
-  function renderActionButtons() {
+  function renderCallToAction() {
     return (
-      <div className="text-xs sm:text-sm flex my-6 justify-center">
-        {hideButton()}
-        {setupButton()}
-      </div>
-    )
-  }
-
-  function setupButton() {
-    return callToAction && (
       <a href={callToAction.link} className="ml-2 sm:ml-4 button px-2 sm:px-4">
         <p className="flex flex-col justify-center text-xs sm:text-sm">{callToAction.action}</p>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="ml-2 w-5 h-5">
@@ -34,7 +25,7 @@ export function FeatureSetupNotice({ site, feature, title, info, callToAction, o
     )
   }
 
-  function hideButton() {
+  function renderHideButton() {
     return (
       <button
         onClick={requestHideSection}
@@ -42,17 +33,6 @@ export function FeatureSetupNotice({ site, feature, title, info, callToAction, o
         Hide this report
       </button>
     )
-  }
-
-  function renderInfo() {
-    if (callToAction) {
-      return info
-    } else {
-      return (<p>
-        {info}
-        <p className="mt-2">In order to use this feature you should ask the owner of this site to upgrade to a Business plan</p>
-      </p>)
-    }
   }
 
   return (
@@ -63,9 +43,13 @@ export function FeatureSetupNotice({ site, feature, title, info, callToAction, o
         </div>
 
         <div className="text-justify mt-4 font-small text-sm text-gray-500 dark:text-gray-200">
-          {renderInfo()}
+          {info}
         </div>
-        {renderActionButtons()}
+
+        <div className="text-xs sm:text-sm flex my-6 justify-center">
+          {renderHideButton()}
+          {renderCallToAction()}
+        </div>
       </div>
     </div>
   )
