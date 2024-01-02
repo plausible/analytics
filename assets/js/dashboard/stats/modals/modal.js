@@ -24,7 +24,7 @@ class Modal extends React.Component {
   componentDidMount() {
     document.body.style.overflow = 'hidden';
     document.body.style.height = '100vh';
-    document.addEventListener("click", this.handleClickOutside);
+    document.addEventListener("mousedown", this.handleClickOutside);
     document.addEventListener("keyup", this.handleKeyup);
     window.addEventListener('resize', this.handleResize, false);
     this.handleResize();
@@ -33,7 +33,7 @@ class Modal extends React.Component {
   componentWillUnmount() {
     document.body.style.overflow = null;
     document.body.style.height = null;
-    document.removeEventListener("click", this.handleClickOutside);
+    document.removeEventListener("mousedown", this.handleClickOutside);
     document.removeEventListener("keyup", this.handleKeyup);
     window.removeEventListener('resize', this.handleResize, false);
   }
