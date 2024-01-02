@@ -12,10 +12,10 @@
         <% :owner -> %>
           <div class="mt-3 text-gray-600 dark:text-gray-300 text-center">
             <p>
-              This dashboard is locked because you don't have a valid subscription. You can check the <a
-        href={Routes.site_path(@conn, :settings_general, @site.domain)}
-        class="text-indigo-500 underline"
-      >site settings</a> and we're still counting the stats but your access to the dashboard is restricted. Please subscribe to the appropriate tier with the link below to access the stats again.
+              This dashboard is locked because you don't have a valid subscription. You can check the
+              <%= link("site settings", to: Routes.site_path(@conn, :settings_general, @site.domain), class: "text-indigo-500 underline") %>
+              and we're still counting the stats but your access to the dashboard is restricted.
+              Please subscribe to the appropriate tier with the link below to access the stats again.
             </p>
           </div>
           <div class="mt-6 w-full text-center">
