@@ -523,6 +523,53 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
            }
   end
 
+  test "pageviews breakdown by event:page - imported data having pageviews=0 and visitors=n should be bypassed",
+       %{conn: conn, site: site} do
+    site =
+      site
+      |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
+      |> Plausible.Repo.update!()
+
+    populate_stats(site, [
+      build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
+      build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:25:00]),
+      build(:pageview,
+        pathname: "/plausible.io",
+        timestamp: ~N[2021-01-01 00:00:00]
+      ),
+      build(:imported_pages,
+        page: "/skip-me",
+        date: ~D[2021-01-01],
+        visitors: 1,
+        pageviews: 0
+      ),
+      build(:imported_pages,
+        page: "/include-me",
+        date: ~D[2021-01-01],
+        visitors: 1,
+        pageviews: 1
+      )
+    ])
+
+    conn =
+      get(conn, "/api/v1/stats/breakdown", %{
+        "site_id" => site.domain,
+        "period" => "day",
+        "date" => "2021-01-01",
+        "property" => "event:page",
+        "with_imported" => "true",
+        "metrics" => "pageviews"
+      })
+
+    assert json_response(conn, 200) == %{
+             "results" => [
+               %{"page" => "/", "pageviews" => 2},
+               %{"page" => "/plausible.io", "pageviews" => 1},
+               %{"page" => "/include-me", "pageviews" => 1}
+             ]
+           }
+  end
+
   test "breakdown by event:page", %{conn: conn, site: site} do
     populate_stats(site, [
       build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:00:00]),
