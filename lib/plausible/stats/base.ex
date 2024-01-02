@@ -529,15 +529,13 @@ defmodule Plausible.Stats.Base do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
     first_datetime =
-      Timex.to_datetime(first, site.timezone)
-      |> Timex.Timezone.convert("UTC")
+      first
+      |> try_timezone_to_utc(site.timezone)
       |> beginning_of_time(site.native_stats_start_at)
 
     {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
 
-    last_datetime =
-      Timex.to_datetime(last, site.timezone)
-      |> Timex.Timezone.convert("UTC")
+    last_datetime = try_timezone_to_utc(last, site.timezone)
 
     {first_datetime, last_datetime}
   end
@@ -562,5 +560,12 @@ defmodule Plausible.Stats.Base do
       Map.get(groups, :event, []),
       Map.get(groups, :page, [])
     }
+  end
+
+  defp try_timezone_to_utc(dt, timezone) do
+    case Timex.to_datetime(dt, timezone) do
+      %DateTime{} = dt -> Timex.Timezone.convert(dt, "UTC")
+      {:error, {:could_not_resolve_timezone, _, _, _}} -> dt
+    end
   end
 end
