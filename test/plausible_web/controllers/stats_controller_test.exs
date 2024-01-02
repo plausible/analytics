@@ -146,7 +146,6 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert ~c"cities.csv" in zip
       assert ~c"conversions.csv" in zip
       assert ~c"countries.csv" in zip
-      assert ~c"custom_props.csv" in zip
       assert ~c"devices.csv" in zip
       assert ~c"entry_pages.csv" in zip
       assert ~c"exit_pages.csv" in zip
@@ -161,15 +160,54 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert ~c"utm_terms.csv" in zip
     end
 
-    test "does not export custom properties when site owner is on a growth plan", %{
+    test "exports only internally used props in custom_props.csv for a growth plan", %{
       conn: conn,
-      site: site,
-      user: user
+      site: site
     } do
-      insert(:growth_subscription, user: user)
-      response = conn |> get("/" <> site.domain <> "/export") |> response(200)
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
 
+      site = Repo.preload(site, :owner)
+      insert(:growth_subscription, user: site.owner)
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["author"], "meta.value": ["a"]),
+        build(:event, name: "File Download", "meta.key": ["url"], "meta.value": ["b"])
+      ])
+
+      conn = get(conn, "/" <> site.domain <> "/export?period=day")
+      assert response = response(conn, 200)
       {:ok, zip} = :zip.unzip(response, [:memory])
+
+      {_filename, result} =
+        Enum.find(zip, fn {filename, _data} -> filename == ~c"custom_props.csv" end)
+
+      assert parse_csv(result) == [
+               ["property", "value", "visitors", "events", "percentage"],
+               ["url", "b", "1", "1", "50.0"],
+               ["url", "(none)", "1", "1", "50.0"],
+               [""]
+             ]
+    end
+
+    test "does not include custom_props.csv for a growth plan if no internal props used", %{
+      conn: conn,
+      site: site
+    } do
+      {:ok, site} = Plausible.Props.allow(site, ["author"])
+
+      site = Repo.preload(site, :owner)
+      insert(:growth_subscription, user: site.owner)
+
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["author"], "meta.value": ["a"])
+      ])
+
+      {:ok, zip} =
+        conn
+        |> get("/#{site.domain}/export?period=day")
+        |> response(200)
+        |> :zip.unzip([:memory])
+
       files = Map.new(zip)
 
       refute Map.has_key?(files, ~c"custom_props.csv")
@@ -190,7 +228,7 @@ defmodule PlausibleWeb.StatsControllerTest do
              |> response(400)
     end
 
-    test "exports allowed event props", %{conn: conn, site: site} do
+    test "exports allowed event props for a trial account", %{conn: conn, site: site} do
       {:ok, site} = Plausible.Props.allow(site, ["author", "logged_in"])
 
       populate_stats(site, [

@@ -159,17 +159,9 @@ defmodule PlausibleWeb.StatsController do
         ~c"operating_systems.csv" => fn -> Api.StatsController.operating_systems(conn, params) end,
         ~c"devices.csv" => fn -> Api.StatsController.screen_sizes(conn, params) end,
         ~c"conversions.csv" => fn -> Api.StatsController.conversions(conn, params) end,
-        ~c"referrers.csv" => fn -> Api.StatsController.referrers(conn, params) end
+        ~c"referrers.csv" => fn -> Api.StatsController.referrers(conn, params) end,
+        ~c"custom_props.csv" => fn -> Api.StatsController.all_custom_prop_values(conn, params) end
       }
-
-      csvs =
-        if Plausible.Billing.Feature.Props.enabled?(site) do
-          Map.put(csvs, ~c"custom_props.csv", fn ->
-            Api.StatsController.all_custom_prop_values(conn, params)
-          end)
-        else
-          csvs
-        end
 
       csv_values =
         Map.values(csvs)
@@ -178,6 +170,7 @@ defmodule PlausibleWeb.StatsController do
       csvs =
         Map.keys(csvs)
         |> Enum.zip(csv_values)
+        |> Enum.reject(fn {_k, v} -> is_nil(v) end)
 
       csvs = [{~c"visitors.csv", visitors} | csvs]
 
