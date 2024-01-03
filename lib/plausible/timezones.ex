@@ -44,7 +44,7 @@ defmodule Plausible.Timezones do
         hhmm_formatted_offset =
           timezone_info
           |> Timex.TimezoneInfo.format_offset()
-          |> String.slice(0..-4)
+          |> String.slice(0..-4//1)
 
         option = [
           key: "(GMT#{hhmm_formatted_offset}) #{timezone_code}",
