@@ -827,7 +827,7 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
       assert [
                %{"name" => "/a", "time_on_page" => 100.0},
                %{"name" => "/b", "time_on_page" => nil},
-               %{"name" => "/d", "time_on_page" => 0.0}
+               %{"name" => "/d", "time_on_page" => +0.0}
              ] =
                conn
                |> get("/api/stats/#{site.domain}/pages?period=day&date=2021-01-01&detailed=true")
