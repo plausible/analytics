@@ -28,3 +28,5 @@ config :plausible,
 config :ex_money, api_module: Plausible.ExchangeRateMock
 
 config :plausible, Plausible.Ingestion.Counters, enabled: false
+
+config :plausible, Oban, testing: :manual
