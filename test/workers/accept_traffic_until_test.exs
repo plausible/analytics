@@ -44,7 +44,8 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     today = Date.utc_today()
     next_week = today |> Date.add(+7)
 
-    user = insert(:user, accept_traffic_until: next_week)
+    user =
+      insert(:user, accept_traffic_until: next_week)
 
     :site
     |> insert(members: [user])
@@ -140,7 +141,8 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     assert_email_delivered_with(
       html_body: ~r/Hey Jane,/,
       to: [nil: email],
-      subject: PlausibleWeb.Email.approaching_accept_traffic_until(%{email: email}).subject
+      subject:
+        PlausibleWeb.Email.approaching_accept_traffic_until(%{name: "", email: email}).subject
     )
   end
 
@@ -149,7 +151,7 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
       html_body: ~r/Hey Jane,/,
       to: [nil: email],
       subject:
-        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(%{email: email}).subject
+        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(%{name: "", email: email}).subject
     )
   end
 
