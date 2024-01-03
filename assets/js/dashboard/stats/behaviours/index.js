@@ -43,7 +43,7 @@ export default function Behaviours(props) {
   const [mode, setMode] = useState(defaultMode())
 
   const [funnelNames, _setFunnelNames] = useState(site.funnels.map(({ name }) => name))
-  const [selectedFunnel, setSelectedFunnel] = useState(storage.getItem(funnelKey))
+  const [selectedFunnel, setSelectedFunnel] = useState(defaultSelectedFunnel())
 
   const [showingPropsForGoalFilter, setShowingPropsForGoalFilter] = useState(false)
 
@@ -83,8 +83,22 @@ export default function Behaviours(props) {
     }
   }
 
+  function defaultSelectedFunnel() {
+    const stored = storage.getItem(funnelKey)
+    const storedExists = stored && site.funnels.some((f) => f.name === stored)
+
+    if (storedExists) {
+      return stored
+    } else if (site.funnels.length > 0) {
+      const firstAvailable = site.funnels[0].name
+
+      storage.setItem(funnelKey, firstAvailable)
+      return firstAvailable
+    }
+  }
+
   function hasFunnels() {
-    return site.funnels.length > 0
+    return site.funnels.length > 0 && site.funnelsAvailable
   }
 
   function tabFunnelPicker() {
@@ -164,10 +178,12 @@ export default function Behaviours(props) {
         <FeatureSetupNotice
           site={site}
           feature={CONVERSIONS}
-          shortFeatureName={'goals'}
           title={'Measure how often visitors complete specific actions'}
           info={'Goals allow you to track registrations, button clicks, form completions, external link clicks, file downloads, 404 error pages and more.'}
-          settingsLink={`/${encodeURIComponent(site.domain)}/settings/goals`}
+          callToAction={{
+            action: "Set up goals",
+            link: `/${encodeURIComponent(site.domain)}/settings/goals`
+          }}
           onHideAction={onHideAction(CONVERSIONS)}
         />
       )
@@ -179,18 +195,25 @@ export default function Behaviours(props) {
     if (Funnel === null) {
       return featureUnavailable()
     }
-    else if (Funnel && selectedFunnel) {
+    else if (Funnel && selectedFunnel && site.funnelsAvailable) {
       return <Funnel site={site} query={query} funnelName={selectedFunnel} />
     }
     else if (Funnel && adminAccess) {
+      let callToAction
+      
+      if (site.funnelsAvailable) {
+        callToAction = {action: 'Set up funnels', link: `/${encodeURIComponent(site.domain)}/settings/funnels`}
+      } else {
+        callToAction = {action: 'Upgrade', link: '/billing/choose-plan'}
+      }
+
       return (
         <FeatureSetupNotice
           site={site}
           feature={FUNNELS}
-          shortFeatureName={'funnels'}
           title={'Follow the visitor journey from entry to conversion'}
           info={'Funnels allow you to analyze the user flow through your website, uncover possible issues, optimize your site and increase the conversion rate.'}
-          settingsLink={`/${encodeURIComponent(site.domain)}/settings/funnels`}
+          callToAction={callToAction}
           onHideAction={onHideAction(FUNNELS)}
         />
       )
@@ -199,17 +222,24 @@ export default function Behaviours(props) {
   }
 
   function renderProps() {
-    if (site.hasProps) {
+    if (site.hasProps && site.propsAvailable) {
       return <Properties site={site} query={query} />
     } else if (adminAccess) {
+      let callToAction
+
+      if (site.propsAvailable) {
+        callToAction = {action: 'Set up props', link: `/${encodeURIComponent(site.domain)}/settings/properties`}
+      } else {
+        callToAction = {action: 'Upgrade', link: '/billing/choose-plan'}
+      }
+
       return (
         <FeatureSetupNotice
           site={site}
           feature={PROPS}
-          shortFeatureName={'props'}
-          title={'No custom properties found'}
+          title={'Send custom data to create your own metrics'}
           info={'You can attach custom properties when sending a pageview or event. This allows you to create custom metrics and analyze stats we don\'t track automatically.'}
-          settingsLink={`/${encodeURIComponent(site.domain)}/settings/properties`}
+          callToAction={callToAction}
           onHideAction={onHideAction(PROPS)}
         />
       )
@@ -261,15 +291,20 @@ export default function Behaviours(props) {
   function getEnabledModes() {
     let enabledModes = []
 
-    if (site.conversionsEnabled) {
-      enabledModes.push(CONVERSIONS)
+    for (const feature of Object.keys(sectionTitles)) {
+      const isOptedOut = site[feature + 'OptedOut']
+      const isAvailable = site[feature + 'Available'] !== false
+
+      // If the feature is not supported by the site owner's subscription,
+      // it only makes sense to display the feature tab to the owner itself
+      // as only they can upgrade to make the feature available.
+      const callToActionIsMissing = !isAvailable && currentUserRole !== 'owner'
+
+      if (!isOptedOut && !callToActionIsMissing) {
+        enabledModes.push(feature)
+      }
     }
-    if (site.propsEnabled) {
-      enabledModes.push(PROPS)
-    }
-    if (site.funnelsEnabled && !isRealtime()) {
-      enabledModes.push(FUNNELS)
-    }
+
     return enabledModes
   }
 
