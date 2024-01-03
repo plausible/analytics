@@ -12,6 +12,7 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     tomorrow = today |> Date.add(+1)
 
     user1 = insert(:user, accept_traffic_until: next_week)
+
     user2 = insert(:user, accept_traffic_until: tomorrow)
 
     _site1 = insert(:site, members: [user1])
@@ -22,6 +23,37 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
 
     refute_notifications(user1.email)
     refute_notifications(user2.email)
+  end
+
+  test "does not send any notifications when site has stats older than 2d" do
+    today = Date.utc_today()
+    next_week = today |> Date.add(+7)
+
+    user = insert(:user, accept_traffic_until: next_week)
+
+    :site
+    |> insert(members: [user])
+    |> populate_stats([build(:pageview, timestamp: Date.add(today, -3))])
+
+    {:ok, 1} = AcceptTrafficUntil.perform(nil)
+
+    refute_notifications(user.email)
+  end
+
+  test "does send notification when last stat is 2d old" do
+    today = Date.utc_today()
+    next_week = today |> Date.add(+7)
+
+    user =
+      insert(:user, accept_traffic_until: next_week)
+
+    :site
+    |> insert(members: [user])
+    |> populate_stats([build(:pageview, timestamp: Date.add(today, -2))])
+
+    {:ok, 1} = AcceptTrafficUntil.perform(nil)
+
+    assert_weekly_notification(user.email)
   end
 
   test "tomorrow: sends one e-mail" do
@@ -107,16 +139,19 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
 
   defp assert_weekly_notification(email) when is_binary(email) do
     assert_email_delivered_with(
+      html_body: ~r/Hey Jane,/,
       to: [nil: email],
-      subject: PlausibleWeb.Email.approaching_accept_traffic_until(%{email: email}).subject
+      subject:
+        PlausibleWeb.Email.approaching_accept_traffic_until(%{name: "", email: email}).subject
     )
   end
 
   defp assert_final_notification(email) when is_binary(email) do
     assert_email_delivered_with(
+      html_body: ~r/Hey Jane,/,
       to: [nil: email],
       subject:
-        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(%{email: email}).subject
+        PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow(%{name: "", email: email}).subject
     )
   end
 

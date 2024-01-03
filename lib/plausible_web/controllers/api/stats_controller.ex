@@ -1214,21 +1214,30 @@ defmodule PlausibleWeb.Api.StatsController do
 
     prop_names = Plausible.Stats.CustomProps.fetch_prop_names(site, query)
 
-    values =
-      prop_names
-      |> Enum.map(fn prop_key ->
-        breakdown_custom_prop_values(site, Map.put(params, "prop_key", prop_key))
-        |> Enum.map(&Map.put(&1, :property, prop_key))
-        |> transform_keys(%{:name => :value})
-      end)
-      |> Enum.concat()
+    prop_names =
+      if Plausible.Billing.Feature.Props.enabled?(site) do
+        prop_names
+      else
+        prop_names |> Enum.filter(&(&1 in Plausible.Props.internal_keys()))
+      end
 
-    percent_or_cr =
-      if query.filters["event:goal"],
-        do: :conversion_rate,
-        else: :percentage
+    if not Enum.empty?(prop_names) do
+      values =
+        prop_names
+        |> Enum.map(fn prop_key ->
+          breakdown_custom_prop_values(site, Map.put(params, "prop_key", prop_key))
+          |> Enum.map(&Map.put(&1, :property, prop_key))
+          |> transform_keys(%{:name => :value})
+        end)
+        |> Enum.concat()
 
-    to_csv(values, [:property, :value, :visitors, :events, percent_or_cr])
+      percent_or_cr =
+        if query.filters["event:goal"],
+          do: :conversion_rate,
+          else: :percentage
+
+      to_csv(values, [:property, :value, :visitors, :events, percent_or_cr])
+    end
   end
 
   defp breakdown_custom_prop_values(site, %{"prop_key" => prop_key} = params) do

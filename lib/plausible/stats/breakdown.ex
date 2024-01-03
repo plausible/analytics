@@ -57,7 +57,7 @@ defmodule Plausible.Stats.Breakdown do
               "notEmpty(multiMatchAllIndices(?, ?) as indices)",
               e.pathname,
               ^page_regexes
-            ),
+            ) and e.name == "pageview",
           group_by: fragment("index"),
           select: %{
             index: fragment("arrayJoin(indices) as index"),

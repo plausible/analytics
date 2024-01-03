@@ -26,6 +26,18 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
                }
       end
 
+      test "timezone is validated", %{conn: conn} do
+        conn =
+          post(conn, "/api/v1/sites", %{
+            "domain" => "some-site.domain",
+            "timezone" => "d"
+          })
+
+        assert json_response(conn, 400) == %{
+                 "error" => "timezone: is invalid"
+               }
+      end
+
       test "timezone defaults to Etc/UTC", %{conn: conn} do
         conn =
           post(conn, "/api/v1/sites", %{

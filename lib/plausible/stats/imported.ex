@@ -368,6 +368,7 @@ defmodule Plausible.Stats.Imported do
 
   defp select_imported_metrics(q, [:pageviews | rest]) do
     q
+    |> where([i], i.pageviews > 0)
     |> select_merge([i], %{pageviews: sum(i.pageviews)})
     |> select_imported_metrics(rest)
   end
