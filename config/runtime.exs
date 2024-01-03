@@ -547,8 +547,7 @@ cond do
         {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
         {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
         # Rescue orphaned jobs after 2 hours
-        {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)},
-        {Oban.Plugins.Stager, interval: :timer.seconds(5)}
+        {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)}
       ],
       queues: if(cron_enabled, do: queues, else: []),
       peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
