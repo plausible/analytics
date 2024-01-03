@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-8BB7566B.js"></script>
+    <script src="dist/sidebar_items-FC0072E8.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -203,6 +203,18 @@ disabled or the user does not have access to it.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#c:opted_out?/1" translate="no">opted_out?(t)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns whether the site explicitly opted out of the feature. This function
+is different from enabled/1, because enabled/1 returns false when the site
+owner does not have access to the feature.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#c:toggle/2" translate="no">toggle(t, t)</a>
 
       </div>
@@ -261,7 +273,7 @@ Types
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L74" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L81" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -306,7 +318,7 @@ Callbacks
     </a>
     <h1 class="signature" translate="no">check_availability(t)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L62" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L69" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -439,6 +451,36 @@ disabled or the user does not have access to it.</p>
 <p>Returns the atom representing the feature name in the plan JSON file.</p>
   </section>
 </section>
+<section class="detail" id="c:opted_out?/1">
+
+  <div class="detail-header">
+    <a href="#c:opted_out?/1" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">opted_out?(t)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L64" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> opted_out?(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+
+      </div>
+
+<p>Returns whether the site explicitly opted out of the feature. This function
+is different from enabled/1, because enabled/1 returns false when the site
+owner does not have access to the feature.</p>
+  </section>
+</section>
 <section class="detail" id="c:toggle/2">
 
   <div class="detail-header">
@@ -518,7 +560,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">list()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L79" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/feature.ex#L86" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
