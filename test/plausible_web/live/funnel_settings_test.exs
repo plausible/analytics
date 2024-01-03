@@ -151,12 +151,12 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  doc,
-                 ~s/input[type="hidden"][name="funnel[steps][][goal_id]"]#submit-step-1/
+                 ~s/input[type="hidden"][name="funnel[steps][1][goal_id]"]#submit-step-1/
                )
 
         step_setup_controls = [
-          ~s/input[type="hidden"][name="funnel[steps][][goal_id]"]#submit-step-1/,
-          ~s/input[type="hidden"][name="funnel[steps][][goal_id]"]#submit-step-2/,
+          ~s/input[type="hidden"][name="funnel[steps][1][goal_id]"]#submit-step-1/,
+          ~s/input[type="hidden"][name="funnel[steps][2][goal_id]"]#submit-step-2/,
           ~s/input[type="text"][name="display-step-1"]#step-1/,
           ~s/input[type="text"][name="display-step-2"]#step-2/,
           ~s/a[phx-click="add-step"]/
@@ -180,7 +180,7 @@ defmodule PlausibleWeb.Live.FunnelSettingsTest do
 
         assert element_exists?(
                  doc,
-                 ~s/input[type="hidden"][name="funnel[steps][][goal_id]"]#submit-step-3/
+                 ~s/input[type="hidden"][name="funnel[steps][3][goal_id]"]#submit-step-3/
                )
 
         assert element_exists?(doc, ~s/input[type="text"][name="display-step-1"]#step-1/)

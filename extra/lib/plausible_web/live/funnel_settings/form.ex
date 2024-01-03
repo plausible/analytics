@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
               <div :for={step_idx <- @step_ids} class="flex mb-3 mt-3">
                 <div class="w-2/5 flex-1">
                   <.live_component
-                    submit_name="funnel[steps][][goal_id]"
+                    submit_name={"funnel[steps][#{step_idx}][goal_id]"}
                     module={PlausibleWeb.Live.Components.ComboBox}
                     suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
                     id={"step-#{step_idx}"}
@@ -223,11 +223,19 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   def handle_event("validate", %{"funnel" => params}, socket) do
+    steps_from_assigns =
+      socket.assigns.step_ids
+      |> Enum.reduce([], fn step_id, acc ->
+        goal = Map.get(socket.assigns.selections_made, "step-#{step_id}")
+        if goal, do: [%{"goal_id" => goal.id} | acc], else: acc
+      end)
+      |> Enum.reverse()
+
     changeset =
       socket.assigns.site
       |> Plausible.Funnels.create_changeset(
         params["name"],
-        params["steps"] || []
+        steps_from_assigns
       )
       |> Map.put(:action, :validate)
 
@@ -235,11 +243,13 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   end
 
   def handle_event("save", %{"funnel" => params}, %{assigns: %{site: site}} = socket) do
-    case Plausible.Funnels.create(site, params["name"], params["steps"]) do
+    steps = Enum.map(params["steps"], fn {_idx, payload} -> payload end)
+
+    case Plausible.Funnels.create(site, params["name"], steps) do
       {:ok, funnel} ->
         send(
           socket.parent_pid,
-          {:funnel_saved, Map.put(funnel, :steps_count, length(params["steps"]))}
+          {:funnel_saved, Map.put(funnel, :steps_count, length(steps))}
         )
 
         {:noreply, socket}
