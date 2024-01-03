@@ -142,7 +142,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       order_by: [desc: fragment("count(*)")],
       limit: 25
     )
-    |> Plausible.Stats.CustomProps.maybe_allowed_props_only(site.allowed_event_props)
+    |> Plausible.Stats.CustomProps.maybe_allowed_props_only(site)
     |> ClickhouseRepo.all()
     |> wrap_suggestions()
   end

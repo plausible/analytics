@@ -16,6 +16,51 @@ defmodule Plausible.Props do
   @max_prop_value_length 2000
   def max_prop_value_length, do: @max_prop_value_length
 
+  @internal_keys ~w(url path)
+  @doc """
+  Lists prop keys used internally.
+
+  These props should be allowed by default, and should not be displayed in the
+  props settings page. For example, `url` is a special prop key used for file
+  downloads and outbound links. It doesn't make sense to remove this prop key
+  from the allow list, or to suggest users to add this prop key.
+  """
+  def internal_keys, do: @internal_keys
+
+  @doc """
+  Returns the custom props allowed in queries for the given site. There are
+  two factors deciding whether a custom property is allowed for a site.
+
+  ### 1. Subscription plan including the props feature.
+
+  Internally used keys (i.e. `#{inspect @internal_keys}`) are always allowed,
+  even for plans that don't include props. But for anything other than those,
+  props feature access is needed.
+
+  ### 2. The site having an `allowed_event_props` list configured.
+
+  For customers with a configured `allowed_event_props` list, this function
+  returns that list (+ internally used keys). That helps to filter out garbage
+  props which people might not want to see in their dashboards.
+
+  Since `allowed_event_props` was added after the props feature had already
+  been used for a while, there are sites with `allowed_event_props = nil`. For
+  those sites, all custom properties that exist in the database are allowed to
+  be queried.
+  """
+  @spec allowed_for(Plausible.Site.t()) :: [prop()] | :all
+  def allowed_for(site) do
+    site = Plausible.Repo.preload(site, :owner)
+    props_enabled? = Plausible.Billing.Feature.Props.check_availability(site.owner) == :ok
+    internal_keys = Plausible.Props.internal_keys()
+
+    case {props_enabled?, site.allowed_event_props} do
+      {true, nil} -> :all
+      {true, props_list} -> props_list ++ internal_keys
+      {false, _} -> internal_keys
+    end
+  end
+
   @spec allow(Plausible.Site.t(), [prop()] | prop()) ::
           {:ok, Plausible.Site.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
   @doc """
@@ -84,17 +129,6 @@ defmodule Plausible.Props do
 
     allow(site, props_to_allow)
   end
-
-  @internal_keys ~w(url path)
-  @doc """
-  Lists prop keys used internally.
-
-  These props should be allowed by default, and should not be displayed in the
-  props settings page. For example, `url` is a special prop key used for file
-  downloads and outbound links. It doesn't make sense to remove this prop key
-  from the allow list, or to suggest users to add this prop key.
-  """
-  def internal_keys, do: @internal_keys
 
   def ensure_prop_key_accessible(prop_key, user) do
     if prop_key in @internal_keys do
