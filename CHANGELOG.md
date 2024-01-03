@@ -31,6 +31,7 @@ All notable changes to this project will be documented in this file.
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
 
 ### Fixed
+- Stop returning custom events in goal breakdown with a pageview goal filter and vice versa
 - Only return `(none)` values in custom property breakdown for the first page (pagination) of results
 - Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
 - Fix [broken interval selection](https://github.com/plausible/analytics/issues/2982) in the all time view plausible/analytics#3110

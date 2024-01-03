@@ -60,18 +60,24 @@ defmodule Plausible.Stats.Base do
     q =
       case query.filters["event:goal"] do
         {:is, {:page, path}} ->
-          from(e in q, where: e.pathname == ^path)
+          from(e in q, where: e.pathname == ^path and e.name == "pageview")
 
         {:matches, {:page, expr}} ->
           regex = page_regex(expr)
-          from(e in q, where: fragment("match(?, ?)", e.pathname, ^regex))
+
+          from(e in q,
+            where: fragment("match(?, ?)", e.pathname, ^regex) and e.name == "pageview"
+          )
 
         {:is, {:event, event}} ->
           from(e in q, where: e.name == ^event)
 
         {:member, clauses} ->
           {events, pages} = split_goals(clauses)
-          from(e in q, where: e.pathname in ^pages or e.name in ^events)
+
+          from(e in q,
+            where: (e.pathname in ^pages and e.name == "pageview") or e.name in ^events
+          )
 
         {:matches_member, clauses} ->
           {events, pages} = split_goals(clauses, &page_regex/1)
@@ -85,7 +91,10 @@ defmodule Plausible.Stats.Base do
 
           page_clause =
             if Enum.any?(pages) do
-              dynamic([x], fragment("multiMatchAny(?, ?)", x.pathname, ^pages))
+              dynamic(
+                [x],
+                fragment("multiMatchAny(?, ?)", x.pathname, ^pages) and x.name == "pageview"
+              )
             else
               dynamic([x], false)
             end
@@ -93,31 +102,6 @@ defmodule Plausible.Stats.Base do
           where_clause = dynamic([], ^event_clause or ^page_clause)
 
           from(e in q, where: ^where_clause)
-
-        {:not_matches_member, clauses} ->
-          {events, pages} = split_goals(clauses, &page_regex/1)
-
-          event_clause =
-            if Enum.any?(events) do
-              dynamic([x], fragment("multiMatchAny(?, ?)", x.name, ^events))
-            else
-              dynamic([x], false)
-            end
-
-          page_clause =
-            if Enum.any?(pages) do
-              dynamic([x], fragment("multiMatchAny(?, ?)", x.pathname, ^pages))
-            else
-              dynamic([x], false)
-            end
-
-          where_clause = dynamic([], not (^event_clause or ^page_clause))
-
-          from(e in q, where: ^where_clause)
-
-        {:not_member, clauses} ->
-          {events, pages} = split_goals(clauses)
-          from(e in q, where: e.pathname not in ^pages and e.name not in ^events)
 
         nil ->
           q
