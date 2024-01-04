@@ -264,8 +264,8 @@ defmodule Plausible.Auth.User do
       change(user, email_verified: false)
     else
       selfhosted_config = Application.get_env(:plausible, :selfhost)
-      enable? = Keyword.fetch!(selfhosted_config, :enable_email_verification)
-      change(user, email_verified: !enable?)
+      must_verify? = Keyword.fetch!(selfhosted_config, :enable_email_verification)
+      change(user, email_verified: not must_verify?)
     end
   end
 end
