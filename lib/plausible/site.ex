@@ -6,6 +6,7 @@ defmodule Plausible.Site do
   import Ecto.Changeset
   alias Plausible.Auth.User
   alias Plausible.Site.GoogleAuth
+  alias Plausible.Timezones
 
   @type t() :: %__MODULE__{}
 
@@ -208,9 +209,7 @@ defmodule Plausible.Site do
 
   def local_start_date(site) do
     site.stats_start_date
-    |> Timex.Timezone.convert("UTC")
-    |> Timex.Timezone.convert(site.timezone)
-    |> Timex.to_date()
+    |> Timezones.to_date_in_timezone(site.timezone)
   end
 
   defp clean_domain(changeset) do

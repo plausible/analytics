@@ -2,6 +2,7 @@ defmodule Plausible.Stats.Base do
   use Plausible.ClickhouseRepo
   use Plausible
   alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Timezones
   import Ecto.Query
 
   @no_ref "Direct / None"
@@ -530,12 +531,12 @@ defmodule Plausible.Stats.Base do
 
     first_datetime =
       first
-      |> try_timezone_to_utc(site.timezone)
+      |> Timezones.to_utc_datetime(site.timezone)
       |> beginning_of_time(site.native_stats_start_at)
 
     {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
 
-    last_datetime = try_timezone_to_utc(last, site.timezone)
+    last_datetime = Timezones.to_utc_datetime(last, site.timezone)
 
     {first_datetime, last_datetime}
   end
@@ -560,18 +561,5 @@ defmodule Plausible.Stats.Base do
       Map.get(groups, :event, []),
       Map.get(groups, :page, [])
     }
-  end
-
-  defp try_timezone_to_utc(naive_date_time, timezone) do
-    case Timex.to_datetime(naive_date_time, timezone) do
-      %DateTime{} = dt ->
-        Timex.Timezone.convert(dt, "UTC")
-
-      %Timex.AmbiguousDateTime{} ->
-        naive_date_time
-
-      {:error, {:could_not_resolve_timezone, _, _, _}} ->
-        naive_date_time
-    end
   end
 end
