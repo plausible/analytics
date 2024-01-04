@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.ExternalSitesController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  use Plug.ErrorHandler
+  use PlausibleWeb.Plugs.ErrorHandler
   alias Plausible.Sites
   alias Plausible.Goals
   alias PlausibleWeb.Api.Helpers, as: H
@@ -160,9 +160,5 @@ defmodule PlausibleWeb.Api.ExternalSitesController do
     {field, {msg, _opts}} = List.first(changeset.errors)
     error_msg = Atom.to_string(field) <> ": " <> msg
     %{"error" => error_msg}
-  end
-
-  def handle_errors(conn, %{kind: kind, reason: reason}) do
-    json(conn, %{error: Exception.format_banner(kind, reason)})
   end
 end

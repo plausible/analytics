@@ -1,7 +1,7 @@
 defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
-  use Plug.ErrorHandler
+  use PlausibleWeb.Plugs.ErrorHandler
   alias Plausible.Stats.{Query, CustomProps}
 
   def realtime_visitors(conn, _params) do
@@ -188,10 +188,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         |> put_status(400)
         |> json(%{error: msg})
     end
-  end
-
-  def handle_errors(conn, %{kind: kind, reason: reason}) do
-    json(conn, %{error: Exception.format_banner(kind, reason)})
   end
 
   defp percent_change(old_count, new_count) do

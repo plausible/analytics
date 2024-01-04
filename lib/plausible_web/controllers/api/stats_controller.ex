@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.StatsController do
   use Plausible
   use PlausibleWeb, :controller
   use Plausible.Repo
-  use Plug.ErrorHandler
+  use PlausibleWeb.Plugs.ErrorHandler
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Filters, Comparisons}
   alias PlausibleWeb.Api.Helpers, as: H
@@ -1284,10 +1284,6 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp google_api(), do: Application.fetch_env!(:plausible, :google_api)
-
-  def handle_errors(conn, %{kind: kind, reason: reason}) do
-    json(conn, %{error: Exception.format_banner(kind, reason)})
-  end
 
   def filter_suggestions(conn, params) do
     site = conn.assigns[:site]

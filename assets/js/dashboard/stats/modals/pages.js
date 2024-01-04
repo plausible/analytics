@@ -8,6 +8,8 @@ import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { trimURL } from '../../util/url'
 
+import { ApiErrorNotice } from '../../api'
+
 class PagesModal extends React.Component {
   constructor(props) {
     super(props)
@@ -16,7 +18,8 @@ class PagesModal extends React.Component {
       query: parseQuery(props.location.search, props.site),
       pages: [],
       page: 1,
-      moreResultsAvailable: false
+      moreResultsAvailable: false,
+      error: undefined
     }
   }
 
@@ -30,6 +33,7 @@ class PagesModal extends React.Component {
 
     api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/pages`, query, { limit: 100, page, detailed })
       .then((res) => this.setState((state) => ({ loading: false, pages: state.pages.concat(res), moreResultsAvailable: res.length === 100 })))
+      .catch((err) => this.setState({ loading: false, error: err }))
   }
 
   loadMore() {
@@ -136,6 +140,7 @@ class PagesModal extends React.Component {
     return (
       <Modal site={this.props.site}>
         {this.renderBody()}
+        {this.state.error && <ApiErrorNotice error={this.state.error} />}
         {this.renderLoading()}
       </Modal>
     )
