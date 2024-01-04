@@ -14,7 +14,7 @@ defmodule PlausibleWeb.Plugs.ErrorHandler do
       @impl Plug.ErrorHandler
       def handle_errors(conn, %{kind: kind, reason: reason}) do
         hash = Hahash.name({kind, reason})
-        Sentry.Context.set_extra_context(%{hash: hash})
+        Sentry.Context.set_tags_context(%{hash: hash})
         json(conn, %{error: "internal server error", support_hash: hash})
       end
     end
