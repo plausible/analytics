@@ -5,12 +5,10 @@ import FunnelTooltip from './funnel-tooltip.js'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import numberFormatter from '../util/number-formatter'
 import Bar from '../stats/bar'
-
-import RocketIcon from '../stats/modals/rocket-icon'
+import { ApiErrorNotice } from '../api'
 
 import * as api from '../api'
 import LazyLoader from '../components/lazy-loader'
-
 
 export default function Funnel(props) {
   const [loading, setLoading] = useState(true)
@@ -275,12 +273,7 @@ export default function Funnel(props) {
       return (
         <>
           {header()}
-          <div className="text-center text-gray-900 dark:text-gray-100 mt-16">
-            <RocketIcon />
-            <div className="text-lg font-bold">Oops! Something went wrong</div>
-            <div className="text-lg">{error.message ? error.message : 'Failed to render funnel'}</div>
-            <div className="text-xs mt-8">Please try refreshing your browser or selecting the funnel again.</div>
-          </div>
+          <ApiErrorNotice error={error} />
         </>
       )
     }

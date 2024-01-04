@@ -8,6 +8,7 @@ defmodule PlausibleWeb.AuthControllerSyncTest do
   describe "PUT /settings/email" do
     setup [:create_user, :log_in]
 
+    @tag :small_build_only
     test "updates email but DOES NOT force reverification when feature disabled", %{
       conn: conn,
       user: user

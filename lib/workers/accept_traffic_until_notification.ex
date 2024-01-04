@@ -40,7 +40,8 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
             id: u.id,
             email: u.email,
             deadline: u.accept_traffic_until,
-            site_ids: fragment("array_agg(?.site_id)", sm)
+            site_ids: fragment("array_agg(?.site_id)", sm),
+            name: u.name
           },
           group_by: u.id
       )
@@ -68,11 +69,11 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
   end
 
   defp has_stats?(site_ids, today) do
-    yesterday = Date.add(today, -1)
+    ago_2d = Date.add(today, -2)
 
     ClickhouseRepo.exists?(
       from e in "events_v2",
-        where: fragment("toDate(?) >= ?", e.timestamp, ^yesterday),
+        where: fragment("toDate(?) >= ?", e.timestamp, ^ago_2d),
         where: e.site_id in ^site_ids
     )
   end

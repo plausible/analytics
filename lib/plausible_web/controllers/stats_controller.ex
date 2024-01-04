@@ -308,6 +308,8 @@ defmodule PlausibleWeb.StatsController do
   defp render_shared_link(conn, shared_link) do
     cond do
       !shared_link.site.locked ->
+        shared_link = Plausible.Repo.preload(shared_link, site: :owner)
+
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")

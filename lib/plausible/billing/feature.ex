@@ -57,6 +57,13 @@ defmodule Plausible.Billing.Feature do
   @callback enabled?(Plausible.Site.t()) :: boolean()
 
   @doc """
+  Returns whether the site explicitly opted out of the feature. This function
+  is different from enabled/1, because enabled/1 returns false when the site
+  owner does not have access to the feature.
+  """
+  @callback opted_out?(Plausible.Site.t()) :: boolean()
+
+  @doc """
   Checks whether the site owner or the user plan includes the given feature.
   """
   @callback check_availability(Plausible.Auth.User.t()) ::
@@ -101,12 +108,12 @@ defmodule Plausible.Billing.Feature do
       @impl true
       def enabled?(%Plausible.Site{} = site) do
         site = Plausible.Repo.preload(site, :owner)
+        check_availability(site.owner) == :ok && !opted_out?(site)
+      end
 
-        cond do
-          check_availability(site.owner) !== :ok -> false
-          is_nil(toggle_field()) -> true
-          true -> Map.fetch!(site, toggle_field())
-        end
+      @impl true
+      def opted_out?(%Plausible.Site{} = site) do
+        if is_nil(toggle_field()), do: false, else: !Map.fetch!(site, toggle_field())
       end
 
       @impl true
@@ -120,18 +127,23 @@ defmodule Plausible.Billing.Feature do
 
       @impl true
       def toggle(%Plausible.Site{} = site, opts \\ []) do
-        with key when not is_nil(key) <- toggle_field(),
-             site <- Plausible.Repo.preload(site, :owner),
-             :ok <- check_availability(site.owner) do
-          override = Keyword.get(opts, :override)
-          toggle = if is_boolean(override), do: override, else: !Map.fetch!(site, toggle_field())
+        if toggle_field(), do: do_toggle(site, opts), else: :ok
+      end
 
-          site
-          |> Ecto.Changeset.change(%{toggle_field() => toggle})
-          |> Plausible.Repo.update()
-        else
-          nil = _feature_not_togglable -> :ok
-          {:error, :upgrade_required} -> {:error, :upgrade_required}
+      defp do_toggle(%Plausible.Site{} = site, opts) do
+        site = Plausible.Repo.preload(site, :owner)
+        override = Keyword.get(opts, :override)
+        toggle = if is_boolean(override), do: override, else: !Map.fetch!(site, toggle_field())
+        availability = if toggle, do: check_availability(site.owner), else: :ok
+
+        case availability do
+          :ok ->
+            site
+            |> Ecto.Changeset.change(%{toggle_field() => toggle})
+            |> Plausible.Repo.update()
+
+          error ->
+            error
         end
       end
 
