@@ -67,7 +67,7 @@ defmodule Plausible.Auth.User do
     |> validate_password_strength()
     |> hash_password()
     |> start_trial()
-    |> change_email_verification_status()
+    |> set_email_verification_status()
     |> unique_constraint(:email)
   end
 
@@ -85,7 +85,7 @@ defmodule Plausible.Auth.User do
     |> validate_email_changed()
     |> check_password()
     |> unique_constraint(:email)
-    |> change_email_verification_status()
+    |> set_email_verification_status()
     |> put_change(:previous_email, user.email)
   end
 
@@ -259,7 +259,7 @@ defmodule Plausible.Auth.User do
     end
   end
 
-  defp change_email_verification_status(user) do
+  defp set_email_verification_status(user) do
     on_full_build do
       change(user, email_verified: false)
     else
