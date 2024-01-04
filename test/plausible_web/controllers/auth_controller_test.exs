@@ -1193,6 +1193,24 @@ defmodule PlausibleWeb.AuthControllerTest do
       assert subject =~ "is your Plausible email verification code"
     end
 
+    test "renders an error on third change attempt (allows 2 per hour)", %{conn: conn, user: user} do
+      payload = %{
+        "user" => %{"email" => "new" <> user.email, "password" => "badpass"}
+      }
+
+      resp1 = conn |> put("/settings/email", payload) |> html_response(200)
+      assert resp1 =~ "is invalid"
+      refute resp1 =~ "too many requests, try again in an hour"
+
+      resp2 = conn |> put("/settings/email", payload) |> html_response(200)
+      assert resp2 =~ "is invalid"
+      refute resp2 =~ "too many requests, try again in an hour"
+
+      resp3 = conn |> put("/settings/email", payload) |> html_response(200)
+      assert resp3 =~ "is invalid"
+      assert resp3 =~ "too many requests, try again in an hour"
+    end
+
     test "renders form with error on no fields filled", %{conn: conn} do
       conn = put(conn, "/settings/email", %{"user" => %{}})
 

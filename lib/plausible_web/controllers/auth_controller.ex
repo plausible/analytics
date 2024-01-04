@@ -300,6 +300,8 @@ defmodule PlausibleWeb.AuthController do
 
   @login_interval 60_000
   @login_limit 5
+  @email_change_limit 2
+  @email_change_interval :timer.hours(1)
 
   defp check_ip_rate_limit(conn) do
     ip_address = PlausibleWeb.RemoteIp.get(conn)
@@ -550,19 +552,41 @@ defmodule PlausibleWeb.AuthController do
 
   def update_email(conn, %{"user" => user_params}) do
     user = conn.assigns.current_user
-    changes = Auth.User.email_changeset(user, user_params)
 
-    case Repo.update(changes) do
-      {:ok, user} ->
-        if user.email_verified do
-          handle_email_updated(conn)
-        else
-          Auth.EmailVerification.issue_code(user)
-          redirect(conn, to: Routes.auth_path(conn, :activate_form))
+    case RateLimit.check_rate(
+           "email-change:user:#{user.id}",
+           @email_change_interval,
+           @email_change_limit
+         ) do
+      {:allow, _} ->
+        changes = Auth.User.email_changeset(user, user_params)
+
+        case Repo.update(changes) do
+          {:ok, user} ->
+            if user.email_verified do
+              handle_email_updated(conn)
+            else
+              Auth.EmailVerification.issue_code(user)
+              redirect(conn, to: Routes.auth_path(conn, :activate_form))
+            end
+
+          {:error, changeset} ->
+            settings_changeset = Auth.User.settings_changeset(user)
+
+            render_settings(conn,
+              settings_changeset: settings_changeset,
+              email_changeset: changeset
+            )
         end
 
-      {:error, changeset} ->
+      {:deny, _} ->
         settings_changeset = Auth.User.settings_changeset(user)
+
+        {:error, changeset} =
+          user
+          |> Auth.User.email_changeset(user_params)
+          |> Ecto.Changeset.add_error(:email, "too many requests, try again in an hour")
+          |> Ecto.Changeset.apply_action(:validate)
 
         render_settings(conn,
           settings_changeset: settings_changeset,
