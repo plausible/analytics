@@ -66,8 +66,8 @@ defmodule Plausible.Auth.User do
     |> validate_confirmation(:password, required: true)
     |> validate_password_strength()
     |> hash_password()
-    |> start_trial
-    |> set_email_verified
+    |> start_trial()
+    |> set_email_verification_status()
     |> unique_constraint(:email)
   end
 
@@ -85,7 +85,7 @@ defmodule Plausible.Auth.User do
     |> validate_email_changed()
     |> check_password()
     |> unique_constraint(:email)
-    |> set_email_verified()
+    |> set_email_verification_status()
     |> put_change(:previous_email, user.email)
   end
 
@@ -259,11 +259,13 @@ defmodule Plausible.Auth.User do
     end
   end
 
-  defp set_email_verified(user) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :enable_email_verification) do
+  defp set_email_verification_status(user) do
+    on_full_build do
       change(user, email_verified: false)
     else
-      change(user, email_verified: true)
+      selfhosted_config = Application.get_env(:plausible, :selfhost)
+      must_verify? = Keyword.fetch!(selfhosted_config, :enable_email_verification)
+      change(user, email_verified: not must_verify?)
     end
   end
 end
