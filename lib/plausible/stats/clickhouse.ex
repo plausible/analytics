@@ -7,6 +7,7 @@ defmodule Plausible.Stats.Clickhouse do
   import Ecto.Query, only: [from: 2]
 
   alias Plausible.Stats.Query
+  alias Plausible.Timezones
 
   @no_ref "Direct / None"
 
@@ -27,9 +28,7 @@ defmodule Plausible.Stats.Clickhouse do
         nil
 
       _ ->
-        Timex.Timezone.convert(datetime, "UTC")
-        |> Timex.Timezone.convert(site.timezone)
-        |> DateTime.to_date()
+        Timezones.to_date_in_timezone(datetime, site.timezone)
     end
   end
 
@@ -585,15 +584,14 @@ defmodule Plausible.Stats.Clickhouse do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
     first_datetime =
-      Timex.to_datetime(first, site.timezone)
-      |> Timex.Timezone.convert("UTC")
+      first
+      |> Timezones.to_utc_datetime(site.timezone)
       |> beginning_of_time(site.native_stats_start_at)
 
     {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
 
     last_datetime =
-      Timex.to_datetime(last, site.timezone)
-      |> Timex.Timezone.convert("UTC")
+      Timezones.to_utc_datetime(last, site.timezone)
 
     {first_datetime, last_datetime}
   end
