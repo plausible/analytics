@@ -33,9 +33,9 @@ defmodule Plausible.Props do
 
   ### 1. Subscription plan including the props feature.
 
-  Internally used keys (i.e. `#{inspect @internal_keys}`) are always allowed,
-  even for plans that don't include props. But for anything other than those,
-  props feature access is needed.
+  Internally used keys (i.e. `#{inspect(@internal_keys)}`) are always allowed,
+  even for plans that don't include props. For any other props, access to the
+  Custom Properties feature is required.
 
   ### 2. The site having an `allowed_event_props` list configured.
 
@@ -43,21 +43,28 @@ defmodule Plausible.Props do
   returns that list (+ internally used keys). That helps to filter out garbage
   props which people might not want to see in their dashboards.
 
+  With the `bypass_setup?` boolean option you can override the requirement of
+  the site having set up props in the `allowed_event_props` list. For example,
+  this is currently used for fetching allowed properties in Stats API queries
+  in order to ensure the props feature access.
+
   Since `allowed_event_props` was added after the props feature had already
   been used for a while, there are sites with `allowed_event_props = nil`. For
   those sites, all custom properties that exist in the database are allowed to
   be queried.
   """
   @spec allowed_for(Plausible.Site.t()) :: [prop()] | :all
-  def allowed_for(site) do
+  def allowed_for(site, opts \\ []) do
     site = Plausible.Repo.preload(site, :owner)
-    props_enabled? = Plausible.Billing.Feature.Props.check_availability(site.owner) == :ok
     internal_keys = Plausible.Props.internal_keys()
+    props_enabled? = Plausible.Billing.Feature.Props.check_availability(site.owner) == :ok
+    bypass_setup? = Keyword.get(opts, :bypass_setup?)
 
-    case {props_enabled?, site.allowed_event_props} do
-      {true, nil} -> :all
-      {true, props_list} -> props_list ++ internal_keys
-      {false, _} -> internal_keys
+    cond do
+      props_enabled? && is_nil(site.allowed_event_props) -> :all
+      props_enabled? && bypass_setup? -> :all
+      props_enabled? -> site.allowed_event_props ++ internal_keys
+      true -> internal_keys
     end
   end
 
