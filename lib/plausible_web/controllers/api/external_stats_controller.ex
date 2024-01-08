@@ -5,13 +5,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   alias Plausible.Stats.{Query, CustomProps}
 
   def realtime_visitors(conn, _params) do
-    site = conn.assigns[:site]
+    site = conn.assigns.site
     query = Query.from(site, %{"period" => "realtime"})
     json(conn, Plausible.Stats.Clickhouse.current_visitors(site, query))
   end
 
   def aggregate(conn, params) do
-    site = conn.assigns[:site] |> Repo.preload(:owner)
+    site = Repo.preload(conn.assigns.site, :owner)
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
@@ -49,7 +49,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   def breakdown(conn, params) do
-    site = conn.assigns[:site] |> Repo.preload(:owner)
+    site = Repo.preload(conn.assigns.site, :owner)
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
@@ -197,7 +197,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   def timeseries(conn, params) do
-    site = conn.assigns[:site] |> Repo.preload(:owner)
+    site = Repo.preload(conn.assigns.site, :owner)
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
