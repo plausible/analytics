@@ -34,14 +34,14 @@ defmodule PlausibleWeb.Live.Components.Modal do
       class="[&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
       data-modal
       x-cloak
-      x-data="{ 
-        modalOpen: false, 
+      x-data="{
+        modalOpen: false,
         openModal() {
           liveSocket.execJS($el, $el.dataset.onopen);
           this.modalOpen = true;
         },
-        closeModal() { 
-          this.modalOpen = false; 
+        closeModal() {
+          this.modalOpen = false;
           liveSocket.execJS($el, $el.dataset.onclose);
         }
       }"
@@ -71,10 +71,18 @@ defmodule PlausibleWeb.Live.Components.Modal do
   end
 
   def handle_event("open", _, socket) do
-    {:noreply, assign(socket, load_content?: true)}
+    if not socket.assigns.load_content? do
+      {:noreply, assign(socket, load_content?: true)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("close", _, socket) do
-    {:noreply, assign(socket, load_content?: false)}
+    if socket.assigns.load_content? do
+      {:noreply, assign(socket, load_content?: false)}
+    else
+      {:noreply, socket}
+    end
   end
 end
