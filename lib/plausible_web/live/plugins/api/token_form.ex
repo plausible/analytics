@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
   @moduledoc """
   Live view for the goal creation form
   """
-  use Phoenix.LiveView
+  use PlausibleWeb, live_view: :no_sentry_context
   import PlausibleWeb.Live.Components.Form
 
   alias Plausible.Repo

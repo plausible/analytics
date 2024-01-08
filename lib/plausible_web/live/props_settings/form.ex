@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
   @moduledoc """
   Live view for the custom props creation form
   """
-  use Phoenix.LiveView
+  use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Form
   alias PlausibleWeb.Live.Components.ComboBox
 

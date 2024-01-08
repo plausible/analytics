@@ -2,8 +2,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   @moduledoc """
   Live view for the goal creation form
   """
-  use Phoenix.LiveView
-  use Plausible
+  use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Form
   alias PlausibleWeb.Live.Components.ComboBox
 
