@@ -2,9 +2,9 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
   @moduledoc """
   LiveView allowing listing, creating and revoking Plugins API tokens.
   """
-
-  use PlausibleWeb, :live_view
+  use Phoenix.LiveView
   use Phoenix.HTML
+  use PlausibleWeb.Live.Flash
 
   alias Plausible.Sites
   alias Plausible.Plugins.API.Tokens

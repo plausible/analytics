@@ -3,12 +3,16 @@ defmodule PlausibleWeb.Live.RegisterForm do
   LiveView for registration form.
   """
 
-  use PlausibleWeb, :live_view
+  use Phoenix.LiveView
   use Phoenix.HTML
+  use Plausible
+
   import PlausibleWeb.Live.Components.Form
 
   alias Plausible.Auth
   alias Plausible.Repo
+
+  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(params, _session, socket) do
     socket =
