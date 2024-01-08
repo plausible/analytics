@@ -183,7 +183,7 @@ const ComparisonInput = function({ site, query, history }) {
             </Transition>
 
             { uiMode == "datepicker" &&
-            <div className="h-0 absolute">
+            <div className="h-0 md:absolute">
               <Flatpickr ref={calendar} options={flatpickrOptions} className="invisible" />
             </div> }
           </Menu>
