@@ -95,7 +95,7 @@ function DropdownContent({ history, site, query, wrapped }) {
 
   if (wrapped === 0 || addingFilter) {
     let filterGroups = {...FILTER_GROUPS}
-    if (!site.propsEnabled) delete filterGroups.props
+    if (!site.propsAvailable) delete filterGroups.props
 
     return Object.keys(filterGroups).map((option) => filterDropdownOption(site, option))
   }
