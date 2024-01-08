@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
   to allow building searchable funnel definitions out of list of goals available.
   """
 
-  use PlausibleWeb, :live_view
+  use Phoenix.LiveView
   use Plausible.Funnel
 
   import PlausibleWeb.Live.Components.Form
