@@ -13,7 +13,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-19EA738B.js"></script>
+    <script src="dist/sidebar_items-5B076C9F.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -177,6 +177,17 @@ the past 6 months.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#allowed_for/2" translate="no">allowed_for(site, opts \\ [])</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the custom props allowed in queries for the given site. There are
+two factors deciding whether a custom property is allowed for a site.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#configured?/1" translate="no">configured?(site)</a>
 
       </div>
@@ -313,7 +324,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">allow(site, prop_or_props)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L26" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L78" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -346,7 +357,7 @@ data to be dropped or lost.</p>
     </a>
     <h1 class="signature" translate="no">allow_changeset(site, prop_or_props)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L35" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L87" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -368,7 +379,7 @@ data to be dropped or lost.</p>
     </a>
     <h1 class="signature" translate="no">allow_existing_props(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L79" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L131" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -389,6 +400,53 @@ data to be dropped or lost.</p>
 the past 6 months.</p>
   </section>
 </section>
+<section class="detail" id="allowed_for/2">
+
+    <span id="allowed_for/1"></span>
+
+  <div class="detail-header">
+    <a href="#allowed_for/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">allowed_for(site, opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L57" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns the custom props allowed in queries for the given site. There are
+two factors deciding whether a custom property is allowed for a site.</p><h3 id="allowed_for/2-1-subscription-plan-including-the-props-feature" class="section-heading">
+  <a href="#allowed_for/2-1-subscription-plan-including-the-props-feature">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    1. Subscription plan including the props feature.
+  </a>
+</h3>
+<p>Internally used keys (i.e. <code class="inline">[&quot;url&quot;, &quot;path&quot;]</code>) are always allowed,
+even for plans that don't include props. For any other props, access to the
+Custom Properties feature is required.</p><h3 id="allowed_for/2-2-the-site-having-an-allowed_event_props-list-configured" class="section-heading">
+  <a href="#allowed_for/2-2-the-site-having-an-allowed_event_props-list-configured">
+    <i class="ri-link-m" aria-hidden="true"></i>
+    2. The site having an <code class="inline">allowed_event_props</code> list configured.
+  </a>
+</h3>
+<p>For customers with a configured <code class="inline">allowed_event_props</code> list, this function
+returns that list (+ internally used keys). That helps to filter out garbage
+props which people might not want to see in their dashboards.</p><p>With the <code class="inline">bypass_setup?</code> boolean option you can override the requirement of
+the site having set up props in the <code class="inline">allowed_event_props</code> list. For example,
+this is currently used for fetching allowed properties in Stats API queries
+in order to ensure the props feature access.</p><p>Since <code class="inline">allowed_event_props</code> was added after the props feature had already
+been used for a while, there are sites with <code class="inline">allowed_event_props = nil</code>. For
+those sites, all custom properties that exist in the database are allowed to
+be queried.</p>
+  </section>
+</section>
 <section class="detail" id="configured?/1">
 
   <div class="detail-header">
@@ -398,7 +456,7 @@ the past 6 months.</p>
     </a>
     <h1 class="signature" translate="no">configured?(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L140" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L181" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -420,7 +478,7 @@ the past 6 months.</p>
     </a>
     <h1 class="signature" translate="no">disallow(site, prop_or_props)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L49" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L101" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -451,7 +509,7 @@ ClickHouse data, nor affects ingestion.</p>
     </a>
     <h1 class="signature" translate="no">ensure_prop_key_accessible(prop_key, user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L99" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L140" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -473,7 +531,7 @@ ClickHouse data, nor affects ingestion.</p>
     </a>
     <h1 class="signature" translate="no">internal_keys()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L97" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L28" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -566,7 +624,7 @@ from the allow list, or to suggest users to add this prop key.</p>
     </a>
     <h1 class="signature" translate="no">suggest_keys_to_allow(site, limit \\ 300)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L113" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/props.ex#L154" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
