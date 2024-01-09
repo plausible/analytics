@@ -72,18 +72,10 @@ defmodule PlausibleWeb.Live.Components.Modal do
   end
 
   def handle_event("open", _, socket) do
-    if not socket.assigns.load_content? do
-      {:noreply, assign(socket, load_content?: true)}
-    else
-      {:noreply, socket}
-    end
+    {:noreply, assign(socket, load_content?: true)}
   end
 
   def handle_event("close", _, socket) do
-    if socket.assigns.load_content? do
-      {:noreply, assign(socket, load_content?: false)}
-    else
-      {:noreply, socket}
-    end
+    {:noreply, assign(socket, load_content?: false)}
   end
 end
