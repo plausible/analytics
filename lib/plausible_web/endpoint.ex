@@ -17,7 +17,12 @@ defmodule PlausibleWeb.Endpoint do
   socket("/live", Phoenix.LiveView.Socket,
     websocket: [
       check_origin: true,
-      connect_info: [session: {__MODULE__, :runtime_session_opts, []}]
+      connect_info: [
+        :peer_data,
+        :uri,
+        :user_agent,
+        session: {__MODULE__, :runtime_session_opts, []}
+      ]
     ]
   )
 

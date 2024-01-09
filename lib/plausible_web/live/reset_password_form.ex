@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
   LiveView for password reset form.
   """
 
-  use Phoenix.LiveView
+  use PlausibleWeb, :live_view
   use Phoenix.HTML
 
   import PlausibleWeb.Live.Components.Form

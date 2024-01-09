@@ -3,11 +3,7 @@ defmodule PlausibleWeb.Live.Sites do
   LiveView for sites index.
   """
 
-  use Phoenix.LiveView, global_prefixes: ~w(x-)
-  use PlausibleWeb.Live.Flash
-  use Plausible
-
-  alias Phoenix.LiveView.JS
+  use PlausibleWeb, :live_view
   use Phoenix.HTML
 
   import PlausibleWeb.Components.Generic
@@ -18,7 +14,6 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Site
   alias Plausible.Sites
   alias Plausible.Site.Memberships.Invitations
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(params, %{"current_user_id" => user_id}, socket) do
     uri =
