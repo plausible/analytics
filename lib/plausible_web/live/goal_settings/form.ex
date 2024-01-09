@@ -2,8 +2,7 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
   @moduledoc """
   Live view for the goal creation form
   """
-  use Phoenix.LiveView
-  use Plausible
+  use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Form
   alias PlausibleWeb.Live.Components.ComboBox
 
@@ -267,6 +266,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
       Pageview
     </a>
     """
+  end
+
+  def handle_info({:selection_made, %{submit_value: _prop}}, socket) do
+    {:noreply, socket}
   end
 
   def handle_event("switch-tab", _params, socket) do

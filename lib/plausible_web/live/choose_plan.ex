@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   @moduledoc """
   LiveView for upgrading to a plan, or changing an existing plan.
   """
-  use Phoenix.LiveView
+  use PlausibleWeb, :live_view
   use Phoenix.HTML
 
   require Plausible.Billing.Subscription.Status
@@ -15,7 +15,7 @@ defmodule PlausibleWeb.Live.ChoosePlan do
   @contact_link "https://plausible.io/contact"
   @billing_faq_link "https://plausible.io/docs/billing"
 
-  def mount(_params, %{"user_id" => user_id}, socket) do
+  def mount(_params, %{"current_user_id" => user_id}, socket) do
     socket =
       socket
       |> assign_new(:user, fn ->
