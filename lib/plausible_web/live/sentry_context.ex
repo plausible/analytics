@@ -19,47 +19,49 @@ defmodule PlausibleWeb.Live.SentryContext do
   end
 
   def on_mount(:default, _params, session, socket) do
-    peer = Phoenix.LiveView.get_connect_info(socket, :peer_data)
-    uri = Phoenix.LiveView.get_connect_info(socket, :uri)
+    if Phoenix.LiveView.connected?(socket) do
+      peer = Phoenix.LiveView.get_connect_info(socket, :peer_data)
+      uri = Phoenix.LiveView.get_connect_info(socket, :uri)
 
-    user_agent =
-      Phoenix.LiveView.get_connect_info(socket, :user_agent)
+      user_agent =
+        Phoenix.LiveView.get_connect_info(socket, :user_agent)
 
-    socket_host =
-      case socket.host_uri do
-        :not_mounted_at_router -> :not_mounted_at_router
-        %URI{host: host} -> host
-      end
+      socket_host =
+        case socket.host_uri do
+          :not_mounted_at_router -> :not_mounted_at_router
+          %URI{host: host} -> host
+        end
 
-    request_context =
-      %{
-        host: socket_host,
-        env: %{
-          "REMOTE_ADDR" => get_ip(peer),
-          "REMOTE_PORT" => peer && peer.port,
-          "SEVER_NAME" => uri && uri.host
-        }
-      }
-
-    request_context =
-      if user_agent do
-        Map.merge(request_context, %{
-          headers: %{
-            "User-Agent" => user_agent
+      request_context =
+        %{
+          host: socket_host,
+          env: %{
+            "REMOTE_ADDR" => get_ip(peer),
+            "REMOTE_PORT" => peer && peer.port,
+            "SEVER_NAME" => uri && uri.host
           }
+        }
+
+      request_context =
+        if user_agent do
+          Map.merge(request_context, %{
+            headers: %{
+              "User-Agent" => user_agent
+            }
+          })
+        else
+          request_context
+        end
+
+      Sentry.Context.set_request_context(request_context)
+
+      user_id = session["current_user_id"]
+
+      if user_id do
+        Sentry.Context.set_user_context(%{
+          id: user_id
         })
-      else
-        request_context
       end
-
-    Sentry.Context.set_request_context(request_context)
-
-    user_id = session["current_user_id"]
-
-    if user_id do
-      Sentry.Context.set_user_context(%{
-        id: user_id
-      })
     end
 
     {:cont, socket}
