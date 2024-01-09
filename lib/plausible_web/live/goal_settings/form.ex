@@ -268,6 +268,10 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
     """
   end
 
+  def handle_info({:selection_made, %{submit_value: _prop}}, socket) do
+    {:noreply, socket}
+  end
+
   def handle_event("switch-tab", _params, socket) do
     {:noreply,
      assign(socket,

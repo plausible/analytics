@@ -129,6 +129,13 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
 
       refute element_exists?(html, ~s/a[phx-value-display-value="PLN - Polish Zloty"]/)
       assert element_exists?(html, ~s/a[phx-value-display-value="EUR - Euro"]/)
+
+      lv
+      |> element("#dropdown-currency_input-option-1 a")
+      |> render_click()
+
+      # make sure combo's {:selection_made, ...} message is received
+      render(lv)
     end
 
     test "pageview combo works", %{conn: conn, site: site} do
