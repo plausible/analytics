@@ -7,8 +7,11 @@ import numberFormatter from '../util/number-formatter'
 import Bar from '../stats/bar'
 import { ApiErrorNotice } from '../api'
 
+import RocketIcon from '../stats/modals/rocket-icon'
+
 import * as api from '../api'
 import LazyLoader from '../components/lazy-loader'
+
 
 export default function Funnel(props) {
   const [loading, setLoading] = useState(true)
