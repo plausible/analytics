@@ -1,7 +1,49 @@
 defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   use PlausibleWeb.ConnCase
+  alias Plausible.Billing.Feature
 
   setup [:create_user, :create_new_site, :create_api_key, :use_api_key]
+
+  describe "feature access" do
+    test "cannot filter by a custom prop without access to the props feature", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters" => "event:props:author==Uku"
+        })
+
+      assert json_response(conn, 402)["error"] ==
+               "The owner of this site does not have access to the custom properties feature"
+    end
+
+    test "can filter by an internal prop without access to the props feature", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      ep = insert(:enterprise_plan, features: [Feature.StatsAPI], user_id: user.id)
+      insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters" => "event:props:path==/404"
+        })
+
+      assert json_response(conn, 200)["results"]
+    end
+  end
 
   describe "param validation" do
     test "validates that date can be parsed", %{conn: conn, site: site} do

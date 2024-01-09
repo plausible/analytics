@@ -5,18 +5,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   alias Plausible.Stats.{Query, CustomProps}
 
   def realtime_visitors(conn, _params) do
-    site = conn.assigns[:site]
+    site = conn.assigns.site
     query = Query.from(site, %{"period" => "realtime"})
     json(conn, Plausible.Stats.Clickhouse.current_visitors(site, query))
   end
 
   def aggregate(conn, params) do
-    site = conn.assigns[:site]
+    site = Repo.preload(conn.assigns.site, :owner)
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          query <- Query.from(site, params),
-         {:ok, metrics} <- parse_and_validate_metrics(params, nil, query) do
+         {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
+         :ok <- ensure_custom_props_access(site, query) do
       results =
         if params["compare"] == "previous_period" do
           {:ok, prev_query} = Plausible.Stats.Comparisons.compare(site, query, "previous_period")
@@ -43,22 +44,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
       json(conn, %{results: results})
     else
-      {:error, msg} ->
-        conn
-        |> put_status(400)
-        |> json(%{error: msg})
+      err_tuple -> send_json_error_response(conn, err_tuple)
     end
   end
 
   def breakdown(conn, params) do
-    site = conn.assigns[:site]
+    site = Repo.preload(conn.assigns.site, :owner)
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          {:ok, property} <- validate_property(params),
          query <- Query.from(site, params),
          {:ok, metrics} <- parse_and_validate_metrics(params, property, query),
-         {:ok, limit} <- validate_or_default_limit(params) do
+         {:ok, limit} <- validate_or_default_limit(params),
+         :ok <- ensure_custom_props_access(site, query, property) do
       page = String.to_integer(Map.get(params, "page", "1"))
       results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
 
@@ -75,10 +74,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
       json(conn, %{results: results})
     else
-      {:error, msg} ->
-        conn
-        |> put_status(400)
-        |> json(%{error: msg})
+      err_tuple -> send_json_error_response(conn, err_tuple)
     end
   end
 
@@ -129,6 +125,35 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
+  @spec ensure_custom_props_access(Plausible.Site.t(), Query.t(), String.t() | nil) ::
+          :ok | {:error, {402, String.t()}}
+  defp ensure_custom_props_access(site, query, property \\ nil) do
+    allowed_props = Plausible.Props.allowed_for(site, bypass_setup?: true)
+    prop_filter = Query.get_filter_by_prefix(query, "event:props:")
+
+    query_allowed? =
+      case {prop_filter, property, allowed_props} do
+        {_, _, :all} ->
+          true
+
+        {{"event:props:" <> prop, _}, _property, allowed_props} ->
+          prop in allowed_props
+
+        {_filter, "event:props:" <> prop, allowed_props} ->
+          prop in allowed_props
+
+        _ ->
+          true
+      end
+
+    if query_allowed? do
+      :ok
+    else
+      msg = "The owner of this site does not have access to the custom properties feature"
+      {:error, {402, msg}}
+    end
+  end
+
   defp validate_all_metrics(metrics, property, query) do
     Enum.reduce_while(metrics, [], fn metric, acc ->
       case validate_metric(metric, property, query) do
@@ -172,21 +197,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   def timeseries(conn, params) do
-    site = conn.assigns[:site]
+    site = Repo.preload(conn.assigns.site, :owner)
 
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
          query <- Query.from(site, params),
-         {:ok, metrics} <- parse_and_validate_metrics(params, nil, query) do
+         {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
+         :ok <- ensure_custom_props_access(site, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
 
       json(conn, %{results: graph})
     else
-      {:error, msg} ->
-        conn
-        |> put_status(400)
-        |> json(%{error: msg})
+      err_tuple -> send_json_error_response(conn, err_tuple)
     end
   end
 
@@ -257,4 +280,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_interval(_), do: :ok
+
+  defp send_json_error_response(conn, {:error, {status, msg}}) do
+    conn
+    |> put_status(status)
+    |> json(%{error: msg})
+  end
+
+  defp send_json_error_response(conn, {:error, msg}) do
+    conn
+    |> put_status(400)
+    |> json(%{error: msg})
+  end
 end

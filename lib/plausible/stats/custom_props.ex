@@ -33,15 +33,15 @@ defmodule Plausible.Stats.CustomProps do
           select: meta.key,
           distinct: true
         )
-        |> maybe_allowed_props_only(site.allowed_event_props)
+        |> maybe_allowed_props_only(site)
         |> ClickhouseRepo.all()
     end
   end
 
-  def maybe_allowed_props_only(q, allowed_props) when is_list(allowed_props) do
-    props = allowed_props ++ Plausible.Props.internal_keys()
-    from [..., m] in q, where: m.key in ^props
+  def maybe_allowed_props_only(q, site) do
+    case Plausible.Props.allowed_for(site) do
+      :all -> q
+      allowed_props -> from [..., m] in q, where: m.key in ^allowed_props
+    end
   end
-
-  def maybe_allowed_props_only(q, nil), do: q
 end
