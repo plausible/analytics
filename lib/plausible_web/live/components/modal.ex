@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
       assign(socket,
         id: assigns.id,
         inner_block: assigns.inner_block,
-        load_content?: false
+        load_content?: true
       )
 
     {:ok, socket}
@@ -46,10 +46,15 @@ defmodule PlausibleWeb.Live.Components.Modal do
       data-modal
       x-cloak
       x-data="{
+        firstLoadDone: false,
         modalOpen: false,
         openModal() {
-          liveSocket.execJS($el, $el.dataset.onclose);
-          liveSocket.execJS($el, $el.dataset.onopen);
+          if (this.firstLoadDone) {
+            liveSocket.execJS($el, $el.dataset.onclose);
+            liveSocket.execJS($el, $el.dataset.onopen);
+          } else {
+            this.firstLoadDone = true;
+          }
 
           this.modalOpen = true;
         },
