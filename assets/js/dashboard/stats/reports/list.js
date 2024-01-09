@@ -180,9 +180,8 @@ export default function ListReport(props) {
           {maybeRenderDetailsLink()}
         </div>
       )
-    } else if (!state.error) {
-      return renderNoDataYet()
     }
+    return renderNoDataYet()
   }
 
   function renderReportHeader() {
