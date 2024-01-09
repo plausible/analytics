@@ -37,12 +37,13 @@ defmodule PlausibleWeb.Live.Components.Modal do
       x-data="{
         modalOpen: false,
         openModal() {
+          liveSocket.execJS($el, $el.dataset.onclose);
           liveSocket.execJS($el, $el.dataset.onopen);
+
           this.modalOpen = true;
         },
         closeModal() {
           this.modalOpen = false;
-          liveSocket.execJS($el, $el.dataset.onclose);
         }
       }"
       x-on:open-modal.window={"if ($event.detail === '#{@id}') openModal()"}
