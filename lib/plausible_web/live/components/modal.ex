@@ -1,18 +1,29 @@
 defmodule PlausibleWeb.Live.Components.Modal do
+  @moduledoc """
+  LiveView implementation of modal component.
+
+  Description TBD.
+  """
+
   use Phoenix.LiveComponent, global_prefixes: ~w(x-)
 
   alias Phoenix.LiveView
 
   defmodule JS do
+    @moduledoc false
+
+    @spec open(String.t()) :: String.t()
     def open(id) do
       "$dispatch('open-modal', '#{id}')"
     end
   end
 
+  @spec close(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
   def close(socket, id) do
     Phoenix.LiveView.push_event(socket, "close-modal", %{id: id})
   end
 
+  @impl true
   def update(assigns, socket) do
     socket =
       assign(socket,
@@ -71,6 +82,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
     """
   end
 
+  @impl true
   def handle_event("open", _, socket) do
     {:noreply, assign(socket, load_content?: true)}
   end
