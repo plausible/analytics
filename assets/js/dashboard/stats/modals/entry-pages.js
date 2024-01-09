@@ -8,8 +8,6 @@ import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { trimURL } from '../../util/url'
 
-import { ApiErrorNotice } from '../../api'
-
 class EntryPagesModal extends React.Component {
   constructor(props) {
     super(props)
@@ -18,8 +16,7 @@ class EntryPagesModal extends React.Component {
       query: parseQuery(props.location.search, props.site),
       pages: [],
       page: 1,
-      moreResultsAvailable: false,
-      error: undefined
+      moreResultsAvailable: false
     }
   }
 
@@ -42,7 +39,6 @@ class EntryPagesModal extends React.Component {
           moreResultsAvailable: res.length === 100
         }))
       )
-      .catch((err) => this.setState({ loading: false, error: err }))
   }
 
   loadMore() {
@@ -154,7 +150,6 @@ class EntryPagesModal extends React.Component {
     return (
       <Modal site={this.props.site}>
         {this.renderBody()}
-        {this.state.error && <ApiErrorNotice error={this.state.error} />}
         {this.renderLoading()}
       </Modal>
     )
