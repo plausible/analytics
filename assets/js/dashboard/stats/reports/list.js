@@ -9,8 +9,6 @@ import Bar from '../bar'
 import LazyLoader from '../../components/lazy-loader'
 import classNames from 'classnames'
 import { trimURL } from '../../util/url'
-import { ApiErrorNotice } from '../../api'
-
 const MAX_ITEMS = 9
 const MIN_HEIGHT = 380
 const ROW_HEIGHT = 32
@@ -124,8 +122,6 @@ export default function ListReport(props) {
     }
     props.fetchData()
       .then((res) => setState({ loading: false, list: res }))
-      .catch((err) => setState({ loading: false, error: err }))
-
   }, [props.keyLabel, props.query])
 
   const onVisible = () => { setVisible(true) }
@@ -180,9 +176,8 @@ export default function ListReport(props) {
           {maybeRenderDetailsLink()}
         </div>
       )
-    } else if (!state.error) {
-      return renderNoDataYet()
     }
+    return renderNoDataYet()
   }
 
   function renderReportHeader() {
@@ -319,7 +314,6 @@ export default function ListReport(props) {
     <LazyLoader onVisible={onVisible} >
       <div className="w-full" style={{ minHeight: `${MIN_HEIGHT}px` }}>
         {state.loading && renderLoading()}
-        {state.error && <ApiErrorNotice error={state.error} />}
         {!state.loading && <FadeIn show={!state.loading} className="h-full">
           {renderReport()}
         </FadeIn>}

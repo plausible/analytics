@@ -4,24 +4,20 @@ import { Link, withRouter } from 'react-router-dom'
 import Modal from './modal'
 import * as api from '../../api'
 import numberFormatter from '../../util/number-formatter'
-import { parseQuery } from '../../query'
-
-import { ApiErrorNotice } from '../../api'
+import {parseQuery} from '../../query'
 
 class ModalTable extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
       loading: true,
-      query: parseQuery(props.location.search, props.site),
-      error: undefined
+      query: parseQuery(props.location.search, props.site)
     }
   }
 
   componentDidMount() {
-    api.get(this.props.endpoint, this.state.query, { limit: 100 })
-      .then((res) => this.setState({ loading: false, list: res }))
-      .catch((err) => this.setState({ loading: false, error: err }))
+    api.get(this.props.endpoint, this.state.query, {limit: 100})
+      .then((res) => this.setState({loading: false, list: res}))
   }
 
   label() {
@@ -38,7 +34,7 @@ class ModalTable extends React.Component {
     return (
       <tr className="text-sm dark:text-gray-200" key={tableItem.name}>
         <td className="p-2">
-          <Link className="hover:underline" to={{ search: query.toString(), pathname: `/${encodeURIComponent(this.props.site.domain)}` }}>
+          <Link className="hover:underline" to={{search: query.toString(), pathname: `/${encodeURIComponent(this.props.site.domain)}`}}>
             {this.props.renderIcon && this.props.renderIcon(tableItem)}
             {this.props.renderIcon && ' '}
             {tableItem.name}
@@ -47,7 +43,7 @@ class ModalTable extends React.Component {
         <td className="p-2 w-32 font-medium" align="right">
           {numberFormatter(tableItem.visitors)}
           {tableItem.percentage >= 0 &&
-            <span className="inline-block text-xs w-8 pl-1 text-right">({tableItem.percentage}%)</span>}
+            <span className="inline-block text-xs w-8 pl-1 text-right">({tableItem.percentage}%)</span> }
         </td>
       </tr>
     )
@@ -86,7 +82,7 @@ class ModalTable extends React.Component {
                 </tr>
               </thead>
               <tbody>
-                {this.state.list.map(this.renderTableItem.bind(this))}
+                { this.state.list.map(this.renderTableItem.bind(this)) }
               </tbody>
             </table>
           </main>
@@ -100,8 +96,7 @@ class ModalTable extends React.Component {
   render() {
     return (
       <Modal site={this.props.site} show={!this.state.loading}>
-        {this.state.error && <ApiErrorNotice error={this.state.error} />}
-        {this.renderBody()}
+        { this.renderBody() }
       </Modal>
     )
   }

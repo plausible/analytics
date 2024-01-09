@@ -8,7 +8,6 @@ import * as url from "../../util/url";
 import numberFormatter from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 import { escapeFilterValue } from '../../util/filters'
-import { ApiErrorNotice } from '../../api'
 
 /*global BUILD_EXTRA*/
 /*global require*/
@@ -25,7 +24,7 @@ const Money = maybeRequire().default
 function ConversionsModal(props) {
   const site = props.site
   const query = parseQuery(props.location.search, site)
-  const [error, setError] = useState(undefined)
+
   const [loading, setLoading] = useState(true)
   const [moreResultsAvailable, setMoreResultsAvailable] = useState(false)
   const [page, setPage] = useState(1)
@@ -42,9 +41,6 @@ function ConversionsModal(props) {
         setList(list.concat(res))
         setPage(page + 1)
         setMoreResultsAvailable(res.length >= 100)
-      })
-      .catch((err) => {
-        setError(err)
       })
   }
 
@@ -124,8 +120,7 @@ function ConversionsModal(props) {
   return (
     <Modal site={site}>
       {renderBody()}
-      {error && <ApiErrorNotice error={error} />}
-      {!error && loading && renderLoading()}
+      {loading && renderLoading()}
       {!loading && moreResultsAvailable && renderLoadMore()}
     </Modal>
   )

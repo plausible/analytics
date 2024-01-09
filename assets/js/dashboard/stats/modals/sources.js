@@ -6,8 +6,6 @@ import * as api from '../../api'
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
 import { parseQuery } from '../../query'
 
-import { ApiErrorNotice } from '../../api'
-
 const TITLES = {
   sources: 'Top Sources',
   utm_mediums: 'Top UTM mediums',
@@ -25,8 +23,7 @@ class SourcesModal extends React.Component {
       sources: [],
       query: parseQuery(props.location.search, props.site),
       page: 1,
-      moreResultsAvailable: false,
-      error: undefined
+      moreResultsAvailable: false
     }
   }
 
@@ -37,7 +34,6 @@ class SourcesModal extends React.Component {
     const detailed = this.showExtra()
     api.get(`/api/stats/${encodeURIComponent(site.domain)}/${this.currentFilter()}`, query, { limit: 100, page, detailed })
       .then((res) => this.setState({ loading: false, sources: sources.concat(res), moreResultsAvailable: res.length === 100 }))
-      .catch((err) => this.setState({ loading: false, error: err }))
   }
 
   componentDidMount() {
@@ -175,7 +171,6 @@ class SourcesModal extends React.Component {
         </main>
 
         {this.renderLoading()}
-        {this.state.error && <ApiErrorNotice error={this.state.error} />}
       </Modal>
     )
   }
