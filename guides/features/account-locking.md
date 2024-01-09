@@ -15,7 +15,6 @@ The user is given 7 days to upgrade their account after the alert, and this is c
   "id": "1aa855bd-022d-4dfc-b572-6853442c3f19",
   "is_over": true,
   "end_date": "2022-03-09",
-  "allowance_required": 100,
   "manual_lock": false
 }
 ```

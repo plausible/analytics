@@ -131,7 +131,10 @@ defmodule Plausible.Workers.CheckUsageTest do
   end
 
   test "skips checking users who already have a grace period", %{user: user} do
-    user |> Plausible.Auth.GracePeriod.start_changeset(12_000) |> Repo.update()
+    %{grace_period: existing_grace_period} =
+      user
+      |> Plausible.Auth.GracePeriod.start_changeset()
+      |> Repo.update!()
 
     quota_stub =
       Plausible.Billing.Quota
@@ -151,7 +154,7 @@ defmodule Plausible.Workers.CheckUsageTest do
     CheckUsage.perform(nil, quota_stub)
 
     assert_no_emails_delivered()
-    assert Repo.reload(user).grace_period.allowance_required == 12_000
+    assert Repo.reload(user).grace_period.id == existing_grace_period.id
   end
 
   test "recommends a plan to upgrade to", %{

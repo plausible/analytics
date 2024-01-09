@@ -319,14 +319,9 @@ defmodule Plausible.BillingTest do
       assert Repo.reload!(api_key).hourly_request_limit == plan.hourly_api_request_limit
     end
 
-    test "if user's grace period has ended, upgrading to the proper plan will unlock sites and remove grace period" do
-      user =
-        insert(:user,
-          grace_period: %Plausible.Auth.GracePeriod{
-            end_date: Timex.shift(Timex.today(), days: -1),
-            allowance_required: 11_000
-          }
-        )
+    test "if user's grace period has ended, upgrading will unlock sites and remove grace period" do
+      grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      user = insert(:user, grace_period: grace_period)
 
       subscription = insert(:subscription, user: user)
       site = insert(:site, locked: true, members: [user])
@@ -341,29 +336,6 @@ defmodule Plausible.BillingTest do
 
       assert Repo.reload!(site).locked == false
       assert Repo.reload!(user).grace_period == nil
-    end
-
-    test "does not remove grace period if upgraded plan allowance is too low" do
-      user =
-        insert(:user,
-          grace_period: %Plausible.Auth.GracePeriod{
-            end_date: Timex.shift(Timex.today(), days: -1),
-            allowance_required: 11_000
-          }
-        )
-
-      subscription = insert(:subscription, user: user)
-      site = insert(:site, locked: true, members: [user])
-
-      @subscription_updated_params
-      |> Map.merge(%{
-        "subscription_id" => subscription.paddle_subscription_id,
-        "passthrough" => user.id
-      })
-      |> Billing.subscription_updated()
-
-      assert Repo.reload!(site).locked == true
-      assert Repo.reload!(user).grace_period.allowance_required == 11_000
     end
 
     test "ignores if subscription cannot be found" do

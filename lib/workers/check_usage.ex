@@ -83,7 +83,7 @@ defmodule Plausible.Workers.CheckUsage do
         |> Plausible.Mailer.send()
 
         subscriber
-        |> Plausible.Auth.GracePeriod.start_manual_lock_changeset(pageview_usage.last_cycle.total)
+        |> Plausible.Auth.GracePeriod.start_manual_lock_changeset()
         |> Repo.update()
     end
   end
@@ -98,7 +98,7 @@ defmodule Plausible.Workers.CheckUsage do
         |> Plausible.Mailer.send()
 
         subscriber
-        |> Plausible.Auth.GracePeriod.start_changeset(pageview_usage.last_cycle.total)
+        |> Plausible.Auth.GracePeriod.start_changeset()
         |> Repo.update()
 
       _ ->
