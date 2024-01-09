@@ -19,12 +19,9 @@ export function ApiErrorNotice({ error }) {
       <div className="text-center text-gray-900 dark:text-gray-100 mt-16 mb-16">
         <RocketIcon />
         <div className="text-lg font-bold">Oops! Our servers had trouble retrieving your data.</div>
-        <div className="text-xs mt-4">If the problem persists after refreshing your browser, please <a rel="noreferrer" target="_blank" href="https://plausible.io/contact" className="underline text-indigo-400">contact support</a> with the following code:
+        <div className="text-xs mt-8">If the problem persists after refreshing your browser, please <a rel="noreferrer" target="_blank" href="https://plausible.io/contact" className="underline text-indigo-400">contact support</a> with the following code:
         </div>
-        <div className="mt-4 text-xs font-mono">
-          {!error.payload && error.message}
-          {error.payload && error.payload.support_hash}
-        </div>
+        <div className="mt-4 text-xs font-mono">{error.payload.support_hash ? error.payload.support_hash : "internal-server-error"}</div>
       </div>
     </div>
   );
