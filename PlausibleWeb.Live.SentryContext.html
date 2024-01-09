@@ -7,7 +7,7 @@
     <meta name="generator" content="ExDoc v0.30.3">
     <meta name="project" content="Plausible v0.0.1">
 
-    <title>Plausible.SentryFilter — Plausible v0.0.1</title>
+    <title>PlausibleWeb.Live.SentryContext — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
 
 
@@ -102,19 +102,24 @@ Plausible
 </button>
 
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/sentry_filter.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sentry_context.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.SentryFilter</span> 
+  <span translate="no">PlausibleWeb.Live.SentryContext</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>Sentry callbacks for filtering and grouping events</p>
+<p>This module tries to supply LiveViews with some common Sentry context
+(without it, there is practically none).</p><p>Use via <code class="inline">use PlausibleWeb.Live.SentryContext</code> in your LiveView module,
+or preferably via <code class="inline">use PlausibleWeb, :live_view</code>.</p><p>In case you have multiple LiveViews, there is <code class="inline">use PlausibleWeb, live_view: :no_sentry_context</code>
+exposed that allows you to skip using this module. This is because
+only the root LiveView has access to <code class="inline">connect_info</code> and an exception will be
+thrown otherwise.</p>
   </section>
 
 
@@ -132,19 +137,9 @@ Plausible
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#before_send/1" translate="no">before_send(event)</a>
+        <a href="#on_mount/4" translate="no">on_mount(atom, params, session, socket)</a>
 
       </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#exclude_exception?/2" translate="no">exclude_exception?(exception, source)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/sentry/8.1.0/Sentry.EventFilter.html#c:exclude_exception?/2"><code class="inline">Sentry.EventFilter.exclude_exception?/2</code></a>.</p></div>
 
     </div>
 
@@ -161,16 +156,16 @@ Functions
       </a>
     </h1>
     <div class="functions-list">
-<section class="detail" id="before_send/1">
+<section class="detail" id="on_mount/4">
 
   <div class="detail-header">
-    <a href="#before_send/1" class="detail-link" title="Link to this function">
+    <a href="#on_mount/4" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">before_send(event)</h1>
+    <h1 class="signature" translate="no">on_mount(atom, params, session, socket)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/sentry_filter.ex#L17" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/sentry_context.ex#L21" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -180,35 +175,7 @@ Functions
 
   <section class="docstring">
 
-      <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> before_send(<a href="https://hexdocs.pm/sentry/8.1.0/Sentry.Event.html#t:t/0">Sentry.Event.t</a>()) :: <a href="https://hexdocs.pm/sentry/8.1.0/Sentry.Event.html#t:t/0">Sentry.Event.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="exclude_exception?/2">
-
-  <div class="detail-header">
-    <a href="#exclude_exception?/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">exclude_exception?(exception, source)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/sentry_filter.ex#L7" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>Callback implementation for <a href="https://hexdocs.pm/sentry/8.1.0/Sentry.EventFilter.html#c:exclude_exception?/2"><code class="inline">Sentry.EventFilter.exclude_exception?/2</code></a>.</p>
   </section>
 </section>
 
