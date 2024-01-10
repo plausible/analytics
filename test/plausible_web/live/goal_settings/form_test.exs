@@ -51,13 +51,15 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       lv = get_liveview(conn, site)
       html = render(lv)
 
-      [event_name] = find(html, "input")
+      [event_name] = find(html, "#goals-form input")
 
       assert name_of(event_name) == "goal[event_name]"
 
-      html = lv |> element(~s/a#pageview-tab/) |> render_click()
+      lv |> element(~s/a#pageview-tab/) |> render_click()
 
-      [page_path_display, page_path] = find(html, "input")
+      html = render(lv)
+
+      [page_path_display, page_path] = find(html, "#goals-form input")
       assert name_of(page_path_display) == "display-page_path_input"
       assert name_of(page_path) == "goal[page_path]"
     end
