@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
       to ensure that.
     * `Modal.close/2` - to close the modal from the backend; usually
       done inside wrapped component's `handle_event/2`. The example
-      qouted above shows one way to implement this, under that assumption
+      quoted above shows one way to implement this, under that assumption
       that the component exposes a callback, like this:
 
       ```
