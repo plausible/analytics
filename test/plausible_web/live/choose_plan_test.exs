@@ -454,7 +454,9 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
       Plausible.Users.allow_next_upgrade_override(user)
 
-      {:ok, _lv, doc} = get_liveview(conn)
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = set_slider(lv, "10k")
 
       refute text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
