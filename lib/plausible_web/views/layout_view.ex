@@ -1,6 +1,7 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
   use Plausible
+  alias PlausibleWeb.Components.Billing.Notice
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()
