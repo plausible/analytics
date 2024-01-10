@@ -40,7 +40,11 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
           </div>
         </form>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <PlausibleWeb.Components.Generic.button x-on:click={Modal.JS.open("goals-form-modal")}>
+          <PlausibleWeb.Components.Generic.button
+            id="add-goal-button"
+            x-data
+            x-on:click={Modal.JS.open("goals-form-modal")}
+          >
             + Add Goal
           </PlausibleWeb.Components.Generic.button>
         </div>
