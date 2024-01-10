@@ -46,7 +46,6 @@ defmodule PlausibleWeb.Live.GoalSettings.Form do
         :let={f}
         x-data="{ tabSelectionInProgress: false }"
         for={@form}
-        class="relative max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"
         phx-submit="save-goal"
         phx-target={@myself}
       >

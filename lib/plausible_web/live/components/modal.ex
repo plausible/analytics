@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
       to ensure that.
     * `Modal.close/2` - to close the modal from the backend; usually
       done inside wrapped component's `handle_event/2`. The example
-      quoted above shows one way to implement this, under that assumption
+      qouted above shows one way to implement this, under that assumption
       that the component exposes a callback, like this:
 
       ```
@@ -115,9 +115,21 @@ defmodule PlausibleWeb.Live.Components.Modal do
   end
 
   attr :id, :any, required: true
+  attr :class, :string, default: ""
   slot :inner_block, required: true
 
   def render(assigns) do
+    class = [
+      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8",
+      assigns.class
+    ]
+
+    assigns =
+      assign(assigns,
+        modal_class: ["modal-dialog relative" | class],
+        modal_loading_class: ["modal-loading hidden" | class]
+      )
+
     ~H"""
     <div
       id={@id}
@@ -151,13 +163,13 @@ defmodule PlausibleWeb.Live.Components.Modal do
       </div>
       <div
         x-show="modalOpen"
-        class="fixed inset-0 flex items-center justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden"
+        class="fixed inset-0 items-top justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden"
       >
-        <div :if={@load_content?} class="modal-dialog w-1/2 h-full" x-on:click.outside="closeModal()">
+        <div :if={@load_content?} class={@modal_class} x-on:click.outside="closeModal()">
           <%= render_slot(@inner_block) %>
         </div>
-        <div class="modal-loading hidden w-1/2 h-full">
-          <div class="text-center max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8">
+        <div class={@modal_loading_class}>
+          <div class="text-center">
             <PlausibleWeb.Components.Generic.spinner class="inline-block" /> Loading...
           </div>
         </div>
