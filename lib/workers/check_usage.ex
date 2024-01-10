@@ -121,7 +121,7 @@ defmodule Plausible.Workers.CheckUsage do
           boolean()
 
   def exceeds_last_two_usage_cycles?(usage, limit) when is_integer(limit) do
-    limit = ceil(limit * 1.1)
+    limit = ceil(limit * (1 + Quota.pageview_allowance_margin()))
 
     Enum.all?([usage.last_cycle, usage.penultimate_cycle], fn usage ->
       not Quota.below_limit?(usage.total, limit)

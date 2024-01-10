@@ -231,6 +231,75 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @business_plan_box) =~ "Recommended"
       refute text_of_element(doc, @growth_plan_box) =~ "Recommended"
     end
+
+    @tag :slow
+    test "allows upgrade to a 100k plan with a pageview allowance margin of 0.15 when trial is active",
+         %{conn: conn, site: site} do
+      generate_usage_for(site, 115_000)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "100k")
+
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+
+      generate_usage_for(site, 1)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "100k")
+
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "allows upgrade to a 10k plan with a pageview allowance margin of 0.3 when trial ended 10 days ago",
+         %{conn: conn, site: site, user: user} do
+      user
+      |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -10)})
+      |> Repo.update!()
+
+      generate_usage_for(site, 13_000)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "10k")
+
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+
+      generate_usage_for(site, 1)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "10k")
+
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "pageview allowance margin on upgrade is 0.1 when trial ended more than 10 days ago", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      user
+      |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -11)})
+      |> Repo.update!()
+
+      generate_usage_for(site, 11_000)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "10k")
+
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+
+      generate_usage_for(site, 1)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "10k")
+
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
   end
 
   describe "for a user with a v4 growth subscription plan" do
