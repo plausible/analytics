@@ -32,6 +32,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert_no_emails_delivered()
     end
 
+    @tag :full_build_only
     test "unlocks the site if it was previously locked" do
       site = insert(:site, locked: true, memberships: [])
       existing_owner = insert(:user)
@@ -314,6 +315,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       )
     end
 
+    @tag :full_build_only
     test "unlocks a previously locked site after transfer" do
       site = insert(:site, locked: true, memberships: [])
       existing_owner = insert(:user)
