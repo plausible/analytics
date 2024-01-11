@@ -71,7 +71,6 @@ defmodule Plausible.MixProject do
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
-      {:connection, "~> 1.1", override: true},
       {:cors_plug, "~> 3.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
       {:csv, "~> 2.3"},
