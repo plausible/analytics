@@ -4,20 +4,21 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.30.3">
+    <meta name="generator" content="ExDoc v0.31.0">
     <meta name="project" content="Plausible v0.0.1">
 
+
     <title>PlausibleWeb.Live.Components.ComboBox — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-5B076C9F.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-8D1A0EBC.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CGDDOCMI.js"></script>
+    <script async src="dist/html-CILPWI2Q.js"></script>
 
 
   </head>
@@ -38,69 +39,94 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
-<section class="sidebar">
-  <form class="sidebar-search" action="search.html">
-    <button type="submit" class="search-button" aria-label="Submit Search">
-      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
-    </button>
-    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
-      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
-    </button>
-    <label class="search-label">
-      <p class="sr-only">Search</p>
-      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-    </label>
-  </form>
-
-  <div class="autocomplete">
-    <div class="autocomplete-results">
-    </div>
-  </div>
+<nav id="sidebar" class="sidebar">
 
   <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
 
-      <a href="readme.html">
-        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
-      </a>
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
 
-    <div class="sidebar-projectDetails">
-      <a href="readme.html" class="sidebar-projectName" translate="no">
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
 Plausible
-      </a>
-      <div class="sidebar-projectVersion" translate="no">
-        v0.0.1
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
       </div>
     </div>
-    <ul class="sidebar-listNav">
-      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
 
-        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
 
 
-        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
 
     </ul>
   </div>
 
-  <div class="gradient"></div>
-  <ul id="full-list"></ul>
-</section>
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
 
-<section class="content">
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
   <output role="status" id="toast"></output>
   <div class="content-outer">
     <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Plausible</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
 
 <h1>
-<button class="icon-action display-settings">
-  <i class="ri-settings-3-line"></i>
-  <span class="sr-only">Settings</span>
-</button>
-
 
     <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -139,8 +165,8 @@ verification.</p>
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        Summary
       </a>
+      <span class="text">Summary</span>
     </h1>
 <div class="summary-functions summary">
   <h2>
@@ -173,7 +199,7 @@ verification.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveComponent.html#c:handle_event/3"><code class="inline">Phoenix.LiveComponent.handle_event/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:handle_event/3"><code class="inline">Phoenix.LiveComponent.handle_event/3</code></a>.</p></div>
 
     </div>
 
@@ -211,7 +237,7 @@ verification.</p>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveComponent.html#c:update/2"><code class="inline">Phoenix.LiveComponent.update/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:update/2"><code class="inline">Phoenix.LiveComponent.update/2</code></a>.</p></div>
 
     </div>
 
@@ -224,8 +250,8 @@ verification.</p>
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-Functions
       </a>
+      <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
 <section class="detail" id="dropdown/1">
@@ -237,7 +263,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">dropdown(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L165" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -248,10 +274,10 @@ Functions
   <section class="docstring">
 
 <h2 id="dropdown/1-attributes" class="section-heading">
-  <a href="#dropdown/1-attributes">
+  <a href="#dropdown/1-attributes" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Attributes
   </a>
+  <span class="text">Attributes</span>
 </h2>
 <ul><li><code class="inline">ref</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">suggestions</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">suggest_fun</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">target</code> (<code class="inline">:any</code>)</li><li><code class="inline">creatable</code> (<code class="inline">:boolean</code>) (required)</li><li><code class="inline">display_value</code> (<code class="inline">:string</code>) (required)</li></ul>
   </section>
@@ -265,7 +291,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">dropdown_anchor(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L137" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -276,10 +302,10 @@ Functions
   <section class="docstring">
 
 <h2 id="dropdown_anchor/1-attributes" class="section-heading">
-  <a href="#dropdown_anchor/1-attributes">
+  <a href="#dropdown_anchor/1-attributes" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Attributes
   </a>
+  <span class="text">Attributes</span>
 </h2>
 <ul><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li></ul>
   </section>
@@ -303,7 +329,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveComponent.html#c:handle_event/3"><code class="inline">Phoenix.LiveComponent.handle_event/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:handle_event/3"><code class="inline">Phoenix.LiveComponent.handle_event/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="option/1">
@@ -315,7 +341,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">option(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L223" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -326,10 +352,10 @@ Functions
   <section class="docstring">
 
 <h2 id="option/1-attributes" class="section-heading">
-  <a href="#option/1-attributes">
+  <a href="#option/1-attributes" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Attributes
   </a>
+  <span class="text">Attributes</span>
 </h2>
 <ul><li><code class="inline">display_value</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">submit_value</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">ref</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">target</code> (<code class="inline">:any</code>)</li><li><code class="inline">idx</code> (<code class="inline">:integer</code>) (required)</li><li><code class="inline">creatable</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li></ul>
   </section>
@@ -343,7 +369,7 @@ Functions
     </a>
     <h1 class="signature" translate="no">render(assigns)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L1" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/combo_box.ex#L73" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -354,10 +380,10 @@ Functions
   <section class="docstring">
 
 <h2 id="render/1-attributes" class="section-heading">
-  <a href="#render/1-attributes">
+  <a href="#render/1-attributes" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Attributes
   </a>
+  <span class="text">Attributes</span>
 </h2>
 <ul><li><code class="inline">placeholder</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;Select option or search by typing&quot;</code>.</li><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">options</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">submit_name</code> (<code class="inline">:string</code>) (required)</li><li><code class="inline">display_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">submit_value</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">suggest_fun</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">suggestions_limit</code> (<code class="inline">:integer</code>)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li><li><code class="inline">required</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li><code class="inline">creatable</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">false</code>.</li><li><code class="inline">errors</code> (<code class="inline">:list</code>) - Defaults to <code class="inline">[]</code>.</li><li><code class="inline">async</code> (<code class="inline">:boolean</code>) - Defaults to <code class="inline">true</code>.</li></ul>
   </section>
@@ -405,7 +431,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.19.4/Phoenix.LiveComponent.html#c:update/2"><code class="inline">Phoenix.LiveComponent.update/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveComponent.html#c:update/2"><code class="inline">Phoenix.LiveComponent.update/2</code></a>.</p>
   </section>
 </section>
 
@@ -429,7 +455,7 @@ Functions
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
@@ -437,7 +463,7 @@ Functions
       </footer>
     </div>
   </div>
-</section>
+</main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>

@@ -4,20 +4,21 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.30.3">
+    <meta name="generator" content="ExDoc v0.31.0">
     <meta name="project" content="Plausible v0.0.1">
 
+
     <title>Plausible.Cldr.Currency — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-5B076C9F.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-8D1A0EBC.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CGDDOCMI.js"></script>
+    <script async src="dist/html-CILPWI2Q.js"></script>
 
 
   </head>
@@ -38,69 +39,94 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
-<section class="sidebar">
-  <form class="sidebar-search" action="search.html">
-    <button type="submit" class="search-button" aria-label="Submit Search">
-      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
-    </button>
-    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
-      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
-    </button>
-    <label class="search-label">
-      <p class="sr-only">Search</p>
-      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-    </label>
-  </form>
-
-  <div class="autocomplete">
-    <div class="autocomplete-results">
-    </div>
-  </div>
+<nav id="sidebar" class="sidebar">
 
   <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
 
-      <a href="readme.html">
-        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
-      </a>
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
 
-    <div class="sidebar-projectDetails">
-      <a href="readme.html" class="sidebar-projectName" translate="no">
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
 Plausible
-      </a>
-      <div class="sidebar-projectVersion" translate="no">
-        v0.0.1
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
       </div>
     </div>
-    <ul class="sidebar-listNav">
-      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
 
-        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
 
 
-        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
 
     </ul>
   </div>
 
-  <div class="gradient"></div>
-  <ul id="full-list"></ul>
-</section>
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
 
-<section class="content">
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
   <output role="status" id="toast"></output>
   <div class="content-outer">
     <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Plausible</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
 
 <h1>
-<button class="icon-action display-settings">
-  <i class="ri-settings-3-line"></i>
-  <span class="sr-only">Settings</span>
-</button>
-
 
     <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -118,8 +144,8 @@ Plausible
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        Summary
       </a>
+      <span class="text">Summary</span>
     </h1>
 <div class="summary-functions summary">
   <h2>
@@ -323,8 +349,8 @@ in a given locale.</p></div>
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-Functions
       </a>
+      <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
 <section class="detail" id="currencies_for_locale/3">
@@ -353,48 +379,48 @@ Functions
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> currencies_for_locale(
-  <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
-  only :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>(),
-  except :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>()
+  <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
+  only :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>(),
+  except :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>()
 ) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
           <pre translate="no"><span class="attribute">@spec</span> currencies_for_locale(
-  <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
-  only :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>(),
-  except :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>()
+  <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
+  only :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>(),
+  except :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>()
 ) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
 
       </div>
 
 <p>Returns a map of the metadata for all currencies for
 a given locale.</p><h2 id="currencies_for_locale/3-arguments" class="section-heading">
-  <a href="#currencies_for_locale/3-arguments">
+  <a href="#currencies_for_locale/3-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">locale</code> is any valid locale name returned by <code class="inline">MyApp.Cldr.known_locale_names/0</code>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li><li><p><code class="inline">currency_status</code> is <code class="inline">:all</code>, <code class="inline">:current</code>, <code class="inline">:historic</code>,
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li><li><p><code class="inline">currency_status</code> is <code class="inline">:all</code>, <code class="inline">:current</code>, <code class="inline">:historic</code>,
 <code class="inline">unannotated</code> or <code class="inline">:tender</code>; or a list of one or more status.
-The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#currency_filter/2"><code class="inline">Cldr.Currency.currency_filter/2</code></a>.</p></li></ul><h2 id="currencies_for_locale/3-returns" class="section-heading">
-  <a href="#currencies_for_locale/3-returns">
+The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#currency_filter/2"><code class="inline">Cldr.Currency.currency_filter/2</code></a>.</p></li></ul><h2 id="currencies_for_locale/3-returns" class="section-heading">
+  <a href="#currencies_for_locale/3-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p><code class="inline">{:ok, currency_map}</code> or</p></li><li><p><code class="inline">{:error, {exception, reason}}</code></p></li></ul><h2 id="currencies_for_locale/3-example" class="section-heading">
-  <a href="#currencies_for_locale/3-example">
+  <a href="#currencies_for_locale/3-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<p>  MyApp.Cldr.Currency.currencies_for_locale &quot;en&quot;
+<p>  MyApp.Cldr.Currency.currencies_for_locale(&quot;en&quot;)
   =&gt; {:ok,
-   %{</p><pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="ss">FJD</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4489154403-1">%</span><span class="nc" data-group-id="4489154403-1">Cldr.Currency</span><span class="p" data-group-id="4489154403-1">{</span><span class="w">
+   %{</p><pre><code class="makeup elixir" translate="no"><span class="w"> </span><span class="ss">FJD</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9145747054-1">%</span><span class="nc" data-group-id="9145747054-1">Cldr.Currency</span><span class="p" data-group-id="9145747054-1">{</span><span class="w">
    </span><span class="ss">cash_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
    </span><span class="ss">cash_rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
    </span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FJD&quot;</span><span class="p">,</span><span class="w">
-   </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4489154403-2">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Fijian dollar&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Fijian dollars&quot;</span><span class="p" data-group-id="4489154403-2">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9145747054-2">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Fijian dollar&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Fijian dollars&quot;</span><span class="p" data-group-id="9145747054-2">}</span><span class="p">,</span><span class="w">
    </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
    </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
    </span><span class="ss">iso_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
@@ -404,12 +430,12 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
    </span><span class="ss">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FJD&quot;</span><span class="p">,</span><span class="w">
    </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
    </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="w">
- </span><span class="p" data-group-id="4489154403-1">}</span><span class="p">,</span><span class="w">
- </span><span class="ss">SUR</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4489154403-3">%</span><span class="nc" data-group-id="4489154403-3">Cldr.Currency</span><span class="p" data-group-id="4489154403-3">{</span><span class="w">
+ </span><span class="p" data-group-id="9145747054-1">}</span><span class="p">,</span><span class="w">
+ </span><span class="ss">SUR</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9145747054-3">%</span><span class="nc" data-group-id="9145747054-3">Cldr.Currency</span><span class="p" data-group-id="9145747054-3">{</span><span class="w">
    </span><span class="ss">cash_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
    </span><span class="ss">cash_rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
    </span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SUR&quot;</span><span class="p">,</span><span class="w">
-   </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="4489154403-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Soviet rouble&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Soviet roubles&quot;</span><span class="p" data-group-id="4489154403-4">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9145747054-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Soviet rouble&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Soviet roubles&quot;</span><span class="p" data-group-id="9145747054-4">}</span><span class="p">,</span><span class="w">
    </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
    </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
    </span><span class="ss">iso_digits</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
@@ -419,7 +445,7 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
    </span><span class="ss">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SUR&quot;</span><span class="p">,</span><span class="w">
    </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
    </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="w">
- </span><span class="p" data-group-id="4489154403-3">}</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="9145747054-3">}</span><span class="p">,</span><span class="w">
  </span><span class="n">...</span><span class="w">
 </span><span class="err">}</span><span class="err">}</span></code></pre>
   </section>
@@ -449,32 +475,32 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
 
 <p>Returns a map of the metadata for all currencies for
 a given locale and raises on error.</p><h2 id="currencies_for_locale!/3-arguments" class="section-heading">
-  <a href="#currencies_for_locale!/3-arguments">
+  <a href="#currencies_for_locale!/3-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">locale</code> is any valid locale name returned by <code class="inline">MyApp.Cldr.known_locale_names/0</code>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li><li><p><code class="inline">currency_status</code> is <code class="inline">:all</code>, <code class="inline">:current</code>, <code class="inline">:historic</code>,
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li><li><p><code class="inline">currency_status</code> is <code class="inline">:all</code>, <code class="inline">:current</code>, <code class="inline">:historic</code>,
 <code class="inline">unannotated</code> or <code class="inline">:tender</code>; or a list of one or more status.
-The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#currency_filter/2"><code class="inline">Cldr.Currency.currency_filter/2</code></a>.</p></li></ul><h2 id="currencies_for_locale!/3-returns" class="section-heading">
-  <a href="#currencies_for_locale!/3-returns">
+The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#currency_filter/2"><code class="inline">Cldr.Currency.currency_filter/2</code></a>.</p></li></ul><h2 id="currencies_for_locale!/3-returns" class="section-heading">
+  <a href="#currencies_for_locale!/3-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p><code class="inline">{:ok, currency_map}</code> or</p></li><li><p>raises an exception</p></li></ul><h2 id="currencies_for_locale!/3-example" class="section-heading">
-  <a href="#currencies_for_locale!/3-example">
+  <a href="#currencies_for_locale!/3-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<p>  MyApp.Cldr.Currency.currencies_for_locale! &quot;en&quot;
-  =&gt; %{</p><pre><code class="makeup elixir" translate="no"><span class="ss">FJD</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6648009500-1">%</span><span class="nc" data-group-id="6648009500-1">Cldr.Currency</span><span class="p" data-group-id="6648009500-1">{</span><span class="w">
+<p>  MyApp.Cldr.Currency.currencies_for_locale!(&quot;en&quot;)
+  =&gt; %{</p><pre><code class="makeup elixir" translate="no"><span class="ss">FJD</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5898518787-1">%</span><span class="nc" data-group-id="5898518787-1">Cldr.Currency</span><span class="p" data-group-id="5898518787-1">{</span><span class="w">
   </span><span class="ss">cash_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">cash_rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
   </span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FJD&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6648009500-2">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Fijian dollar&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Fijian dollars&quot;</span><span class="p" data-group-id="6648009500-2">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5898518787-2">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Fijian dollar&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Fijian dollars&quot;</span><span class="p" data-group-id="5898518787-2">}</span><span class="p">,</span><span class="w">
   </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
   </span><span class="ss">iso_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
@@ -484,12 +510,12 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
   </span><span class="ss">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;FJD&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
   </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="w">
-</span><span class="p" data-group-id="6648009500-1">}</span><span class="p">,</span><span class="w">
-</span><span class="ss">SUR</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6648009500-3">%</span><span class="nc" data-group-id="6648009500-3">Cldr.Currency</span><span class="p" data-group-id="6648009500-3">{</span><span class="w">
+</span><span class="p" data-group-id="5898518787-1">}</span><span class="p">,</span><span class="w">
+</span><span class="ss">SUR</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5898518787-3">%</span><span class="nc" data-group-id="5898518787-3">Cldr.Currency</span><span class="p" data-group-id="5898518787-3">{</span><span class="w">
   </span><span class="ss">cash_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">cash_rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
   </span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SUR&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6648009500-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Soviet rouble&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Soviet roubles&quot;</span><span class="p" data-group-id="6648009500-4">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="5898518787-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Soviet rouble&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Soviet roubles&quot;</span><span class="p" data-group-id="5898518787-4">}</span><span class="p">,</span><span class="w">
   </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
   </span><span class="ss">iso_digits</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
@@ -499,7 +525,7 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
   </span><span class="ss">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;SUR&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
   </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="w">
-</span><span class="p" data-group-id="6648009500-3">}</span><span class="p">,</span><span class="w">
+</span><span class="p" data-group-id="5898518787-3">}</span><span class="p">,</span><span class="w">
 </span><span class="n">...</span></code></pre><p>   }</p>
   </section>
 </section>
@@ -526,44 +552,44 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> currency_for_code(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>() | <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
-  {:ok, <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> currency_for_code(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>() | <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
 <p>Returns the currency metadata for the requested currency code.</p><h2 id="currency_for_code/2-arguments" class="section-heading">
-  <a href="#currency_for_code/2-arguments">
+  <a href="#currency_for_code/2-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><code class="inline">currency_or_currency_code</code> is a <code class="inline">binary</code> or <code class="inline">atom</code> representation
  of an ISO 4217 currency code, or a <code class="inline">%Cldr.Currency{}</code> struct.</li></ul><h2 id="currency_for_code/2-options" class="section-heading">
-  <a href="#currency_for_code/2-options">
+  <a href="#currency_for_code/2-options" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Options
   </a>
+  <span class="text">Options</span>
 </h2>
-<ul><li><code class="inline">:locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></li></ul><h2 id="currency_for_code/2-returns" class="section-heading">
-  <a href="#currency_for_code/2-returns">
+<ul><li><code class="inline">:locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></li></ul><h2 id="currency_for_code/2-returns" class="section-heading">
+  <a href="#currency_for_code/2-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p>A <code class="inline">{:ok, currency}</code> or</p></li><li><p><code class="inline">{:error, {exception, reason}}</code></p></li></ul><h2 id="currency_for_code/2-examples" class="section-heading">
-  <a href="#currency_for_code/2-examples">
+  <a href="#currency_for_code/2-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Examples
   </a>
+  <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_for_code</span><span class="p" data-group-id="6701036763-1">(</span><span class="s">&quot;AUD&quot;</span><span class="p" data-group-id="6701036763-1">)</span><span class="w">
-</span><span class="p" data-group-id="6701036763-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="6701036763-3">%</span><span class="nc" data-group-id="6701036763-3">Cldr.Currency</span><span class="p" data-group-id="6701036763-3">{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_for_code</span><span class="p" data-group-id="7703817023-1">(</span><span class="s">&quot;AUD&quot;</span><span class="p" data-group-id="7703817023-1">)</span><span class="w">
+</span><span class="p" data-group-id="7703817023-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="7703817023-3">%</span><span class="nc" data-group-id="7703817023-3">Cldr.Currency</span><span class="p" data-group-id="7703817023-3">{</span><span class="w">
     </span><span class="ss">cash_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
     </span><span class="ss">cash_rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
     </span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;AUD&quot;</span><span class="p">,</span><span class="w">
-    </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6701036763-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian dollar&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian dollars&quot;</span><span class="p" data-group-id="6701036763-4">}</span><span class="p">,</span><span class="w">
+    </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7703817023-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian dollar&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian dollars&quot;</span><span class="p" data-group-id="7703817023-4">}</span><span class="p">,</span><span class="w">
     </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
     </span><span class="ss">iso_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
     </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian Dollar&quot;</span><span class="p">,</span><span class="w">
@@ -571,15 +597,15 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
     </span><span class="ss">rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
     </span><span class="ss">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;A$&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="w">
-</span><span class="p" data-group-id="6701036763-3">}</span><span class="p" data-group-id="6701036763-2">}</span><span class="w">
+</span><span class="p" data-group-id="7703817023-3">}</span><span class="p" data-group-id="7703817023-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_for_code</span><span class="p" data-group-id="6701036763-5">(</span><span class="s">&quot;THB&quot;</span><span class="p" data-group-id="6701036763-5">)</span><span class="w">
-</span><span class="p" data-group-id="6701036763-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-  </span><span class="p" data-group-id="6701036763-7">%</span><span class="nc" data-group-id="6701036763-7">Cldr.Currency</span><span class="p" data-group-id="6701036763-7">{</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_for_code</span><span class="p" data-group-id="7703817023-5">(</span><span class="s">&quot;THB&quot;</span><span class="p" data-group-id="7703817023-5">)</span><span class="w">
+</span><span class="p" data-group-id="7703817023-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="7703817023-7">%</span><span class="nc" data-group-id="7703817023-7">Cldr.Currency</span><span class="p" data-group-id="7703817023-7">{</span><span class="w">
     </span><span class="ss">cash_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
     </span><span class="ss">cash_rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
     </span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;THB&quot;</span><span class="p">,</span><span class="w">
-    </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6701036763-8">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai baht&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai baht&quot;</span><span class="p" data-group-id="6701036763-8">}</span><span class="p">,</span><span class="w">
+    </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="7703817023-8">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai baht&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai baht&quot;</span><span class="p" data-group-id="7703817023-8">}</span><span class="p">,</span><span class="w">
     </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
     </span><span class="ss">iso_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
     </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai Baht&quot;</span><span class="p">,</span><span class="w">
@@ -587,7 +613,7 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
     </span><span class="ss">rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
     </span><span class="ss">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;THB&quot;</span><span class="p">,</span><span class="w">
     </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="w">
-</span><span class="p" data-group-id="6701036763-7">}</span><span class="p" data-group-id="6701036763-6">}</span></code></pre>
+</span><span class="p" data-group-id="7703817023-7">}</span><span class="p" data-group-id="7703817023-6">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="currency_for_code!/2">
@@ -615,43 +641,43 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> currency_for_code!(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>() | <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
-  <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> currency_for_code!(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>() | <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
 
       </div>
 
 <p>Returns the currency metadata for the requested currency code.</p><h2 id="currency_for_code!/2-arguments" class="section-heading">
-  <a href="#currency_for_code!/2-arguments">
+  <a href="#currency_for_code!/2-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><code class="inline">currency_or_currency_code</code> is a <code class="inline">binary</code> or <code class="inline">atom</code> representation
  of an ISO 4217 currency code, or a <code class="inline">%Cldr.Currency{}</code> struct.</li></ul><h2 id="currency_for_code!/2-options" class="section-heading">
-  <a href="#currency_for_code!/2-options">
+  <a href="#currency_for_code!/2-options" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Options
   </a>
+  <span class="text">Options</span>
 </h2>
-<ul><li><code class="inline">:locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></li></ul><h2 id="currency_for_code!/2-returns" class="section-heading">
-  <a href="#currency_for_code!/2-returns">
+<ul><li><code class="inline">:locale</code> is any valid locale name returned by <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.html#known_locale_names/1"><code class="inline">Cldr.known_locale_names/1</code></a>
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></li></ul><h2 id="currency_for_code!/2-returns" class="section-heading">
+  <a href="#currency_for_code!/2-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p>A <code class="inline">t:Cldr.Current.t/0</code> or</p></li><li><p>raises an exception</p></li></ul><h2 id="currency_for_code!/2-examples" class="section-heading">
-  <a href="#currency_for_code!/2-examples">
+  <a href="#currency_for_code!/2-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Examples
   </a>
+  <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_for_code!</span><span class="p" data-group-id="3314512482-1">(</span><span class="s">&quot;AUD&quot;</span><span class="p" data-group-id="3314512482-1">)</span><span class="w">
-</span><span class="p" data-group-id="3314512482-2">%</span><span class="nc" data-group-id="3314512482-2">Cldr.Currency</span><span class="p" data-group-id="3314512482-2">{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_for_code!</span><span class="p" data-group-id="3614268599-1">(</span><span class="s">&quot;AUD&quot;</span><span class="p" data-group-id="3614268599-1">)</span><span class="w">
+</span><span class="p" data-group-id="3614268599-2">%</span><span class="nc" data-group-id="3614268599-2">Cldr.Currency</span><span class="p" data-group-id="3614268599-2">{</span><span class="w">
   </span><span class="ss">cash_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">cash_rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
   </span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;AUD&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3314512482-3">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian dollar&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian dollars&quot;</span><span class="p" data-group-id="3314512482-3">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3614268599-3">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian dollar&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian dollars&quot;</span><span class="p" data-group-id="3614268599-3">}</span><span class="p">,</span><span class="w">
   </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">iso_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Australian Dollar&quot;</span><span class="p">,</span><span class="w">
@@ -659,14 +685,14 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
   </span><span class="ss">rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
   </span><span class="ss">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;A$&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="w">
-</span><span class="p" data-group-id="3314512482-2">}</span><span class="w">
+</span><span class="p" data-group-id="3614268599-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_for_code!</span><span class="p" data-group-id="3314512482-4">(</span><span class="s">&quot;THB&quot;</span><span class="p" data-group-id="3314512482-4">)</span><span class="w">
-</span><span class="p" data-group-id="3314512482-5">%</span><span class="nc" data-group-id="3314512482-5">Cldr.Currency</span><span class="p" data-group-id="3314512482-5">{</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_for_code!</span><span class="p" data-group-id="3614268599-4">(</span><span class="s">&quot;THB&quot;</span><span class="p" data-group-id="3614268599-4">)</span><span class="w">
+</span><span class="p" data-group-id="3614268599-5">%</span><span class="nc" data-group-id="3614268599-5">Cldr.Currency</span><span class="p" data-group-id="3614268599-5">{</span><span class="w">
   </span><span class="ss">cash_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">cash_rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
   </span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;THB&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3314512482-6">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai baht&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai baht&quot;</span><span class="p" data-group-id="3314512482-6">}</span><span class="p">,</span><span class="w">
+  </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="3614268599-6">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai baht&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai baht&quot;</span><span class="p" data-group-id="3614268599-6">}</span><span class="p">,</span><span class="w">
   </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">iso_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
   </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Thai Baht&quot;</span><span class="p">,</span><span class="w">
@@ -674,7 +700,7 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
   </span><span class="ss">rounding</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
   </span><span class="ss">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;THB&quot;</span><span class="p">,</span><span class="w">
   </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="w">
-</span><span class="p" data-group-id="3314512482-5">}</span></code></pre>
+</span><span class="p" data-group-id="3614268599-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="currency_from_locale/1">
@@ -697,33 +723,33 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
   <section class="docstring">
 
 <p>Returns the effective currency for a given locale</p><h2 id="currency_from_locale/1-arguments" class="section-heading">
-  <a href="#currency_from_locale/1-arguments">
+  <a href="#currency_from_locale/1-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
-<ul><li><code class="inline">locale</code> is a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
-<a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></li></ul><h2 id="currency_from_locale/1-returns" class="section-heading">
-  <a href="#currency_from_locale/1-returns">
+<ul><li><code class="inline">locale</code> is a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by
+<a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a></li></ul><h2 id="currency_from_locale/1-returns" class="section-heading">
+  <a href="#currency_from_locale/1-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li>A ISO 4217 currency code as an upcased atom</li></ul><h2 id="currency_from_locale/1-examples" class="section-heading">
-  <a href="#currency_from_locale/1-examples">
+  <a href="#currency_from_locale/1-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Examples
   </a>
+  <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="1340644850-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">locale</span><span class="p" data-group-id="1340644850-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="7573783607-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">locale</span><span class="p" data-group-id="7573783607-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="7573783607-2">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="7573783607-2">)</span><span class="w">
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_from_locale</span><span class="w"> </span><span class="n">locale</span><span class="w">
 </span><span class="ss">:USD</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="1340644850-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">locale</span><span class="p" data-group-id="1340644850-2">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="w"> </span><span class="s">&quot;en-AU&quot;</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="7573783607-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">locale</span><span class="p" data-group-id="7573783607-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="7573783607-4">(</span><span class="s">&quot;en-AU&quot;</span><span class="p" data-group-id="7573783607-4">)</span><span class="w">
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_from_locale</span><span class="w"> </span><span class="n">locale</span><span class="w">
 </span><span class="ss">:AUD</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_from_locale</span><span class="w"> </span><span class="s">&quot;en-GB&quot;</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">currency_from_locale</span><span class="p" data-group-id="7573783607-5">(</span><span class="s">&quot;en-GB&quot;</span><span class="p" data-group-id="7573783607-5">)</span><span class="w">
 </span><span class="ss">:GBP</span></code></pre>
   </section>
 </section>
@@ -748,33 +774,33 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> currency_history_for_locale(<a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
-  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> currency_history_for_locale(<a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
 <p>Returns a list of historic and the current
 currency for a given locale.</p><h2 id="currency_history_for_locale/1-arguments" class="section-heading">
-  <a href="#currency_history_for_locale/1-arguments">
+  <a href="#currency_history_for_locale/1-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by <code class="inline">MyApp.Cldr.known_locale_names/0</code>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></li></ul><h2 id="currency_history_for_locale/1-example" class="section-heading">
-  <a href="#currency_history_for_locale/1-example">
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></li></ul><h2 id="currency_history_for_locale/1-example" class="section-heading">
+  <a href="#currency_history_for_locale/1-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">currency_history_for_locale</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="w">
-</span><span class="p" data-group-id="1501494695-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-    </span><span class="p" data-group-id="1501494695-2">%{</span><span class="w">
-    </span><span class="ss">USD</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1501494695-3">%{</span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[1792-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="1501494695-3">}</span><span class="p">,</span><span class="w">
-    </span><span class="ss">USN</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1501494695-4">%{</span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p" data-group-id="1501494695-4">}</span><span class="p">,</span><span class="w">
-    </span><span class="ss">USS</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="1501494695-5">%{</span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[2014-03-01]</span><span class="p" data-group-id="1501494695-5">}</span><span class="w">
-  </span><span class="p" data-group-id="1501494695-2">}</span><span class="w">
-</span><span class="p" data-group-id="1501494695-1">}</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">currency_history_for_locale</span><span class="p" data-group-id="6236725913-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="6236725913-1">)</span><span class="w">
+</span><span class="p" data-group-id="6236725913-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+    </span><span class="p" data-group-id="6236725913-3">%{</span><span class="w">
+    </span><span class="ss">USD</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6236725913-4">%{</span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[1792-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="6236725913-4">}</span><span class="p">,</span><span class="w">
+    </span><span class="ss">USN</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6236725913-5">%{</span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p" data-group-id="6236725913-5">}</span><span class="p">,</span><span class="w">
+    </span><span class="ss">USS</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="6236725913-6">%{</span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w"> </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[2014-03-01]</span><span class="p" data-group-id="6236725913-6">}</span><span class="w">
+  </span><span class="p" data-group-id="6236725913-3">}</span><span class="w">
+</span><span class="p" data-group-id="6236725913-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="currency_strings/3">
@@ -803,9 +829,9 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> currency_strings(
-  <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
-  only :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>(),
-  except :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>()
+  <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
+  only :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>(),
+  except :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>()
 ) :: {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
@@ -813,29 +839,29 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
 <p>Returns a map that matches a currency string to a
 currency code.</p><p>A currency string is a localised name or symbol
 representing a currency in a locale-specific manner.</p><h2 id="currency_strings/3-arguments" class="section-heading">
-  <a href="#currency_strings/3-arguments">
+  <a href="#currency_strings/3-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">locale</code> is any valid locale name returned by <code class="inline">MyApp.Cldr.known_locale_names/0</code>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li><li><p><code class="inline">currency_status</code> is <code class="inline">:all</code>, <code class="inline">:current</code>, <code class="inline">:historic</code>,
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li><li><p><code class="inline">currency_status</code> is <code class="inline">:all</code>, <code class="inline">:current</code>, <code class="inline">:historic</code>,
 <code class="inline">unannotated</code> or <code class="inline">:tender</code>; or a list of one or more status.
-The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#currency_filter/2"><code class="inline">Cldr.Currency.currency_filter/2</code></a>.</p></li></ul><h2 id="currency_strings/3-returns" class="section-heading">
-  <a href="#currency_strings/3-returns">
+The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#currency_filter/2"><code class="inline">Cldr.Currency.currency_filter/2</code></a>.</p></li></ul><h2 id="currency_strings/3-returns" class="section-heading">
+  <a href="#currency_strings/3-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p><code class="inline">{:ok, currency_string_map}</code> or</p></li><li><p><code class="inline">{:error, {exception, reason}}</code></p></li></ul><h2 id="currency_strings/3-example" class="section-heading">
-  <a href="#currency_strings/3-example">
+  <a href="#currency_strings/3-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">currency_strings</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="w">
-</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="6529801078-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="6529801078-2">%{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">currency_strings</span><span class="p" data-group-id="0896143939-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="0896143939-1">)</span><span class="w">
+</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="0896143939-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="0896143939-3">%{</span><span class="w">
    </span><span class="s">&quot;mexican silver pesos&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:MXP</span><span class="p">,</span><span class="w">
    </span><span class="s">&quot;sudanese dinar&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:SDD</span><span class="p">,</span><span class="w">
    </span><span class="s">&quot;bad&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:BAD</span><span class="p">,</span><span class="w">
@@ -845,7 +871,7 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
    </span><span class="s">&quot;guyanaese dollars&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:GYD</span><span class="p">,</span><span class="w">
    </span><span class="s">&quot;equatorial guinean ekwele&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:GQE</span><span class="p">,</span><span class="w">
    </span><span class="n">...</span><span class="w">
-  </span><span class="p" data-group-id="6529801078-2">}</span><span class="p" data-group-id="6529801078-1">}</span></code></pre>
+  </span><span class="p" data-group-id="0896143939-3">}</span><span class="p" data-group-id="0896143939-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="currency_strings!/3">
@@ -874,9 +900,9 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> currency_strings!(
-  <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
-  only :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>(),
-  except :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>()
+  <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
+  only :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>(),
+  except :: <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:filter/0">Cldr.Currency.filter</a>()
 ) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">no_return</a>()</pre>
 
       </div>
@@ -884,28 +910,28 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
 <p>Returns a map that matches a currency string to a
 currency code or raises an exception.</p><p>A currency string is a localised name or symbol
 representing a currency in a locale-specific manner.</p><h2 id="currency_strings!/3-arguments" class="section-heading">
-  <a href="#currency_strings!/3-arguments">
+  <a href="#currency_strings!/3-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">locale</code> is any valid locale name returned by <code class="inline">MyApp.Cldr.known_locale_names/0</code>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li><li><p><code class="inline">currency_status</code> is <code class="inline">:all</code>, <code class="inline">:current</code>, <code class="inline">:historic</code>,
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li><li><p><code class="inline">currency_status</code> is <code class="inline">:all</code>, <code class="inline">:current</code>, <code class="inline">:historic</code>,
 <code class="inline">unannotated</code> or <code class="inline">:tender</code>; or a list of one or more status.
-The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#currency_filter/2"><code class="inline">Cldr.Currency.currency_filter/2</code></a>.</p></li></ul><h2 id="currency_strings!/3-returns" class="section-heading">
-  <a href="#currency_strings!/3-returns">
+The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#currency_filter/2"><code class="inline">Cldr.Currency.currency_filter/2</code></a>.</p></li></ul><h2 id="currency_strings!/3-returns" class="section-heading">
+  <a href="#currency_strings!/3-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p><code class="inline">{:ok, currency_string_map}</code> or</p></li><li><p>raises an exception</p></li></ul><h2 id="currency_strings!/3-example" class="section-heading">
-  <a href="#currency_strings!/3-example">
+  <a href="#currency_strings!/3-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">currency_strings!</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="w">
-</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="1097675225-1">%{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">currency_strings!</span><span class="p" data-group-id="7897917649-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="7897917649-1">)</span><span class="w">
+</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="7897917649-2">%{</span><span class="w">
   </span><span class="s">&quot;mexican silver pesos&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:MXP</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;sudanese dinar&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:SDD</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;bad&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:BAD</span><span class="p">,</span><span class="w">
@@ -915,7 +941,7 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
   </span><span class="s">&quot;guyanaese dollars&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:GYD</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;equatorial guinean ekwele&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="ss">:GQE</span><span class="p">,</span><span class="w">
   </span><span class="n">...</span><span class="w">
- </span><span class="p" data-group-id="1097675225-1">}</span></code></pre>
+ </span><span class="p" data-group-id="7897917649-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="current_currency_from_locale/1">
@@ -939,24 +965,24 @@ The default is <code class="inline">:all</code>. See <a href="https://hexdocs.pm
 
 <p>Returns the current currency for a given locale.</p><p>This function does not consider the <code class="inline">U</code> extenion
 parameters <code class="inline">cu</code> or <code class="inline">rg</code>. It is recommended to us
-<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#currency_from_locale/1"><code class="inline">Cldr.Currency.currency_from_locale/1</code></a> in most
+<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#currency_from_locale/1"><code class="inline">Cldr.Currency.currency_from_locale/1</code></a> in most
 circumstances.</p><h2 id="current_currency_from_locale/1-arguments" class="section-heading">
-  <a href="#current_currency_from_locale/1-arguments">
+  <a href="#current_currency_from_locale/1-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by <code class="inline">MyApp.Cldr.known_locale_names/0</code>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></li></ul><h2 id="current_currency_from_locale/1-example" class="section-heading">
-  <a href="#current_currency_from_locale/1-example">
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></li></ul><h2 id="current_currency_from_locale/1-example" class="section-heading">
+  <a href="#current_currency_from_locale/1-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">current_currency_from_locale</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">current_currency_from_locale</span><span class="p" data-group-id="2199741334-1">(</span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="2199741334-1">)</span><span class="w">
 </span><span class="ss">:USD</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">current_currency_from_locale</span><span class="w"> </span><span class="s">&quot;en-AU&quot;</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">current_currency_from_locale</span><span class="p" data-group-id="2199741334-2">(</span><span class="s">&quot;en-AU&quot;</span><span class="p" data-group-id="2199741334-2">)</span><span class="w">
 </span><span class="ss">:AUD</span></code></pre>
   </section>
 </section>
@@ -984,7 +1010,7 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> current_territory_currencies() :: %{
-  required(<a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:territory_code/0">Cldr.Locale.territory_code</a>()) =&gt; <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>()
+  required(<a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:territory_code/0">Cldr.Locale.territory_code</a>()) =&gt; <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>()
 }</pre>
 
       </div>
@@ -993,18 +1019,18 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
 current currency code.</p><p>If a territory has no current currency (like
 Antartica, territory code <code class="inline">:AQ</code>) then no
 mapping is returned for that territory.</p><h2 id="current_territory_currencies/0-returns" class="section-heading">
-  <a href="#current_territory_currencies/0-returns">
+  <a href="#current_territory_currencies/0-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li>A map of <code class="inline">{territory_code =&gt; Cldr.Currency.t}</code></li></ul><h2 id="current_territory_currencies/0-example" class="section-heading">
-  <a href="#current_territory_currencies/0-example">
+  <a href="#current_territory_currencies/0-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">current_territory_currencies</span><span class="p" data-group-id="9460943715-1">(</span><span class="p" data-group-id="9460943715-1">)</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">current_territory_currencies</span><span class="p" data-group-id="3892068685-1">(</span><span class="p" data-group-id="3892068685-1">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_currencies/0">
@@ -1072,35 +1098,35 @@ mapping is returned for that territory.</p><h2 id="current_territory_currencies/
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> known_currency_code(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>()) ::
-  {:ok, <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> known_currency_code(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
 <p>Returns a 2-tuple indicating if the supplied currency code is known.</p><h2 id="known_currency_code/1-arguments" class="section-heading">
-  <a href="#known_currency_code/1-arguments">
+  <a href="#known_currency_code/1-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><code class="inline">currency_code</code> is a <code class="inline">binary</code> or <code class="inline">atom</code> representing an ISO4217
 currency code</li></ul><h2 id="known_currency_code/1-returns" class="section-heading">
-  <a href="#known_currency_code/1-returns">
+  <a href="#known_currency_code/1-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p><code class="inline">{:ok, currency_code}</code> or</p></li><li><p><code class="inline">{:error, {exception, reason}}</code></p></li></ul><h2 id="known_currency_code/1-examples" class="section-heading">
-  <a href="#known_currency_code/1-examples">
+  <a href="#known_currency_code/1-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Examples
   </a>
+  <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code</span><span class="w"> </span><span class="s">&quot;AUD&quot;</span><span class="w">
-</span><span class="p" data-group-id="9621437409-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:AUD</span><span class="p" data-group-id="9621437409-1">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code</span><span class="p" data-group-id="6562986968-1">(</span><span class="s">&quot;AUD&quot;</span><span class="p" data-group-id="6562986968-1">)</span><span class="w">
+</span><span class="p" data-group-id="6562986968-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:AUD</span><span class="p" data-group-id="6562986968-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code</span><span class="w"> </span><span class="s">&quot;GGG&quot;</span><span class="w">
-</span><span class="p" data-group-id="9621437409-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9621437409-3">{</span><span class="nc">Cldr.UnknownCurrencyError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The currency </span><span class="se">\&quot;</span><span class="s">GGG</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="9621437409-3">}</span><span class="p" data-group-id="9621437409-2">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code</span><span class="p" data-group-id="6562986968-3">(</span><span class="s">&quot;GGG&quot;</span><span class="p" data-group-id="6562986968-3">)</span><span class="w">
+</span><span class="p" data-group-id="6562986968-4">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6562986968-5">{</span><span class="nc">Cldr.UnknownCurrencyError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;The currency </span><span class="se">\&quot;</span><span class="s">GGG</span><span class="se">\&quot;</span><span class="s"> is invalid&quot;</span><span class="p" data-group-id="6562986968-5">}</span><span class="p" data-group-id="6562986968-4">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="known_currency_code?/1">
@@ -1124,36 +1150,36 @@ currency code</li></ul><h2 id="known_currency_code/1-returns" class="section-hea
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> known_currency_code?(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> known_currency_code?(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
 
       </div>
 
 <p>Returns a boolean indicating if the supplied currency code is known.</p><h2 id="known_currency_code?/1-arguments" class="section-heading">
-  <a href="#known_currency_code?/1-arguments">
+  <a href="#known_currency_code?/1-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><code class="inline">currency_code</code> is a <code class="inline">binary</code> or <code class="inline">atom</code> representing an ISO4217
 currency code</li></ul><h2 id="known_currency_code?/1-returns" class="section-heading">
-  <a href="#known_currency_code?/1-returns">
+  <a href="#known_currency_code?/1-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><code class="inline">true</code> or <code class="inline">false</code></li></ul><h2 id="known_currency_code?/1-examples" class="section-heading">
-  <a href="#known_currency_code?/1-examples">
+  <a href="#known_currency_code?/1-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Examples
   </a>
+  <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code?</span><span class="w"> </span><span class="s">&quot;AUD&quot;</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code?</span><span class="p" data-group-id="8590496533-1">(</span><span class="s">&quot;AUD&quot;</span><span class="p" data-group-id="8590496533-1">)</span><span class="w">
 </span><span class="no">true</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code?</span><span class="w"> </span><span class="s">&quot;GGG&quot;</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code?</span><span class="p" data-group-id="8590496533-2">(</span><span class="s">&quot;GGG&quot;</span><span class="p" data-group-id="8590496533-2">)</span><span class="w">
 </span><span class="no">false</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code?</span><span class="w"> </span><span class="ss">:XCV</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_code?</span><span class="p" data-group-id="8590496533-3">(</span><span class="ss">:XCV</span><span class="p" data-group-id="8590496533-3">)</span><span class="w">
 </span><span class="no">false</span></code></pre>
   </section>
 </section>
@@ -1183,12 +1209,12 @@ currency code</li></ul><h2 id="known_currency_code?/1-returns" class="section-he
       </div>
 
 <p>Returns a list of all known currency codes.</p><h2 id="known_currency_codes/0-example" class="section-heading">
-  <a href="#known_currency_codes/0-example">
+  <a href="#known_currency_codes/0-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_codes</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">known_currency_codes</span><span class="p" data-group-id="6683887831-1">(</span><span class="p" data-group-id="6683887831-1">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="new/2">
@@ -1214,47 +1240,47 @@ currency code</li></ul><h2 id="known_currency_code?/1-returns" class="section-he
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> new(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
-  {:ok, <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
+          <pre translate="no"><span class="attribute">@spec</span> new(<a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:code/0">Cldr.Currency.code</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>() | <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#t:t/0">Cldr.Currency.t</a>()} | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
 
 <p>Returns a <code class="inline">Currency</code> struct created from the arguments.</p><h2 id="new/2-arguments" class="section-heading">
-  <a href="#new/2-arguments">
+  <a href="#new/2-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">currency</code> is a private use currency code in a format defined by
 <a href="https://en.wikipedia.org/wiki/ISO_4217">ISO4217</a>
 which is <code class="inline">X</code> followed by two alphanumeric characters.</p></li><li><p><code class="inline">options</code> is a map of options representing the optional elements of
 the <code class="inline">Cldr.Currency.t</code> struct.</p></li></ul><h2 id="new/2-options" class="section-heading">
-  <a href="#new/2-options">
+  <a href="#new/2-options" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Options
   </a>
+  <span class="text">Options</span>
 </h2>
 <ul><li><code class="inline">:name</code> is the name of the currency. Required.</li><li><code class="inline">:digits</code> is the precision of the currency. Required.</li><li><code class="inline">:symbol</code> is the currency symbol. Optional.</li><li><code class="inline">:narrow_symbol</code> is an alternative narrow symbol. Optional.</li><li><code class="inline">:round_nearest</code> is the rounding precision such as <code class="inline">0.05</code>. Optional.</li><li><code class="inline">:alt_code</code> is an alternative currency code for application use.</li><li><code class="inline">:cash_digits</code> is the precision of the currency when used as cash. Optional.</li><li><code class="inline">:cash_rounding_nearest</code> is the rounding precision when used as cash
 such as <code class="inline">0.05</code>. Optional.</li></ul><h2 id="new/2-returns" class="section-heading">
-  <a href="#new/2-returns">
+  <a href="#new/2-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p><code class="inline">{:ok, Cldr.Currency.t}</code> or</p></li><li><p><code class="inline">{:error, {exception, message}}</code></p></li></ul><h2 id="new/2-example" class="section-heading">
-  <a href="#new/2-example">
+  <a href="#new/2-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="2652227664-1">(</span><span class="ss">:XAE</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Custom Name&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="2652227664-1">)</span><span class="w">
-</span><span class="p" data-group-id="2652227664-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="2652227664-3">%</span><span class="nc" data-group-id="2652227664-3">Cldr.Currency</span><span class="p" data-group-id="2652227664-3">{</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="8234573309-1">(</span><span class="ss">:XAE</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Custom Name&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="8234573309-1">)</span><span class="w">
+</span><span class="p" data-group-id="8234573309-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="8234573309-3">%</span><span class="nc" data-group-id="8234573309-3">Cldr.Currency</span><span class="p" data-group-id="8234573309-3">{</span><span class="w">
    </span><span class="ss">alt_code</span><span class="p">:</span><span class="w"> </span><span class="ss">:XAE</span><span class="p">,</span><span class="w">
    </span><span class="ss">cash_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
    </span><span class="ss">cash_rounding</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
    </span><span class="ss">code</span><span class="p">:</span><span class="w"> </span><span class="ss">:XAE</span><span class="p">,</span><span class="w">
-   </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2652227664-4">%{</span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Custom Name&quot;</span><span class="p" data-group-id="2652227664-4">}</span><span class="p">,</span><span class="w">
+   </span><span class="ss">count</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="8234573309-4">%{</span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Custom Name&quot;</span><span class="p" data-group-id="8234573309-4">}</span><span class="p">,</span><span class="w">
    </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
    </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
    </span><span class="ss">iso_digits</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">
@@ -1264,11 +1290,11 @@ such as <code class="inline">0.05</code>. Optional.</li></ul><h2 id="new/2-retur
    </span><span class="ss">symbol</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;XAE&quot;</span><span class="p">,</span><span class="w">
    </span><span class="ss">tender</span><span class="p">:</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w">
    </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="no">nil</span><span class="w">
- </span><span class="p" data-group-id="2652227664-3">}</span><span class="p" data-group-id="2652227664-2">}</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="2652227664-5">(</span><span class="ss">:XAH</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Custom Name&quot;</span><span class="p" data-group-id="2652227664-5">)</span><span class="w">
-</span><span class="p" data-group-id="2652227664-6">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Required options are missing. Required options are [:name, :digits]&quot;</span><span class="p" data-group-id="2652227664-6">}</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="2652227664-7">(</span><span class="ss">:XAE</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;XAE&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="2652227664-7">)</span><span class="w">
-</span><span class="p" data-group-id="2652227664-8">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2652227664-9">{</span><span class="nc">Cldr.CurrencyAlreadyDefined</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Currency :XAE is already defined.&quot;</span><span class="p" data-group-id="2652227664-9">}</span><span class="p" data-group-id="2652227664-8">}</span></code></pre>
+ </span><span class="p" data-group-id="8234573309-3">}</span><span class="p" data-group-id="8234573309-2">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="8234573309-5">(</span><span class="ss">:XAH</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Custom Name&quot;</span><span class="p" data-group-id="8234573309-5">)</span><span class="w">
+</span><span class="p" data-group-id="8234573309-6">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Required options are missing. Required options are [:name, :digits]&quot;</span><span class="p" data-group-id="8234573309-6">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="8234573309-7">(</span><span class="ss">:XAE</span><span class="p">,</span><span class="w"> </span><span class="ss">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;XAE&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">digits</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="8234573309-7">)</span><span class="w">
+</span><span class="p" data-group-id="8234573309-8">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8234573309-9">{</span><span class="nc">Cldr.CurrencyAlreadyDefined</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Currency :XAE is already defined.&quot;</span><span class="p" data-group-id="8234573309-9">}</span><span class="p" data-group-id="8234573309-8">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="pluralize/3">
@@ -1301,45 +1327,45 @@ such as <code class="inline">0.05</code>. Optional.</li></ul><h2 id="new/2-retur
 
 <p>Returns the appropriate currency display name for the <code class="inline">currency</code>, based
 on the plural rules in effect for the <code class="inline">locale</code>.</p><h2 id="pluralize/3-arguments" class="section-heading">
-  <a href="#pluralize/3-arguments">
+  <a href="#pluralize/3-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
-<ul><li><p><code class="inline">number</code> is an integer, float or <a href="https://hexdocs.pm/decimal/2.1.1/Decimal.html"><code class="inline">Decimal</code></a></p></li><li><p><code class="inline">currency</code> is any currency returned by <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.0/Cldr.Currency.html#known_currencies/0"><code class="inline">Cldr.Currency.known_currencies/0</code></a></p></li><li><p><code class="inline">options</code> is a keyword list of options</p></li></ul><h2 id="pluralize/3-options" class="section-heading">
-  <a href="#pluralize/3-options">
+<ul><li><p><code class="inline">number</code> is an integer, float or <a href="https://hexdocs.pm/decimal/2.1.1/Decimal.html"><code class="inline">Decimal</code></a></p></li><li><p><code class="inline">currency</code> is any currency returned by <a href="https://hexdocs.pm/ex_cldr_currencies/2.15.1/Cldr.Currency.html#known_currencies/0"><code class="inline">Cldr.Currency.known_currencies/0</code></a></p></li><li><p><code class="inline">options</code> is a keyword list of options</p></li></ul><h2 id="pluralize/3-options" class="section-heading">
+  <a href="#pluralize/3-options" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Options
   </a>
+  <span class="text">Options</span>
 </h2>
 <ul><li><code class="inline">locale</code> is any valid locale name returned by <code class="inline">MyApp.Cldr.known_locale_names/0</code>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code>. The
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code>. The
 default is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a></li></ul><h2 id="pluralize/3-returns" class="section-heading">
-  <a href="#pluralize/3-returns">
+  <a href="#pluralize/3-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p><code class="inline">{:ok, plural_string}</code> or</p></li><li><p><code class="inline">{:error, {exception, message}}</code></p></li></ul><h2 id="pluralize/3-examples" class="section-heading">
-  <a href="#pluralize/3-examples">
+  <a href="#pluralize/3-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Examples
   </a>
+  <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="w">
-</span><span class="p" data-group-id="0116237352-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;US dollar&quot;</span><span class="p" data-group-id="0116237352-1">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="p" data-group-id="1793249704-1">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p" data-group-id="1793249704-1">)</span><span class="w">
+</span><span class="p" data-group-id="1793249704-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;US dollar&quot;</span><span class="p" data-group-id="1793249704-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="w">
-</span><span class="p" data-group-id="0116237352-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;US dollars&quot;</span><span class="p" data-group-id="0116237352-2">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="p" data-group-id="1793249704-3">(</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p" data-group-id="1793249704-3">)</span><span class="w">
+</span><span class="p" data-group-id="1793249704-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;US dollars&quot;</span><span class="p" data-group-id="1793249704-4">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;zh&quot;</span><span class="w">
-</span><span class="p" data-group-id="0116237352-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;美元&quot;</span><span class="p" data-group-id="0116237352-3">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="p" data-group-id="1793249704-5">(</span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;zh&quot;</span><span class="p" data-group-id="1793249704-5">)</span><span class="w">
+</span><span class="p" data-group-id="1793249704-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;美元&quot;</span><span class="p" data-group-id="1793249704-6">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="w">
-</span><span class="p" data-group-id="0116237352-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;dollars des États-Unis&quot;</span><span class="p" data-group-id="0116237352-4">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="p" data-group-id="1793249704-7">(</span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="1793249704-7">)</span><span class="w">
+</span><span class="p" data-group-id="1793249704-8">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;dollars des États-Unis&quot;</span><span class="p" data-group-id="1793249704-8">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="w">
-</span><span class="p" data-group-id="0116237352-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;dollar des États-Unis&quot;</span><span class="p" data-group-id="0116237352-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Currency</span><span class="o">.</span><span class="n">pluralize</span><span class="p" data-group-id="1793249704-9">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="ss">:USD</span><span class="p">,</span><span class="w"> </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="1793249704-9">)</span><span class="w">
+</span><span class="p" data-group-id="1793249704-10">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;dollar des États-Unis&quot;</span><span class="p" data-group-id="1793249704-10">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="strings_for_currency/2">
@@ -1363,26 +1389,26 @@ default is <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plaus
 
 <p>Returns the strings associated with a currency
 in a given locale.</p><h2 id="strings_for_currency/2-arguments" class="section-heading">
-  <a href="#strings_for_currency/2-arguments">
+  <a href="#strings_for_currency/2-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">currency</code> is an ISO4217 currency code</p></li><li><p><code class="inline">locale</code> is any valid locale name returned by <code class="inline">MyApp.Cldr.known_locale_names/0</code>
-or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li></ul><h2 id="strings_for_currency/2-returns" class="section-heading">
-  <a href="#strings_for_currency/2-returns">
+or a <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html"><code class="inline">Cldr.LanguageTag</code></a> struct returned by <code class="inline">MyApp.Cldr.Locale.new!/1</code></p></li></ul><h2 id="strings_for_currency/2-returns" class="section-heading">
+  <a href="#strings_for_currency/2-returns" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Returns
   </a>
+  <span class="text">Returns</span>
 </h2>
 <ul><li><p>A list of strings or</p></li><li><p><code class="inline">{:error, {exception, reason}}</code></p></li></ul><h2 id="strings_for_currency/2-example" class="section-heading">
-  <a href="#strings_for_currency/2-example">
+  <a href="#strings_for_currency/2-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">strings_for_currency</span><span class="w"> </span><span class="ss">:AUD</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="w">
-</span><span class="p" data-group-id="8743349474-1">[</span><span class="s">&quot;a$&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;australian dollars&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;aud&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;australian dollar&quot;</span><span class="p" data-group-id="8743349474-1">]</span></code></pre>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">MyApp.Cldr.Currency</span><span class="o">.</span><span class="n">strings_for_currency</span><span class="p" data-group-id="7903541813-1">(</span><span class="ss">:AUD</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p" data-group-id="7903541813-1">)</span><span class="w">
+</span><span class="p" data-group-id="7903541813-2">[</span><span class="s">&quot;a$&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;australian dollars&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;aud&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;australian dollar&quot;</span><span class="p" data-group-id="7903541813-2">]</span></code></pre>
   </section>
 </section>
 
@@ -1406,7 +1432,7 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
@@ -1414,7 +1440,7 @@ or a <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html"><code cla
       </footer>
     </div>
   </div>
-</section>
+</main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>

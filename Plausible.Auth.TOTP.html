@@ -4,20 +4,21 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.30.3">
+    <meta name="generator" content="ExDoc v0.31.0">
     <meta name="project" content="Plausible v0.0.1">
 
+
     <title>Plausible.Auth.TOTP — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-5B076C9F.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-8D1A0EBC.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CGDDOCMI.js"></script>
+    <script async src="dist/html-CILPWI2Q.js"></script>
 
 
   </head>
@@ -38,69 +39,94 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
-<section class="sidebar">
-  <form class="sidebar-search" action="search.html">
-    <button type="submit" class="search-button" aria-label="Submit Search">
-      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
-    </button>
-    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
-      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
-    </button>
-    <label class="search-label">
-      <p class="sr-only">Search</p>
-      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-    </label>
-  </form>
-
-  <div class="autocomplete">
-    <div class="autocomplete-results">
-    </div>
-  </div>
+<nav id="sidebar" class="sidebar">
 
   <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
 
-      <a href="readme.html">
-        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
-      </a>
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
 
-    <div class="sidebar-projectDetails">
-      <a href="readme.html" class="sidebar-projectName" translate="no">
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
 Plausible
-      </a>
-      <div class="sidebar-projectVersion" translate="no">
-        v0.0.1
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
       </div>
     </div>
-    <ul class="sidebar-listNav">
-      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
 
-        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
 
 
-        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
 
     </ul>
   </div>
 
-  <div class="gradient"></div>
-  <ul id="full-list"></ul>
-</section>
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
 
-<section class="content">
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
   <output role="status" id="toast"></output>
   <div class="content-outer">
     <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Plausible</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
 
 <h1>
-<button class="icon-action display-settings">
-  <i class="ri-settings-3-line"></i>
-  <span class="sr-only">Settings</span>
-</button>
-
 
     <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/totp.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -115,16 +141,16 @@ Plausible
 
   <section id="moduledoc">
 <p>TOTP auth context</p><p>Handles all the aspects of TOTP setup, management and validation for users.</p><h2 id="module-setup" class="section-heading">
-  <a href="#module-setup">
+  <a href="#module-setup" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Setup
   </a>
+  <span class="text">Setup</span>
 </h2>
 <p>TOTP setup is started with <a href="#initiate/1"><code class="inline">initiate/1</code></a>. At this stage, a random secret
 binary is generated for user and stored under <code class="inline">User.totp_secret</code>. The secret
 is additionally encrypted while stored in the database using <a href="https://hexdocs.pm/cloak/1.1.2/Cloak.html"><code class="inline">Cloak</code></a>. The
 vault for safe storage is configured in <a href="Plausible.Auth.TOTP.Vault.html"><code class="inline">Plausible.Auth.TOTP.Vault</code></a> via
-a dedicated <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.html"><code class="inline">Ecto</code></a> type defined in <a href="Plausible.Auth.TOTP.EncryptedBinary.html"><code class="inline">Plausible.Auth.TOTP.EncryptedBinary</code></a>.
+a dedicated <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.html"><code class="inline">Ecto</code></a> type defined in <a href="Plausible.Auth.TOTP.EncryptedBinary.html"><code class="inline">Plausible.Auth.TOTP.EncryptedBinary</code></a>.
 The function returns updated user along with TOTP URI and a readable form
 of secret. Both - the URI and readable secret - are meant for exposure 
 in the user's setup screen. The URI should be encoded as a QR code.</p><p>After initiation, user is expected to confirm valid setup with <a href="#enable/2"><code class="inline">enable/2</code></a>,
@@ -134,10 +160,10 @@ Finally, the user must be immediately presented with a list of recovery codes
 returned by the same call of <a href="#enable/2"><code class="inline">enable/2</code></a>. The codes should be presented
 in copy/paste friendly form, ideally also with a print-friendly view option.</p><p>The <a href="#initiate/1"><code class="inline">initiate/1</code></a> and <code class="inline">enable/1</code> functions can be safely called multiple
 times, allowing user to abort and restart setup up to these stages.</p><h2 id="module-management" class="section-heading">
-  <a href="#module-management">
+  <a href="#module-management" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Management
   </a>
+  <span class="text">Management</span>
 </h2>
 <p>The state of TOTP for a particular user can be chcecked by calling
 <a href="#enabled?/1"><code class="inline">enabled?/1</code></a> or <a href="#initiated?/1"><code class="inline">initiated?/1</code></a>.</p><p>TOTP can be disabled with <a href="#disable/2"><code class="inline">disable/2</code></a>. User is expected to provide their
@@ -147,18 +173,18 @@ can be safely run more than once.</p><p>If the user needs to regenerate the reco
 they must do it via <a href="#generate_recovery_codes/2"><code class="inline">generate_recovery_codes/2</code></a>, providing their current
 password for safety. They must be warned that any existing recovery codes
 will be invalidated.</p><h2 id="module-validation" class="section-heading">
-  <a href="#module-validation">
+  <a href="#module-validation" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Validation
   </a>
+  <span class="text">Validation</span>
 </h2>
 <p>After logging in, user's TOTP state must be checked with <a href="#enabled?/1"><code class="inline">enabled?/1</code></a>.</p><p>If enabled, user must be presented with TOTP code input form accepting
 6 digit characters. The code must be checked using <a href="#validate_code/2"><code class="inline">validate_code/2</code></a>.</p><p>User must have an option to alternatively input one of their recovery
 codes. Those codes must be checked with <a href="#use_recovery_code/2"><code class="inline">use_recovery_code/2</code></a>.</p><h2 id="module-code-validity" class="section-heading">
-  <a href="#module-code-validity">
+  <a href="#module-code-validity" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Code validity
   </a>
+  <span class="text">Code validity</span>
 </h2>
 <p>In case of TOTP codes, a grace period of 30 seconds is applied, which
 allows user to use their current and previous TOTP code, assuming 30
@@ -168,10 +194,10 @@ code can be used only once. Validation procedure rejects repeat use
 of the same code for safety. It's done by tracking last time a TOTP
 code was used successfully, stored under <code class="inline">User.totp_last_used_at</code>.</p><p>In case of recovery codes, each code is deleted immediately after use.
 They are strictly one-time use only.</p><h2 id="module-totp-token" class="section-heading">
-  <a href="#module-totp-token">
+  <a href="#module-totp-token" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    TOTP Token
   </a>
+  <span class="text">TOTP Token</span>
 </h2>
 <p>TOTP token is an alternate method of authenticating  user session.
 It's main use case is &quot;trust this device&quot; functionality, where user
@@ -187,8 +213,8 @@ effectively invalidate all trusted devices for a given user.</p>
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        Summary
       </a>
+      <span class="text">Summary</span>
     </h1>
 <div class="summary-functions summary">
   <h2>
@@ -284,8 +310,8 @@ effectively invalidate all trusted devices for a given user.</p>
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-Functions
       </a>
+      <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
 <section class="detail" id="disable/2">
@@ -595,7 +621,7 @@ Functions
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
@@ -603,7 +629,7 @@ Functions
       </footer>
     </div>
   </div>
-</section>
+</main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>

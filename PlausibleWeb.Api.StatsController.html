@@ -4,20 +4,21 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.30.3">
+    <meta name="generator" content="ExDoc v0.31.0">
     <meta name="project" content="Plausible v0.0.1">
 
+
     <title>PlausibleWeb.Api.StatsController — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-5B076C9F.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-8D1A0EBC.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CGDDOCMI.js"></script>
+    <script async src="dist/html-CILPWI2Q.js"></script>
 
 
   </head>
@@ -38,69 +39,94 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
-<section class="sidebar">
-  <form class="sidebar-search" action="search.html">
-    <button type="submit" class="search-button" aria-label="Submit Search">
-      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
-    </button>
-    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
-      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
-    </button>
-    <label class="search-label">
-      <p class="sr-only">Search</p>
-      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-    </label>
-  </form>
-
-  <div class="autocomplete">
-    <div class="autocomplete-results">
-    </div>
-  </div>
+<nav id="sidebar" class="sidebar">
 
   <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
 
-      <a href="readme.html">
-        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
-      </a>
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
 
-    <div class="sidebar-projectDetails">
-      <a href="readme.html" class="sidebar-projectName" translate="no">
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
 Plausible
-      </a>
-      <div class="sidebar-projectVersion" translate="no">
-        v0.0.1
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
       </div>
     </div>
-    <ul class="sidebar-listNav">
-      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
 
-        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
 
 
-        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
 
     </ul>
   </div>
 
-  <div class="gradient"></div>
-  <ul id="full-list"></ul>
-</section>
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
 
-<section class="content">
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
   <output role="status" id="toast"></output>
   <div class="content-outer">
     <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Plausible</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
 
 <h1>
-<button class="icon-action display-settings">
-  <i class="ri-settings-3-line"></i>
-  <span class="sr-only">Settings</span>
-</button>
-
 
     <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/controllers/api/stats_controller.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -118,8 +144,8 @@ Plausible
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        Summary
       </a>
+      <span class="text">Summary</span>
     </h1>
 <div class="summary-functions summary">
   <h2>
@@ -373,8 +399,8 @@ Plausible
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-Functions
       </a>
+      <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
 <section class="detail" id="all_custom_prop_values/2">
@@ -705,10 +731,10 @@ Functions
   <section class="docstring">
 
 <p>Returns a time-series based on given parameters.</p><h2 id="main_graph/2-parameters" class="section-heading">
-  <a href="#main_graph/2-parameters">
+  <a href="#main_graph/2-parameters" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Parameters
   </a>
+  <span class="text">Parameters</span>
 </h2>
 <p>This API accepts the following parameters:</p><ul><li><p><code class="inline">period</code> - x-axis of the graph, e.g. <code class="inline">12mo</code>, <code class="inline">day</code>, <code class="inline">custom</code>.</p></li><li><p><code class="inline">metric</code> - y-axis of the graph, e.g. <code class="inline">visits</code>, <code class="inline">visitors</code>, <code class="inline">pageviews</code>.
 See the Stats API <a href="https://plausible.io/docs/stats-api#metrics">&quot;Metrics&quot;</a>
@@ -718,17 +744,17 @@ and <code class="inline">month</code>. The default depends on the <code class="i
 <code class="inline">Plausible.Query.from/2</code> for each default.</p></li><li><p><code class="inline">filters</code> - optional filters to drill down data. See the Stats API
 <a href="https://plausible.io/docs/stats-api#filtering">&quot;Filtering&quot;</a> section for
 more details.</p></li><li><p><code class="inline">with_imported</code> - boolean indicating whether to include Google Analytics
-imported data or not. Defaults to <code class="inline">false</code>.</p></li></ul><p>Full example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="9497339221-1">%{</span><span class="w">
+imported data or not. Defaults to <code class="inline">false</code>.</p></li></ul><p>Full example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2031083643-1">%{</span><span class="w">
   </span><span class="s">&quot;from&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;2021-09-06&quot;</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;interval&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;metric&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;visitors&quot;</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;period&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;custom&quot;</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;to&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;2021-12-13&quot;</span><span class="w">
-</span><span class="p" data-group-id="9497339221-1">}</span></code></pre><h2 id="main_graph/2-response" class="section-heading">
-  <a href="#main_graph/2-response">
+</span><span class="p" data-group-id="2031083643-1">}</span></code></pre><h2 id="main_graph/2-response" class="section-heading">
+  <a href="#main_graph/2-response" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Response
   </a>
+  <span class="text">Response</span>
 </h2>
 <p>Returns a map with the following keys:</p><ul><li><p><code class="inline">plot</code> - list of values for the requested metric representing the y-axis
 of the graph.</p></li><li><p><code class="inline">labels</code> - list of date times representing the x-axis of the graph.</p></li><li><p><code class="inline">present_index</code> - index of the element representing the current date in
@@ -739,20 +765,20 @@ cut off by the requested date range or not. For example, if looking at a
 month week-by-week, some weeks may be cut off by the month boundaries.
 It's useful to adjust the graph display slightly in case the interval is
 not 'full' so that the user understands why the numbers might be lower for
-those partial periods.</p></li></ul><p>Full example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2800387218-1">%{</span><span class="w">
-  </span><span class="s">&quot;full_intervals&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="2800387218-2">%{</span><span class="w">
+those partial periods.</p></li></ul><p>Full example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="8939567324-1">%{</span><span class="w">
+  </span><span class="s">&quot;full_intervals&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="8939567324-2">%{</span><span class="w">
     </span><span class="s">&quot;2021-09-01&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w">
     </span><span class="s">&quot;2021-10-01&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
     </span><span class="s">&quot;2021-11-01&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
     </span><span class="s">&quot;2021-12-01&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">false</span><span class="w">
-  </span><span class="p" data-group-id="2800387218-2">}</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="8939567324-2">}</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;imported_source&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;interval&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="s">&quot;labels&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="2800387218-3">[</span><span class="s">&quot;2021-09-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-10-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-11-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-12-01&quot;</span><span class="p" data-group-id="2800387218-3">]</span><span class="p">,</span><span class="w">
-  </span><span class="s">&quot;plot&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="2800387218-4">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="2800387218-4">]</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;labels&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="8939567324-3">[</span><span class="s">&quot;2021-09-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-10-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-11-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-12-01&quot;</span><span class="p" data-group-id="8939567324-3">]</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;plot&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="8939567324-4">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="8939567324-4">]</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;present_index&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;with_imported&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">false</span><span class="w">
-</span><span class="p" data-group-id="2800387218-1">}</span></code></pre>
+</span><span class="p" data-group-id="8939567324-1">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="operating_system_versions/2">
@@ -1084,7 +1110,7 @@ those partial periods.</p></li></ul><p>Full example:</p><pre><code class="makeup
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
@@ -1092,7 +1118,7 @@ those partial periods.</p></li></ul><p>Full example:</p><pre><code class="makeup
       </footer>
     </div>
   </div>
-</section>
+</main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>

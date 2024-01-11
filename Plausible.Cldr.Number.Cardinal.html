@@ -4,20 +4,21 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.30.3">
+    <meta name="generator" content="ExDoc v0.31.0">
     <meta name="project" content="Plausible v0.0.1">
 
+
     <title>Plausible.Cldr.Number.Cardinal — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-5B076C9F.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-8D1A0EBC.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CGDDOCMI.js"></script>
+    <script async src="dist/html-CILPWI2Q.js"></script>
 
 
   </head>
@@ -38,69 +39,94 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
-<section class="sidebar">
-  <form class="sidebar-search" action="search.html">
-    <button type="submit" class="search-button" aria-label="Submit Search">
-      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
-    </button>
-    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
-      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
-    </button>
-    <label class="search-label">
-      <p class="sr-only">Search</p>
-      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-    </label>
-  </form>
-
-  <div class="autocomplete">
-    <div class="autocomplete-results">
-    </div>
-  </div>
+<nav id="sidebar" class="sidebar">
 
   <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
 
-      <a href="readme.html">
-        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
-      </a>
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
 
-    <div class="sidebar-projectDetails">
-      <a href="readme.html" class="sidebar-projectName" translate="no">
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
 Plausible
-      </a>
-      <div class="sidebar-projectVersion" translate="no">
-        v0.0.1
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
       </div>
     </div>
-    <ul class="sidebar-listNav">
-      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
 
-        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
 
 
-        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
 
     </ul>
   </div>
 
-  <div class="gradient"></div>
-  <ul id="full-list"></ul>
-</section>
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
 
-<section class="content">
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
   <output role="status" id="toast"></output>
   <div class="content-outer">
     <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Plausible</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
 
 <h1>
-<button class="icon-action display-settings">
-  <i class="ri-settings-3-line"></i>
-  <span class="sr-only">Settings</span>
-</button>
-
 
     <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -122,8 +148,8 @@ Plausible
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        Summary
       </a>
+      <span class="text">Summary</span>
     </h1>
 <div class="summary-functions summary">
   <h2>
@@ -200,8 +226,8 @@ and a substitution map.</p></div>
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-Functions
       </a>
+      <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
 <section class="detail" id="available_locale_names/0">
@@ -247,13 +273,13 @@ Functions
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> known_locale_names() :: [<a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(), ...]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> known_locale_names() :: [<a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(), ...]</pre>
 
       </div>
 
 <p>The configured locales for which plural rules are defined.</p><p>Returns the intersection of <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a> and
-the locales for which Cardinal plural rules are defined.</p><p>There are many <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.html"><code class="inline">Cldr</code></a> locales which don't have their own plural
-rules so this list is the intersection of <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.html"><code class="inline">Cldr</code></a>'s configured
+the locales for which Cardinal plural rules are defined.</p><p>There are many <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.html"><code class="inline">Cldr</code></a> locales which don't have their own plural
+rules so this list is the intersection of <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.html"><code class="inline">Cldr</code></a>'s configured
 locales and those that have rules.</p>
   </section>
 </section>
@@ -281,10 +307,10 @@ locales and those that have rules.</p>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> plural_rule(
-  <a href="https://hexdocs.pm/cldr_utils/2.24.1/Cldr.Math.html#t:number_or_decimal/0">Cldr.Math.number_or_decimal</a>(),
-  <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
+  <a href="https://hexdocs.pm/cldr_utils/2.24.2/Cldr.Math.html#t:number_or_decimal/0">Cldr.Math.number_or_decimal</a>(),
+  <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>(),
   <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()
-) :: <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Number.PluralRule.html#t:plural_type/0">Cldr.Number.PluralRule.plural_type</a>()</pre>
+) :: <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Number.PluralRule.html#t:plural_type/0">Cldr.Number.PluralRule.plural_type</a>()</pre>
 
       </div>
 
@@ -295,18 +321,18 @@ literally.  For example, the key returned from
 <code class="inline">Cldr.Number.Ordinal.plural_rule(0, &quot;en&quot;)</code> is actually
 <code class="inline">:other</code>, not <code class="inline">:zero</code>.</p><p>This key can then be used to format a number, date, time, unit,
 list or other content in a plural-sensitive way.</p><h2 id="plural_rule/3-arguments" class="section-heading">
-  <a href="#plural_rule/3-arguments">
+  <a href="#plural_rule/3-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
-<ul><li><p><code class="inline">number</code> is any <code class="inline">integer</code>, <code class="inline">float</code> or <a href="https://hexdocs.pm/decimal/2.1.1/Decimal.html"><code class="inline">Decimal</code></a></p></li><li><p><code class="inline">locale</code> is any locale returned by <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a> or any
+<ul><li><p><code class="inline">number</code> is any <code class="inline">integer</code>, <code class="inline">float</code> or <a href="https://hexdocs.pm/decimal/2.1.1/Decimal.html"><code class="inline">Decimal</code></a></p></li><li><p><code class="inline">locale</code> is any locale returned by <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#new!/2"><code class="inline">Cldr.Locale.new!/2</code></a> or any
 <code class="inline">locale_name</code> returned by <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a></p></li><li><p><code class="inline">rounding</code> is one of <code class="inline">[:down, :up, :ceiling, :floor, :half_even, :half_up, :half_down]</code>.  The
 default is <code class="inline">:half_even</code>.</p></li></ul><h2 id="plural_rule/3-examples" class="section-heading">
-  <a href="#plural_rule/3-examples">
+  <a href="#plural_rule/3-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Examples
   </a>
+  <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">plural_rule</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="w">
 </span><span class="ss">:one</span><span class="w">
@@ -364,7 +390,7 @@ default is <code class="inline">:half_even</code>.</p></li></ul><h2 id="plural_r
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> plural_rules_for(<a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()) :: [
+          <pre translate="no"><span class="attribute">@spec</span> plural_rules_for(<a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>()) :: [
   {<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">list</a>()},
   ...
 ]</pre>
@@ -372,10 +398,10 @@ default is <code class="inline">:half_even</code>.</p></li></ul><h2 id="plural_r
       </div>
 
 <p>Return the plural rules for a locale.</p><h2 id="plural_rules_for/1-arguments" class="section-heading">
-  <a href="#plural_rules_for/1-arguments">
+  <a href="#plural_rules_for/1-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><code class="inline">locale</code> is any locale returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a> or any
 <code class="inline">locale_name</code> returned by <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a></li></ul><p>The rules are returned in AST form after parsing.</p>
@@ -403,8 +429,8 @@ default is <code class="inline">:half_even</code>.</p></li></ul><h2 id="plural_r
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> pluralize(
-  <a href="https://hexdocs.pm/cldr_utils/2.24.1/Cldr.Math.html#t:number_or_decimal/0">Cldr.Math.number_or_decimal</a>() | <a href="https://hexdocs.pm/elixir/Range.html#t:t/0">Range.t</a>(),
-  <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>(),
+  <a href="https://hexdocs.pm/cldr_utils/2.24.2/Cldr.Math.html#t:number_or_decimal/0">Cldr.Math.number_or_decimal</a>() | <a href="https://hexdocs.pm/elixir/Range.html#t:t/0">Range.t</a>(),
+  <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_reference/0">Cldr.Locale.locale_reference</a>(),
   %{}
 ) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
 
@@ -412,45 +438,45 @@ default is <code class="inline">:half_even</code>.</p></li></ul><h2 id="plural_r
 
 <p>Pluralize a number using cardinal plural rules
 and a substitution map.</p><h2 id="pluralize/3-arguments" class="section-heading">
-  <a href="#pluralize/3-arguments">
+  <a href="#pluralize/3-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">number</code> is an integer, float or Decimal</p></li><li><p><code class="inline">locale</code> is any locale returned by <a href="Plausible.Cldr.Locale.html#new!/1"><code class="inline">Plausible.Cldr.Locale.new!/1</code></a> or any
 <code class="inline">locale_name</code> returned by <a href="Plausible.Cldr.html#known_locale_names/0"><code class="inline">Plausible.Cldr.known_locale_names/0</code></a></p></li><li><p><code class="inline">substitutions</code> is a map that maps plural keys to a string.
 The valid substitution keys are <code class="inline">:zero</code>, <code class="inline">:one</code>, <code class="inline">:two</code>,
 <code class="inline">:few</code>, <code class="inline">:many</code> and <code class="inline">:other</code>.</p></li></ul><p>See also <code class="inline">Plausible.Cldr.Number.Cardinal.Cardinal.plural_rule/3</code>.</p><h2 id="pluralize/3-examples" class="section-heading">
-  <a href="#pluralize/3-examples">
+  <a href="#pluralize/3-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Examples
   </a>
+  <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7257966509-1">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="7257966509-1">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9008804676-1">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="9008804676-1">}</span><span class="w">
 </span><span class="s">&quot;one&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7257966509-2">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="7257966509-2">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9008804676-2">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="9008804676-2">}</span><span class="w">
 </span><span class="no">nil</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7257966509-3">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="7257966509-3">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9008804676-3">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="9008804676-3">}</span><span class="w">
 </span><span class="s">&quot;other&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7257966509-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="7257966509-4">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">22</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9008804676-4">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="9008804676-4">}</span><span class="w">
 </span><span class="s">&quot;other&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="7257966509-5">(</span><span class="mi">1</span><span class="p" data-group-id="7257966509-5">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7257966509-6">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="7257966509-6">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="9008804676-5">(</span><span class="mi">1</span><span class="p" data-group-id="9008804676-5">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9008804676-6">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="9008804676-6">}</span><span class="w">
 </span><span class="s">&quot;one&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="7257966509-7">(</span><span class="mi">2</span><span class="p" data-group-id="7257966509-7">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7257966509-8">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="7257966509-8">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="9008804676-7">(</span><span class="mi">2</span><span class="p" data-group-id="9008804676-7">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9008804676-8">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p" data-group-id="9008804676-8">}</span><span class="w">
 </span><span class="no">nil</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="7257966509-9">(</span><span class="mi">2</span><span class="p" data-group-id="7257966509-9">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7257966509-10">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p" data-group-id="7257966509-10">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="nc">Decimal</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="9008804676-9">(</span><span class="mi">2</span><span class="p" data-group-id="9008804676-9">)</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9008804676-10">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">two</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;two&quot;</span><span class="p" data-group-id="9008804676-10">}</span><span class="w">
 </span><span class="no">nil</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ar&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7257966509-11">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">few</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;few&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="7257966509-11">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ar&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9008804676-11">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">few</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;few&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="9008804676-11">}</span><span class="w">
 </span><span class="s">&quot;few&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7257966509-12">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">few</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;few&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="7257966509-12">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Cardinal</span><span class="o">.</span><span class="n">pluralize</span><span class="w"> </span><span class="mi">1</span><span class="o">..</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9008804676-12">%{</span><span class="ss">one</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;one&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">few</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;few&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">other</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;other&quot;</span><span class="p" data-group-id="9008804676-12">}</span><span class="w">
 </span><span class="s">&quot;other&quot;</span></code></pre>
   </section>
 </section>
@@ -475,7 +501,7 @@ The valid substitution keys are <code class="inline">:zero</code>, <code class="
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
@@ -483,7 +509,7 @@ The valid substitution keys are <code class="inline">:zero</code>, <code class="
       </footer>
     </div>
   </div>
-</section>
+</main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>

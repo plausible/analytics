@@ -4,20 +4,21 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.30.3">
+    <meta name="generator" content="ExDoc v0.31.0">
     <meta name="project" content="Plausible v0.0.1">
 
+
     <title>Plausible.ClickhouseRepo — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-5B076C9F.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-8D1A0EBC.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CGDDOCMI.js"></script>
+    <script async src="dist/html-CILPWI2Q.js"></script>
 
 
   </head>
@@ -38,69 +39,94 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
-<section class="sidebar">
-  <form class="sidebar-search" action="search.html">
-    <button type="submit" class="search-button" aria-label="Submit Search">
-      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
-    </button>
-    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
-      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
-    </button>
-    <label class="search-label">
-      <p class="sr-only">Search</p>
-      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-    </label>
-  </form>
-
-  <div class="autocomplete">
-    <div class="autocomplete-results">
-    </div>
-  </div>
+<nav id="sidebar" class="sidebar">
 
   <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
 
-      <a href="readme.html">
-        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
-      </a>
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
 
-    <div class="sidebar-projectDetails">
-      <a href="readme.html" class="sidebar-projectName" translate="no">
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
 Plausible
-      </a>
-      <div class="sidebar-projectVersion" translate="no">
-        v0.0.1
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
       </div>
     </div>
-    <ul class="sidebar-listNav">
-      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
 
-        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
 
 
-        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
 
     </ul>
   </div>
 
-  <div class="gradient"></div>
-  <ul id="full-list"></ul>
-</section>
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
 
-<section class="content">
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
   <output role="status" id="toast"></output>
   <div class="content-outer">
     <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Plausible</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
 
 <h1>
-<button class="icon-action display-settings">
-  <i class="ri-settings-3-line"></i>
-  <span class="sr-only">Settings</span>
-</button>
-
 
     <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/clickhouse_repo.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -118,8 +144,8 @@ Plausible
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        Summary
       </a>
+      <span class="text">Summary</span>
     </h1>
 <div class="summary-functions summary">
   <h2>
@@ -132,7 +158,7 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p></div>
 
     </div>
 
@@ -142,7 +168,7 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p></div>
 
     </div>
 
@@ -152,7 +178,7 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p></div>
 
     </div>
 
@@ -162,7 +188,7 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p></div>
 
     </div>
 
@@ -172,7 +198,7 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p></div>
 
     </div>
 
@@ -190,7 +216,7 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p></div>
 
     </div>
 
@@ -200,7 +226,7 @@ Plausible
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p></div>
 
     </div>
 
@@ -221,7 +247,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p></div>
 
     </div>
 
@@ -231,7 +257,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p></div>
 
     </div>
 
@@ -241,7 +267,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p></div>
 
     </div>
 
@@ -251,7 +277,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p></div>
 
     </div>
 
@@ -261,7 +287,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p></div>
 
     </div>
 
@@ -271,7 +297,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p></div>
 
     </div>
 
@@ -291,7 +317,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p></div>
 
     </div>
 
@@ -301,7 +327,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p></div>
 
     </div>
 
@@ -311,7 +337,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p></div>
 
     </div>
 
@@ -329,7 +355,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p></div>
 
     </div>
 
@@ -339,7 +365,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:prepare_query/3"><code class="inline">Ecto.Repo.prepare_query/3</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:prepare_query/3"><code class="inline">Ecto.Repo.prepare_query/3</code></a>.</p></div>
 
     </div>
 
@@ -349,7 +375,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p></div>
 
     </div>
 
@@ -379,7 +405,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p></div>
 
     </div>
 
@@ -389,7 +415,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p></div>
 
     </div>
 
@@ -399,7 +425,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p></div>
 
     </div>
 
@@ -409,7 +435,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p></div>
 
     </div>
 
@@ -419,7 +445,7 @@ pool to disconnect within the given interval.</p></div>
 
       </div>
 
-        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p></div>
+        <div class="summary-synopsis"><p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p></div>
 
     </div>
 
@@ -442,8 +468,8 @@ pool to disconnect within the given interval.</p></div>
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-Functions
       </a>
+      <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
 <section class="detail" id="aggregate/3">
@@ -467,7 +493,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:aggregate/3"><code class="inline">Ecto.Repo.aggregate/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="aggregate/4">
@@ -489,7 +515,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:aggregate/4"><code class="inline">Ecto.Repo.aggregate/4</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="all/2">
@@ -513,7 +539,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:all/2"><code class="inline">Ecto.Repo.all/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="checked_out?/0">
@@ -535,7 +561,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:checked_out?/0"><code class="inline">Ecto.Repo.checked_out?/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="checkout/2">
@@ -559,7 +585,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:checkout/2"><code class="inline">Ecto.Repo.checkout/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
@@ -603,7 +629,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:config/0"><code class="inline">Ecto.Repo.config/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="default_options/1">
@@ -625,7 +651,7 @@ Functions
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:default_options/1"><code class="inline">Ecto.Repo.default_options/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="disconnect_all/2">
@@ -650,7 +676,7 @@ Functions
   <section class="docstring">
 
 <p>A convenience function for SQL-based repositories that forces all connections in the
-pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.10.1/Ecto.Adapters.SQL.html#disconnect_all/3"><code class="inline">Ecto.Adapters.SQL.disconnect_all/3</code></a> for more information.</p>
+pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.11.1/Ecto.Adapters.SQL.html#disconnect_all/3"><code class="inline">Ecto.Adapters.SQL.disconnect_all/3</code></a> for more information.</p>
   </section>
 </section>
 <section class="detail" id="exists?/2">
@@ -674,7 +700,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:exists?/2"><code class="inline">Ecto.Repo.exists?/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get/3">
@@ -698,7 +724,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get/3"><code class="inline">Ecto.Repo.get/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get!/3">
@@ -722,7 +748,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get!/3"><code class="inline">Ecto.Repo.get!/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_by/3">
@@ -746,7 +772,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get_by/3"><code class="inline">Ecto.Repo.get_by/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_by!/3">
@@ -770,7 +796,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get_by!/3"><code class="inline">Ecto.Repo.get_by!/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="get_dynamic_repo/0">
@@ -792,7 +818,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:get_dynamic_repo/0"><code class="inline">Ecto.Repo.get_dynamic_repo/0</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="insert_stream/3">
@@ -816,23 +842,23 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Similar to <code class="inline">insert_all/2</code> but with the following differences:</p><ul><li>accepts rows as streams or lists</li><li>sends rows as a chunked request</li><li>doesn't autogenerate ids or does any other preprocessing</li></ul><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Repo</span><span class="o">.</span><span class="n">query!</span><span class="p" data-group-id="2775499385-1">(</span><span class="s">&quot;create table ecto_ch_demo(a UInt64, b String) engine Null&quot;</span><span class="p" data-group-id="2775499385-1">)</span><span class="w">
+<p>Similar to <code class="inline">insert_all/2</code> but with the following differences:</p><ul><li>accepts rows as streams or lists</li><li>sends rows as a chunked request</li><li>doesn't autogenerate ids or does any other preprocessing</li></ul><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="nc">Repo</span><span class="o">.</span><span class="n">query!</span><span class="p" data-group-id="9377188841-1">(</span><span class="s">&quot;create table ecto_ch_demo(a UInt64, b String) engine Null&quot;</span><span class="p" data-group-id="9377188841-1">)</span><span class="w">
 
-</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Demo</span><span class="w"> </span><span class="k" data-group-id="2775499385-2">do</span><span class="w">
+</span><span class="kd">defmodule</span><span class="w"> </span><span class="nc">Demo</span><span class="w"> </span><span class="k" data-group-id="9377188841-2">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Ecto.Schema</span><span class="w">
 
   </span><span class="na">@primary_key</span><span class="w"> </span><span class="no">false</span><span class="w">
-  </span><span class="n">schema</span><span class="w"> </span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="w"> </span><span class="k" data-group-id="2775499385-3">do</span><span class="w">
+  </span><span class="n">schema</span><span class="w"> </span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="w"> </span><span class="k" data-group-id="9377188841-3">do</span><span class="w">
     </span><span class="n">field</span><span class="w"> </span><span class="ss">:a</span><span class="p">,</span><span class="w"> </span><span class="nc">Ch</span><span class="p">,</span><span class="w"> </span><span class="ss">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;UInt64&quot;</span><span class="w">
     </span><span class="n">field</span><span class="w"> </span><span class="ss">:b</span><span class="p">,</span><span class="w"> </span><span class="ss">:string</span><span class="w">
-  </span><span class="k" data-group-id="2775499385-3">end</span><span class="w">
-</span><span class="k" data-group-id="2775499385-2">end</span><span class="w">
+  </span><span class="k" data-group-id="9377188841-3">end</span><span class="w">
+</span><span class="k" data-group-id="9377188841-2">end</span><span class="w">
 
-</span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">map</span><span class="p" data-group-id="2775499385-4">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="2775499385-5">fn</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p" data-group-id="2775499385-6">%{</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="n">to_string</span><span class="p" data-group-id="2775499385-7">(</span><span class="n">i</span><span class="p" data-group-id="2775499385-7">)</span><span class="p" data-group-id="2775499385-6">}</span><span class="w"> </span><span class="k" data-group-id="2775499385-5">end</span><span class="p" data-group-id="2775499385-4">)</span><span class="w">
-</span><span class="p" data-group-id="2775499385-8">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="2775499385-8">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="2775499385-9">(</span><span class="nc">Demo</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p" data-group-id="2775499385-9">)</span><span class="w">
+</span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Stream</span><span class="o">.</span><span class="n">map</span><span class="p" data-group-id="9377188841-4">(</span><span class="mi">1</span><span class="o">..</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="k" data-group-id="9377188841-5">fn</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p" data-group-id="9377188841-6">%{</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="n">to_string</span><span class="p" data-group-id="9377188841-7">(</span><span class="n">i</span><span class="p" data-group-id="9377188841-7">)</span><span class="p" data-group-id="9377188841-6">}</span><span class="w"> </span><span class="k" data-group-id="9377188841-5">end</span><span class="p" data-group-id="9377188841-4">)</span><span class="w">
+</span><span class="p" data-group-id="9377188841-8">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="9377188841-8">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="9377188841-9">(</span><span class="nc">Demo</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p" data-group-id="9377188841-9">)</span><span class="w">
 
 </span><span class="c1"># schemaless</span><span class="w">
-</span><span class="p" data-group-id="2775499385-10">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="2775499385-10">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="2775499385-11">(</span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="ss">types</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="2775499385-12">[</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="nc">Ch.Types</span><span class="o">.</span><span class="n">u64</span><span class="p" data-group-id="2775499385-13">(</span><span class="p" data-group-id="2775499385-13">)</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="ss">:string</span><span class="p" data-group-id="2775499385-12">]</span><span class="p" data-group-id="2775499385-11">)</span></code></pre>
+</span><span class="p" data-group-id="9377188841-10">{</span><span class="mi">100_000</span><span class="p">,</span><span class="w"> </span><span class="no">nil</span><span class="p" data-group-id="9377188841-10">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Repo</span><span class="o">.</span><span class="n">insert_stream</span><span class="p" data-group-id="9377188841-11">(</span><span class="s">&quot;ecto_ch_demo&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="p">,</span><span class="w"> </span><span class="ss">types</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="9377188841-12">[</span><span class="ss">a</span><span class="p">:</span><span class="w"> </span><span class="nc">Ch.Types</span><span class="o">.</span><span class="n">u64</span><span class="p" data-group-id="9377188841-13">(</span><span class="p" data-group-id="9377188841-13">)</span><span class="p">,</span><span class="w"> </span><span class="ss">b</span><span class="p">:</span><span class="w"> </span><span class="ss">:string</span><span class="p" data-group-id="9377188841-12">]</span><span class="p" data-group-id="9377188841-11">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="load/2">
@@ -854,7 +880,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:load/2"><code class="inline">Ecto.Repo.load/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="one/2">
@@ -878,7 +904,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:one/2"><code class="inline">Ecto.Repo.one/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="one!/2">
@@ -902,7 +928,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:one!/2"><code class="inline">Ecto.Repo.one!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="parallel_tasks/1">
@@ -948,7 +974,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:preload/3"><code class="inline">Ecto.Repo.preload/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="prepare_query/3">
@@ -970,7 +996,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:prepare_query/3"><code class="inline">Ecto.Repo.prepare_query/3</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:prepare_query/3"><code class="inline">Ecto.Repo.prepare_query/3</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="put_dynamic_repo/1">
@@ -992,7 +1018,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:put_dynamic_repo/1"><code class="inline">Ecto.Repo.put_dynamic_repo/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="query/3">
@@ -1018,7 +1044,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that executes the given query.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.10.1/Ecto.Adapters.SQL.html#query/4"><code class="inline">Ecto.Adapters.SQL.query/4</code></a> for more information.</p>
+<p>A convenience function for SQL-based repositories that executes the given query.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.11.1/Ecto.Adapters.SQL.html#query/4"><code class="inline">Ecto.Adapters.SQL.query/4</code></a> for more information.</p>
   </section>
 </section>
 <section class="detail" id="query!/3">
@@ -1044,7 +1070,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that executes the given query.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.10.1/Ecto.Adapters.SQL.html#query!/4"><code class="inline">Ecto.Adapters.SQL.query!/4</code></a> for more information.</p>
+<p>A convenience function for SQL-based repositories that executes the given query.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.11.1/Ecto.Adapters.SQL.html#query!/4"><code class="inline">Ecto.Adapters.SQL.query!/4</code></a> for more information.</p>
   </section>
 </section>
 <section class="detail" id="reload/2">
@@ -1068,7 +1094,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:reload/2"><code class="inline">Ecto.Repo.reload/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="reload!/2">
@@ -1092,7 +1118,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:reload!/2"><code class="inline">Ecto.Repo.reload!/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -1116,7 +1142,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:start_link/1"><code class="inline">Ecto.Repo.start_link/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="stop/1">
@@ -1140,7 +1166,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:stop/1"><code class="inline">Ecto.Repo.stop/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="stream/2">
@@ -1164,7 +1190,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.10.3/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p>
+<p>Callback implementation for <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Repo.html#c:stream/2"><code class="inline">Ecto.Repo.stream/2</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="to_sql/2">
@@ -1186,7 +1212,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
   <section class="docstring">
 
-<p>A convenience function for SQL-based repositories that translates the given query to SQL.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.10.1/Ecto.Adapters.SQL.html#to_sql/3"><code class="inline">Ecto.Adapters.SQL.to_sql/3</code></a> for more information.</p>
+<p>A convenience function for SQL-based repositories that translates the given query to SQL.</p><p>See <a href="https://hexdocs.pm/ecto_sql/3.11.1/Ecto.Adapters.SQL.html#to_sql/3"><code class="inline">Ecto.Adapters.SQL.to_sql/3</code></a> for more information.</p>
   </section>
 </section>
 
@@ -1210,7 +1236,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
@@ -1218,7 +1244,7 @@ pool to disconnect within the given interval.</p><p>See <a href="https://hexdocs
       </footer>
     </div>
   </div>
-</section>
+</main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>

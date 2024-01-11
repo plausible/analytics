@@ -4,20 +4,21 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.30.3">
+    <meta name="generator" content="ExDoc v0.31.0">
     <meta name="project" content="Plausible v0.0.1">
 
+
     <title>Plausible.Cldr.Number.Transliterate — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-P5GXSCHE.css" />
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
-    <script src="dist/handlebars.templates-NBND3S2D.js"></script>
-    <script src="dist/sidebar_items-5B076C9F.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-8D1A0EBC.js"></script>
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CGDDOCMI.js"></script>
+    <script async src="dist/html-CILPWI2Q.js"></script>
 
 
   </head>
@@ -38,69 +39,94 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar">
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
 
-<section class="sidebar">
-  <form class="sidebar-search" action="search.html">
-    <button type="submit" class="search-button" aria-label="Submit Search">
-      <i class="ri-search-2-line" aria-hidden="true" title="Submit search"></i>
-    </button>
-    <button type="button" tabindex="-1" class="search-close-button" aria-label="Cancel Search">
-      <i class="ri-close-line ri-lg" aria-hidden="true" title="Cancel search"></i>
-    </button>
-    <label class="search-label">
-      <p class="sr-only">Search</p>
-      <input name="q" type="text" class="search-input" placeholder="Search..." aria-label="Input your search terms" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-    </label>
-  </form>
-
-  <div class="autocomplete">
-    <div class="autocomplete-results">
-    </div>
-  </div>
+<nav id="sidebar" class="sidebar">
 
   <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
 
-      <a href="readme.html">
-        <img src="assets/logo.png" alt="Plausible" class="sidebar-projectImage">
-      </a>
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
 
-    <div class="sidebar-projectDetails">
-      <a href="readme.html" class="sidebar-projectName" translate="no">
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
 Plausible
-      </a>
-      <div class="sidebar-projectVersion" translate="no">
-        v0.0.1
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
       </div>
     </div>
-    <ul class="sidebar-listNav">
-      <li><a id="extras-list-link" href="#full-list">Pages</a></li>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
 
-        <li><a id="modules-list-link" href="#full-list">Modules</a></li>
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
 
 
-        <li><a id="tasks-list-link" href="#full-list"><span translate="no">Mix</span> Tasks</a></li>
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
 
     </ul>
   </div>
 
-  <div class="gradient"></div>
-  <ul id="full-list"></ul>
-</section>
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
 
-<section class="content">
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
   <output role="status" id="toast"></output>
   <div class="content-outer">
     <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Plausible</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
 
 <h1>
-<button class="icon-action display-settings">
-  <i class="ri-settings-3-line"></i>
-  <span class="sr-only">Settings</span>
-</button>
-
 
     <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cldr.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -123,23 +149,23 @@ formatting already. When short circuiting is possible (typically the en-*
 locales with &quot;latn&quot; number_system - the total number of short circuited
 locales is 211 of the 537 in CLDR) the overall number formatting is twice as
 fast than when formal transliteration is required.</p><h3 id="module-configuring-precompilation-of-digit-transliterations" class="section-heading">
-  <a href="#module-configuring-precompilation-of-digit-transliterations">
+  <a href="#module-configuring-precompilation-of-digit-transliterations" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Configuring precompilation of digit transliterations
   </a>
+  <span class="text">Configuring precompilation of digit transliterations</span>
 </h3>
-<p>This module includes <a href="https://hexdocs.pm/ex_cldr_numbers/2.31.3/Cldr.Number.Transliterate.html#transliterate_digits/3"><code class="inline">Cldr.Number.Transliterate.transliterate_digits/3</code></a> which transliterates
+<p>This module includes <a href="https://hexdocs.pm/ex_cldr_numbers/2.32.3/Cldr.Number.Transliterate.html#transliterate_digits/3"><code class="inline">Cldr.Number.Transliterate.transliterate_digits/3</code></a> which transliterates
 digits between number systems.  For example from :arabic to :latn.  Since generating a
 transliteration map is slow, pairs of transliterations can be configured so that the
 transliteration map is created at compile time and therefore speeding up transliteration at
 run time.</p><p>To configure these transliteration pairs, add the to the <code class="inline">use Cldr</code> configuration
-in a backend module:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyApp.Cldr</span><span class="w"> </span><span class="k" data-group-id="0365450055-1">do</span><span class="w">
+in a backend module:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">MyApp.Cldr</span><span class="w"> </span><span class="k" data-group-id="0683107391-1">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Cldr</span><span class="p">,</span><span class="w">
-  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0365450055-2">[</span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p" data-group-id="0365450055-2">]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">locale</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0683107391-2">[</span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p" data-group-id="0683107391-2">]</span><span class="p">,</span><span class="w">
   </span><span class="ss">default_locale</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;en&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="ss">precompile_transliterations</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0365450055-3">[</span><span class="p" data-group-id="0365450055-4">{</span><span class="ss">:latn</span><span class="p">,</span><span class="w"> </span><span class="ss">:thai</span><span class="p" data-group-id="0365450055-4">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0365450055-5">{</span><span class="ss">:arab</span><span class="p">,</span><span class="w"> </span><span class="ss">:thai</span><span class="p" data-group-id="0365450055-5">}</span><span class="p" data-group-id="0365450055-3">]</span><span class="w">
-</span><span class="k" data-group-id="0365450055-1">end</span></code></pre><p>Where each tuple in the list configures one transliteration map.  In this example, two maps are
-configured: from <code class="inline">:latn</code> to <code class="inline">:thai</code> and from <code class="inline">:arab</code> to <code class="inline">:thai</code>.</p><p>A list of configurable number systems is returned by <a href="https://hexdocs.pm/ex_cldr_numbers/2.31.3/Cldr.Number.System.html#systems_with_digits/0"><code class="inline">Cldr.Number.System.systems_with_digits/0</code></a>.</p><p>If a transliteration is requested between two number pairs that have not been configured for
+  </span><span class="ss">precompile_transliterations</span><span class="p">:</span><span class="w"> </span><span class="p" data-group-id="0683107391-3">[</span><span class="p" data-group-id="0683107391-4">{</span><span class="ss">:latn</span><span class="p">,</span><span class="w"> </span><span class="ss">:thai</span><span class="p" data-group-id="0683107391-4">}</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0683107391-5">{</span><span class="ss">:arab</span><span class="p">,</span><span class="w"> </span><span class="ss">:thai</span><span class="p" data-group-id="0683107391-5">}</span><span class="p" data-group-id="0683107391-3">]</span><span class="w">
+</span><span class="k" data-group-id="0683107391-1">end</span></code></pre><p>Where each tuple in the list configures one transliteration map.  In this example, two maps are
+configured: from <code class="inline">:latn</code> to <code class="inline">:thai</code> and from <code class="inline">:arab</code> to <code class="inline">:thai</code>.</p><p>A list of configurable number systems is returned by <a href="https://hexdocs.pm/ex_cldr_numbers/2.32.3/Cldr.Number.System.html#numeric_systems/0"><code class="inline">Cldr.Number.System.numeric_systems/0</code></a>.</p><p>If a transliteration is requested between two number pairs that have not been configured for
 precompilation, a warning is logged.</p>
   </section>
 
@@ -148,8 +174,8 @@ precompilation, a warning is logged.</p>
     <h1 class="section-heading">
       <a class="hover-link" href="#summary">
         <i class="ri-link-m" aria-hidden="true"></i>
-        Summary
       </a>
+      <span class="text">Summary</span>
     </h1>
 <div class="summary-functions summary">
   <h2>
@@ -193,8 +219,8 @@ precompilation, a warning is logged.</p>
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
         <i class="ri-link-m" aria-hidden="true"></i>
-Functions
       </a>
+      <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
 <section class="detail" id="transliterate/3">
@@ -224,8 +250,8 @@ Functions
 
           <pre translate="no"><span class="attribute">@spec</span> transliterate(
   <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.2/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.31.3/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>() | <a href="https://hexdocs.pm/ex_cldr_numbers/2.31.3/Cldr.Number.System.html#t:types/0">Cldr.Number.System.types</a>()
+  <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.LanguageTag.html#t:t/0">Cldr.LanguageTag.t</a>() | <a href="https://hexdocs.pm/ex_cldr/2.37.5/Cldr.Locale.html#t:locale_name/0">Cldr.Locale.locale_name</a>(),
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.32.3/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>() | <a href="https://hexdocs.pm/ex_cldr_numbers/2.32.3/Cldr.Number.System.html#t:types/0">Cldr.Number.System.types</a>()
 ) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | {:error, {<a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">module</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
 
       </div>
@@ -234,40 +260,40 @@ Functions
 another number system. Also transliterates the decimal and grouping
 separators as well as the plus, minus and exponent symbols. Any other character
 in the string will be returned &quot;as is&quot;.</p><h2 id="transliterate/3-arguments" class="section-heading">
-  <a href="#transliterate/3-arguments">
+  <a href="#transliterate/3-arguments" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Arguments
   </a>
+  <span class="text">Arguments</span>
 </h2>
 <ul><li><p><code class="inline">sequence</code> is the string to be transliterated.</p></li><li><p><code class="inline">locale</code> is any known locale, defaulting to <a href="Plausible.Cldr.html#get_locale/0"><code class="inline">Plausible.Cldr.get_locale/0</code></a>.</p></li><li><p><code class="inline">number_system</code> is any known number system. If expressed as a <code class="inline">string</code> it
 is the actual name of a known number system. If epressed as an <code class="inline">atom</code> it is
 used as a key to look up a number system for the locale (the usual keys are
 <code class="inline">:default</code> and <code class="inline">:native</code> but :traditional and :finance are also part of the
 standard). See <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class="inline">Plausible.Cldr.Number.System.number_systems_for/1</code></a> for a locale to
-see what number system types are defined. The default is <code class="inline">:default</code>.</p></li></ul><p>For available number systems see <a href="https://hexdocs.pm/ex_cldr_numbers/2.31.3/Cldr.Number.System.html#number_systems/0"><code class="inline">Cldr.Number.System.number_systems/0</code></a>
+see what number system types are defined. The default is <code class="inline">:default</code>.</p></li></ul><p>For available number systems see <a href="https://hexdocs.pm/ex_cldr_numbers/2.32.3/Cldr.Number.System.html#number_systems/0"><code class="inline">Cldr.Number.System.number_systems/0</code></a>
 and <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class="inline">Plausible.Cldr.Number.System.number_systems_for/1</code></a>.  Also see
 <a href="Plausible.Cldr.Number.Symbol.html#number_symbols_for/1"><code class="inline">Plausible.Cldr.Number.Symbol.number_symbols_for/1</code></a>.</p><h2 id="transliterate/3-examples" class="section-heading">
-  <a href="#transliterate/3-examples">
+  <a href="#transliterate/3-examples" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Examples
   </a>
+  <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="5450931685-1">(</span><span class="s">&quot;123556&quot;</span><span class="p" data-group-id="5450931685-1">)</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="3993514972-1">(</span><span class="s">&quot;123556&quot;</span><span class="p" data-group-id="3993514972-1">)</span><span class="w">
 </span><span class="s">&quot;123556&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="5450931685-2">(</span><span class="s">&quot;123,556.000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="p" data-group-id="5450931685-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="3993514972-2">(</span><span class="s">&quot;123,556.000&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;fr&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="p" data-group-id="3993514972-2">)</span><span class="w">
 </span><span class="s">&quot;123 556,000&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="5450931685-3">(</span><span class="s">&quot;123556&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="p" data-group-id="5450931685-3">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="3993514972-3">(</span><span class="s">&quot;123556&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:default</span><span class="p" data-group-id="3993514972-3">)</span><span class="w">
 </span><span class="s">&quot;123556&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="5450931685-4">(</span><span class="s">&quot;123556&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;thai&quot;</span><span class="p" data-group-id="5450931685-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="3993514972-4">(</span><span class="s">&quot;123556&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;thai&quot;</span><span class="p" data-group-id="3993514972-4">)</span><span class="w">
 </span><span class="s">&quot;๑๒๓๕๕๖&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="5450931685-5">(</span><span class="s">&quot;123556&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:native</span><span class="p" data-group-id="5450931685-5">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="3993514972-5">(</span><span class="s">&quot;123556&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:native</span><span class="p" data-group-id="3993514972-5">)</span><span class="w">
 </span><span class="s">&quot;๑๒๓๕๕๖&quot;</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="5450931685-6">(</span><span class="s">&quot;Some number is: 123556&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;thai&quot;</span><span class="p" data-group-id="5450931685-6">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate</span><span class="p" data-group-id="3993514972-6">(</span><span class="s">&quot;Some number is: 123556&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;th&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;thai&quot;</span><span class="p" data-group-id="3993514972-6">)</span><span class="w">
 </span><span class="s">&quot;Some number is: ๑๒๓๕๕๖&quot;</span></code></pre>
   </section>
 </section>
@@ -316,18 +342,18 @@ and <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class
 
           <pre translate="no"><span class="attribute">@spec</span> transliterate_digits(
   <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.31.3/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>(),
-  <a href="https://hexdocs.pm/ex_cldr_numbers/2.31.3/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.32.3/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>(),
+  <a href="https://hexdocs.pm/ex_cldr_numbers/2.32.3/Cldr.Number.System.html#t:system_name/0">Cldr.Number.System.system_name</a>()
 ) :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
 
       </div>
 
 <p>Transliterates digits from one number system to another number system</p><ul><li><p><code class="inline">digits</code> is binary representation of a number</p></li><li><p><code class="inline">from_system</code> and <code class="inline">to_system</code> are number system names in atom form.  See
-<a href="https://hexdocs.pm/ex_cldr_numbers/2.31.3/Cldr.Number.System.html#systems_with_digits/0"><code class="inline">Cldr.Number.System.systems_with_digits/0</code></a> for available number systems.</p></li></ul><h2 id="transliterate_digits/3-example" class="section-heading">
-  <a href="#transliterate_digits/3-example">
+<a href="https://hexdocs.pm/ex_cldr_numbers/2.32.3/Cldr.Number.System.html#numeric_systems/0"><code class="inline">Cldr.Number.System.numeric_systems/0</code></a> for available number systems.</p></li></ul><h2 id="transliterate_digits/3-example" class="section-heading">
+  <a href="#transliterate_digits/3-example" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
-    Example
   </a>
+  <span class="text">Example</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number.Transliterate</span><span class="o">.</span><span class="n">transliterate_digits</span><span class="w"> </span><span class="s">&quot;٠١٢٣٤٥٦٧٨٩&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:arab</span><span class="p">,</span><span class="w"> </span><span class="ss">:latn</span><span class="w">
 </span><span class="s">&quot;0123456789&quot;</span></code></pre>
@@ -354,7 +380,7 @@ and <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.30.3) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
@@ -362,7 +388,7 @@ and <a href="Plausible.Cldr.Number.System.html#number_systems_for/1"><code class
       </footer>
     </div>
   </div>
-</section>
+</main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
