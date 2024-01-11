@@ -87,6 +87,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
   use Phoenix.LiveComponent, global_prefixes: ~w(x-)
 
   alias Phoenix.LiveView
+  alias Phoenix.LiveView.JS, as: LiveViewJS
 
   defmodule JS do
     @moduledoc false
@@ -120,13 +121,13 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   def render(assigns) do
     class = [
-      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8",
+      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-lg px-8 pt-6 pb-8",
       assigns.class
     ]
 
     assigns =
       assign(assigns,
-        class: ["modal-dialog relative" | class],
+        class: ["modal-dialog relative opacity-0 translate-y-4 sm:translate-y-0" | class],
         dialog_id: assigns.id <> "-dialog"
       )
 
@@ -161,7 +162,16 @@ defmodule PlausibleWeb.Live.Components.Modal do
       role="dialog"
       aria-modal="true"
     >
-      <div x-show="modalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
+      <div
+        x-show="modalOpen"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="bg-opacity-0"
+        x-transition:enter-end="bg-opacity-75"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="bg-opacity-75"
+        x-transition:leave-end="bg-opacity-0"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50"
+      >
       </div>
       <div
         x-show="modalOpen"
@@ -169,8 +179,23 @@ defmodule PlausibleWeb.Live.Components.Modal do
       >
         <Phoenix.Component.focus_wrap
           :if={@load_content?}
+          phx-mounted={
+            LiveViewJS.show(
+              time: 300,
+              transition:
+                {"ease-out duration-300", "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
+                 "opacity-100 translate-y-0 sm:scale-100"}
+            )
+          }
           id={@dialog_id}
           class={@class}
+          x-show="modalOpen"
+          x-transition:enter="transition ease-out duration-300"
+          x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+          x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+          x-transition:leave="transition ease-in duration-200"
+          x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+          x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           x-on:click.outside="closeModal()"
         >
           <%= render_slot(@inner_block) %>
