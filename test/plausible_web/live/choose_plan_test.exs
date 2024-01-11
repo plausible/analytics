@@ -1,5 +1,7 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
   use PlausibleWeb.ConnCase, async: true
+  @moduletag :full_build_only
+
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
   require Plausible.Billing.Subscription.Status
@@ -222,7 +224,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute text_of_element(doc, @business_plan_box) =~ "Recommended"
     end
 
-    @tag :full_build_only
     test "recommends Business when Revenue Goals used during trial", %{conn: conn, site: site} do
       insert(:goal, site: site, currency: :USD, event_name: "Purchase")
 
@@ -531,7 +532,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
     end
 
-    @tag :full_build_only
     test "warns about losing access to a feature", %{conn: conn, user: user, site: site} do
       Plausible.Props.allow(site, ["author"])
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
@@ -765,7 +765,6 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute element_exists?(doc, @business_highlight_pill)
     end
 
-    @tag :full_build_only
     test "recommends Business tier when premium features used", %{conn: conn, site: site} do
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
