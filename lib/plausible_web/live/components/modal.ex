@@ -120,20 +120,20 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   def render(assigns) do
     class = [
-      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8",
+      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8",
       assigns.class
     ]
 
     assigns =
       assign(assigns,
-        modal_class: ["modal-dialog relative" | class],
-        modal_loading_class: ["modal-loading hidden" | class]
+        class: ["modal-dialog relative" | class],
+        dialog_id: assigns.id <> "-dialog"
       )
 
     ~H"""
     <div
       id={@id}
-      class="[&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
+      class="relative z-50 [&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
       data-modal
       x-cloak
       x-data="{
@@ -158,19 +158,26 @@ defmodule PlausibleWeb.Live.Components.Modal do
       data-onopen={LiveView.JS.push("open", target: @myself)}
       data-onclose={LiveView.JS.push("close", target: @myself)}
       x-on:keydown.escape.window="closeModal()"
+      role="dialog"
+      aria-modal="true"
     >
       <div x-show="modalOpen" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50">
       </div>
       <div
         x-show="modalOpen"
-        class="fixed inset-0 items-top justify-center mt-16 z-50 overflow-y-auto overflow-x-hidden"
+        class="fixed flex inset-0 items-center justify-center z-50 overflow-y-auto overflow-x-hidden"
       >
-        <div :if={@load_content?} class={@modal_class} x-on:click.outside="closeModal()">
+        <Phoenix.Component.focus_wrap
+          :if={@load_content?}
+          id={@dialog_id}
+          class={@class}
+          x-on:click.outside="closeModal()"
+        >
           <%= render_slot(@inner_block) %>
-        </div>
-        <div class={@modal_loading_class}>
+        </Phoenix.Component.focus_wrap>
+        <div class="modal-loading hidden">
           <div class="text-center">
-            <PlausibleWeb.Components.Generic.spinner class="inline-block" /> Loading...
+            <PlausibleWeb.Components.Generic.spinner class="inline-block h-8 w-8" />
           </div>
         </div>
       </div>
