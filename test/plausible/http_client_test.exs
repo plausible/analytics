@@ -112,7 +112,7 @@ defmodule Plausible.HTTPClientTest do
     assert {:error, %Mint.TransportError{reason: :timeout}} ==
              HTTPClient.post(bypass_url(bypass, path: "/timeout"), [], %{}, receive_timeout: 100)
 
-    Bypass.down(bypass)
+    Bypass.pass(bypass)
   end
 
   test "non-200 responses are tagged as errors", %{bypass: bypass} do
