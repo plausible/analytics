@@ -141,6 +141,8 @@ defmodule PlausibleWeb.Live.Components.Modal do
         firstLoadDone: false,
         modalOpen: false,
         openModal() {
+          document.body.style['overflow-y'] = 'hidden';
+
           if (this.firstLoadDone) {
             liveSocket.execJS($el, $el.dataset.onclose);
             liveSocket.execJS($el, $el.dataset.onopen);
@@ -152,6 +154,10 @@ defmodule PlausibleWeb.Live.Components.Modal do
         },
         closeModal() {
           this.modalOpen = false;
+
+          setTimeout(function() {
+            document.body.style['overflow-y'] = 'auto';
+          }, 200);
         }
       }"
       x-on:open-modal.window={"if ($event.detail === '#{@id}') openModal()"}
