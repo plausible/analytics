@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-0D4C46BF.js"></script>
+    <script src="dist/sidebar_items-CF1C204F.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -144,7 +144,7 @@ Pages
 period.</p><p>Users are given this 7-day grace period to upgrade their account after
 outgrowing their subscriptions. The actual account locking happens in
 background with <a href="Plausible.Workers.LockSites.html"><code class="inline">Plausible.Workers.LockSites</code></a>.</p><p>The grace period can also be manual, without an end date, being controlled
-manually from the CRM, and not by the background site locker job. This is 
+manually from the CRM, and not by the background site locker job. This is
 useful for enterprise subscriptions.</p>
   </section>
 
@@ -220,7 +220,7 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_changeset/2" translate="no">start_changeset(user, allowance_required)</a>
+        <a href="#start_changeset/1" translate="no">start_changeset(user)</a>
 
       </div>
 
@@ -230,11 +230,11 @@ false if the user is nil or there is no grace period.</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#start_manual_lock_changeset/2" translate="no">start_manual_lock_changeset(user, allowance_required)</a>
+        <a href="#start_manual_lock_changeset/1" translate="no">start_manual_lock_changeset(user)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Starts a manual account locking grace period by changing the User struct. 
+        <div class="summary-synopsis"><p>Starts a manual account locking grace period by changing the User struct.
 Manual locking means the grace period can only be removed manually from the
 CRM.</p></div>
 
@@ -275,7 +275,6 @@ CRM.</p></div>
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> t() :: %Plausible.Auth.GracePeriod{
-  allowance_required: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>(),
   end_date: <a href="https://hexdocs.pm/elixir/Date.html#t:t/0">Date.t</a>() | nil,
   id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   is_over: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>(),
@@ -308,7 +307,7 @@ CRM.</p></div>
     </a>
     <h1 class="signature" translate="no">active?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L86" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L82" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -337,7 +336,7 @@ false if the user is nil or there is no grace period.</p>
     </a>
     <h1 class="signature" translate="no">end_changeset(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L69" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L65" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -366,7 +365,7 @@ This means the grace period has expired.</p>
     </a>
     <h1 class="signature" translate="no">expired?(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L103" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L99" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -395,7 +394,7 @@ false if the user is nil or there is no grace period.</p>
     </a>
     <h1 class="signature" translate="no">remove_changeset(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L77" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L73" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -414,16 +413,16 @@ false if the user is nil or there is no grace period.</p>
 <p>Removes the grace period from the User completely.</p>
   </section>
 </section>
-<section class="detail" id="start_changeset/2">
+<section class="detail" id="start_changeset/1">
 
   <div class="detail-header">
-    <a href="#start_changeset/2" class="detail-link" title="Link to this function">
+    <a href="#start_changeset/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_changeset(user, allowance_required)</h1>
+    <h1 class="signature" translate="no">start_changeset(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L36" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L34" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -435,24 +434,23 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
-  <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> start_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
 <p>Starts a account locking grace period of 7 days by changing the User struct.</p>
   </section>
 </section>
-<section class="detail" id="start_manual_lock_changeset/2">
+<section class="detail" id="start_manual_lock_changeset/1">
 
   <div class="detail-header">
-    <a href="#start_manual_lock_changeset/2" class="detail-link" title="Link to this function">
+    <a href="#start_manual_lock_changeset/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">start_manual_lock_changeset(user, allowance_required)</h1>
+    <h1 class="signature" translate="no">start_manual_lock_changeset(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L53" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/auth/grace_period.ex#L50" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -464,12 +462,11 @@ false if the user is nil or there is no grace period.</p>
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> start_manual_lock_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) ::
-  <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> start_manual_lock_changeset(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
 
       </div>
 
-<p>Starts a manual account locking grace period by changing the User struct. 
+<p>Starts a manual account locking grace period by changing the User struct.
 Manual locking means the grace period can only be removed manually from the
 CRM.</p>
   </section>

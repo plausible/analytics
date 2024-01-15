@@ -307,7 +307,6 @@ PlausibleWeb.TwoFactor.Session.html
 PlausibleWeb.UnsubscribeController.html
 PlausibleWeb.UnsubscribeView.html
 PlausibleWeb.html
-account-locking.html
 api-reference.html
 assets/logo.png
 contributing.html
@@ -338,8 +337,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-64EA1904.js
-dist/sidebar_items-0D4C46BF.js
+dist/search_data-C8AFBE56.js
+dist/sidebar_items-CF1C204F.js
 index.html
 readme.html
 search.html

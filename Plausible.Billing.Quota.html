@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-0D4C46BF.js"></script>
+    <script src="dist/sidebar_items-CF1C204F.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -280,6 +280,14 @@ with the following structure is returned</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#pageview_allowance_margin/0" translate="no">pageview_allowance_margin()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#site_limit/1" translate="no">site_limit(user)</a>
 
       </div>
@@ -520,7 +528,7 @@ Returns true if usage is equal to the limit.</p></div>
     </a>
     <h1 class="signature" translate="no">allowed_features_for(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L433" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L437" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -543,7 +551,7 @@ ability to use all features during their trial.</p>
     </a>
     <h1 class="signature" translate="no">below_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L455" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L459" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -572,7 +580,7 @@ Returns false if usage is equal to the limit.</p>
     </a>
     <h1 class="signature" translate="no">ensure_can_add_new_site(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L100" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L104" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -598,7 +606,7 @@ in a background job instead (see <code class="inline">check_usage.ex</code>).</p
     </a>
     <h1 class="signature" translate="no">ensure_within_plan_limits(user_or_usage, plan, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L378" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L382" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -634,7 +642,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">features_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L303" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L307" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -663,7 +671,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
     </a>
     <h1 class="signature" translate="no">monthly_pageview_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L120" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L124" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -697,7 +705,7 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
     </a>
     <h1 class="signature" translate="no">monthly_pageview_usage(user, site_ids \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L172" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L176" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -716,14 +724,36 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
 
 <p>Queries the ClickHouse database for the monthly pageview usage. If the given user's
 subscription is <code class="inline">active</code>, <code class="inline">past_due</code>, or a <code class="inline">deleted</code> (but not yet expired), a map
-with the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="3943935806-1">%{</span><span class="w">
-  </span><span class="ss">current_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="3943935806-2">(</span><span class="p" data-group-id="3943935806-2">)</span><span class="p">,</span><span class="w">
-  </span><span class="ss">last_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="3943935806-3">(</span><span class="p" data-group-id="3943935806-3">)</span><span class="p">,</span><span class="w">
-  </span><span class="ss">penultimate_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="3943935806-4">(</span><span class="p" data-group-id="3943935806-4">)</span><span class="w">
-</span><span class="p" data-group-id="3943935806-1">}</span></code></pre><p>In all other cases of the subscription status (or a <code class="inline">free_10k</code> subscription which
-does not have a <code class="inline">last_bill_date</code> defined) - the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="4357559577-1">%{</span><span class="ss">last_30_days</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="4357559577-2">(</span><span class="p" data-group-id="4357559577-2">)</span><span class="p" data-group-id="4357559577-1">}</span></code></pre><p>Given only a user as input, the usage is queried from across all the sites that the
+with the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2839134628-1">%{</span><span class="w">
+  </span><span class="ss">current_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="2839134628-2">(</span><span class="p" data-group-id="2839134628-2">)</span><span class="p">,</span><span class="w">
+  </span><span class="ss">last_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="2839134628-3">(</span><span class="p" data-group-id="2839134628-3">)</span><span class="p">,</span><span class="w">
+  </span><span class="ss">penultimate_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="2839134628-4">(</span><span class="p" data-group-id="2839134628-4">)</span><span class="w">
+</span><span class="p" data-group-id="2839134628-1">}</span></code></pre><p>In all other cases of the subscription status (or a <code class="inline">free_10k</code> subscription which
+does not have a <code class="inline">last_bill_date</code> defined) - the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="1997256408-1">%{</span><span class="ss">last_30_days</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="1997256408-2">(</span><span class="p" data-group-id="1997256408-2">)</span><span class="p" data-group-id="1997256408-1">}</span></code></pre><p>Given only a user as input, the usage is queried from across all the sites that the
 user owns. Alternatively, given an optional argument of <code class="inline">site_ids</code>, the usage from
 across all those sites is queried instead.</p>
+  </section>
+</section>
+<section class="detail" id="pageview_allowance_margin/0">
+
+  <div class="detail-header">
+    <a href="#pageview_allowance_margin/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">pageview_allowance_margin()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L30" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+
   </section>
 </section>
 <section class="detail" id="site_limit/1">
@@ -735,7 +765,7 @@ across all those sites is queried instead.</p>
     </a>
     <h1 class="signature" translate="no">site_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L49" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L53" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -763,7 +793,7 @@ across all those sites is queried instead.</p>
     </a>
     <h1 class="signature" translate="no">site_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L91" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L95" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -791,7 +821,7 @@ across all those sites is queried instead.</p>
     </a>
     <h1 class="signature" translate="no">team_member_limit(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L68" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L72" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -819,7 +849,7 @@ across all those sites is queried instead.</p>
     </a>
     <h1 class="signature" translate="no">team_member_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L265" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L269" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -850,7 +880,7 @@ many sites owned by the given user, they still count as one team member.</p></li
     </a>
     <h1 class="signature" translate="no">usage(user, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L28" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L32" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -876,7 +906,7 @@ many sites owned by the given user, they still count as one team member.</p></li
     </a>
     <h1 class="signature" translate="no">usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Timex.today())</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L195" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L199" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -905,7 +935,7 @@ many sites owned by the given user, they still count as one team member.</p></li
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L464" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L468" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
