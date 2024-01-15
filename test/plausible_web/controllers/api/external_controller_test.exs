@@ -970,7 +970,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
