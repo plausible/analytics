@@ -84,6 +84,11 @@ defmodule PlausibleWeb.Live.FunnelSettings.Form do
                     submit_name={"funnel[steps][#{step_idx}][goal_id]"}
                     module={PlausibleWeb.Live.Components.ComboBox}
                     suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
+                    on_selection_made={
+                      fn value, by_id ->
+                        send(self(), {:selection_made, %{submit_value: value, by: by_id}})
+                      end
+                    }
                     id={"step-#{step_idx}"}
                     options={reject_already_selected("step-#{step_idx}", @goals, @selections_made)}
                   />

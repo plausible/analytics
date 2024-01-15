@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   ComboBox own test suite, so there is no need for additional
   verification.
   """
-  use Phoenix.LiveComponent
+  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
   alias Phoenix.LiveView.JS
 
   @default_suggestions_limit 15
@@ -69,6 +69,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   attr(:creatable, :boolean, default: false)
   attr(:errors, :list, default: [])
   attr(:async, :boolean, default: Mix.env() != :test)
+  attr(:on_selection_made, :any)
 
   def render(assigns) do
     assigns =
@@ -103,15 +104,22 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             phx-target={@myself}
             phx-debounce={200}
             value={@display_value}
-            class="border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
+            class="[&.phx-change-loading+svg.spinner]:block border-none py-1 px-1 p-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm"
             style="background-color: inherit;"
             required={@required}
+          />
+
+          <PlausibleWeb.Components.Generic.spinner class="spinner hidden absolute inset-y-3 right-8" />
+          <PlausibleWeb.Components.Generic.spinner
+            x-show="selectionInProgress"
+            class="spinner absolute inset-y-3 right-8"
           />
 
           <.dropdown_anchor id={@id} />
 
           <input
             type="hidden"
+            x-init={"trackSubmitValueChange('#{@submit_value}')"}
             name={@submit_name}
             value={@submit_value}
             phx-target={@myself}
@@ -235,7 +243,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
     >
       <a
         x-ref={"dropdown-#{@ref}-option-#{@idx}"}
+        x-on:click="selectionInProgress = true"
         phx-click={select_option(@ref, @submit_value, @display_value)}
+        phx-value-submit-value={@submit_value}
         phx-value-display-value={@display_value}
         phx-target={@target}
         class="block truncate py-2 px-3"
@@ -306,14 +316,9 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
       |> assign(:display_value, display_value)
       |> assign(:submit_value, submit_value)
 
-    send(
-      self(),
-      {:selection_made,
-       %{
-         by: id,
-         submit_value: submit_value
-       }}
-    )
+    if socket.assigns[:on_selection_made] do
+      socket.assigns.on_selection_made.(submit_value, id)
+    end
 
     socket
   end

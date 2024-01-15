@@ -5,6 +5,7 @@ export default (id) => ({
   isOpen: false,
   id: id,
   focus: null,
+  selectionInProgress: false,
   setFocus(f) {
     this.focus = f;
   },
@@ -12,6 +13,9 @@ export default (id) => ({
     if (this.focus === null) {
       this.setFocus(this.leastFocusableIndex())
     }
+  },
+  trackSubmitValueChange() {
+    this.selectionInProgress = false;
   },
   open() {
     this.initFocus()

@@ -10,6 +10,16 @@ Alpine.data('dropdown', dropdown)
 Alpine.data('comboBox', comboBox)
 Alpine.start()
 
+if (document.querySelectorAll('[data-modal]').length > 0) {
+  window.addEventListener(`phx:close-modal`, (e) => {
+    document
+      .getElementById(e.detail.id)
+      .dispatchEvent(
+        new CustomEvent('close-modal', { bubbles: true, detail: e.detail.id })
+      )
+  })
+}
+
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')
 
 for (const trigger of triggers) {

@@ -1,0 +1,227 @@
+defmodule PlausibleWeb.Live.Components.Modal do
+  @moduledoc """
+  LiveView implementation of modal component.
+
+  This component is a general purpose modal implementation for LiveView
+  with emphasis on keeping nested components largely agnostic of the fact
+  that they are placed in a modal and maintaining good user experience
+  on connections with high latency.
+
+  ## Usage
+
+  An example use case for a modal is embedding a form inside
+  existing live view which allows adding new entries of some kind:
+
+  ```
+  <.live_component module={Modal} id="some-form-modal">
+    <.live_component
+      module={SomeForm}
+      id="some-form"
+      on_save_form={
+        fn entry, socket ->
+          send(self(), {:entry_added, entry})
+          Modal.close(socket, "some-form-modal")
+        end
+      }
+    />
+  </.live_component>
+  ```
+
+  Then somewhere in the same live view the modal is rendered in:
+
+  ```
+  <.button x-data x-on:click={Modal.JS.open("goals-form-modal")}>
+    + Add Entry
+  </.button>
+  ```
+
+  ## Explanation
+
+  The component embedded inside the modal is always rendered when
+  the live view is mounted but is kept hidden until `Modal.JS.open`
+  is called on it. On subsequent openings within the same session
+  the contents of the modal are completely remounted. This assures
+  that any stateful components inside the modal are reset to their
+  initial state.
+
+  `Modal` exposes two functions for managing window state:
+
+    * `Modal.JS.open/1` - to open the modal from the frontend. It's
+      important to make sure the element triggering that call is
+      wrapped in an Alpine UI component - or is an Alpine component
+      itself - adding `x-data` attribute without any value is enough
+      to ensure that.
+    * `Modal.close/2` - to close the modal from the backend; usually
+      done inside wrapped component's `handle_event/2`. The example
+      qouted above shows one way to implement this, under that assumption
+      that the component exposes a callback, like this:
+
+      ```
+      defmodule SomeForm do
+        use Phoenix.LiveComponent
+
+        def update(assigns, socket) do
+          # ...
+
+          {:ok, assign(socket, :on_save_form, assigns.on_save_form)}
+        end
+
+        #...
+
+        def handle_event("save-form", %{"form" => form}, socket) do
+          case save_entry(form) do
+            {:ok, entry} ->
+              {:noreply, socket.assigns.on_save_form(entry, socket)}
+
+            # error case handling ...
+          end
+        end
+      end
+      ```
+
+      Using callback approach has an added benefit of making the
+      component more flexible.
+
+  """
+
+  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
+
+  alias Phoenix.LiveView
+  alias Phoenix.LiveView.JS, as: LiveViewJS
+
+  defmodule JS do
+    @moduledoc false
+
+    @spec open(String.t()) :: String.t()
+    def open(id) do
+      "$dispatch('open-modal', '#{id}')"
+    end
+  end
+
+  @spec close(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
+  def close(socket, id) do
+    Phoenix.LiveView.push_event(socket, "close-modal", %{id: id})
+  end
+
+  @impl true
+  def update(assigns, socket) do
+    socket =
+      assign(socket,
+        id: assigns.id,
+        inner_block: assigns.inner_block,
+        load_content?: true
+      )
+
+    {:ok, socket}
+  end
+
+  attr :id, :any, required: true
+  attr :class, :string, default: ""
+  slot :inner_block, required: true
+
+  def render(assigns) do
+    class = [
+      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-lg px-8 pt-6 pb-8 top-24",
+      assigns.class
+    ]
+
+    assigns =
+      assign(assigns,
+        class: ["modal-dialog relative opacity-0 translate-y-4 sm:translate-y-0" | class],
+        dialog_id: assigns.id <> "-dialog"
+      )
+
+    ~H"""
+    <div
+      id={@id}
+      class="relative z-50 [&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
+      data-modal
+      x-cloak
+      x-data="{
+        firstLoadDone: false,
+        modalOpen: false,
+        openModal() {
+          document.body.style['overflow-y'] = 'hidden';
+
+          if (this.firstLoadDone) {
+            liveSocket.execJS($el, $el.dataset.onclose);
+            liveSocket.execJS($el, $el.dataset.onopen);
+          } else {
+            this.firstLoadDone = true;
+          }
+
+          this.modalOpen = true;
+        },
+        closeModal() {
+          this.modalOpen = false;
+
+          setTimeout(function() {
+            document.body.style['overflow-y'] = 'auto';
+          }, 200);
+        }
+      }"
+      x-on:open-modal.window={"if ($event.detail === '#{@id}') openModal()"}
+      x-on:close-modal.window={"if ($event.detail === '#{@id}') closeModal()"}
+      data-onopen={LiveView.JS.push("open", target: @myself)}
+      data-onclose={LiveView.JS.push("close", target: @myself)}
+      x-on:keydown.escape.window="closeModal()"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        x-show="modalOpen"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="bg-opacity-0"
+        x-transition:enter-end="bg-opacity-75"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="bg-opacity-75"
+        x-transition:leave-end="bg-opacity-0"
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 z-50"
+      >
+      </div>
+      <div
+        x-show="modalOpen"
+        class="fixed flex inset-0 items-start z-50 overflow-y-auto overflow-x-hidden"
+      >
+        <Phoenix.Component.focus_wrap
+          :if={@load_content?}
+          phx-mounted={
+            LiveViewJS.show(
+              time: 300,
+              transition:
+                {"ease-out duration-300", "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
+                 "opacity-100 translate-y-0 sm:scale-100"}
+            )
+          }
+          id={@dialog_id}
+          class={@class}
+          x-show="modalOpen"
+          x-transition:enter="transition ease-out duration-300"
+          x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+          x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+          x-transition:leave="transition ease-in duration-200"
+          x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+          x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+          x-on:click.outside="closeModal()"
+        >
+          <%= render_slot(@inner_block) %>
+        </Phoenix.Component.focus_wrap>
+        <div class="modal-loading hidden w-full self-center">
+          <div class="text-center">
+            <PlausibleWeb.Components.Generic.spinner class="inline-block h-8 w-8" />
+          </div>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  @impl true
+  def handle_event("open", _, socket) do
+    {:noreply, assign(socket, load_content?: true)}
+  end
+
+  def handle_event("close", _, socket) do
+    {:noreply, assign(socket, load_content?: false)}
+  end
+end
