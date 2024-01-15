@@ -92,7 +92,7 @@ defmodule Plausible.Stats.Fragments do
     quote do
       weekstart_not_before(
         to_timezone(unquote(date), unquote(timezone)),
-        unquote(not_before)
+        to_timezone(unquote(not_before), unquote(timezone))
       )
     end
   end

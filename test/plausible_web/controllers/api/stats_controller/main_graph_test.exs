@@ -688,6 +688,31 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
              }
     end
 
+    test "returns stats for the first week of the month when site timezone is ahead of UTC", %{
+      conn: conn,
+      site: site
+    } do
+      site =
+        site
+        |> Plausible.Site.changeset(%{timezone: "Europe/Copenhagen"})
+        |> Plausible.Repo.update!()
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2023-03-01 12:00:00])
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&metric=visitors&date=2023-03-01&interval=week"
+        )
+
+      %{"labels" => labels, "plot" => plot} = json_response(conn, 200)
+
+      assert List.first(plot) == 1
+      assert List.first(labels) == "2023-03-01"
+    end
+
     test "shows half-perfect week-split month on week scale with full week indicators", %{
       conn: conn,
       site: site
