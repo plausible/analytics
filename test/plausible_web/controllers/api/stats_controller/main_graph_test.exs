@@ -688,7 +688,7 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
              }
     end
 
-    test "returns stats for the first week of the month when site.timezone is ahead of UTC", %{
+    test "returns stats for the first week of the month when site timezone is ahead of UTC", %{
       conn: conn,
       site: site
     } do
