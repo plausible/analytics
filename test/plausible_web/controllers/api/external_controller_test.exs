@@ -963,6 +963,29 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.country_code == "US"
     end
 
+    test "prioritizes x-plausible-ip header over everything else", %{
+      conn: conn,
+      site: site
+    } do
+      params = %{
+        name: "pageview",
+        domain: site.domain,
+        url: "http://example.com/"
+      }
+
+      conn
+      |> put_req_header("cf-connecting-ip", "0.0.0.0")
+      |> put_req_header("b-forwarded-for", "0.0.0.0")
+      |> put_req_header("x-forwarded-for", "0.0.0.0")
+      |> put_req_header("forwarded", "for=0.0.0.0;host=dashboard.site.com;proto=https")
+      |> put_req_header("x-plausible-ip", "216.160.83.56")
+      |> post("/api/event", params)
+
+      pageview = get_event(site)
+
+      assert pageview.country_code == "US"
+    end
+
     test "Uses the Forwarded header when cf-connecting-ip and x-forwarded-for are missing", %{
       site: site
     } do
