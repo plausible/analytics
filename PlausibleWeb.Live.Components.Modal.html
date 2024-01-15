@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="project" content="Plausible v0.0.1">
+
+
+    <title>PlausibleWeb.Live.Components.Modal — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-0D4C46BF.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-CILPWI2Q.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-module">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Plausible</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+      </div>
+      <div class="autocomplete">
+      </div>
+
+<h1>
+
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L1" title="View Source" class="icon-action" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">PlausibleWeb.Live.Components.Modal</span> 
+  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>LiveView implementation of modal component.</p><p>This component is a general purpose modal implementation for LiveView
+with emphasis on keeping nested components largely agnostic of the fact
+that they are placed in a modal and maintaining good user experience
+on connections with high latency.</p><h2 id="module-usage" class="section-heading">
+  <a href="#module-usage" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Usage</span>
+</h2>
+<p>An example use case for a modal is embedding a form inside
+existing live view which allows adding new entries of some kind:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w"> </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="0462635157-1">{</span><span class="nc">Modal</span><span class="p" data-group-id="0462635157-1">}</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;some-form-modal&quot;</span><span class="o">&gt;</span><span class="w">
+  </span><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w">
+    </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="0462635157-2">{</span><span class="nc">SomeForm</span><span class="p" data-group-id="0462635157-2">}</span><span class="w">
+    </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;some-form&quot;</span><span class="w">
+    </span><span class="n">on_save_form</span><span class="o">=</span><span class="p" data-group-id="0462635157-3">{</span><span class="w">
+      </span><span class="k" data-group-id="0462635157-4">fn</span><span class="w"> </span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="n">send</span><span class="p" data-group-id="0462635157-5">(</span><span class="n">self</span><span class="p" data-group-id="0462635157-6">(</span><span class="p" data-group-id="0462635157-6">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="0462635157-7">{</span><span class="ss">:entry_added</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="0462635157-7">}</span><span class="p" data-group-id="0462635157-5">)</span><span class="w">
+        </span><span class="nc">Modal</span><span class="o">.</span><span class="n">close</span><span class="p" data-group-id="0462635157-8">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;some-form-modal&quot;</span><span class="p" data-group-id="0462635157-8">)</span><span class="w">
+      </span><span class="k" data-group-id="0462635157-4">end</span><span class="w">
+    </span><span class="p" data-group-id="0462635157-3">}</span><span class="w">
+  </span><span class="o">/</span><span class="o">&gt;</span><span class="w">
+</span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">live_component</span><span class="o">&gt;</span></code></pre><p>Then somewhere in the same live view the modal is rendered in:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">button</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">data</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">on</span><span class="ss">:click</span><span class="o">=</span><span class="p" data-group-id="8276377918-1">{</span><span class="nc">Modal.JS</span><span class="o">.</span><span class="n">open</span><span class="p" data-group-id="8276377918-2">(</span><span class="s">&quot;goals-form-modal&quot;</span><span class="p" data-group-id="8276377918-2">)</span><span class="p" data-group-id="8276377918-1">}</span><span class="o">&gt;</span><span class="w">
+  </span><span class="o">+</span><span class="w"> </span><span class="nc">Add</span><span class="w"> </span><span class="nc">Entry</span><span class="w">
+</span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">button</span><span class="o">&gt;</span></code></pre><h2 id="module-explanation" class="section-heading">
+  <a href="#module-explanation" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Explanation</span>
+</h2>
+<p>The component embedded inside the modal is always rendered when
+the live view is mounted but is kept hidden until <code class="inline">Modal.JS.open</code>
+is called on it. On subsequent openings within the same session
+the contents of the modal are completely remounted. This assures
+that any stateful components inside the modal are reset to their
+initial state.</p><p><code class="inline">Modal</code> exposes two functions for managing window state:</p><ul><li><p><code class="inline">Modal.JS.open/1</code> - to open the modal from the frontend. It's
+important to make sure the element triggering that call is
+wrapped in an Alpine UI component - or is an Alpine component
+itself - adding <code class="inline">x-data</code> attribute without any value is enough
+to ensure that.</p></li><li><p><code class="inline">Modal.close/2</code> - to close the modal from the backend; usually
+done inside wrapped component's <code class="inline">handle_event/2</code>. The example
+qouted above shows one way to implement this, under that assumption
+that the component exposes a callback, like this:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">SomeForm</span><span class="w"> </span><span class="k" data-group-id="9040359222-1">do</span><span class="w">
+  </span><span class="kn">use</span><span class="w"> </span><span class="nc">Phoenix.LiveComponent</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">update</span><span class="p" data-group-id="9040359222-2">(</span><span class="n">assigns</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="9040359222-2">)</span><span class="w"> </span><span class="k" data-group-id="9040359222-3">do</span><span class="w">
+    </span><span class="c1"># ...</span><span class="w">
+
+    </span><span class="p" data-group-id="9040359222-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">assign</span><span class="p" data-group-id="9040359222-5">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="ss">:on_save_form</span><span class="p">,</span><span class="w"> </span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="9040359222-5">)</span><span class="p" data-group-id="9040359222-4">}</span><span class="w">
+  </span><span class="k" data-group-id="9040359222-3">end</span><span class="w">
+
+  </span><span class="c1">#...</span><span class="w">
+
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p" data-group-id="9040359222-6">(</span><span class="s">&quot;save-form&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9040359222-7">%{</span><span class="s">&quot;form&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">form</span><span class="p" data-group-id="9040359222-7">}</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="9040359222-6">)</span><span class="w"> </span><span class="k" data-group-id="9040359222-8">do</span><span class="w">
+    </span><span class="k">case</span><span class="w"> </span><span class="n">save_entry</span><span class="p" data-group-id="9040359222-9">(</span><span class="n">form</span><span class="p" data-group-id="9040359222-9">)</span><span class="w"> </span><span class="k" data-group-id="9040359222-10">do</span><span class="w">
+      </span><span class="p" data-group-id="9040359222-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="9040359222-11">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="p" data-group-id="9040359222-12">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="o">.</span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="9040359222-13">(</span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="9040359222-13">)</span><span class="p" data-group-id="9040359222-12">}</span><span class="w">
+
+      </span><span class="c1"># error case handling ...</span><span class="w">
+    </span><span class="k" data-group-id="9040359222-10">end</span><span class="w">
+  </span><span class="k" data-group-id="9040359222-8">end</span><span class="w">
+</span><span class="k" data-group-id="9040359222-1">end</span></code></pre><p>Using callback approach has an added benefit of making the
+component more flexible.</p></li></ul>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#close/2" translate="no">close(socket, id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#render/1" translate="no">render(assigns)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><h2>Attributes</h2><ul><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li></ul><h2>Slots</h2><ul><li><code class="inline">inner_block</code> (required)</li></ul></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="close/2">
+
+  <div class="detail-header">
+    <a href="#close/2" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">close(socket, id)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L102" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> close(<a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) :: <a href="https://hexdocs.pm/phoenix_live_view/0.20.3/Phoenix.LiveView.Socket.html#t:t/0">Phoenix.LiveView.Socket.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="render/1">
+
+  <div class="detail-header">
+    <a href="#render/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">render(assigns)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible_web/live/components/modal.ex#L122" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<h2 id="render/1-attributes" class="section-heading">
+  <a href="#render/1-attributes" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Attributes</span>
+</h2>
+<ul><li><code class="inline">id</code> (<code class="inline">:any</code>) (required)</li><li><code class="inline">class</code> (<code class="inline">:string</code>) - Defaults to <code class="inline">&quot;&quot;</code>.</li></ul><h2 id="render/1-slots" class="section-heading">
+  <a href="#render/1-slots" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Slots</span>
+</h2>
+<ul><li><code class="inline">inner_block</code> (required)</li></ul>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Plausible.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true})</script>
+
+  </body>
+</html>
