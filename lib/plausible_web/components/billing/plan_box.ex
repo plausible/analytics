@@ -208,13 +208,14 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   end
 
   defp usage_within_plan_limits?(%{usage: usage, user: user, plan_to_render: plan}) do
-    # At this point, the user is guaranteed to have a `trial_expiry_date`.
-    # Otherwise, they'd be ineligible for an upgrade and this function
-    # would never be called.
-    %Date{} = user.trial_expiry_date
+    # At this point, the user is *not guaranteed* to have a `trial_expiry_date`,
+    # because in the past we've let users upgrade without that constraint, as
+    # well as transfer sites to those accounts. to these accounts we won't be
+    # offering an extra pageview limit allowance margin though.
+    invited_user? = is_nil(user.trial_expiry_date)
 
     trial_active_or_ended_recently? =
-      Timex.diff(Timex.today(), user.trial_expiry_date, :days) <= 10
+      not invited_user? && Timex.diff(Timex.today(), user.trial_expiry_date, :days) <= 10
 
     limit_checking_opts =
       cond do
