@@ -121,7 +121,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
 
   def render(assigns) do
     class = [
-      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-lg px-8 pt-6 pb-8",
+      "md:w-1/2 w-full max-w-md mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-lg px-8 pt-6 pb-8 top-24",
       assigns.class
     ]
 
@@ -181,7 +181,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
       </div>
       <div
         x-show="modalOpen"
-        class="fixed flex inset-0 items-center justify-center z-50 overflow-y-auto overflow-x-hidden"
+        class="fixed flex inset-0 items-start z-50 overflow-y-auto overflow-x-hidden"
       >
         <Phoenix.Component.focus_wrap
           :if={@load_content?}
@@ -206,7 +206,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
         >
           <%= render_slot(@inner_block) %>
         </Phoenix.Component.focus_wrap>
-        <div class="modal-loading hidden">
+        <div class="modal-loading hidden w-full self-center">
           <div class="text-center">
             <PlausibleWeb.Components.Generic.spinner class="inline-block h-8 w-8" />
           </div>
