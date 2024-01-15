@@ -754,6 +754,21 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute enterprise_box =~ "10+ team members"
       refute enterprise_box =~ "Unlimited team members"
     end
+
+    test "allows to upgrade without a trial_expiry_date when the user owns a site", %{
+      conn: conn,
+      user: user
+    } do
+      user
+      |> Plausible.Auth.User.changeset(%{trial_expiry_date: nil})
+      |> Repo.update!()
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "100k")
+
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
   end
 
   describe "for a free_10k subscription" do
