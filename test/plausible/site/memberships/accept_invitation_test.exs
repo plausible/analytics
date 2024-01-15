@@ -7,7 +7,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   alias Plausible.Site.Memberships.AcceptInvitation
 
   describe "transfer_ownership/3" do
-    test "transfers ownership succeeds" do
+    test "transfers ownership successfully" do
       site = insert(:site, memberships: [])
       existing_owner = insert(:user)
 
@@ -30,6 +30,26 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       assert existing_membership.role == :admin
 
       assert_no_emails_delivered()
+    end
+
+    @tag :full_build_only
+    test "unlocks the site if it was previously locked" do
+      site = insert(:site, locked: true, memberships: [])
+      existing_owner = insert(:user)
+
+      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
+
+      assert {:ok, new_membership} =
+               AcceptInvitation.transfer_ownership(site, new_owner)
+
+      assert new_membership.site_id == site.id
+      assert new_membership.user_id == new_owner.id
+      assert new_membership.role == :owner
+
+      refute Repo.reload!(site).locked
     end
 
     for role <- [:viewer, :admin] do
@@ -293,6 +313,38 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
         subject:
           "[Plausible Analytics] #{new_owner.email} accepted the ownership transfer of #{site.domain}"
       )
+    end
+
+    @tag :full_build_only
+    test "unlocks a previously locked site after transfer" do
+      site = insert(:site, locked: true, memberships: [])
+      existing_owner = insert(:user)
+
+      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: existing_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:ok, new_membership} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
+
+      assert new_membership.site_id == site.id
+      assert new_membership.user_id == new_owner.id
+      assert new_membership.role == :owner
+      refute Repo.reload(invitation)
+
+      refute Repo.reload!(site).locked
     end
 
     for role <- [:viewer, :admin] do

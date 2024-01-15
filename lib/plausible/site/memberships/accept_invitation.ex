@@ -105,6 +105,15 @@ defmodule Plausible.Site.Memberships.AcceptInvitation do
     Multi.new()
     |> downgrade_previous_owner(site, user)
     |> Multi.insert_or_update(:membership, membership)
+    |> Multi.run(:update_locked_sites, fn _, _ ->
+      on_full_build do
+        # At this point this function should be guaranteed to unlock
+        # the site, via `Invitations.ensure_can_take_ownership/2`.
+        :unlocked = Billing.SiteLocker.update_sites_for(user, send_email?: false)
+      end
+
+      {:ok, :unlocked}
+    end)
   end
 
   # If there's an existing membership, we DO NOT change the role
