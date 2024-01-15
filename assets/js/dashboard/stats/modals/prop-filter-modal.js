@@ -86,7 +86,14 @@ function PropFilterModal(props) {
           <FilterTypeSelector isDisabled={!formState.prop_key} forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
         </div>
         <div className="col-span-4">
-          <Combobox isDisabled={!formState.prop_key} fetchOptions={fetchPropValueOptions()} values={formState.prop_value.clauses} onSelect={onPropValueSelect()} placeholder={'Value'} />
+          <Combobox
+            isDisabled={!formState.prop_key}
+            fetchOptions={fetchPropValueOptions()}
+            values={formState.prop_value.clauses}
+            onSelect={onPropValueSelect()}
+            placeholder={'Value'}
+            freeChoice={selectedFilterType() == FILTER_TYPES.contains}
+          />
         </div>
       </div>
     )
