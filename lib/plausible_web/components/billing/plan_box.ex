@@ -155,17 +155,6 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
     paddle_product_id = get_paddle_product_id(assigns.plan_to_render, assigns.selected_interval)
     change_plan_link_text = change_plan_link_text(assigns)
 
-    limit_checking_opts =
-      if assigns.user.allow_next_upgrade_override do
-        [ignore_pageview_limit: true]
-      else
-        []
-      end
-
-    usage_within_limits =
-      Quota.ensure_within_plan_limits(assigns.usage, assigns.plan_to_render, limit_checking_opts) ==
-        :ok
-
     subscription = assigns.user.subscription
 
     billing_details_expired =
@@ -184,7 +173,7 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
         change_plan_link_text == "Currently on this plan" && not subscription_deleted ->
           {true, nil}
 
-        assigns.available && !usage_within_limits ->
+        assigns.available && !usage_within_plan_limits?(assigns) ->
           {true, "Your usage exceeds this plan"}
 
         billing_details_expired ->
@@ -216,6 +205,33 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
       <%= @disabled_message %>
     </p>
     """
+  end
+
+  defp usage_within_plan_limits?(%{usage: usage, user: user, plan_to_render: plan}) do
+    # At this point, the user is guaranteed to have a `trial_expiry_date`.
+    # Otherwise, they'd be ineligible for an upgrade and this function
+    # would never be called.
+    %Date{} = user.trial_expiry_date
+
+    trial_active_or_ended_recently? =
+      Timex.diff(Timex.today(), user.trial_expiry_date, :days) <= 10
+
+    limit_checking_opts =
+      cond do
+        user.allow_next_upgrade_override ->
+          [ignore_pageview_limit: true]
+
+        trial_active_or_ended_recently? && plan.volume == "10k" ->
+          [pageview_allowance_margin: 0.3]
+
+        trial_active_or_ended_recently? ->
+          [pageview_allowance_margin: 0.15]
+
+        true ->
+          []
+      end
+
+    Quota.ensure_within_plan_limits(usage, plan, limit_checking_opts) == :ok
   end
 
   defp get_paddle_product_id(%Plan{monthly_product_id: plan_id}, :monthly), do: plan_id

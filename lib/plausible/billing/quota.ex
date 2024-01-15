@@ -25,6 +25,10 @@ defmodule Plausible.Billing.Quota do
           total: non_neg_integer()
         }
 
+  @pageview_allowance_margin 0.1
+
+  def pageview_allowance_margin(), do: @pageview_allowance_margin
+
   def usage(user, opts \\ []) do
     basic_usage = %{
       monthly_pageviews: monthly_pageview_usage(user),
@@ -410,7 +414,7 @@ defmodule Plausible.Billing.Quota do
     else
       case usage do
         %{last_30_days: %{total: total}} ->
-          !within_limit?(total, pageview_limit_with_margin(plan))
+          !within_limit?(total, pageview_limit_with_margin(plan, opts))
 
         billing_cycles_usage ->
           Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
@@ -421,9 +425,9 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  defp pageview_limit_with_margin(%{monthly_pageview_limit: limit}) do
-    allowance_margin = if limit == 10_000, do: 0.3, else: 0.15
-    ceil(limit * (1 + allowance_margin))
+  defp pageview_limit_with_margin(%{monthly_pageview_limit: limit}, opts) do
+    margin = Keyword.get(opts, :pageview_allowance_margin, @pageview_allowance_margin)
+    ceil(limit * (1 + margin))
   end
 
   @doc """
