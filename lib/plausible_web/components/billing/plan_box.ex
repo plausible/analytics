@@ -208,6 +208,11 @@ defmodule PlausibleWeb.Components.Billing.PlanBox do
   end
 
   defp usage_within_plan_limits?(%{usage: usage, user: user, plan_to_render: plan}) do
+    # At this point, the user is guaranteed to have a `trial_expiry_date`.
+    # Otherwise, they'd be ineligible for an upgrade and this function
+    # would never be called.
+    %Date{} = user.trial_expiry_date
+
     trial_active_or_ended_recently? =
       Timex.diff(Timex.today(), user.trial_expiry_date, :days) <= 10
 
