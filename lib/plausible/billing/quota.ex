@@ -426,12 +426,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   defp pageview_limit_with_margin(%{monthly_pageview_limit: limit}, opts) do
-    margin =
-      case Keyword.get(opts, :pageview_allowance_margin) do
-        margin when is_float(margin) -> margin
-        _ -> @pageview_allowance_margin
-      end
-
+    margin = Keyword.get(opts, :pageview_allowance_margin, @pageview_allowance_margin)
     ceil(limit * (1 + margin))
   end
 
