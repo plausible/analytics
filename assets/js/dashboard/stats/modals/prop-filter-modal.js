@@ -40,11 +40,15 @@ function PropFilterModal(props) {
 
   const fetchPropValueOptions = useCallback(() => {
     return (input) => {
+      if (formState.prop_value?.type === FILTER_TYPES.contains) {
+        return Promise.resolve([])
+      }
+
       const propKey = formState.prop_key?.value
       const updatedQuery = { ...query, filters: { ...query.filters, props: {[propKey]: '!(none)'} } }
       return api.get(apiPath(props.site, "/suggestions/prop_value"), updatedQuery, { q: input.trim() })
     }
-  }, [formState.prop_key])
+  }, [formState.prop_key, formState.prop_value])
 
   function onPropKeySelect() {
     return (selectedOptions) => {
