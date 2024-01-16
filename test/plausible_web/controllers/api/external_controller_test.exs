@@ -16,7 +16,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         domain: site.domain,
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "http://m.facebook.com/"
       }
 
@@ -28,7 +28,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event(site)
 
       assert response(conn, 202) == "ok"
-      assert pageview.hostname == "gigride.live"
+      assert pageview.hostname == "example.com"
 
       assert pageview.site_id == site.id
 
@@ -39,7 +39,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         domain: site.domain,
         name: "pageview",
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn =
@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event(site)
 
       assert response(conn, 202) == "ok"
-      assert pageview.hostname == "gigride.live"
+      assert pageview.hostname == "example.com"
 
       assert pageview.site_id == site.id
 
@@ -74,7 +74,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
 
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "http://m.facebook.com/",
         domain: "#{site1.domain},#{site2.domain}"
       }
@@ -96,7 +96,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         domain: site.domain,
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "http://m.facebook.com/"
       }
 
@@ -123,7 +123,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "www. is stripped from domain", %{conn: conn, site: site} do
       params = %{
         name: "custom event",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain
       }
 
@@ -214,7 +214,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "parses user_agent", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain
       }
 
@@ -235,7 +235,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "parses referrer", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "https://facebook.com",
         domain: site.domain
       }
@@ -254,7 +254,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "strips trailing slash from referrer", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "https://facebook.com/page/",
         domain: site.domain
       }
@@ -275,7 +275,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         domain: site.domain,
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "https://www.1-best-seo.com"
       }
 
@@ -311,8 +311,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "ignores when referrer is internal", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
-        referrer: "https://gigride.live",
+        url: "http://example.com/",
+        referrer: "https://example.com",
         domain: site.domain
       }
 
@@ -330,7 +330,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "ignores localhost referrer", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "http://localhost:4000/",
         domain: site.domain
       }
@@ -349,8 +349,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "parses subdomain referrer", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
-        referrer: "https://blog.gigride.live",
+        url: "http://example.com/",
+        referrer: "https://blog.example.com",
         domain: site.domain
       }
 
@@ -362,7 +362,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       pageview = get_event(site)
 
       assert response(conn, 202) == "ok"
-      assert pageview.referrer_source == "blog.gigride.live"
+      assert pageview.referrer_source == "blog.example.com"
     end
 
     test "referrer is cleaned", %{conn: conn, site: site} do
@@ -418,7 +418,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "if it's an :unknown referrer, just the domain is used", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "https://www.indiehackers.com/landing-page-feedback",
         domain: site.domain
       }
@@ -437,7 +437,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "if the referrer is not http or https, it is ignored", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "android-app://com.google.android.gm",
         domain: site.domain
       }
@@ -456,7 +456,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "screen size is calculated from user agent", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain
       }
 
@@ -474,7 +474,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "screen size is nil if user agent is unknown", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain
       }
 
@@ -492,7 +492,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "screen size is calculated from user_agent when is tablet", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain
       }
 
@@ -513,7 +513,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     } do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain
       }
 
@@ -531,7 +531,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "can trigger a custom event", %{conn: conn, site: site} do
       params = %{
         name: "custom event",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain
       }
 
@@ -549,7 +549,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "casts custom props to string", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         props: %{
           bool_test: true,
@@ -569,7 +569,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "filters out bad props", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         props: %{
           false: nil,
@@ -593,7 +593,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "ignores malformed custom props", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         props: "\"show-more:button\""
       }
@@ -610,7 +610,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "can send props stringified", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         props: Jason.encode!(%{number_test: 12})
       }
@@ -627,7 +627,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "ignores custom prop with array value", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         props: Jason.encode!(%{wat: ["some-thing"], other: "key"})
       }
@@ -645,7 +645,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "ignores custom prop with map value", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         props: Jason.encode!(%{foo: %{bar: "baz"}, other_key: 1})
       }
@@ -663,7 +663,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "ignores custom prop with empty string value", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         props: Jason.encode!(%{foo: "", other_key: true})
       }
@@ -681,7 +681,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "ignores custom prop with nil value", %{conn: conn, site: site} do
       params = %{
         name: "Signup",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         props: Jason.encode!(%{foo: nil, other_key: true})
       }
@@ -700,7 +700,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "converts revenue values into the goal currency", %{conn: conn, site: site} do
       params = %{
         name: "Payment",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         revenue: %{amount: 10.2, currency: "USD"}
       }
@@ -717,7 +717,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "revenue values can be sent with minified keys", %{conn: conn, site: site} do
       params = %{
         "n" => "Payment",
-        "u" => "http://gigride.live/",
+        "u" => "http://example.com/",
         "d" => site.domain,
         "$" => Jason.encode!(%{amount: 10.2, currency: "USD"})
       }
@@ -737,7 +737,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     } do
       params = %{
         name: "Payment",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         revenue: %{amount: 10, currency: "BRL"}
       }
@@ -753,7 +753,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "does not fail when revenue value is invalid", %{conn: conn, site: site} do
       params = %{
         name: "Payment",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         revenue: %{amount: "1831d", currency: "ADSIE"}
       }
@@ -767,7 +767,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "does not fail when sending revenue without a matching goal", %{conn: conn, site: site} do
       params = %{
         name: "Add to Cart",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         domain: site.domain,
         revenue: %{amount: 10.2, currency: "USD"}
       }
@@ -782,7 +782,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
     test "ignores a malformed referrer URL", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
-        url: "http://gigride.live/",
+        url: "http://example.com/",
         referrer: "https:://twitter.com",
         domain: site.domain
       }
@@ -803,7 +803,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
@@ -822,7 +822,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
@@ -841,7 +841,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
@@ -860,7 +860,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
@@ -879,7 +879,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
@@ -895,7 +895,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
@@ -911,7 +911,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
@@ -930,7 +930,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
@@ -950,7 +950,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       conn
@@ -992,7 +992,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       build_conn()
@@ -1008,7 +1008,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         domain: site.domain,
-        url: "http://gigride.live/"
+        url: "http://example.com/"
       }
 
       build_conn()
