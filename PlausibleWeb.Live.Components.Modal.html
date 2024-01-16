@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="generator" content="ExDoc v0.31.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>PlausibleWeb.Live.Components.Modal — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
@@ -18,7 +18,7 @@
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CILPWI2Q.js"></script>
+    <script async src="dist/html-L4O5OK2K.js"></script>
 
 
   </head>
@@ -39,9 +39,11 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
+
+<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -117,13 +119,14 @@ Pages
               <i class="ri-close-line ri-lg" title="Cancel search"></i>
             </button>
           </form>
+          <div class="autocomplete">
+          </div>
           <button class="icon-settings display-settings">
             <i class="ri-settings-3-line"></i>
             <span class="sr-only">Settings</span>
           </button>
         </div>
-      </div>
-      <div class="autocomplete">
+
       </div>
 
 <h1>
@@ -150,18 +153,18 @@ on connections with high latency.</p><h2 id="module-usage" class="section-headin
   <span class="text">Usage</span>
 </h2>
 <p>An example use case for a modal is embedding a form inside
-existing live view which allows adding new entries of some kind:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w"> </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="3125408780-1">{</span><span class="nc">Modal</span><span class="p" data-group-id="3125408780-1">}</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;some-form-modal&quot;</span><span class="o">&gt;</span><span class="w">
+existing live view which allows adding new entries of some kind:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w"> </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="3317620070-1">{</span><span class="nc">Modal</span><span class="p" data-group-id="3317620070-1">}</span><span class="w"> </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;some-form-modal&quot;</span><span class="o">&gt;</span><span class="w">
   </span><span class="o">&lt;</span><span class="o">.</span><span class="n">live_component</span><span class="w">
-    </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="3125408780-2">{</span><span class="nc">SomeForm</span><span class="p" data-group-id="3125408780-2">}</span><span class="w">
+    </span><span class="n">module</span><span class="o">=</span><span class="p" data-group-id="3317620070-2">{</span><span class="nc">SomeForm</span><span class="p" data-group-id="3317620070-2">}</span><span class="w">
     </span><span class="n">id</span><span class="o">=</span><span class="s">&quot;some-form&quot;</span><span class="w">
-    </span><span class="n">on_save_form</span><span class="o">=</span><span class="p" data-group-id="3125408780-3">{</span><span class="w">
-      </span><span class="k" data-group-id="3125408780-4">fn</span><span class="w"> </span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-        </span><span class="n">send</span><span class="p" data-group-id="3125408780-5">(</span><span class="n">self</span><span class="p" data-group-id="3125408780-6">(</span><span class="p" data-group-id="3125408780-6">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3125408780-7">{</span><span class="ss">:entry_added</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="3125408780-7">}</span><span class="p" data-group-id="3125408780-5">)</span><span class="w">
-        </span><span class="nc">Modal</span><span class="o">.</span><span class="n">close</span><span class="p" data-group-id="3125408780-8">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;some-form-modal&quot;</span><span class="p" data-group-id="3125408780-8">)</span><span class="w">
-      </span><span class="k" data-group-id="3125408780-4">end</span><span class="w">
-    </span><span class="p" data-group-id="3125408780-3">}</span><span class="w">
+    </span><span class="n">on_save_form</span><span class="o">=</span><span class="p" data-group-id="3317620070-3">{</span><span class="w">
+      </span><span class="k" data-group-id="3317620070-4">fn</span><span class="w"> </span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="n">send</span><span class="p" data-group-id="3317620070-5">(</span><span class="n">self</span><span class="p" data-group-id="3317620070-6">(</span><span class="p" data-group-id="3317620070-6">)</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="3317620070-7">{</span><span class="ss">:entry_added</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="3317620070-7">}</span><span class="p" data-group-id="3317620070-5">)</span><span class="w">
+        </span><span class="nc">Modal</span><span class="o">.</span><span class="n">close</span><span class="p" data-group-id="3317620070-8">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;some-form-modal&quot;</span><span class="p" data-group-id="3317620070-8">)</span><span class="w">
+      </span><span class="k" data-group-id="3317620070-4">end</span><span class="w">
+    </span><span class="p" data-group-id="3317620070-3">}</span><span class="w">
   </span><span class="o">/</span><span class="o">&gt;</span><span class="w">
-</span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">live_component</span><span class="o">&gt;</span></code></pre><p>Then somewhere in the same live view the modal is rendered in:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">button</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">data</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">on</span><span class="ss">:click</span><span class="o">=</span><span class="p" data-group-id="6263881302-1">{</span><span class="nc">Modal.JS</span><span class="o">.</span><span class="n">open</span><span class="p" data-group-id="6263881302-2">(</span><span class="s">&quot;goals-form-modal&quot;</span><span class="p" data-group-id="6263881302-2">)</span><span class="p" data-group-id="6263881302-1">}</span><span class="o">&gt;</span><span class="w">
+</span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">live_component</span><span class="o">&gt;</span></code></pre><p>Then somewhere in the same live view the modal is rendered in:</p><pre><code class="makeup elixir" translate="no"><span class="o">&lt;</span><span class="o">.</span><span class="n">button</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">data</span><span class="w"> </span><span class="n">x</span><span class="o">-</span><span class="n">on</span><span class="ss">:click</span><span class="o">=</span><span class="p" data-group-id="3048038692-1">{</span><span class="nc">Modal.JS</span><span class="o">.</span><span class="n">open</span><span class="p" data-group-id="3048038692-2">(</span><span class="s">&quot;goals-form-modal&quot;</span><span class="p" data-group-id="3048038692-2">)</span><span class="p" data-group-id="3048038692-1">}</span><span class="o">&gt;</span><span class="w">
   </span><span class="o">+</span><span class="w"> </span><span class="nc">Add</span><span class="w"> </span><span class="nc">Entry</span><span class="w">
 </span><span class="o">&lt;</span><span class="o">/</span><span class="o">.</span><span class="n">button</span><span class="o">&gt;</span></code></pre><h2 id="module-explanation" class="section-heading">
   <a href="#module-explanation" class="hover-link">
@@ -181,26 +184,26 @@ itself - adding <code class="inline">x-data</code> attribute without any value i
 to ensure that.</p></li><li><p><code class="inline">Modal.close/2</code> - to close the modal from the backend; usually
 done inside wrapped component's <code class="inline">handle_event/2</code>. The example
 qouted above shows one way to implement this, under that assumption
-that the component exposes a callback, like this:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">SomeForm</span><span class="w"> </span><span class="k" data-group-id="1556758026-1">do</span><span class="w">
+that the component exposes a callback, like this:</p><pre><code class="makeup elixir" translate="no"><span class="kd">defmodule</span><span class="w"> </span><span class="nc">SomeForm</span><span class="w"> </span><span class="k" data-group-id="7405292449-1">do</span><span class="w">
   </span><span class="kn">use</span><span class="w"> </span><span class="nc">Phoenix.LiveComponent</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">update</span><span class="p" data-group-id="1556758026-2">(</span><span class="n">assigns</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="1556758026-2">)</span><span class="w"> </span><span class="k" data-group-id="1556758026-3">do</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">update</span><span class="p" data-group-id="7405292449-2">(</span><span class="n">assigns</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="7405292449-2">)</span><span class="w"> </span><span class="k" data-group-id="7405292449-3">do</span><span class="w">
     </span><span class="c1"># ...</span><span class="w">
 
-    </span><span class="p" data-group-id="1556758026-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">assign</span><span class="p" data-group-id="1556758026-5">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="ss">:on_save_form</span><span class="p">,</span><span class="w"> </span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="1556758026-5">)</span><span class="p" data-group-id="1556758026-4">}</span><span class="w">
-  </span><span class="k" data-group-id="1556758026-3">end</span><span class="w">
+    </span><span class="p" data-group-id="7405292449-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">assign</span><span class="p" data-group-id="7405292449-5">(</span><span class="n">socket</span><span class="p">,</span><span class="w"> </span><span class="ss">:on_save_form</span><span class="p">,</span><span class="w"> </span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="7405292449-5">)</span><span class="p" data-group-id="7405292449-4">}</span><span class="w">
+  </span><span class="k" data-group-id="7405292449-3">end</span><span class="w">
 
   </span><span class="c1">#...</span><span class="w">
 
-  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p" data-group-id="1556758026-6">(</span><span class="s">&quot;save-form&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1556758026-7">%{</span><span class="s">&quot;form&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">form</span><span class="p" data-group-id="1556758026-7">}</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="1556758026-6">)</span><span class="w"> </span><span class="k" data-group-id="1556758026-8">do</span><span class="w">
-    </span><span class="k">case</span><span class="w"> </span><span class="n">save_entry</span><span class="p" data-group-id="1556758026-9">(</span><span class="n">form</span><span class="p" data-group-id="1556758026-9">)</span><span class="w"> </span><span class="k" data-group-id="1556758026-10">do</span><span class="w">
-      </span><span class="p" data-group-id="1556758026-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="1556758026-11">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
-        </span><span class="p" data-group-id="1556758026-12">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="o">.</span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="1556758026-13">(</span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="1556758026-13">)</span><span class="p" data-group-id="1556758026-12">}</span><span class="w">
+  </span><span class="kd">def</span><span class="w"> </span><span class="nf">handle_event</span><span class="p" data-group-id="7405292449-6">(</span><span class="s">&quot;save-form&quot;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="7405292449-7">%{</span><span class="s">&quot;form&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="n">form</span><span class="p" data-group-id="7405292449-7">}</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="7405292449-6">)</span><span class="w"> </span><span class="k" data-group-id="7405292449-8">do</span><span class="w">
+    </span><span class="k">case</span><span class="w"> </span><span class="n">save_entry</span><span class="p" data-group-id="7405292449-9">(</span><span class="n">form</span><span class="p" data-group-id="7405292449-9">)</span><span class="w"> </span><span class="k" data-group-id="7405292449-10">do</span><span class="w">
+      </span><span class="p" data-group-id="7405292449-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">entry</span><span class="p" data-group-id="7405292449-11">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+        </span><span class="p" data-group-id="7405292449-12">{</span><span class="ss">:noreply</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="o">.</span><span class="n">assigns</span><span class="o">.</span><span class="n">on_save_form</span><span class="p" data-group-id="7405292449-13">(</span><span class="n">entry</span><span class="p">,</span><span class="w"> </span><span class="n">socket</span><span class="p" data-group-id="7405292449-13">)</span><span class="p" data-group-id="7405292449-12">}</span><span class="w">
 
       </span><span class="c1"># error case handling ...</span><span class="w">
-    </span><span class="k" data-group-id="1556758026-10">end</span><span class="w">
-  </span><span class="k" data-group-id="1556758026-8">end</span><span class="w">
-</span><span class="k" data-group-id="1556758026-1">end</span></code></pre><p>Using callback approach has an added benefit of making the
+    </span><span class="k" data-group-id="7405292449-10">end</span><span class="w">
+  </span><span class="k" data-group-id="7405292449-8">end</span><span class="w">
+</span><span class="k" data-group-id="7405292449-1">end</span></code></pre><p>Using callback approach has an added benefit of making the
 component more flexible.</p></li></ul>
   </section>
 
@@ -331,7 +334,7 @@ component more flexible.</p></li></ul>
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="generator" content="ExDoc v0.31.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>PlausibleWeb.Api.StatsController — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
@@ -18,7 +18,7 @@
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CILPWI2Q.js"></script>
+    <script async src="dist/html-L4O5OK2K.js"></script>
 
 
   </head>
@@ -39,9 +39,11 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
+
+<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -117,13 +119,14 @@ Pages
               <i class="ri-close-line ri-lg" title="Cancel search"></i>
             </button>
           </form>
+          <div class="autocomplete">
+          </div>
           <button class="icon-settings display-settings">
             <i class="ri-settings-3-line"></i>
             <span class="sr-only">Settings</span>
           </button>
         </div>
-      </div>
-      <div class="autocomplete">
+
       </div>
 
 <h1>
@@ -744,13 +747,13 @@ and <code class="inline">month</code>. The default depends on the <code class="i
 <code class="inline">Plausible.Query.from/2</code> for each default.</p></li><li><p><code class="inline">filters</code> - optional filters to drill down data. See the Stats API
 <a href="https://plausible.io/docs/stats-api#filtering">&quot;Filtering&quot;</a> section for
 more details.</p></li><li><p><code class="inline">with_imported</code> - boolean indicating whether to include Google Analytics
-imported data or not. Defaults to <code class="inline">false</code>.</p></li></ul><p>Full example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2277953775-1">%{</span><span class="w">
+imported data or not. Defaults to <code class="inline">false</code>.</p></li></ul><p>Full example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="9185556786-1">%{</span><span class="w">
   </span><span class="s">&quot;from&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;2021-09-06&quot;</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;interval&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;metric&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;visitors&quot;</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;period&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;custom&quot;</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;to&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;2021-12-13&quot;</span><span class="w">
-</span><span class="p" data-group-id="2277953775-1">}</span></code></pre><h2 id="main_graph/2-response" class="section-heading">
+</span><span class="p" data-group-id="9185556786-1">}</span></code></pre><h2 id="main_graph/2-response" class="section-heading">
   <a href="#main_graph/2-response" class="hover-link">
     <i class="ri-link-m" aria-hidden="true"></i>
   </a>
@@ -765,20 +768,20 @@ cut off by the requested date range or not. For example, if looking at a
 month week-by-week, some weeks may be cut off by the month boundaries.
 It's useful to adjust the graph display slightly in case the interval is
 not 'full' so that the user understands why the numbers might be lower for
-those partial periods.</p></li></ul><p>Full example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="7169017313-1">%{</span><span class="w">
-  </span><span class="s">&quot;full_intervals&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="7169017313-2">%{</span><span class="w">
+those partial periods.</p></li></ul><p>Full example:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2999367706-1">%{</span><span class="w">
+  </span><span class="s">&quot;full_intervals&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="2999367706-2">%{</span><span class="w">
     </span><span class="s">&quot;2021-09-01&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">false</span><span class="p">,</span><span class="w">
     </span><span class="s">&quot;2021-10-01&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
     </span><span class="s">&quot;2021-11-01&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">true</span><span class="p">,</span><span class="w">
     </span><span class="s">&quot;2021-12-01&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">false</span><span class="w">
-  </span><span class="p" data-group-id="7169017313-2">}</span><span class="p">,</span><span class="w">
+  </span><span class="p" data-group-id="2999367706-2">}</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;imported_source&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;interval&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;month&quot;</span><span class="p">,</span><span class="w">
-  </span><span class="s">&quot;labels&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="7169017313-3">[</span><span class="s">&quot;2021-09-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-10-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-11-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-12-01&quot;</span><span class="p" data-group-id="7169017313-3">]</span><span class="p">,</span><span class="w">
-  </span><span class="s">&quot;plot&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="7169017313-4">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="7169017313-4">]</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;labels&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="2999367706-3">[</span><span class="s">&quot;2021-09-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-10-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-11-01&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;2021-12-01&quot;</span><span class="p" data-group-id="2999367706-3">]</span><span class="p">,</span><span class="w">
+  </span><span class="s">&quot;plot&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="2999367706-4">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="2999367706-4">]</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;present_index&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">nil</span><span class="p">,</span><span class="w">
   </span><span class="s">&quot;with_imported&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="no">false</span><span class="w">
-</span><span class="p" data-group-id="7169017313-1">}</span></code></pre>
+</span><span class="p" data-group-id="2999367706-1">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="operating_system_versions/2">
@@ -1110,7 +1113,7 @@ those partial periods.</p></li></ul><p>Full example:</p><pre><code class="makeup
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="generator" content="ExDoc v0.31.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Cldr.Rbnf.Ordinal — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
@@ -18,7 +18,7 @@
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CILPWI2Q.js"></script>
+    <script async src="dist/html-L4O5OK2K.js"></script>
 
 
   </head>
@@ -39,9 +39,11 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
+
+<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -117,13 +119,14 @@ Pages
               <i class="ri-close-line ri-lg" title="Cancel search"></i>
             </button>
           </form>
+          <div class="autocomplete">
+          </div>
           <button class="icon-settings display-settings">
             <i class="ri-settings-3-line"></i>
             <span class="sr-only">Settings</span>
           </button>
         </div>
-      </div>
-      <div class="autocomplete">
+
       </div>
 
 <h1>
@@ -142,20 +145,20 @@ Pages
   <section id="moduledoc">
 <p>Functions to implement the ordinal rule-based-number-format rules of CLDR.</p><p>As CLDR notes, the data is incomplete or non-existent for many languages.  It
 is considered complete for English however.</p><p>The standard public API for RBNF is via the <a href="https://hexdocs.pm/ex_cldr_numbers/2.32.3/Cldr.Number.html#to_string/2"><code class="inline">Cldr.Number.to_string/2</code></a> function.</p><p>The functions on this module are defined at compile time based upon the RBNF rules
-defined in the Unicode CLDR data repository.  Available rules are identified by:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="6138355993-1">(</span><span class="ss">:en</span><span class="p" data-group-id="6138355993-1">)</span><span class="w">
-</span><span class="p" data-group-id="6138355993-2">[</span><span class="ss">:digits_ordinal</span><span class="p" data-group-id="6138355993-2">]</span><span class="w">
+defined in the Unicode CLDR data repository.  Available rules are identified by:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="4805264218-1">(</span><span class="ss">:en</span><span class="p" data-group-id="4805264218-1">)</span><span class="w">
+</span><span class="p" data-group-id="4805264218-2">[</span><span class="ss">:digits_ordinal</span><span class="p" data-group-id="4805264218-2">]</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="6138355993-3">(</span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="6138355993-3">)</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">sort</span><span class="p" data-group-id="6138355993-4">(</span><span class="p" data-group-id="6138355993-4">)</span><span class="w">
-</span><span class="p" data-group-id="6138355993-5">[</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">rule_sets</span><span class="p" data-group-id="4805264218-3">(</span><span class="s">&quot;fr&quot;</span><span class="p" data-group-id="4805264218-3">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="o">|&gt;</span><span class="w"> </span><span class="nc">Enum</span><span class="o">.</span><span class="n">sort</span><span class="p" data-group-id="4805264218-4">(</span><span class="p" data-group-id="4805264218-4">)</span><span class="w">
+</span><span class="p" data-group-id="4805264218-5">[</span><span class="w">
   </span><span class="ss">:digits_ordinal</span><span class="p">,</span><span class="w">
   </span><span class="ss">:digits_ordinal_feminine</span><span class="p">,</span><span class="w">
   </span><span class="ss">:digits_ordinal_feminine_plural</span><span class="p">,</span><span class="w">
   </span><span class="ss">:digits_ordinal_masculine</span><span class="p">,</span><span class="w">
   </span><span class="ss">:digits_ordinal_masculine_plural</span><span class="w">
-</span><span class="p" data-group-id="6138355993-5">]</span></code></pre><p>A rule can then be invoked on an available rule_set.  For example</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">digits_ordinal</span><span class="p" data-group-id="1641573368-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p" data-group-id="1641573368-1">)</span><span class="w">
-</span><span class="s">&quot;123rd&quot;</span></code></pre><p>This call is equivalent to the call through the public API of:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="0121702742-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:ordinal</span><span class="p" data-group-id="0121702742-1">)</span><span class="w">
-</span><span class="p" data-group-id="0121702742-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;123rd&quot;</span><span class="p" data-group-id="0121702742-2">}</span></code></pre>
+</span><span class="p" data-group-id="4805264218-5">]</span></code></pre><p>A rule can then be invoked on an available rule_set.  For example</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Rbnf.Ordinal</span><span class="o">.</span><span class="n">digits_ordinal</span><span class="p" data-group-id="6259201916-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">:en</span><span class="p" data-group-id="6259201916-1">)</span><span class="w">
+</span><span class="s">&quot;123rd&quot;</span></code></pre><p>This call is equivalent to the call through the public API of:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Number</span><span class="o">.</span><span class="n">to_string</span><span class="p" data-group-id="2610240415-1">(</span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="ss">format</span><span class="p">:</span><span class="w"> </span><span class="ss">:ordinal</span><span class="p" data-group-id="2610240415-1">)</span><span class="w">
+</span><span class="p" data-group-id="2610240415-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;123rd&quot;</span><span class="p" data-group-id="2610240415-2">}</span></code></pre>
   </section>
 
 
@@ -325,7 +328,7 @@ defined in the Unicode CLDR data repository.  Available rules are identified by:
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 

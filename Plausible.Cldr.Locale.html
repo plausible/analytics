@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="generator" content="ExDoc v0.31.0">
+    <meta name="generator" content="ExDoc v0.31.1">
     <meta name="project" content="Plausible v0.0.1">
 
 
     <title>Plausible.Cldr.Locale — Plausible v0.0.1</title>
-    <link rel="stylesheet" href="dist/html-elixir-3ZLIM5JF.css" />
+    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
@@ -18,7 +18,7 @@
 
       <script src="docs_config.js"></script>
 
-    <script async src="dist/html-CILPWI2Q.js"></script>
+    <script async src="dist/html-L4O5OK2K.js"></script>
 
 
   </head>
@@ -39,9 +39,11 @@
 
 <div class="main">
 
-<button class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
   <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
 </button>
+
+<div class="background-layer"></div>
 
 <nav id="sidebar" class="sidebar">
 
@@ -117,13 +119,14 @@ Pages
               <i class="ri-close-line ri-lg" title="Cancel search"></i>
             </button>
           </form>
+          <div class="autocomplete">
+          </div>
           <button class="icon-settings display-settings">
             <i class="ri-settings-3-line"></i>
             <span class="sr-only">Settings</span>
           </button>
         </div>
-      </div>
-      <div class="autocomplete">
+
       </div>
 
 <h1>
@@ -323,16 +326,16 @@ this specific locale..</p><h2 id="fallback_locale_names/1-arguments" class="sect
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locale_names</span><span class="p" data-group-id="9313551404-1">(</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p" data-group-id="9313551404-1">)</span><span class="w">
-</span><span class="p" data-group-id="9313551404-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9313551404-3">[</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:fr</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="9313551404-3">]</span><span class="p" data-group-id="9313551404-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locale_names</span><span class="p" data-group-id="9208409428-1">(</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p" data-group-id="9208409428-1">)</span><span class="w">
+</span><span class="p" data-group-id="9208409428-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9208409428-3">[</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">:fr</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="9208409428-3">]</span><span class="p" data-group-id="9208409428-2">}</span><span class="w">
 
 </span><span class="c1"># Fallbacks are typically formed by progressively</span><span class="w">
 </span><span class="c1"># stripping variant, territory and script from the</span><span class="w">
 </span><span class="c1"># given locale name. But not always - there are</span><span class="w">
 </span><span class="c1"># certain fallbacks that take a different path.</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locale_names</span><span class="p" data-group-id="9313551404-4">(</span><span class="ss">:nb</span><span class="p" data-group-id="9313551404-4">)</span><span class="w">
-</span><span class="p" data-group-id="9313551404-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9313551404-6">[</span><span class="ss">:nb</span><span class="p">,</span><span class="w"> </span><span class="ss">:no</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="9313551404-6">]</span><span class="p" data-group-id="9313551404-5">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locale_names</span><span class="p" data-group-id="9208409428-4">(</span><span class="ss">:nb</span><span class="p" data-group-id="9208409428-4">)</span><span class="w">
+</span><span class="p" data-group-id="9208409428-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9208409428-6">[</span><span class="ss">:nb</span><span class="p">,</span><span class="w"> </span><span class="ss">:no</span><span class="p">,</span><span class="w"> </span><span class="ss">:und</span><span class="p" data-group-id="9208409428-6">]</span><span class="p" data-group-id="9208409428-5">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="fallback_locales/1">
@@ -386,20 +389,20 @@ this specific locale.</p><h2 id="fallback_locales/1-arguments" class="section-he
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locales</span><span class="p" data-group-id="8944173348-1">(</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p" data-group-id="8944173348-1">)</span><span class="w">
-</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="8944173348-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-     </span><span class="p" data-group-id="8944173348-3">[</span><span class="p" data-group-id="8944173348-4">#</span><span class="nc" data-group-id="8944173348-4">Cldr.LanguageTag</span><span class="p" data-group-id="8944173348-4">&lt;</span><span class="n">fr</span><span class="o">-</span><span class="nc">CA</span><span class="w"> </span><span class="p" data-group-id="8944173348-5">[</span><span class="n">validated</span><span class="p" data-group-id="8944173348-5">]</span><span class="p" data-group-id="8944173348-4">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8944173348-6">#</span><span class="nc" data-group-id="8944173348-6">Cldr.LanguageTag</span><span class="p" data-group-id="8944173348-6">&lt;</span><span class="n">fr</span><span class="w"> </span><span class="p" data-group-id="8944173348-7">[</span><span class="n">validated</span><span class="p" data-group-id="8944173348-7">]</span><span class="p" data-group-id="8944173348-6">&gt;</span><span class="p">,</span><span class="w">
-      </span><span class="p" data-group-id="8944173348-8">#</span><span class="nc" data-group-id="8944173348-8">Cldr.LanguageTag</span><span class="p" data-group-id="8944173348-8">&lt;</span><span class="n">und</span><span class="w"> </span><span class="p" data-group-id="8944173348-9">[</span><span class="n">validated</span><span class="p" data-group-id="8944173348-9">]</span><span class="p" data-group-id="8944173348-8">&gt;</span><span class="p" data-group-id="8944173348-3">]</span><span class="p" data-group-id="8944173348-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locales</span><span class="p" data-group-id="1160617606-1">(</span><span class="ss">:&quot;fr-CA&quot;</span><span class="p" data-group-id="1160617606-1">)</span><span class="w">
+</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="1160617606-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="1160617606-3">[</span><span class="p" data-group-id="1160617606-4">#</span><span class="nc" data-group-id="1160617606-4">Cldr.LanguageTag</span><span class="p" data-group-id="1160617606-4">&lt;</span><span class="n">fr</span><span class="o">-</span><span class="nc">CA</span><span class="w"> </span><span class="p" data-group-id="1160617606-5">[</span><span class="n">validated</span><span class="p" data-group-id="1160617606-5">]</span><span class="p" data-group-id="1160617606-4">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1160617606-6">#</span><span class="nc" data-group-id="1160617606-6">Cldr.LanguageTag</span><span class="p" data-group-id="1160617606-6">&lt;</span><span class="n">fr</span><span class="w"> </span><span class="p" data-group-id="1160617606-7">[</span><span class="n">validated</span><span class="p" data-group-id="1160617606-7">]</span><span class="p" data-group-id="1160617606-6">&gt;</span><span class="p">,</span><span class="w">
+      </span><span class="p" data-group-id="1160617606-8">#</span><span class="nc" data-group-id="1160617606-8">Cldr.LanguageTag</span><span class="p" data-group-id="1160617606-8">&lt;</span><span class="n">und</span><span class="w"> </span><span class="p" data-group-id="1160617606-9">[</span><span class="n">validated</span><span class="p" data-group-id="1160617606-9">]</span><span class="p" data-group-id="1160617606-8">&gt;</span><span class="p" data-group-id="1160617606-3">]</span><span class="p" data-group-id="1160617606-2">}</span><span class="w">
 
 </span><span class="c1"># Fallbacks are typically formed by progressively</span><span class="w">
 </span><span class="c1"># stripping variant, territory and script from the</span><span class="w">
 </span><span class="c1"># given locale name. But not always - there are</span><span class="w">
 </span><span class="c1"># certain fallbacks that take a different path.</span><span class="w">
 
-</span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locales</span><span class="p" data-group-id="8944173348-10">(</span><span class="ss">:nb</span><span class="p" data-group-id="8944173348-10">)</span><span class="p">)</span><span class="w">
-</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="8944173348-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
-     </span><span class="p" data-group-id="8944173348-12">[</span><span class="p" data-group-id="8944173348-13">#</span><span class="nc" data-group-id="8944173348-13">Cldr.LanguageTag</span><span class="p" data-group-id="8944173348-13">&lt;</span><span class="n">nb</span><span class="w"> </span><span class="p" data-group-id="8944173348-14">[</span><span class="n">validated</span><span class="p" data-group-id="8944173348-14">]</span><span class="p" data-group-id="8944173348-13">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="8944173348-15">#</span><span class="nc" data-group-id="8944173348-15">Cldr.LanguageTag</span><span class="p" data-group-id="8944173348-15">&lt;</span><span class="n">no</span><span class="w"> </span><span class="p" data-group-id="8944173348-16">[</span><span class="n">validated</span><span class="p" data-group-id="8944173348-16">]</span><span class="p" data-group-id="8944173348-15">&gt;</span><span class="p">,</span><span class="w">
-      </span><span class="p" data-group-id="8944173348-17">#</span><span class="nc" data-group-id="8944173348-17">Cldr.LanguageTag</span><span class="p" data-group-id="8944173348-17">&lt;</span><span class="n">und</span><span class="w"> </span><span class="p" data-group-id="8944173348-18">[</span><span class="n">validated</span><span class="p" data-group-id="8944173348-18">]</span><span class="p" data-group-id="8944173348-17">&gt;</span><span class="p" data-group-id="8944173348-12">]</span><span class="p" data-group-id="8944173348-11">}</span></code></pre>
+</span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">fallback_locales</span><span class="p" data-group-id="1160617606-10">(</span><span class="ss">:nb</span><span class="p" data-group-id="1160617606-10">)</span><span class="p">)</span><span class="w">
+</span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="1160617606-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w">
+     </span><span class="p" data-group-id="1160617606-12">[</span><span class="p" data-group-id="1160617606-13">#</span><span class="nc" data-group-id="1160617606-13">Cldr.LanguageTag</span><span class="p" data-group-id="1160617606-13">&lt;</span><span class="n">nb</span><span class="w"> </span><span class="p" data-group-id="1160617606-14">[</span><span class="n">validated</span><span class="p" data-group-id="1160617606-14">]</span><span class="p" data-group-id="1160617606-13">&gt;</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="1160617606-15">#</span><span class="nc" data-group-id="1160617606-15">Cldr.LanguageTag</span><span class="p" data-group-id="1160617606-15">&lt;</span><span class="n">no</span><span class="w"> </span><span class="p" data-group-id="1160617606-16">[</span><span class="n">validated</span><span class="p" data-group-id="1160617606-16">]</span><span class="p" data-group-id="1160617606-15">&gt;</span><span class="p">,</span><span class="w">
+      </span><span class="p" data-group-id="1160617606-17">#</span><span class="nc" data-group-id="1160617606-17">Cldr.LanguageTag</span><span class="p" data-group-id="1160617606-17">&lt;</span><span class="n">und</span><span class="w"> </span><span class="p" data-group-id="1160617606-18">[</span><span class="n">validated</span><span class="p" data-group-id="1160617606-18">]</span><span class="p" data-group-id="1160617606-17">&gt;</span><span class="p" data-group-id="1160617606-12">]</span><span class="p" data-group-id="1160617606-11">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="locale_for_territory/1">
@@ -530,15 +533,15 @@ generic top-level domain names.</p><h2 id="locale_from_host/2-examples" class="s
   <span class="text">Examples</span>
 </h2>
 <pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="w"> </span><span class="s">&quot;a.b.com.au&quot;</span><span class="w">
-</span><span class="nc">Elixir.Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="3635429423-1">(</span><span class="ss">:&quot;en-AU&quot;</span><span class="p" data-group-id="3635429423-1">)</span><span class="w">
+</span><span class="nc">Elixir.Plausible.Cldr</span><span class="o">.</span><span class="n">validate_locale</span><span class="p" data-group-id="9108046276-1">(</span><span class="ss">:&quot;en-AU&quot;</span><span class="p" data-group-id="9108046276-1">)</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="p" data-group-id="3635429423-2">(</span><span class="s">&quot;a.b.com.tv&quot;</span><span class="p" data-group-id="3635429423-2">)</span><span class="w">
-</span><span class="p" data-group-id="3635429423-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="3635429423-4">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">tv</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="3635429423-4">}</span><span class="p" data-group-id="3635429423-3">}</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="p" data-group-id="9108046276-2">(</span><span class="s">&quot;a.b.com.tv&quot;</span><span class="p" data-group-id="9108046276-2">)</span><span class="w">
+</span><span class="p" data-group-id="9108046276-3">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="9108046276-4">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">tv</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="9108046276-4">}</span><span class="p" data-group-id="9108046276-3">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="p" data-group-id="3635429423-5">(</span><span class="s">&quot;a.b.com&quot;</span><span class="p" data-group-id="3635429423-5">)</span><span class="w">
-</span><span class="p" data-group-id="3635429423-6">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="3635429423-7">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">com</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="3635429423-7">}</span><span class="p" data-group-id="3635429423-6">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Plausible.Cldr.Locale</span><span class="o">.</span><span class="n">locale_from_host</span><span class="p" data-group-id="9108046276-5">(</span><span class="s">&quot;a.b.com&quot;</span><span class="p" data-group-id="9108046276-5">)</span><span class="w">
+</span><span class="p" data-group-id="9108046276-6">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="9108046276-7">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">com</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="9108046276-7">}</span><span class="p" data-group-id="9108046276-6">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="new/1">
@@ -680,12 +683,12 @@ be a territory.</p><h2 id="territory_from_host/1-arguments" class="section-headi
   </a>
   <span class="text">Examples</span>
 </h2>
-<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Locale</span><span class="o">.</span><span class="n">territory_from_host</span><span class="p" data-group-id="7240960622-1">(</span><span class="s">&quot;a.b.com.au&quot;</span><span class="p" data-group-id="7240960622-1">)</span><span class="w">
-</span><span class="p" data-group-id="7240960622-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:AU</span><span class="p" data-group-id="7240960622-2">}</span><span class="w">
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Locale</span><span class="o">.</span><span class="n">territory_from_host</span><span class="p" data-group-id="1682862590-1">(</span><span class="s">&quot;a.b.com.au&quot;</span><span class="p" data-group-id="1682862590-1">)</span><span class="w">
+</span><span class="p" data-group-id="1682862590-2">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="ss">:AU</span><span class="p" data-group-id="1682862590-2">}</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Locale</span><span class="o">.</span><span class="n">territory_from_host</span><span class="p" data-group-id="7240960622-3">(</span><span class="s">&quot;a.b.com&quot;</span><span class="p" data-group-id="7240960622-3">)</span><span class="w">
-</span><span class="p" data-group-id="7240960622-4">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
- </span><span class="p" data-group-id="7240960622-5">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">com</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="7240960622-5">}</span><span class="p" data-group-id="7240960622-4">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Cldr.Locale</span><span class="o">.</span><span class="n">territory_from_host</span><span class="p" data-group-id="1682862590-3">(</span><span class="s">&quot;a.b.com&quot;</span><span class="p" data-group-id="1682862590-3">)</span><span class="w">
+</span><span class="p" data-group-id="1682862590-4">{</span><span class="ss">:error</span><span class="p">,</span><span class="w">
+ </span><span class="p" data-group-id="1682862590-5">{</span><span class="nc">Cldr.UnknownLocaleError</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;No locale was identified for territory </span><span class="se">\&quot;</span><span class="s">com</span><span class="se">\&quot;</span><span class="s">&quot;</span><span class="p" data-group-id="1682862590-5">}</span><span class="p" data-group-id="1682862590-4">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="territory_from_locale/1">
@@ -820,7 +823,7 @@ or a locale name in the list returned by
 
         <p class="built-using">
           Built using
-          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.0) for the
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
 
             <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
 
