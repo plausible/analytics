@@ -117,11 +117,11 @@ defmodule Plausible.Google.Api do
 
   This function fetches Google Analytics reports in batches of #{@per_page} per
   request. The batches are then buffered to Clickhouse by the
-  `Plausible.Google.Buffer` process.
+  `Plausible.Imported.Buffer` process.
 
   Requests to Google Analytics can fail, and are retried at most
   #{@max_attempts} times with an exponential backoff. Returns `:ok` when
-  importing has finished or `{:error, term()}` when a request to GA failed too 
+  importing has finished or `{:error, term()}` when a request to GA failed too
   many times.
 
   Useful links:
@@ -146,7 +146,7 @@ defmodule Plausible.Google.Api do
   end
 
   defp do_import_analytics(site, date_range, view_id, access_token) do
-    {:ok, buffer} = Plausible.Google.Buffer.start_link()
+    {:ok, buffer} = Plausible.Imported.Buffer.start_link()
 
     result =
       Enum.reduce_while(ReportRequest.full_report(), :ok, fn report_request, :ok ->
@@ -165,8 +165,8 @@ defmodule Plausible.Google.Api do
         end
       end)
 
-    Plausible.Google.Buffer.flush(buffer)
-    Plausible.Google.Buffer.stop(buffer)
+    Plausible.Imported.Buffer.flush(buffer)
+    Plausible.Imported.Buffer.stop(buffer)
 
     result
   end
@@ -181,7 +181,7 @@ defmodule Plausible.Google.Api do
     case HTTP.get_report(report_request) do
       {:ok, {rows, next_page_token}} ->
         records = Plausible.Imported.from_google_analytics(rows, site.id, report_request.dataset)
-        :ok = Plausible.Google.Buffer.insert_many(buffer_pid, report_request.dataset, records)
+        :ok = Plausible.Imported.Buffer.insert_many(buffer_pid, report_request.dataset, records)
 
         if next_page_token do
           fetch_and_persist(

@@ -1,4 +1,4 @@
-defmodule Plausible.Google.Buffer do
+defmodule Plausible.Imported.Buffer do
   @moduledoc """
   This GenServer inserts records into Clickhouse `imported_*` tables. Multiple buffers are
   automatically created for each table. Records are flushed when the table buffer reaches the
@@ -81,7 +81,7 @@ defmodule Plausible.Google.Buffer do
 
   defp max_buffer_size do
     :plausible
-    |> Application.get_env(:google)
+    |> Application.fetch_env!(:imported)
     |> Keyword.fetch!(:max_buffer_size)
   end
 

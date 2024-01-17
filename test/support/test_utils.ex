@@ -196,7 +196,7 @@ defmodule Plausible.TestUtils do
 
   defp populate_imported_stats(events) do
     Enum.group_by(events, &Map.fetch!(&1, :table), &Map.delete(&1, :table))
-    |> Enum.map(fn {table, events} -> Plausible.Google.Buffer.insert_all(table, events) end)
+    |> Enum.map(fn {table, events} -> Plausible.Imported.Buffer.insert_all(table, events) end)
   end
 
   def relative_time(shifts) do

@@ -360,7 +360,10 @@ config :plausible, :google,
   client_id: google_cid,
   client_secret: google_secret,
   api_url: "https://www.googleapis.com",
-  reporting_api_url: "https://analyticsreporting.googleapis.com",
+  reporting_api_url: "https://analyticsreporting.googleapis.com"
+
+config :plausible, :imported,
+  # NOT: rename it to `IMPORTED_MAX_BUFFER_SIZE`
   max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
 
 maybe_ch_ipv6 =

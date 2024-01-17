@@ -75,7 +75,7 @@ defmodule Plausible.Google.ApiTest do
     @no_report_response Jason.decode!(File.read!("fixture/ga_report_empty_rows.json"))
 
     setup do
-      {:ok, pid} = Plausible.Google.Buffer.start_link()
+      {:ok, pid} = Plausible.Imported.Buffer.start_link()
       {:ok, buffer: pid}
     end
 
@@ -126,7 +126,7 @@ defmodule Plausible.Google.ApiTest do
         buffer: buffer
       )
 
-      Plausible.Google.Buffer.flush(buffer)
+      Plausible.Imported.Buffer.flush(buffer)
 
       assert 1479 ==
                Plausible.ClickhouseRepo.aggregate(
