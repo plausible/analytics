@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 - Log mailer errors plausible/analytics#3336
 - Allow custom event timeseries in stats API plausible/analytics#3505
 - Fixes for sites with UTF characters in domain plausible/analytics#3560
+- Fix crash when using special characters in filter plausible/analytics#3634
 
 ## v2.0.0 - 2023-07-12
 
