@@ -7,6 +7,8 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
     max_attempts: 3,
     unique: [fields: [:args], period: 60]
 
+  alias Plausible.Imported.UniversalAnalytics
+
   @impl Oban.Worker
   def perform(
         %Oban.Job{
@@ -18,7 +20,7 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
               "end_date" => end_date
             } = args
         },
-        google_api \\ Plausible.Google.Api
+        import_api \\ UniversalAnalytics
       ) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload([[memberships: :user]])
     start_date = Date.from_iso8601!(start_date)
@@ -27,7 +29,7 @@ defmodule Plausible.Workers.ImportGoogleAnalytics do
 
     auth = {args["access_token"], args["refresh_token"], args["token_expires_at"]}
 
-    case google_api.import_analytics(site, date_range, view_id, auth) do
+    case import_api.import(site, date_range: date_range, view_id: view_id, auth: auth) do
       :ok ->
         Plausible.Site.import_success(site)
         |> Repo.update!()

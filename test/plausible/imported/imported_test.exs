@@ -6,7 +6,7 @@ defmodule Plausible.ImportedTest do
 
   defp import_data(ga_data, site_id, table_name) do
     ga_data
-    |> Plausible.Imported.from_google_analytics(site_id, table_name)
+    |> Plausible.Imported.UniversalAnalytics.from_report(site_id, table_name)
     |> then(&Plausible.Imported.Buffer.insert_all(table_name, &1))
   end
 
