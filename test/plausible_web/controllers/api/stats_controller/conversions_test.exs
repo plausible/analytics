@@ -577,13 +577,10 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/register"})
       insert(:goal, %{site: site, page_path: "/reg*"})
       insert(:goal, %{site: site, page_path: "/*/register"})
-      insert(:goal, %{site: site, page_path: "/billing**/success"})
       insert(:goal, %{site: site, page_path: "/billing*/success"})
       insert(:goal, %{site: site, page_path: "/signup"})
       insert(:goal, %{site: site, page_path: "/signup/*"})
-      insert(:goal, %{site: site, page_path: "/signup/**"})
       insert(:goal, %{site: site, page_path: "/*"})
-      insert(:goal, %{site: site, page_path: "/**"})
 
       populate_stats(site, [
         build(:pageview,
@@ -630,25 +627,19 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                %{
                  "conversion_rate" => 100.0,
                  "visitors" => 8,
-                 "name" => "Visit /**",
+                 "name" => "Visit /*",
                  "events" => 8
                },
                %{
                  "conversion_rate" => 37.5,
                  "visitors" => 3,
-                 "name" => "Visit /signup/**",
-                 "events" => 3
-               },
-               %{
-                 "conversion_rate" => 37.5,
-                 "visitors" => 3,
-                 "name" => "Visit /*",
+                 "name" => "Visit /signup/*",
                  "events" => 3
                },
                %{
                  "conversion_rate" => 25.0,
                  "visitors" => 2,
-                 "name" => "Visit /billing**/success",
+                 "name" => "Visit /billing*/success",
                  "events" => 2
                },
                %{
@@ -656,18 +647,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "visitors" => 2,
                  "name" => "Visit /reg*",
                  "events" => 2
-               },
-               %{
-                 "conversion_rate" => 12.5,
-                 "visitors" => 1,
-                 "name" => "Visit /signup/*",
-                 "events" => 1
-               },
-               %{
-                 "conversion_rate" => 12.5,
-                 "visitors" => 1,
-                 "name" => "Visit /billing*/success",
-                 "events" => 1
                },
                %{
                  "conversion_rate" => 12.5,

@@ -525,16 +525,15 @@ defmodule Plausible.Stats.Base do
     {first_datetime, last_datetime}
   end
 
-  @replaces %{
-    ~r/\*\*/ => ".*",
-    ~r/(?<!\.)\*/ => "[^/]*",
-    "(" => "\\(",
-    ")" => "\\)"
-  }
   def page_regex(expr) do
-    Enum.reduce(@replaces, "^#{expr}$", fn {pattern, replacement}, regex ->
-      String.replace(regex, pattern, replacement)
-    end)
+    escaped =
+      expr
+      |> Regex.escape()
+      |> String.replace("\\|", "|")
+      |> String.replace("\\*\\*", ".*")
+      |> String.replace("\\*", ".*")
+
+    "^#{escaped}$"
   end
 
   defp split_goals(clauses, map_fn \\ &Function.identity/1) do

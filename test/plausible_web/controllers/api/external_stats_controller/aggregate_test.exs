@@ -495,6 +495,23 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    test "wildcard referrer filter with special regex characters", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, referrer: "https://a.com"),
+        build(:pageview, referrer: "https://a.com"),
+        build(:pageview, referrer: "https://ab.com")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors",
+          "filters" => "visit:referrer==**a.com**"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"visitors" => %{"value" => 2}}
+    end
+
     test "can filter by utm_medium", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
