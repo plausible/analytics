@@ -363,8 +363,7 @@ config :plausible, :google,
   reporting_api_url: "https://analyticsreporting.googleapis.com"
 
 config :plausible, :imported,
-  # NOT: rename it to `IMPORTED_MAX_BUFFER_SIZE`
-  max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
+  max_buffer_size: get_int_from_path_or_env(config_dir, "IMPORTED_MAX_BUFFER_SIZE", 10_000)
 
 maybe_ch_ipv6 =
   get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
