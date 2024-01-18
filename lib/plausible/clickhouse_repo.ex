@@ -36,8 +36,8 @@ defmodule Plausible.ClickhouseRepo do
 
   def get_context() do
     case :logger.get_process_metadata() do
-      %{@logger_metadata_key => ctx} ->
-        ctx
+      %{@logger_metadata_key => %{log_comment: log_comment}} ->
+        log_comment
 
       %{} ->
         %{}
