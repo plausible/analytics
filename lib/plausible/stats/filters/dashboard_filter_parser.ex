@@ -36,7 +36,7 @@ defmodule Plausible.Stats.Filters.DashboardFilterParser do
     {is_negated, val} = parse_negated_prefix(val)
     {is_contains, val} = parse_contains_prefix(val)
     is_list = list_expression?(val)
-    is_wildcard = String.contains?(key, ["page", "goal"]) && String.match?(val, ~r/\*/)
+    is_wildcard = String.contains?(key, ["page", "goal"]) && wildcard_expression?(val)
     val = if is_list, do: parse_member_list(val), else: remove_escape_chars(val)
     val = if key == "goal", do: wrap_goal_value(val), else: val
 
@@ -62,8 +62,4 @@ defmodule Plausible.Stats.Filters.DashboardFilterParser do
 
   defp parse_contains_prefix("~" <> val), do: {true, val}
   defp parse_contains_prefix(val), do: {false, val}
-
-  defp wrap_goal_value(goals) when is_list(goals), do: Enum.map(goals, &wrap_goal_value/1)
-  defp wrap_goal_value("Visit " <> page), do: {:page, page}
-  defp wrap_goal_value(event), do: {:event, event}
 end
