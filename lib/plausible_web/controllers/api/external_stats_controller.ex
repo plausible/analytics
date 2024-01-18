@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  alias Plausible.Stats.{Query, CustomProps}
+  alias Plausible.Stats.Query
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
@@ -60,17 +60,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- ensure_custom_props_access(site, query, property) do
       page = String.to_integer(Map.get(params, "page", "1"))
       results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
-
-      results =
-        if property == "event:goal" do
-          prop_names = CustomProps.props_for_all_event_names(site, query)
-
-          Enum.map(results, fn row ->
-            Map.put(row, "props", prop_names[row[:goal]] || [])
-          end)
-        else
-          results
-        end
 
       json(conn, %{results: results})
     else

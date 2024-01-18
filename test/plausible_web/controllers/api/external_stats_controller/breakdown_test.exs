@@ -1179,28 +1179,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "breakdown by event:goal" do
-    test "custom properties from custom events are returned", %{conn: conn, site: site} do
+    test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
       insert(:goal, %{site: site, event_name: "Purchase"})
       insert(:goal, %{site: site, page_path: "/test"})
 
       populate_stats(site, [
         build(:pageview,
           timestamp: ~N[2021-01-01 00:00:01],
-          pathname: "/test",
-          "meta.key": ["method"],
-          "meta.value": ["HTTP"]
+          pathname: "/test"
         ),
         build(:event,
           name: "Purchase",
-          timestamp: ~N[2021-01-01 00:00:03],
-          "meta.key": ["OS", "method"],
-          "meta.value": ["Linux", "HTTP"]
+          timestamp: ~N[2021-01-01 00:00:03]
         ),
         build(:event,
           name: "Purchase",
-          timestamp: ~N[2021-01-01 00:00:03],
-          "meta.key": ["OS"],
-          "meta.value": ["Linux"]
+          timestamp: ~N[2021-01-01 00:00:03]
         )
       ])
 
@@ -1213,20 +1207,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         })
 
       assert [
-               %{
-                 "goal" => "Purchase",
-                 "props" => props,
-                 "visitors" => 2
-               },
-               %{
-                 "goal" => "Visit /test",
-                 "props" => [],
-                 "visitors" => 1
-               }
+               %{"goal" => "Purchase", "visitors" => 2},
+               %{"goal" => "Visit /test", "visitors" => 1}
              ] = json_response(conn, 200)["results"]
-
-      assert "method" in props
-      assert "OS" in props
     end
   end
 
