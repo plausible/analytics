@@ -1211,6 +1211,31 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                %{"goal" => "Visit /test", "visitors" => 1}
              ] = json_response(conn, 200)["results"]
     end
+
+    test "returns pageview goals containing wildcards", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, page_path: "/**/post"})
+      insert(:goal, %{site: site, page_path: "/blog**"})
+
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post-1", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post-2", user_id: @user_id),
+        build(:pageview, pathname: "/blog/something/post"),
+        build(:pageview, pathname: "/different/page/post")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors,pageviews",
+          "property" => "event:goal"
+        })
+
+      assert [
+               %{"goal" => "Visit /**/post", "visitors" => 2, "pageviews" => 2},
+               %{"goal" => "Visit /blog**", "visitors" => 2, "pageviews" => 4}
+             ] = json_response(conn, 200)["results"]
+    end
   end
 
   describe "filtering" do

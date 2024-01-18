@@ -7,7 +7,6 @@ defmodule Plausible.Stats.CustomProps do
   use Plausible.ClickhouseRepo
   import Plausible.Stats.Base
 
-
   def fetch_prop_names(site, query) do
     case Query.get_filter_by_prefix(query, "event:props:") do
       {"event:props:" <> key, _} ->
