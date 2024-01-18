@@ -189,6 +189,7 @@ defmodule Plausible.Stats.Breakdown do
   defp include_none_result?({:is_not, "(none)"}), do: false
   defp include_none_result?({:member, values}), do: Enum.member?(values, "(none)")
   defp include_none_result?({:not_member, values}), do: !Enum.member?(values, "(none)")
+  defp include_none_result?({:matches, _}), do: false
   defp include_none_result?(_), do: true
 
   defp breakdown_sessions(_, _, _, [], _), do: []
