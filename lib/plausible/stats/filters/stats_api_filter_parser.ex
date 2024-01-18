@@ -1,7 +1,7 @@
 defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
   @moduledoc false
 
-  alias Plausible.Stats.Filters
+  import Plausible.Stats.Filters.Utils
 
   @doc """
   This function parses the filter expression given as a string.
@@ -19,7 +19,7 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
     case to_kv(str) do
       [key, raw_value] ->
         is_negated = String.contains?(str, "!=")
-        is_list = Regex.match?(Filters.non_escaped_pipe_regex(), raw_value)
+        is_list = list_expression?(raw_value)
         is_wildcard = String.contains?(raw_value, "*")
 
         final_value = remove_escape_chars(raw_value)
@@ -57,16 +57,13 @@ defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
     |> Enum.map(&String.trim/1)
   end
 
-  defp parse_goal_filter("Visit " <> page), do: {:is, {:page, page}}
+  defp parse_goal_filter("Visit " <> page_expression) do
+    if String.contains?(page_expression, "*") do
+      {:matches, {:page, page_expression}}
+    else
+      {:is, {:page, page_expression}}
+    end
+  end
+
   defp parse_goal_filter(event), do: {:is, {:event, event}}
-
-  defp remove_escape_chars(value) do
-    String.replace(value, "\\|", "|")
-  end
-
-  defp parse_member_list(raw_value) do
-    raw_value
-    |> String.split(Filters.non_escaped_pipe_regex())
-    |> Enum.map(&remove_escape_chars/1)
-  end
 end

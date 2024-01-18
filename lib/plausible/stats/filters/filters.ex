@@ -35,9 +35,6 @@ defmodule Plausible.Stats.Filters do
 
   def event_props(), do: @event_props
 
-  @non_escaped_pipe_regex ~r/(?<!\\)\|/
-  def non_escaped_pipe_regex(), do: @non_escaped_pipe_regex
-
   @doc """
   Parses different filter formats.
 
