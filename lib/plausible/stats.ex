@@ -13,32 +13,38 @@ defmodule Plausible.Stats do
 
   def breakdown(site, query, prop, metrics, pagination) do
     include_sentry_replay_info()
+    Plausible.ClickhouseRepo.set_context(%{query_type: :breakdown})
     Breakdown.breakdown(site, query, prop, metrics, pagination)
   end
 
   def aggregate(site, query, metrics) do
+    Plausible.ClickhouseRepo.set_context(%{query_type: :aggregate})
     include_sentry_replay_info()
     Aggregate.aggregate(site, query, metrics)
   end
 
   def timeseries(site, query, metrics) do
+    Plausible.ClickhouseRepo.set_context(%{query_type: :timeseries})
     include_sentry_replay_info()
     Timeseries.timeseries(site, query, metrics)
   end
 
   def current_visitors(site) do
+    Plausible.ClickhouseRepo.set_context(%{query_type: :current_visitors})
     include_sentry_replay_info()
     CurrentVisitors.current_visitors(site)
   end
 
   on_full_build do
     def funnel(site, query, funnel) do
+      Plausible.ClickhouseRepo.set_context(%{query_type: :funnel})
       include_sentry_replay_info()
       Plausible.Stats.Funnel.funnel(site, query, funnel)
     end
   end
 
   def filter_suggestions(site, query, filter_name, filter_search) do
+    Plausible.ClickhouseRepo.set_context(%{query_type: :filter_suggestions})
     include_sentry_replay_info()
     FilterSuggestions.filter_suggestions(site, query, filter_name, filter_search)
   end

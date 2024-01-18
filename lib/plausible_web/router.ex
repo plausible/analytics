@@ -14,6 +14,7 @@ defmodule PlausibleWeb.Router do
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.LastSeenPlug
+    plug Plausible.ClickhouseRepo.KeepRouteContext
   end
 
   pipeline :shared_link do
@@ -38,6 +39,7 @@ defmodule PlausibleWeb.Router do
     plug :accepts, ["json"]
     plug :fetch_session
     plug PlausibleWeb.AuthPlug
+    plug Plausible.ClickhouseRepo.KeepRouteContext
   end
 
   pipeline :internal_stats_api do
@@ -45,10 +47,12 @@ defmodule PlausibleWeb.Router do
     plug :fetch_session
     plug PlausibleWeb.AuthorizeSiteAccess
     plug PlausibleWeb.Plugs.NoRobots
+    plug Plausible.ClickhouseRepo.KeepRouteContext
   end
 
   pipeline :public_api do
     plug :accepts, ["json"]
+    plug Plausible.ClickhouseRepo.KeepRouteContext
   end
 
   on_full_build do
