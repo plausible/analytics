@@ -116,22 +116,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "validates that session metrics cannot be used with event:name filter", %{
-      conn: conn,
-      site: site
-    } do
-      conn =
-        get(conn, "/api/v1/stats/aggregate", %{
-          "site_id" => site.domain,
-          "period" => "30d",
-          "metrics" => "pageviews,visit_duration",
-          "filters" => "event:name==Signup"
-        })
+    for property <- ["event:name", "event:goal", "event:props:custom_prop"] do
+      test "validates that session metrics cannot be used with #{property} filter", %{
+        conn: conn,
+        site: site
+      } do
+        prop = unquote(property)
 
-      assert json_response(conn, 400) == %{
-               "error" =>
-                 "Session metric `visit_duration` cannot be queried when using a filter on `event:name`."
-             }
+        conn =
+          get(conn, "/api/v1/stats/aggregate", %{
+            "site_id" => site.domain,
+            "period" => "30d",
+            "metrics" => "pageviews,visit_duration",
+            "filters" => "#{prop}==some_value"
+          })
+
+        assert json_response(conn, 400) == %{
+                 "error" =>
+                   "Session metric `visit_duration` cannot be queried when using a filter on `#{prop}`."
+               }
+      end
     end
 
     test "validates that views_per_visit cannot be used with event:page filter", %{
