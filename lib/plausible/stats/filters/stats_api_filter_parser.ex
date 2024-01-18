@@ -1,42 +1,13 @@
-defmodule Plausible.Stats.FilterParser do
-  @moduledoc """
-  A module for parsing filters used in stat queries.
-  """
+defmodule Plausible.Stats.Filters.StatsAPIFilterParser do
+  @moduledoc false
+
+  alias Plausible.Stats.Filters
 
   @doc """
-  Parses different filter formats.
-
-  Depending on the format and type of the `filters` argument, returns:
-
-    * a decoded map, when `filters` is encoded JSON
-    * a parsed filter map, when `filters` is a filter expression string
-    * the same map, when `filters` is a map
-
-  Returns an empty map when argument type is unexpected (e.g. `nil`).
-
-  ### Examples:
-
-      iex> FilterParser.parse_filters("{\\"page\\":\\"/blog/**\\"}")
-      %{"page" => "/blog/**"}
-
-      iex> FilterParser.parse_filters("visit:browser!=Chrome")
-      %{"visit:browser" => {:is_not, "Chrome"}}
-
-      iex> FilterParser.parse_filters(nil)
-      %{}
+  This function parses the filter expression given as a string.
+  This filtering format is used by the public Stats API.
   """
-  def parse_filters(filters) when is_binary(filters) do
-    case Jason.decode(filters) do
-      {:ok, parsed} when is_map(parsed) -> parsed
-      {:ok, _} -> %{}
-      {:error, err} -> parse_filter_expression(err.data)
-    end
-  end
-
-  def parse_filters(filters) when is_map(filters), do: filters
-  def parse_filters(_), do: %{}
-
-  defp parse_filter_expression(str) do
+  def parse_filter_expression(str) do
     filters = String.split(str, ";")
 
     Enum.map(filters, &parse_single_filter/1)
@@ -44,12 +15,11 @@ defmodule Plausible.Stats.FilterParser do
     |> Enum.into(%{})
   end
 
-  @non_escaped_pipe_regex ~r/(?<!\\)\|/
   defp parse_single_filter(str) do
     case to_kv(str) do
       [key, raw_value] ->
         is_negated = String.contains?(str, "!=")
-        is_list = Regex.match?(@non_escaped_pipe_regex, raw_value)
+        is_list = Regex.match?(Filters.non_escaped_pipe_regex(), raw_value)
         is_wildcard = String.contains?(raw_value, "*")
 
         final_value = remove_escape_chars(raw_value)
@@ -96,7 +66,7 @@ defmodule Plausible.Stats.FilterParser do
 
   defp parse_member_list(raw_value) do
     raw_value
-    |> String.split(@non_escaped_pipe_regex)
+    |> String.split(Filters.non_escaped_pipe_regex())
     |> Enum.map(&remove_escape_chars/1)
   end
 end
