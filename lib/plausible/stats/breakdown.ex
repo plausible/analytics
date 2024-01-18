@@ -436,24 +436,6 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
-         "event:page_match"
-       ) do
-    case Map.get(q, :__private_match_sources__) do
-      match_exprs when is_list(match_exprs) ->
-        from(
-          e in q,
-          group_by: fragment("index"),
-          select_merge: %{
-            index: fragment("arrayJoin(indices) as index"),
-            page_match: fragment("?[index]", ^match_exprs)
-          },
-          order_by: {:asc, fragment("index")}
-        )
-    end
-  end
-
   defp do_group_by(q, "visit:source") do
     from(
       s in q,
