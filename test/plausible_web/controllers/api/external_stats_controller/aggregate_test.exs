@@ -903,7 +903,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "filtering by a pageview goal", %{conn: conn, site: site} do
+    test "filtering by a simple pageview goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
           pathname: "/register",
@@ -939,6 +939,81 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 200)["results"] == %{
                "visitors" => %{"value" => 2},
                "pageviews" => %{"value" => 3}
+             }
+    end
+
+    test "filtering by a wildcard pageview goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post-1"),
+        build(:pageview, pathname: "/blog/post-2", user_id: @user_id),
+        build(:pageview, pathname: "/blog", user_id: @user_id),
+        build(:pageview, pathname: "/")
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog**"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,pageviews",
+          "filters" => "event:goal==Visit /blog**"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "pageviews" => %{"value" => 3}
+             }
+    end
+
+    test "filtering by multiple custom event goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Purchase", user_id: @user_id),
+        build(:event, name: "Purchase", user_id: @user_id),
+        build(:pageview)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, event_name: "Purchase"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,events",
+          "filters" => "event:goal==Signup|Purchase"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "events" => %{"value" => 3}
+             }
+    end
+
+    test "filtering by multiple mixed goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/account/register"),
+        build(:pageview, pathname: "/register", user_id: @user_id),
+        build(:event, name: "Signup", user_id: @user_id),
+        build(:pageview)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, page_path: "/**register"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,events,pageviews",
+          "filters" => "event:goal==Signup|Visit /**register"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "events" => %{"value" => 3},
+               "pageviews" => %{"value" => 2}
              }
     end
 
