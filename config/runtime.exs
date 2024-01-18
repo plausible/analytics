@@ -524,7 +524,7 @@ base_queues = [
   check_stats_emails: 1,
   site_setup_emails: 1,
   clean_invitations: 1,
-  google_analytics_imports: 1,
+  analytics_imports: 1,
   domain_change_transition: 1,
   check_accept_traffic_until: 1
 ]

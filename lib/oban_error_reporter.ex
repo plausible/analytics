@@ -23,8 +23,8 @@ defmodule ObanErrorReporter do
   end
 
   defp on_job_exception(%Oban.Job{
-         queue: "google_analytics_imports",
-         args: %{"site_id" => site_id},
+         queue: "analytics_imports",
+         args: %{"site_id" => site_id, "source" => source},
          state: "executing",
          attempt: attempt,
          max_attempts: max_attempts
@@ -33,12 +33,12 @@ defmodule ObanErrorReporter do
     site = Plausible.Repo.get(Plausible.Site, site_id)
 
     if site do
-      Plausible.Workers.ImportGoogleAnalytics.import_failed(site)
+      Plausible.Workers.ImportAnalytics.import_failed(source, site)
     end
   end
 
   defp on_job_exception(%Oban.Job{
-         queue: "google_analytics_imports",
+         queue: "analytics_imports",
          args: %{"site_id" => site_id},
          state: "executing"
        }) do

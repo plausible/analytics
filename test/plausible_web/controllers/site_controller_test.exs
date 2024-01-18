@@ -1289,8 +1289,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       })
 
       assert_enqueued(
-        worker: Plausible.Workers.ImportGoogleAnalytics,
+        worker: Plausible.Workers.ImportAnalytics,
         args: %{
+          "source" => "Google Analytics",
           "site_id" => site.id,
           "view_id" => "123",
           "start_date" => "2018-03-01",
@@ -1330,7 +1331,8 @@ defmodule PlausibleWeb.SiteControllerTest do
 
     test "cancels Oban job if it exists", %{conn: conn, site: site} do
       {:ok, job} =
-        Plausible.Workers.ImportGoogleAnalytics.new(%{
+        Plausible.Workers.ImportAnalytics.new(%{
+          "source" => "Google Analytics",
           "site_id" => site.id,
           "view_id" => "123",
           "start_date" => "2022-01-01",

@@ -1,6 +1,6 @@
 defmodule Plausible.Site.ImportedData do
   @moduledoc """
-  Embedded schema for Google Analytics imports
+  Embedded schema for analytics imports
   """
   use Ecto.Schema
 
