@@ -686,6 +686,8 @@ defmodule Plausible.Stats.Breakdown do
     if !Keyword.get(opts, :skip_tracing) do
       Query.trace(query)
 
+      metrics = Enum.sort(metrics) |> Enum.join(";")
+
       Tracer.set_attributes([
         {"plausible.query.breakdown_property", property},
         {"plausible.query.breakdown_metrics", metrics}
