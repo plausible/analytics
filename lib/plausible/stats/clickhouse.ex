@@ -543,8 +543,11 @@ defmodule Plausible.Stats.Clickhouse do
       else
         from(
           e in q,
-          array_join: meta in fragment("meta"),
-          where: meta.key == ^key and meta.value == ^val
+          where:
+            fragment("indexOf(meta.key, ?) > 0", ^key) and
+              fragment("meta.value[indexOf(meta.key, ?)] = ?", ^key, ^val)
+          # array_join: meta in fragment("meta"),
+          # where: meta.key == ^key and meta.value == ^val
         )
       end
     else

@@ -395,37 +395,17 @@ defmodule Plausible.Stats.Breakdown do
     |> Map.new()
   end
 
-  defp joins_table?(ecto_q, table) do
-    Enum.any?(
-      ecto_q.joins,
-      fn
-        %Ecto.Query.JoinExpr{source: {^table, _}} -> true
-        _ -> false
-      end
-    )
-  end
-
   defp do_group_by(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
          "event:props:" <> prop
        ) do
-    q =
-      if joins_table?(q, "meta") do
-        q
-      else
-        from(
-          e in q,
-          array_join: meta in fragment("meta"),
-          as: :meta
-        )
-      end
-
     from(
-      [e, meta: meta] in q,
-      where: meta.key == ^prop,
-      group_by: meta.value,
-      select_merge: %{^prop => meta.value},
-      order_by: {:asc, meta.value}
+      e in q,
+      where: fragment("has(`meta.key`, ?)", ^prop),
+      select_merge: %{^prop => fragment("`meta.value`[indexOf(`meta.key`, ?)]", ^prop)},
+      group_by: fragment("`meta.value`[indexOf(`meta.key`, ?)]", ^prop),
+      # :TODO: Correct ordering {:asc, `meta.value`}
+      order_by: {:asc, fragment("`meta.value`[indexOf(`meta.key`, ?)]", ^prop)}
     )
   end
 

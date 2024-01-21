@@ -119,9 +119,9 @@ defmodule Plausible.Stats.Base do
           else
             from(
               e in q,
-              array_join: meta in "meta",
-              as: :meta,
-              where: meta.key == ^prop_name and meta.value == ^value
+              where:
+                fragment("has(meta.key, ? > 0", ^prop_name) and
+                  fragment("meta.value[indexOf(meta.key, ?)] = ?", ^prop_name, ^value)
             )
           end
 
@@ -134,10 +134,9 @@ defmodule Plausible.Stats.Base do
           else
             from(
               e in q,
-              left_array_join: meta in "meta",
-              as: :meta,
               where:
-                (meta.key == ^prop_name and meta.value != ^value) or
+                (fragment("has(meta.key, ? > 0", ^prop_name) and
+                   fragment("meta.value[indexOf(meta.key, ?)] = ?", ^prop_name, ^value)) or
                   fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
             )
           end
@@ -147,9 +146,9 @@ defmodule Plausible.Stats.Base do
 
           from(
             e in q,
-            left_array_join: meta in "meta",
-            as: :meta,
-            where: meta.key == ^prop_name and fragment("match(?, ?)", meta.value, ^regex)
+            where:
+              fragment("has(meta.key, ? > 0", ^prop_name) and
+                fragment("match(meta.value[indexOf(meta.key, ?)], ?)", ^prop_name, ^regex)
           )
 
         {"event:props:" <> prop_name, {:member, values}} ->
@@ -157,10 +156,9 @@ defmodule Plausible.Stats.Base do
 
           from(
             e in q,
-            left_array_join: meta in "meta",
-            as: :meta,
             where:
-              (meta.key == ^prop_name and meta.value in ^values) or
+              (fragment("has(meta.key, ? > 0", ^prop_name) and
+                 fragment("meta.value[indexOf(meta.key, ?)]", ^prop_name) in ^values) or
                 (^none_value_included and
                    fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
           )
@@ -170,12 +168,15 @@ defmodule Plausible.Stats.Base do
 
           from(
             e in q,
-            left_array_join: meta in "meta",
-            as: :meta,
+            # left_array_join: meta in "meta",
+            # as: :meta,
+            # (meta.key == ^prop_name and meta.value not in ^values) or
             where:
-              (meta.key == ^prop_name and meta.value not in ^values) or
-                (^none_value_included and fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name) and
-                   meta.value not in ^values) or
+              (fragment("has(meta.key, ? > 0", ^prop_name) and
+                 fragment("meta.value[indexOf(meta.key, ?)]", ^prop_name) not in ^values and
+                 (^none_value_included and
+                    fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name) and
+                    fragment("meta.value[indexOf(meta.key, ?)]", ^prop_name) not in ^values)) or
                 (not (^none_value_included) and
                    fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
           )
