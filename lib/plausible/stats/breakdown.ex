@@ -1,6 +1,8 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   use Plausible
+  use Plausible.Stats.Fragments
+
   import Plausible.Stats.{Base, Imported, Util}
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.Query
@@ -401,11 +403,10 @@ defmodule Plausible.Stats.Breakdown do
        ) do
     from(
       e in q,
-      where: fragment("has(`meta.key`, ?)", ^prop),
-      select_merge: %{^prop => fragment("`meta.value`[indexOf(`meta.key`, ?)]", ^prop)},
-      group_by: fragment("`meta.value`[indexOf(`meta.key`, ?)]", ^prop),
-      # :TODO: Correct ordering {:asc, `meta.value`}
-      order_by: {:asc, fragment("`meta.value`[indexOf(`meta.key`, ?)]", ^prop)}
+      where: has_key(e, :meta, ^prop),
+      select_merge: %{^prop => get_by_key(e, :meta, ^prop)},
+      group_by: get_by_key(e, :meta, ^prop),
+      order_by: {:asc, get_by_key(e, :meta, ^prop)}
     )
   end
 
