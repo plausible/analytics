@@ -20,6 +20,7 @@ defmodule Plausible.MixProject do
         plausible: [
           include_executables_for: [:unix],
           applications: [plausible: :permanent],
+          config_providers: [{Plausible.Config.ReleaseRuntimeProvider, []}],
           steps: [:assemble, :tar]
         ]
       ],
