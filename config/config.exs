@@ -76,4 +76,13 @@ config :ex_cldr,
   default_locale: "en",
   default_backend: Plausible.Cldr
 
+# OIDC config and defaults
+config :plausible, Plausible.Auth.OIDC, enable: false
+
+config :plausible, :openid_connect_providers,
+  default: [
+    response_type: "code",
+    scope: "openid profile email"
+  ]
+
 import_config "#{config_env()}.exs"

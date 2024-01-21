@@ -71,6 +71,13 @@ defmodule Plausible.Auth.User do
     |> unique_constraint(:email)
   end
 
+  def new_oidc(attrs \\ %{}) do
+    %Plausible.Auth.User{}
+    |> cast(attrs, [:email, :name, :email_verified])
+    |> start_trial()
+    |> unique_constraint(:email)
+  end
+
   def settings_changeset(user, attrs \\ %{}) do
     user
     |> cast(attrs, [:email, :name, :theme])

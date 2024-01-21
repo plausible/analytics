@@ -32,7 +32,8 @@ defmodule Plausible.Application do
       {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
       PlausibleWeb.Endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
-      Plausible.PromEx
+      Plausible.PromEx,
+      {OpenIDConnect.Worker, Application.get_env(:plausible, :openid_connect_providers)}
     ]
 
     opts = [strategy: :one_for_one, name: Plausible.Supervisor]

@@ -222,6 +222,29 @@ defmodule PlausibleWeb.AuthController do
     |> redirect(to: Routes.auth_path(conn, :login_form))
   end
 
+  def oidc_callback(conn, %{"code" => code}) do
+    if !Plausible.Auth.OIDC.use_oidc() do
+      render_error(
+        conn,
+        404,
+        "OIDC is not active"
+      )
+    else
+      with {:ok, tokens} <- OpenIDConnect.fetch_tokens(:default, %{code: code}),
+           {:ok, claims} <- OpenIDConnect.verify(:default, tokens["id_token"]),
+           {:ok, user} <- Plausible.Auth.OIDC.get_or_create_user(claims) do
+        set_user_session_and_redirect(conn, user)
+      else
+        e ->
+          render_error(
+            conn,
+            400,
+            "OIDC login failed: #{inspect(e)}"
+          )
+      end
+    end
+  end
+
   def login(conn, %{"email" => email, "password" => password}) do
     with {:ok, user} <- login_user(conn, email, password) do
       if Auth.TOTP.enabled?(user) and not TwoFactor.Session.remember_2fa?(conn, user) do
@@ -320,14 +343,11 @@ defmodule PlausibleWeb.AuthController do
   end
 
   defp find_user(email) do
-    user =
-      Repo.one(
-        from(u in Plausible.Auth.User,
-          where: u.email == ^email
-        )
-      )
-
-    if user, do: {:ok, user}, else: :user_not_found
+    Auth.user_by_email(email)
+    |> case do
+      {:error, _} -> :user_not_found
+      v -> v
+    end
   end
 
   defp check_password(user, password) do
@@ -339,7 +359,11 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def login_form(conn, _params) do
-    render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    if Plausible.Auth.OIDC.use_oidc() do
+      redirect(conn, external: OpenIDConnect.authorization_uri(:default))
+    else
+      render(conn, "login_form.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
+    end
   end
 
   def user_settings(conn, _params) do

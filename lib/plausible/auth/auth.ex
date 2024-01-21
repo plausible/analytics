@@ -8,6 +8,22 @@ defmodule Plausible.Auth do
     |> Repo.insert()
   end
 
+  @spec create_oidc_user(String.t() | nil, String.t(), boolean() | nil) ::
+          {:ok, Plausible.Auth.User.t()} | {:error, Ecto.Changeset.t()}
+  def create_oidc_user(name, email, email_verified) do
+    Auth.User.new_oidc(%{name: name, email: email, email_verified: email_verified})
+    |> Repo.insert(returning: :id)
+  end
+
+  @spec user_by_email(String.t()) :: Auth.User.t() | nil
+  def user_by_email(email) when is_binary(email) do
+    find_user_by(email: email)
+    |> case do
+      nil -> {:error, :not_found}
+      u -> {:ok, u}
+    end
+  end
+
   def find_user_by(opts) do
     Repo.get_by(Auth.User, opts)
   end

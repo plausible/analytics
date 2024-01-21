@@ -135,7 +135,8 @@ defmodule Plausible.MixProject do
       {:scrivener_ecto, "~> 2.0"},
       {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :small_dev]},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :small_dev]},
-      {:ex_json_logger, "~> 1.4.0"}
+      {:ex_json_logger, "~> 1.4.0"},
+      {:openid_connect, "~> 0.2.2"}
     ]
   end
 

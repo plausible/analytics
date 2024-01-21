@@ -205,6 +205,7 @@ defmodule PlausibleWeb.Router do
     post "/2fa/use_recovery_code", AuthController, :verify_2fa_recovery_code
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
+    get "/oidc/callback", AuthController, :oidc_callback
     get "/avatar/:hash", AvatarController, :avatar
     post "/error_report", ErrorReportController, :submit_error_report
   end
