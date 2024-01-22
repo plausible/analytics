@@ -77,6 +77,10 @@
   name: 'Winamp'
   version: '$1'
 
+- regex: 'J\. River Internet Reader/(\d+\.[.\d]+)'
+  name: 'JRiver Media Center'
+  version: '$1'
+
 - regex: '(?:Windows-Media-Player|NSPlayer)(?:/(\d+[\.\d]+))?'
   name: 'Windows Media Player'
   version: '$1'
@@ -123,4 +127,57 @@
 
 - regex: 'Downcast/(\d+\.[\d\.]+)?'
   name: 'Downcast'
+  version: '$1'
+
+- regex: '^Juice/([\d\.]+)'
+  name: 'Juice'
+  version: '$1'
+
+- regex: 'just_audio/(\d+\.[.\d]+)'
+  name: 'Just Audio'
+  version: '$1'
+
+# https://apps.kde.org/kasts/ ?
+- regex: '^Kasts/(\d+\.[.\d]+)'
+  name: 'Kasts'
+  version: '$1'
+
+- regex: 'MixerBox(?:%20Pro)?/([.\d]+)'
+  name: 'MixerBox'
+  version: '$1'
+
+- regex: '^MusicBee(?:/(\d+\.[.\d]+))?'
+  name: 'MusicBee'
+  version: '$1'
+
+- regex: '^amarok/(\d+\.[.\d]+)'
+  name: 'Amarok'
+  version: '$1'
+
+- regex: 'Hubhopper/([\d\.]+)'
+  name: 'Hubhopper'
+  version: '$1'
+
+- regex: 'StudioDisplay/(\d+\.[\d\.]+)'
+  name: 'StudioDisplay'
+  version: '$1'
+
+# JHelioviewer (https://www.jhelioviewer.org/)
+- regex: 'JHV/SWHV-([.\d+]+)'
+  name: 'JHelioviewer'
+  version: '$1'
+
+# Xtream Player (https://play.google.com/store/apps/details?id=com.devcoder.iptvxtreamplayer)
+- regex: 'com.devcoder.iptvxtreamplayer'
+  name: 'Xtream Player'
+  version: ''
+
+# DIGA (https://av.jpn.support.panasonic.com/support/global/cs/bd/diga_player/2013/android/index.html)
+- regex: 'DIGA(?:Plus/(\d+\.[.\d]+))?'
+  name: 'DIGA'
+  version: '$1'
+
+# YouView (https://www.youview.com/)
+- regex: 'YouView(?:HTML/(\d+\.[.\d]+))?'
+  name: 'YouView'
   version: '$1'
