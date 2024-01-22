@@ -12,8 +12,8 @@
           <%= select f, :tab, settings_tabs(@conn), class: "dark:bg-gray-800 mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 outline-none focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:text-gray-100", onchange: "location.href = location.href.replace(/[^\/\/]*$/, event.target.value)", selected: List.last(@conn.path_info)  %>
         <% end %>
         <div class="hidden lg:block">
-          <%= for [key: key, value: val] <- settings_tabs(@conn) do %>
-            <%= render("_settings_tab.html", this_tab: val, text: key, site: @site, conn: @conn) %>
+          <%= for [key: key, value: val, icon: icon] <- settings_tabs(@conn) do %>
+            <%= render("_settings_tab.html", icon: icon, this_tab: val, text: key, site: @site, conn: @conn) %>
           <% end %>
         </div>
       </div>

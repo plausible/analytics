@@ -1,0 +1,13 @@
+<a
+  href={"/" <> URI.encode_www_form(@site.domain) <> "/settings/" <> @this_tab}
+  class={[
+    "flex items-center px-3 py-2 text-sm leading-5 font-medium rounded-md outline-none focus:outline-none transition ease-in-out duration-150 cursor-default",
+    is_current_tab(@conn, @this_tab) &&
+      "cursor-default text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-900 hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-200 dark:focus:bg-gray-800",
+    not is_current_tab(@conn, @this_tab) &&
+      "cursor-pointer text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 focus:text-gray-900 focus:bg-gray-50 dark:focus:text-gray-100 dark:focus:bg-gray-800"
+  ]}
+>
+  <PlausibleWeb.Components.Generic.dynamic_icon name={@icon} class="h-4 w-4 mr-2" />
+  <%= @text %>
+</a>
