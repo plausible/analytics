@@ -25,7 +25,7 @@ defmodule Plausible.Stats.Breakdown do
     events = Enum.map(event_goals, & &1.event_name)
     event_query = %Query{query | filters: Map.put(query.filters, "event:name", {:member, events})}
 
-    trace(query, property, metrics, opts)
+    if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
     event_results =
       if Enum.any?(event_goals) do
@@ -101,7 +101,7 @@ defmodule Plausible.Stats.Breakdown do
         []
       end
 
-    trace(query, property, metrics, opts)
+    if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
     breakdown_events(site, query, "event:props:" <> custom_prop, metrics, pagination)
     |> Kernel.++(none_result)
@@ -136,7 +136,7 @@ defmodule Plausible.Stats.Breakdown do
           Query.put_filter(query, "visit:entry_page", {:member, Enum.map(pages, & &1[:page])})
       end
 
-    trace(new_query, property, metrics, opts)
+    if !Keyword.get(opts, :skip_tracing), do: trace(new_query, property, metrics)
 
     if Enum.any?(event_metrics) && Enum.empty?(event_result) do
       []
@@ -160,12 +160,12 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def breakdown(site, query, property, metrics, pagination, opts) when property in @event_props do
-    trace(query, property, metrics, opts)
+    if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
     breakdown_events(site, query, property, metrics, pagination)
   end
 
   def breakdown(site, query, property, metrics, pagination, opts) do
-    trace(query, property, metrics, opts)
+    if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
     breakdown_sessions(site, query, property, metrics, pagination)
   end
 
@@ -683,17 +683,15 @@ defmodule Plausible.Stats.Breakdown do
     |> Ecto.Query.offset(^offset)
   end
 
-  defp trace(query, property, metrics, opts) do
-    if !Keyword.get(opts, :skip_tracing) do
-      Query.trace(query)
+  defp trace(query, property, metrics) do
+    Query.trace(query)
 
-      metrics = Enum.sort(metrics) |> Enum.join(";")
+    metrics = Enum.sort(metrics) |> Enum.join(";")
 
-      Tracer.set_attributes([
-        {"plausible.query.breakdown_property", property},
-        {"plausible.query.breakdown_metrics", metrics}
-      ])
-    end
+    Tracer.set_attributes([
+      {"plausible.query.breakdown_property", property},
+      {"plausible.query.breakdown_metrics", metrics}
+    ])
   end
 
   on_full_build do
