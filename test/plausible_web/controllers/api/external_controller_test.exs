@@ -438,7 +438,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       params = %{
         name: "pageview",
         url: "http://example.com/",
-        referrer: "android-app://com.google.android.gm",
+        referrer: "android-app://random",
         domain: site.domain
       }
 
