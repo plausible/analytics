@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - master
-    paths: 
-      - 'test/e2e/**.tf' 
+    paths:
+      - 'test/e2e/**.tf'
   pull_request:
-    branches:
-      - master
     paths:
       - 'test/e2e/**.tf'
 
@@ -43,7 +41,7 @@ jobs:
       - name: Terraform Init
         id: init
         run: terraform init
-      
+
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
