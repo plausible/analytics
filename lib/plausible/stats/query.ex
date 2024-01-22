@@ -250,15 +250,17 @@ defmodule Plausible.Stats.Query do
     end
   end
 
-  @spec trace(%__MODULE__{}) :: %__MODULE__{}
-  def trace(%__MODULE__{} = query) do
+  @spec trace(%__MODULE__{}, [atom()]) :: %__MODULE__{}
+  def trace(%__MODULE__{} = query, metrics) do
     filter_keys = Map.keys(query.filters) |> Enum.sort() |> Enum.join(";")
+    metrics = metrics |> Enum.sort() |> Enum.join(";")
 
     Tracer.set_attributes([
       {"plausible.query.interval", query.interval},
       {"plausible.query.period", query.period},
       {"plausible.query.include_imported", query.include_imported},
-      {"plausible.query.filter_keys", filter_keys}
+      {"plausible.query.filter_keys", filter_keys},
+      {"plausible.query.metrics", metrics}
     ])
 
     query
