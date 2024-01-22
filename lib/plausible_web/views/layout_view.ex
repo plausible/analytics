@@ -42,18 +42,18 @@ defmodule PlausibleWeb.LayoutView do
 
   def settings_tabs(conn) do
     [
-      [key: "General", value: "general"],
-      [key: "People", value: "people"],
-      [key: "Visibility", value: "visibility"],
-      [key: "Goals", value: "goals"],
+      [key: "General", value: "general", icon: :rocket_launch],
+      [key: "People", value: "people", icon: :users],
+      [key: "Visibility", value: "visibility", icon: :eye],
+      [key: "Goals", value: "goals", icon: :check_circle],
       on_full_build do
-        [key: "Funnels", value: "funnels"]
+        [key: "Funnels", value: "funnels", icon: :funnel]
       end,
-      [key: "Custom Properties", value: "properties"],
-      [key: "Integrations", value: "integrations"],
-      [key: "Email Reports", value: "email-reports"],
+      [key: "Custom Properties", value: "properties", icon: :document_text],
+      [key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square],
+      [key: "Email Reports", value: "email-reports", icon: :envelope],
       if conn.assigns[:current_user_role] == :owner do
-        [key: "Danger zone", value: "danger-zone"]
+        [key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle]
       end
     ]
   end
