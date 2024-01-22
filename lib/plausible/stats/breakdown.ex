@@ -684,13 +684,10 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp trace(query, property, metrics) do
-    Query.trace(query)
-
-    metrics = Enum.sort(metrics) |> Enum.join(";")
+    Query.trace(query, metrics)
 
     Tracer.set_attributes([
-      {"plausible.query.breakdown_property", property},
-      {"plausible.query.breakdown_metrics", metrics}
+      {"plausible.query.breakdown_property", property}
     ])
   end
 

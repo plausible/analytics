@@ -33,6 +33,8 @@ defmodule Plausible.Stats.Timeseries do
         {nil, event_metrics}
       end
 
+    Query.trace(query, metrics)
+
     [event_result, session_result] =
       Plausible.ClickhouseRepo.parallel_tasks([
         fn -> events_timeseries(site, query, event_metrics) end,
