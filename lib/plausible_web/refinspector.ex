@@ -18,7 +18,7 @@ defmodule PlausibleWeb.RefInspector do
   def right_uri?(%URI{host: nil}), do: false
 
   def right_uri?(%URI{host: host, scheme: scheme})
-      when scheme in ["http", "https"] and byte_size(host) > 0,
+      when scheme in ["http", "https", "android-app"] and byte_size(host) > 0,
       do: true
 
   def right_uri?(_), do: false

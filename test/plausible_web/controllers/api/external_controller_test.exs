@@ -444,11 +444,11 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.referrer_source == "indiehackers.com"
     end
 
-    test "if the referrer is not http or https, it is ignored", %{conn: conn, site: site} do
+    test "stores referrer from android app", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
         url: "http://example.com/",
-        referrer: "android-app://random",
+        referrer: "android-app://some.android.app",
         domain: site.domain
       }
 
@@ -460,7 +460,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.referrer_source == ""
+      assert session.referrer_source == "some.android.app"
     end
 
     test "screen size is calculated from user agent", %{conn: conn, site: site} do
