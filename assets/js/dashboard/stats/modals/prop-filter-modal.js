@@ -40,11 +40,15 @@ function PropFilterModal(props) {
 
   const fetchPropValueOptions = useCallback(() => {
     return (input) => {
+      if (formState.prop_value?.type === FILTER_TYPES.contains) {
+        return Promise.resolve([])
+      }
+
       const propKey = formState.prop_key?.value
       const updatedQuery = { ...query, filters: { ...query.filters, props: {[propKey]: '!(none)'} } }
       return api.get(apiPath(props.site, "/suggestions/prop_value"), updatedQuery, { q: input.trim() })
     }
-  }, [formState.prop_key])
+  }, [formState.prop_key, formState.prop_value])
 
   function onPropKeySelect() {
     return (selectedOptions) => {
@@ -86,7 +90,14 @@ function PropFilterModal(props) {
           <FilterTypeSelector isDisabled={!formState.prop_key} forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
         </div>
         <div className="col-span-4">
-          <Combobox isDisabled={!formState.prop_key} fetchOptions={fetchPropValueOptions()} values={formState.prop_value.clauses} onSelect={onPropValueSelect()} placeholder={'Value'} />
+          <Combobox
+            isDisabled={!formState.prop_key}
+            fetchOptions={fetchPropValueOptions()}
+            values={formState.prop_value.clauses}
+            onSelect={onPropValueSelect()}
+            placeholder={'Value'}
+            freeChoice={selectedFilterType() == FILTER_TYPES.contains}
+          />
         </div>
       </div>
     )
