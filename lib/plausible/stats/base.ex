@@ -142,6 +142,16 @@ defmodule Plausible.Stats.Base do
             )
           end
 
+        {"event:props:" <> prop_name, {:matches, value}} ->
+          regex = page_regex(value)
+
+          from(
+            e in q,
+            left_array_join: meta in "meta",
+            as: :meta,
+            where: meta.key == ^prop_name and fragment("match(?, ?)", meta.value, ^regex)
+          )
+
         {"event:props:" <> prop_name, {:member, values}} ->
           none_value_included = Enum.member?(values, "(none)")
 

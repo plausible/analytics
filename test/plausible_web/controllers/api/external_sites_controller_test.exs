@@ -162,11 +162,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn =
           put(conn, "/api/v1/sites/shared-links", %{
             site_id: site.domain,
-            name: "Wordpress"
+            name: "WordPress"
           })
 
         res = json_response(conn, 200)
-        assert res["name"] == "Wordpress"
+        assert res["name"] == "WordPress"
         assert String.starts_with?(res["url"], "http://")
       end
 
@@ -182,11 +182,11 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn =
           put(conn, "/api/v1/sites/shared-links", %{
             site_id: old_domain,
-            name: "Wordpress"
+            name: "WordPress"
           })
 
         res = json_response(conn, 200)
-        assert res["name"] == "Wordpress"
+        assert res["name"] == "WordPress"
         assert String.starts_with?(res["url"], "http://")
       end
 
@@ -194,7 +194,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn =
           put(conn, "/api/v1/sites/shared-links", %{
             site_id: site.domain,
-            name: "Wordpress"
+            name: "WordPress"
           })
 
         %{"url" => url} = json_response(conn, 200)
@@ -202,7 +202,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn =
           put(conn, "/api/v1/sites/shared-links", %{
             site_id: site.domain,
-            name: "Wordpress"
+            name: "WordPress"
           })
 
         assert %{"url" => ^url} = json_response(conn, 200)
@@ -211,7 +211,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       test "returns 400 when site id missing", %{conn: conn} do
         conn =
           put(conn, "/api/v1/sites/shared-links", %{
-            name: "Wordpress"
+            name: "WordPress"
           })
 
         res = json_response(conn, 400)
@@ -221,7 +221,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
       test "returns 404 when site id is non existent", %{conn: conn} do
         conn =
           put(conn, "/api/v1/sites/shared-links", %{
-            name: "Wordpress",
+            name: "WordPress",
             site_id: "bad"
           })
 
@@ -244,7 +244,7 @@ defmodule PlausibleWeb.Api.ExternalSitesControllerTest do
         conn =
           put(conn, "/api/v1/sites/shared-links", %{
             site_id: site.domain,
-            name: "Wordpress"
+            name: "WordPress"
           })
 
         res = json_response(conn, 404)

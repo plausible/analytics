@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Allow filtering with `contains`/`matches` operator for custom properties
 - Add `referrers.csv` to CSV export
 - Add a new Properties section in the dashboard to break down by custom properties
 - Add `custom_props.csv` to CSV export (almost the same as the old `prop_breakdown.csv`, but has different column headers, and includes props for pageviews too, not only custom events)

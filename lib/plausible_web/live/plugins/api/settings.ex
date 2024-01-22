@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
      assign(socket,
        domain: domain,
        add_token?: not is_nil(session["new_token"]),
-       token_description: String.capitalize(session["new_token"] || ""),
+       token_description: session["new_token"] || "",
        current_user_id: user_id
      )}
   end
