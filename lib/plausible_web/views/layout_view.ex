@@ -53,7 +53,7 @@ defmodule PlausibleWeb.LayoutView do
       [key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square],
       [key: "Email Reports", value: "email-reports", icon: :envelope],
       if conn.assigns[:current_user_role] == :owner do
-        [key: "Danger zone", value: "danger-zone", icon: :exclamation_triangle]
+        [key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle]
       end
     ]
   end
