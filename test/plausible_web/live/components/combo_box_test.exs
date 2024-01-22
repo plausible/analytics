@@ -274,6 +274,20 @@ defmodule PlausibleWeb.Live.Components.ComboBoxTest do
                "input[type=hidden][name=some_submit_name][value=\"my new option\"]"
              )
     end
+
+    test "selectionInProgress doesn't apply when no server roundtrip is needed", %{conn: conn} do
+      {:ok, lv, html} = live_isolated(conn, CreatableView, session: %{})
+      regular_option = find(html, "li#dropdown-test-creatable-component-option-1 a")
+
+      assert Floki.attribute(regular_option, "x-on:click") == ["selectionInProgress = true"]
+
+      creatable_option =
+        lv
+        |> type_into_combo("test-creatable-component", "my new option")
+        |> find("input[type=hidden][name=some_submit_name][value=\"my new option\"]")
+
+      assert Floki.attribute(creatable_option, "x-on:click") == []
+    end
   end
 
   describe "async suggestions" do
