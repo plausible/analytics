@@ -1236,6 +1236,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                %{"goal" => "Visit /blog**", "visitors" => 2, "pageviews" => 4}
              ] = json_response(conn, 200)["results"]
     end
+
+    test "does not return goals that are not configured for the site", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/register"),
+        build(:event, name: "Signup")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors,pageviews",
+          "property" => "event:goal"
+        })
+
+      assert [] = json_response(conn, 200)["results"]
+    end
   end
 
   describe "filtering" do
