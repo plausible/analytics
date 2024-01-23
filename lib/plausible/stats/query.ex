@@ -15,6 +15,8 @@ defmodule Plausible.Stats.Query do
   @type t :: %__MODULE__{}
 
   def from(site, params) do
+    Plausible.ClickhouseRepo.set_context(params)
+
     query =
       query_by_period(site, params)
       |> put_interval(params)

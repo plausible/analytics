@@ -12,16 +12,64 @@ defmodule Plausible.ClickhouseRepo do
     end
   end
 
+  defmodule KeepRouteContext do
+    alias Plausible.ClickhouseRepo
+
+    def init(_opts), do: nil
+
+    def call(conn, _) do
+      ClickhouseRepo.set_context(%{request_path: conn.request_path})
+      conn
+    end
+  end
+
+  @logger_metadata_key __MODULE__
+  def set_context(new) when is_map(new) do
+    metadata =
+      case :logger.get_process_metadata() do
+        %{@logger_metadata_key => ctx} -> Map.update(ctx, :log_comment, new, &Map.merge(&1, new))
+        _ -> %{:log_comment => new}
+      end
+
+    :logger.update_process_metadata(%{@logger_metadata_key => metadata})
+  end
+
+  def get_context() do
+    case :logger.get_process_metadata() do
+      %{@logger_metadata_key => %{log_comment: log_comment}} ->
+        log_comment
+
+      %{} ->
+        %{}
+
+      :undefined ->
+        %{}
+    end
+  end
+
+  @impl true
+  def prepare_query(_operation, query, opts) do
+    setting = {:log_comment, Jason.encode!(get_context())}
+
+    opts =
+      Keyword.update(opts, :settings, [setting], fn settings -> [setting | settings] end)
+
+    {query, opts}
+  end
+
   @task_timeout 60_000
   def parallel_tasks(queries) do
-    ctx = OpenTelemetry.Ctx.get_current()
+    otel_ctx = OpenTelemetry.Ctx.get_current()
+    ch_ctx = get_context()
 
-    execute_with_tracing = fn fun ->
-      OpenTelemetry.Ctx.attach(ctx)
+    context_carrier = fn fun ->
+      OpenTelemetry.Ctx.attach(otel_ctx)
+      set_context(ch_ctx)
+
       fun.()
     end
 
-    Task.async_stream(queries, execute_with_tracing, max_concurrency: 3, timeout: @task_timeout)
+    Task.async_stream(queries, context_carrier, max_concurrency: 3, timeout: @task_timeout)
     |> Enum.to_list()
     |> Keyword.values()
   end
