@@ -1,23 +1,23 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { withRouter } from "react-router-dom";
 
-import Combobox from '../../components/combobox'
-import FilterTypeSelector from "../../components/filter-type-selector";
 import { FILTER_TYPES } from "../../util/filters";
 import { parseQuery } from '../../query'
-import * as api from '../../api'
-import { apiPath, siteBasePath } from '../../util/url'
+import { siteBasePath } from '../../util/url'
 import { toFilterQuery, parseQueryFilter } from '../../util/filters';
 import { shouldIgnoreKeypress } from '../../keybinding';
+import PropFilterRow from './prop-filter-row';
 
 function getFormState(query) {
   const rawValue = query.filters['props']
   if (rawValue) {
     const [[propKey, _propValue]] = Object.entries(rawValue)
-    const {type, clauses} = parseQueryFilter(query, 'props')
+    const { type, clauses } = parseQueryFilter(query, 'props')
+
+    console.log({ type, clauses, propKey, _propValue })
 
     return {
-      prop_key: {value: propKey, label: propKey},
+      prop_key: { value: propKey, label: propKey },
       prop_value: { type: type, clauses: clauses }
     }
   }
@@ -31,24 +31,6 @@ function getFormState(query) {
 function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
   const [formState, setFormState] = useState(getFormState(query))
-
-  function fetchPropKeyOptions() {
-    return (input) => {
-      return api.get(apiPath(props.site, "/suggestions/prop_key"), query, { q: input.trim() })
-    }
-  }
-
-  const fetchPropValueOptions = useCallback(() => {
-    return (input) => {
-      if (formState.prop_value?.type === FILTER_TYPES.contains) {
-        return Promise.resolve([])
-      }
-
-      const propKey = formState.prop_key?.value
-      const updatedQuery = { ...query, filters: { ...query.filters, props: {[propKey]: '!(none)'} } }
-      return api.get(apiPath(props.site, "/suggestions/prop_value"), updatedQuery, { q: input.trim() })
-    }
-  }, [formState.prop_key, formState.prop_value])
 
   function onPropKeySelect() {
     return (selectedOptions) => {
@@ -74,33 +56,6 @@ function PropFilterModal(props) {
         ...prevState, prop_value: { ...prevState.prop_value, type: newType }
       }))
     }
-  }
-
-  function selectedFilterType() {
-    return formState.prop_value.type
-  }
-
-  function renderFilterInputs() {
-    return (
-      <div className="grid grid-cols-11 mt-6">
-        <div className="col-span-4">
-          <Combobox className="mr-2" fetchOptions={fetchPropKeyOptions()} singleOption={true} values={formState.prop_key ? [formState.prop_key] : []} onSelect={onPropKeySelect()} placeholder={'Property'} />
-        </div>
-        <div className="col-span-3 mx-2">
-          <FilterTypeSelector isDisabled={!formState.prop_key} forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
-        </div>
-        <div className="col-span-4">
-          <Combobox
-            isDisabled={!formState.prop_key}
-            fetchOptions={fetchPropValueOptions()}
-            values={formState.prop_value.clauses}
-            onSelect={onPropValueSelect()}
-            placeholder={'Value'}
-            freeChoice={selectedFilterType() == FILTER_TYPES.contains}
-          />
-        </div>
-      </div>
-    )
   }
 
   function isDisabled() {
@@ -150,7 +105,17 @@ function PropFilterModal(props) {
       <div className="mt-4 border-b border-gray-300"></div>
       <main className="modal__content">
         <form className="flex flex-col" onSubmit={handleSubmit}>
-          {renderFilterInputs()}
+          <div className="grid grid-cols-11 mt-6">
+            <PropFilterRow
+              site={props.site}
+              query={query}
+              propKey={formState.prop_key}
+              propValue={formState.prop_value}
+              onPropKeySelect={onPropKeySelect}
+              onPropValueSelect={onPropValueSelect}
+              onFilterTypeSelect={onFilterTypeSelect}
+            />
+          </div>
 
           <div className="mt-6 flex items-center justify-start">
             <button
@@ -165,7 +130,7 @@ function PropFilterModal(props) {
               <button
                 type="button"
                 className="ml-2 button px-4 flex bg-red-500 dark:bg-red-500 hover:bg-red-600 dark:hover:bg-red-700 items-center"
-                onClick={() => {selectFiltersAndCloseModal(null)}}
+                onClick={() => { selectFiltersAndCloseModal(null) }}
               >
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 Remove filter
