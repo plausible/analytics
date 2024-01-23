@@ -444,6 +444,26 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert session.referrer_source == "indiehackers.com"
     end
 
+    test "if the referrer is not http, https, or android it is ignored", %{conn: conn, site: site} do
+      params = %{
+        name: "pageview",
+        url: "http://example.com/",
+        referrer: "ftp://wat",
+        domain: site.domain
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", @user_agent)
+        |> post("/api/event", params)
+
+      pageview = get_event(site)
+
+      assert response(conn, 202) == "ok"
+      assert pageview.referrer_source == ""
+      assert pageview.referrer == ""
+    end
+
     test "stores referrer from android app", %{conn: conn, site: site} do
       params = %{
         name: "pageview",
