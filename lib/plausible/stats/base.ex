@@ -111,71 +111,74 @@ defmodule Plausible.Stats.Base do
       end
 
     q =
-      case Query.get_filter_by_prefix(query, "event:props") do
-        {"event:props:" <> prop_name, {:is, value}} ->
-          if value == "(none)" do
-            from(
-              e in q,
-              where: not has_key(e, :meta, ^prop_name)
-            )
-          else
-            from(
-              e in q,
-              where: has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) == ^value
-            )
-          end
+      Enum.reduce(Query.get_all_filters_by_prefix(query, "event:props"), q, fn prop_filter, q ->
+        case prop_filter do
+          {"event:props:" <> prop_name, {:is, value}} ->
+            if value == "(none)" do
+              from(
+                e in q,
+                where: not has_key(e, :meta, ^prop_name)
+              )
+            else
+              from(
+                e in q,
+                where:
+                  has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) == ^value
+              )
+            end
 
-        {"event:props:" <> prop_name, {:is_not, value}} ->
-          if value == "(none)" do
-            from(
-              e in q,
-              where: has_key(e, :meta, ^prop_name)
-            )
-          else
+          {"event:props:" <> prop_name, {:is_not, value}} ->
+            if value == "(none)" do
+              from(
+                e in q,
+                where: has_key(e, :meta, ^prop_name)
+              )
+            else
+              from(
+                e in q,
+                where:
+                  not has_key(e, :meta, ^prop_name) or get_by_key(e, :meta, ^prop_name) != ^value
+              )
+            end
+
+          {"event:props:" <> prop_name, {:matches, value}} ->
+            regex = page_regex(value)
+
             from(
               e in q,
               where:
-                not has_key(e, :meta, ^prop_name) or get_by_key(e, :meta, ^prop_name) != ^value
+                has_key(e, :meta, ^prop_name) and
+                  fragment("match(?, ?)", get_by_key(e, :meta, ^prop_name), ^regex)
             )
-          end
 
-        {"event:props:" <> prop_name, {:matches, value}} ->
-          regex = page_regex(value)
+          {"event:props:" <> prop_name, {:member, values}} ->
+            none_value_included = Enum.member?(values, "(none)")
 
-          from(
-            e in q,
-            where:
-              has_key(e, :meta, ^prop_name) and
-                fragment("match(?, ?)", get_by_key(e, :meta, ^prop_name), ^regex)
-          )
+            from(
+              e in q,
+              where:
+                (has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) in ^values) or
+                  (^none_value_included and not has_key(e, :meta, ^prop_name))
+            )
 
-        {"event:props:" <> prop_name, {:member, values}} ->
-          none_value_included = Enum.member?(values, "(none)")
+          {"event:props:" <> prop_name, {:not_member, values}} ->
+            none_value_included = Enum.member?(values, "(none)")
 
-          from(
-            e in q,
-            where:
-              (has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) in ^values) or
-                (^none_value_included and not has_key(e, :meta, ^prop_name))
-          )
-
-        {"event:props:" <> prop_name, {:not_member, values}} ->
-          none_value_included = Enum.member?(values, "(none)")
-
-          from(
-            e in q,
-            where:
-              (has_key(e, :meta, ^prop_name) and
-                 get_by_key(e, :meta, ^prop_name) not in ^values) or
-                (^none_value_included and
-                   has_key(e, :meta, ^prop_name) and
+            from(
+              e in q,
+              where:
+                (has_key(e, :meta, ^prop_name) and
                    get_by_key(e, :meta, ^prop_name) not in ^values) or
-                (not (^none_value_included) and not has_key(e, :meta, ^prop_name))
-          )
+                  (^none_value_included and
+                     has_key(e, :meta, ^prop_name) and
+                     get_by_key(e, :meta, ^prop_name) not in ^values) or
+                  (not (^none_value_included) and not has_key(e, :meta, ^prop_name))
+            )
 
-        _ ->
-          q
-      end
+          _ ->
+            q
+        end
+      end)
 
     q
   end
