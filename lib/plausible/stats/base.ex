@@ -1,6 +1,8 @@
 defmodule Plausible.Stats.Base do
   use Plausible.ClickhouseRepo
   use Plausible
+  use Plausible.Stats.Fragments
+
   alias Plausible.Stats.{Query, Filters}
   alias Plausible.Timezones
   import Ecto.Query
@@ -114,14 +116,12 @@ defmodule Plausible.Stats.Base do
           if value == "(none)" do
             from(
               e in q,
-              where: fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
+              where: not has_key(e, :meta, ^prop_name)
             )
           else
             from(
               e in q,
-              array_join: meta in "meta",
-              as: :meta,
-              where: meta.key == ^prop_name and meta.value == ^value
+              where: has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) == ^value
             )
           end
 
@@ -129,16 +129,13 @@ defmodule Plausible.Stats.Base do
           if value == "(none)" do
             from(
               e in q,
-              where: fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name)
+              where: has_key(e, :meta, ^prop_name)
             )
           else
             from(
               e in q,
-              left_array_join: meta in "meta",
-              as: :meta,
               where:
-                (meta.key == ^prop_name and meta.value != ^value) or
-                  fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name)
+                not has_key(e, :meta, ^prop_name) or get_by_key(e, :meta, ^prop_name) != ^value
             )
           end
 
@@ -147,9 +144,9 @@ defmodule Plausible.Stats.Base do
 
           from(
             e in q,
-            left_array_join: meta in "meta",
-            as: :meta,
-            where: meta.key == ^prop_name and fragment("match(?, ?)", meta.value, ^regex)
+            where:
+              has_key(e, :meta, ^prop_name) and
+                fragment("match(?, ?)", get_by_key(e, :meta, ^prop_name), ^regex)
           )
 
         {"event:props:" <> prop_name, {:member, values}} ->
@@ -157,12 +154,9 @@ defmodule Plausible.Stats.Base do
 
           from(
             e in q,
-            left_array_join: meta in "meta",
-            as: :meta,
             where:
-              (meta.key == ^prop_name and meta.value in ^values) or
-                (^none_value_included and
-                   fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
+              (has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) in ^values) or
+                (^none_value_included and not has_key(e, :meta, ^prop_name))
           )
 
         {"event:props:" <> prop_name, {:not_member, values}} ->
@@ -170,14 +164,13 @@ defmodule Plausible.Stats.Base do
 
           from(
             e in q,
-            left_array_join: meta in "meta",
-            as: :meta,
             where:
-              (meta.key == ^prop_name and meta.value not in ^values) or
-                (^none_value_included and fragment("has(?, ?)", field(e, :"meta.key"), ^prop_name) and
-                   meta.value not in ^values) or
-                (not (^none_value_included) and
-                   fragment("not has(?, ?)", field(e, :"meta.key"), ^prop_name))
+              (has_key(e, :meta, ^prop_name) and
+                 get_by_key(e, :meta, ^prop_name) not in ^values) or
+                (^none_value_included and
+                   has_key(e, :meta, ^prop_name) and
+                   get_by_key(e, :meta, ^prop_name) not in ^values) or
+                (not (^none_value_included) and not has_key(e, :meta, ^prop_name))
           )
 
         _ ->
@@ -240,34 +233,31 @@ defmodule Plausible.Stats.Base do
   def apply_entry_prop_filter(sessions_q, prop_name, {:is, "(none)"}) do
     from(
       s in sessions_q,
-      where: fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+      where: not has_key(s, :entry_meta, ^prop_name)
     )
   end
 
   def apply_entry_prop_filter(sessions_q, prop_name, {:is, value}) do
     from(
       s in sessions_q,
-      array_join: meta in "entry_meta",
-      as: :meta,
-      where: meta.key == ^prop_name and meta.value == ^value
+      where:
+        has_key(s, :entry_meta, ^prop_name) and get_by_key(s, :entry_meta, ^prop_name) == ^value
     )
   end
 
   def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, "(none)"}) do
     from(
       s in sessions_q,
-      where: fragment("has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+      where: has_key(s, :entry_meta, ^prop_name)
     )
   end
 
   def apply_entry_prop_filter(sessions_q, prop_name, {:is_not, value}) do
     from(
       s in sessions_q,
-      left_array_join: meta in "entry_meta",
-      as: :meta,
       where:
-        (meta.key == ^prop_name and meta.value != ^value) or
-          fragment("not has(?, ?)", field(s, :"entry_meta.key"), ^prop_name)
+        not has_key(s, :entry_meta, ^prop_name) or
+          get_by_key(s, :entry_meta, ^prop_name) != ^value
     )
   end
 

@@ -1,6 +1,8 @@
 defmodule Plausible.Stats.Breakdown do
   use Plausible.ClickhouseRepo
   use Plausible
+  use Plausible.Stats.Fragments
+
   import Plausible.Stats.{Base, Imported, Util}
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.Query
@@ -397,37 +399,16 @@ defmodule Plausible.Stats.Breakdown do
     |> Map.new()
   end
 
-  defp joins_table?(ecto_q, table) do
-    Enum.any?(
-      ecto_q.joins,
-      fn
-        %Ecto.Query.JoinExpr{source: {^table, _}} -> true
-        _ -> false
-      end
-    )
-  end
-
   defp do_group_by(
          %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
          "event:props:" <> prop
        ) do
-    q =
-      if joins_table?(q, "meta") do
-        q
-      else
-        from(
-          e in q,
-          array_join: meta in fragment("meta"),
-          as: :meta
-        )
-      end
-
     from(
-      [e, meta: meta] in q,
-      where: meta.key == ^prop,
-      group_by: meta.value,
-      select_merge: %{^prop => meta.value},
-      order_by: {:asc, meta.value}
+      e in q,
+      where: has_key(e, :meta, ^prop),
+      select_merge: %{^prop => get_by_key(e, :meta, ^prop)},
+      group_by: get_by_key(e, :meta, ^prop),
+      order_by: {:asc, get_by_key(e, :meta, ^prop)}
     )
   end
 

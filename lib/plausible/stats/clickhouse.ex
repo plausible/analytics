@@ -538,13 +538,12 @@ defmodule Plausible.Stats.Clickhouse do
       if val == "(none)" do
         from(
           e in q,
-          where: fragment("not has(meta.key, ?)", ^key)
+          where: not has_key(e, :meta, ^key)
         )
       else
         from(
           e in q,
-          array_join: meta in fragment("meta"),
-          where: meta.key == ^key and meta.value == ^val
+          where: has_key(e, :meta, ^key) and get_by_key(e, :meta, ^key) == ^val
         )
       end
     else
