@@ -71,11 +71,11 @@ export function parsePrefix(rawValue) {
 
 export function parseQueryFilter(query, filter) {
   if (filter === 'props') {
-    const rawValue = query.filters['props']
-    const [[_propKey, propVal]] = Object.entries(rawValue)
-    const {type, values} = parsePrefix(propVal)
-    const clauses = values.map(val => { return {value: val, label: val}})
-    return {type, clauses}
+    return Object.entries(query.filters['props']).map(([propKey, propVal]) => {
+      const {type, values} = parsePrefix(propVal)
+      const clauses = values.map(val => { return {value: val, label: val}})
+      return { propKey, type, clauses }
+    })
   } else {
     const {type, values} = parsePrefix(query.filters[filter] || '')
 

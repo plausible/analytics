@@ -38,17 +38,24 @@ function clearAllFilters(history, query) {
 }
 
 function filterText(key, _rawValue, query) {
-  const {type, clauses} = parseQueryFilter(query, key)
   const formattedFilter = formattedFilters[key]
 
   if (key === "props") {
-    const [[propKey, _propValue]] = Object.entries(query.filters['props'])
-    return <>Property <b>{propKey}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    const propTexts = parseQueryFilter(query, key).map(propFilterText)
+
+    return <>Property {propTexts.map((text, index) => (
+      <Fragment key={index}>{index > 0 ? 'and ' : ''}{text}</Fragment>
+    ))} </>
   } else if (formattedFilter) {
+    const {type, clauses} = parseQueryFilter(query, key)
     return <>{formattedFilter} {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
 
   throw new Error(`Unknown filter: ${key}`)
+}
+
+function propFilterText({ propKey, type, clauses }) {
+  return <><b>{propKey}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
 }
 
 function renderDropdownFilter(site, history, [key, value], query) {
