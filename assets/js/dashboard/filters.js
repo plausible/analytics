@@ -55,7 +55,7 @@ function filterText(key, _rawValue, query) {
 }
 
 function propFilterText({ propKey, type, clauses }) {
-  return <><b>{propKey}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+  return <><b>{propKey.label}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
 }
 
 function renderDropdownFilter(site, history, [key, value], query) {

@@ -9,34 +9,26 @@ import { shouldIgnoreKeypress } from '../../keybinding';
 import PropFilterRow from './prop-filter-row';
 
 function getFormState(query) {
-  return {
-    entries: [0],
-    values: {
-      0: {
-        propKey: null,
-        type: FILTER_TYPES.is,
-        clauses: []
+  if (query.filters['props']) {
+    const values = Object.fromEntries(parseQueryFilter(query, 'props').map((value, index) => [index, value]))
+    console.log({ query, values })
+
+    return {
+      entries: Object.keys(values).sort(),
+      values
+    }
+  } else {
+    return {
+      entries: [0],
+      values: {
+        0: {
+          propKey: null,
+          type: FILTER_TYPES.is,
+          clauses: []
+        }
       }
     }
   }
-
-  // const rawValue = query.filters['props']
-  // if (rawValue) {
-  //   const [[propKey, _propValue]] = Object.entries(rawValue)
-  //   const { type, clauses } = parseQueryFilter(query, 'props')
-
-  //   console.log({ type, clauses, propKey, _propValue })
-
-  //   return {
-  //     prop_key: { value: propKey, label: propKey },
-  //     prop_value: { type: type, clauses: clauses }
-  //   }
-  // }
-
-  // return {
-  //   prop_key: null,
-  //   prop_value: { type: FILTER_TYPES.is, clauses: [] }
-  // }
 }
 
 function PropFilterModal(props) {
