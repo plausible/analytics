@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-EC8C8EF5.js"></script>
+    <script src="dist/sidebar_items-7D46B7A8.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -173,6 +173,26 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#get_by_key/3" translate="no">get_by_key(table, meta_column, key)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns value of a key (usually property) under <code class="inline">meta.value</code> array or similar.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#has_key/3" translate="no">has_key(table, meta_column, key)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns whether a key (usually property) exists under <code class="inline">meta.key</code> array or similar.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#sample_percent/0" translate="no">sample_percent()</a>
 
       </div>
@@ -294,6 +314,67 @@ the specified timezone.</p></div>
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="get_by_key/3">
+
+  <div class="detail-header">
+    <a href="#get_by_key/3" class="detail-link" title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">get_by_key(table, meta_column, key)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/fragments.ex#L129" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns value of a key (usually property) under <code class="inline">meta.value</code> array or similar.</p><p>This macro is used for operating on custom properties.
+Callsites should also check whether key exists first in SQL via <code class="inline">has_key</code> macro.</p><h2 id="get_by_key/3-examples" class="section-heading">
+  <a href="#get_by_key/3-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples</span>
+</h2>
+<p><code class="inline">get_by_key(e, :meta, &quot;some_property_name&quot;)</code> expands to SQL <code class="inline">meta.value[indexOf(meta.key, &quot;some_property&quot;)]</code></p>
+  </section>
+</section>
+<section class="detail" id="has_key/3">
+
+  <div class="detail-header">
+    <a href="#has_key/3" class="detail-link" title="Link to this macro">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this macro</span>
+    </a>
+    <h1 class="signature" translate="no">has_key(table, meta_column, key)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/fragments.ex#L109" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+      <span class="note">(macro)</span>
+
+  </div>
+
+  <section class="docstring">
+
+<p>Returns whether a key (usually property) exists under <code class="inline">meta.key</code> array or similar.</p><p>This macro is used for operating on custom properties.</p><h2 id="has_key/3-examples" class="section-heading">
+  <a href="#has_key/3-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples</span>
+</h2>
+<p><code class="inline">has_key(e, :meta, &quot;some_property_name&quot;)</code> expands to SQL <code class="inline">has(meta.key, &quot;some_property_name&quot;)</code></p>
   </section>
 </section>
 <section class="detail" id="sample_percent/0">
