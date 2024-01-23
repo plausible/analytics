@@ -5,7 +5,8 @@ defmodule Plausible.Imported.ImportSources do
 
   @sources [
     Plausible.Imported.UniversalAnalytics,
-    Plausible.Imported.NoopImporter
+    Plausible.Imported.NoopImporter,
+    Plausible.Imported.CSVImporter
   ]
 
   @sources_map Map.new(@sources, &{&1.name(), &1})
