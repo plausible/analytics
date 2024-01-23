@@ -1,54 +1,70 @@
-import React, { useCallback } from 'react'
+import React from 'react'
 
 import Combobox from '../../components/combobox'
 import FilterTypeSelector from "../../components/filter-type-selector";
 import { FILTER_TYPES } from "../../util/filters";
 import * as api from '../../api'
 import { apiPath } from '../../util/url'
+import { TrashIcon } from '@heroicons/react/20/solid'
 
-function PropFilterRow({ query, site, propKey, propValue, onPropKeySelect, onPropValueSelect, onFilterTypeSelect }) {
+function PropFilterRow({ id, query, site, propKey, type, clauses, showDelete, onPropKeySelect, onPropValueSelect, onFilterTypeSelect, onPropDelete }) {
   function fetchPropKeyOptions() {
     return (input) => {
       return api.get(apiPath(site, "/suggestions/prop_key"), query, { q: input.trim() })
     }
   }
 
-  const fetchPropValueOptions = useCallback(() => {
+  function fetchPropValueOptions() {
     return (input) => {
-      if (propValue?.type === FILTER_TYPES.contains) {
+      if (type === FILTER_TYPES.contains) {
         return Promise.resolve([])
       }
 
-      const propKey = propKey?.value
-      // :TODO: Make sure props is retained
-      const updatedQuery = { ...query, filters: { ...query.filters, props: {[propKey]: '!(none)'} } }
+
+      const key = propKey?.value
+      const updatedQuery = { ...query, filters: { ...query.filters, props: { [key]: '!(none)' } } }
       return api.get(apiPath(site, "/suggestions/prop_value"), updatedQuery, { q: input.trim() })
     }
-  }, [propKey, propValue])
-
-  function selectedFilterType() {
-    return propValue.type
   }
 
   return (
-    <>
+    <div className="grid grid-cols-12 mt-6">
       <div className="col-span-4">
-        <Combobox className="mr-2" fetchOptions={fetchPropKeyOptions()} singleOption={true} values={propKey ? [propKey] : []} onSelect={onPropKeySelect()} placeholder={'Property'} />
+        <Combobox
+          className="mr-2"
+          fetchOptions={fetchPropKeyOptions()}
+          singleOption={true}
+          values={propKey ? [propKey] : []}
+          onSelect={(value) => onPropKeySelect(id, value)}
+          placeholder={'Property'}
+        />
       </div>
       <div className="col-span-3 mx-2">
-        <FilterTypeSelector isDisabled={!propKey} forFilter={'prop_value'} onSelect={onFilterTypeSelect()} selectedType={selectedFilterType()} />
+        <FilterTypeSelector
+          isDisabled={!propKey}
+          forFilter={'prop_value'}
+          onSelect={(value) => onFilterTypeSelect(id, value)}
+          selectedType={type}
+        />
       </div>
       <div className="col-span-4">
         <Combobox
           isDisabled={!propKey}
           fetchOptions={fetchPropValueOptions()}
-          values={propValue.clauses}
-          onSelect={onPropValueSelect()}
+          values={clauses}
+          onSelect={(value) => onPropValueSelect(id, value)}
           placeholder={'Value'}
-          freeChoice={selectedFilterType() == FILTER_TYPES.contains}
+          freeChoice={type == FILTER_TYPES.contains}
         />
       </div>
-    </>
+      {showDelete && (
+        <div className="col-span-1 flex flex-col justify-center">
+          <a className="ml-2 text-red-600 h-5 w-5 cursor-pointer" onClick={() => onPropDelete(id)}>
+            <TrashIcon />
+          </a>
+        </div>
+      )}
+    </div>
   )
 }
 

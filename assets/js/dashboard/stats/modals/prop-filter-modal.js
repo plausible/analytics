@@ -9,57 +9,110 @@ import { shouldIgnoreKeypress } from '../../keybinding';
 import PropFilterRow from './prop-filter-row';
 
 function getFormState(query) {
-  const rawValue = query.filters['props']
-  if (rawValue) {
-    const [[propKey, _propValue]] = Object.entries(rawValue)
-    const { type, clauses } = parseQueryFilter(query, 'props')
-
-    console.log({ type, clauses, propKey, _propValue })
-
-    return {
-      prop_key: { value: propKey, label: propKey },
-      prop_value: { type: type, clauses: clauses }
+  return {
+    entries: [0],
+    values: {
+      0: {
+        propKey: null,
+        type: FILTER_TYPES.is,
+        clauses: []
+      }
     }
   }
 
-  return {
-    prop_key: null,
-    prop_value: { type: FILTER_TYPES.is, clauses: [] }
-  }
+  // const rawValue = query.filters['props']
+  // if (rawValue) {
+  //   const [[propKey, _propValue]] = Object.entries(rawValue)
+  //   const { type, clauses } = parseQueryFilter(query, 'props')
+
+  //   console.log({ type, clauses, propKey, _propValue })
+
+  //   return {
+  //     prop_key: { value: propKey, label: propKey },
+  //     prop_value: { type: type, clauses: clauses }
+  //   }
+  // }
+
+  // return {
+  //   prop_key: null,
+  //   prop_value: { type: FILTER_TYPES.is, clauses: [] }
+  // }
 }
 
 function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
   const [formState, setFormState] = useState(getFormState(query))
 
-  function onPropKeySelect() {
-    return (selectedOptions) => {
-      const newPropKey = selectedOptions.length === 0 ? null : selectedOptions[0]
-      setFormState(prevState => ({
-        prop_key: newPropKey,
-        prop_value: { type: prevState.prop_value.type, clauses: [] }
-      }))
-    }
+  function onPropKeySelect(id, selectedOptions) {
+    const newPropKey = selectedOptions.length === 0 ? null : selectedOptions[0]
+    setFormState(prevState => ({
+      ...prevState,
+      values: {
+        ...prevState.values,
+        [id]: {
+          ...prevState.values[id],
+          propKey: newPropKey,
+          clauses: []
+        }
+      }
+    }))
   }
 
-  function onPropValueSelect() {
-    return (selection) => {
-      setFormState(prevState => ({
-        ...prevState, prop_value: { ...prevState.prop_value, clauses: selection }
-      }))
-    }
+  function onPropValueSelect(id, selection) {
+    setFormState(prevState => ({
+      ...prevState,
+      values: {
+        ...prevState.values,
+        [id]: {
+          ...prevState.values[id],
+          clauses: selection
+        }
+      }
+    }))
   }
 
-  function onFilterTypeSelect() {
-    return (newType) => {
-      setFormState(prevState => ({
-        ...prevState, prop_value: { ...prevState.prop_value, type: newType }
-      }))
-    }
+  function onFilterTypeSelect(id, newType) {
+    setFormState(prevState => ({
+      ...prevState,
+      values: {
+        ...prevState.values,
+        [id]: {
+          ...prevState.values[id],
+          type: newType
+        }
+      }
+    }))
+  }
+
+  function onPropAdd() {
+    setFormState(prevState => {
+      const id = prevState.entries[prevState.entries.length - 1] + 1
+      return {
+        entries: prevState.entries.concat([id]),
+        values: {
+          ...prevState.values,
+          [id]: {
+            propKey: null,
+            type: FILTER_TYPES.is,
+            clauses: []
+          }
+        }
+      }
+    })
+  }
+
+  function onPropDelete(id) {
+    setFormState(prevState => {
+      const entries = prevState.entries.filter((entry) => entry != id)
+      const values = {...prevState.values}
+      delete values[id]
+
+      return { entries, values }
+    })
   }
 
   function isDisabled() {
-    return !(formState.prop_key && formState.prop_value.clauses.length > 0)
+    return formState.entries.some((id) => !formState.values[id].propKey || formState.values[id].clauses.length == 0)
   }
 
   function shouldShowClear() {
@@ -67,8 +120,11 @@ function PropFilterModal(props) {
   }
 
   function handleSubmit() {
-    const filterString = JSON.stringify({ [formState.prop_key.value]: toFilterQuery(formState.prop_value.type, formState.prop_value.clauses) })
-    selectFiltersAndCloseModal(filterString)
+    const formFilters = Object.fromEntries(
+      Object.entries(formState.values)
+        .map(([_, {propKey, type, clauses}]) => [propKey.value, toFilterQuery(type, clauses)])
+    )
+    selectFiltersAndCloseModal(JSON.stringify(formFilters))
   }
 
   function selectFiltersAndCloseModal(filterString) {
@@ -105,17 +161,24 @@ function PropFilterModal(props) {
       <div className="mt-4 border-b border-gray-300"></div>
       <main className="modal__content">
         <form className="flex flex-col" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-11 mt-6">
-            <PropFilterRow
-              site={props.site}
-              query={query}
-              propKey={formState.prop_key}
-              propValue={formState.prop_value}
-              onPropKeySelect={onPropKeySelect}
-              onPropValueSelect={onPropValueSelect}
-              onFilterTypeSelect={onFilterTypeSelect}
-            />
-          </div>
+          {formState.entries.map((id) => (
+              <PropFilterRow
+                key={id}
+                id={id}
+                site={props.site}
+                query={query}
+                {...formState.values[id]}
+                showDelete={formState.entries.length > 1}
+                onPropKeySelect={onPropKeySelect}
+                onPropValueSelect={onPropValueSelect}
+                onFilterTypeSelect={onFilterTypeSelect}
+                onPropDelete={onPropDelete}
+              />
+          ))}
+
+          <a className="underline text-indigo-500 text-sm cursor-pointer mt-6" onClick={onPropAdd}>
+            + Add another step
+          </a>
 
           <div className="mt-6 flex items-center justify-start">
             <button
