@@ -778,6 +778,9 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
+  # NOTE: To be cleaned up once #3700 is released
+  @analytics_queues ["analytics_imports", "google_analytics_imports"]
+
   def forget_imported(conn, _params) do
     site = conn.assigns[:site]
 
@@ -786,7 +789,7 @@ defmodule PlausibleWeb.SiteController do
         Oban.cancel_all_jobs(
           from j in Oban.Job,
             where:
-              j.queue == "analytics_imports" and
+              j.queue in @analytics_queues and
                 fragment("(? ->> 'site_id')::int", j.args) == ^site.id
         )
 
