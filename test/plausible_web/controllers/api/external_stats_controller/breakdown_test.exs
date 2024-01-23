@@ -1255,6 +1255,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "filtering" do
+    test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "filters" => "event:goal==Register"
+        })
+
+      assert %{"error" => msg} = json_response(conn, 400)
+      assert msg =~ "The goal `Register` is not configured for this site. Find out how"
+    end
+
     test "event:page filter for breakdown by session props", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1405,6 +1417,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     end
 
     test "event:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, page_path: "/plausible.io"})
+
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Bing",
@@ -1439,6 +1453,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     end
 
     test "event:goal custom event filter for breakdown by visit source", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, event_name: "Register"})
+
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Bing",
@@ -1529,6 +1545,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     end
 
     test "event:goal custom event filter for breakdown by event page", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, event_name: "Register"})
+
       populate_stats(site, [
         build(:event,
           pathname: "/en/register",

@@ -123,6 +123,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       } do
         prop = unquote(property)
 
+        if prop == "event:goal", do: insert(:goal, %{site: site, event_name: "some_value"})
+
         conn =
           get(conn, "/api/v1/stats/aggregate", %{
             "site_id" => site.domain,
@@ -404,6 +406,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   end
 
   describe "filters" do
+    test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "filters" => "event:goal==Register|Visit /register"
+        })
+
+      assert %{"error" => msg} = json_response(conn, 400)
+      assert msg =~ "The goal `Register` is not configured for this site. Find out how"
+    end
+
     test "can filter by source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

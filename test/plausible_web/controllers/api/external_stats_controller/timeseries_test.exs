@@ -466,6 +466,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   end
 
   describe "filters" do
+    test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "filters" => "event:goal==Visit /register**"
+        })
+
+      assert %{"error" => msg} = json_response(conn, 400)
+
+      assert msg =~
+               "The pageview goal for the pathname `/register**` is not configured for this site"
+    end
+
     test "can filter by a custom event goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,

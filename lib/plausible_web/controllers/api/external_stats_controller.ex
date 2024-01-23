@@ -16,6 +16,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          query <- Query.from(site, params),
+         :ok <- validate_goal_filter(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
          :ok <- ensure_custom_props_access(site, query) do
       results =
@@ -55,6 +56,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          {:ok, property} <- validate_property(params),
          query <- Query.from(site, params),
+         :ok <- validate_goal_filter(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, property, query),
          {:ok, limit} <- validate_or_default_limit(params),
          :ok <- ensure_custom_props_access(site, query, property) do
@@ -193,6 +195,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
          query <- Query.from(site, params),
+         :ok <- validate_goal_filter(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
          :ok <- ensure_custom_props_access(site, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
@@ -270,6 +273,37 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_interval(_), do: :ok
+
+  defp validate_goal_filter(site, %{"event:goal" => goal_filter}) do
+    configured_goals = Plausible.Goals.for_site(site) |> Enum.map(&to_string/1)
+
+    goals_in_filter =
+      case goal_filter do
+        {_type, filters} when is_list(filters) -> filters
+        {_type, filter} -> [filter]
+      end
+      |> Plausible.Stats.Filters.Utils.unwrap_goal_value()
+
+    if found = Enum.find(goals_in_filter, &(&1 not in configured_goals)) do
+      msg =
+        goal_not_configured_message(found) <>
+          "Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
+
+      {:error, msg}
+    else
+      :ok
+    end
+  end
+
+  defp validate_goal_filter(_site, _filters), do: :ok
+
+  defp goal_not_configured_message("Visit " <> page_path) do
+    "The pageview goal for the pathname `#{page_path}` is not configured for this site. "
+  end
+
+  defp goal_not_configured_message(goal) do
+    "The goal `#{goal}` is not configured for this site. "
+  end
 
   defp send_json_error_response(conn, {:error, {status, msg}}) do
     conn

@@ -3,6 +3,7 @@ defmodule Plausible.Stats.FiltersTest do
   alias Plausible.Stats.Filters
 
   doctest Plausible.Stats.Filters
+  doctest Plausible.Stats.Filters.Utils
 
   def assert_parsed(input, expected_output) do
     assert Filters.parse(input) == expected_output
