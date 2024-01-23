@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7D46B7A8.js"></script>
+    <script src="dist/sidebar_items-244BB8AE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -179,7 +179,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fetch_and_persist/3" translate="no">fetch_and_persist(site, report_request, opts \\ [])</a>
+        <a href="#fetch_and_persist/2" translate="no">fetch_and_persist(report_request, opts \\ [])</a>
 
       </div>
 
@@ -213,7 +213,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#import_analytics/4" translate="no">import_analytics(site, date_range, view_id, auth)</a>
+        <a href="#import_analytics/4" translate="no">import_analytics(date_range, view_id, auth, persist_fn)</a>
 
       </div>
 
@@ -330,18 +330,18 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="fetch_and_persist/3">
+<section class="detail" id="fetch_and_persist/2">
 
-    <span id="fetch_and_persist/2"></span>
+    <span id="fetch_and_persist/1"></span>
 
   <div class="detail-header">
-    <a href="#fetch_and_persist/3" class="detail-link" title="Link to this function">
+    <a href="#fetch_and_persist/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">fetch_and_persist(site, report_request, opts \\ [])</h1>
+    <h1 class="signature" translate="no">fetch_and_persist(report_request, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/api.ex#L176" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/api.ex#L159" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -353,11 +353,7 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> fetch_and_persist(
-  <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(),
-  <a href="Plausible.Google.ReportRequest.html#t:t/0">Plausible.Google.ReportRequest.t</a>(),
-  <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()
-) ::
+          <pre translate="no"><span class="attribute">@spec</span> fetch_and_persist(<a href="Plausible.Google.ReportRequest.html#t:t/0">Plausible.Google.ReportRequest.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
   :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
 
       </div>
@@ -445,9 +441,9 @@ Pages
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">import_analytics(site, date_range, view_id, auth)</h1>
+    <h1 class="signature" translate="no">import_analytics(date_range, view_id, auth, persist_fn)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/api.ex#L134" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/api.ex#L133" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -459,16 +455,20 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> import_analytics(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="https://hexdocs.pm/elixir/Date.Range.html#t:t/0">Date.Range.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="#t:import_auth/0">import_auth</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> import_analytics(
+  <a href="https://hexdocs.pm/elixir/Date.Range.html#t:t/0">Date.Range.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="#t:import_auth/0">import_auth</a>(),
+  (<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()] -&gt; :ok)
+) ::
   :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>()}</pre>
 
       </div>
 
 <p>Imports stats from a Google Analytics UA view to a Plausible site.</p><p>This function fetches Google Analytics reports in batches of 7500 per
-request. The batches are then buffered to Clickhouse by the
-<a href="Plausible.Google.Buffer.html"><code class="inline">Plausible.Google.Buffer</code></a> process.</p><p>Requests to Google Analytics can fail, and are retried at most
+request. The batches are then passed to persist callback.</p><p>Requests to Google Analytics can fail, and are retried at most
 5 times with an exponential backoff. Returns <code class="inline">:ok</code> when
-importing has finished or <code class="inline">{:error, term()}</code> when a request to GA failed too 
+importing has finished or <code class="inline">{:error, term()}</code> when a request to GA failed too
 many times.</p><p>Useful links:</p><ul><li><a href="https://plausible.io/docs/google-analytics-import">Feature documentation</a></li><li><a href="https://developers.google.com/analytics/devguides/reporting/core/v4/rest/v4/reports/batchGet#ReportRequest">GA API reference</a></li><li><a href="https://ga-dev-tools.web.app/dimensions-metrics-explorer">GA Dimensions reference</a></li></ul>
   </section>
 </section>

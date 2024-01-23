@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7D46B7A8.js"></script>
+    <script src="dist/sidebar_items-244BB8AE.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -744,17 +744,6 @@ creating and deleting funnel definitions.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.Google.Buffer.html" translate="no">Plausible.Google.Buffer</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>This GenServer inserts records into Clickhouse <code class="inline">imported_*</code> tables. Multiple buffers are
-automatically created for each table. Records are flushed when the table buffer reaches the
-maximum size, defined by <code class="inline">max_buffer_size/0</code>.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="Plausible.Google.HTTP.html" translate="no">Plausible.Google.HTTP</a>
 
   </div>
@@ -813,6 +802,44 @@ maximum size, defined by <code class="inline">max_buffer_size/0</code>.</p></div
     <a href="Plausible.Imported.html" translate="no">Plausible.Imported</a>
 
   </div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Imported.Buffer.html" translate="no">Plausible.Imported.Buffer</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>This GenServer inserts records into Clickhouse <code class="inline">imported_*</code> tables. Multiple buffers are
+automatically created for each table. Records are flushed when the table buffer reaches the
+maximum size, defined by <code class="inline">max_buffer_size/0</code>.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Imported.ImportSources.html" translate="no">Plausible.Imported.ImportSources</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Definitions of import sources.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Imported.NoopImporter.html" translate="no">Plausible.Imported.NoopImporter</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Stub import implementation.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Imported.UniversalAnalytics.html" translate="no">Plausible.Imported.UniversalAnalytics</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Import implementation for Universal Analytics.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1164,7 +1191,7 @@ with one of the following policy markers</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>Embedded schema for Google Analytics imports</p></div>
+    <div class="summary-synopsis"><p>Embedded schema for analytics imports</p></div>
 
 </div>
 <div class="summary-row">
@@ -1550,9 +1577,11 @@ before redeploying their scripts and integrations.</p></div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="Plausible.Workers.ImportGoogleAnalytics.html" translate="no">Plausible.Workers.ImportGoogleAnalytics</a>
+    <a href="Plausible.Workers.ImportAnalytics.html" translate="no">Plausible.Workers.ImportAnalytics</a>
 
   </div>
+
+    <div class="summary-synopsis"><p>Worker for running analytics import jobs.</p></div>
 
 </div>
 <div class="summary-row">

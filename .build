@@ -74,7 +74,6 @@ Plausible.Goal.html
 Plausible.Goals.html
 Plausible.Google.Api.Mock.html
 Plausible.Google.Api.html
-Plausible.Google.Buffer.html
 Plausible.Google.HTTP.html
 Plausible.Google.ReportRequest.html
 Plausible.HTTPClient.Interface.html
@@ -82,6 +81,10 @@ Plausible.HTTPClient.Non200Error.html
 Plausible.HTTPClient.html
 Plausible.Helpers.JSON.html
 Plausible.ImportDeletionRepo.html
+Plausible.Imported.Buffer.html
+Plausible.Imported.ImportSources.html
+Plausible.Imported.NoopImporter.html
+Plausible.Imported.UniversalAnalytics.html
 Plausible.Imported.html
 Plausible.IngestRepo.html
 Plausible.Ingestion.Counters.Buffer.html
@@ -168,7 +171,7 @@ Plausible.Workers.AcceptTrafficUntil.html
 Plausible.Workers.CheckUsage.html
 Plausible.Workers.CleanInvitations.html
 Plausible.Workers.ExpireDomainChangeTransitions.html
-Plausible.Workers.ImportGoogleAnalytics.html
+Plausible.Workers.ImportAnalytics.html
 Plausible.Workers.LockSites.html
 Plausible.Workers.NotifyAnnualRenewal.html
 Plausible.Workers.RotateSalts.html
@@ -337,8 +340,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-8D49C314.js
-dist/sidebar_items-7D46B7A8.js
+dist/search_data-167B3D8F.js
+dist/sidebar_items-244BB8AE.js
 index.html
 readme.html
 search.html
