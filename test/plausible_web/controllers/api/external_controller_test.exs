@@ -480,7 +480,8 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
-      assert session.referrer_source == "some.android.app"
+      assert session.referrer == "android-app://some.android.app"
+      assert session.referrer_source == "android-app://some.android.app"
     end
 
     test "screen size is calculated from user agent", %{conn: conn, site: site} do
