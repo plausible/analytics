@@ -360,8 +360,10 @@ config :plausible, :google,
   client_id: google_cid,
   client_secret: google_secret,
   api_url: "https://www.googleapis.com",
-  reporting_api_url: "https://analyticsreporting.googleapis.com",
-  max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
+  reporting_api_url: "https://analyticsreporting.googleapis.com"
+
+config :plausible, :imported,
+  max_buffer_size: get_int_from_path_or_env(config_dir, "IMPORTED_MAX_BUFFER_SIZE", 10_000)
 
 maybe_ch_ipv6 =
   get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
@@ -521,7 +523,9 @@ base_queues = [
   check_stats_emails: 1,
   site_setup_emails: 1,
   clean_invitations: 1,
+  # NOTE: to be removed once #3700 is released
   google_analytics_imports: 1,
+  analytics_imports: 1,
   domain_change_transition: 1,
   check_accept_traffic_until: 1
 ]
