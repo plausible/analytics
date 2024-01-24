@@ -22,8 +22,9 @@ config :bamboo, :refute_timeout, 10
 
 config :plausible,
   session_timeout: 0,
-  http_impl: Plausible.HTTPClient.Mock,
-  sites_by_domain_cache_enabled: false
+  http_impl: Plausible.HTTPClient.Mock
+
+config :plausible, Plausible.Cache, enabled: false
 
 config :ex_money, api_module: Plausible.ExchangeRateMock
 
