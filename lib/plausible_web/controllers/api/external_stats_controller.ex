@@ -275,7 +275,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp validate_interval(_), do: :ok
 
   defp validate_goal_filter(site, %{"event:goal" => goal_filter}) do
-    configured_goals = Plausible.Goals.for_site(site) |> Enum.map(&to_string/1)
+    configured_goals =
+      Plausible.Goals.for_site(site)
+      |> Enum.map(fn
+        %{page_path: path} when is_binary(path) -> "Visit " <> path
+        %{event_name: event_name} -> event_name
+      end)
 
     goals_in_filter =
       case goal_filter do

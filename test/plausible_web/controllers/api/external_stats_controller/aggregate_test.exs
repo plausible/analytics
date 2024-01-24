@@ -920,6 +920,41 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
+    test "filtering by a revenue goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      insert(:goal, site: site, currency: :USD, event_name: "Purchase")
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events",
+          "filters" => "event:goal==Purchase"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "events" => %{"value" => 3}
+             }
+    end
+
     test "filtering by a simple pageview goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
