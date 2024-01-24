@@ -11,7 +11,6 @@ import PropFilterRow from './prop-filter-row';
 function getFormState(query) {
   if (query.filters['props']) {
     const values = Object.fromEntries(parseQueryFilter(query, 'props').map((value, index) => [index, value]))
-    console.log({ query, values })
 
     return {
       entries: Object.keys(values).sort(),
