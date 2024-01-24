@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Wildcard and member filtering on the Stats API `event:goal` property
 - Allow filtering with `contains`/`matches` operator for custom properties
 - Add `referrers.csv` to CSV export
 - Add a new Properties section in the dashboard to break down by custom properties
@@ -21,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
+- Removed the `prop_names` returned in the Stats API `event:goal` breakdown response
 - Removed the `prop-breakdown.csv` file from CSV export
 - Deprecated `CLICKHOUSE_MAX_BUFFER_SIZE`
 
