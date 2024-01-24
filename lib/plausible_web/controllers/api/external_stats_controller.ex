@@ -148,6 +148,20 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end)
   end
 
+  defp validate_metric("conversion_rate" = metric, property, query) do
+    cond do
+      property == "event:goal" ->
+        {:ok, metric}
+
+      query.filters["event:goal"] ->
+        {:ok, metric}
+
+      true ->
+        {:error,
+         "Metric `#{metric}` can only be queried in a goal breakdown or with a goal filter"}
+    end
+  end
+
   defp validate_metric("events" = metric, _, query) do
     if query.include_imported do
       {:error, "Metric `#{metric}` cannot be queried with imported data"}
