@@ -1,7 +1,7 @@
 import React from 'react';
 
 import * as storage from '../../util/storage'
-import { FILTER_TYPES, parseQueryFilter } from '../../util/filters'
+import { isFilteringOnFixedValue } from '../../util/filters'
 import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
@@ -160,17 +160,14 @@ export default class Devices extends React.Component {
   }
 
   renderContent() {
-    let type, clauses
     switch (this.state.mode) {
       case 'browser':
-        ({ type, clauses } = parseQueryFilter(this.props.query, 'browser'))
-        if (clauses.length > 0 && type !== FILTER_TYPES.contains) {
+        if (isFilteringOnFixedValue(this.props.query, 'browser')) {
           return <BrowserVersions site={this.props.site} query={this.props.query} />
         }
         return <Browsers site={this.props.site} query={this.props.query} />
       case 'os':
-        ({ type, clauses } = parseQueryFilter(this.props.query, 'os'))
-        if (clauses.length > 0 && type !== FILTER_TYPES.contains) {
+        if (isFilteringOnFixedValue(this.props.query, 'os')) {
           return <OperatingSystemVersions site={this.props.site} query={this.props.query} />
         }
         return <OperatingSystems site={this.props.site} query={this.props.query} />

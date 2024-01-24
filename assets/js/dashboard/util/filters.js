@@ -100,6 +100,11 @@ export function parseQueryFilter(query, filter) {
   }
 }
 
+export function isFilteringOnFixedValue(query, filter) {
+  const { type, clauses } = parseQueryFilter(query, filter)
+  return type == FILTER_TYPES.is && clauses.length == 1
+}
+
 export function formatFilterGroup(filterGroup) {
   if (filterGroup === 'utm') {
     return 'UTM tags'
