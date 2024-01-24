@@ -16,9 +16,7 @@ defmodule Plausible.Stats.Query do
   @type t :: %__MODULE__{}
 
   def from(site, params) do
-    now =
-      NaiveDateTime.utc_now()
-      |> NaiveDateTime.truncate(:second)
+    now = NaiveDateTime.utc_now(:second)
 
     query =
       __MODULE__
