@@ -171,7 +171,7 @@ function PropFilterModal(props) {
           ))}
 
           <a className="underline text-indigo-500 text-sm cursor-pointer mt-6" onClick={onPropAdd}>
-            + Add another step
+            + Add another
           </a>
 
           <div className="mt-6 flex items-center justify-start">
