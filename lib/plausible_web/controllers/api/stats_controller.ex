@@ -1328,10 +1328,16 @@ defmodule PlausibleWeb.Api.StatsController do
        when not is_map_key(query.filters, "event:goal") do
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, query, [:visitors])
 
-    breakdown_result
-    |> Enum.map(fn stat ->
-      Map.put(stat, :percentage, Float.round(stat.visitors / total_visitors * 100, 1))
-    end)
+    # :HACK: With realtime graphs, total_visitors might report as 0 while there are stats
+    #   As division by 0 would result in errors, just don't include percentages
+    if total_visitors == 0 do
+      breakdown_result
+    else
+      breakdown_result
+      |> Enum.map(fn stat ->
+        Map.put(stat, :percentage, Float.round(stat.visitors / total_visitors * 100, 1))
+      end)
+    end
   end
 
   defp add_percentages(breakdown_result, _, _), do: breakdown_result
