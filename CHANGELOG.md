@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Allow filtering by multiple custom properties
+- Allow filtering by other properties when custom property filter applied
 - Allow filtering with `contains`/`matches` operator for custom properties
 - Add `referrers.csv` to CSV export
 - Add a new Properties section in the dashboard to break down by custom properties
