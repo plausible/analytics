@@ -91,8 +91,10 @@ export default function PlausibleCombobox(props) {
     }
   }
 
-  function isDisabled(option) {
-    return props.values.some((val) => val.value === option.value) || (props.disabledOptions || []).some((val) => val?.value === option.value)
+  function isOptionDisabled(option) {
+    const optionAlreadySelected = props.values.some((val) => val.value === option.value)
+    const optionDisabled = (props.disabledOptions || []).some((val) => val?.value === option.value)
+    return optionAlreadySelected || optionDisabled
   }
 
   function fetchOptions(query) {
@@ -217,7 +219,7 @@ export default function PlausibleCombobox(props) {
   }
 
   function renderDropDownContent() {
-    const matchesFound = visibleOptions.length > 0 && visibleOptions.some(option => !isDisabled(option))
+    const matchesFound = visibleOptions.length > 0 && visibleOptions.some(option => !isOptionDisabled(option))
 
     if (loading) {
       return <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">Loading options...</div>
@@ -225,7 +227,7 @@ export default function PlausibleCombobox(props) {
 
     if (matchesFound) {
       return visibleOptions
-        .filter(option => !isDisabled(option))
+        .filter(option => !isOptionDisabled(option))
         .map((option, i) => {
           const text = option.freeChoice ? `Filter by '${option.label}'` : option.label
 
