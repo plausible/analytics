@@ -4,9 +4,9 @@ defmodule Plausible.Cache do
 
       use Plausible.Cache
 
-      # Implement the callbacks required.
-      # Optionally override `unwrap_cache_keys/1`.
-      # Populate the cache with `Plausible.Cache.Warmer` 
+      # - Implement the callbacks required
+      # - Optionally override `unwrap_cache_keys/1`
+      # - Populate the cache with `Plausible.Cache.Warmer`
 
   Serves as a thin wrapper around Cachex, but the underlying
   implementation can be transparently swapped.
@@ -20,7 +20,7 @@ defmodule Plausible.Cache do
 
   There are two modes of refresh operation: `:all` and `:updated_recently`;
   the former will invoke the query as is and clear all the existing entries,
-  while the later will attempt to limit the query to only the records that 
+  while the latter will attempt to limit the query to only the records that 
   have been updated in the last 15 minutes and try to merge the new results with
   existing cache entries.
 

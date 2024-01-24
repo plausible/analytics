@@ -6,7 +6,7 @@ defmodule Plausible.Cache.Warmer do
 
     * `cache_impl` - module expected to implement `Plausible.Cache` behaviour
     * `interval` - the number of milliseconds for each warm-up cycle
-    * `cache_name` - defaults to cache_impl.name() but can be overriden for testing
+    * `cache_name` - defaults to cache_impl.name() but can be overridden for testing
     * `force_start?` - enforcess process startup for testing, even if it's barred
       by `Plausible.Cache.enabled?`. This is useful for avoiding issues with DB ownership
       and async tests.
