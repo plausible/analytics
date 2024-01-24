@@ -24,26 +24,29 @@ defmodule ObanErrorReporter do
 
   defp on_job_exception(%Oban.Job{
          queue: "analytics_imports",
-         args: %{"site_id" => site_id, "source" => source},
+         args: %{"import_id" => import_id},
          state: "executing",
          attempt: attempt,
          max_attempts: max_attempts
        })
        when attempt >= max_attempts do
-    site = Plausible.Repo.get(Plausible.Site, site_id)
+    site_import = Plausible.Repo.get(Plausible.Imported.SiteImport, import_id)
 
-    if site do
-      Plausible.Workers.ImportAnalytics.import_failed(source, site)
+    if site_import do
+      Plausible.Workers.ImportAnalytics.import_fail(site_import)
     end
   end
 
   defp on_job_exception(%Oban.Job{
          queue: "analytics_imports",
-         args: %{"site_id" => site_id},
+         args: %{"import_id" => import_id},
          state: "executing"
        }) do
-    site = Plausible.Repo.get(Plausible.Site, site_id)
-    Plausible.Purge.delete_imported_stats!(site)
+    site_import = Plausible.Repo.get(Plausible.Imported.SiteImport, import_id)
+
+    if site_import do
+      Plausible.Workers.ImportAnalytics.import_fail_transient(site_import)
+    end
   end
 
   defp on_job_exception(_job), do: :ignore

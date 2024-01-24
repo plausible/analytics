@@ -764,11 +764,12 @@ defmodule PlausibleWeb.SiteController do
         "expires_at" => expires_at
       }) do
     site = conn.assigns.site
-    source = "Google Analytics"
+    current_user = conn.assigns.current_user
 
-    job =
-      Plausible.Imported.UniversalAnalytics.create_job(
+    {:ok, _} =
+      Plausible.Imported.UniversalAnalytics.new_import(
         site,
+        current_user,
         view_id: view_id,
         start_date: start_date,
         end_date: end_date,
@@ -777,45 +778,40 @@ defmodule PlausibleWeb.SiteController do
         token_expires_at: expires_at
       )
 
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(
-      :update_site,
-      Plausible.Site.start_import(site, start_date, end_date, source)
-    )
-    |> Oban.insert(:oban_job, job)
-    |> Repo.transaction()
-
     conn
     |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def forget_imported(conn, _params) do
-    site = conn.assigns[:site]
+    site = conn.assigns.site
 
-    cond do
-      site.imported_data ->
-        Oban.cancel_all_jobs(
-          from j in Oban.Job,
-            where:
-              j.queue == "analytics_imports" and
-                fragment("(? ->> 'site_id')::int", j.args) == ^site.id
-        )
+    import_ids =
+      site
+      |> Plausible.Imported.list_all_imports()
+      |> Enum.map(& &1.id)
 
-        Plausible.Imported.forget(site)
+    if import_ids != [] do
+      Oban.cancel_all_jobs(
+        from j in Oban.Job,
+          where:
+            j.queue == "analytics_imports" and
+              fragment("(? ->> 'import_id')::int", j.args) in ^import_ids
+      )
 
-        site
-        |> Plausible.Site.remove_imported_data()
-        |> Repo.update!()
+      Plausible.Purge.delete_imported_stats!(site)
 
-        conn
-        |> put_flash(:success, "Imported data has been cleared")
-        |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
+      site
+      |> Plausible.Site.remove_imported_data()
+      |> Repo.update!()
 
-      true ->
-        conn
-        |> put_flash(:error, "No data has been imported")
-        |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
+      conn
+      |> put_flash(:success, "Imported data has been cleared")
+      |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
+    else
+      conn
+      |> put_flash(:error, "No data has been imported")
+      |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
     end
   end
 

@@ -204,7 +204,21 @@ defmodule Plausible.Sites do
   end
 
   def stats_start_date(%Site{} = site) do
-    if start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site) do
+    start_dates =
+      site
+      |> Plausible.Imported.list_imports()
+      |> Enum.map(& &1.start_date)
+
+    start_dates =
+      if native_start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site) do
+        [native_start_date | start_dates]
+      else
+        start_dates
+      end
+
+    start_date = Enum.min(start_dates, Date, fn -> nil end)
+
+    if start_date do
       updated_site =
         site
         |> Site.set_stats_start_date(start_date)

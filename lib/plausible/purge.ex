@@ -33,18 +33,38 @@ defmodule Plausible.Purge do
   - [Synchronicity of `ALTER` Queries](https://clickhouse.com/docs/en/sql-reference/statements/alter/#synchronicity-of-alter-queries)
   """
 
-  @spec delete_imported_stats!(Plausible.Site.t()) :: :ok
+  alias Plausible.Repo
+
+  @spec delete_imported_stats!(Plausible.Site.t() | Plausible.Imported.SiteImport.t()) :: :ok
   @doc """
   Deletes imported stats from Google Analytics, and clears the
   `stats_start_date` field.
   """
-  def delete_imported_stats!(site) do
+  # NOTE: consider getting rid of that clause
+  def delete_imported_stats!(%Plausible.Site{} = site) do
     Enum.each(Plausible.Imported.tables(), fn table ->
       sql = "ALTER TABLE #{table} DELETE WHERE site_id = {$0:UInt64}"
       Ecto.Adapters.SQL.query!(Plausible.ImportDeletionRepo, sql, [site.id])
     end)
 
     clear_stats_start_date!(site)
+
+    :ok
+  end
+
+  def delete_imported_stats!(%Plausible.Imported.SiteImport{} = site_import) do
+    site_import = Repo.preload(site_import, :site)
+
+    Enum.each(Plausible.Imported.tables(), fn table ->
+      sql = "ALTER TABLE #{table} DELETE WHERE site_id = {$0:UInt64} AND import_id = {$1:UInt64}"
+
+      Ecto.Adapters.SQL.query!(Plausible.ImportDeletionRepo, sql, [
+        site_import.site_id,
+        site_import.id
+      ])
+    end)
+
+    clear_stats_start_date!(site_import.site)
 
     :ok
   end

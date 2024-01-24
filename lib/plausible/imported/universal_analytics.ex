@@ -3,50 +3,17 @@ defmodule Plausible.Imported.UniversalAnalytics do
   Import implementation for Universal Analytics.
   """
 
-  use Plausible.ClickhouseRepo
-
-  alias Plausible.Site
+  use Plausible.Imported.Importer
 
   @missing_values ["(none)", "(not set)", "(not provided)", "(other)"]
-
-  @type job_opt() ::
-          {:view_id, non_neg_integer()}
-          | {:start_date | :end_date | :access_token | :refresh_token | :token_expires_at,
-             String.t()}
-
-  @type import_opt() ::
-          {:view_id, non_neg_integer()}
-          | {:date_range, Date.Range.t()}
-          | {:auth, {String.t(), String.t(), String.t()}}
 
   # NOTE: we have to use old name for now
   @name "Google Analytics"
 
-  @spec name() :: String.t()
+  @impl true
   def name(), do: @name
 
-  @spec create_job(Site.t(), [job_opt()]) :: Ecto.Changeset.t()
-  def create_job(site, opts) do
-    view_id = Keyword.fetch!(opts, :view_id)
-    start_date = Keyword.fetch!(opts, :start_date)
-    end_date = Keyword.fetch!(opts, :end_date)
-    access_token = Keyword.fetch!(opts, :access_token)
-    refresh_token = Keyword.fetch!(opts, :refresh_token)
-    token_expires_at = Keyword.fetch!(opts, :token_expires_at)
-
-    Plausible.Workers.ImportAnalytics.new(%{
-      "source" => @name,
-      "site_id" => site.id,
-      "view_id" => view_id,
-      "start_date" => start_date,
-      "end_date" => end_date,
-      "access_token" => access_token,
-      "refresh_token" => refresh_token,
-      "token_expires_at" => token_expires_at
-    })
-  end
-
-  @spec parse_args(map()) :: [import_opt()]
+  @impl true
   def parse_args(
         %{"view_id" => view_id, "start_date" => start_date, "end_date" => end_date} = args
       ) do
@@ -73,8 +40,8 @@ defmodule Plausible.Imported.UniversalAnalytics do
   This function fetches Google Analytics reports which are then passed in batches
   to Clickhouse by the `Plausible.Imported.Buffer` process.
   """
-  @spec import(Site.t(), [import_opt()]) :: :ok | {:error, any()}
-  def import(site, opts) do
+  @impl true
+  def import_data(site, opts) do
     date_range = Keyword.fetch!(opts, :date_range)
     view_id = Keyword.fetch!(opts, :view_id)
     auth = Keyword.fetch!(opts, :auth)

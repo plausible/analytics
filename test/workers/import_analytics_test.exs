@@ -9,57 +9,54 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
   describe "Universal Analytics" do
     setup do
       %{
-        imported_data: %Plausible.Site.ImportedData{
+        import_opts: [
           start_date: Timex.today() |> Timex.shift(days: -7),
-          end_date: Timex.today(),
-          source: "Noop",
-          status: "importing"
-        }
+          end_date: Timex.today()
+        ]
       }
     end
 
-    test "updates the imported_data field for the site after successful import", %{
-      imported_data: imported_data
+    test "updates site import after successful import", %{
+      import_opts: import_opts
     } do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
-      site = insert(:site, members: [user], imported_data: imported_data)
+      site = insert(:site, members: [user])
 
-      ImportAnalytics.perform(%Oban.Job{
-        args: %{
-          "source" => "Noop",
-          "site_id" => site.id
-        }
-      })
+      {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
-      assert Repo.reload!(site).imported_data.status == "ok"
+      assert [%{status: :pending}] = Plausible.Imported.list_all_imports(site)
+
+      job
+      |> Repo.reload!()
+      |> ImportAnalytics.perform()
+
+      assert [%{status: :completed}] = Plausible.Imported.list_all_imports(site)
     end
 
     test "updates the stats_start_date field for the site after successful import", %{
-      imported_data: imported_data
+      import_opts: import_opts
     } do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
-      site = insert(:site, members: [user], imported_data: imported_data)
+      site = insert(:site, members: [user])
 
-      ImportAnalytics.perform(%Oban.Job{
-        args: %{
-          "source" => "Noop",
-          "site_id" => site.id
-        }
-      })
+      {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
-      assert Repo.reload!(site).stats_start_date == imported_data.start_date
+      job
+      |> Repo.reload!()
+      |> ImportAnalytics.perform()
+
+      assert Plausible.Sites.stats_start_date(site) == import_opts[:start_date]
     end
 
-    test "sends email to owner after successful import", %{imported_data: imported_data} do
+    test "sends email to owner after successful import", %{import_opts: import_opts} do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
-      site = insert(:site, members: [user], imported_data: imported_data)
+      site = insert(:site, members: [user])
 
-      ImportAnalytics.perform(%Oban.Job{
-        args: %{
-          "source" => "Noop",
-          "site_id" => site.id
-        }
-      })
+      {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
+
+      job
+      |> Repo.reload!()
+      |> ImportAnalytics.perform()
 
       assert_email_delivered_with(
         to: [user],
@@ -67,36 +64,34 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       )
     end
 
-    test "updates site record after failed import", %{imported_data: imported_data} do
+    test "updates site import record after failed import", %{import_opts: import_opts} do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
-      site = insert(:site, members: [user], imported_data: imported_data)
+      site = insert(:site, members: [user])
+      import_opts = Keyword.put(import_opts, :error, true)
 
-      ImportAnalytics.perform(%Oban.Job{
-        args: %{
-          "source" => "Noop",
-          "site_id" => site.id,
-          "error" => true
-        }
-      })
+      {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
-      assert Repo.reload!(site).imported_data.status == "error"
+      job
+      |> Repo.reload!()
+      |> ImportAnalytics.perform()
+
+      assert [%{status: :failed}] = Plausible.Imported.list_all_imports(site)
     end
 
-    test "clears any orphaned data during import", %{imported_data: imported_data} do
+    test "clears any orphaned data during import", %{import_opts: import_opts} do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
-      site = insert(:site, members: [user], imported_data: imported_data)
+      site = insert(:site, members: [user])
+      import_opts = Keyword.put(import_opts, :error, true)
+
+      {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
       populate_stats(site, [
-        build(:imported_visitors, pageviews: 10)
+        build(:imported_visitors, import_id: job.args.import_id, pageviews: 10)
       ])
 
-      ImportAnalytics.perform(%Oban.Job{
-        args: %{
-          "source" => "Noop",
-          "site_id" => site.id,
-          "error" => true
-        }
-      })
+      job
+      |> Repo.reload!()
+      |> ImportAnalytics.perform()
 
       assert eventually(fn ->
                count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
@@ -104,17 +99,16 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
              end)
     end
 
-    test "sends email to owner after failed import", %{imported_data: imported_data} do
+    test "sends email to owner after failed import", %{import_opts: import_opts} do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
-      site = insert(:site, members: [user], imported_data: imported_data)
+      site = insert(:site, members: [user])
+      import_opts = Keyword.put(import_opts, :error, true)
 
-      ImportAnalytics.perform(%Oban.Job{
-        args: %{
-          "source" => "Noop",
-          "site_id" => site.id,
-          "error" => true
-        }
-      })
+      {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
+
+      job
+      |> Repo.reload!()
+      |> ImportAnalytics.perform()
 
       assert_email_delivered_with(
         to: [user],

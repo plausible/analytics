@@ -314,28 +314,28 @@ defmodule PlausibleWeb.Email do
   end
 
   # NOTE: make email different depending on import source
-  def import_success(source, user, site) do
+  def import_success(site_import, user) do
     priority_email()
     |> to(user)
     |> tag("import-success-email")
-    |> subject("#{source} data imported for #{site.domain}")
+    |> subject("#{site_import.source} data imported for #{site_import.site.domain}")
     |> render("google_analytics_import.html", %{
-      site: site,
-      link: PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site.domain),
+      site_import: site_import,
+      link: PlausibleWeb.Endpoint.url() <> "/" <> URI.encode_www_form(site_import.site.domain),
       user: user,
       success: true
     })
   end
 
   # NOTE: make email different depending on import source
-  def import_failure(source, user, site) do
+  def import_failure(site_import, user) do
     priority_email()
     |> to(user)
     |> tag("import-failure-email")
-    |> subject("#{source} import failed for #{site.domain}")
+    |> subject("#{site_import.source} import failed for #{site_import.site.domain}")
     |> render("google_analytics_import.html", %{
       user: user,
-      site: site,
+      site_import: site_import,
       success: false
     })
   end

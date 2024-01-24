@@ -3,20 +3,17 @@ defmodule Plausible.Imported.NoopImporter do
   Stub import implementation.
   """
 
+  use Plausible.Imported.Importer
+
   @name "Noop"
 
+  @impl true
   def name(), do: @name
 
-  def create_job(site, opts) do
-    Plausible.Workers.ImportAnalytics.new(%{
-      "source" => @name,
-      "site_id" => site.id,
-      "error" => opts[:error]
-    })
-  end
-
+  @impl true
   def parse_args(opts), do: opts
 
-  def import(_site, %{"error" => true}), do: {:error, "Something went wrong"}
-  def import(_site, _opts), do: :ok
+  @impl true
+  def import_data(_site, %{"error" => true}), do: {:error, "Something went wrong"}
+  def import_data(_site, _opts), do: :ok
 end

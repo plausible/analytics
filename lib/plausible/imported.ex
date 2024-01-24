@@ -3,6 +3,11 @@ defmodule Plausible.Imported do
   Context for managing site statistics imports.
   """
 
+  import Ecto.Query
+
+  alias Plausible.Imported.SiteImport
+  alias Plausible.Repo
+
   @tables ~w(
     imported_visitors imported_sources imported_pages imported_entry_pages
     imported_exit_pages imported_locations imported_devices imported_browsers
@@ -12,7 +17,15 @@ defmodule Plausible.Imported do
   @spec tables() :: [String.t()]
   def tables, do: @tables
 
-  def forget(site) do
-    Plausible.Purge.delete_imported_stats!(site)
+ def list_all_imports(site) do
+    SiteImport
+    |> where(site_id: ^site.id)
+    |> Repo.all()
+  end
+
+  def list_imports(site) do
+    SiteImport
+    |> where(site_id: ^site.id, status: :completed)
+    |> Repo.all()
   end
 end

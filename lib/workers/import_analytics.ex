@@ -12,28 +12,38 @@ defmodule Plausible.Workers.ImportAnalytics do
     unique: [fields: [:args], period: 60]
 
   alias Plausible.Imported.ImportSources
+  alias Plausible.Imported.SiteImport
 
   @impl Oban.Worker
   def perform(%Oban.Job{
-        args: %{"site_id" => site_id, "source" => source} = args
+        args: %{"import_id" => import_id} = args
       }) do
-    import_api = ImportSources.by_name(source)
+    site_import =
+      SiteImport
+      |> Repo.get!(import_id)
+      |> Repo.preload(:site)
+
+    import_api = ImportSources.by_name(site_import.source)
     import_opts = import_api.parse_args(args)
 
-    site = Repo.get!(Plausible.Site, site_id)
+    case import_api.run_import(site_import, import_opts) do
+      {:ok, site_import} ->
+        import_complete(site_import)
 
-    case import_api.import(site, import_opts) do
-      :ok ->
-        import_success(source, site)
+        Oban.Notifier.notify(Oban, :analytics_imports_jobs, %{complete: site_import.id})
 
         :ok
 
       {:error, error} ->
-        Sentry.capture_message("Failed to import from Google Analytics",
-          extra: %{site: site.domain, error: inspect(error)}
+        Sentry.capture_message("Failed to import from #{site_import.source}",
+          extra: %{
+            import_id: site_import.id,
+            site: site_import.site.domain,
+            error: inspect(error)
+          }
         )
 
-        import_failed(source, site)
+        import_fail(site_import)
 
         {:error, error}
     end
@@ -45,33 +55,33 @@ defmodule Plausible.Workers.ImportAnalytics do
     300
   end
 
-  def import_success(source, site) do
-    site = Repo.preload(site, memberships: :user)
+  def import_complete(site_import) do
+    site_import = Repo.preload(site_import, site: [memberships: :user])
 
-    site
-    |> Plausible.Site.import_success()
-    |> Repo.update!()
-
-    Enum.each(site.memberships, fn membership ->
+    Enum.each(site_import.site.memberships, fn membership ->
       if membership.role in [:owner, :admin] do
-        PlausibleWeb.Email.import_success(source, membership.user, site)
+        PlausibleWeb.Email.import_success(site_import, membership.user)
         |> Plausible.Mailer.send()
       end
     end)
   end
 
-  def import_failed(source, site) do
-    site = Repo.preload(site, memberships: :user)
+  def import_fail_transient(site_import) do
+    Plausible.Purge.delete_imported_stats!(site_import)
+  end
 
-    site
-    |> Plausible.Site.import_failure()
-    |> Repo.update!()
+  def import_fail(site_import) do
+    site_import =
+      site_import
+      |> SiteImport.fail_changeset()
+      |> Repo.update!()
+      |> Repo.preload(site: [memberships: :user])
 
-    Plausible.Purge.delete_imported_stats!(site)
+    Plausible.Purge.delete_imported_stats!(site_import)
 
-    Enum.each(site.memberships, fn membership ->
+    Enum.each(site_import.site.memberships, fn membership ->
       if membership.role in [:owner, :admin] do
-        PlausibleWeb.Email.import_failure(source, membership.user, site)
+        PlausibleWeb.Email.import_failure(site_import, membership.user)
         |> Plausible.Mailer.send()
       end
     end)
