@@ -92,7 +92,7 @@ export default function PlausibleCombobox(props) {
   }
 
   function isDisabled(option) {
-    return props.values.some((val) => val.value === option.value)
+    return props.values.some((val) => val.value === option.value) || (props.disabledOptions || []).some((val) => val?.value === option.value)
   }
 
   function fetchOptions(query) {
@@ -161,7 +161,7 @@ export default function PlausibleCombobox(props) {
       searchRef.current.focus()
     }
   }, [props.values.length === 0])
-  
+
   const searchBoxClass = 'border-none py-1 px-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm'
 
   const containerClass = classNames('relative w-full', {
@@ -222,7 +222,7 @@ export default function PlausibleCombobox(props) {
     if (loading) {
       return <div className="relative cursor-default select-none py-2 px-4 text-gray-700 dark:text-gray-300">Loading options...</div>
     }
-    
+
     if (matchesFound) {
       return visibleOptions
         .filter(option => !isDisabled(option))

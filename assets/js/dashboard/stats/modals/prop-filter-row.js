@@ -7,7 +7,20 @@ import * as api from '../../api'
 import { apiPath } from '../../util/url'
 import { TrashIcon } from '@heroicons/react/20/solid'
 
-function PropFilterRow({ id, query, site, propKey, type, clauses, showDelete, onPropKeySelect, onPropValueSelect, onFilterTypeSelect, onPropDelete }) {
+function PropFilterRow({
+  id,
+  query,
+  site,
+  propKey,
+  type,
+  clauses,
+  showDelete,
+  selectedPropKeys,
+  onPropKeySelect,
+  onPropValueSelect,
+  onFilterTypeSelect,
+  onPropDelete
+}) {
   function fetchPropKeyOptions() {
     return (input) => {
       return api.get(apiPath(site, "/suggestions/prop_key"), query, { q: input.trim() })
@@ -37,6 +50,7 @@ function PropFilterRow({ id, query, site, propKey, type, clauses, showDelete, on
           values={propKey ? [propKey] : []}
           onSelect={(value) => onPropKeySelect(id, value)}
           placeholder={'Property'}
+          disabledOptions={selectedPropKeys}
         />
       </div>
       <div className="col-span-3 mx-2">

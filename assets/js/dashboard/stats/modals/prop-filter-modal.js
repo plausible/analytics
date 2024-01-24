@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { withRouter } from "react-router-dom";
 
 import { FILTER_TYPES } from "../../util/filters";
@@ -34,6 +34,8 @@ function getFormState(query) {
 function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
   const [formState, setFormState] = useState(getFormState(query))
+
+  const selectedPropKeys = useMemo(() => Object.values(formState.values).map((value) => value.propKey), [formState])
 
   function onPropKeySelect(id, selectedOptions) {
     const newPropKey = selectedOptions.length === 0 ? null : selectedOptions[0]
@@ -161,6 +163,7 @@ function PropFilterModal(props) {
                 query={query}
                 {...formState.values[id]}
                 showDelete={formState.entries.length > 1}
+                selectedPropKeys={selectedPropKeys}
                 onPropKeySelect={onPropKeySelect}
                 onPropValueSelect={onPropValueSelect}
                 onFilterTypeSelect={onFilterTypeSelect}
