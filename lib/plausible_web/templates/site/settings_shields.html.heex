@@ -1,0 +1,20 @@
+<section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
+  <div class="py-6 px-4 sm:p-6">
+    <header class="relative">
+      <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+        IP Block List
+      </h2>
+      <p class="mt-1 mb-4 text-sm leading-5 text-gray-500 dark:text-gray-200">
+        Reject incoming traffic from specific IP addresses
+      </p>
+    </header>
+
+    <%= live_render(@conn, PlausibleWeb.Live.Shields,
+      session: %{
+        "site_id" => @site.id,
+        "domain" => @site.domain,
+        "remote_ip" => PlausibleWeb.RemoteIP.get(@conn)
+      }
+    ) %>
+  </div>
+</section>
