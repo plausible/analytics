@@ -19,3 +19,5 @@ function onInit() {
     })
   }
 }
+
+window.plausibleEmbedLoaded = true // Used by WP plugin to detect whether adblocker has blocked the loading of this script
