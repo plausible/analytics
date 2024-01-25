@@ -206,7 +206,7 @@ defmodule Plausible.Sites do
   def stats_start_date(%Site{} = site) do
     start_dates =
       site
-      |> Plausible.Imported.list_imports()
+      |> Plausible.Imported.list_complete_imports()
       |> Enum.map(& &1.start_date)
 
     start_dates =
