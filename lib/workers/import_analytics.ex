@@ -67,6 +67,8 @@ defmodule Plausible.Workers.ImportAnalytics do
   end
 
   def import_fail_transient(site_import) do
+    Oban.Notifier.notify(Oban, :analytics_imports_jobs, %{transient_fail: site_import.id})
+
     Plausible.Purge.delete_imported_stats!(site_import)
   end
 
@@ -77,6 +79,8 @@ defmodule Plausible.Workers.ImportAnalytics do
       site_import
       |> import_api.mark_failed()
       |> Repo.preload(site: [memberships: :user])
+
+    Oban.Notifier.notify(Oban, :analytics_imports_jobs, %{fail: site_import.id})
 
     Plausible.Purge.delete_imported_stats!(site_import)
 
