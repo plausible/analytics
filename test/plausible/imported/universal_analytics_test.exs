@@ -62,7 +62,7 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
 
   describe "import_data/2" do
     @tag :slow
-    test "imports page views from Google Analytics", %{site: site} do
+    test "imports page views from Google Analytics", %{user: user, site: site} do
       mock_http_with("google_analytics_import#1.json")
 
       view_id = "54297898"
@@ -71,8 +71,16 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
       future = DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_iso8601()
       auth = {"***", "refresh_token", future}
 
+      site_import =
+        site
+        |> Plausible.Imported.SiteImport.create_changeset(
+          user,
+          %{source: "Google Analytics", start_date: date_range.first, end_date: date_range.last}
+        )
+        |> Plausible.Repo.insert!()
+
       assert :ok ==
-               UniversalAnalytics.import_data(site,
+               UniversalAnalytics.import_data(site_import,
                  date_range: date_range,
                  view_id: view_id,
                  auth: auth
