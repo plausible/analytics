@@ -71,10 +71,11 @@ defmodule Plausible.Workers.ImportAnalytics do
   end
 
   def import_fail(site_import) do
+    import_api = ImportSources.by_name(site_import.source)
+
     site_import =
       site_import
-      |> SiteImport.fail_changeset()
-      |> Repo.update!()
+      |> import_api.mark_failed()
       |> Repo.preload(site: [memberships: :user])
 
     Plausible.Purge.delete_imported_stats!(site_import)

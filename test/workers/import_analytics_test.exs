@@ -6,7 +6,7 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
 
   @moduletag capture_log: true
 
-  describe "Universal Analytics" do
+  describe "perform/1" do
     setup do
       %{
         import_opts: [
@@ -26,11 +26,17 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
 
       assert [%{status: :pending}] = Plausible.Imported.list_all_imports(site)
 
+      # before_start callback triggered
+      assert_received {:before_start, import_id}
+
       job
       |> Repo.reload!()
       |> ImportAnalytics.perform()
 
-      assert [%{status: :completed}] = Plausible.Imported.list_all_imports(site)
+      assert [%{id: ^import_id, status: :completed}] = Plausible.Imported.list_all_imports(site)
+
+      # on_success callback triggered
+      assert_received {:on_success, ^import_id}
     end
 
     test "updates the stats_start_date field for the site after successful import", %{
@@ -97,6 +103,9 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
                count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
                {count == 0, count}
              end)
+
+      # on_failure callback triggered
+      assert_received {:on_failure, _import_id}
     end
 
     test "sends email to owner after failed import", %{import_opts: import_opts} do

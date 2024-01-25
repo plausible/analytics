@@ -17,7 +17,7 @@ defmodule Plausible.Imported do
   @spec tables() :: [String.t()]
   def tables, do: @tables
 
- def list_all_imports(site) do
+  def list_all_imports(site) do
     SiteImport
     |> where(site_id: ^site.id)
     |> Repo.all()

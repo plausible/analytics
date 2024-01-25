@@ -16,4 +16,25 @@ defmodule Plausible.Imported.NoopImporter do
   @impl true
   def import_data(_site, %{"error" => true}), do: {:error, "Something went wrong"}
   def import_data(_site, _opts), do: :ok
+
+  @impl true
+  def before_start(site_import) do
+    send(self(), {:before_start, site_import.id})
+
+    :ok
+  end
+
+  @impl true
+  def on_success(site_import) do
+    send(self(), {:on_success, site_import.id})
+
+    :ok
+  end
+
+  @impl true
+  def on_failure(site_import) do
+    send(self(), {:on_failure, site_import.id})
+
+    :ok
+  end
 end

@@ -5,6 +5,8 @@ defmodule Plausible.Imported.UniversalAnalytics do
 
   use Plausible.Imported.Importer
 
+  alias Plausible.Repo
+
   @missing_values ["(none)", "(not set)", "(not provided)", "(other)"]
 
   # NOTE: we have to use old name for now
@@ -12,6 +14,43 @@ defmodule Plausible.Imported.UniversalAnalytics do
 
   @impl true
   def name(), do: @name
+
+  @impl true
+  def before_start(site_import) do
+    site = Repo.preload(site_import, :site).site
+
+    site
+    |> Plausible.Site.start_import(
+      site_import.start_date,
+      site_import.end_date,
+      site_import.source
+    )
+    |> Repo.update!()
+
+    :ok
+  end
+
+  @impl true
+  def on_success(site_import) do
+    site = Repo.preload(site_import, :site).site
+
+    site
+    |> Plausible.Site.import_success()
+    |> Repo.update!()
+
+    :ok
+  end
+
+  @impl true
+  def on_failure(site_import) do
+    site = Repo.preload(site_import, :site).site
+
+    site
+    |> Plausible.Site.import_failure()
+    |> Repo.update!()
+
+    :ok
+  end
 
   @impl true
   def parse_args(

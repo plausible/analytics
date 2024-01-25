@@ -6,19 +6,19 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
 
   setup [:create_user, :create_new_site]
 
-  describe "parse_args/1" do
+  describe "new_import/3 and parse_args/1" do
     test "parses job args properly", %{user: user, site: site} do
       expires_at = NaiveDateTime.to_iso8601(NaiveDateTime.utc_now())
 
       assert {:ok, job} =
-        UniversalAnalytics.new_import(site, user,
-          view_id: 123,
-          start_date: "2023-10-01",
-          end_date: "2024-01-02",
-          access_token: "access123",
-          refresh_token: "refresh123",
-          token_expires_at: expires_at
-        )
+               UniversalAnalytics.new_import(site, user,
+                 view_id: 123,
+                 start_date: "2023-10-01",
+                 end_date: "2024-01-02",
+                 access_token: "access123",
+                 refresh_token: "refresh123",
+                 token_expires_at: expires_at
+               )
 
       assert %Oban.Job{
                args:
@@ -36,10 +36,21 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
       assert [
                %{
                  id: ^import_id,
+                 source: "Google Analytics",
                  start_date: ~D[2023-10-01],
-                 end_date: ~D[2024-01-02]
+                 end_date: ~D[2024-01-02],
+                 status: :pending
                }
              ] = Plausible.Imported.list_all_imports(site)
+
+      assert %{
+               imported_data: %{
+                 source: "Google Analytics",
+                 start_date: ~D[2023-10-01],
+                 end_date: ~D[2024-01-02],
+                 status: "importing"
+               }
+             } = Repo.reload!(site)
 
       assert opts = [_ | _] = UniversalAnalytics.parse_args(args)
 
