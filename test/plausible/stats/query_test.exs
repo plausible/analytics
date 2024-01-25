@@ -19,8 +19,8 @@ defmodule Plausible.Stats.QueryTest do
   test "keeps current timestamp so that utc_boundaries don't depend on time passing by", %{
     site: site
   } do
-    q1 = Query.from(site, %{"period" => "realtime"})
-    q2 = Query.from(site, %{"period" => "30m"})
+    q1 = %{now: %NaiveDateTime{}} = Query.from(site, %{"period" => "realtime"})
+    q2 = %{now: %NaiveDateTime{}} = Query.from(site, %{"period" => "30m"})
     boundaries1 = Plausible.Stats.Base.utc_boundaries(q1, site)
     boundaries2 = Plausible.Stats.Base.utc_boundaries(q2, site)
     :timer.sleep(1500)
