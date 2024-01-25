@@ -274,7 +274,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_interval(_), do: :ok
 
-  defp validate_goal_filter(site, %{"event:goal" => goal_filter}) do
+  defp validate_goal_filter(site, %{"event:goal" => {_type, goal_filter}}) do
     configured_goals =
       Plausible.Goals.for_site(site)
       |> Enum.map(fn
@@ -283,10 +283,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       end)
 
     goals_in_filter =
-      case goal_filter do
-        {_type, filters} when is_list(filters) -> filters
-        {_type, filter} -> [filter]
-      end
+      List.wrap(goal_filter)
       |> Plausible.Stats.Filters.Utils.unwrap_goal_value()
 
     if found = Enum.find(goals_in_filter, &(&1 not in configured_goals)) do
