@@ -40,10 +40,34 @@ defmodule Plausible.Stats.Aggregate do
 
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
+    |> maybe_put_cr(site, query, metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
     |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
     |> Enum.into(%{})
+  end
+
+  defp maybe_put_cr(aggregate_result, site, query, metrics) do
+    if :conversion_rate in metrics do
+      all =
+        query
+        |> Query.remove_event_filters([:goal, :props])
+        |> then(fn query -> aggregate_events(site, query, [:visitors]) end)
+        |> Map.fetch!(:visitors)
+
+      converted = aggregate_result.visitors
+      cr = calculate_cr(all, converted)
+
+      aggregate_result = Map.put(aggregate_result, :conversion_rate, cr)
+
+      if :visitors_without_event_filters in metrics do
+        Map.put(aggregate_result, :visitors_without_event_filters, all)
+      else
+        aggregate_result
+      end
+    else
+      aggregate_result
+    end
   end
 
   defp aggregate_events(_, _, []), do: %{}

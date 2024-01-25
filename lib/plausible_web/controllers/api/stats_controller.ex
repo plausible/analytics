@@ -341,61 +341,23 @@ defmodule PlausibleWeb.Api.StatsController do
   end
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _}} = query, comparison_query) do
-    query_without_filters = Query.remove_event_filters(query, [:goal, :props])
-    metrics = [:visitors, :events] ++ @revenue_metrics
+    metrics =
+      [:visitors_without_event_filters, :visitors, :events, :conversion_rate] ++ @revenue_metrics
 
-    results_without_filters =
-      site
-      |> Stats.aggregate(query_without_filters, [:visitors])
-      |> transform_keys(%{visitors: :unique_visitors})
-
-    results =
-      site
-      |> Stats.aggregate(query, metrics)
-      |> transform_keys(%{visitors: :converted_visitors, events: :completions})
-      |> Map.merge(results_without_filters)
-
-    comparison =
-      if comparison_query do
-        comparison_query_without_filters =
-          Query.remove_event_filters(comparison_query, [:goal, :props])
-
-        comparison_without_filters =
-          site
-          |> Stats.aggregate(comparison_query_without_filters, [:visitors])
-          |> transform_keys(%{visitors: :unique_visitors})
-
-        site
-        |> Stats.aggregate(comparison_query, metrics)
-        |> transform_keys(%{visitors: :converted_visitors, events: :completions})
-        |> Map.merge(comparison_without_filters)
-      end
-
-    conversion_rate = %{
-      cr: %{value: calculate_cr(results.unique_visitors.value, results.converted_visitors.value)}
-    }
-
-    comparison_conversion_rate =
-      if comparison do
-        value =
-          calculate_cr(comparison.unique_visitors.value, comparison.converted_visitors.value)
-
-        %{cr: %{value: value}}
-      else
-        nil
-      end
+    results = Stats.aggregate(site, query, metrics)
+    comparison = if comparison_query, do: Stats.aggregate(site, comparison_query, metrics)
 
     [
-      top_stats_entry(results, comparison, "Unique visitors", :unique_visitors),
-      top_stats_entry(results, comparison, "Unique conversions", :converted_visitors),
-      top_stats_entry(results, comparison, "Total conversions", :completions),
+      top_stats_entry(results, comparison, "Unique visitors", :visitors_without_event_filters),
+      top_stats_entry(results, comparison, "Unique conversions", :visitors),
+      top_stats_entry(results, comparison, "Total conversions", :events),
       on_full_build do
         top_stats_entry(results, comparison, "Average revenue", :average_revenue, &format_money/1)
       end,
       on_full_build do
         top_stats_entry(results, comparison, "Total revenue", :total_revenue, &format_money/1)
       end,
-      top_stats_entry(conversion_rate, comparison_conversion_rate, "Conversion rate", :cr)
+      top_stats_entry(results, comparison, "Conversion rate", :conversion_rate)
     ]
     |> Enum.reject(&is_nil/1)
     |> then(&{&1, 100})
