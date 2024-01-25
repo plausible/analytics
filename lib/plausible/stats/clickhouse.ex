@@ -555,8 +555,8 @@ defmodule Plausible.Stats.Clickhouse do
     base_query_bare(site, query) |> include_goal_conversions(query)
   end
 
-  defp utc_boundaries(%Query{period: "30m"}, site) do
-    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+  defp utc_boundaries(%Query{now: now, period: "30m"}, site) do
+    last_datetime = now |> NaiveDateTime.truncate(:second)
 
     first_datetime =
       last_datetime
@@ -567,8 +567,8 @@ defmodule Plausible.Stats.Clickhouse do
     {first_datetime, last_datetime}
   end
 
-  defp utc_boundaries(%Query{period: "realtime"}, site) do
-    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+  defp utc_boundaries(%Query{now: now, period: "realtime"}, site) do
+    last_datetime = now |> NaiveDateTime.truncate(:second)
 
     first_datetime =
       last_datetime
