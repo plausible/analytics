@@ -204,10 +204,16 @@ defmodule Plausible.Sites do
   end
 
   def stats_start_date(%Site{} = site) do
-    start_dates =
+    earliest_import =
       site
-      |> Plausible.Imported.list_complete_imports()
-      |> Enum.map(& &1.start_date)
+      |> Plausible.Imported.get_earliest_import()
+
+    start_dates =
+      if earliest_import do
+        [earliest_import.start_date]
+      else
+        []
+      end
 
     start_dates =
       if native_start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site) do

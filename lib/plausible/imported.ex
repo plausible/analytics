@@ -22,11 +22,6 @@ defmodule Plausible.Imported do
     |> Repo.all()
   end
 
-  def list_complete_imports(site) do
-    from(i in SiteImport, where: i.site_id == ^site.id and i.status == ^:completed)
-    |> Repo.all()
-  end
-
   def list_complete_import_ids(site) do
     ids =
       from(i in SiteImport,
