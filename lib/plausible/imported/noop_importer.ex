@@ -14,8 +14,8 @@ defmodule Plausible.Imported.NoopImporter do
   def parse_args(opts), do: opts
 
   @impl true
-  def import_data(_site, %{"error" => true}), do: {:error, "Something went wrong"}
-  def import_data(_site, _opts), do: :ok
+  def import_data(_site_import, %{"error" => true}), do: {:error, "Something went wrong"}
+  def import_data(_site_import, _opts), do: :ok
 
   @impl true
   def before_start(site_import) do

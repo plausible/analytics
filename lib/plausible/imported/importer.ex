@@ -111,7 +111,7 @@ defmodule Plausible.Imported.Importer do
 
     import_opts = parse_args_fun.(args)
 
-    case import_fun.(site_import.site, import_opts) do
+    case import_fun.(site_import, import_opts) do
       :ok ->
         {:ok, mark_complete(site_import, %{}, on_success_fun)}
 

@@ -80,7 +80,7 @@ defmodule Plausible.Imported.UniversalAnalytics do
   to Clickhouse by the `Plausible.Imported.Buffer` process.
   """
   @impl true
-  def import_data(site, opts) do
+  def import_data(site_import, opts) do
     date_range = Keyword.fetch!(opts, :date_range)
     view_id = Keyword.fetch!(opts, :view_id)
     auth = Keyword.fetch!(opts, :auth)
@@ -88,7 +88,7 @@ defmodule Plausible.Imported.UniversalAnalytics do
     {:ok, buffer} = Plausible.Imported.Buffer.start_link()
 
     persist_fn = fn table, rows ->
-      records = from_report(rows, site.id, table)
+      records = from_report(rows, site_import.site_id, site_import.id, table)
       Plausible.Imported.Buffer.insert_many(buffer, table, records)
     end
 
@@ -100,14 +100,14 @@ defmodule Plausible.Imported.UniversalAnalytics do
     end
   end
 
-  def from_report(nil, _site_id, _metric), do: nil
+  def from_report(nil, _site_id, _import_id, _metric), do: nil
 
-  def from_report(data, site_id, table) do
+  def from_report(data, site_id, import_id, table) do
     Enum.reduce(data, [], fn row, acc ->
       if Map.get(row.dimensions, "ga:date") in @missing_values do
         acc
       else
-        [new_from_report(site_id, table, row) | acc]
+        [new_from_report(site_id, import_id, table, row) | acc]
       end
     end)
   end
@@ -117,9 +117,10 @@ defmodule Plausible.Imported.UniversalAnalytics do
     round(float)
   end
 
-  defp new_from_report(site_id, "imported_visitors", row) do
+  defp new_from_report(site_id, import_id, "imported_visitors", row) do
     %{
       site_id: site_id,
+      import_id: import_id,
       date: get_date(row),
       visitors: row.metrics |> Map.fetch!("ga:users") |> parse_number(),
       pageviews: row.metrics |> Map.fetch!("ga:pageviews") |> parse_number(),
@@ -129,9 +130,10 @@ defmodule Plausible.Imported.UniversalAnalytics do
     }
   end
 
-  defp new_from_report(site_id, "imported_sources", row) do
+  defp new_from_report(site_id, import_id, "imported_sources", row) do
     %{
       site_id: site_id,
+      import_id: import_id,
       date: get_date(row),
       source: row.dimensions |> Map.fetch!("ga:source") |> parse_referrer(),
       utm_medium: row.dimensions |> Map.fetch!("ga:medium") |> default_if_missing(),
@@ -145,9 +147,10 @@ defmodule Plausible.Imported.UniversalAnalytics do
     }
   end
 
-  defp new_from_report(site_id, "imported_pages", row) do
+  defp new_from_report(site_id, import_id, "imported_pages", row) do
     %{
       site_id: site_id,
+      import_id: import_id,
       date: get_date(row),
       hostname: row.dimensions |> Map.fetch!("ga:hostname") |> String.replace_prefix("www.", ""),
       page: row.dimensions |> Map.fetch!("ga:pagePath") |> URI.parse() |> Map.get(:path),
@@ -158,9 +161,10 @@ defmodule Plausible.Imported.UniversalAnalytics do
     }
   end
 
-  defp new_from_report(site_id, "imported_entry_pages", row) do
+  defp new_from_report(site_id, import_id, "imported_entry_pages", row) do
     %{
       site_id: site_id,
+      import_id: import_id,
       date: get_date(row),
       entry_page: row.dimensions |> Map.fetch!("ga:landingPagePath"),
       visitors: row.metrics |> Map.fetch!("ga:users") |> parse_number(),
@@ -170,9 +174,10 @@ defmodule Plausible.Imported.UniversalAnalytics do
     }
   end
 
-  defp new_from_report(site_id, "imported_exit_pages", row) do
+  defp new_from_report(site_id, import_id, "imported_exit_pages", row) do
     %{
       site_id: site_id,
+      import_id: import_id,
       date: get_date(row),
       exit_page: Map.fetch!(row.dimensions, "ga:exitPagePath"),
       visitors: row.metrics |> Map.fetch!("ga:users") |> parse_number(),
@@ -180,13 +185,14 @@ defmodule Plausible.Imported.UniversalAnalytics do
     }
   end
 
-  defp new_from_report(site_id, "imported_locations", row) do
+  defp new_from_report(site_id, import_id, "imported_locations", row) do
     country_code = row.dimensions |> Map.fetch!("ga:countryIsoCode") |> default_if_missing("")
     city_name = row.dimensions |> Map.fetch!("ga:city") |> default_if_missing("")
     city_data = Location.get_city(city_name, country_code)
 
     %{
       site_id: site_id,
+      import_id: import_id,
       date: get_date(row),
       country: country_code,
       region: row.dimensions |> Map.fetch!("ga:regionIsoCode") |> default_if_missing(""),
@@ -198,9 +204,10 @@ defmodule Plausible.Imported.UniversalAnalytics do
     }
   end
 
-  defp new_from_report(site_id, "imported_devices", row) do
+  defp new_from_report(site_id, import_id, "imported_devices", row) do
     %{
       site_id: site_id,
+      import_id: import_id,
       date: get_date(row),
       device: row.dimensions |> Map.fetch!("ga:deviceCategory") |> String.capitalize(),
       visitors: row.metrics |> Map.fetch!("ga:users") |> parse_number(),
@@ -220,11 +227,12 @@ defmodule Plausible.Imported.UniversalAnalytics do
     "(not set)" => ""
   }
 
-  defp new_from_report(site_id, "imported_browsers", row) do
+  defp new_from_report(site_id, import_id, "imported_browsers", row) do
     browser = Map.fetch!(row.dimensions, "ga:browser")
 
     %{
       site_id: site_id,
+      import_id: import_id,
       date: get_date(row),
       browser: Map.get(@browser_google_to_plausible, browser, browser),
       visitors: row.metrics |> Map.fetch!("ga:users") |> parse_number(),
@@ -240,11 +248,12 @@ defmodule Plausible.Imported.UniversalAnalytics do
     "(not set)" => ""
   }
 
-  defp new_from_report(site_id, "imported_operating_systems", row) do
+  defp new_from_report(site_id, import_id, "imported_operating_systems", row) do
     os = Map.fetch!(row.dimensions, "ga:operatingSystem")
 
     %{
       site_id: site_id,
+      import_id: import_id,
       date: get_date(row),
       operating_system: Map.get(@os_google_to_plausible, os, os),
       visitors: row.metrics |> Map.fetch!("ga:users") |> parse_number(),

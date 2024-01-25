@@ -14,7 +14,7 @@ defmodule Plausible.Imported.CSVImporter do
   def parse_args(%{"s3_path" => s3_path}), do: [s3_path: s3_path]
 
   @impl true
-  def import_data(_site, _opts) do
+  def import_data(_site_import, _opts) do
     :ok
   end
 end
