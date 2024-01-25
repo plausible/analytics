@@ -267,6 +267,25 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  def settings_imports_exports(conn, _params) do
+    site =
+      conn.assigns.site
+      |> Repo.preload([:google_auth])
+
+    if FunWithFlags.enabled?(:imports_exports) do
+      conn
+      |> render("settings_imports_exports.html",
+        site: site,
+        dogfood_page_path: "/:dashboard/settings/imports-exports",
+        connect_live_socket: true,
+        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+      )
+    else
+      conn
+      |> redirect(external: Routes.site_path(conn, :settings, site.domain))
+    end
+  end
+
   def update_google_auth(conn, %{"google_auth" => attrs}) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 
