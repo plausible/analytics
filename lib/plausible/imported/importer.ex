@@ -74,30 +74,13 @@ defmodule Plausible.Imported.Importer do
         |> SiteImport.create_changeset(user, import_params)
         |> Repo.insert()
 
-      case result do
-        {:ok, site_import} ->
-          case before_start_fun.(site_import) do
-            :ok -> :ok
-            {:error, error} -> Repo.rollback(error)
-          end
-
-          job_params =
-            opts
-            |> Keyword.put(:import_id, site_import.id)
-            |> Map.new()
-
-          job_changeset = Plausible.Workers.ImportAnalytics.new(job_params)
-
-          case Oban.insert(job_changeset) do
-            {:ok, job} ->
-              job
-
-            {:error, changeset} ->
-              Repo.rollback(changeset)
-          end
-
-        {:error, changeset} ->
-          Repo.rollback(changeset)
+      with {:ok, site_import} <- result,
+           :ok <- before_start_fun.(site_import),
+           {:ok, job} <- schedule_job(site_import, opts) do
+        job
+      else
+        {:error, error} ->
+          Repo.rollback(error)
       end
     end)
   end
@@ -121,6 +104,14 @@ defmodule Plausible.Imported.Importer do
       {:error, error} ->
         {:error, error}
     end
+  end
+
+  defp schedule_job(site_import, opts) do
+    opts
+    |> Keyword.put(:import_id, site_import.id)
+    |> Map.new()
+    |> Plausible.Workers.ImportAnalytics.new()
+    |> Oban.insert()
   end
 
   defp mark_complete(site_import, extra_data, on_success_fun) do
