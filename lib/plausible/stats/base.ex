@@ -484,28 +484,28 @@ defmodule Plausible.Stats.Base do
     end
   end
 
-  def utc_boundaries(%Query{period: "realtime"}, site) do
+  def utc_boundaries(%Query{period: "realtime", now: now}, site) do
     last_datetime =
-      NaiveDateTime.utc_now()
+      now
       |> Timex.shift(seconds: 5)
       |> beginning_of_time(site.native_stats_start_at)
       |> NaiveDateTime.truncate(:second)
 
     first_datetime =
-      NaiveDateTime.utc_now() |> Timex.shift(minutes: -5) |> NaiveDateTime.truncate(:second)
+      now |> Timex.shift(minutes: -5) |> NaiveDateTime.truncate(:second)
 
     {first_datetime, last_datetime}
   end
 
-  def utc_boundaries(%Query{period: "30m"}, site) do
+  def utc_boundaries(%Query{period: "30m", now: now}, site) do
     last_datetime =
-      NaiveDateTime.utc_now()
+      now
       |> Timex.shift(seconds: 5)
       |> beginning_of_time(site.native_stats_start_at)
       |> NaiveDateTime.truncate(:second)
 
     first_datetime =
-      NaiveDateTime.utc_now() |> Timex.shift(minutes: -30) |> NaiveDateTime.truncate(:second)
+      now |> Timex.shift(minutes: -30) |> NaiveDateTime.truncate(:second)
 
     {first_datetime, last_datetime}
   end
