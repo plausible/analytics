@@ -28,4 +28,8 @@ defmodule Plausible.Imported do
     |> where(site_id: ^site.id, status: :completed)
     |> Repo.all()
   end
+
+  def delete_imports_for_site(site) do
+    Repo.delete_all(from i in SiteImport, where: i.site_id == ^site.id)
+  end
 end

@@ -159,22 +159,12 @@ defmodule Plausible.Site do
 
   def import_success(site) do
     change(site,
-      stats_start_date: site.imported_data.start_date,
       imported_data: %{status: "ok"}
     )
   end
 
   def import_failure(site) do
     change(site, imported_data: %{status: "error"})
-  end
-
-  def set_imported_source(site, imported_source) do
-    change(site,
-      imported_data: %Plausible.Site.ImportedData{
-        end_date: Timex.today(),
-        source: imported_source
-      }
-    )
   end
 
   def remove_imported_data(site) do
