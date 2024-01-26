@@ -55,7 +55,12 @@ defmodule Plausible.Stats.Aggregate do
         |> then(fn query -> aggregate_events(site, query, [:visitors]) end)
         |> Map.fetch!(:visitors)
 
-      converted = aggregate_result.visitors
+      converted =
+        case aggregate_result do
+          %{visitors: visitors} -> visitors
+          _ -> aggregate_events(site, query, [:visitors]).visitors
+        end
+
       cr = calculate_cr(all, converted)
 
       aggregate_result = Map.put(aggregate_result, :conversion_rate, cr)
