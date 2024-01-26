@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.FilterSuggestions do
   use Plausible.Repo
   use Plausible.ClickhouseRepo
+  use Plausible.Stats.Fragments
   import Plausible.Stats.Base
   alias Plausible.Stats.Query
 
@@ -154,20 +155,22 @@ defmodule Plausible.Stats.FilterSuggestions do
 
     none_q =
       from(e in base_event_query(site, Query.remove_event_filters(query, [:props])),
-        left_array_join: meta in "meta",
-        as: :meta,
         select: "(none)",
-        where: fragment("not has(?, ?)", field(e, :"meta.key"), ^key),
+        where: not has_key(e, :meta, ^key),
         limit: 1
       )
 
     search_q =
       from(e in base_event_query(site, query),
-        array_join: meta in "meta",
-        as: :meta,
-        select: meta.value,
-        where: meta.key == ^key and fragment("? ilike ?", meta.value, ^filter_query),
-        group_by: meta.value,
+        select: get_by_key(e, :meta, ^key),
+        where:
+          has_key(e, :meta, ^key) and
+            fragment(
+              "? ilike ?",
+              get_by_key(e, :meta, ^key),
+              ^filter_query
+            ),
+        group_by: get_by_key(e, :meta, ^key),
         order_by: [desc: fragment("count(*)")],
         limit: 25
       )

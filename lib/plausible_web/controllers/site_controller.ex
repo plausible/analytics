@@ -751,23 +751,24 @@ defmodule PlausibleWeb.SiteController do
         "refresh_token" => refresh_token,
         "expires_at" => expires_at
       }) do
-    site = conn.assigns[:site]
+    site = conn.assigns.site
+    source = "Google Analytics"
 
     job =
-      Plausible.Workers.ImportGoogleAnalytics.new(%{
-        "site_id" => site.id,
-        "view_id" => view_id,
-        "start_date" => start_date,
-        "end_date" => end_date,
-        "access_token" => access_token,
-        "refresh_token" => refresh_token,
-        "token_expires_at" => expires_at
-      })
+      Plausible.Imported.UniversalAnalytics.create_job(
+        site,
+        view_id: view_id,
+        start_date: start_date,
+        end_date: end_date,
+        access_token: access_token,
+        refresh_token: refresh_token,
+        token_expires_at: expires_at
+      )
 
     Ecto.Multi.new()
     |> Ecto.Multi.update(
       :update_site,
-      Plausible.Site.start_import(site, start_date, end_date, "Google Analytics")
+      Plausible.Site.start_import(site, start_date, end_date, source)
     )
     |> Oban.insert(:oban_job, job)
     |> Repo.transaction()
@@ -777,6 +778,9 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
+  # NOTE: To be cleaned up once #3700 is released
+  @analytics_queues ["analytics_imports", "google_analytics_imports"]
+
   def forget_imported(conn, _params) do
     site = conn.assigns[:site]
 
@@ -785,7 +789,7 @@ defmodule PlausibleWeb.SiteController do
         Oban.cancel_all_jobs(
           from j in Oban.Job,
             where:
-              j.queue == "google_analytics_imports" and
+              j.queue in @analytics_queues and
                 fragment("(? ->> 'site_id')::int", j.args) == ^site.id
         )
 

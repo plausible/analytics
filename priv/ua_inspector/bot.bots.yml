@@ -19,7 +19,7 @@
   url: 'https://developers.cloudflare.com/health-checks/'
   producer:
     name: 'CloudFlare'
-    url: 'http://www.cloudflare.com'
+    url: 'https://www.cloudflare.com/'
 
 - regex: '360Spider'
   name: '360Spider'
@@ -331,21 +331,53 @@
     name: 'CloudFlare'
     url: 'http://www.cloudflare.com'
 
-- regex: 'CloudflareDiagnostics'
+- regex: 'Cloudflare-?Diagnostics'
   name: 'Cloudflare Diagnostics'
   category: 'Site Monitor'
   url: 'https://www.cloudflare.com/'
   producer:
     name: 'Cloudflare'
-    url: 'https://www.cloudflare.com'
+    url: 'https://www.cloudflare.com/'
 
 - regex: 'CloudFlare-AlwaysOnline'
   name: 'CloudFlare Always Online'
   category: 'Site Monitor'
-  url: 'http://www.cloudflare.com/always-online'
+  url: 'https://www.cloudflare.com/always-online'
   producer:
     name: 'CloudFlare'
-    url: 'http://www.cloudflare.com'
+    url: 'https://www.cloudflare.com/'
+
+- regex: 'Cloudflare-SSLDetector'
+  name: 'Cloudflare SSL Detector'
+  category: 'Site Monitor'
+  url: 'https://developers.cloudflare.com/fundamentals/reference/cloudflare-site-crawling/'
+  producer:
+    name: 'CloudFlare'
+    url: 'https://www.cloudflare.com/'
+
+- regex: 'Cloudflare Custom Hostname Verification'
+  name: 'Cloudflare Custom Hostname Verification'
+  category: 'Service Agent'
+  url: 'https://developers.cloudflare.com/fundamentals/reference/cloudflare-site-crawling/'
+  producer:
+    name: 'CloudFlare'
+    url: 'https://www.cloudflare.com/'
+
+- regex: 'Cloudflare-Traffic-Manager'
+  name: 'Cloudflare Traffic Manager'
+  category: 'Site Monitor'
+  url: 'https://developers.cloudflare.com/fundamentals/reference/cloudflare-site-crawling/'
+  producer:
+    name: 'CloudFlare'
+    url: 'https://www.cloudflare.com/'
+
+- regex: 'https://developers.cloudflare.com/security-center/'
+  name: 'Cloudflare Security Insights'
+  category: 'Site Monitor'
+  url: 'https://developers.cloudflare.com/fundamentals/reference/cloudflare-site-crawling/'
+  producer:
+    name: 'CloudFlare'
+    url: 'https://www.cloudflare.com/'
 
 - regex: 'coccoc.com'
   name: 'Cốc Cốc Bot'
@@ -2003,7 +2035,7 @@
 - regex: 'RSSRadio \(Push Notification Scanner;support@dorada\.co\.uk\)'
   name: 'RSSRadio Bot'
 
-- regex: '(A6-Indexer|nuhk|TsolCrawler|Yammybot|Openbot|Gulper Web Bot|grub-client|Download Demon|SearchExpress|Microsoft URL Control|borg|altavista|dataminr.com|tweetedtimes.com|TrendsmapResolver|teoma|blitzbot|oegp|furlbot|http%20client|polybot|htdig|mogimogi|larbin|scrubby|searchsight|seekbot|semanticdiscovery|snappy|vortex(?!(?: Build|Plus))|zeal(?!ot)|fast-webcrawler|converacrawler|dataparksearch|findlinks|BrowserMob|HttpMonitor|ThumbShotsBot|URL2PNG|ZooShot|GomezA|Google SketchUp|Read%20Later|RackspaceBot|robots|SeopultContentAnalyzer|7Siters|centuryb.o.t9|InterNaetBoten|EasyBib AutoCite|Bidtellect|tomnomnom/meg|My User Agent|cortex|CF-UC User Agent|Re-re Studio|adreview|AHC/|NameOfAgent|Request-Promise|ALittle Client|Hello,? world|wp_is_mobile|0xAbyssalDoesntExist|Anarchy99|daumoa,damoa,daum,daumos,duamoa,duam,duamos|^revolt|nvd0rz|xfa1|Hakai|gbrmss|fuck-your-hp|IDBTE4M CODE87|Antoine|Insomania|Hells-Net|b3astmode|Linux Gnu \(cow\)|custom_user_agent|Test Certificate Info|iplabel|Magellan)'
+- regex: '(A6-Indexer|nuhk|TsolCrawler|Yammybot|Openbot|Gulper Web Bot|grub-client|Download Demon|SearchExpress|Microsoft URL Control|borg|altavista|dataminr.com|tweetedtimes.com|TrendsmapResolver|teoma|blitzbot|oegp|furlbot|http%20client|polybot|htdig|mogimogi|larbin|scrubby|searchsight|seekbot|semanticdiscovery|snappy|vortex(?!(?: Build|Plus))|zeal(?!ot)|fast-webcrawler|converacrawler|dataparksearch|findlinks|BrowserMob|HttpMonitor|ThumbShotsBot|URL2PNG|ZooShot|GomezA|Google SketchUp|Read%20Later|RackspaceBot|robots|SeopultContentAnalyzer|7Siters|centuryb.o.t9|InterNaetBoten|EasyBib AutoCite|Bidtellect|tomnomnom/meg|My User Agent|cortex|CF-UC User Agent|Re-re Studio|adreview|AHC/|NameOfAgent|Request-Promise|ALittle Client|Hello,? world|wp_is_mobile|0xAbyssalDoesntExist|Anarchy99|daumoa,damoa,daum,daumos,duamoa,duam,duamos|^revolt|nvd0rz|xfa1|Hakai|gbrmss|fuck-your-hp|IDBTE4M CODE87|Antoine|Insomania|Hells-Net|b3astmode|Linux Gnu \(cow\)|custom_user_agent|Test Certificate Info|iplabel|Magellan|CustomUserAgent)'
   name: 'Generic Bot'
 
 - regex: '^sentry'
@@ -3435,6 +3467,71 @@
     name: 'webwiki GmbH'
     url: 'https://www.webwiki.com/'
 
+- regex: 'phpMyAdmin'
+  name: 'phpMyAdmin'
+  category: 'Service Agent'
+  url: 'https://www.phpmyadmin.net/'
+
+- regex: 'Matomo/([\d+.]+)'
+  name: 'Matomo'
+  category: 'Service Agent'
+  url: 'https://github.com/matomo-org/matomo'
+  producer:
+    name: 'InnoCraft Ltd'
+    url: 'https://matomo.org/'
+
+- regex: 'Prometheus/([\d+.]+)'
+  name: 'Prometheus'
+  category: 'Service Agent'
+  url: 'https://github.com/prometheus/prometheus'
+  producer:
+    name: 'The Linux Foundation'
+    url: 'https://www.cncf.io/'
+
+- regex: 'ArchiveTeam ArchiveBot'
+  name: 'ArchiveBot'
+  category: 'Crawler'
+  url: 'https://wiki.archiveteam.org/index.php?title=ArchiveBot'
+  producer:
+    name: 'ArchiveTeam'
+    url: 'https://wiki.archiveteam.org/'
+
+- regex: 'MADBbot/([\d+.]+)'
+  name: 'MADBbot'
+  category: 'Crawler'
+  url: 'https://madb.zapto.org/bot.html'
+
+- regex: 'MeltwaterNews'
+  name: 'MeltwaterNews'
+  category: 'Crawler'
+  producer:
+    name: 'Meltwater Deutschland GmbH'
+    url: 'https://www.meltwater.com/'
+
+- regex: '(?:Owler@ows.eu|OWLer)/([\d+.]+)'
+  name: 'OWLer'
+  category: 'Crawler'
+  url: 'https://openwebsearch.eu/owler/'
+  producer:
+    name: 'Open Search Foundation e.V.'
+    url: 'https://openwebsearch.eu/'
+
+- regex: 'bbc.co.uk/display/men/Page\+Monitor'
+  name: 'BBC Page Monitor'
+  category: 'Site Monitor'
+  url: 'https://confluence.dev.bbc.co.uk/display/men/Page+Monitor'
+  producer:
+    name: 'BBC'
+    url: 'https://www.bbc.com/'
+
+- regex: 'BBC-Forge-URL-Monitor-Twisted'
+  name: 'BBC Forge URL Monitor'
+  category: 'Site Monitor'
+  url: 'https://www.bbc.com/'
+  producer:
+    name: 'BBC'
+    url: 'https://www.bbc.com/'
+
 # Generic detections
-- regex: '[a-z0-9\-_]*((?<!cu|power[ _]|m[ _])bot(?![ _]TAB|[ _]?5[0-9]|[ _]Senior|[ _]Junior)|crawler|crawl|checker|archiver|transcoder|spider)([^a-z]|$)'
+- regex: '[a-z0-9\-_]*((?<!cu|power[ _]|m[ _])bot(?![ _]TAB|[ _]?5[0-9]|[ _]Senior|[ _]Junior)|crawler|crawl|checker|archiver|transcoder|spider|^firefox$|^chrome$)([^a-z]|$)'
   name: 'Generic Bot'

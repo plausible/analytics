@@ -3,6 +3,7 @@ defmodule Plausible.Google.ApiTest do
   use Plausible.Test.Support.HTTPMocker
 
   alias Plausible.Google.Api
+  alias Plausible.Imported.UniversalAnalytics
 
   import ExUnit.CaptureLog
   import Mox
@@ -36,7 +37,18 @@ defmodule Plausible.Google.ApiTest do
     future = DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_iso8601()
     auth = {"***", "refresh_token", future}
 
-    assert :ok == Plausible.Google.Api.import_analytics(site, date_range, view_id, auth)
+    {:ok, buffer} = Plausible.Imported.Buffer.start_link()
+
+    persist_fn = fn table, rows ->
+      records = UniversalAnalytics.from_report(rows, site.id, table)
+      Plausible.Imported.Buffer.insert_many(buffer, table, records)
+    end
+
+    assert :ok == Plausible.Google.Api.import_analytics(date_range, view_id, auth, persist_fn)
+
+    Plausible.Imported.Buffer.flush(buffer)
+    Plausible.Imported.Buffer.stop(buffer)
+
     assert 1_495_150 == Plausible.Stats.Clickhouse.imported_pageview_count(site)
   end
 
@@ -67,20 +79,25 @@ defmodule Plausible.Google.ApiTest do
       end)
     end
 
-    assert :ok == Plausible.Google.Api.import_analytics(site, range, "123551", auth)
+    {:ok, buffer} = Plausible.Imported.Buffer.start_link()
+
+    persist_fn = fn table, rows ->
+      records = UniversalAnalytics.from_report(rows, site.id, table)
+      Plausible.Imported.Buffer.insert_many(buffer, table, records)
+    end
+
+    assert :ok == Plausible.Google.Api.import_analytics(range, "123551", auth, persist_fn)
+
+    Plausible.Imported.Buffer.flush(buffer)
+    Plausible.Imported.Buffer.stop(buffer)
   end
 
   describe "fetch_and_persist/4" do
     @ok_response Jason.decode!(File.read!("fixture/ga_batch_report.json"))
     @no_report_response Jason.decode!(File.read!("fixture/ga_report_empty_rows.json"))
 
-    setup do
-      {:ok, pid} = Plausible.Google.Buffer.start_link()
-      {:ok, buffer: pid}
-    end
-
     @tag :slow
-    test "will fetch and persist import data from Google Analytics", %{site: site, buffer: buffer} do
+    test "will fetch and persist import data from Google Analytics" do
       request = %Plausible.Google.ReportRequest{
         dataset: "imported_exit_pages",
         view_id: "123",
@@ -121,24 +138,19 @@ defmodule Plausible.Google.ApiTest do
         end
       )
 
-      Api.fetch_and_persist(site, request,
-        sleep_time: 0,
-        buffer: buffer
-      )
+      assert :ok =
+               Api.fetch_and_persist(request,
+                 sleep_time: 0,
+                 persist_fn: fn dataset, row ->
+                   assert dataset == "imported_exit_pages"
+                   assert length(row) == 1479
 
-      Plausible.Google.Buffer.flush(buffer)
-
-      assert 1479 ==
-               Plausible.ClickhouseRepo.aggregate(
-                 from(iex in "imported_exit_pages", where: iex.site_id == ^site.id),
-                 :count
+                   :ok
+                 end
                )
     end
 
-    test "retries HTTP request up to 5 times before raising the last error", %{
-      site: site,
-      buffer: buffer
-    } do
+    test "retries HTTP request up to 5 times before raising the last error" do
       expect(
         Plausible.HTTPClient.Mock,
         :post,
@@ -166,13 +178,13 @@ defmodule Plausible.Google.ApiTest do
       }
 
       assert {:error, :request_failed} =
-               Api.fetch_and_persist(site, request,
+               Api.fetch_and_persist(request,
                  sleep_time: 0,
-                 buffer: buffer
+                 persist_fn: fn _dataset, _rows -> :ok end
                )
     end
 
-    test "does not fail when report does not have rows key", %{site: site, buffer: buffer} do
+    test "does not fail when report does not have rows key" do
       expect(
         Plausible.HTTPClient.Mock,
         :post,
@@ -197,9 +209,14 @@ defmodule Plausible.Google.ApiTest do
       }
 
       assert :ok ==
-               Api.fetch_and_persist(site, request,
+               Api.fetch_and_persist(request,
                  sleep_time: 0,
-                 buffer: buffer
+                 persist_fn: fn dataset, rows ->
+                   assert dataset == "imported_exit_pages"
+                   assert rows == []
+
+                   :ok
+                 end
                )
     end
   end

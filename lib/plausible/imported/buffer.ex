@@ -1,4 +1,4 @@
-defmodule Plausible.Google.Buffer do
+defmodule Plausible.Imported.Buffer do
   @moduledoc """
   This GenServer inserts records into Clickhouse `imported_*` tables. Multiple buffers are
   automatically created for each table. Records are flushed when the table buffer reaches the
@@ -81,7 +81,7 @@ defmodule Plausible.Google.Buffer do
 
   defp max_buffer_size do
     :plausible
-    |> Application.get_env(:google)
+    |> Application.fetch_env!(:imported)
     |> Keyword.fetch!(:max_buffer_size)
   end
 
@@ -101,13 +101,13 @@ defmodule Plausible.Google.Buffer do
     Plausible.IngestRepo.insert_all(schema, records)
   end
 
-  defp table_schema("imported_visitors"), do: Plausible.Google.ImportedVisitor
-  defp table_schema("imported_sources"), do: Plausible.Google.ImportedSource
-  defp table_schema("imported_pages"), do: Plausible.Google.ImportedPage
-  defp table_schema("imported_entry_pages"), do: Plausible.Google.ImportedEntryPage
-  defp table_schema("imported_exit_pages"), do: Plausible.Google.ImportedExitPage
-  defp table_schema("imported_locations"), do: Plausible.Google.ImportedLocation
-  defp table_schema("imported_devices"), do: Plausible.Google.ImportedDevice
-  defp table_schema("imported_browsers"), do: Plausible.Google.ImportedBrowser
-  defp table_schema("imported_operating_systems"), do: Plausible.Google.ImportedOperatingSystem
+  defp table_schema("imported_visitors"), do: Plausible.Imported.Visitor
+  defp table_schema("imported_sources"), do: Plausible.Imported.Source
+  defp table_schema("imported_pages"), do: Plausible.Imported.Page
+  defp table_schema("imported_entry_pages"), do: Plausible.Imported.EntryPage
+  defp table_schema("imported_exit_pages"), do: Plausible.Imported.ExitPage
+  defp table_schema("imported_locations"), do: Plausible.Imported.Location
+  defp table_schema("imported_devices"), do: Plausible.Imported.Device
+  defp table_schema("imported_browsers"), do: Plausible.Imported.Browser
+  defp table_schema("imported_operating_systems"), do: Plausible.Imported.OperatingSystem
 end

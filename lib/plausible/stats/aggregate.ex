@@ -24,6 +24,8 @@ defmodule Plausible.Stats.Aggregate do
         {nil, metrics}
       end
 
+    Query.trace(query, metrics)
+
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     event_task = fn -> aggregate_events(site, query, event_metrics) end
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))

@@ -538,13 +538,12 @@ defmodule Plausible.Stats.Clickhouse do
       if val == "(none)" do
         from(
           e in q,
-          where: fragment("not has(meta.key, ?)", ^key)
+          where: not has_key(e, :meta, ^key)
         )
       else
         from(
           e in q,
-          array_join: meta in fragment("meta"),
-          where: meta.key == ^key and meta.value == ^val
+          where: has_key(e, :meta, ^key) and get_by_key(e, :meta, ^key) == ^val
         )
       end
     else
@@ -556,8 +555,8 @@ defmodule Plausible.Stats.Clickhouse do
     base_query_bare(site, query) |> include_goal_conversions(query)
   end
 
-  defp utc_boundaries(%Query{period: "30m"}, site) do
-    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+  defp utc_boundaries(%Query{now: now, period: "30m"}, site) do
+    last_datetime = now |> NaiveDateTime.truncate(:second)
 
     first_datetime =
       last_datetime
@@ -568,8 +567,8 @@ defmodule Plausible.Stats.Clickhouse do
     {first_datetime, last_datetime}
   end
 
-  defp utc_boundaries(%Query{period: "realtime"}, site) do
-    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+  defp utc_boundaries(%Query{now: now, period: "realtime"}, site) do
+    last_datetime = now |> NaiveDateTime.truncate(:second)
 
     first_datetime =
       last_datetime

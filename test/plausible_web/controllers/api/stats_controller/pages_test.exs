@@ -75,6 +75,43 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns top pages with :matches filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/1",
+          "meta.key": ["prop"],
+          "meta.value": ["bar"]
+        ),
+        build(:pageview,
+          pathname: "/2",
+          "meta.key": ["prop"],
+          "meta.value": ["foobar"]
+        ),
+        build(:pageview,
+          pathname: "/3",
+          "meta.key": ["prop"],
+          "meta.value": ["baar"]
+        ),
+        build(:pageview,
+          pathname: "/4",
+          "meta.key": ["another"],
+          "meta.value": ["bar"]
+        ),
+        build(:pageview, pathname: "/5")
+      ])
+
+      filters = Jason.encode!(%{props: %{"prop" => "~bar"}})
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"visitors" => 1, "name" => "/1"},
+               %{"visitors" => 1, "name" => "/2"}
+             ]
+    end
+
     test "calculates bounce_rate and time_on_page with :is filter on custom pageview props",
          %{conn: conn, site: site} do
       populate_stats(site, [
