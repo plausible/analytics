@@ -527,7 +527,7 @@ base_queues = [
   google_analytics_imports: 1,
   analytics_imports: 1,
   domain_change_transition: 1,
-  check_accept_traffic_until: 1
+  check_accept_traffic_until: 0
 ]
 
 cloud_queues = [
