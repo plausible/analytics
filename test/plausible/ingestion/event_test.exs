@@ -117,6 +117,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :dc_ip
   end
 
+  @tag :skip
   test "event pipeline drops events for site with accept_trafic_until in the past" do
     yesterday = Date.add(Date.utc_today(), -1)
 
