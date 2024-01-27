@@ -394,6 +394,7 @@ defmodule Plausible.BillingTest do
   end
 
   describe "subscription_payment_succeeded" do
+    @tag :full_build_only
     test "updates accept_traffic_until" do
       user = insert(:user)
       subscription = insert(:subscription, user: user)
