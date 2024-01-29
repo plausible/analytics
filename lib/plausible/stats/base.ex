@@ -551,5 +551,5 @@ defmodule Plausible.Stats.Base do
     )
   end
 
-  defp filter_by_custom_prop(q, _), do: q
+  defp filter_by_custom_prop(_, q), do: q
 end
