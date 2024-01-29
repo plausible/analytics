@@ -524,7 +524,8 @@ base_queues = [
   # NOTE: to be removed once #3700 is released
   google_analytics_imports: 1,
   analytics_imports: 1,
-  domain_change_transition: 1
+  domain_change_transition: 1,
+  check_accept_traffic_until: 0
 ]
 
 cloud_queues = [
