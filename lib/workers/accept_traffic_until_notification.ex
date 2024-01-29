@@ -16,6 +16,10 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
   alias Plausible.Repo
   alias Plausible.ClickhouseRepo
 
+  def dry_run(date) do
+    perform(nil, date, true)
+  end
+
   @impl Oban.Worker
   def perform(_job, today \\ Date.utc_today(), dry_run? \\ false) do
     tomorrow = today |> Date.add(+1)
