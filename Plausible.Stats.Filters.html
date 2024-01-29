@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-244BB8AE.js"></script>
+    <script src="dist/sidebar_items-7E4F1ACB.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -131,7 +131,7 @@ Pages
 
 <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/filters.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
@@ -141,6 +141,10 @@ Pages
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>A module for parsing filters used in stat queries.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -157,9 +161,19 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#add_prefix/1" translate="no">add_prefix(query)</a>
+        <a href="#event_props/0" translate="no">event_props()</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#parse/1" translate="no">parse(filters)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Parses different filter formats.</p></div>
 
     </div>
 
@@ -184,16 +198,16 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="add_prefix/1">
+<section class="detail" id="event_props/0">
 
   <div class="detail-header">
-    <a href="#add_prefix/1" class="detail-link" title="Link to this function">
+    <a href="#event_props/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">add_prefix(query)</h1>
+    <h1 class="signature" translate="no">event_props()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters.ex#L33" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/filters.ex#L36" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -206,6 +220,41 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="parse/1">
+
+  <div class="detail-header">
+    <a href="#parse/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">parse(filters)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/filters.ex#L60" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Parses different filter formats.</p><p>Depending on the format and type of the <code class="inline">filters</code> argument, returns:</p><ul><li>a decoded map, when <code class="inline">filters</code> is encoded JSON</li><li>a parsed filter map, when <code class="inline">filters</code> is a filter expression string</li><li>the same map, when <code class="inline">filters</code> is a map</li></ul><p>Returns an empty map when argument type is unexpected (e.g. <code class="inline">nil</code>).</p><h3 id="parse/1-examples" class="section-heading">
+  <a href="#parse/1-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples:</span>
+</h3>
+<pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="nc">Filters</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="5232775136-1">(</span><span class="s">&quot;{</span><span class="se">\&quot;</span><span class="s">page</span><span class="se">\&quot;</span><span class="s">:</span><span class="se">\&quot;</span><span class="s">/blog/**</span><span class="se">\&quot;</span><span class="s">}&quot;</span><span class="p" data-group-id="5232775136-1">)</span><span class="w">
+</span><span class="p" data-group-id="5232775136-2">%{</span><span class="s">&quot;event:page&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="5232775136-3">{</span><span class="ss">:matches</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/blog/**&quot;</span><span class="p" data-group-id="5232775136-3">}</span><span class="p" data-group-id="5232775136-2">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Filters</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="5232775136-4">(</span><span class="s">&quot;visit:browser!=Chrome&quot;</span><span class="p" data-group-id="5232775136-4">)</span><span class="w">
+</span><span class="p" data-group-id="5232775136-5">%{</span><span class="s">&quot;visit:browser&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p" data-group-id="5232775136-6">{</span><span class="ss">:is_not</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Chrome&quot;</span><span class="p" data-group-id="5232775136-6">}</span><span class="p" data-group-id="5232775136-5">}</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">Filters</span><span class="o">.</span><span class="n">parse</span><span class="p" data-group-id="5232775136-7">(</span><span class="no">nil</span><span class="p" data-group-id="5232775136-7">)</span><span class="w">
+</span><span class="p" data-group-id="5232775136-8">%{</span><span class="p" data-group-id="5232775136-8">}</span></code></pre>
+  </section>
+</section>
 <section class="detail" id="visit_props/0">
 
   <div class="detail-header">
@@ -215,7 +264,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">visit_props()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters.ex#L29" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/filters.ex#L28" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

@@ -8,7 +8,7 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.Workers.CheckUsage — Plausible v0.0.1</title>
+    <title>Plausible.Stats.Filters.Utils — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
@@ -131,16 +131,21 @@ Pages
 
 <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Workers.CheckUsage</span> 
+  <span translate="no">Plausible.Stats.Filters.Utils</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>Contains utility functions shared between <code class="inline">DashboardFilterParser</code>
+and <code class="inline">StatsAPIFilterParser</code>.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -157,7 +162,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#check_enterprise_subscriber/2" translate="no">check_enterprise_subscriber(subscriber, quota_mod)</a>
+        <a href="#list_expression?/1" translate="no">list_expression?(expression)</a>
 
       </div>
 
@@ -165,7 +170,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#day_of_month/1" translate="no">day_of_month(date)</a>
+        <a href="#parse_member_list/1" translate="no">parse_member_list(raw_value)</a>
 
       </div>
 
@@ -173,7 +178,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#exceeds_last_two_usage_cycles?/2" translate="no">exceeds_last_two_usage_cycles?(usage, limit)</a>
+        <a href="#remove_escape_chars/1" translate="no">remove_escape_chars(value)</a>
 
       </div>
 
@@ -181,7 +186,19 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#last_day_of_month/1" translate="no">last_day_of_month(day)</a>
+        <a href="#unwrap_goal_value/1" translate="no">unwrap_goal_value(goals)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Does the opposite to <code class="inline">wrap_goal_value</code>, turning the <code class="inline">{:page, path}</code>
+and <code class="inline">{:event, name}</code> tuples into strings. Similarly, when given a
+list, maps all the list elements into strings with the same logic.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#wildcard_expression?/1" translate="no">wildcard_expression?(expression)</a>
 
       </div>
 
@@ -189,17 +206,13 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#least/2" translate="no">least(left, right)</a>
+        <a href="#wrap_goal_value/1" translate="no">wrap_goal_value(goals)</a>
 
       </div>
 
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#yesterday/0" translate="no">yesterday()</a>
-
-      </div>
+        <div class="summary-synopsis"><p>Wraps the given goal filter into a tuple where the first element
+represents the goal type (i.e. <code class="inline">page</code> or <code class="inline">event</code>), and the second
+element is either the page path or the event name.</p></div>
 
     </div>
 
@@ -216,16 +229,16 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="check_enterprise_subscriber/2">
+<section class="detail" id="list_expression?/1">
 
   <div class="detail-header">
-    <a href="#check_enterprise_subscriber/2" class="detail-link" title="Link to this function">
+    <a href="#list_expression?/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">check_enterprise_subscriber(subscriber, quota_mod)</h1>
+    <h1 class="signature" translate="no">list_expression?(expression)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L68" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L9" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -238,77 +251,20 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="day_of_month/1">
+<section class="detail" id="parse_member_list/1">
 
   <div class="detail-header">
-    <a href="#day_of_month/1" class="detail-link" title="Link to this macro">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
-    </a>
-    <h1 class="signature" translate="no">day_of_month(date)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L23" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-      <span class="note">(macro)</span>
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="exceeds_last_two_usage_cycles?/2">
-
-  <div class="detail-header">
-    <a href="#exceeds_last_two_usage_cycles?/2" class="detail-link" title="Link to this function">
+    <a href="#parse_member_list/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">exceeds_last_two_usage_cycles?(usage, limit)</h1>
+    <h1 class="signature" translate="no">parse_member_list(raw_value)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L123" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L17" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
 
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> exceeds_last_two_usage_cycles?(
-  <a href="Plausible.Billing.Quota.html#t:monthly_pageview_usage/0">Plausible.Billing.Quota.monthly_pageview_usage</a>(),
-  <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()
-) :: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">boolean</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="last_day_of_month/1">
-
-  <div class="detail-header">
-    <a href="#last_day_of_month/1" class="detail-link" title="Link to this macro">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
-    </a>
-    <h1 class="signature" translate="no">last_day_of_month(day)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L14" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-      <span class="note">(macro)</span>
 
   </div>
 
@@ -317,22 +273,20 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="least/2">
+<section class="detail" id="remove_escape_chars/1">
 
   <div class="detail-header">
-    <a href="#least/2" class="detail-link" title="Link to this macro">
+    <a href="#remove_escape_chars/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
+      <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">least(left, right)</h1>
+    <h1 class="signature" translate="no">remove_escape_chars(value)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L29" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L23" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
 
-
-      <span class="note">(macro)</span>
 
   </div>
 
@@ -341,28 +295,91 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="yesterday/0">
+<section class="detail" id="unwrap_goal_value/1">
 
   <div class="detail-header">
-    <a href="#yesterday/0" class="detail-link" title="Link to this macro">
+    <a href="#unwrap_goal_value/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this macro</span>
+      <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">yesterday()</h1>
+    <h1 class="signature" translate="no">unwrap_goal_value(goals)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/workers/check_usage.ex#L8" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L66" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
 
 
-      <span class="note">(macro)</span>
+  </div>
+
+  <section class="docstring">
+
+<p>Does the opposite to <code class="inline">wrap_goal_value</code>, turning the <code class="inline">{:page, path}</code>
+and <code class="inline">{:event, name}</code> tuples into strings. Similarly, when given a
+list, maps all the list elements into strings with the same logic.</p><h2 id="unwrap_goal_value/1-examples" class="section-heading">
+  <a href="#unwrap_goal_value/1-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples</span>
+</h2>
+<p>  iex&gt; Plausible.Stats.Filters.Utils.unwrap_goal_value({:page, &quot;/register&quot;})
+  &quot;Visit /register&quot;</p><p>  iex&gt; Plausible.Stats.Filters.Utils.unwrap_goal_value({:event, &quot;Signup&quot;})
+  &quot;Signup&quot;</p><p>  iex&gt; Plausible.Stats.Filters.Utils.unwrap_goal_value([{:event, &quot;Signup&quot;}, {:page, &quot;/register&quot;}])
+  [&quot;Signup&quot;, &quot;Visit /register&quot;]</p>
+  </section>
+</section>
+<section class="detail" id="wildcard_expression?/1">
+
+  <div class="detail-header">
+    <a href="#wildcard_expression?/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">wildcard_expression?(expression)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L13" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
 
   </div>
 
   <section class="docstring">
 
 
+  </section>
+</section>
+<section class="detail" id="wrap_goal_value/1">
+
+  <div class="detail-header">
+    <a href="#wrap_goal_value/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">wrap_goal_value(goals)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/filters/utils.ex#L46" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Wraps the given goal filter into a tuple where the first element
+represents the goal type (i.e. <code class="inline">page</code> or <code class="inline">event</code>), and the second
+element is either the page path or the event name.</p><p>Given a list of goal filter values, wraps all values based on the
+same logic.</p><h2 id="wrap_goal_value/1-examples" class="section-heading">
+  <a href="#wrap_goal_value/1-examples" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Examples</span>
+</h2>
+<p>  iex&gt; Plausible.Stats.Filters.Utils.wrap_goal_value(&quot;Visit /register&quot;)</p><p>  iex&gt; Plausible.Stats.Filters.Utils.wrap_goal_value(&quot;Signup&quot;)</p><p>  iex&gt; Plausible.Stats.Filters.Utils.wrap_goal_value([&quot;Signup&quot;, &quot;Visit /register&quot;])
+  [{:event, &quot;Signup&quot;}, {:page, &quot;/register&quot;}]</p>
   </section>
 </section>
 
