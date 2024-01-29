@@ -551,5 +551,14 @@ defmodule Plausible.Stats.Base do
     )
   end
 
-  defp filter_by_custom_prop(_, q), do: q
+  defp filter_by_custom_prop({"event:props:" <> prop_name, {:matches_member, clauses}}, q) do
+    regexes = Enum.map(clauses, &page_regex/1)
+
+    from(
+      e in q,
+      where:
+        has_key(e, :meta, ^prop_name) and
+          fragment("arrayExists(k -> match(?, k), ?)", get_by_key(e, :meta, ^prop_name), ^regexes)
+    )
+  end
 end

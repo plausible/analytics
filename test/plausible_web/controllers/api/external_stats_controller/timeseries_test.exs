@@ -857,6 +857,47 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       assert first == %{"date" => "2021-01-01", "visitors" => 1}
       assert second == %{"date" => "2021-01-02", "visitors" => 0}
     end
+
+    test "filter by multiple custom event properties matching", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package", "browser"],
+          "meta.value": ["business", "Chrome"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package", "browser"],
+          "meta.value": ["business", "Firefox"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package", "browser"],
+          "meta.value": ["personal", "Safari"],
+          timestamp: ~N[2021-01-02 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          timestamp: ~N[2021-01-02 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "filters" => "event:name==Purchase;event:props:browser==F*|S*"
+        })
+
+      %{"results" => [first, second | _rest]} = json_response(conn, 200)
+      assert first == %{"date" => "2021-01-01", "visitors" => 1}
+      assert second == %{"date" => "2021-01-02", "visitors" => 1}
+    end
   end
 
   describe "metrics" do
