@@ -14,9 +14,19 @@ import {
   formattedFilters
 } from "./util/filters";
 
-function removeFilter(key, history, query) {
-  const newOpts = {
-    [key]: false
+function removeFilter(filterType, key, history, query) {
+  const newOpts = {}
+  if (filterType === 'props') {
+    if (Object.keys(query.filters.props).length == 1) {
+      newOpts.props = false
+    } else {
+      newOpts.props = JSON.stringify({
+        ...query.filters.props,
+        [key]: undefined,
+      })
+    }
+  } else {
+    newOpts[key] = false
   }
   if (key === 'country') { newOpts.country_labels = false }
   if (key === 'region') { newOpts.region_labels = false }
@@ -65,7 +75,11 @@ function renderDropdownFilter(site, history, { key, value, filterType }, query) 
           <span className="inline-block w-full truncate">{filterText(filterType, key, query)}</span>
           <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
-        <b title={`Remove filter: ${formattedFilters[filterType]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
+        <b
+          title={`Remove filter: ${formattedFilters[filterType]}`}
+          className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500"
+          onClick={() => removeFilter(filterType, key, history, query)}
+        >
           <XMarkIcon className="w-4 h-4" />
         </b>
       </div>
@@ -213,7 +227,11 @@ class Filters extends React.Component {
         >
           <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(filterType, key, query)}</span>
         </Link>
-        <span title={`Remove filter: ${formattedFilters[filterType]}`} className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => removeFilter(key, history, query)}>
+        <span
+          title={`Remove filter: ${formattedFilters[filterType]}`}
+          className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center"
+          onClick={() => removeFilter(filterType, key, history, query)}
+        >
           <XMarkIcon className="w-4 h-4" />
         </span>
       </span>
