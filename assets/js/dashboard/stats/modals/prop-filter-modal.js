@@ -4,13 +4,13 @@ import { withRouter } from "react-router-dom";
 import { FILTER_TYPES } from "../../util/filters";
 import { parseQuery } from '../../query'
 import { siteBasePath } from '../../util/url'
-import { toFilterQuery, parseQueryFilter } from '../../util/filters';
+import { toFilterQuery, parseQueryPropsFilter } from '../../util/filters';
 import { shouldIgnoreKeypress } from '../../keybinding';
 import PropFilterRow from './prop-filter-row';
 
 function getFormState(query) {
   if (query.filters['props']) {
-    const values = Object.fromEntries(parseQueryFilter(query, 'props').map((value, index) => [index, value]))
+    const values = Object.fromEntries(parseQueryPropsFilter(query, 'props').map((value, index) => [index, value]))
 
     return {
       entries: Object.keys(values).sort(),

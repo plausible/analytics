@@ -10,6 +10,7 @@ import {
   formatFilterGroup,
   filterGroupForFilter,
   parseQueryFilter,
+  parseQueryPropsFilter,
   formattedFilters
 } from "./util/filters";
 
@@ -37,15 +38,12 @@ function clearAllFilters(history, query) {
   );
 }
 
-function filterText(key, _rawValue, query) {
+function filterText(filterType, key, query) {
   const formattedFilter = formattedFilters[key]
 
-  if (key === "props") {
-    const propTexts = parseQueryFilter(query, key).map(propFilterText)
-
-    return <>Property {propTexts.map((text, index) => (
-      <Fragment key={index}>{index > 0 ? 'and ' : ''}{text}</Fragment>
-    ))} </>
+  if (filterType === "props") {
+    const [{ propKey, clauses, type }] = parseQueryPropsFilter(query).filter((filter) => filter.propKey.value === key)
+    return <>Property <b>{propKey.label}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   } else if (formattedFilter) {
     const {type, clauses} = parseQueryFilter(query, key)
     return <>{formattedFilter} {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
@@ -54,24 +52,20 @@ function filterText(key, _rawValue, query) {
   throw new Error(`Unknown filter: ${key}`)
 }
 
-function propFilterText({ propKey, type, clauses }) {
-  return <><b>{propKey.label}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
-}
-
-function renderDropdownFilter(site, history, [key, value], query) {
+function renderDropdownFilter(site, history, { key, value, filterType }, query) {
   return (
     <Menu.Item key={key}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={key + value}>
         <Link
-          title={`Edit filter: ${formattedFilters[key]}`}
-          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}
+          title={`Edit filter: ${formattedFilters[filterType]}`}
+          to={{ pathname: `/${encodeURIComponent(site.domain)}/filter/${filterGroupForFilter(filterType)}`, search: window.location.search }}
           className="group flex w-full justify-between items-center"
           style={{ width: 'calc(100% - 1.5rem)' }}
         >
-          <span className="inline-block w-full truncate">{filterText(key, value, query)}</span>
+          <span className="inline-block w-full truncate">{filterText(filterType, key, query)}</span>
           <PencilSquareIcon className="w-4 h-4 ml-1 cursor-pointer group-hover:text-indigo-700 dark:group-hover:text-indigo-500" />
         </Link>
-        <b title={`Remove filter: ${formattedFilters[key]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
+        <b title={`Remove filter: ${formattedFilters[filterType]}`} className="ml-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500" onClick={() => removeFilter(key, history, query)}>
           <XMarkIcon className="w-4 h-4" />
         </b>
       </div>
@@ -209,13 +203,17 @@ class Filters extends React.Component {
     });
   };
 
-  renderListFilter(history, [key, value], query) {
+  renderListFilter(history, { key, value, filterType }, query) {
     return (
       <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
-        <Link title={`Edit filter: ${formattedFilters[key]}`} className="flex w-full h-full items-center py-2 pl-3" to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(key)}`, search: window.location.search }}>
-          <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(key, value, query)}</span>
+        <Link
+          title={`Edit filter: ${formattedFilters[filterType]}`}
+          className="flex w-full h-full items-center py-2 pl-3"
+          to={{ pathname: `/${encodeURIComponent(this.props.site.domain)}/filter/${filterGroupForFilter(filterType)}`, search: window.location.search }}
+        >
+          <span className="inline-block max-w-2xs md:max-w-xs truncate">{filterText(filterType, key, query)}</span>
         </Link>
-        <span title={`Remove filter: ${formattedFilters[key]}`} className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => removeFilter(key, history, query)}>
+        <span title={`Remove filter: ${formattedFilters[filterType]}`} className="flex h-full w-full px-2 cursor-pointer hover:text-indigo-700 dark:hover:text-indigo-500 items-center" onClick={() => removeFilter(key, history, query)}>
           <XMarkIcon className="w-4 h-4" />
         </span>
       </span>

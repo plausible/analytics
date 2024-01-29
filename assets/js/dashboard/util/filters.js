@@ -69,37 +69,37 @@ export function parsePrefix(rawValue) {
   return {type, values}
 }
 
+export function parseQueryPropsFilter(query) {
+  return Object.entries(query.filters['props']).map(([key, propVal]) => {
+    const {type, values} = parsePrefix(propVal)
+    const clauses = values.map(val => { return {value: val, label: val}})
+    return { propKey: { label: key, value: key }, type, clauses }
+  })
+}
+
 export function parseQueryFilter(query, filter) {
-  if (filter === 'props') {
-    return Object.entries(query.filters['props']).map(([key, propVal]) => {
-      const {type, values} = parsePrefix(propVal)
-      const clauses = values.map(val => { return {value: val, label: val}})
-      return { propKey: { label: key, value: key }, type, clauses }
-    })
-  } else {
-    const {type, values} = parsePrefix(query.filters[filter] || '')
+  const {type, values} = parsePrefix(query.filters[filter] || '')
 
-    let labels = values
+  let labels = values
 
-    if (filter === 'country' && values.length > 0) {
-      const rawLabel = (new URLSearchParams(window.location.search)).get('country_labels') || ''
-      labels = rawLabel.split('|').filter(label => !!label)
-    }
-
-    if (filter === 'region' && values.length > 0) {
-      const rawLabel = (new URLSearchParams(window.location.search)).get('region_labels') || ''
-      labels = rawLabel.split('|').filter(label => !!label)
-    }
-
-    if (filter === 'city' && values.length > 0) {
-      const rawLabel = (new URLSearchParams(window.location.search)).get('city_labels') || ''
-      labels = rawLabel.split('|').filter(label => !!label)
-    }
-
-    const clauses = values.map((value, index) => { return {value, label: labels[index]}})
-
-    return {type, clauses}
+  if (filter === 'country' && values.length > 0) {
+    const rawLabel = (new URLSearchParams(window.location.search)).get('country_labels') || ''
+    labels = rawLabel.split('|').filter(label => !!label)
   }
+
+  if (filter === 'region' && values.length > 0) {
+    const rawLabel = (new URLSearchParams(window.location.search)).get('region_labels') || ''
+    labels = rawLabel.split('|').filter(label => !!label)
+  }
+
+  if (filter === 'city' && values.length > 0) {
+    const rawLabel = (new URLSearchParams(window.location.search)).get('city_labels') || ''
+    labels = rawLabel.split('|').filter(label => !!label)
+  }
+
+  const clauses = values.map((value, index) => { return {value, label: labels[index]}})
+
+  return {type, clauses}
 }
 
 export function formatFilterGroup(filterGroup) {

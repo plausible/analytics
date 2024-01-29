@@ -65,9 +65,13 @@ export function parseQuery(querystring, site) {
 }
 
 export function appliedFilters(query) {
-  return Object.keys(query.filters)
-    .map((key) => [key, query.filters[key]])
-    .filter(([_key, value]) => !!value);
+  const pageKeys = Object.entries(query.filters)
+    .map(([key, value]) => ({ key, value, filterType: key }))
+    .filter(({ key, value }) => key !== 'props' && !!value)
+  const propKeys = Object.entries(query.filters.props || {})
+    .map(([key, value]) => ({ key, value, filterType: 'props' }))
+
+  return pageKeys.concat(propKeys)
 }
 
 function generateQueryString(data) {
