@@ -188,14 +188,14 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"goal" => "Signup"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters["goal"] == "Signup"
+      assert q.filters["event:goal"] == {:is, {:event, "Signup"}}
     end
 
     test "parses source filter", %{site: site} do
       filters = Jason.encode!(%{"source" => "Twitter"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters["source"] == "Twitter"
+      assert q.filters["visit:source"] == {:is, "Twitter"}
     end
 
     test "allows prop filters when site owner is on a business plan", %{site: site, user: user} do
@@ -203,7 +203,7 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
       query = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert Map.has_key?(query.filters, "props")
+      assert Map.has_key?(query.filters, "event:props:author")
     end
 
     test "drops prop filter when site owner is on a growth plan", %{site: site, user: user} do

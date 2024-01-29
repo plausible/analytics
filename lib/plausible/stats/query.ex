@@ -11,7 +11,7 @@ defmodule Plausible.Stats.Query do
             now: nil
 
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.{FilterParser, Interval}
+  alias Plausible.Stats.{Filters, Interval}
 
   @type t :: %__MODULE__{}
 
@@ -164,7 +164,7 @@ defmodule Plausible.Stats.Query do
   end
 
   defp put_parsed_filters(query, params) do
-    struct!(query, filters: FilterParser.parse_filters(params["filters"]))
+    struct!(query, filters: Filters.parse(params["filters"]))
   end
 
   def put_filter(query, key, val) do
