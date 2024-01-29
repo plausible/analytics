@@ -16,6 +16,8 @@ defmodule Plausible.Repo.Migrations.MigrateAcceptedTrafficUntil do
     s.paddle_plan_id != 'free_10k'
     AND
     s.status = 'active'
+    AND
+    u1.accept_traffic_until <= s.next_bill_date
     """
   end
 
