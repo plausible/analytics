@@ -43,10 +43,17 @@ defmodule Plausible.Site.GateKeeper do
   end
 
   defp policy(domain, opts) when is_binary(domain) do
-    if site = Cache.get(domain, Keyword.get(opts, :cache_opts, [])) do
-      check_rate_limit(site, opts)
+    with from_cache <- Cache.get(domain, Keyword.get(opts, :cache_opts, [])),
+         site = %Site{owner: %{accept_traffic_until: accept_traffic_until}} <- from_cache do
+      if not is_nil(accept_traffic_until) and
+           Date.after?(Date.utc_today(), accept_traffic_until) do
+        :payment_required
+      else
+        check_rate_limit(site, opts)
+      end
     else
-      @policy_for_non_existing_sites
+      _ ->
+        @policy_for_non_existing_sites
     end
   end
 
