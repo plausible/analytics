@@ -10,7 +10,7 @@ export const FILTER_GROUPS = {
   'props': ['prop_key', 'prop_value']
 }
 
-export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'])
+export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))
 
 export const FILTER_TYPES = {
   isNot: 'is not',
