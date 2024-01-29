@@ -1,0 +1,5 @@
+Plausible copyright notice
+
+This software is Copyright 2024 Plausible Insights OÜ
+
+This repository is provided for informational purposes only, and no rights to use, distribute or otherwise exploit this software are granted to you. Our other repositories include software that is offered under the Affero GPL, but this repository is not. If you wish to discuss a license, or our hosted service that uses the software, please contact us at hello@plausible.io
