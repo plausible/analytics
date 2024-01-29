@@ -45,7 +45,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.Query
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
@@ -110,7 +110,7 @@ defmodule PlausibleWeb.StatsController do
   def csv_export(conn, params) do
     if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
-      query = Query.from(site, params) |> Filters.add_prefix()
+      query = Query.from(site, params)
 
       metrics =
         if query.filters["event:goal"] do

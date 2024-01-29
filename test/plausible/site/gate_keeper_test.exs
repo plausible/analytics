@@ -14,7 +14,6 @@ defmodule Plausible.Site.GateKeeperTest do
     assert {:deny, :not_found} = GateKeeper.check("example.com", opts)
   end
 
-  @tag :skip
   test "sites with accepted_traffic_until < now are denied", %{test: test, opts: opts} do
     domain = "expired.example.com"
     yesterday = Date.utc_today() |> Date.add(-1)

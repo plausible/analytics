@@ -1179,28 +1179,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "breakdown by event:goal" do
-    test "custom properties from custom events are returned", %{conn: conn, site: site} do
+    test "returns custom event goals and pageview goals", %{conn: conn, site: site} do
       insert(:goal, %{site: site, event_name: "Purchase"})
       insert(:goal, %{site: site, page_path: "/test"})
 
       populate_stats(site, [
         build(:pageview,
           timestamp: ~N[2021-01-01 00:00:01],
-          pathname: "/test",
-          "meta.key": ["method"],
-          "meta.value": ["HTTP"]
+          pathname: "/test"
         ),
         build(:event,
           name: "Purchase",
-          timestamp: ~N[2021-01-01 00:00:03],
-          "meta.key": ["OS", "method"],
-          "meta.value": ["Linux", "HTTP"]
+          timestamp: ~N[2021-01-01 00:00:03]
         ),
         build(:event,
           name: "Purchase",
-          timestamp: ~N[2021-01-01 00:00:03],
-          "meta.key": ["OS"],
-          "meta.value": ["Linux"]
+          timestamp: ~N[2021-01-01 00:00:03]
         )
       ])
 
@@ -1213,24 +1207,66 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
         })
 
       assert [
-               %{
-                 "goal" => "Purchase",
-                 "props" => props,
-                 "visitors" => 2
-               },
-               %{
-                 "goal" => "Visit /test",
-                 "props" => [],
-                 "visitors" => 1
-               }
+               %{"goal" => "Purchase", "visitors" => 2},
+               %{"goal" => "Visit /test", "visitors" => 1}
              ] = json_response(conn, 200)["results"]
+    end
 
-      assert "method" in props
-      assert "OS" in props
+    test "returns pageview goals containing wildcards", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, page_path: "/**/post"})
+      insert(:goal, %{site: site, page_path: "/blog**"})
+
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post-1", user_id: @user_id),
+        build(:pageview, pathname: "/blog/post-2", user_id: @user_id),
+        build(:pageview, pathname: "/blog/something/post"),
+        build(:pageview, pathname: "/different/page/post")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors,pageviews",
+          "property" => "event:goal"
+        })
+
+      assert [
+               %{"goal" => "Visit /**/post", "visitors" => 2, "pageviews" => 2},
+               %{"goal" => "Visit /blog**", "visitors" => 2, "pageviews" => 4}
+             ] = json_response(conn, 200)["results"]
+    end
+
+    test "does not return goals that are not configured for the site", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/register"),
+        build(:event, name: "Signup")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors,pageviews",
+          "property" => "event:goal"
+        })
+
+      assert [] = json_response(conn, 200)["results"]
     end
   end
 
   describe "filtering" do
+    test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "event:page",
+          "filters" => "event:goal==Register"
+        })
+
+      assert %{"error" => msg} = json_response(conn, 400)
+      assert msg =~ "The goal `Register` is not configured for this site. Find out how"
+    end
+
     test "event:page filter for breakdown by session props", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -1381,6 +1417,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     end
 
     test "event:goal pageview filter for breakdown by visit source", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, page_path: "/plausible.io"})
+
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Bing",
@@ -1415,6 +1453,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
     end
 
     test "event:goal custom event filter for breakdown by visit source", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, event_name: "Register"})
+
       populate_stats(site, [
         build(:pageview,
           referrer_source: "Bing",
@@ -1448,7 +1488,65 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "wildcard pageview goal filter for breakdown by event:page", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/en/register"),
+        build(:pageview, pathname: "/en/register", user_id: @user_id),
+        build(:pageview, pathname: "/en/register", user_id: @user_id),
+        build(:pageview, pathname: "/123/it/register"),
+        build(:pageview, pathname: "/should-not-appear")
+      ])
+
+      insert(:goal, %{site: site, page_path: "/**register"})
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,pageviews",
+          "property" => "event:page",
+          "filters" => "event:goal==Visit /**register"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"page" => "/en/register", "visitors" => 2, "pageviews" => 3},
+                 %{"page" => "/123/it/register", "visitors" => 1, "pageviews" => 1}
+               ]
+             }
+    end
+
+    test "mixed multi-goal filter for breakdown by visit:country", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, country_code: "EE", pathname: "/en/register"),
+        build(:event, country_code: "EE", name: "Signup", pathname: "/en/register"),
+        build(:pageview, country_code: "US", pathname: "/123/it/register"),
+        build(:pageview, country_code: "US", pathname: "/different")
+      ])
+
+      insert(:goal, %{site: site, page_path: "/**register"})
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,pageviews,events",
+          "property" => "visit:country",
+          "filters" => "event:goal==Signup|Visit /**register"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"country" => "EE", "visitors" => 2, "pageviews" => 1, "events" => 2},
+                 %{"country" => "US", "visitors" => 1, "pageviews" => 1, "events" => 1}
+               ]
+             }
+    end
+
     test "event:goal custom event filter for breakdown by event page", %{conn: conn, site: site} do
+      insert(:goal, %{site: site, event_name: "Register"})
+
       populate_stats(site, [
         build(:event,
           pathname: "/en/register",
