@@ -22,10 +22,12 @@ defmodule Plausible.ImportedTest do
         if unquote(import_type) in [:new, :new_and_legacy] do
           import_params =
             if unquote(import_type) == :new_and_legacy do
-              Map.from_struct(site.imported_data)
+              site.imported_data
+              |> Map.from_struct()
+              |> Map.put(:source, :universal_analytics)
             else
               %{
-                source: "Google Analytics",
+                source: :universal_analytics,
                 start_date: ~D[2005-01-01],
                 end_date: Timex.today()
               }

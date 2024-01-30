@@ -36,7 +36,7 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
       assert [
                %{
                  id: ^import_id,
-                 source: "Google Analytics",
+                 source: :universal_analytics,
                  start_date: ~D[2023-10-01],
                  end_date: ~D[2024-01-02],
                  status: :pending
@@ -75,7 +75,7 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
         site
         |> Plausible.Imported.SiteImport.create_changeset(
           user,
-          %{source: "Google Analytics", start_date: date_range.first, end_date: date_range.last}
+          %{source: :universal_analytics, start_date: date_range.first, end_date: date_range.last}
         )
         |> Plausible.Repo.insert!()
 

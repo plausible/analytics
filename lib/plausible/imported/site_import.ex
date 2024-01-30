@@ -14,7 +14,7 @@ defmodule Plausible.Imported.SiteImport do
   schema "site_imports" do
     field :start_date, :date
     field :end_date, :date
-    field :source, :string
+    field :source, Ecto.Enum, values: ImportSources.names()
     field :status, Ecto.Enum, values: [:pending, :importing, :completed, :failed]
 
     belongs_to :site, Plausible.Site
@@ -23,11 +23,15 @@ defmodule Plausible.Imported.SiteImport do
     timestamps()
   end
 
+  # NOTE: this is necessary for backwards compatbility
+  # with legacy imports
+  def label(%__MODULE__{source: source}), do: ImportSources.by_name(source).label()
+  def label(%Plausible.Site.ImportedData{source: source}), do: source
+
   def create_changeset(site, user, params) do
     %__MODULE__{}
     |> cast(params, [:source, :start_date, :end_date])
     |> validate_required([:source])
-    |> validate_inclusion(:source, ImportSources.names())
     |> put_assoc(:site, site)
     |> put_assoc(:imported_by, user)
     |> put_change(:status, :pending)

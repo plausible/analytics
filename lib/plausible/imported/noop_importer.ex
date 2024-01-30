@@ -5,10 +5,11 @@ defmodule Plausible.Imported.NoopImporter do
 
   use Plausible.Imported.Importer
 
-  @name "Noop"
+  @impl true
+  def name(), do: :noop
 
   @impl true
-  def name(), do: @name
+  def label(), do: "Noop"
 
   @impl true
   def parse_args(opts), do: opts

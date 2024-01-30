@@ -1272,7 +1272,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       [site_import] = Plausible.Imported.list_all_imports(site)
 
-      assert site_import.source == "Google Analytics"
+      assert site_import.source == :universal_analytics
       assert site_import.end_date == ~D[2022-03-01]
       assert site_import.status == :pending
     end

@@ -9,11 +9,12 @@ defmodule Plausible.Imported.UniversalAnalytics do
 
   @missing_values ["(none)", "(not set)", "(not provided)", "(other)"]
 
-  # NOTE: we have to use old name for now
-  @name "Google Analytics"
-
   @impl true
-  def name(), do: @name
+  def name(), do: :universal_analytics
+
+  # NOTE: we have to use old name for now
+  @impl true
+  def label(), do: "Google Analytics"
 
   @impl true
   def before_start(site_import) do
@@ -23,7 +24,7 @@ defmodule Plausible.Imported.UniversalAnalytics do
     |> Plausible.Site.start_import(
       site_import.start_date,
       site_import.end_date,
-      site_import.source
+      label()
     )
     |> Repo.update!()
 

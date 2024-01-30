@@ -8,7 +8,8 @@ defmodule Plausible.Imported.Importer do
   alias Plausible.Imported.SiteImport
   alias Plausible.Repo
 
-  @callback name() :: String.t()
+  @callback name() :: atom()
+  @callback label() :: String.t()
   @callback parse_args(map()) :: Keyword.t()
   @callback import_data(Plausible.Site.t(), Keyword.t()) :: :ok | {:error, any()}
   @callback before_start(SiteImport.t()) :: :ok | {:error, any()}

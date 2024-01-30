@@ -5,10 +5,11 @@ defmodule Plausible.Imported.CSVImporter do
 
   use Plausible.Imported.Importer
 
-  @name "CSV"
+  @impl true
+  def name(), do: :csv
 
   @impl true
-  def name(), do: @name
+  def label(), do: "CSV"
 
   @impl true
   def parse_args(%{"s3_path" => s3_path}), do: [s3_path: s3_path]
