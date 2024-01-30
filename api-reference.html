@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-6633A269.js"></script>
+    <script src="dist/sidebar_items-EF0D6B9C.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -398,6 +398,24 @@ Funnels and Custom Properties.</p></div>
     <div class="summary-synopsis"><p>The subscription statuses are stored in Paddle. They can only be changed
 through Paddle webhooks, which always send the current subscription status
 via the payload.</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Cache.html" translate="no">Plausible.Cache</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>Caching interface specific for Plausible. Usage</p></div>
+
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Plausible.Cache.Warmer.html" translate="no">Plausible.Cache.Warmer</a>
+
+  </div>
+
+    <div class="summary-synopsis"><p>A periodic cache warmer.</p></div>
 
 </div>
 <div class="summary-row">
@@ -1122,39 +1140,9 @@ clean-up process to act as a rate limiter.</p></div>
 
   </div>
 
-    <div class="summary-synopsis"><p>A &quot;sites by domain&quot; caching interface.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Site.Cache.Warmer.html" translate="no">Plausible.Site.Cache.Warmer</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A periodic cache warmer.
-Queries all Sites from Postgres, every <code class="inline">interval</code> and pre-populates the cache.
-After each run the process is hibernated, triggering garbage collection.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Site.Cache.Warmer.All.html" translate="no">Plausible.Site.Cache.Warmer.All</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A Cache.Warmer adapter that refreshes the Sites Cache fully.
-This module exists only to make it explicit what the warmer
-refreshes, to be used in the supervisor tree.</p></div>
-
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="Plausible.Site.Cache.Warmer.RecentlyUpdated.html" translate="no">Plausible.Site.Cache.Warmer.RecentlyUpdated</a>
-
-  </div>
-
-    <div class="summary-synopsis"><p>A Cache.Warmer adapter that only refreshes the Cache
-with recently updated sites every 30 seconds.</p></div>
+    <div class="summary-synopsis"><p>The cache allows lookups by both <code class="inline">domain</code> and <code class="inline">domain_changed_from</code>
+fields - this is to allow traffic from sites whose domains changed within a certain
+grace period (see: <code class="inline">Plausible.Site.Transfer</code>).</p></div>
 
 </div>
 <div class="summary-row">

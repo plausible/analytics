@@ -8,7 +8,7 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.HTTPClient.Interface — Plausible v0.0.1</title>
+    <title>Plausible.Cache — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
@@ -131,16 +131,37 @@ Pages
 
 <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L13" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.HTTPClient.Interface</span> <small>behaviour</small>
+  <span translate="no">Plausible.Cache</span> <small>behaviour</small>
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>Caching interface specific for Plausible. Usage:</p><pre><code class="makeup elixir" translate="no"><span class="kn">use</span><span class="w"> </span><span class="nc">Plausible.Cache</span><span class="w">
+
+</span><span class="c1"># - Implement the callbacks required</span><span class="w">
+</span><span class="c1"># - Optionally override `unwrap_cache_keys/1`</span><span class="w">
+</span><span class="c1"># - Populate the cache with `Plausible.Cache.Warmer`</span></code></pre><p>Serves as a thin wrapper around Cachex, but the underlying
+implementation can be transparently swapped.</p><p>Even though the Cachex process is started, cache access is disabled
+during tests via the <code class="inline">:plausible, Elixir.Plausible.Cache, enabled: bool()</code> application env key.
+This can be overridden on case by case basis, using the child specs options.</p><p>The <code class="inline">base_db_query/0</code> callback is used to generate the base query that is 
+executed on every cache refresh. </p><p>There are two modes of refresh operation: <code class="inline">:all</code> and <code class="inline">:updated_recently</code>;
+the former will invoke the query as is and clear all the existing entries,
+while the latter will attempt to limit the query to only the records that 
+have been updated in the last 15 minutes and try to merge the new results with
+existing cache entries.</p><p>Both refresh modes are normally executed periodically from within a warmer process;
+see: <a href="Plausible.Cache.Warmer.html"><code class="inline">Plausible.Cache.Warmer</code></a>. The reason for two modes is that the latter is lighter 
+on the database and can be executed more frequently.</p><p>When Cache is disabled via application env, the <code class="inline">get/1</code> function
+falls back to pure database lookups (implemented via <code class="inline">get_from_source/1</code> callback. 
+This should help with introducing cached lookups in existing code, 
+so that no existing tests should break.</p><p>Refreshing the cache emits telemetry event defined as per <code class="inline">telemetry_event_refresh/2</code>.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -150,52 +171,6 @@ Pages
       </a>
       <span class="text">Summary</span>
     </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:finch_request_opts/0" translate="no">finch_request_opts()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:headers/0" translate="no">headers()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:params/0" translate="no">params()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:response/0" translate="no">response()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:url/0" translate="no">url()</a>
-
-      </div>
-
-    </div>
-
-</div>
 <div class="summary-callbacks summary">
   <h2>
     <a href="#callbacks">Callbacks</a>
@@ -203,41 +178,77 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:get/1" translate="no">get(url)</a>
+        <a href="#c:base_db_query/0" translate="no">base_db_query()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Returns the base Ecto query used to refresh the cache</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:get/2" translate="no">get(url, headers)</a>
+        <a href="#c:child_id/0" translate="no">child_id()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Supervisor child id, must be unique within the supervision tree</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:get/3" translate="no">get(url, headers, params)</a>
+        <a href="#c:count_all/0" translate="no">count_all()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Counts all items at the source, an aggregate query most likely</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:post/3" translate="no">post(url, headers, params)</a>
+        <a href="#c:get_from_source/1" translate="no">get_from_source(any)</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Retrieves the item from the source, in case the cache is disabled</p></div>
 
     </div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#c:post/4" translate="no">post(url, headers, params, finch_request_opts)</a>
+        <a href="#c:name/0" translate="no">name()</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>Unique cache name, used by underlying implementation</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:unwrap_cache_keys/1" translate="no">unwrap_cache_keys(list)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Optionally unwraps the keys of the cache items, in case one item is stored under multiple keys</p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h2>
+    <a href="#functions">Functions</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#enabled?/0" translate="no">enabled?()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Looks for application env value at <code class="inline">:plausible, Elixir.Plausible.Cache, enabled: bool()</code></p></div>
 
     </div>
 
@@ -245,161 +256,6 @@ Pages
 
   </section>
 
-
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Types</span>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:finch_request_opts/0">
-
-  <div class="detail-header">
-    <a href="#t:finch_request_opts/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">finch_request_opts()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L14" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> finch_request_opts() :: <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:headers/0">
-
-  <div class="detail-header">
-    <a href="#t:headers/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">headers()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L16" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> headers() :: <a href="https://hexdocs.pm/finch/0.16.0/Finch.Request.html#t:headers/0">Finch.Request.headers</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:params/0">
-
-  <div class="detail-header">
-    <a href="#t:params/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">params()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L17" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> params() :: <a href="https://hexdocs.pm/finch/0.16.0/Finch.Request.html#t:body/0">Finch.Request.body</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:response/0">
-
-  <div class="detail-header">
-    <a href="#t:response/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">response()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L18" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> response() ::
-  {:ok, <a href="https://hexdocs.pm/finch/0.16.0/Finch.Response.html#t:t/0">Finch.Response.t</a>()}
-  | {:error,
-     <a href="https://hexdocs.pm/mint/1.5.2/Mint.Types.html#t:error/0">Mint.Types.error</a>() | <a href="https://hexdocs.pm/finch/0.16.0/Finch.Error.html#t:t/0">Finch.Error.t</a>() | <a href="Plausible.HTTPClient.Non200Error.html#t:t/0">Plausible.HTTPClient.Non200Error.t</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:url/0">
-
-  <div class="detail-header">
-    <a href="#t:url/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">url()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L15" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> url() :: <a href="https://hexdocs.pm/finch/0.16.0/Finch.Request.html#t:url/0">Finch.Request.url</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
 
   <section id="callbacks" class="details-list">
     <h1 class="section-heading">
@@ -409,16 +265,16 @@ Pages
       <span class="text">Callbacks</span>
     </h1>
     <div class="callbacks-list">
-<section class="detail" id="c:get/1">
+<section class="detail" id="c:base_db_query/0">
 
   <div class="detail-header">
-    <a href="#c:get/1" class="detail-link" title="Link to this callback">
+    <a href="#c:base_db_query/0" class="detail-link" title="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this callback</span>
     </a>
-    <h1 class="signature" translate="no">get(url)</h1>
+    <h1 class="signature" translate="no">base_db_query()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L24" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L47" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -430,23 +286,23 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@callback</span> get(<a href="#t:url/0">url</a>()) :: <a href="#t:response/0">response</a>()</pre>
+          <pre translate="no"><span class="attribute">@callback</span> base_db_query() :: <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Query.html#t:t/0">Ecto.Query.t</a>()</pre>
 
       </div>
 
-
+<p>Returns the base Ecto query used to refresh the cache</p>
   </section>
 </section>
-<section class="detail" id="c:get/2">
+<section class="detail" id="c:child_id/0">
 
   <div class="detail-header">
-    <a href="#c:get/2" class="detail-link" title="Link to this callback">
+    <a href="#c:child_id/0" class="detail-link" title="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this callback</span>
     </a>
-    <h1 class="signature" translate="no">get(url, headers)</h1>
+    <h1 class="signature" translate="no">child_id()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L23" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L41" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -458,23 +314,23 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@callback</span> get(<a href="#t:url/0">url</a>(), <a href="#t:headers/0">headers</a>()) :: <a href="#t:response/0">response</a>()</pre>
+          <pre translate="no"><span class="attribute">@callback</span> child_id() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
 
       </div>
 
-
+<p>Supervisor child id, must be unique within the supervision tree</p>
   </section>
 </section>
-<section class="detail" id="c:get/3">
+<section class="detail" id="c:count_all/0">
 
   <div class="detail-header">
-    <a href="#c:get/3" class="detail-link" title="Link to this callback">
+    <a href="#c:count_all/0" class="detail-link" title="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this callback</span>
     </a>
-    <h1 class="signature" translate="no">get(url, headers, params)</h1>
+    <h1 class="signature" translate="no">count_all()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L22" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L43" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -486,23 +342,23 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@callback</span> get(<a href="#t:url/0">url</a>(), <a href="#t:headers/0">headers</a>(), <a href="#t:params/0">params</a>()) :: <a href="#t:response/0">response</a>()</pre>
+          <pre translate="no"><span class="attribute">@callback</span> count_all() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()</pre>
 
       </div>
 
-
+<p>Counts all items at the source, an aggregate query most likely</p>
   </section>
 </section>
-<section class="detail" id="c:post/3">
+<section class="detail" id="c:get_from_source/1">
 
   <div class="detail-header">
-    <a href="#c:post/3" class="detail-link" title="Link to this callback">
+    <a href="#c:get_from_source/1" class="detail-link" title="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this callback</span>
     </a>
-    <h1 class="signature" translate="no">post(url, headers, params)</h1>
+    <h1 class="signature" translate="no">get_from_source(any)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L25" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L49" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -514,23 +370,23 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@callback</span> post(<a href="#t:url/0">url</a>(), <a href="#t:headers/0">headers</a>(), <a href="#t:params/0">params</a>()) :: <a href="#t:response/0">response</a>()</pre>
+          <pre translate="no"><span class="attribute">@callback</span> get_from_source(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()</pre>
 
       </div>
 
-
+<p>Retrieves the item from the source, in case the cache is disabled</p>
   </section>
 </section>
-<section class="detail" id="c:post/4">
+<section class="detail" id="c:name/0">
 
   <div class="detail-header">
-    <a href="#c:post/4" class="detail-link" title="Link to this callback">
+    <a href="#c:name/0" class="detail-link" title="Link to this callback">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this callback</span>
     </a>
-    <h1 class="signature" translate="no">post(url, headers, params, finch_request_opts)</h1>
+    <h1 class="signature" translate="no">name()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/http_client.ex#L26" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L39" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -542,11 +398,73 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@callback</span> post(<a href="#t:url/0">url</a>(), <a href="#t:headers/0">headers</a>(), <a href="#t:params/0">params</a>(), <a href="#t:finch_request_opts/0">finch_request_opts</a>()) :: <a href="#t:response/0">response</a>()</pre>
+          <pre translate="no"><span class="attribute">@callback</span> name() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
 
       </div>
 
+<p>Unique cache name, used by underlying implementation</p>
+  </section>
+</section>
+<section class="detail" id="c:unwrap_cache_keys/1">
 
+  <div class="detail-header">
+    <a href="#c:unwrap_cache_keys/1" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">unwrap_cache_keys(list)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L45" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> unwrap_cache_keys([<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()]) :: [{<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}]</pre>
+
+      </div>
+
+<p>Optionally unwraps the keys of the cache items, in case one item is stored under multiple keys</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h1>
+    <div class="functions-list">
+<section class="detail" id="enabled?/0">
+
+  <div class="detail-header">
+    <a href="#enabled?/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">enabled?()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache.ex#L52" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>Looks for application env value at <code class="inline">:plausible, Elixir.Plausible.Cache, enabled: bool()</code></p>
   </section>
 </section>
 

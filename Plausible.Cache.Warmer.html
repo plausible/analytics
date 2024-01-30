@@ -8,13 +8,13 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.Site.Cache.Warmer — Plausible v0.0.1</title>
+    <title>Plausible.Cache.Warmer — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-6633A269.js"></script>
+    <script src="dist/sidebar_items-EF0D6B9C.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -131,27 +131,23 @@ Pages
 
 <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/cache/warmer.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/warmer.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Site.Cache.Warmer</span> 
+  <span translate="no">Plausible.Cache.Warmer</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>A periodic cache warmer.
-Queries all Sites from Postgres, every <code class="inline">interval</code> and pre-populates the cache.
-After each run the process is hibernated, triggering garbage collection.</p><p>Currently Cachex is used, but the underlying implementation can be transparently swapped.</p><p>Child specification options available:</p><ul><li><code class="inline">interval</code> - the number of milliseconds for each warm-up cycle, defaults
-to <code class="inline">:sites_by_domain_cache_refresh_interval</code> application env value
-with random jitter added, for which the maximum is stored under
-<code class="inline">:sites_by_domain_cache_refresh_interval_max_jitter</code> key.</li><li><code class="inline">cache_name</code> - defaults to Cache.name() but can be overriden for testing</li><li><code class="inline">force_start?</code> - enforcess process startup for testing, even if it's barred
-by <code class="inline">Cache.enabled?</code>. This is useful for avoiding issues with DB ownership
-and async tests.</li><li><code class="inline">warmer_fn</code> - used for testing, a custom function to retrieve the items meant
-to be cached during the warm-up cycle.</li></ul><p>See tests for more comprehensive examples.</p>
+<p>A periodic cache warmer.</p><p>Child specification options available:</p><ul><li><code class="inline">cache_impl</code> - module expected to implement <a href="Plausible.Cache.html"><code class="inline">Plausible.Cache</code></a> behaviour</li><li><code class="inline">interval</code> - the number of milliseconds for each warm-up cycle</li><li><code class="inline">cache_name</code> - defaults to cache_impl.name() but can be overridden for testing</li><li><code class="inline">force_start?</code> - enforcess process startup for testing, even if it's barred
+by <code class="inline">Plausible.Cache.enabled?</code>. This is useful for avoiding issues with DB ownership
+and async tests.</li><li><code class="inline">warmer_fn</code> - by convention, either <code class="inline">:refresh_all</code> or <code class="inline">:refresh_updated_recently</code>,
+both are automatically provided by <code class="inline">cache_impl</code> module. Technically any exported
+or captured function will work, if need be.</li></ul><p>See tests for more comprehensive examples.</p>
   </section>
 
 
@@ -170,14 +166,6 @@ to be cached during the warm-up cycle.</li></ul><p>See tests for more comprehens
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#child_spec/1" translate="no">child_spec(opts)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#interval/0" translate="no">interval()</a>
 
       </div>
 
@@ -205,7 +193,7 @@ to be cached during the warm-up cycle.</li></ul><p>See tests for more comprehens
     </a>
     <h1 class="signature" translate="no">child_spec(opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/cache/warmer.ex#L32" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/cache/warmer.ex#L25" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -218,34 +206,6 @@ to be cached during the warm-up cycle.</li></ul><p>See tests for more comprehens
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@spec</span> child_spec(<a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: <a href="https://hexdocs.pm/elixir/Supervisor.html#t:child_spec/0">Supervisor.child_spec</a>() | :ignore</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="interval/0">
-
-  <div class="detail-header">
-    <a href="#interval/0" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">interval()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/cache/warmer.ex#L73" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> interval() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()</pre>
 
       </div>
 
