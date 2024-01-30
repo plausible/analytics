@@ -466,6 +466,198 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   end
 
   describe "filters" do
+    test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "filters" => "event:goal==Visit /register**"
+        })
+
+      assert %{"error" => msg} = json_response(conn, 400)
+
+      assert msg =~
+               "The pageview goal for the pathname `/register**` is not configured for this site"
+    end
+
+    test "can filter by a custom event goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "NotConfigured",
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events",
+          "filters" => "event:goal==Signup"
+        })
+
+      res = json_response(conn, 200)
+
+      assert List.first(res["results"]) == %{
+               "date" => "2021-01-01",
+               "visitors" => 2,
+               "events" => 3
+             }
+    end
+
+    test "can filter by a simple pageview goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/register",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/register",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          pathname: "/register",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      insert(:goal, %{site: site, page_path: "/register"})
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,pageviews",
+          "filters" => "event:goal==Visit /register"
+        })
+
+      res = json_response(conn, 200)
+
+      assert List.first(res["results"]) == %{
+               "date" => "2021-01-01",
+               "visitors" => 2,
+               "pageviews" => 3
+             }
+    end
+
+    test "can filter by a wildcard pageview goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post-1", timestamp: ~N[2021-01-01 00:25:00]),
+        build(:pageview,
+          pathname: "/blog/post-2",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview, pathname: "/blog", user_id: @user_id, timestamp: ~N[2021-01-01 00:25:00]),
+        build(:pageview, pathname: "/", timestamp: ~N[2021-01-01 00:25:00])
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog**"})
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,pageviews",
+          "filters" => "event:goal==Visit /blog**"
+        })
+
+      res = json_response(conn, 200)
+
+      assert List.first(res["results"]) == %{
+               "date" => "2021-01-01",
+               "visitors" => 2,
+               "pageviews" => 3
+             }
+    end
+
+    test "can filter by multiple custom event goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:25:00]),
+        build(:event, name: "Purchase", user_id: @user_id, timestamp: ~N[2021-01-01 00:25:00]),
+        build(:event, name: "Purchase", user_id: @user_id, timestamp: ~N[2021-01-01 00:25:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:25:00])
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, event_name: "Purchase"})
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events",
+          "filters" => "event:goal==Signup|Purchase"
+        })
+
+      res = json_response(conn, 200)
+
+      assert List.first(res["results"]) == %{
+               "date" => "2021-01-01",
+               "visitors" => 2,
+               "events" => 3
+             }
+    end
+
+    test "can filter by multiple mixed goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/account/register", timestamp: ~N[2021-01-01 00:25:00]),
+        build(:pageview,
+          pathname: "/register",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event, name: "Signup", user_id: @user_id, timestamp: ~N[2021-01-01 00:25:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:25:00])
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, page_path: "/**register"})
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "period" => "month",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events,pageviews",
+          "filters" => "event:goal==Signup|Visit /**register"
+        })
+
+      res = json_response(conn, 200)
+
+      assert List.first(res["results"]) == %{
+               "date" => "2021-01-01",
+               "visitors" => 2,
+               "events" => 3,
+               "pageviews" => 2
+             }
+    end
+
     test "can filter by source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

@@ -16,8 +16,12 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
   alias Plausible.Repo
   alias Plausible.ClickhouseRepo
 
+  def dry_run(date) do
+    perform(nil, date, true)
+  end
+
   @impl Oban.Worker
-  def perform(_job, today \\ Date.utc_today()) do
+  def perform(_job, today \\ Date.utc_today(), dry_run? \\ false) do
     tomorrow = today |> Date.add(+1)
     next_week = today |> Date.add(+7)
 
@@ -49,16 +53,24 @@ defmodule Plausible.Workers.AcceptTrafficUntil do
     for notification <- notifications do
       case {has_stats?(notification.site_ids, today), notification.deadline} do
         {true, ^tomorrow} ->
-          notification
-          |> store_sent(today)
-          |> PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow()
-          |> Plausible.Mailer.send()
+          if dry_run? do
+            IO.puts("Will send final notification to #{notification.email}")
+          else
+            notification
+            |> store_sent(today)
+            |> PlausibleWeb.Email.approaching_accept_traffic_until_tomorrow()
+            |> Plausible.Mailer.send()
+          end
 
         {true, ^next_week} ->
-          notification
-          |> store_sent(today)
-          |> PlausibleWeb.Email.approaching_accept_traffic_until()
-          |> Plausible.Mailer.send()
+          if dry_run? do
+            IO.puts("Will send weekly notification to #{notification.email}")
+          else
+            notification
+            |> store_sent(today)
+            |> PlausibleWeb.Email.approaching_accept_traffic_until()
+            |> Plausible.Mailer.send()
+          end
 
         _ ->
           nil

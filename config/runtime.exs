@@ -509,8 +509,8 @@ cloud_cron = [
   {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
   # Every midnight
   {"0 0 * * *", Plausible.Workers.LockSites},
-  # Daily at 5
-  {"0 5 * * *", Plausible.Workers.AcceptTrafficUntil}
+  # Daily at 8
+  {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil}
 ]
 
 crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
