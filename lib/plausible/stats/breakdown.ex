@@ -16,6 +16,8 @@ defmodule Plausible.Stats.Breakdown do
 
   @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
 
+  @special_metrics [:conversion_rate, :total_visitors]
+
   def breakdown(site, query, property, metrics, pagination, opts \\ [])
 
   def breakdown(site, query, "event:goal" = property, metrics, pagination, opts) do
@@ -157,6 +159,7 @@ defmodule Plausible.Stats.Breakdown do
       )
       |> Enum.map(&Map.take(&1, metrics))
     end
+    |> maybe_add_cr(site, query, property, metrics)
   end
 
   def breakdown(site, query, "event:name" = property, metrics, pagination, opts) do
@@ -166,7 +169,11 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, property, metrics, pagination, opts) do
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
-    breakdown_sessions(site, query, property, metrics, pagination)
+
+    queryable_metrics = metrics -- @special_metrics
+
+    breakdown_sessions(site, query, property, queryable_metrics, pagination)
+    |> maybe_add_cr(site, query, property, metrics)
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
@@ -621,6 +628,50 @@ defmodule Plausible.Stats.Breakdown do
       },
       order_by: {:asc, s.browser_version}
     )
+  end
+
+  defp maybe_add_cr(breakdown_results, site, query, property, metrics) do
+    if :conversion_rate in metrics && !Enum.empty?(breakdown_results) do
+      add_cr(breakdown_results, site, query, property, metrics)
+    else
+      breakdown_results
+    end
+  end
+
+  defp add_cr(breakdown_results, site, query, property, metrics) do
+    property_atom = Plausible.Stats.Filters.without_prefix(property)
+
+    items =
+      Enum.map(breakdown_results, fn item -> Map.fetch!(item, property_atom) end)
+
+    query_without_goal =
+      query
+      |> Query.put_filter(property, {:member, items})
+      |> Query.remove_event_filters([:goal, :props])
+
+    # Here, we're always only interested in the first page of results
+    # - the :member filter makes sure that the results always match with
+    # the items in the given breakdown_results list
+    pagination = {length(items), 1}
+
+    res_without_goal = breakdown(site, query_without_goal, property, [:visitors], pagination)
+
+    Enum.map(breakdown_results, fn item ->
+      without_goal =
+        Enum.find(res_without_goal, fn s ->
+          Map.fetch!(s, property_atom) == Map.fetch!(item, property_atom)
+        end)
+
+      item =
+        item
+        |> Map.put(:conversion_rate, calculate_cr(without_goal.visitors, item.visitors))
+
+      if :total_visitors in metrics do
+        Map.put(item, :total_visitors, without_goal.visitors)
+      else
+        item
+      end
+    end)
   end
 
   defp sorting_key(metrics) do
