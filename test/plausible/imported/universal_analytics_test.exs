@@ -66,25 +66,28 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
       mock_http_with("google_analytics_import#1.json")
 
       view_id = "54297898"
-      date_range = Date.range(~D[2011-01-01], ~D[2022-07-19])
+      start_date = ~D[2011-01-01]
+      end_date = ~D[2022-07-19]
 
       future = DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_iso8601()
-      auth = {"***", "refresh_token", future}
+      access_token = "***"
+      refresh_token = "refresh_token"
 
-      site_import =
-        site
-        |> Plausible.Imported.SiteImport.create_changeset(
+      {:ok, job} =
+        UniversalAnalytics.new_import(
+          site,
           user,
-          %{source: :universal_analytics, start_date: date_range.first, end_date: date_range.last}
+          view_id: view_id,
+          start_date: start_date,
+          end_date: end_date,
+          access_token: access_token,
+          refresh_token: refresh_token,
+          token_expires_at: future
         )
-        |> Plausible.Repo.insert!()
 
-      assert :ok ==
-               UniversalAnalytics.import_data(site_import,
-                 date_range: date_range,
-                 view_id: view_id,
-                 auth: auth
-               )
+      job = Repo.reload!(job)
+
+      Plausible.Workers.ImportAnalytics.perform(job)
 
       assert 1_495_150 == Plausible.Stats.Clickhouse.imported_pageview_count(site)
     end

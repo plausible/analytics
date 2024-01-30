@@ -111,7 +111,7 @@ defmodule Plausible.Imported.Importer do
       end
 
       @doc false
-      @spec run_import(SiteImport.t(), Keyword.t()) :: :ok | {:error, :any}
+      @spec run_import(SiteImport.t(), map()) :: :ok | {:error, :any}
       def run_import(site_import, args) do
         Plausible.Imported.Importer.run_import(
           site_import,

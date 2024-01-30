@@ -25,9 +25,8 @@ defmodule Plausible.Workers.ImportAnalytics do
       |> Repo.preload(:site)
 
     import_api = ImportSources.by_name(site_import.source)
-    import_opts = import_api.parse_args(args)
 
-    case import_api.run_import(site_import, import_opts) do
+    case import_api.run_import(site_import, args) do
       {:ok, site_import} ->
         import_complete(site_import)
 
