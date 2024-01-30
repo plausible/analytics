@@ -16,8 +16,6 @@ defmodule Plausible.Stats.Breakdown do
 
   @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
 
-  @event_props Plausible.Stats.Props.event_props()
-
   def breakdown(site, query, property, metrics, pagination, opts \\ [])
 
   def breakdown(site, query, "event:goal" = property, metrics, pagination, opts) do
@@ -161,7 +159,7 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  def breakdown(site, query, property, metrics, pagination, opts) when property in @event_props do
+  def breakdown(site, query, "event:name" = property, metrics, pagination, opts) do
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
     breakdown_events(site, query, property, metrics, pagination)
   end
