@@ -189,6 +189,13 @@ defmodule Plausible.Sites do
     end
   end
 
+  @spec clear_stats_start_date!(Site.t()) :: Site.t()
+  def clear_stats_start_date!(site) do
+    site
+    |> Ecto.Changeset.change(stats_start_date: nil)
+    |> Plausible.Repo.update!()
+  end
+
   @spec stats_start_date(Site.t()) :: Date.t() | nil
   @doc """
   Returns the date of the first event of the given site, or `nil` if the site

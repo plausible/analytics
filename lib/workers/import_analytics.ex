@@ -63,6 +63,8 @@ defmodule Plausible.Workers.ImportAnalytics do
       end
     end)
 
+    Plausible.Sites.clear_stats_start_date!(site_import.site)
+
     Importer.notify(site_import, :complete)
 
     :ok

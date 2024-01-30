@@ -51,7 +51,7 @@ defmodule Plausible.Purge do
       Ecto.Adapters.SQL.query!(Plausible.ImportDeletionRepo, sql, [site.id])
     end)
 
-    clear_stats_start_date!(site)
+    Plausible.Sites.clear_stats_start_date!(site)
 
     :ok
   end
@@ -68,7 +68,7 @@ defmodule Plausible.Purge do
       ])
     end)
 
-    clear_stats_start_date!(site_import.site)
+    Plausible.Sites.clear_stats_start_date!(site_import.site)
 
     :ok
   end
@@ -89,12 +89,6 @@ defmodule Plausible.Purge do
       native_stats_start_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       stats_start_date: nil
     )
-    |> Plausible.Repo.update!()
-  end
-
-  defp clear_stats_start_date!(site) do
-    site
-    |> Ecto.Changeset.change(stats_start_date: nil)
     |> Plausible.Repo.update!()
   end
 end

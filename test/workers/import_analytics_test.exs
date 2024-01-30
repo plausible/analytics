@@ -39,11 +39,11 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       assert_received {:on_success, ^import_id}
     end
 
-    test "updates the stats_start_date field for the site after successful import", %{
+    test "clears stats_start_date field for the site after successful import", %{
       import_opts: import_opts
     } do
       user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
-      site = insert(:site, members: [user])
+      site = insert(:site, members: [user], stats_start_date: ~D[2005-01-01])
 
       {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
@@ -51,7 +51,10 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       |> Repo.reload!()
       |> ImportAnalytics.perform()
 
+      site = Repo.reload!(site)
+      assert site.stats_start_date == nil
       assert Plausible.Sites.stats_start_date(site) == import_opts[:start_date]
+      assert Repo.reload!(site).stats_start_date == import_opts[:start_date]
     end
 
     test "sends email to owner after successful import", %{import_opts: import_opts} do
