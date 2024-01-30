@@ -48,6 +48,44 @@ defmodule Plausible.Imported.Importer do
 
   Managing any configuration or authentication prior to running import is outside of
   scope of importer logic and is expected to be implemented separately.
+
+  ## Running import fully synchronously
+
+  In case it's necessary to run the whole import job fully synchronously, the
+  `Plausible.Workers.ImportAnalytics` worker sends an `Oban.Notifier` message
+  on completion, failure or transient failure of the import.
+
+  A basic usage scenario looks like this:
+
+  ```elixir
+  {:ok, job} = Plausible.Imported.NoopImporter.new_import(
+    site,
+    user,
+    start_date: ~D[2005-01-01],
+    end_date: Date.utc_today(),
+    # this option is necessary to setup the calling process as listener
+    listen?: true
+  )
+
+  import_id = job.args[:import_id]
+
+  receive do
+    {:notification, :analytics_imports_jobs, %{"complete" => ^import_id}} ->
+      IO.puts("Job compelete")
+
+    {:notification, :analytics_imports_jobs, %{"transient_fail" => ^import_id}} ->
+      IO.puts("Job failed transiently")
+
+    {:notification, :analytics_imports_jobs, %{"fail" => ^import_id}} ->
+      IO.puts("Job failed permanently")
+  after
+    15_000 ->
+      IO.puts("Job didn't finish in 15 seconds")
+  end
+  ```
+
+  In a more realistic scenario, job scheduling will be done inside a GenServer process
+  like LiveView, where notifications can be listened for via `handle_info/2`.
   """
 
   alias Plausible.Imported.SiteImport
@@ -72,6 +110,7 @@ defmodule Plausible.Imported.Importer do
         Plausible.Imported.Importer.new_import(name(), site, user, opts, &before_start/1)
       end
 
+      @doc false
       @spec run_import(SiteImport.t(), Keyword.t()) :: :ok | {:error, :any}
       def run_import(site_import, args) do
         Plausible.Imported.Importer.run_import(
@@ -83,6 +122,7 @@ defmodule Plausible.Imported.Importer do
         )
       end
 
+      @doc false
       @spec mark_failed(SiteImport.t()) :: SiteImport.t()
       def mark_failed(site_import) do
         site_import =
@@ -108,6 +148,7 @@ defmodule Plausible.Imported.Importer do
     end
   end
 
+  @doc false
   def new_import(source, site, user, opts, before_start_fun) do
     import_params =
       opts
@@ -132,6 +173,7 @@ defmodule Plausible.Imported.Importer do
     end)
   end
 
+  @doc false
   def run_import(site_import, args, parse_args_fun, import_fun, on_success_fun) do
     site_import =
       site_import
@@ -153,7 +195,20 @@ defmodule Plausible.Imported.Importer do
     end
   end
 
+  @oban_channel :analytics_imports_jobs
+
+  @doc false
+  def notify(site_import, event) do
+    Oban.Notifier.notify(Oban, @oban_channel, %{event => site_import.id})
+  end
+
   defp schedule_job(site_import, opts) do
+    {listen?, opts} = Keyword.pop(opts, :listen?, false)
+
+    if listen? do
+      :ok = Oban.Notifier.listen([@oban_channel])
+    end
+
     opts
     |> Keyword.put(:import_id, site_import.id)
     |> Map.new()

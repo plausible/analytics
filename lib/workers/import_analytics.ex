@@ -12,6 +12,7 @@ defmodule Plausible.Workers.ImportAnalytics do
     unique: [fields: [:args], period: 60]
 
   alias Plausible.Imported.ImportSources
+  alias Plausible.Imported.Importer
   alias Plausible.Imported.SiteImport
 
   @impl Oban.Worker
@@ -29,8 +30,6 @@ defmodule Plausible.Workers.ImportAnalytics do
     case import_api.run_import(site_import, import_opts) do
       {:ok, site_import} ->
         import_complete(site_import)
-
-        Oban.Notifier.notify(Oban, :analytics_imports_jobs, %{complete: site_import.id})
 
         :ok
 
@@ -64,10 +63,14 @@ defmodule Plausible.Workers.ImportAnalytics do
         |> Plausible.Mailer.send()
       end
     end)
+
+    Importer.notify(site_import, :complete)
+
+    :ok
   end
 
   def import_fail_transient(site_import) do
-    Oban.Notifier.notify(Oban, :analytics_imports_jobs, %{transient_fail: site_import.id})
+    Importer.notify(site_import, :transient_fail)
 
     Plausible.Purge.delete_imported_stats!(site_import)
   end
@@ -80,7 +83,7 @@ defmodule Plausible.Workers.ImportAnalytics do
       |> import_api.mark_failed()
       |> Repo.preload(site: [memberships: :user])
 
-    Oban.Notifier.notify(Oban, :analytics_imports_jobs, %{fail: site_import.id})
+    Importer.notify(site_import, :fail)
 
     Plausible.Purge.delete_imported_stats!(site_import)
 
