@@ -1075,16 +1075,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
 
-    metrics =
-      on_full_build do
-        if Enum.any?(site.goals, &Plausible.Goal.Revenue.revenue?/1) do
-          [:visitors, :events] ++ @revenue_metrics
-        else
-          [:visitors, :events]
-        end
-      else
-        [:visitors, :events]
-      end
+    metrics = [:visitors, :events] ++ @revenue_metrics
 
     conversions =
       site
@@ -1165,12 +1156,7 @@ defmodule PlausibleWeb.Api.StatsController do
       Query.from(site, params)
       |> Map.put(:include_imported, false)
 
-    metrics =
-      if full_build?() and Map.has_key?(query.filters, "event:goal") do
-        [:visitors, :events] ++ @revenue_metrics
-      else
-        [:visitors, :events]
-      end
+    metrics = [:visitors, :events] ++ @revenue_metrics
 
     props =
       Stats.breakdown(site, query, prefixed_prop, metrics, pagination)

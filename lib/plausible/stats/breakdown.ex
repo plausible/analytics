@@ -29,13 +29,18 @@ defmodule Plausible.Stats.Breakdown do
 
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
+    {revenue_goals, metrics} =
+      on_full_build do
+        revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
+        metrics = if Enum.any?(revenue_goals), do: metrics, else: metrics -- @revenue_metrics
+
+        {revenue_goals, metrics}
+      else
+        {nil, metrics}
+      end
+
     event_results =
       if Enum.any?(event_goals) do
-        revenue_goals =
-          on_full_build do
-            Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
-          end
-
         site
         |> breakdown(event_query, "event:name", metrics, pagination, skip_tracing: true)
         |> transform_keys(%{name: :goal})
