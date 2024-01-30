@@ -12,9 +12,11 @@ defmodule Plausible.Imported.UniversalAnalytics do
   @impl true
   def name(), do: :universal_analytics
 
-  # NOTE: we have to use old name for now
   @impl true
   def label(), do: "Google Analytics"
+
+  @impl true
+  def email_template(), do: "google_analytics_import.html"
 
   @impl true
   def before_start(site_import) do

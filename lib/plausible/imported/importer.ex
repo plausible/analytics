@@ -10,6 +10,9 @@ defmodule Plausible.Imported.Importer do
   * `name/0` - Returns import source name as an atom. Example: `:universal_analytics`.
   * `label/0` - Descriptive, display friendly name of the source.
     Example: "Google Analytics".
+  * `email_template/0` - Name of the email template to use for notifications in
+    `PlausibleWeb.Email` (`import_success` and `import_failure`). The template
+    should have content customized for a particular source.
   * `parse_args/1` - Receives Oban job arguments coming from `new_import/3`. Whatever
     options were passed to `new_import/3` will be present in the input map with string
     keys and values serialized to primitives. If, for instance `start_date: ~D[2024-01-03]`
@@ -52,6 +55,7 @@ defmodule Plausible.Imported.Importer do
 
   @callback name() :: atom()
   @callback label() :: String.t()
+  @callback email_template() :: String.t()
   @callback parse_args(map()) :: Keyword.t()
   @callback import_data(Plausible.Imported.SiteImport.t(), Keyword.t()) :: :ok | {:error, any()}
   @callback before_start(SiteImport.t()) :: :ok | {:ok, map()} | {:error, any()}

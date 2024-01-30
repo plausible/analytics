@@ -11,6 +11,10 @@ defmodule Plausible.Imported.NoopImporter do
   @impl true
   def label(), do: "Noop"
 
+  # reusing existing template from another source
+  @impl true
+  def email_template(), do: "google_analytics_import.html"
+
   @impl true
   def parse_args(opts), do: opts
 
