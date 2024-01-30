@@ -5,23 +5,35 @@ defmodule Plausible.Imported do
 
   import Ecto.Query
 
+  alias Plausible.Imported
   alias Plausible.Imported.SiteImport
   alias Plausible.Repo
+  alias Plausible.Site
 
-  @tables ~w(
-    imported_visitors imported_sources imported_pages imported_entry_pages
-    imported_exit_pages imported_locations imported_devices imported_browsers
-    imported_operating_systems
-  )
+  @tables [
+    Imported.Visitor,
+    Imported.Source,
+    Imported.Page,
+    Imported.EntryPage,
+    Imported.ExitPage,
+    Imported.Location,
+    Imported.Device,
+    Imported.Browser,
+    Imported.OperatingSystem
+  ]
+
+  @table_names Enum.map(@tables, & &1.__schema__(:source))
 
   @spec tables() :: [String.t()]
-  def tables, do: @tables
+  def tables, do: @table_names
 
+  @spec list_all_imports(Site.t()) :: [SiteImport.t()]
   def list_all_imports(site) do
     from(i in SiteImport, where: i.site_id == ^site.id)
     |> Repo.all()
   end
 
+  @spec list_complete_import_ids(Site.t()) :: [non_neg_integer()]
   def list_complete_import_ids(site) do
     ids =
       from(i in SiteImport,
@@ -38,6 +50,7 @@ defmodule Plausible.Imported do
     end
   end
 
+  @spec get_earliest_import(Site.t()) :: SiteImport.t() | nil
   def get_earliest_import(site) do
     first_import =
       from(i in SiteImport,
@@ -60,7 +73,10 @@ defmodule Plausible.Imported do
     end
   end
 
+  @spec delete_imports_for_site(Site.t()) :: :ok
   def delete_imports_for_site(site) do
     Repo.delete_all(from i in SiteImport, where: i.site_id == ^site.id)
+
+    :ok
   end
 end
