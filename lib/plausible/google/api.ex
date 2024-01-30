@@ -110,18 +110,17 @@ defmodule Plausible.Google.Api do
   @per_page 7_500
   @backoff_factor :timer.seconds(10)
   @max_attempts 5
-  @spec import_analytics(Plausible.Site.t(), Date.Range.t(), String.t(), import_auth()) ::
+  @spec import_analytics(Date.Range.t(), String.t(), import_auth(), (String.t(), [map()] -> :ok)) ::
           :ok | {:error, term()}
   @doc """
   Imports stats from a Google Analytics UA view to a Plausible site.
 
   This function fetches Google Analytics reports in batches of #{@per_page} per
-  request. The batches are then buffered to Clickhouse by the
-  `Plausible.Google.Buffer` process.
+  request. The batches are then passed to persist callback.
 
   Requests to Google Analytics can fail, and are retried at most
   #{@max_attempts} times with an exponential backoff. Returns `:ok` when
-  importing has finished or `{:error, term()}` when a request to GA failed too 
+  importing has finished or `{:error, term()}` when a request to GA failed too
   many times.
 
   Useful links:
@@ -131,61 +130,43 @@ defmodule Plausible.Google.Api do
   - [GA Dimensions reference](https://ga-dev-tools.web.app/dimensions-metrics-explorer)
 
   """
-  def import_analytics(site, date_range, view_id, auth) do
-    with {:ok, access_token} <- maybe_refresh_token(auth),
-         :ok <- do_import_analytics(site, date_range, view_id, access_token) do
-      :ok
-    else
-      {:error, cause} ->
-        Sentry.capture_message("Failed to import from Google Analytics",
-          extra: %{site: site.domain, error: inspect(cause)}
-        )
-
-        {:error, cause}
+  def import_analytics(date_range, view_id, auth, persist_fn) do
+    with {:ok, access_token} <- maybe_refresh_token(auth) do
+      do_import_analytics(date_range, view_id, access_token, persist_fn)
     end
   end
 
-  defp do_import_analytics(site, date_range, view_id, access_token) do
-    {:ok, buffer} = Plausible.Google.Buffer.start_link()
+  defp do_import_analytics(date_range, view_id, access_token, persist_fn) do
+    Enum.reduce_while(ReportRequest.full_report(), :ok, fn report_request, :ok ->
+      report_request = %ReportRequest{
+        report_request
+        | date_range: date_range,
+          view_id: view_id,
+          access_token: access_token,
+          page_token: nil,
+          page_size: @per_page
+      }
 
-    result =
-      Enum.reduce_while(ReportRequest.full_report(), :ok, fn report_request, :ok ->
-        report_request = %ReportRequest{
-          report_request
-          | date_range: date_range,
-            view_id: view_id,
-            access_token: access_token,
-            page_token: nil,
-            page_size: @per_page
-        }
-
-        case fetch_and_persist(site, report_request, buffer: buffer) do
-          :ok -> {:cont, :ok}
-          {:error, _} = error -> {:halt, error}
-        end
-      end)
-
-    Plausible.Google.Buffer.flush(buffer)
-    Plausible.Google.Buffer.stop(buffer)
-
-    result
+      case fetch_and_persist(report_request, persist_fn: persist_fn) do
+        :ok -> {:cont, :ok}
+        {:error, _} = error -> {:halt, error}
+      end
+    end)
   end
 
-  @spec fetch_and_persist(Plausible.Site.t(), ReportRequest.t(), Keyword.t()) ::
+  @spec fetch_and_persist(ReportRequest.t(), Keyword.t()) ::
           :ok | {:error, term()}
-  def fetch_and_persist(site, %ReportRequest{} = report_request, opts \\ []) do
-    buffer_pid = Keyword.get(opts, :buffer)
+  def fetch_and_persist(%ReportRequest{} = report_request, opts \\ []) do
+    persist_fn = Keyword.fetch!(opts, :persist_fn)
     attempt = Keyword.get(opts, :attempt, 1)
     sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
 
     case HTTP.get_report(report_request) do
       {:ok, {rows, next_page_token}} ->
-        records = Plausible.Imported.from_google_analytics(rows, site.id, report_request.dataset)
-        :ok = Plausible.Google.Buffer.insert_many(buffer_pid, report_request.dataset, records)
+        :ok = persist_fn.(report_request.dataset, rows)
 
         if next_page_token do
           fetch_and_persist(
-            site,
             %ReportRequest{report_request | page_token: next_page_token},
             opts
           )
@@ -198,7 +179,7 @@ defmodule Plausible.Google.Api do
           {:error, cause}
         else
           Process.sleep(attempt * sleep_time)
-          fetch_and_persist(site, report_request, Keyword.merge(opts, attempt: attempt + 1))
+          fetch_and_persist(report_request, Keyword.merge(opts, attempt: attempt + 1))
         end
     end
   end

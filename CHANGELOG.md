@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Wildcard and member filtering on the Stats API `event:goal` property
+- Allow filtering with `contains`/`matches` operator for custom properties
 - Add `referrers.csv` to CSV export
 - Add a new Properties section in the dashboard to break down by custom properties
 - Add `custom_props.csv` to CSV export (almost the same as the old `prop_breakdown.csv`, but has different column headers, and includes props for pageviews too, not only custom events)
@@ -20,6 +22,7 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
+- Removed the `prop_names` returned in the Stats API `event:goal` breakdown response
 - Removed the `prop-breakdown.csv` file from CSV export
 - Deprecated `CLICKHOUSE_MAX_BUFFER_SIZE`
 
@@ -44,6 +47,7 @@ All notable changes to this project will be documented in this file.
 - Log mailer errors plausible/analytics#3336
 - Allow custom event timeseries in stats API plausible/analytics#3505
 - Fixes for sites with UTF characters in domain plausible/analytics#3560
+- Fix crash when using special characters in filter plausible/analytics#3634
 
 ## v2.0.0 - 2023-07-12
 

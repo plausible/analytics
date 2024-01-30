@@ -1,208 +1,101 @@
 defmodule Plausible.Stats.FiltersTest do
   use ExUnit.Case, async: true
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.Filters
 
-  def assert_parsed(filters, expected_output) do
-    new_query =
-      %Query{filters: filters}
-      |> Filters.add_prefix()
+  doctest Plausible.Stats.Filters
+  doctest Plausible.Stats.Filters.Utils
 
-    assert new_query.filters == expected_output
+  def assert_parsed(input, expected_output) do
+    assert Filters.parse(input) == expected_output
   end
 
-  describe "adding prefix" do
-    test "adds appropriate prefix to filter" do
-      %{"page" => "/"}
-      |> assert_parsed(%{"event:page" => {:is, "/"}})
-
-      %{"goal" => "Signup"}
-      |> assert_parsed(%{"event:goal" => {:is, {:event, "Signup"}}})
-
-      %{"goal" => "Visit /blog"}
-      |> assert_parsed(%{"event:goal" => {:is, {:page, "/blog"}}})
-
-      %{"source" => "Google"}
-      |> assert_parsed(%{"visit:source" => {:is, "Google"}})
-
-      %{"referrer" => "cnn.com"}
-      |> assert_parsed(%{"visit:referrer" => {:is, "cnn.com"}})
-
-      %{"utm_medium" => "search"}
-      |> assert_parsed(%{"visit:utm_medium" => {:is, "search"}})
-
-      %{"utm_source" => "bing"}
-      |> assert_parsed(%{"visit:utm_source" => {:is, "bing"}})
-
-      %{"utm_content" => "content"}
-      |> assert_parsed(%{"visit:utm_content" => {:is, "content"}})
-
-      %{"utm_term" => "term"}
-      |> assert_parsed(%{"visit:utm_term" => {:is, "term"}})
-
-      %{"screen" => "Desktop"}
-      |> assert_parsed(%{"visit:screen" => {:is, "Desktop"}})
-
-      %{"browser" => "Opera"}
-      |> assert_parsed(%{"visit:browser" => {:is, "Opera"}})
-
-      %{"browser_version" => "10.1"}
-      |> assert_parsed(%{"visit:browser_version" => {:is, "10.1"}})
-
-      %{"os" => "Linux"}
-      |> assert_parsed(%{"visit:os" => {:is, "Linux"}})
-
-      %{"os_version" => "13.0"}
-      |> assert_parsed(%{"visit:os_version" => {:is, "13.0"}})
-
-      %{"country" => "EE"}
-      |> assert_parsed(%{"visit:country" => {:is, "EE"}})
-
-      %{"region" => "EE-12"}
-      |> assert_parsed(%{"visit:region" => {:is, "EE-12"}})
-
-      %{"city" => "123"}
-      |> assert_parsed(%{"visit:city" => {:is, "123"}})
-
-      %{"entry_page" => "/blog"}
-      |> assert_parsed(%{"visit:entry_page" => {:is, "/blog"}})
-
-      %{"exit_page" => "/blog"}
-      |> assert_parsed(%{"visit:exit_page" => {:is, "/blog"}})
-
-      %{"props" => %{"cta" => "Top"}}
-      |> assert_parsed(%{"event:props:cta" => {:is, "Top"}})
-    end
-  end
-
-  describe "escaping pipe character" do
-    test "in simple is filter" do
-      %{"goal" => ~S(Foo \| Bar)}
-      |> assert_parsed(%{"event:goal" => {:is, {:event, "Foo | Bar"}}})
+  describe "parses filter expression" do
+    test "simple positive" do
+      "event:name==pageview"
+      |> assert_parsed(%{"event:name" => {:is, "pageview"}})
     end
 
-    test "in member filter" do
-      %{"page" => ~S(/|\|)}
-      |> assert_parsed(%{"event:page" => {:member, ["/", "|"]}})
-    end
-  end
-
-  describe "is not filter type" do
-    test "simple is not filter" do
-      %{"page" => "!/"}
-      |> assert_parsed(%{"event:page" => {:is_not, "/"}})
-
-      %{"props" => %{"cta" => "!Top"}}
-      |> assert_parsed(%{"event:props:cta" => {:is_not, "Top"}})
-    end
-  end
-
-  describe "member filter type" do
-    test "simple member filter" do
-      %{"page" => "/|/blog"}
-      |> assert_parsed(%{"event:page" => {:member, ["/", "/blog"]}})
+    test "simple negative" do
+      "event:name!=pageview"
+      |> assert_parsed(%{"event:name" => {:is_not, "pageview"}})
     end
 
-    test "escaping pipe character" do
-      %{"page" => "/|\\|"}
-      |> assert_parsed(%{"event:page" => {:member, ["/", "|"]}})
+    test "whitespace is trimmed" do
+      " event:name == pageview "
+      |> assert_parsed(%{"event:name" => {:is, "pageview"}})
     end
 
-    test "mixed goals" do
-      %{"goal" => "Signup|Visit /thank-you"}
-      |> assert_parsed(%{"event:goal" => {:member, [{:event, "Signup"}, {:page, "/thank-you"}]}})
-
-      %{"goal" => "Visit /thank-you|Signup"}
-      |> assert_parsed(%{"event:goal" => {:member, [{:page, "/thank-you"}, {:event, "Signup"}]}})
-    end
-  end
-
-  describe "matches_member filter type" do
-    test "parses matches_member filter type" do
-      %{"page" => "/|/blog**"}
-      |> assert_parsed(%{"event:page" => {:matches_member, ["/", "/blog**"]}})
-    end
-
-    test "parses not_matches_member filter type" do
-      %{"page" => "!/|/blog**"}
-      |> assert_parsed(%{"event:page" => {:not_matches_member, ["/", "/blog**"]}})
-    end
-  end
-
-  describe "contains filter type" do
-    test "single contains" do
-      %{"page" => "~blog"}
-      |> assert_parsed(%{"event:page" => {:matches, "**blog**"}})
-    end
-
-    test "negated contains" do
-      %{"page" => "!~articles"}
-      |> assert_parsed(%{"event:page" => {:does_not_match, "**articles**"}})
-    end
-
-    test "contains member" do
-      %{"page" => "~articles|blog"}
-      |> assert_parsed(%{"event:page" => {:matches_member, ["**articles**", "**blog**"]}})
-    end
-
-    test "not contains member" do
-      %{"page" => "!~articles|blog"}
-      |> assert_parsed(%{"event:page" => {:not_matches_member, ["**articles**", "**blog**"]}})
-    end
-  end
-
-  describe "not_member filter type" do
-    test "simple not_member filter" do
-      %{"page" => "!/|/blog"}
-      |> assert_parsed(%{"event:page" => {:not_member, ["/", "/blog"]}})
-    end
-
-    test "mixed goals" do
-      %{"goal" => "!Signup|Visit /thank-you"}
-      |> assert_parsed(%{
-        "event:goal" => {:not_member, [{:event, "Signup"}, {:page, "/thank-you"}]}
-      })
-
-      %{"goal" => "!Visit /thank-you|Signup"}
-      |> assert_parsed(%{
-        "event:goal" => {:not_member, [{:page, "/thank-you"}, {:event, "Signup"}]}
-      })
-    end
-  end
-
-  describe "matches filter type" do
-    test "can be used with `goal` or `page` filters" do
-      %{"page" => "/blog/post-*"}
+    test "wildcard" do
+      "event:page==/blog/post-*"
       |> assert_parsed(%{"event:page" => {:matches, "/blog/post-*"}})
-
-      %{"goal" => "Visit /blog/post-*"}
-      |> assert_parsed(%{"event:goal" => {:matches, {:page, "/blog/post-*"}}})
     end
 
-    test "other filters default to `is` even when wildcard is present" do
-      %{"country" => "Germa**"}
-      |> assert_parsed(%{"visit:country" => {:is, "Germa**"}})
-    end
-  end
-
-  describe "does_not_match filter type" do
-    test "can be used with `page` filter" do
-      %{"page" => "!/blog/post-*"}
+    test "negative wildcard" do
+      "event:page!=/blog/post-*"
       |> assert_parsed(%{"event:page" => {:does_not_match, "/blog/post-*"}})
     end
 
-    test "other filters default to is_not even when wildcard is present" do
-      %{"country" => "!Germa**"}
-      |> assert_parsed(%{"visit:country" => {:is_not, "Germa**"}})
+    test "custom event goal" do
+      "event:goal==Signup"
+      |> assert_parsed(%{"event:goal" => {:is, {:event, "Signup"}}})
     end
-  end
 
-  describe "contains prefix filter type" do
-    test "can be used with any filter" do
-      %{"page" => "~/blog/post"}
-      |> assert_parsed(%{"event:page" => {:matches, "**/blog/post**"}})
+    test "pageview goal" do
+      "event:goal==Visit /blog"
+      |> assert_parsed(%{"event:goal" => {:is, {:page, "/blog"}}})
+    end
 
-      %{"source" => "~facebook"}
-      |> assert_parsed(%{"visit:source" => {:matches, "**facebook**"}})
+    test "member" do
+      "visit:country==FR|GB|DE"
+      |> assert_parsed(%{"visit:country" => {:member, ["FR", "GB", "DE"]}})
+    end
+
+    test "member + wildcard" do
+      "event:page==/blog**|/newsletter|/*/"
+      |> assert_parsed(%{"event:page" => {:matches, "/blog**|/newsletter|/*/"}})
+    end
+
+    test "combined with \";\"" do
+      "event:page==/blog**|/newsletter|/*/ ; visit:country==FR|GB|DE"
+      |> assert_parsed(%{
+        "event:page" => {:matches, "/blog**|/newsletter|/*/"},
+        "visit:country" => {:member, ["FR", "GB", "DE"]}
+      })
+    end
+
+    test "escaping pipe character" do
+      "utm_campaign==campaign \\| 1"
+      |> assert_parsed(%{"utm_campaign" => {:is, "campaign | 1"}})
+    end
+
+    test "escaping pipe character in member filter" do
+      "utm_campaign==campaign \\| 1|campaign \\| 2"
+      |> assert_parsed(%{"utm_campaign" => {:member, ["campaign | 1", "campaign | 2"]}})
+    end
+
+    test "keeps escape characters in member + wildcard filter" do
+      "event:page==/**\\|page|/other/page"
+      |> assert_parsed(%{"event:page" => {:matches, "/**\\|page|/other/page"}})
+    end
+
+    test "gracefully fails to parse garbage" do
+      "bfg10309\uff1cs1\ufe65s2\u02bas3\u02b9hjl10309"
+      |> assert_parsed(%{})
+    end
+
+    test "gracefully fails to parse garbage with double quotes" do
+      "\";print(md5(31337));$a=\""
+      |> assert_parsed(%{})
+    end
+
+    test "gracefully fails to parse garbage country code" do
+      "visit:country==AKSJSDFKJSS"
+      |> assert_parsed(%{})
+    end
+
+    test "gracefully fails to parse garbage country code (with pipes)" do
+      "visit:country==ET'||DBMS_PIPE.RECEIVE_MESSAGE(CHR(98)||CHR(98)||CHR(98),15)||'"
+      |> assert_parsed(%{})
     end
   end
 end

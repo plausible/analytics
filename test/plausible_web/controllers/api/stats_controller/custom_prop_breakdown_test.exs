@@ -1046,6 +1046,42 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                }
              ]
     end
+
+    test "returns prop-breakdown with a prop_value matching filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["key"], "meta.value": ["foo"]),
+        build(:pageview, "meta.key": ["key"], "meta.value": ["bar"]),
+        build(:pageview, "meta.key": ["key"], "meta.value": ["bar"]),
+        build(:pageview, "meta.key": ["key"], "meta.value": ["foobar"]),
+        build(:pageview)
+      ])
+
+      filters = Jason.encode!(%{props: %{key: "~bar"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/key?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 2,
+                 "name" => "bar",
+                 "events" => 2,
+                 "percentage" => 66.7
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "foobar",
+                 "events" => 1,
+                 "percentage" => 33.3
+               }
+             ]
+    end
   end
 
   describe "GET /api/stats/:domain/custom-prop-values/:prop_key - for a Growth subscription" do

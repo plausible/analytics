@@ -273,6 +273,16 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr :rest, :global, include: ~w(fill stroke stroke-width)
+  attr :name, :atom, required: true
+  attr :outline, :boolean, default: true
+  attr :solid, :boolean, default: false
+  attr :mini, :boolean, default: false
+
+  def dynamic_icon(assigns) do
+    apply(Heroicons, assigns.name, [assigns])
+  end
+
   defp icon_class(link_assigns) do
     if String.contains?(link_assigns[:class], "text-sm") do
       ["w-3 h-3"]

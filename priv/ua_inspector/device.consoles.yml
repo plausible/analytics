@@ -46,9 +46,17 @@ JXD:
   model: 'S601 WiFi'
 
 Sony:
-  regex: 'PlayStation ?(2|3|4 Pro|4|5|Portable|Vita)'
+  regex: '(?:PlayStation ?(2|3|4 Pro|4|5|Portable|Vita)|sony_tv;ps5;|\(PS3\))'
   device: 'console'
-  model: 'PlayStation $1'
+  models:
+    - regex: 'sony_tv;ps5;'
+      model: 'PlayStation 5'
+    - regex: 'PlayStation 4 PRO'
+      model: 'PlayStation 4 Pro'
+    - regex: '\(PS3\)'
+      model: 'PlayStation 3'
+    - regex: 'PlayStation ?(2|3|4 Pro|4|5|Portable|Vita)'
+      model: 'PlayStation $1'
 
 # Retroid Pocket (www.goretroid.com)
 Retroid Pocket:

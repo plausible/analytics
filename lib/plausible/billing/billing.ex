@@ -190,13 +190,19 @@ defmodule Plausible.Billing do
       amount =
         :erlang.float_to_binary(api_subscription["next_payment"]["amount"] / 1, decimals: 2)
 
+      subscription =
+        subscription
+        |> Subscription.changeset(%{
+          next_bill_amount: amount,
+          next_bill_date: api_subscription["next_payment"]["date"],
+          last_bill_date: api_subscription["last_payment"]["date"]
+        })
+        |> Repo.update!()
+        |> Repo.preload(:user)
+
+      Plausible.Users.update_accept_traffic_until(subscription.user)
+
       subscription
-      |> Subscription.changeset(%{
-        next_bill_amount: amount,
-        next_bill_date: api_subscription["next_payment"]["date"],
-        last_bill_date: api_subscription["last_payment"]["date"]
-      })
-      |> Repo.update!()
     end
   end
 
