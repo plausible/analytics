@@ -394,6 +394,22 @@ defmodule Plausible.BillingTest do
   end
 
   describe "subscription_payment_succeeded" do
+    @tag :full_build_only
+    test "updates accept_traffic_until" do
+      user = insert(:user)
+      subscription = insert(:subscription, user: user)
+
+      refute user.accept_traffic_until
+
+      Billing.subscription_payment_succeeded(%{
+        "alert_name" => "subscription_payment_succeeded",
+        "subscription_id" => subscription.paddle_subscription_id
+      })
+
+      user = Plausible.Users.with_subscription(user.id)
+      assert user.accept_traffic_until == Date.add(user.subscription.next_bill_date, 30)
+    end
+
     test "sets the next bill amount and date, last bill date" do
       user = insert(:user)
       subscription = insert(:subscription, user: user)

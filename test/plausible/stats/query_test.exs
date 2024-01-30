@@ -15,6 +15,19 @@ defmodule Plausible.Stats.QueryTest do
     {:ok, site: site, user: user}
   end
 
+  @tag :slow
+  test "keeps current timestamp so that utc_boundaries don't depend on time passing by", %{
+    site: site
+  } do
+    q1 = %{now: %NaiveDateTime{}} = Query.from(site, %{"period" => "realtime"})
+    q2 = %{now: %NaiveDateTime{}} = Query.from(site, %{"period" => "30m"})
+    boundaries1 = Plausible.Stats.Base.utc_boundaries(q1, site)
+    boundaries2 = Plausible.Stats.Base.utc_boundaries(q2, site)
+    :timer.sleep(1500)
+    assert ^boundaries1 = Plausible.Stats.Base.utc_boundaries(q1, site)
+    assert ^boundaries2 = Plausible.Stats.Base.utc_boundaries(q2, site)
+  end
+
   test "parses day format", %{site: site} do
     q = Query.from(site, %{"period" => "day", "date" => "2019-01-01"})
 
@@ -175,14 +188,14 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"goal" => "Signup"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters["goal"] == "Signup"
+      assert q.filters["event:goal"] == {:is, {:event, "Signup"}}
     end
 
     test "parses source filter", %{site: site} do
       filters = Jason.encode!(%{"source" => "Twitter"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters["source"] == "Twitter"
+      assert q.filters["visit:source"] == {:is, "Twitter"}
     end
 
     test "allows prop filters when site owner is on a business plan", %{site: site, user: user} do
@@ -190,7 +203,7 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
       query = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert Map.has_key?(query.filters, "props")
+      assert Map.has_key?(query.filters, "event:props:author")
     end
 
     test "drops prop filter when site owner is on a growth plan", %{site: site, user: user} do

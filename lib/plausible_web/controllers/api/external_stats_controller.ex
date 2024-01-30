@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  alias Plausible.Stats.{Query, CustomProps}
+  alias Plausible.Stats.Query
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
@@ -16,6 +16,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     with :ok <- validate_period(params),
          :ok <- validate_date(params),
          query <- Query.from(site, params),
+         :ok <- validate_goal_filter(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
          :ok <- ensure_custom_props_access(site, query) do
       results =
@@ -55,22 +56,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          {:ok, property} <- validate_property(params),
          query <- Query.from(site, params),
+         :ok <- validate_goal_filter(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, property, query),
          {:ok, limit} <- validate_or_default_limit(params),
          :ok <- ensure_custom_props_access(site, query, property) do
       page = String.to_integer(Map.get(params, "page", "1"))
       results = Plausible.Stats.breakdown(site, query, property, metrics, {limit, page})
-
-      results =
-        if property == "event:goal" do
-          prop_names = CustomProps.props_for_all_event_names(site, query)
-
-          Enum.map(results, fn row ->
-            Map.put(row, "props", prop_names[row[:goal]] || [])
-          end)
-        else
-          results
-        end
 
       json(conn, %{results: results})
     else
@@ -106,6 +97,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   defp validate_or_default_limit(_), do: {:ok, @default_breakdown_limit}
 
   defp event_only_property?("event:name"), do: true
+  defp event_only_property?("event:goal"), do: true
   defp event_only_property?("event:props:" <> _), do: true
   defp event_only_property?(_), do: false
 
@@ -203,6 +195,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- validate_date(params),
          :ok <- validate_interval(params),
          query <- Query.from(site, params),
+         :ok <- validate_goal_filter(site, query.filters),
          {:ok, metrics} <- parse_and_validate_metrics(params, nil, query),
          :ok <- ensure_custom_props_access(site, query) do
       graph = Plausible.Stats.timeseries(site, query, metrics)
@@ -280,6 +273,39 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_interval(_), do: :ok
+
+  defp validate_goal_filter(site, %{"event:goal" => {_type, goal_filter}}) do
+    configured_goals =
+      Plausible.Goals.for_site(site)
+      |> Enum.map(fn
+        %{page_path: path} when is_binary(path) -> "Visit " <> path
+        %{event_name: event_name} -> event_name
+      end)
+
+    goals_in_filter =
+      List.wrap(goal_filter)
+      |> Plausible.Stats.Filters.Utils.unwrap_goal_value()
+
+    if found = Enum.find(goals_in_filter, &(&1 not in configured_goals)) do
+      msg =
+        goal_not_configured_message(found) <>
+          "Find out how to configure goals here: https://plausible.io/docs/stats-api#filtering-by-goals"
+
+      {:error, msg}
+    else
+      :ok
+    end
+  end
+
+  defp validate_goal_filter(_site, _filters), do: :ok
+
+  defp goal_not_configured_message("Visit " <> page_path) do
+    "The pageview goal for the pathname `#{page_path}` is not configured for this site. "
+  end
+
+  defp goal_not_configured_message(goal) do
+    "The goal `#{goal}` is not configured for this site. "
+  end
 
   defp send_json_error_response(conn, {:error, {status, msg}}) do
     conn
