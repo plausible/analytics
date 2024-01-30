@@ -37,10 +37,14 @@ defmodule Plausible.Purge do
 
   @spec delete_imported_stats!(Plausible.Site.t() | Plausible.Imported.SiteImport.t()) :: :ok
   @doc """
-  Deletes imported stats from Google Analytics, and clears the
-  `stats_start_date` field.
+  Deletes imported stats from and clears the `stats_start_date` field.
+
+  The `stats_start_date` is expected to get repopulated the next time
+  `Plausible.Sites.stats_start_date/1` is called.
+
+  If the input argument is a site, all imported stats are deleted. If it's a site import,
+  only imported stats for that import are deleted.
   """
-  # NOTE: consider getting rid of that clause
   def delete_imported_stats!(%Plausible.Site{} = site) do
     Enum.each(Plausible.Imported.tables(), fn table ->
       sql = "ALTER TABLE #{table} DELETE WHERE site_id = {$0:UInt64}"

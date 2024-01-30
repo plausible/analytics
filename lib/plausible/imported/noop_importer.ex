@@ -26,7 +26,7 @@ defmodule Plausible.Imported.NoopImporter do
   end
 
   @impl true
-  def on_success(site_import) do
+  def on_success(site_import, _extra_data) do
     send(self(), {:on_success, site_import.id})
 
     :ok

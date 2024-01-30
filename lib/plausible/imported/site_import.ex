@@ -7,7 +7,9 @@ defmodule Plausible.Imported.SiteImport do
 
   import Ecto.Changeset
 
+  alias Plausible.Auth.User
   alias Plausible.Imported.ImportSources
+  alias Plausible.Site
 
   @type t() :: %__MODULE__{}
 
@@ -17,17 +19,19 @@ defmodule Plausible.Imported.SiteImport do
     field :source, Ecto.Enum, values: ImportSources.names()
     field :status, Ecto.Enum, values: [:pending, :importing, :completed, :failed]
 
-    belongs_to :site, Plausible.Site
-    belongs_to :imported_by, Plausible.Auth.User
+    belongs_to :site, Site
+    belongs_to :imported_by, User
 
     timestamps()
   end
 
   # NOTE: this is necessary for backwards compatbility
   # with legacy imports
+  @spec label(t() | Site.ImportedData.t()) :: String.t()
   def label(%__MODULE__{source: source}), do: ImportSources.by_name(source).label()
-  def label(%Plausible.Site.ImportedData{source: source}), do: source
+  def label(%Site.ImportedData{source: source}), do: source
 
+  @spec create_changeset(Site.t(), User.t(), map()) :: Ecto.Changeset.t()
   def create_changeset(site, user, params) do
     %__MODULE__{}
     |> cast(params, [:source, :start_date, :end_date])
@@ -37,11 +41,13 @@ defmodule Plausible.Imported.SiteImport do
     |> put_change(:status, :pending)
   end
 
+  @spec start_changeset(t()) :: Ecto.Changeset.t()
   def start_changeset(site_import) do
     site_import
     |> change(status: :importing)
   end
 
+  @spec complete_changeset(t(), map()) :: Ecto.Changeset.t()
   def complete_changeset(site_import, params \\ %{}) do
     site_import
     |> cast(params, [:start_date, :end_date])
@@ -49,6 +55,7 @@ defmodule Plausible.Imported.SiteImport do
     |> validate_required([:start_date, :end_date])
   end
 
+  @spec fail_changeset(t()) :: Ecto.Changeset.t()
   def fail_changeset(site_import) do
     change(site_import, status: :failed)
   end

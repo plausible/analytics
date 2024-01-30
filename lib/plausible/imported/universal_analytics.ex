@@ -32,7 +32,7 @@ defmodule Plausible.Imported.UniversalAnalytics do
   end
 
   @impl true
-  def on_success(site_import) do
+  def on_success(site_import, _extra_data) do
     site = Repo.preload(site_import, :site).site
 
     site

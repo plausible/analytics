@@ -195,7 +195,8 @@ defmodule Plausible.Sites do
   does not have stats yet.
 
   If this is the first time the function is called for the site, it queries
-  Clickhouse and saves the date in the sites table.
+  imported stats and Clickhouse, choosing the earliest start date and saves
+  it in the sites table.
   """
   def stats_start_date(site)
 

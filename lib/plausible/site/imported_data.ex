@@ -4,6 +4,8 @@ defmodule Plausible.Site.ImportedData do
   """
   use Ecto.Schema
 
+  @type t() :: %__MODULE__{}
+
   embedded_schema do
     field :start_date, :date
     field :end_date, :date

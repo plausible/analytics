@@ -1,6 +1,16 @@
 defmodule Plausible.Imported do
   @moduledoc """
   Context for managing site statistics imports.
+
+  Currently following importers are implemented:
+
+  * `Plausible.Imported.UniversalAnalytics` - existing mechanism, for legacy Google
+    analytics formerly known as "Google Analytics"
+  * `Plausible.Imported.NoopImporter` - importer stub, used mainly for testing pruposes
+  * `Plausible.Imported.CSVImporter` - a placeholder stub for CSV importer that will
+    be added soon
+
+  For more information on implementing importers, see `Plausible.Imported.Importer`.
   """
 
   import Ecto.Query
