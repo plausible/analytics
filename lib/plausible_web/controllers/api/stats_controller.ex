@@ -3,7 +3,6 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  import Plausible.Stats.Util
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Comparisons}
   alias PlausibleWeb.Api.Helpers, as: H
@@ -1071,11 +1070,7 @@ defmodule PlausibleWeb.Api.StatsController do
         query
       end
 
-    total_q = Query.remove_event_filters(query, [:goal, :props])
-
-    %{visitors: %{value: total_visitors}} = Stats.aggregate(site, total_q, [:visitors])
-
-    metrics = [:visitors, :events] ++ @revenue_metrics
+    metrics = [:visitors, :events, :conversion_rate] ++ @revenue_metrics
 
     conversions =
       site
@@ -1083,7 +1078,6 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{goal: :name})
       |> Enum.map(fn goal ->
         goal
-        |> Map.put(:conversion_rate, calculate_cr(total_visitors, goal[:visitors]))
         |> Enum.map(&format_revenue_metric/1)
         |> Map.new()
       end)
@@ -1156,28 +1150,20 @@ defmodule PlausibleWeb.Api.StatsController do
       Query.from(site, params)
       |> Map.put(:include_imported, false)
 
-    metrics = [:visitors, :events] ++ @revenue_metrics
+    metrics =
+      if query.filters["event:goal"] do
+        [:visitors, :events, :conversion_rate] ++ @revenue_metrics
+      else
+        [:visitors, :events] ++ @revenue_metrics
+      end
 
-    props =
-      Stats.breakdown(site, query, prefixed_prop, metrics, pagination)
-      |> transform_keys(%{prop_key => :name})
-      |> Enum.map(fn entry ->
-        Enum.map(entry, &format_revenue_metric/1)
-        |> Map.new()
-      end)
-      |> add_percentages(site, query)
-
-    if Map.has_key?(query.filters, "event:goal") do
-      total_q = Query.remove_event_filters(query, [:goal, :props])
-
-      %{visitors: %{value: total_unique_visitors}} = Stats.aggregate(site, total_q, [:visitors])
-
-      Enum.map(props, fn prop ->
-        Map.put(prop, :conversion_rate, calculate_cr(total_unique_visitors, prop.visitors))
-      end)
-    else
-      props
-    end
+    Stats.breakdown(site, query, prefixed_prop, metrics, pagination)
+    |> transform_keys(%{prop_key => :name})
+    |> Enum.map(fn entry ->
+      Enum.map(entry, &format_revenue_metric/1)
+      |> Map.new()
+    end)
+    |> add_percentages(site, query)
   end
 
   def current_visitors(conn, _) do
