@@ -3,8 +3,15 @@
     <div class="xl:grid xl:grid-cols-3 xl:gap-8">
       <div class="my-8 xl:my-0">
         <h4 class="font-semibold tracking-wider text-gray-300 leading-5">
-          <img src="/images/icon/plausible_logo_sm.png" class="inline-block w-6 mr-1" />
-          Plausible Analytics
+          <%= img_tag(
+            PlausibleWeb.Router.Helpers.static_path(
+              @conn,
+              dark_logo_path()
+            ),
+            class: "inline-block w-40 mr-1",
+            alt: "Plausible logo",
+            loading: "lazy"
+          ) %>
         </h4>
         <p class="mt-4 text-base text-gray-400 leading-6">
           <%= if full_build?() do %>

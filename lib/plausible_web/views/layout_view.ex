@@ -40,6 +40,22 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def light_logo_path() do
+    if full_build?() do
+      "/images/icon/ee_logo_light.svg"
+    else
+      "/images/icon/ce_logo_light.svg"
+    end
+  end
+
+  def dark_logo_path() do
+    if full_build?() do
+      "/images/icon/ee_logo_dark.svg"
+    else
+      "/images/icon/ce_logo_dark.svg"
+    end
+  end
+
   def settings_tabs(conn) do
     [
       [key: "General", value: "general", icon: :rocket_launch],
