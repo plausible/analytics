@@ -128,4 +128,96 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       )
     end
   end
+
+  describe "perform/1 notifications" do
+    setup do
+      on_exit(fn ->
+        Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
+          Repo.delete_all(Plausible.Site)
+          Repo.delete_all(Plausible.Auth.User)
+        end)
+
+        :ok
+      end)
+
+      %{
+        import_opts: [
+          start_date: Timex.today() |> Timex.shift(days: -7),
+          end_date: Timex.today()
+        ]
+      }
+    end
+
+    test "sends oban notification to calling process on completion when instructed", %{
+      import_opts: import_opts
+    } do
+      Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
+        user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+        site = insert(:site, members: [user])
+        import_opts = Keyword.put(import_opts, :listen?, true)
+
+        {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
+        import_id = job.args[:import_id]
+
+        job
+        |> Repo.reload!()
+        |> ImportAnalytics.perform()
+
+        assert_receive {:notification, :analytics_imports_jobs, %{"complete" => ^import_id}}
+      end)
+    end
+
+    test "sends oban notification to calling process on permanent failure when instructed", %{
+      import_opts: import_opts
+    } do
+      Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
+        user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+        site = insert(:site, members: [user])
+
+        import_opts =
+          import_opts
+          |> Keyword.put(:listen?, true)
+          |> Keyword.put(:error, true)
+
+        {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
+        import_id = job.args[:import_id]
+
+        job
+        |> Repo.reload!()
+        |> ImportAnalytics.perform()
+
+        assert_receive {:notification, :analytics_imports_jobs, %{"fail" => ^import_id}}
+      end)
+    end
+
+    test "sends oban notification to calling process on transient failure when instructed", %{
+      import_opts: import_opts
+    } do
+      Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
+        user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+        site = insert(:site, members: [user])
+
+        import_opts =
+          import_opts
+          |> Keyword.put(:listen?, true)
+          |> Keyword.put(:crash, true)
+
+        {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
+        import_id = job.args[:import_id]
+
+        site_import = Repo.get(Plausible.Imported.SiteImport, import_id)
+
+        # emulate oban error handler
+        try do
+          job
+          |> Repo.reload!()
+          |> ImportAnalytics.perform()
+        rescue
+          _ -> ImportAnalytics.import_fail_transient(site_import)
+        end
+
+        assert_receive {:notification, :analytics_imports_jobs, %{"transient_fail" => ^import_id}}
+      end)
+    end
+  end
 end

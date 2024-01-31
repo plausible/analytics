@@ -20,6 +20,7 @@ defmodule Plausible.Imported.NoopImporter do
 
   @impl true
   def import_data(_site_import, %{"error" => true}), do: {:error, "Something went wrong"}
+  def import_data(_site_import, %{"crash" => true}), do: raise("boom")
   def import_data(_site_import, _opts), do: :ok
 
   @impl true
