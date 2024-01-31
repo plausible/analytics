@@ -8,18 +8,19 @@ defmodule Plausible.Users do
   import Ecto.Query
 
   alias Plausible.Auth
-  alias Plausible.Billing.{Subscription, Subscriptions}
+  alias Plausible.Billing.Subscription
   alias Plausible.Repo
 
+  @spec on_trial?(Auth.User.t()) :: boolean()
   on_full_build do
     def on_trial?(%Auth.User{trial_expiry_date: nil}), do: false
 
     def on_trial?(user) do
       user = with_subscription(user)
-      not Subscriptions.active?(user.subscription) && trial_days_left(user) >= 0
+      not Plausible.Billing.Subscriptions.active?(user.subscription) && trial_days_left(user) >= 0
     end
   else
-    def on_trial?(_), do: false
+    def on_trial?(_), do: true
   end
 
   @spec trial_days_left(Auth.User.t()) :: integer()
