@@ -97,7 +97,8 @@ defmodule Plausible.Billing do
     user = Plausible.Users.with_subscription(user)
 
     trial_over? =
-      not is_nil(user.trial_expiry_date) and Date.before?(user.trial_expiry_date, Date.utc_today())
+      not is_nil(user.trial_expiry_date) and
+        Date.before?(user.trial_expiry_date, Date.utc_today())
 
     subscription_active? = Subscriptions.active?(user.subscription)
 
