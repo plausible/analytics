@@ -71,12 +71,14 @@ defmodule Plausible.Workers.ImportAnalytics do
   end
 
   def import_fail_transient(site_import) do
-    Importer.notify(site_import, :transient_fail)
-
     Plausible.Purge.delete_imported_stats!(site_import)
+
+    Importer.notify(site_import, :transient_fail)
   end
 
   def import_fail(site_import) do
+    Plausible.Purge.delete_imported_stats!(site_import)
+
     import_api = ImportSources.by_name(site_import.source)
 
     site_import =
@@ -85,8 +87,6 @@ defmodule Plausible.Workers.ImportAnalytics do
       |> Repo.preload(site: [memberships: :user])
 
     Importer.notify(site_import, :fail)
-
-    Plausible.Purge.delete_imported_stats!(site_import)
 
     Enum.each(site_import.site.memberships, fn membership ->
       if membership.role in [:owner, :admin] do
