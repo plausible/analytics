@@ -126,19 +126,10 @@ defmodule Plausible.Stats.Breakdown do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    event_result = breakdown_events(site, query, "event:page", event_metrics, pagination)
-
     event_result =
-      if :time_on_page in metrics do
-        pages = Enum.map(event_result, & &1[:page])
-        time_on_page_result = breakdown_time_on_page(site, query, pages)
-
-        Enum.map(event_result, fn row ->
-          Map.put(row, :time_on_page, time_on_page_result[row[:page]])
-        end)
-      else
-        event_result
-      end
+      site
+      |> breakdown_events(query, "event:page", event_metrics, pagination)
+      |> maybe_add_time_on_page(site, query, metrics)
 
     new_query =
       case event_result do
@@ -242,6 +233,19 @@ defmodule Plausible.Stats.Breakdown do
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
     |> transform_keys(%{operating_system: :os})
+  end
+
+  defp maybe_add_time_on_page(event_results, site, query, metrics) do
+    if :time_on_page in metrics do
+      pages = Enum.map(event_results, & &1[:page])
+      time_on_page_result = breakdown_time_on_page(site, query, pages)
+
+      Enum.map(event_results, fn row ->
+        Map.put(row, :time_on_page, time_on_page_result[row[:page]])
+      end)
+    else
+      event_results
+    end
   end
 
   defp breakdown_time_on_page(_site, _query, []) do
