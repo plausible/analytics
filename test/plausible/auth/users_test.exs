@@ -5,6 +5,41 @@ defmodule Plausible.UsersTest do
   alias Plausible.Auth.User
   alias Plausible.Repo
 
+  describe "trial_days_left" do
+    test "is 30 days for new signup" do
+      user = insert(:user)
+
+      assert Users.trial_days_left(user) == 30
+    end
+
+    test "is based on trial_expiry_date" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: 1))
+
+      assert Users.trial_days_left(user) == 1
+    end
+  end
+
+  describe "on_trial?" do
+    @describetag :full_build_only
+    test "is true with >= 0 trial days left" do
+      user = insert(:user)
+
+      assert Users.on_trial?(user)
+    end
+
+    test "is false with < 0 trial days left" do
+      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: -1))
+
+      refute Users.on_trial?(user)
+    end
+
+    test "is false if user has subscription" do
+      user = insert(:user, subscription: build(:subscription))
+
+      refute Users.on_trial?(user)
+    end
+  end
+
   describe "update_accept_traffic_until" do
     @describetag :full_build_only
     test "update" do

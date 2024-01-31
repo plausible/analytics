@@ -118,7 +118,7 @@ defmodule Plausible.Auth.UserAdmin do
       user.subscription ->
         PlausibleWeb.AuthView.present_subscription_status(user.subscription.status)
 
-      Plausible.Billing.on_trial?(user) ->
+      Plausible.Users.on_trial?(user) ->
         "On trial"
 
       true ->

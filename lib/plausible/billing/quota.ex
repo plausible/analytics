@@ -7,7 +7,7 @@ defmodule Plausible.Billing.Quota do
   import Ecto.Query
   alias Plausible.Auth.User
   alias Plausible.Site
-  alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
+  alias Plausible.Billing.{Plan, Plans, Subscription, Subscriptions, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
   @type limit() :: :site_limit | :pageview_limit | :team_member_limit
@@ -180,7 +180,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   def monthly_pageview_usage(user, site_ids) do
-    active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
+    active_subscription? = Subscriptions.active?(user.subscription)
 
     if active_subscription? && user.subscription.last_bill_date do
       [:current_cycle, :last_cycle, :penultimate_cycle]

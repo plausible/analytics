@@ -277,7 +277,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     plan =
       Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
 
-    trial? = Plausible.Billing.on_trial?(assigns.billable_user)
+    trial? = Plausible.Users.on_trial?(assigns.billable_user)
     growth? = plan && plan.kind == :growth
 
     cond do

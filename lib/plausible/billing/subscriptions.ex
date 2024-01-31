@@ -4,6 +4,17 @@ defmodule Plausible.Billing.Subscriptions do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
+  def active?(%Subscription{status: Subscription.Status.active()}), do: true
+  def active?(%Subscription{status: Subscription.Status.past_due()}), do: true
+
+  def active?(%Subscription{status: Subscription.Status.deleted()} = subscription) do
+    not is_nil(subscription.next_bill_date) and
+      not Date.before?(subscription.next_bill_date, Date.utc_today())
+  end
+
+  def active?(%Subscription{}), do: false
+  def active?(nil), do: false
+
   @spec expired?(Subscription.t()) :: boolean()
   @doc """
   Returns whether the given subscription is expired. That means that the

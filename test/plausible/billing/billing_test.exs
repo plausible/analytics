@@ -5,41 +5,6 @@ defmodule Plausible.BillingTest do
   alias Plausible.Billing
   alias Plausible.Billing.Subscription
 
-  describe "trial_days_left" do
-    test "is 30 days for new signup" do
-      user = insert(:user)
-
-      assert Billing.trial_days_left(user) == 30
-    end
-
-    test "is based on trial_expiry_date" do
-      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: 1))
-
-      assert Billing.trial_days_left(user) == 1
-    end
-  end
-
-  describe "on_trial?" do
-    @describetag :full_build_only
-    test "is true with >= 0 trial days left" do
-      user = insert(:user)
-
-      assert Billing.on_trial?(user)
-    end
-
-    test "is false with < 0 trial days left" do
-      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: -1))
-
-      refute Billing.on_trial?(user)
-    end
-
-    test "is false if user has subscription" do
-      user = insert(:user, subscription: build(:subscription))
-
-      refute Billing.on_trial?(user)
-    end
-  end
-
   describe "check_needs_to_upgrade" do
     test "is false for a trial user" do
       user = insert(:user)

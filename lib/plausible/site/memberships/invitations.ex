@@ -10,6 +10,7 @@ defmodule Plausible.Site.Memberships.Invitations do
   alias Plausible.Repo
   alias Plausible.Billing.Quota
   alias Plausible.Billing.Feature
+  alias Plausible.Billing.Subscriptions
 
   @type missing_features_error() :: {:missing_features, [Feature.t()]}
 
@@ -72,7 +73,7 @@ defmodule Plausible.Site.Memberships.Invitations do
       new_owner = Plausible.Users.with_subscription(new_owner)
       plan = Plausible.Billing.Plans.get_subscription_plan(new_owner.subscription)
 
-      active_subscription? = Plausible.Billing.subscription_is_active?(new_owner.subscription)
+      active_subscription? = Subscriptions.active?(new_owner.subscription)
 
       if active_subscription? && plan != :free_10k do
         usage_after_transfer = %{
