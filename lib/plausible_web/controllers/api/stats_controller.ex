@@ -709,7 +709,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     query =
       Query.from(site, params)
-      |> Query.put_filter("visit:source", {:is, "Google"})
+      |> Query.put_filter("visit:source", "Google")
 
     search_terms =
       if site.google_auth && site.google_auth.property && !query.filters["goal"] do
@@ -744,7 +744,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
     query =
       Query.from(site, params)
-      |> Query.put_filter("visit:source", {:is, referrer})
+      |> Query.put_filter("visit:source", referrer)
 
     pagination = parse_pagination(params)
 
