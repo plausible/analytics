@@ -452,7 +452,7 @@ defmodule Plausible.Billing.Quota do
         if Users.on_trial?(user) do
           Feature.list()
         else
-          []
+          [Goals]
         end
     end
   end

@@ -502,7 +502,7 @@ defmodule Plausible.Billing.QuotaTest do
     on_full_build do
       test "users with expired trials have no access to subscription features" do
         user = insert(:user, trial_expiry_date: ~D[2023-01-01])
-        assert [] == Quota.allowed_features_for(user)
+        assert [Goals] == Quota.allowed_features_for(user)
       end
     end
 
