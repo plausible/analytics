@@ -296,7 +296,10 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         """
 
       true ->
-        ~H"please contact hello@plausible.io to upgrade your subscription"
+        ~H"""
+        please contact <a href="mailto:hello@plausible.io" class="underline">hello@plausible.io</a>
+        to upgrade your subscription
+        """
     end
   end
 
