@@ -29,7 +29,7 @@ defmodule Plausible.Stats.Util do
   Currently, the conversion rate cannot be queried from the
   database with a simple select clause - instead, we need to
   fetch the database result first, and then manually add it
-  into each entry of the breakdown list.
+  into the aggregate map or every entry of thebreakdown list.
 
   In order for us to be able to calculate it based on the
   results returned by the database query, the visitors metric
@@ -50,12 +50,21 @@ defmodule Plausible.Stats.Util do
 
   @doc """
   This function removes the manually added `visitors` metric
-  from the breakdown response. See `maybe_add_visitors_metric/1`
+  from the results returned by the db query (either aggregate
+  map or breakdown list). See `maybe_add_visitors_metric/1`
   for more information.
   """
-  def maybe_remove_visitors_metric(results, asked_metrics) do
+  def maybe_remove_visitors_metric(results, asked_metrics) when is_list(results) do
     if :visitors not in asked_metrics do
       Enum.map(results, &Map.delete(&1, :visitors))
+    else
+      results
+    end
+  end
+
+  def maybe_remove_visitors_metric(results, asked_metrics) when is_map(results) do
+    if :visitors not in asked_metrics do
+      Map.delete(results, :visitors)
     else
       results
     end

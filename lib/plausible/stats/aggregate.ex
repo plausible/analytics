@@ -26,8 +26,13 @@ defmodule Plausible.Stats.Aggregate do
 
     Query.trace(query, metrics)
 
-    event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
+    event_metrics =
+      metrics
+      |> maybe_add_visitors_metric()
+      |> Enum.filter(&(&1 in @event_metrics))
+
     event_task = fn -> aggregate_events(site, query, event_metrics) end
+
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
     session_task = fn -> aggregate_sessions(site, query, session_metrics) end
 
@@ -41,6 +46,7 @@ defmodule Plausible.Stats.Aggregate do
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
     |> maybe_put_cr(site, query, metrics)
+    |> maybe_remove_visitors_metric(metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
     |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
@@ -55,11 +61,7 @@ defmodule Plausible.Stats.Aggregate do
         |> then(fn query -> aggregate_events(site, query, [:visitors]) end)
         |> Map.fetch!(:visitors)
 
-      converted =
-        case aggregate_result do
-          %{visitors: visitors} -> visitors
-          _ -> aggregate_events(site, query, [:visitors]).visitors
-        end
+      converted = aggregate_result.visitors
 
       cr = calculate_cr(all, converted)
 
