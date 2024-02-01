@@ -1,9 +1,17 @@
 defmodule ObanErrorReporter do
+  require Logger
+
   def handle_event(name, measurements, metadata, _) do
-    # handling telemetry event in an unlinked process
+    # handling telemetry event in a try/catch block
     # to avoid handler detachment in the case of an error
     # see https://hexdocs.pm/telemetry/telemetry.html#attach/4
-    Task.start(fn -> handle_event(name, measurements, metadata) end)
+    try do
+      handle_event(name, measurements, metadata)
+    catch
+      kind, reason ->
+        message = Exception.format(kind, reason, __STACKTRACE__)
+        Logger.error(message)
+    end
   end
 
   defp handle_event([:oban, :job, :exception], measure, %{job: job} = meta) do
