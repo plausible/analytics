@@ -26,13 +26,8 @@ defmodule Plausible.Stats.Filters.DashboardFilterParser do
     end)
   end
 
-  defp put_parsed_props(new_filters, name, val) do
-    Enum.reduce(val, new_filters, fn {prop_key, prop_val}, new_filters ->
-      Map.put(new_filters, "event:props:" <> prop_key, filter_value(name, prop_val))
-    end)
-  end
-
-  defp filter_value(key, val) do
+  @spec filter_value(String.t(), String.t()) :: {atom(), String.t() | [String.t()]}
+  def filter_value(key, val) do
     {is_negated, val} = parse_negated_prefix(val)
     {is_contains, val} = parse_contains_prefix(val)
     is_list = list_expression?(val)
@@ -55,6 +50,12 @@ defmodule Plausible.Stats.Filters.DashboardFilterParser do
       is_wildcard -> {:matches, val}
       true -> {:is, val}
     end
+  end
+
+  defp put_parsed_props(new_filters, name, val) do
+    Enum.reduce(val, new_filters, fn {prop_key, prop_val}, new_filters ->
+      Map.put(new_filters, "event:props:" <> prop_key, filter_value(name, prop_val))
+    end)
   end
 
   defp parse_negated_prefix("!" <> val), do: {true, val}
