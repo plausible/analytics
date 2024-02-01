@@ -52,7 +52,7 @@ function filterText(filterType, key, query) {
   const formattedFilter = formattedFilters[key]
 
   if (filterType === "props") {
-    const [{ propKey, clauses, type }] = parseQueryPropsFilter(query).filter((filter) => filter.propKey.value === key)
+    const { propKey, clauses, type } = parseQueryPropsFilter(query).find((filter) => filter.propKey.value === key)
     return <>Property <b>{propKey.label}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   } else if (formattedFilter) {
     const {type, clauses} = parseQueryFilter(query, key)
