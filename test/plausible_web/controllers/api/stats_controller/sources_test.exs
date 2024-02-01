@@ -1460,11 +1460,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
     test "works when filter expression is provided for source", %{
       conn: conn,
-      user: user,
       site: site
     } do
-      insert(:google_auth, user: user, user: user, site: site, property: "sc-domain:example.com")
-
       populate_stats(site, [
         build(:pageview,
           referrer_source: "DuckDuckGo",
