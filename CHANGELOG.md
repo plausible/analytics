@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Display `Total visitors`, `Conversions`, and `CR` in the "Details" views of Countries, Regions and Cities (when filtering by a goal)
+- Add `conversion_rate` to Regions and Cities reports (when filtering by a goal)
+- Add the `conversion_rate` metric to Stats API Breakdown and Aggregate endpoints
 - Wildcard and member filtering on the Stats API `event:goal` property
 - Allow filtering with `contains`/`matches` operator for custom properties
 - Add `referrers.csv` to CSV export
