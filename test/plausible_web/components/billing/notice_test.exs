@@ -121,7 +121,9 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       )
 
     assert rendered =~ "Your account is limited to 10 users."
-    assert Floki.text(rendered) =~ "please contact hello@plausible.io to upgrade your subscription"
+
+    assert Floki.text(rendered) =~
+             "please contact hello@plausible.io to upgrade your subscription"
   end
 
   @tag :full_build_only
@@ -137,6 +139,8 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       )
 
     assert rendered =~ "Your account is limited to 10 users."
-    assert Floki.text(rendered) =~ "please contact hello@plausible.io to upgrade your subscription"
+
+    assert Floki.text(rendered) =~
+             "please contact hello@plausible.io to upgrade your subscription"
   end
 end
