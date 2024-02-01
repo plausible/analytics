@@ -15,7 +15,12 @@ defmodule ObanErrorReporterTest do
 
     @tag :capture_log
     test "doesn't detach on failure" do
-      :telemetry.execute([:oban, :job, :exception], %{}, %{job: %{}})
+      :ok =
+        :telemetry.execute(
+          [:oban, :job, :exception],
+          _bad_measurements = %{},
+          _bad_metadata = %{job: :bad_job}
+        )
 
       handlers = :telemetry.list_handlers([:oban, :job, :exception])
       assert Enum.any?(handlers, &(&1.id == "oban-errors-test"))
@@ -24,10 +29,15 @@ defmodule ObanErrorReporterTest do
     test "logs an error on failure" do
       log =
         ExUnit.CaptureLog.capture_log(fn ->
-          :telemetry.execute([:oban, :job, :exception], %{}, %{job: %{}})
+          :ok =
+            :telemetry.execute(
+              [:oban, :job, :exception],
+              _bad_measurements = %{},
+              _bad_metadata = %{job: :bad_job}
+            )
         end)
 
-      assert log =~ "[error] ** (KeyError) key :reason not found in: %{job: %{}}"
+      assert log =~ "[error] ** (BadMapError) expected a map, got: :bad_job"
     end
   end
 end
