@@ -20,7 +20,7 @@ defmodule Plausible.Site.GateKeeper do
   a Site by domain using `Plausible.Cache` interface.
 
   The module defines two policies outside the regular bucket inspection:
-    * when the the site is not found in cache: #{@policy_for_non_existing_sites}
+    * when the site is not found in cache: #{@policy_for_non_existing_sites}
     * when the underlying rate limiting mechanism returns
       an internal error: :allow
   """

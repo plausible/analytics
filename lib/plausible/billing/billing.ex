@@ -2,6 +2,7 @@ defmodule Plausible.Billing do
   use Plausible
   use Plausible.Repo
   require Plausible.Billing.Subscription.Status
+  alias Plausible.Billing.Subscriptions
   alias Plausible.Billing.{Subscription, Plans, Quota}
   alias Plausible.Auth.User
 
@@ -94,40 +95,26 @@ defmodule Plausible.Billing do
           | :no_upgrade_needed
   def check_needs_to_upgrade(user) do
     user = Plausible.Users.with_subscription(user)
-    trial_is_over = user.trial_expiry_date && Timex.before?(user.trial_expiry_date, Timex.today())
-    subscription_active = subscription_is_active?(user.subscription)
+
+    trial_over? =
+      not is_nil(user.trial_expiry_date) and
+        Date.before?(user.trial_expiry_date, Date.utc_today())
+
+    subscription_active? = Subscriptions.active?(user.subscription)
 
     cond do
-      !user.trial_expiry_date && !subscription_active -> {:needs_to_upgrade, :no_trial}
-      trial_is_over && !subscription_active -> {:needs_to_upgrade, :no_active_subscription}
-      Plausible.Auth.GracePeriod.expired?(user) -> {:needs_to_upgrade, :grace_period_ended}
-      true -> :no_upgrade_needed
+      is_nil(user.trial_expiry_date) and not subscription_active? ->
+        {:needs_to_upgrade, :no_trial}
+
+      trial_over? and not subscription_active? ->
+        {:needs_to_upgrade, :no_active_subscription}
+
+      Plausible.Auth.GracePeriod.expired?(user) ->
+        {:needs_to_upgrade, :grace_period_ended}
+
+      true ->
+        :no_upgrade_needed
     end
-  end
-
-  def subscription_is_active?(%Subscription{status: Subscription.Status.active()}), do: true
-  def subscription_is_active?(%Subscription{status: Subscription.Status.past_due()}), do: true
-
-  def subscription_is_active?(%Subscription{status: Subscription.Status.deleted()} = subscription) do
-    subscription.next_bill_date && !Timex.before?(subscription.next_bill_date, Timex.today())
-  end
-
-  def subscription_is_active?(%Subscription{}), do: false
-  def subscription_is_active?(nil), do: false
-
-  on_full_build do
-    def on_trial?(%User{trial_expiry_date: nil}), do: false
-
-    def on_trial?(user) do
-      user = Plausible.Users.with_subscription(user)
-      !subscription_is_active?(user.subscription) && trial_days_left(user) >= 0
-    end
-  else
-    def on_trial?(_), do: false
-  end
-
-  def trial_days_left(user) do
-    Timex.diff(user.trial_expiry_date, Timex.today(), :days)
   end
 
   defp handle_subscription_created(params) do

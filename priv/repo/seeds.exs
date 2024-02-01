@@ -43,7 +43,7 @@ site =
     memberships: [
       Plausible.Factory.build(:site_membership, user: user, role: :owner),
       Plausible.Factory.build(:site_membership,
-        user: Plausible.Factory.build(:user, name: "Arnold Wallaby"),
+        user: Plausible.Factory.build(:user, name: "Arnold Wallaby", password: "plausible"),
         role: :viewer
       )
     ]

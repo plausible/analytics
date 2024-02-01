@@ -194,7 +194,7 @@ defmodule Plausible.Billing.Feature.StatsAPI do
   @doc """
   Checks whether the user has access to Stats API or not.
 
-  Before the the business tier, users who had not yet started their trial had
+  Before the business tier, users who had not yet started their trial had
   access to Stats API. With the business tier work, access is blocked and they
   must either start their trial or subscribe to a plan. This is common when a
   site owner invites a new user. In such cases, using the owner's API key is
