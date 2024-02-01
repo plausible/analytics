@@ -352,7 +352,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{
-               "conversion_rate" => %{"value" => 50.0, "change" => 50.0}
+               "conversion_rate" => %{"value" => 50.0, "change" => 16.7}
              }
     end
   end
