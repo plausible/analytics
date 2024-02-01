@@ -14,16 +14,16 @@ export const ALLOW_FREE_CHOICE = new Set(
   FILTER_GROUPS['page'].concat(FILTER_GROUPS['utm']).concat(['prop_value'])
 )
 
-export const FILTER_TYPES = {
+export const FILTER_OPERATIONS = {
   isNot: 'is not',
   contains: 'contains',
   is: 'is'
 };
 
-export const FILTER_PREFIXES = {
-  [FILTER_TYPES.isNot]: '!',
-  [FILTER_TYPES.contains]: '~',
-  [FILTER_TYPES.is]: ''
+export const OPERATION_PREFIX = {
+  [FILTER_OPERATIONS.isNot]: '!',
+  [FILTER_OPERATIONS.contains]: '~',
+  [FILTER_OPERATIONS.is]: ''
 };
 
 export function supportsIsNot(filterName) {
@@ -50,16 +50,16 @@ export function escapeFilterValue(value) {
 }
 
 export function toFilterQuery(type, clauses) {
-  const prefix = FILTER_PREFIXES[type];
+  const prefix = OPERATION_PREFIX[type];
   const result = clauses.map(clause => escapeFilterValue(clause.value.trim())).join('|')
   return prefix + result;
 }
 
 export function parsePrefix(rawValue) {
-  const type = Object.keys(FILTER_PREFIXES)
-    .find(type => FILTER_PREFIXES[type] === rawValue[0]) || FILTER_TYPES.is;
+  const type = Object.keys(OPERATION_PREFIX)
+    .find(type => OPERATION_PREFIX[type] === rawValue[0]) || FILTER_OPERATIONS.is;
 
-  const value = type === FILTER_TYPES.is ? rawValue : rawValue.substring(1)
+  const value = type === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
 
   const values = value
     .split(NON_ESCAPED_PIPE_REGEX)

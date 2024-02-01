@@ -2,7 +2,7 @@ import React from 'react'
 
 import Combobox from '../../components/combobox'
 import FilterTypeSelector from "../../components/filter-type-selector";
-import { FILTER_TYPES } from "../../util/filters";
+import { FILTER_OPERATIONS } from "../../util/filters";
 import * as api from '../../api'
 import { apiPath } from '../../util/url'
 import { TrashIcon } from '@heroicons/react/20/solid'
@@ -29,7 +29,7 @@ function PropFilterRow({
 
   function fetchPropValueOptions() {
     return (input) => {
-      if (type === FILTER_TYPES.contains) {
+      if (type === FILTER_OPERATIONS.contains) {
         return Promise.resolve([])
       }
 
@@ -68,7 +68,7 @@ function PropFilterRow({
           values={clauses}
           onSelect={(value) => onPropValueSelect(id, value)}
           placeholder={'Value'}
-          freeChoice={type == FILTER_TYPES.contains}
+          freeChoice={type == FILTER_OPERATIONS.contains}
         />
       </div>
       {showDelete && (

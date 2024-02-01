@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import { withRouter } from "react-router-dom";
 
-import { FILTER_TYPES } from "../../util/filters";
+import { FILTER_OPERATIONS } from "../../util/filters";
 import { parseQuery } from '../../query'
 import { siteBasePath } from '../../util/url'
 import { toFilterQuery, parseQueryPropsFilter } from '../../util/filters';
@@ -22,7 +22,7 @@ function getFormState(query) {
       values: {
         0: {
           propKey: null,
-          type: FILTER_TYPES.is,
+          type: FILTER_OPERATIONS.is,
           clauses: []
         }
       }
@@ -86,7 +86,7 @@ function PropFilterModal(props) {
           ...prevState.values,
           [id]: {
             propKey: null,
-            type: FILTER_TYPES.is,
+            type: FILTER_OPERATIONS.is,
             clauses: []
           }
         }
