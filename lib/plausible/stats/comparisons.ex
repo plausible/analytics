@@ -32,7 +32,7 @@ defmodule Plausible.Stats.Comparisons do
       more details.
 
   The comparison query returned by the function has its end date restricted to
-  the current day. This can be overriden by the `now` option, described below.
+  the current day. This can be overridden by the `now` option, described below.
 
   ## Options
 

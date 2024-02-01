@@ -168,8 +168,15 @@ defmodule Plausible.Stats.Query do
   end
 
   def put_filter(query, key, val) do
+    parsed_val =
+      if is_binary(val) do
+        Filters.DashboardFilterParser.filter_value(key, val)
+      else
+        val
+      end
+
     struct!(query,
-      filters: Map.put(query.filters, key, val)
+      filters: Map.put(query.filters, key, parsed_val)
     )
   end
 

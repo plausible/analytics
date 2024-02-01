@@ -254,7 +254,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       assert doc =~ "Looking to adjust your plan?"
       assert doc =~ "You're currently on a custom plan."
-      assert doc =~ "please contact us at hello@plausible.io"
+      assert Floki.text(doc) =~ "please contact us at hello@plausible.io"
     end
   end
 

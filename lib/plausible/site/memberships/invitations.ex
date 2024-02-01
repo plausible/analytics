@@ -72,7 +72,7 @@ defmodule Plausible.Site.Memberships.Invitations do
       new_owner = Plausible.Users.with_subscription(new_owner)
       plan = Plausible.Billing.Plans.get_subscription_plan(new_owner.subscription)
 
-      active_subscription? = Plausible.Billing.subscription_is_active?(new_owner.subscription)
+      active_subscription? = Plausible.Billing.Subscriptions.active?(new_owner.subscription)
 
       if active_subscription? && plan != :free_10k do
         usage_after_transfer = %{

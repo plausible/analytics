@@ -1458,6 +1458,38 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
              }
     end
 
+    test "works when filter expression is provided for source", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com"
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com"
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com"
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/!Google?period=day")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "duckduckgo.com", "visitors" => 1}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google|DuckDuckGo?period=day")
+
+      assert [entry1, entry2] = json_response(conn, 200)
+      assert %{"name" => "google.com", "visitors" => 2} in [entry1, entry2]
+      assert %{"name" => "duckduckgo.com", "visitors" => 1} in [entry1, entry2]
+    end
+
     test "returns top referring urls for a custom goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
