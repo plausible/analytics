@@ -2012,6 +2012,32 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "returns conversion_rate alone in an event:goal breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup", user_id: 1),
+        build(:pageview)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:goal",
+          "metrics" => "conversion_rate"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "goal" => "Signup",
+                   "conversion_rate" => 50
+                 }
+               ]
+             }
+    end
+
     test "returns conversion_rate in a goal filtered custom prop breakdown", %{
       conn: conn,
       site: site
@@ -2073,6 +2099,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "returns conversion_rate alone in a goal filtered custom prop breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/1", "meta.key": ["author"], "meta.value": ["Uku"]),
+        build(:pageview)
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog**"})
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:props:author",
+          "filters" => "event:goal==Visit /blog**",
+          "metrics" => "conversion_rate"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "author" => "Uku",
+                   "conversion_rate" => 50
+                 }
+               ]
+             }
+    end
+
     test "returns conversion_rate in a goal filtered event:page breakdown", %{
       conn: conn,
       site: site
@@ -2109,6 +2165,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "page" => "/it/register",
                    "visitors" => 1,
                    "events" => 2,
+                   "conversion_rate" => 50
+                 }
+               ]
+             }
+    end
+
+    test "returns conversion_rate alone in a goal filtered event:page breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, pathname: "/en/register"),
+        build(:event, pathname: "/en/register", name: "Signup")
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "event:page",
+          "filters" => "event:goal==Signup",
+          "metrics" => "conversion_rate"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "page" => "/en/register",
                    "conversion_rate" => 50
                  }
                ]
@@ -2154,6 +2240,36 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
                    "device" => "Desktop",
                    "visitors" => 1,
                    "events" => 2,
+                   "conversion_rate" => 50
+                 }
+               ]
+             }
+    end
+
+    test "returns conversion_rate alone in a goal filtered visit:screen_size breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, screen_size: "Mobile"),
+        build(:event, screen_size: "Mobile", name: "AddToCart")
+      ])
+
+      insert(:goal, %{site: site, event_name: "AddToCart"})
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "visit:device",
+          "filters" => "event:goal==AddToCart",
+          "metrics" => "conversion_rate"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "device" => "Mobile",
                    "conversion_rate" => 50
                  }
                ]

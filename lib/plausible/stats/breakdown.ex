@@ -39,12 +39,15 @@ defmodule Plausible.Stats.Breakdown do
         {nil, metrics}
       end
 
-    queryable_metrics = metrics -- @special_metrics
+    metrics_to_select =
+      metrics
+      |> maybe_add_visitors_metric()
+      |> Kernel.--(@special_metrics)
 
     event_results =
       if Enum.any?(event_goals) do
         site
-        |> breakdown(event_query, "event:name", queryable_metrics, pagination, skip_tracing: true)
+        |> breakdown(event_query, "event:name", metrics_to_select, pagination, skip_tracing: true)
         |> transform_keys(%{name: :goal})
         |> cast_revenue_metrics_to_money(revenue_goals)
       else
@@ -75,15 +78,16 @@ defmodule Plausible.Stats.Breakdown do
             goal: fragment("concat('Visit ', ?[index])", ^page_exprs)
           }
         )
-        |> select_event_metrics(queryable_metrics -- @revenue_metrics)
+        |> select_event_metrics(metrics_to_select -- @revenue_metrics)
         |> ClickhouseRepo.all()
         |> Enum.map(fn row -> Map.delete(row, :index) end)
       else
         []
       end
 
-    zip_results(event_results, page_results, :goal, queryable_metrics)
+    zip_results(event_results, page_results, :goal, metrics_to_select)
     |> maybe_add_cr(site, query, nil, metrics)
+    |> maybe_remove_visitors_metric(metrics)
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination, opts) do
@@ -94,7 +98,10 @@ defmodule Plausible.Stats.Breakdown do
         {nil, metrics}
       end
 
-    queryable_metrics = metrics -- @special_metrics
+    metrics_to_select =
+      metrics
+      |> maybe_add_visitors_metric()
+      |> Kernel.--(@special_metrics)
 
     {_limit, page} = pagination
 
@@ -107,7 +114,7 @@ defmodule Plausible.Stats.Breakdown do
           select_merge: %{^custom_prop => "(none)"},
           having: fragment("uniq(?)", e.user_id) > 0
         )
-        |> select_event_metrics(queryable_metrics)
+        |> select_event_metrics(metrics_to_select)
         |> ClickhouseRepo.all()
       else
         []
@@ -115,21 +122,28 @@ defmodule Plausible.Stats.Breakdown do
 
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
-    breakdown_events(site, query, "event:props:" <> custom_prop, queryable_metrics, pagination)
+    breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select, pagination)
     |> Kernel.++(none_result)
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
-    |> Enum.sort_by(& &1[sorting_key(queryable_metrics)], :desc)
+    |> Enum.sort_by(& &1[sorting_key(metrics_to_select)], :desc)
     |> maybe_add_cr(site, query, nil, metrics)
+    |> maybe_remove_visitors_metric(metrics)
   end
 
   def breakdown(site, query, "event:page" = property, metrics, pagination, opts) do
-    event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
-    session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
+    event_metrics =
+      metrics
+      |> maybe_add_visitors_metric()
+      |> Enum.filter(&(&1 in @event_metrics))
 
     event_result =
       site
       |> breakdown_events(query, "event:page", event_metrics, pagination)
       |> maybe_add_time_on_page(site, query, metrics)
+      |> maybe_add_cr(site, query, property, metrics)
+      |> maybe_remove_visitors_metric(metrics)
+
+    session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
     new_query =
       case event_result do
@@ -161,7 +175,6 @@ defmodule Plausible.Stats.Breakdown do
       )
       |> Enum.map(&Map.take(&1, metrics))
     end
-    |> maybe_add_cr(site, query, property, metrics)
   end
 
   def breakdown(site, query, "event:name" = property, metrics, pagination, opts) do
@@ -172,10 +185,14 @@ defmodule Plausible.Stats.Breakdown do
   def breakdown(site, query, property, metrics, pagination, opts) do
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
-    queryable_metrics = metrics -- @special_metrics
+    metrics_to_select =
+      metrics
+      |> maybe_add_visitors_metric()
+      |> Kernel.--(@special_metrics)
 
-    breakdown_sessions(site, query, property, queryable_metrics, pagination)
+    breakdown_sessions(site, query, property, metrics_to_select, pagination)
     |> maybe_add_cr(site, query, property, metrics)
+    |> maybe_remove_visitors_metric(metrics)
   end
 
   defp zip_results(event_result, session_result, property, metrics) do

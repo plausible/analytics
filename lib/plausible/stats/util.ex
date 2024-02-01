@@ -21,6 +21,46 @@ defmodule Plausible.Stats.Util do
     Map.delete(result, :__internal_visits)
   end
 
+  @doc """
+  This function adds the `visitors` metric into the list of
+  given metrics if it's not already there and if there is a
+  `conversion_rate` metric in the list.
+
+  Currently, the conversion rate cannot be queried from the
+  database with a simple select clause - instead, we need to
+  fetch the database result first, and then manually add it
+  into each entry of the breakdown list.
+
+  In order for us to be able to calculate it based on the
+  results returned by the database query, the visitors metric
+  needs to be queried.
+
+  Before returning those results to the client though, we
+  probably want to remove the visitors metric from the result
+  since it was not really asked for. For that, we can use the
+  `maybe_remove_visitors_metric/1` function
+  """
+  def maybe_add_visitors_metric(metrics) do
+    if :conversion_rate in metrics and :visitors not in metrics do
+      metrics ++ [:visitors]
+    else
+      metrics
+    end
+  end
+
+  @doc """
+  This function removes the manually added `visitors` metric
+  from the breakdown response. See `maybe_add_visitors_metric/1`
+  for more information.
+  """
+  def maybe_remove_visitors_metric(results, asked_metrics) do
+    if :visitors not in asked_metrics do
+      Enum.map(results, &Map.delete(&1, :visitors))
+    else
+      results
+    end
+  end
+
   def calculate_cr(nil, _converted_visitors), do: nil
 
   def calculate_cr(unique_visitors, converted_visitors) do
