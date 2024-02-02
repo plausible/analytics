@@ -64,7 +64,7 @@ function filterText(filterType, key, query) {
 
 function renderDropdownFilter(site, history, { key, value, filterType }, query) {
   return (
-    <Menu.Item key={key}>
+    <Menu.Item key={`${filterType}::${key}`}>
       <div className="px-3 md:px-4 sm:py-2 py-3 text-sm leading-tight flex items-center justify-between" key={key + value}>
         <Link
           title={`Edit filter: ${formattedFilters[filterType]}`}
@@ -219,7 +219,7 @@ class Filters extends React.Component {
 
   renderListFilter(history, { key, value, filterType }, query) {
     return (
-      <span key={key} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
+      <span key={`${filterType}::${key}`} title={value} className="flex bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 shadow text-sm rounded mr-2 items-center">
         <Link
           title={`Edit filter: ${formattedFilters[filterType]}`}
           className="flex w-full h-full items-center py-2 pl-3"
