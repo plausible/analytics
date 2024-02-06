@@ -25,6 +25,7 @@
         "Plausible · Simple, privacy-friendly alternative to Google Analytics" %>
     </title>
     <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
+    <PlausibleWeb.Components.Layout.theme_script {Map.take(assigns, [:current_user, :theme])} />
     <%= render("_tracking.html", assigns) %>
   </head>
   <body
@@ -44,8 +45,6 @@
     <main class="flex-1">
       <%= Map.get(assigns, :inner_layout) || @inner_content %>
     </main>
-
-    <PlausibleWeb.Components.Layout.theme_script {Map.take(assigns, [:current_user, :theme])} />
 
     <%= if assigns[:embedded] do %>
       <div data-iframe-height></div>
