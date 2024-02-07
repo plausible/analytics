@@ -41,7 +41,15 @@ defmodule Plausible.ShieldsTest do
       assert {:ok, _} = add_ip_rule(site, %{"inet" => "0.0.0.111"})
       assert {:error, changeset} = add_ip_rule(site, %{"inet" => "0.0.0.111"})
       refute changeset.valid?
-      assert changeset.errors == [inet: {"has already been taken", [{:constraint, :unique}, {:constraint_name, "shield_rules_ip_site_id_inet_index"}]}]
+
+      assert changeset.errors == [
+               inet:
+                 {"has already been taken",
+                  [
+                    {:constraint, :unique},
+                    {:constraint_name, "shield_rules_ip_site_id_inet_index"}
+                  ]}
+             ]
     end
 
     test "ipv6", %{site: site} do
