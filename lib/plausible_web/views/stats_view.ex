@@ -44,7 +44,7 @@ defmodule PlausibleWeb.StatsView do
     cond do
       conn.assigns[:embedded] && conn.assigns[:width] == "manual" -> ""
       conn.assigns[:embedded] -> "max-w-screen-xl mx-auto px-6"
-      !conn.assigns[:embedded] -> "container"
+      !conn.assigns[:embedded] -> "container print:max-w-full"
     end
   end
 

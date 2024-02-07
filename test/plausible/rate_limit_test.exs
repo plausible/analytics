@@ -21,9 +21,9 @@ defmodule Plausible.RateLimitTest do
       assert expires_at >= System.system_time(:millisecond)
       assert expires_at <= System.system_time(:millisecond) + 50
 
-      :timer.sleep(150)
-
-      assert :ets.tab2list(@table) == []
+      Plausible.TestUtils.eventually(fn ->
+        {:ets.tab2list(@table) == [], :done}
+      end)
     end
   end
 

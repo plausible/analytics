@@ -349,7 +349,7 @@ class LineGraph extends React.Component {
             <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={updateInterval} />
           </div>
           <FadeIn show={graphData}>
-            <div className="relative h-96 w-full z-0">
+            <div className="relative h-96 print:h-auto print:pb-8 w-full z-0">
               <canvas id="main-graph-canvas" className={canvasClass}></canvas>
             </div>
           </FadeIn>
