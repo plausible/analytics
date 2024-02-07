@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Components.Layout do
 
   def theme_script(assigns) do
     ~H"""
-    <script>
+    <script blocking="rendering">
       (function(){
         var themePref = '<%= theme_preference(assigns) %>';
         function reapplyTheme() {
