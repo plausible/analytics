@@ -10,6 +10,7 @@ defmodule Plausible.PromEx do
       Plugins.Beam,
       Plugins.PhoenixLiveView,
       {Plugins.Phoenix, router: PlausibleWeb.Router, endpoint: PlausibleWeb.Endpoint},
+      {Plugins.Phoenix, router: PlausibleWeb.Plugins.API.Router, endpoint: PlausibleWeb.Endpoint},
       {Plugins.Ecto,
        repos: [
          Plausible.Repo,
