@@ -55,7 +55,7 @@ jobs:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
       - name: Restore dependencies cache
-        uses: buildjet/cache@v3
+        uses: buildjet/cache@v4
         with:
           path: |
             deps
