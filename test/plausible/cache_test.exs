@@ -52,6 +52,10 @@ defmodule Plausible.CacheTest do
 
       assert log =~ "Error retrieving key from 'NonExistingCache': :no_cache"
     end
+
+    test "cache is not ready when it doesn't exist", %{test: test} do
+      refute ExampleCache.ready?(test)
+    end
   end
 
   describe "merging cache items" do

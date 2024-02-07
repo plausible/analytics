@@ -158,6 +158,9 @@ defmodule Plausible.Cache do
 
           0 ->
             count_all() == 0
+
+          _ -> 
+            false
         end
       end
 
