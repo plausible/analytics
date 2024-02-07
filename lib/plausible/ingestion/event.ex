@@ -26,6 +26,7 @@ defmodule Plausible.Ingestion.Event do
           | GateKeeper.policy()
           | :invalid
           | :dc_ip
+          | :site_ip_blocklist
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
