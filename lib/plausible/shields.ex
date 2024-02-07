@@ -26,23 +26,23 @@ defmodule Plausible.Shields do
           {:ok, Shield.IPRule.t()} | {:error, Ecto.Changeset.t()}
   def add_ip_rule(site_id, params) when is_integer(site_id) do
     Repo.transaction(fn ->
-      if count_ip_rules(site_id) >= @maximum_ip_rules do
-        changeset =
-          %Shield.IPRule{}
-          |> Shield.IPRule.changeset(Map.put(params, "site_id", site_id))
-          |> Ecto.Changeset.add_error(:inet, "maximum reached")
+      result =
+        if count_ip_rules(site_id) >= @maximum_ip_rules do
+          changeset =
+            %Shield.IPRule{}
+            |> Shield.IPRule.changeset(Map.put(params, "site_id", site_id))
+            |> Ecto.Changeset.add_error(:inet, "maximum reached")
 
-        Repo.rollback(changeset)
-      else
-        result =
+          {:error, changeset}
+        else
           %Shield.IPRule{}
           |> Shield.IPRule.changeset(Map.put(params, "site_id", site_id))
           |> Repo.insert()
-
-        case result do
-          {:ok, rule} -> rule
-          {:error, changeset} -> Repo.rollback(changeset)
         end
+
+      case result do
+        {:ok, rule} -> rule
+        {:error, changeset} -> Repo.rollback(changeset)
       end
     end)
   end
