@@ -1,4 +1,9 @@
 defmodule PlausibleWeb.Live.Shields.Tabs do
+  @moduledoc """
+  Currently only a placeholder module. Once more shields
+  are implemented it will display tabs with counters,
+  linking to their respective live views.
+  """
   use PlausibleWeb, :live_view
   use Phoenix.HTML
 
@@ -9,7 +14,6 @@ defmodule PlausibleWeb.Live.Shields.Tabs do
         _params,
         %{
           "remote_ip" => remote_ip,
-          # "site_id" => site_id,
           "domain" => domain,
           "current_user_id" => user_id
         },
@@ -38,7 +42,6 @@ defmodule PlausibleWeb.Live.Shields.Tabs do
       <%= live_render(@socket, PlausibleWeb.Live.Shields.IPRules,
         id: "ip-rules",
         session: %{
-          "site_id" => @site.id,
           "domain" => @site.domain,
           "remote_ip" => @remote_ip,
           "flash" => @flash

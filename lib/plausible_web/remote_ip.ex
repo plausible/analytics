@@ -1,4 +1,8 @@
 defmodule PlausibleWeb.RemoteIP do
+  @moduledoc """
+  Implements the strategy of retrieving client's remote IP
+  """
+
   def get(conn) do
     x_plausible_ip = List.first(Plug.Conn.get_req_header(conn, "x-plausible-ip"))
     cf_connecting_ip = List.first(Plug.Conn.get_req_header(conn, "cf-connecting-ip"))

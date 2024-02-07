@@ -1,4 +1,7 @@
 defmodule Plausible.Shield.IPRule do
+  @moduledoc """
+  Schema for IP block list
+  """
   use Ecto.Schema
   import Ecto.Changeset
 

@@ -1,5 +1,6 @@
 defmodule PlausibleWeb.Live.Shields.IPRules do
   @moduledoc """
+  LiveView allowing IP Rules management
   """
   use PlausibleWeb, :live_view
   use Phoenix.HTML
@@ -15,7 +16,6 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
         _params,
         %{
           "remote_ip" => remote_ip,
-          # "site_id" => site_id,
           "domain" => domain,
           "current_user_id" => user_id
         },

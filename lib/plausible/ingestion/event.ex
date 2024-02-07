@@ -155,10 +155,12 @@ defmodule Plausible.Ingestion.Event do
   defp drop_blocklist_ip(%__MODULE__{} = event) do
     domain = event.domain
     address = event.request.remote_ip
+
     case Plausible.Shield.IPRuleCache.get({domain, address}) do
       %Plausible.Shield.IPRule{action: :deny} ->
         drop(event, :site_ip_blocklist)
-      _ -> 
+
+      _ ->
         event
     end
   end

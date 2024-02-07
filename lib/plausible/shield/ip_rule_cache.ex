@@ -1,4 +1,7 @@
 defmodule Plausible.Shield.IPRuleCache do
+  @moduledoc """
+  Allows retrieving IP Rules by domain and IP
+  """
   alias Plausible.Shield.IPRule
 
   import Ecto.Query

@@ -1,4 +1,7 @@
 defmodule Plausible.Shields do
+  @moduledoc """
+  Contextual interface for shields.
+  """
   import Ecto.Query
   alias Plausible.Repo
   alias Plausible.Shield
