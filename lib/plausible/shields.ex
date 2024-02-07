@@ -25,21 +25,26 @@ defmodule Plausible.Shields do
   @spec add_ip_rule(Plausible.Site.t() | non_neg_integer(), map()) ::
           {:ok, Shield.IPRule.t()} | {:error, Ecto.Changeset.t()}
   def add_ip_rule(site_id, params) when is_integer(site_id) do
-    {:ok, result} =
-      Repo.transaction(fn ->
-        if count_ip_rules(site_id) >= @maximum_ip_rules do
+    Repo.transaction(fn ->
+      if count_ip_rules(site_id) >= @maximum_ip_rules do
+        changeset =
           %Shield.IPRule{}
           |> Shield.IPRule.changeset(Map.put(params, "site_id", site_id))
           |> Ecto.Changeset.add_error(:inet, "maximum reached")
-          |> Ecto.Changeset.apply_action(nil)
-        else
+
+        Repo.rollback(changeset)
+      else
+        result =
           %Shield.IPRule{}
           |> Shield.IPRule.changeset(Map.put(params, "site_id", site_id))
           |> Repo.insert()
-        end
-      end)
 
-    result
+        case result do
+          {:ok, rule} -> rule
+          {:error, changeset} -> Repo.rollback(changeset)
+        end
+      end
+    end)
   end
 
   def add_ip_rule(%Plausible.Site{id: id}, params) do

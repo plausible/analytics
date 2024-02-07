@@ -31,6 +31,19 @@ defmodule Plausible.ShieldsTest do
       refute changeset.valid?
     end
 
+    # remove once https://github.com/adam12/ecto_network/pull/28 is merged
+    test "non-strict IPs", %{site: site} do
+      assert {:ok, _} = add_ip_rule(site, %{"inet" => "111"})
+      assert {:error, _} = add_ip_rule(site, %{"inet" => "0.0.0.111"})
+    end
+
+    test "double insert", %{site: site} do
+      assert {:ok, _} = add_ip_rule(site, %{"inet" => "0.0.0.111"})
+      assert {:error, changeset} = add_ip_rule(site, %{"inet" => "0.0.0.111"})
+      refute changeset.valid?
+      assert changeset.errors == [inet: {"has already been taken", [{:constraint, :unique}, {:constraint_name, "shield_rules_ip_site_id_inet_index"}]}]
+    end
+
     test "ipv6", %{site: site} do
       assert {:ok, rule} =
                add_ip_rule(site, %{"inet" => "2001:0000:130F:0000:0000:09C0:876A:130B"})
