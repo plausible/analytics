@@ -192,20 +192,9 @@ defmodule PlausibleWeb.Live.ShieldsTest do
       assert Shields.count_ip_rules(site) == 0
     end
 
-    # defp get_liveview(conn, site, user) do
-
     defp get_liveview(conn, site) do
       conn = assign(conn, :live_module, PlausibleWeb.Live.Shields)
       {:ok, lv, _html} = live(conn, "/#{site.domain}/settings/shields")
-
-      # {:ok, lv, _html} =
-      #   live_isolated(conn, PlausibleWeb.Live.Shields.IPRules,
-      #     session: %{
-      #       "remote_ip" => "127.0.0.1",
-      #       "domain" => site.domain,
-      #       "current_user_id" => user.id
-      #     }
-      #   )
 
       lv
     end
