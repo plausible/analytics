@@ -61,7 +61,7 @@ defmodule Plausible.Cache do
       @behaviour Plausible.Cache
       @modes [:all, :updated_recently]
 
-      @spec get(String.t(), Keyword.t()) :: any() | nil
+      @spec get(any(), Keyword.t()) :: any() | nil
       def get(key, opts \\ []) do
         cache_name = Keyword.get(opts, :cache_name, name())
         force? = Keyword.get(opts, :force?, false)
