@@ -25,7 +25,7 @@
           <% @conn.assigns[:current_user] -> %>
             <ul class="flex items-center w-full sm:w-auto">
               <li
-                :if={Plausible.Billing.on_trial?(@conn.assigns[:current_user])}
+                :if={full_build?() and Plausible.Users.on_trial?(@conn.assigns[:current_user])}
                 class="hidden mr-6 sm:block"
               >
                 <%= link(trial_notificaton(@conn.assigns[:current_user]),

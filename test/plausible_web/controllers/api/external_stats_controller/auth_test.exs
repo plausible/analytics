@@ -163,7 +163,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AuthTest do
     |> get("/api/v1/stats/aggregate", %{"site_id" => site.domain, "metrics" => "pageviews"})
     |> assert_error(
       402,
-      "Stats API is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+      "The account that owns this API key does not have access to Stats API."
     )
   end
 

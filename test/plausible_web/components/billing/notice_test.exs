@@ -104,6 +104,7 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
     assert rendered =~ "/billing/choose-plan"
   end
 
+  @tag :full_build_only
   test "limit_exceeded/1 when billable user is on an enterprise plan displays support email" do
     me =
       insert(:user,
@@ -120,9 +121,12 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       )
 
     assert rendered =~ "Your account is limited to 10 users."
-    assert rendered =~ "please contact hello@plausible.io to upgrade your subscription"
+
+    assert rendered =~ "hello@plausible.io"
+    assert rendered =~ "upgrade your subscription"
   end
 
+  @tag :full_build_only
   test "limit_exceeded/1 when billable user is on a business plan displays support email" do
     me = insert(:user, subscription: build(:business_subscription))
 
@@ -135,6 +139,8 @@ defmodule PlausibleWeb.Components.Billing.NoticeTest do
       )
 
     assert rendered =~ "Your account is limited to 10 users."
-    assert rendered =~ "please contact hello@plausible.io to upgrade your subscription"
+
+    assert rendered =~ "hello@plausible.io"
+    assert rendered =~ "upgrade your subscription"
   end
 end

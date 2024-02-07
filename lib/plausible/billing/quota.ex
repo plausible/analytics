@@ -5,9 +5,10 @@ defmodule Plausible.Billing.Quota do
 
   use Plausible
   import Ecto.Query
+  alias Plausible.Users
   alias Plausible.Auth.User
   alias Plausible.Site
-  alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
+  alias Plausible.Billing.{Plan, Plans, Subscription, Subscriptions, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
 
   @type limit() :: :site_limit | :pageview_limit | :team_member_limit
@@ -59,7 +60,7 @@ defmodule Plausible.Billing.Quota do
     end
 
     defp get_site_limit_from_plan(user) do
-      user = Plausible.Users.with_subscription(user)
+      user = Users.with_subscription(user)
 
       case Plans.get_subscription_plan(user.subscription) do
         %{site_limit: site_limit} -> site_limit
@@ -70,7 +71,7 @@ defmodule Plausible.Billing.Quota do
 
     @spec team_member_limit(User.t()) :: non_neg_integer()
     def team_member_limit(user) do
-      user = Plausible.Users.with_subscription(user)
+      user = Users.with_subscription(user)
 
       case Plans.get_subscription_plan(user.subscription) do
         %{team_member_limit: limit} -> limit
@@ -102,7 +103,7 @@ defmodule Plausible.Billing.Quota do
   in a background job instead (see `check_usage.ex`).
   """
   def ensure_can_add_new_site(user) do
-    user = Plausible.Users.with_subscription(user)
+    user = Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
       %EnterprisePlan{} ->
@@ -122,7 +123,7 @@ defmodule Plausible.Billing.Quota do
   @spec monthly_pageview_limit(User.t() | Subscription.t()) ::
           non_neg_integer() | :unlimited
   def monthly_pageview_limit(%User{} = user) do
-    user = Plausible.Users.with_subscription(user)
+    user = Users.with_subscription(user)
     monthly_pageview_limit(user.subscription)
   end
 
@@ -180,7 +181,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   def monthly_pageview_usage(user, site_ids) do
-    active_subscription? = Plausible.Billing.subscription_is_active?(user.subscription)
+    active_subscription? = Subscriptions.active?(user.subscription)
 
     if active_subscription? && user.subscription.last_bill_date do
       [:current_cycle, :last_cycle, :penultimate_cycle]
@@ -217,7 +218,7 @@ defmodule Plausible.Billing.Quota do
   end
 
   def usage_cycle(user, cycle, owned_site_ids, today) do
-    user = Plausible.Users.with_subscription(user)
+    user = Users.with_subscription(user)
     last_bill_date = user.subscription.last_bill_date
 
     normalized_last_bill_date =
@@ -435,13 +436,24 @@ defmodule Plausible.Billing.Quota do
   ability to use all features during their trial.
   """
   def allowed_features_for(user) do
-    user = Plausible.Users.with_subscription(user)
+    user = Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{features: features} -> features
-      %Plan{features: features} -> features
-      :free_10k -> [Goals, Props, StatsAPI]
-      nil -> Feature.list()
+      %EnterprisePlan{features: features} ->
+        features
+
+      %Plan{features: features} ->
+        features
+
+      :free_10k ->
+        [Goals, Props, StatsAPI]
+
+      nil ->
+        if Users.on_trial?(user) do
+          Feature.list()
+        else
+          [Goals]
+        end
     end
   end
 

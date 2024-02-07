@@ -4,7 +4,7 @@ Do check out your <%= link("easy to use, fast-loading and privacy-friendly dashb
 <br /><br />
 Something looks off? Take a look at our <%= link("installation troubleshooting guide", to: "https://plausible.io/docs/troubleshoot-integration") %>.
 <br /><br />
-<%= if Plausible.Billing.on_trial?(@user) do %>
+<%= if Plausible.Users.on_trial?(@user) do %>
   You're on a 30-day free trial with no obligations so do take your time to explore Plausible. Here's how to get <%= link("the most out of your Plausible experience", to: "https://plausible.io/docs/your-plausible-experience") %>. 
   <br /><br />
 <% end %>
