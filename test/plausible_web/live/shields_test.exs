@@ -70,8 +70,8 @@ defmodule PlausibleWeb.Live.ShieldsTest do
   end
 
   describe "IP Rules - LiveView" do
-    test "modal contains form", %{site: site, conn: conn, user: user} do
-      lv = get_liveview(conn, site, user)
+    test "modal contains form", %{site: site, conn: conn} do
+      lv = get_liveview(conn, site)
       html = render(lv)
 
       assert element_exists?(
@@ -87,62 +87,64 @@ defmodule PlausibleWeb.Live.ShieldsTest do
       assert submit_button(html, ~s/form[phx-submit="save-ip-rule"]/)
     end
 
-    test "form modal contains link to add own IP", %{site: site, conn: conn, user: user} do
-      assert conn.remote_ip == {127, 0, 0, 1}
-
-      lv = get_liveview(conn, site, user)
+    test "form modal contains link to add own IP", %{site: site, conn: conn} do
+      ip = PlausibleWeb.RemoteIP.get(conn)
+      lv = get_liveview(conn, site)
       html = render(lv)
 
-      assert text(html) =~ "Your current IP address is: 127.0.0.1"
+      assert text(html) =~ "Your current IP address is: #{ip}"
       assert element_exists?(html, ~s/a[phx-click="prefill-own-ip-rule"]/)
     end
 
     test "form modal does not contains link to add own IP if already added", %{
       site: site,
-      conn: conn,
-      user: user
+      conn: conn
     } do
-      assert conn.remote_ip == {127, 0, 0, 1}
+      ip = PlausibleWeb.RemoteIP.get(conn)
 
       {:ok, _} =
-        Shields.add_ip_rule(site, %{"inet" => "127.0.0.1", "description" => "Alice"})
+        Shields.add_ip_rule(site, %{
+          "inet" => ip,
+          "description" => "Alice"
+        })
 
-      lv = get_liveview(conn, site, user)
+      lv = get_liveview(conn, site)
       html = render(lv)
 
-      refute text(html) =~ "Your current IP address is: 127.0.0.1"
+      refute text(html) =~ "Your current IP address is: #{ip}"
       refute element_exists?(html, ~s/a[phx-click="prefill-own-ip-rule"]/)
     end
 
     test "clicking the link prefills own IP", %{conn: conn, site: site, user: user} do
-      assert conn.remote_ip == {127, 0, 0, 1}
-
-      lv = get_liveview(conn, site, user)
+      lv = get_liveview(conn, site)
       lv |> element(~s/a[phx-click="prefill-own-ip-rule"]/) |> render_click()
 
       html = render(lv)
 
-      assert text_of_attr(html, "input[name=\"ip_rule[inet]\"]", "value") == "127.0.0.1"
+      assert text_of_attr(html, "input[name=\"ip_rule[inet]\"]", "value") ==
+               PlausibleWeb.RemoteIP.get(conn)
+
       assert text_of_attr(html, "input[name=\"ip_rule[description]\"]", "value") == user.name
     end
 
     test "submitting own IP saves it", %{conn: conn, site: site, user: user} do
+      ip = PlausibleWeb.RemoteIP.get(conn)
       assert [] = Shields.list_ip_rules(site)
 
-      lv = get_liveview(conn, site, user)
+      lv = get_liveview(conn, site)
       lv |> element(~s/a[phx-click="prefill-own-ip-rule"]/) |> render_click()
       lv |> element(~s/form/) |> render_submit()
 
       html = render(lv)
 
-      assert html =~ "127.0.0.1"
+      assert html =~ ip
       assert html =~ user.name
 
       assert [_] = Shields.list_ip_rules(site)
     end
 
-    test "submitting a valid IP saves it", %{conn: conn, site: site, user: user} do
-      lv = get_liveview(conn, site, user)
+    test "submitting a valid IP saves it", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
 
       lv
       |> element("form")
@@ -160,8 +162,8 @@ defmodule PlausibleWeb.Live.ShieldsTest do
       assert to_string(ip) == "1.1.1.1"
     end
 
-    test "submitting invalid IP renders error", %{conn: conn, site: site, user: user} do
-      lv = get_liveview(conn, site, user)
+    test "submitting invalid IP renders error", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
 
       lv
       |> element("form")
@@ -173,11 +175,11 @@ defmodule PlausibleWeb.Live.ShieldsTest do
       assert html =~ "is invalid"
     end
 
-    test "clicking Remove deletes the rule", %{conn: conn, site: site, user: user} do
+    test "clicking Remove deletes the rule", %{conn: conn, site: site} do
       {:ok, _} =
         Shields.add_ip_rule(site, %{"inet" => "2.2.2.2", "description" => "Alice"})
 
-      lv = get_liveview(conn, site, user)
+      lv = get_liveview(conn, site)
 
       html = render(lv)
       assert html =~ "2.2.2.2"
@@ -190,15 +192,20 @@ defmodule PlausibleWeb.Live.ShieldsTest do
       assert Shields.count_ip_rules(site) == 0
     end
 
-    defp get_liveview(conn, site, user) do
-      {:ok, lv, _html} =
-        live_isolated(conn, PlausibleWeb.Live.Shields.IPRules,
-          session: %{
-            "remote_ip" => "127.0.0.1",
-            "domain" => site.domain,
-            "current_user_id" => user.id
-          }
-        )
+    # defp get_liveview(conn, site, user) do
+
+    defp get_liveview(conn, site) do
+      conn = assign(conn, :live_module, PlausibleWeb.Live.Shields)
+      {:ok, lv, _html} = live(conn, "/#{site.domain}/settings/shields")
+
+      # {:ok, lv, _html} =
+      #   live_isolated(conn, PlausibleWeb.Live.Shields.IPRules,
+      #     session: %{
+      #       "remote_ip" => "127.0.0.1",
+      #       "domain" => site.domain,
+      #       "current_user_id" => user.id
+      #     }
+      #   )
 
       lv
     end

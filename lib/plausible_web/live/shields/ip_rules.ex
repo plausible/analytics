@@ -2,41 +2,28 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
   @moduledoc """
   LiveView allowing IP Rules management
   """
-  use PlausibleWeb, :live_view
+
+  use Phoenix.LiveComponent, global_prefixes: ~w(x-)
   use Phoenix.HTML
 
   alias PlausibleWeb.Live.Components.Modal
   alias Plausible.Shields
   alias Plausible.Shield
-  alias Plausible.Sites
   import PlausibleWeb.Live.Components.Form
   import PlausibleWeb.Components.Generic
 
-  def mount(
-        _params,
-        %{
-          "remote_ip" => remote_ip,
-          "domain" => domain,
-          "current_user_id" => user_id
-        },
-        socket
-      ) do
+  def update(assigns, socket) do
     socket =
       socket
-      |> assign_new(:site, fn ->
-        Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
-      end)
+      |> assign(ip_rules_count: assigns.ip_rules_count,
+        remote_ip: assigns.remote_ip,
+        site: assigns.site,
+        current_user:  assigns.current_user,
+        form: new_form()
+      )
       |> assign_new(:ip_rules, fn %{site: site} ->
         Shields.list_ip_rules(site)
       end)
-      |> assign_new(:ip_rules_count, fn %{site: site} ->
-        Shields.count_ip_rules(site)
-      end)
-      |> assign_new(:current_user, fn ->
-        Plausible.Repo.get(Plausible.Auth.User, user_id)
-      end)
-      |> assign_new(:form, fn -> new_form() end)
-      |> assign_new(:remote_ip, fn -> remote_ip end)
 
     {:ok, socket}
   end
@@ -44,7 +31,6 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
   def render(assigns) do
     ~H"""
     <section class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden">
-      <.flash_messages flash={@flash} />
       <div class="py-6 px-4 sm:p-6">
         <header class="relative">
           <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
@@ -83,6 +69,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             :let={f}
             for={@form}
             phx-submit="save-ip-rule"
+            phx-target={@myself}
             class="max-w-md w-full mx-auto bg-white dark:bg-gray-800"
           >
             <h2 class="text-xl font-black dark:text-gray-100 mb-8">Add IP to Block List</h2>
@@ -102,7 +89,9 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
               >
                 Your current IP address is: <span class="font-mono"><%= @remote_ip %></span>
                 <br />
-                <.styled_link phx-click="prefill-own-ip-rule">Click here</.styled_link>
+                <.styled_link phx-target={@myself} phx-click="prefill-own-ip-rule">
+                  Click here
+                </.styled_link>
                 to block your own traffic, or enter a custom address.
               </p>
             </div>
@@ -190,13 +179,17 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                     </span>
                   </td>
                   <td class="px-6 py-4 text-sm font-normal whitespace-nowrap truncate max-w-xs">
-                    <span title={rule.description}>
+                    <span :if={rule.description} title={rule.description}>
                       <%= rule.description %>
                     </span>
+                      <span :if={!rule.description} class="text-gray-400 dark:text-gray-600">
+                        --
+                      </span>
                   </td>
                   <td class="px-6 py-4 text-sm font-medium text-right">
                     <button
                       id={"remove-ip-rule-#{rule.id}"}
+                      phx-target={@myself}
                       phx-click="remove-ip-rule"
                       phx-value-rule-id={rule.id}
                       class="text-sm text-red-600"
@@ -232,11 +225,6 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
       {:ok, rule} ->
         socket =
           socket
-          |> put_live_flash(
-            :success,
-            "IP rule added successfully. Traffic for #{params["inet"]} will be blocked within a few minutes.
-          "
-          )
           |> Modal.close("ip-rule-form-modal")
           |> assign(
             form: new_form(),
@@ -256,10 +244,6 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
 
     {:noreply,
      socket
-     |> put_live_flash(
-       :success,
-       "IP rule removed successfully. Traffic will be resumed within a few minutes."
-     )
      |> assign(
        ip_rules_count: socket.assigns.ip_rules_count - 1,
        ip_rules: Enum.reject(socket.assigns.ip_rules, &(&1.id == rule_id))

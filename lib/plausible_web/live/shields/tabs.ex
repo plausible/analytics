@@ -39,14 +39,14 @@ defmodule PlausibleWeb.Live.Shields.Tabs do
   def render(assigns) do
     ~H"""
     <div>
-      <%= live_render(@socket, PlausibleWeb.Live.Shields.IPRules,
-        id: "ip-rules",
-        session: %{
-          "domain" => @site.domain,
-          "remote_ip" => @remote_ip,
-          "flash" => @flash
-        }
-      ) %>
+      <.live_component
+        module={PlausibleWeb.Live.Shields.IPRules}
+        current_user={@current_user}
+        ip_rules_count={@ip_rules_count}
+        site={@site}
+        remote_ip={@remote_ip}
+        id="ip-rules-#{@current_user.id}"
+      />
     </div>
     """
   end
