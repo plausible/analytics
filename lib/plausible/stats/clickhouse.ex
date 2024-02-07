@@ -89,7 +89,7 @@ defmodule Plausible.Stats.Clickhouse do
     referrers =
       from(s in base_session_query(site, query),
         group_by: s.referrer_source,
-        order_by: [desc: uniq(s.user_id), asc: fragment("min(start)")],
+        order_by: [desc: uniq(s.user_id), asc: s.referrer_source],
         limit: ^limit,
         offset: ^offset
       )
