@@ -278,6 +278,13 @@ defmodule Plausible.Factory do
     }
   end
 
+  def ip_rule_factory do
+    %Plausible.Shield.IPRule{
+      inet: Plausible.TestUtils.random_ip(),
+      description: "Test IP Rule"
+    }
+  end
+
   defp hash_key() do
     Keyword.fetch!(
       Application.get_env(:plausible, PlausibleWeb.Endpoint),
