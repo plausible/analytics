@@ -15,10 +15,11 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
   def update(assigns, socket) do
     socket =
       socket
-      |> assign(ip_rules_count: assigns.ip_rules_count,
+      |> assign(
+        ip_rules_count: assigns.ip_rules_count,
         remote_ip: assigns.remote_ip,
         site: assigns.site,
-        current_user:  assigns.current_user,
+        current_user: assigns.current_user,
         form: new_form()
       )
       |> assign_new(:ip_rules, fn %{site: site} ->
@@ -182,9 +183,9 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                     <span :if={rule.description} title={rule.description}>
                       <%= rule.description %>
                     </span>
-                      <span :if={!rule.description} class="text-gray-400 dark:text-gray-600">
-                        --
-                      </span>
+                    <span :if={!rule.description} class="text-gray-400 dark:text-gray-600">
+                      --
+                    </span>
                   </td>
                   <td class="px-6 py-4 text-sm font-medium text-right">
                     <button
@@ -232,6 +233,11 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             ip_rules_count: socket.assigns.ip_rules_count + 1
           )
 
+        send_flash(
+          :success,
+          "IP rule added successfully. Traffic will be rejected within a few minutes."
+        )
+
         {:noreply, socket}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -242,12 +248,21 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
   def handle_event("remove-ip-rule", %{"rule-id" => rule_id}, socket) do
     Shields.remove_ip_rule(socket.assigns.site.id, rule_id)
 
+    send_flash(
+      :success,
+      "IP rule removed successfully. Traffic will be resumed within a few minutes."
+    )
+
     {:noreply,
      socket
      |> assign(
        ip_rules_count: socket.assigns.ip_rules_count - 1,
        ip_rules: Enum.reject(socket.assigns.ip_rules, &(&1.id == rule_id))
      )}
+  end
+
+  def send_flash(kind, message) do
+    send(self(), {:flash, kind, message})
   end
 
   defp new_form() do

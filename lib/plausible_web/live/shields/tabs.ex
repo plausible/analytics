@@ -39,6 +39,7 @@ defmodule PlausibleWeb.Live.Shields.Tabs do
   def render(assigns) do
     ~H"""
     <div>
+      <.flash_messages flash={@flash} />
       <.live_component
         module={PlausibleWeb.Live.Shields.IPRules}
         current_user={@current_user}
@@ -49,5 +50,10 @@ defmodule PlausibleWeb.Live.Shields.Tabs do
       />
     </div>
     """
+  end
+
+  def handle_info({:flash, kind, message}, socket) do
+    socket = put_live_flash(socket, kind, message)
+    {:noreply, socket}
   end
 end
