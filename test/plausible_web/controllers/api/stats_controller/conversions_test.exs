@@ -261,6 +261,50 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
     end
 
     @tag :full_build_only
+    test "returns revenue goals as custom events if the plan doesn't cover the feature", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      user
+      |> Plausible.Auth.User.end_trial()
+      |> Plausible.Repo.update!()
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("200100300.123"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("300100400.123"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("0"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event, name: "Payment", revenue_reporting_amount: nil),
+        build(:event, name: "Payment", revenue_reporting_amount: nil)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 5,
+                 "events" => 5,
+                 "conversion_rate" => 100.0
+               }
+             ]
+    end
+
+    @tag :full_build_only
     test "returns revenue metrics as nil for non-revenue goals", %{
       conn: conn,
       site: site
