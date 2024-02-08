@@ -281,7 +281,8 @@ defmodule Plausible.Factory do
   def ip_rule_factory do
     %Plausible.Shield.IPRule{
       inet: Plausible.TestUtils.random_ip(),
-      description: "Test IP Rule"
+      description: "Test IP Rule",
+      updated_by: "Mr Seed <user@plausible.test>"
     }
   end
 

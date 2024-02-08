@@ -156,7 +156,10 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 <tr class="text-gray-900 dark:text-gray-100">
                   <td class="px-6 py-4 text-xs font-medium">
                     <div class="flex items-center">
-                      <span class="font-mono mr-4">
+                      <span
+                        class="font-mono mr-4 cursor-help border-b border-dotted border-gray-400"
+                        title={"Updated at #{rule.updated_at} by #{rule.updated_by}"}
+                      >
                         <%= rule.inet %>
                       </span>
 
@@ -222,7 +225,12 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
   end
 
   def handle_event("save-ip-rule", %{"ip_rule" => params}, socket) do
-    case Shields.add_ip_rule(socket.assigns.site.id, params) do
+    user = socket.assigns.current_user
+
+    case Shields.add_ip_rule(
+           socket.assigns.site.id,
+           Map.put(params, "updated_by", "#{user.name} <#{user.email}>")
+         ) do
       {:ok, rule} ->
         socket =
           socket
