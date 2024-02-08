@@ -25,6 +25,7 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       assert resp =~ "Revenue Goal"
     end
 
+    @tag :full_build_only
     test "lists Revenue Goals with feature availability annotation if the plan does not cover them",
          %{conn: conn, user: user, site: site} do
       {:ok, [_, _, g3]} = setup_goals(site)
