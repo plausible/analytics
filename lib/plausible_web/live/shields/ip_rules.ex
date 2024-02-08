@@ -157,6 +157,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                   <td class="px-6 py-4 text-xs font-medium">
                     <div class="flex items-center">
                       <span
+                        id={"inet-#{rule.id}"}
                         class="font-mono mr-4 cursor-help border-b border-dotted border-gray-400"
                         title={"Updated at #{rule.updated_at} by #{rule.updated_by}"}
                       >
