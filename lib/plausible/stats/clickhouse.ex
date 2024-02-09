@@ -83,67 +83,39 @@ defmodule Plausible.Stats.Clickhouse do
 
   def usage_breakdown([], _date_range), do: {0, 0}
 
-  def top_sources_for_spike(site, query, limit, page, show_noref \\ false, include_details) do
+  def top_sources_for_spike(site, query, limit, page) do
     offset = (page - 1) * limit
 
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     referrers =
       from(s in "sessions_v2",
+        select: %{
+          name:
+            fragment(
+              "if(empty(?), ?, ?) as name",
+              s.referrer_source,
+              @no_ref,
+              s.referrer_source
+            ),
+          url: fragment("any(?)", s.referrer),
+          count: uniq(s.user_id),
+          bounce_rate: bounce_rate(),
+          visit_duration: visit_duration()
+        },
         where: s.site_id == ^site.id,
         # Note: This query intentionally uses session end timestamp to get currently active users
         where: s.timestamp >= ^first_datetime and s.start < ^last_datetime,
+        where: s.referrer_source != "",
         group_by: s.referrer_source,
         order_by: [desc: uniq(s.user_id), asc: s.referrer_source],
         limit: ^limit,
         offset: ^offset
       )
 
-    referrers =
-      if show_noref do
-        referrers
-      else
-        from(s in referrers, where: s.referrer_source != "")
-      end
-
     on_full_build do
       referrers = Plausible.Stats.Sampling.add_query_hint(referrers, 10_000_000)
     end
-
-    referrers =
-      if include_details do
-        from(
-          s in referrers,
-          select: %{
-            name:
-              fragment(
-                "if(empty(?), ?, ?) as name",
-                s.referrer_source,
-                @no_ref,
-                s.referrer_source
-              ),
-            url: fragment("any(?)", s.referrer),
-            count: uniq(s.user_id),
-            bounce_rate: bounce_rate(),
-            visit_duration: visit_duration()
-          }
-        )
-      else
-        from(
-          s in referrers,
-          select: %{
-            name:
-              fragment(
-                "if(empty(?), ?, ?) as name",
-                s.referrer_source,
-                @no_ref,
-                s.referrer_source
-              ),
-            url: fragment("any(?)", s.referrer),
-            count: uniq(s.user_id)
-          }
-        )
-      end
 
     ClickhouseRepo.all(referrers)
     |> Enum.map(fn ref ->
