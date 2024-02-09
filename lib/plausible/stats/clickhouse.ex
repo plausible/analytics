@@ -9,8 +9,6 @@ defmodule Plausible.Stats.Clickhouse do
   alias Plausible.Stats.Query
   alias Plausible.Timezones
 
-  @no_ref "Direct / None"
-
   @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
   def pageview_start_date_local(site) do
     datetime =
