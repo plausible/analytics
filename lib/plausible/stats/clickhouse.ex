@@ -106,8 +106,6 @@ defmodule Plausible.Stats.Clickhouse do
         from(s in referrers, where: s.referrer_source != "")
       end
 
-    referrers = apply_page_as_entry_page(referrers, site, query)
-
     on_full_build do
       referrers = Plausible.Stats.Sampling.add_query_hint(referrers, 10_000_000)
     end
@@ -151,10 +149,6 @@ defmodule Plausible.Stats.Clickhouse do
     |> Enum.map(fn ref ->
       Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
     end)
-  end
-
-  defp apply_page_as_entry_page(db_query, _site, query) do
-    include_path_filter_entry(db_query, query.filters[:page])
   end
 
   def current_visitors(site, query) do
@@ -532,52 +526,6 @@ defmodule Plausible.Stats.Clickhouse do
           from(e in db_query, where: e.pathname != ^path)
         else
           from(e in db_query, where: e.pathname == ^path)
-        end
-      end
-    else
-      db_query
-    end
-  end
-
-  defp include_path_filter_entry(db_query, path) do
-    if path do
-      {negated, path} = check_negated_filter(path)
-      {contains_regex, path_regex} = convert_path_regex(path)
-
-      if contains_regex do
-        if negated do
-          from(e in db_query, where: fragment("not(match(?, ?))", e.entry_page, ^path_regex))
-        else
-          from(e in db_query, where: fragment("match(?, ?)", e.entry_page, ^path_regex))
-        end
-      else
-        if negated do
-          from(e in db_query, where: e.entry_page != ^path)
-        else
-          from(e in db_query, where: e.entry_page == ^path)
-        end
-      end
-    else
-      db_query
-    end
-  end
-
-  defp include_path_filter_exit(db_query, path) do
-    if path do
-      {negated, path} = check_negated_filter(path)
-      {contains_regex, path_regex} = convert_path_regex(path)
-
-      if contains_regex do
-        if negated do
-          from(e in db_query, where: fragment("not(match(?, ?))", e.exit_page, ^path_regex))
-        else
-          from(e in db_query, where: fragment("match(?, ?)", e.exit_page, ^path_regex))
-        end
-      else
-        if negated do
-          from(e in db_query, where: e.exit_page != ^path)
-        else
-          from(e in db_query, where: e.exit_page == ^path)
         end
       end
     else
