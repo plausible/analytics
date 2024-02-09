@@ -91,17 +91,8 @@ defmodule Plausible.Stats.Clickhouse do
     referrers =
       from(s in "sessions_v2",
         select: %{
-          name:
-            fragment(
-              "if(empty(?), ?, ?) as name",
-              s.referrer_source,
-              @no_ref,
-              s.referrer_source
-            ),
-          url: fragment("any(?)", s.referrer),
-          count: uniq(s.user_id),
-          bounce_rate: bounce_rate(),
-          visit_duration: visit_duration()
+          name: s.referrer_source,
+          count: uniq(s.user_id)
         },
         where: s.site_id == ^site.id,
         # Note: This query intentionally uses session end timestamp to get currently active users
@@ -118,9 +109,6 @@ defmodule Plausible.Stats.Clickhouse do
     end
 
     ClickhouseRepo.all(referrers)
-    |> Enum.map(fn ref ->
-      Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
-    end)
   end
 
   def current_visitors(site, query) do
