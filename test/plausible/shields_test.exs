@@ -31,10 +31,8 @@ defmodule Plausible.ShieldsTest do
       refute changeset.valid?
     end
 
-    # remove once https://github.com/adam12/ecto_network/pull/28 is merged
     test "non-strict IPs", %{site: site} do
-      assert {:ok, _} = add_ip_rule(site, %{"inet" => "111"})
-      assert {:error, _} = add_ip_rule(site, %{"inet" => "0.0.0.111"})
+      assert {:error, _} = add_ip_rule(site, %{"inet" => "111"})
     end
 
     test "double insert", %{site: site} do
