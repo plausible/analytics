@@ -3,9 +3,9 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible
   use Plausible.Stats.Fragments
 
-  import Plausible.Stats.{Base, Imported, Util}
+  import Plausible.Stats.{Base, Imported}
   require OpenTelemetry.Tracer, as: Tracer
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Util}
 
   @no_ref "Direct / None"
   @not_set "(not set)"
@@ -41,7 +41,7 @@ defmodule Plausible.Stats.Breakdown do
 
     metrics_to_select =
       metrics
-      |> maybe_add_visitors_metric()
+      |> Util.maybe_add_visitors_metric()
       |> Kernel.--(@special_metrics)
 
     event_results =
@@ -87,7 +87,7 @@ defmodule Plausible.Stats.Breakdown do
 
     zip_results(event_results, page_results, :goal, metrics_to_select)
     |> maybe_add_cr(site, query, nil, metrics)
-    |> maybe_remove_visitors_metric(metrics)
+    |> Util.maybe_remove_visitors_metric(metrics)
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination, opts) do
@@ -100,7 +100,7 @@ defmodule Plausible.Stats.Breakdown do
 
     metrics_to_select =
       metrics
-      |> maybe_add_visitors_metric()
+      |> Util.maybe_add_visitors_metric()
       |> Kernel.--(@special_metrics)
 
     {_limit, page} = pagination
@@ -127,13 +127,13 @@ defmodule Plausible.Stats.Breakdown do
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
     |> Enum.sort_by(& &1[sorting_key(metrics_to_select)], :desc)
     |> maybe_add_cr(site, query, nil, metrics)
-    |> maybe_remove_visitors_metric(metrics)
+    |> Util.maybe_remove_visitors_metric(metrics)
   end
 
   def breakdown(site, query, "event:page" = property, metrics, pagination, opts) do
     event_metrics =
       metrics
-      |> maybe_add_visitors_metric()
+      |> Util.maybe_add_visitors_metric()
       |> Enum.filter(&(&1 in @event_metrics))
 
     event_result =
@@ -141,7 +141,7 @@ defmodule Plausible.Stats.Breakdown do
       |> breakdown_events(query, "event:page", event_metrics, pagination)
       |> maybe_add_time_on_page(site, query, metrics)
       |> maybe_add_cr(site, query, property, metrics)
-      |> maybe_remove_visitors_metric(metrics)
+      |> Util.maybe_remove_visitors_metric(metrics)
 
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
@@ -187,12 +187,12 @@ defmodule Plausible.Stats.Breakdown do
 
     metrics_to_select =
       metrics
-      |> maybe_add_visitors_metric()
+      |> Util.maybe_add_visitors_metric()
       |> Kernel.--(@special_metrics)
 
     breakdown_sessions(site, query, property, metrics_to_select, pagination)
     |> maybe_add_cr(site, query, property, metrics)
-    |> maybe_remove_visitors_metric(metrics)
+    |> Util.maybe_remove_visitors_metric(metrics)
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
@@ -235,7 +235,7 @@ defmodule Plausible.Stats.Breakdown do
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
     |> transform_keys(%{operating_system: :os})
-    |> remove_internal_visits_metric(metrics)
+    |> Util.remove_internal_visits_metric(metrics)
   end
 
   defp breakdown_events(_, _, _, [], _), do: []
@@ -709,7 +709,7 @@ defmodule Plausible.Stats.Breakdown do
 
       item =
         item
-        |> Map.put(:conversion_rate, calculate_cr(without_goal.visitors, item.visitors))
+        |> Map.put(:conversion_rate, Util.calculate_cr(without_goal.visitors, item.visitors))
 
       if :total_visitors in metrics do
         Map.put(item, :total_visitors, without_goal.visitors)
@@ -735,7 +735,7 @@ defmodule Plausible.Stats.Breakdown do
 
     breakdown_results
     |> Enum.map(fn goal ->
-      Map.put(goal, :conversion_rate, calculate_cr(total_visitors, goal[:visitors]))
+      Map.put(goal, :conversion_rate, Util.calculate_cr(total_visitors, goal[:visitors]))
     end)
   end
 

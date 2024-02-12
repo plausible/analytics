@@ -1,9 +1,9 @@
 defmodule Plausible.Stats.Aggregate do
-  alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
   use Plausible
-  import Plausible.Stats.{Base, Imported, Util}
+  import Plausible.Stats.{Base, Imported}
   import Ecto.Query
+  alias Plausible.Stats.{Query, Util}
 
   @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
@@ -28,7 +28,7 @@ defmodule Plausible.Stats.Aggregate do
 
     event_metrics =
       metrics
-      |> maybe_add_visitors_metric()
+      |> Util.maybe_add_visitors_metric()
       |> Enum.filter(&(&1 in @event_metrics))
 
     event_task = fn -> aggregate_events(site, query, event_metrics) end
@@ -46,7 +46,7 @@ defmodule Plausible.Stats.Aggregate do
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
     |> maybe_put_cr(site, query, metrics)
-    |> maybe_remove_visitors_metric(metrics)
+    |> Util.maybe_remove_visitors_metric(metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
     |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
@@ -63,7 +63,7 @@ defmodule Plausible.Stats.Aggregate do
 
       converted = aggregate_result.visitors
 
-      cr = calculate_cr(all, converted)
+      cr = Util.calculate_cr(all, converted)
 
       aggregate_result = Map.put(aggregate_result, :conversion_rate, cr)
 
@@ -94,7 +94,7 @@ defmodule Plausible.Stats.Aggregate do
     |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
-    |> remove_internal_visits_metric()
+    |> Util.remove_internal_visits_metric()
   end
 
   defp aggregate_time_on_page(site, query) do
