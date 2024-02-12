@@ -71,7 +71,7 @@ defmodule Plausible.Imported.Importer do
 
   receive do
     {:notification, :analytics_imports_jobs, %{"complete" => ^import_id}} ->
-      IO.puts("Job compelete")
+      IO.puts("Job completed")
 
     {:notification, :analytics_imports_jobs, %{"transient_fail" => ^import_id}} ->
       IO.puts("Job failed transiently")
