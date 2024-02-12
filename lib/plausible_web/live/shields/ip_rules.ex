@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                       <span
                         id={"inet-#{rule.id}"}
                         class="font-mono mr-4 cursor-help border-b border-dotted border-gray-400"
-                        title={"Updated at #{rule.updated_at} by #{rule.added_by}"}
+                        title={"Added at #{rule.updated_at} by #{rule.added_by}"}
                       >
                         <%= rule.inet %>
                       </span>

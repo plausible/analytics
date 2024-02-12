@@ -143,7 +143,7 @@ defmodule PlausibleWeb.Live.ShieldsTest do
       assert [%{id: id}] = Shields.list_ip_rules(site)
 
       tooltip = text_of_attr(html, "#inet-#{id}", "title")
-      assert tooltip =~ "Updated at #{Date.utc_today()}"
+      assert tooltip =~ "Added at #{Date.utc_today()}"
       assert tooltip =~ "by #{user.name} <#{user.email}>"
 
       assert [_] = Shields.list_ip_rules(site)
