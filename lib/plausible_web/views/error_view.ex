@@ -2,7 +2,7 @@ defmodule PlausibleWeb.ErrorView do
   use Plausible
   use PlausibleWeb, :view
 
-  def render("500.json", %{conn: %{private: %{PlausibleWeb.Plugins.API.Router => _}}}) do
+  def render("500.json", %{conn: %{assigns: %{plugins_api: true}}}) do
     contact_support_note =
       on_full_build do
         "If the problem persists please contact support@plausible.io"
