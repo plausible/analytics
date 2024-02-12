@@ -39,10 +39,7 @@ defmodule Plausible.Stats.Breakdown do
         {nil, metrics -- @revenue_metrics}
       end
 
-    metrics_to_select =
-      metrics
-      |> Util.maybe_add_visitors_metric()
-      |> Kernel.--(@special_metrics)
+    metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @special_metrics
 
     event_results =
       if Enum.any?(event_goals) do
@@ -98,10 +95,7 @@ defmodule Plausible.Stats.Breakdown do
         {nil, metrics}
       end
 
-    metrics_to_select =
-      metrics
-      |> Util.maybe_add_visitors_metric()
-      |> Kernel.--(@special_metrics)
+    metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @special_metrics
 
     {_limit, page} = pagination
 
@@ -185,10 +179,7 @@ defmodule Plausible.Stats.Breakdown do
   def breakdown(site, query, property, metrics, pagination, opts) do
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
-    metrics_to_select =
-      metrics
-      |> Util.maybe_add_visitors_metric()
-      |> Kernel.--(@special_metrics)
+    metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @special_metrics
 
     breakdown_sessions(site, query, property, metrics_to_select, pagination)
     |> maybe_add_cr(site, query, property, metrics)
