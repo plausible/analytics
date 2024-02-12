@@ -1144,7 +1144,8 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       on_full_build do
-        if Enum.any?(site.goals, &Plausible.Goal.Revenue.revenue?/1) do
+        if Enum.any?(site.goals, &Plausible.Goal.Revenue.revenue?/1) and
+             Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
           [:visitors, :events] ++ @revenue_metrics
         else
           [:visitors, :events]
