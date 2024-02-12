@@ -70,17 +70,9 @@ defmodule Plausible.Imported do
       )
       |> Repo.one()
 
-    # fall back to imported_data for legacy support
-    cond do
-      first_import ->
-        first_import
-
-      site.imported_data && site.imported_data.status == "ok" ->
-        site.imported_data
-
-      true ->
-        nil
-    end
+    [site.imported_data, first_import]
+    |> Enum.reject(&is_nil/1)
+    |> Enum.min_by(& &1.start_date, Date, fn -> nil end)
   end
 
   @spec delete_imports_for_site(Site.t()) :: :ok
