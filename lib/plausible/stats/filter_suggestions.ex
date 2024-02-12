@@ -134,7 +134,7 @@ defmodule Plausible.Stats.FilterSuggestions do
   def filter_suggestions(site, query, "prop_key", filter_search) do
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
-    from(e in base_event_query(site, Query.remove_event_filters(query, [:props])),
+    from(e in base_event_query(site, query),
       array_join: meta in "meta",
       as: :meta,
       select: meta.key,

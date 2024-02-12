@@ -92,14 +92,16 @@ export default function Properties(props) {
     )
   }
 
-  const getFilterFor = (listItem) => { return { 'props': JSON.stringify({ [propKey]: escapeFilterValue(listItem.name) }) } }
+  const getFilterFor = (listItem) => ({
+    props: JSON.stringify({ ...query.filters.props, [propKey]: escapeFilterValue(listItem.name) })
+  })
   const comboboxValues = propKey ? [{ value: propKey, label: propKey }] : []
   const boxClass = 'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500'
 
   return (
     <div className="w-full mt-4">
       <div>
-        <Combobox isDisabled={!!query.filters.props} boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
+        <Combobox boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
       </div>
       {propKey && renderBreakdown()}
     </div>
