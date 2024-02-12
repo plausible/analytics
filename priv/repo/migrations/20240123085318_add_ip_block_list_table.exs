@@ -8,7 +8,7 @@ defmodule Plausible.Repo.Migrations.AddIpBlockListTable do
       add :inet, :inet
       add :action, :string, default: "deny", null: false
       add :description, :string
-      add :updated_by, :string
+      add :added_by, :string
       timestamps()
     end
 

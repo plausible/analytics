@@ -79,9 +79,9 @@ defmodule Plausible.ShieldsTest do
       assert changeset.errors == [inet: {"maximum reached", []}]
     end
 
-    test "with updated_by", %{site: site} do
-      assert {:ok, rule} = add_ip_rule(site, %{"inet" => "1.1.1.1", "updated_by" => "test"})
-      assert rule.updated_by == "test"
+    test "with added_by", %{site: site} do
+      assert {:ok, rule} = add_ip_rule(site, %{"inet" => "1.1.1.1", "added_by" => "test"})
+      assert rule.added_by == "test"
     end
   end
 

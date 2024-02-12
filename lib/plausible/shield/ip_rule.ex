@@ -13,7 +13,7 @@ defmodule Plausible.Shield.IPRule do
     field :inet, EctoNetwork.INET
     field :action, Ecto.Enum, values: [:deny, :allow], default: :deny
     field :description, :string
-    field :updated_by, :string
+    field :added_by, :string
 
     # If `from_cache?` is set, the struct might be incomplete - see `Plausible.Site.Shield.Rules.IP.Cache`
     field :from_cache?, :boolean, virtual: true, default: false
@@ -22,7 +22,7 @@ defmodule Plausible.Shield.IPRule do
 
   def changeset(rule, attrs) do
     rule
-    |> cast(attrs, [:site_id, :inet, :description, :updated_by])
+    |> cast(attrs, [:site_id, :inet, :description, :added_by])
     |> validate_required([:site_id, :inet])
     |> disallow_netmask(:inet)
     |> unique_constraint(:inet,
