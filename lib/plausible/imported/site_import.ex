@@ -25,7 +25,7 @@ defmodule Plausible.Imported.SiteImport do
     timestamps()
   end
 
-  # NOTE: this is necessary for backwards compatbility
+  # NOTE: this is necessary for backwards compatibility
   # with legacy imports
   @spec label(t() | Site.ImportedData.t()) :: String.t()
   def label(%__MODULE__{source: source}), do: ImportSources.by_name(source).label()
