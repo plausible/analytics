@@ -254,7 +254,7 @@ defmodule Plausible.Stats.Query do
 
     cond do
       is_nil(site_import) -> false
-      Timex.after?(query.date_range.first, site_import.end_date) -> false
+      Date.after?(query.date_range.first, site_import.end_date) -> false
       Enum.any?(query.filters) -> false
       query.period == "realtime" -> false
       true -> requested?
