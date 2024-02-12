@@ -32,7 +32,7 @@ defmodule Plausible.Stats.Breakdown do
     {revenue_goals, metrics} =
       if full_build?() && Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
         revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
-        metrics = if Enum.any?(revenue_goals), do: metrics, else: metrics -- @revenue_metrics
+        metrics = if Enum.empty?(revenue_goals), do: metrics -- @revenue_metrics, else: metrics
 
         {revenue_goals, metrics}
       else
