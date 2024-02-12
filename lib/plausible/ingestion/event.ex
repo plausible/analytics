@@ -96,7 +96,7 @@ defmodule Plausible.Ingestion.Event do
   defp pipeline() do
     [
       &drop_datacenter_ip/1,
-      &drop_blocklist_ip/1,
+      &drop_shield_rule_ip/1,
       &put_user_agent/1,
       &put_basic_info/1,
       &put_referrer/1,
@@ -153,7 +153,7 @@ defmodule Plausible.Ingestion.Event do
     end
   end
 
-  defp drop_blocklist_ip(%__MODULE__{} = event) do
+  defp drop_shield_rule_ip(%__MODULE__{} = event) do
     domain = event.domain
     address = event.request.remote_ip
 
