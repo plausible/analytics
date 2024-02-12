@@ -67,8 +67,8 @@ defmodule Plausible.Stats.Aggregate do
 
       aggregate_result = Map.put(aggregate_result, :conversion_rate, cr)
 
-      if :visitors_without_event_filters in metrics do
-        Map.put(aggregate_result, :visitors_without_event_filters, all)
+      if :total_visitors in metrics do
+        Map.put(aggregate_result, :total_visitors, all)
       else
         aggregate_result
       end

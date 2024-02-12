@@ -341,13 +341,13 @@ defmodule PlausibleWeb.Api.StatsController do
 
   defp fetch_top_stats(site, %Query{filters: %{"event:goal" => _}} = query, comparison_query) do
     metrics =
-      [:visitors_without_event_filters, :visitors, :events, :conversion_rate] ++ @revenue_metrics
+      [:total_visitors, :visitors, :events, :conversion_rate] ++ @revenue_metrics
 
     results = Stats.aggregate(site, query, metrics)
     comparison = if comparison_query, do: Stats.aggregate(site, comparison_query, metrics)
 
     [
-      top_stats_entry(results, comparison, "Unique visitors", :visitors_without_event_filters),
+      top_stats_entry(results, comparison, "Unique visitors", :total_visitors),
       top_stats_entry(results, comparison, "Unique conversions", :visitors),
       top_stats_entry(results, comparison, "Total conversions", :events),
       on_full_build do
