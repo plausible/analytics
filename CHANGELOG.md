@@ -40,6 +40,8 @@ All notable changes to this project will be documented in this file.
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
 
 ### Fixed
+- Calculate `conversion_rate` percentage change in the same way like `bounce_rate` (subtraction instead of division)
+- Calculate `bounce_rate` percentage change in the Stats API in the same way as it's done in the dashboard
 - Stop returning custom events in goal breakdown with a pageview goal filter and vice versa
 - Only return `(none)` values in custom property breakdown for the first page (pagination) of results
 - Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
