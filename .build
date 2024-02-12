@@ -117,6 +117,9 @@ Plausible.Sentry.Client.html
 Plausible.SentryFilter.html
 Plausible.Session.CacheStore.html
 Plausible.Session.Salts.html
+Plausible.Shield.IPRule.html
+Plausible.Shield.IPRuleCache.html
+Plausible.Shields.html
 Plausible.Site.Cache.html
 Plausible.Site.Domain.html
 Plausible.Site.GateKeeper.html
@@ -246,6 +249,8 @@ PlausibleWeb.Live.PropsSettings.html
 PlausibleWeb.Live.RegisterForm.html
 PlausibleWeb.Live.ResetPasswordForm.html
 PlausibleWeb.Live.SentryContext.html
+PlausibleWeb.Live.Shields.IPRules.html
+PlausibleWeb.Live.Shields.Tabs.html
 PlausibleWeb.Live.Sites.html
 PlausibleWeb.MJML.StatsReport.html
 PlausibleWeb.PageController.html
@@ -291,7 +296,7 @@ PlausibleWeb.Plugs.ErrorHandler.html
 PlausibleWeb.Plugs.MaybeDisableRegistration.html
 PlausibleWeb.Plugs.NoRobots.html
 PlausibleWeb.RefInspector.html
-PlausibleWeb.RemoteIp.html
+PlausibleWeb.RemoteIP.html
 PlausibleWeb.RequireAccountPlug.html
 PlausibleWeb.RequireLoggedOutPlug.html
 PlausibleWeb.Router.html
@@ -337,8 +342,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-08A278DA.js
-dist/sidebar_items-C805698E.js
+dist/search_data-E6A8A940.js
+dist/sidebar_items-D761B285.js
 index.html
 readme.html
 search.html

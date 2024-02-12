@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-C805698E.js"></script>
+    <script src="dist/sidebar_items-D761B285.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -259,7 +259,12 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
       <div class="specs">
 
           <pre translate="no"><span class="attribute">@type</span> drop_reason() ::
-  :bot | :spam_referrer | <a href="Plausible.Site.GateKeeper.html#t:policy/0">Plausible.Site.GateKeeper.policy</a>() | :invalid | :dc_ip</pre>
+  :bot
+  | :spam_referrer
+  | <a href="Plausible.Site.GateKeeper.html#t:policy/0">Plausible.Site.GateKeeper.policy</a>()
+  | :invalid
+  | :dc_ip
+  | :site_ip_blocklist</pre>
 
       </div>
 
@@ -275,7 +280,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">t()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L30" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L31" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -411,7 +416,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">build_and_buffer(request)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L43" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L44" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -440,7 +445,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">emit_telemetry_buffered(event)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L79" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -468,7 +473,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">emit_telemetry_dropped(event, reason)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L87" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L88" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -496,7 +501,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">telemetry_event_buffered()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L69" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L70" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -524,7 +529,7 @@ are uniformly either buffered in batches (to Clickhouse) or dropped
     </a>
     <h1 class="signature" translate="no">telemetry_event_dropped()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L74" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/ingestion/event.ex#L75" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
