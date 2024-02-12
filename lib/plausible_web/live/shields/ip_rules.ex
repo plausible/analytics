@@ -40,6 +40,8 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
           <p class="mt-1 mb-4 text-sm leading-5 text-gray-500 dark:text-gray-200">
             Reject incoming traffic from specific IP addresses
           </p>
+
+          <PlausibleWeb.Components.Generic.docs_info slug="excluding" />
         </header>
         <div class="border-t border-gray-200 pt-4 grid">
           <div
