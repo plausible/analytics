@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Allow filtering by multiple custom properties
 - Wildcard and member filtering on the Stats API `event:goal` property
 - Allow filtering with `contains`/`matches` operator for custom properties
 - Add `referrers.csv` to CSV export

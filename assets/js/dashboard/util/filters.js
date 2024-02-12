@@ -14,16 +14,16 @@ export const ALLOW_FREE_CHOICE = new Set(
   FILTER_GROUPS['page'].concat(FILTER_GROUPS['utm']).concat(['prop_value'])
 )
 
-export const FILTER_TYPES = {
+export const FILTER_OPERATIONS = {
   isNot: 'is not',
   contains: 'contains',
   is: 'is'
 };
 
-export const FILTER_PREFIXES = {
-  [FILTER_TYPES.isNot]: '!',
-  [FILTER_TYPES.contains]: '~',
-  [FILTER_TYPES.is]: ''
+export const OPERATION_PREFIX = {
+  [FILTER_OPERATIONS.isNot]: '!',
+  [FILTER_OPERATIONS.contains]: '~',
+  [FILTER_OPERATIONS.is]: ''
 };
 
 export function supportsIsNot(filterName) {
@@ -50,16 +50,16 @@ export function escapeFilterValue(value) {
 }
 
 export function toFilterQuery(type, clauses) {
-  const prefix = FILTER_PREFIXES[type];
+  const prefix = OPERATION_PREFIX[type];
   const result = clauses.map(clause => escapeFilterValue(clause.value.trim())).join('|')
   return prefix + result;
 }
 
 export function parsePrefix(rawValue) {
-  const type = Object.keys(FILTER_PREFIXES)
-    .find(type => FILTER_PREFIXES[type] === rawValue[0]) || FILTER_TYPES.is;
+  const type = Object.keys(OPERATION_PREFIX)
+    .find(type => OPERATION_PREFIX[type] === rawValue[0]) || FILTER_OPERATIONS.is;
 
-  const value = type === FILTER_TYPES.is ? rawValue : rawValue.substring(1)
+  const value = type === FILTER_OPERATIONS.is ? rawValue : rawValue.substring(1)
 
   const values = value
     .split(NON_ESCAPED_PIPE_REGEX)
@@ -69,37 +69,37 @@ export function parsePrefix(rawValue) {
   return {type, values}
 }
 
-export function parseQueryFilter(query, filter) {
-  if (filter === 'props') {
-    const rawValue = query.filters['props']
-    const [[_propKey, propVal]] = Object.entries(rawValue)
+export function parseQueryPropsFilter(query) {
+  return Object.entries(query.filters['props']).map(([key, propVal]) => {
     const {type, values} = parsePrefix(propVal)
     const clauses = values.map(val => { return {value: val, label: val}})
-    return {type, clauses}
-  } else {
-    const {type, values} = parsePrefix(query.filters[filter] || '')
+    return { propKey: { label: key, value: key }, type, clauses }
+  })
+}
 
-    let labels = values
+export function parseQueryFilter(query, filter) {
+  const {type, values} = parsePrefix(query.filters[filter] || '')
 
-    if (filter === 'country' && values.length > 0) {
-      const rawLabel = (new URLSearchParams(window.location.search)).get('country_labels') || ''
-      labels = rawLabel.split('|').filter(label => !!label)
-    }
+  let labels = values
 
-    if (filter === 'region' && values.length > 0) {
-      const rawLabel = (new URLSearchParams(window.location.search)).get('region_labels') || ''
-      labels = rawLabel.split('|').filter(label => !!label)
-    }
-
-    if (filter === 'city' && values.length > 0) {
-      const rawLabel = (new URLSearchParams(window.location.search)).get('city_labels') || ''
-      labels = rawLabel.split('|').filter(label => !!label)
-    }
-
-    const clauses = values.map((value, index) => { return {value, label: labels[index]}})
-
-    return {type, clauses}
+  if (filter === 'country' && values.length > 0) {
+    const rawLabel = (new URLSearchParams(window.location.search)).get('country_labels') || ''
+    labels = rawLabel.split('|').filter(label => !!label)
   }
+
+  if (filter === 'region' && values.length > 0) {
+    const rawLabel = (new URLSearchParams(window.location.search)).get('region_labels') || ''
+    labels = rawLabel.split('|').filter(label => !!label)
+  }
+
+  if (filter === 'city' && values.length > 0) {
+    const rawLabel = (new URLSearchParams(window.location.search)).get('city_labels') || ''
+    labels = rawLabel.split('|').filter(label => !!label)
+  }
+
+  const clauses = values.map((value, index) => { return {value, label: labels[index]}})
+
+  return {type, clauses}
 }
 
 export function formatFilterGroup(filterGroup) {

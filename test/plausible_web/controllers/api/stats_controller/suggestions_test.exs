@@ -282,6 +282,63 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
+    test "returns suggestions found in time frame", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author", "logged_in"],
+          "meta.value": ["Uku Taht", "false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["dark_mode"],
+          "meta.value": ["true"],
+          timestamp: ~N[2022-01-02 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
+
+      assert json_response(conn, 200) == [
+               %{"label" => "author", "value" => "author"},
+               %{"label" => "logged_in", "value" => "logged_in"}
+             ]
+    end
+
+    test "returns only prop keys which exist under filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author", "bank"],
+          "meta.value": ["Uku", "a"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author", "serial_number"],
+          "meta.value": ["Marko", "b"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{author: "Uku"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "author", "value" => "author"},
+               %{"label" => "bank", "value" => "bank"}
+             ]
+    end
+
     test "returns suggestions for prop key based on site.allowed_event_props list", %{
       conn: conn,
       site: site

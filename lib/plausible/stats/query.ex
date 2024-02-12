@@ -208,6 +208,12 @@ defmodule Plausible.Stats.Query do
     end)
   end
 
+  def get_all_filters_by_prefix(query, prefix) do
+    Enum.filter(query.filters, fn {prop, _value} ->
+      String.starts_with?(prop, prefix)
+    end)
+  end
+
   defp today(tz) do
     Timex.now(tz) |> Timex.to_date()
   end
