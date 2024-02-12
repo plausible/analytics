@@ -1,4 +1,8 @@
-defmodule PlausibleWeb.RemoteIp do
+defmodule PlausibleWeb.RemoteIP do
+  @moduledoc """
+  Implements the strategy of retrieving client's remote IP
+  """
+
   def get(conn) do
     x_plausible_ip = List.first(Plug.Conn.get_req_header(conn, "x-plausible-ip"))
     cf_connecting_ip = List.first(Plug.Conn.get_req_header(conn, "cf-connecting-ip"))
@@ -24,7 +28,7 @@ defmodule PlausibleWeb.RemoteIp do
         |> Map.get("for")
         # IPv6 addresses are enclosed in quote marks and square brackets: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Forwarded
         |> String.trim("\"")
-        |> clean_ip
+        |> clean_ip()
 
       true ->
         to_string(:inet_parse.ntoa(conn.remote_ip))
@@ -50,6 +54,6 @@ defmodule PlausibleWeb.RemoteIp do
     String.split(header, ",")
     |> Enum.map(&String.trim/1)
     |> List.first()
-    |> clean_ip
+    |> clean_ip()
   end
 end

@@ -26,6 +26,7 @@ defmodule Plausible.Ingestion.Event do
           | GateKeeper.policy()
           | :invalid
           | :dc_ip
+          | :site_ip_blocklist
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -94,7 +95,8 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
-      &put_ip_classification/1,
+      &drop_datacenter_ip/1,
+      &drop_shield_rule_ip/1,
       &put_user_agent/1,
       &put_basic_info/1,
       &put_referrer/1,
@@ -141,12 +143,25 @@ defmodule Plausible.Ingestion.Event do
     struct!(event, clickhouse_event_attrs: Map.merge(event.clickhouse_event_attrs, attrs))
   end
 
-  defp put_ip_classification(%__MODULE__{} = event) do
+  defp drop_datacenter_ip(%__MODULE__{} = event) do
     case event.request.ip_classification do
       "dc_ip" ->
         drop(event, :dc_ip)
 
       _any ->
+        event
+    end
+  end
+
+  defp drop_shield_rule_ip(%__MODULE__{} = event) do
+    domain = event.domain
+    address = event.request.remote_ip
+
+    case Plausible.Shield.IPRuleCache.get({domain, address}) do
+      %Plausible.Shield.IPRule{action: :deny} ->
+        drop(event, :site_ip_blocklist)
+
+      _ ->
         event
     end
   end

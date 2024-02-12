@@ -253,6 +253,18 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
+  def settings_shields(conn, _params) do
+    site = conn.assigns.site
+
+    conn
+    |> render("settings_shields.html",
+      site: site,
+      dogfood_page_path: "/:dashboard/settings/shields",
+      connect_live_socket: true,
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+    )
+  end
+
   def update_google_auth(conn, %{"google_auth" => attrs}) do
     site = conn.assigns[:site] |> Repo.preload(:google_auth)
 

@@ -53,6 +53,7 @@ defmodule Plausible.Cache do
     Application.fetch_env!(:plausible, __MODULE__)[:enabled] == true
   end
 
+  # credo:disable-for-this-file Credo.Check.Refactor.LongQuoteBlocks
   defmacro __using__(_opts) do
     quote do
       require Logger
@@ -60,7 +61,7 @@ defmodule Plausible.Cache do
       @behaviour Plausible.Cache
       @modes [:all, :updated_recently]
 
-      @spec get(String.t(), Keyword.t()) :: any() | nil
+      @spec get(any(), Keyword.t()) :: any() | nil
       def get(key, opts \\ []) do
         cache_name = Keyword.get(opts, :cache_name, name())
         force? = Keyword.get(opts, :force?, false)
@@ -158,6 +159,9 @@ defmodule Plausible.Cache do
 
           0 ->
             count_all() == 0
+
+          _ ->
+            false
         end
       end
 
