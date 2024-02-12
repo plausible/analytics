@@ -46,7 +46,7 @@ defmodule Plausible.Stats.Aggregate do
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
     |> maybe_put_cr(site, query, metrics)
-    |> Util.maybe_remove_visitors_metric(metrics)
+    |> Util.keep_requested_metrics(metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
     |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
@@ -94,7 +94,7 @@ defmodule Plausible.Stats.Aggregate do
     |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
-    |> Util.remove_internal_visits_metric()
+    |> Util.keep_requested_metrics(metrics)
   end
 
   defp aggregate_time_on_page(site, query) do

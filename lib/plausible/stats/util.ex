@@ -3,22 +3,30 @@ defmodule Plausible.Stats.Util do
   Utilities for modifying stat results
   """
 
+  @manually_removable_metrics [:__internal_visits, :visitors]
+
   @doc """
-  `__internal_visits` is fetched when querying bounce rate and visit duration, as it
-  is needed to calculate these from imported data. This function removes that metric
-  from all entries in the results list.
+  Sometimes we need to manually add metrics in order to calculate the value for
+  other metrics. E.g:
+
+  * `__internal_visits` is fetched when querying bounce rate and visit duration,
+    as it is needed to calculate these from imported data.
+
+  * `visitors` metric might be added manually via `maybe_add_visitors_metric/1`,
+    in order to be able to calculate conversion rate.
+
+  This function can be used for stripping those metrics from a breakdown (list),
+  or an aggregate (map) result. We do not want to return metrics that we're not
+  requested.
   """
-  def remove_internal_visits_metric(results, metrics) when is_list(results) do
-    if :bounce_rate in metrics or :visit_duration in metrics do
-      results
-      |> Enum.map(&remove_internal_visits_metric/1)
-    else
-      results
-    end
+  def keep_requested_metrics(results, requested_metrics) when is_list(results) do
+    Enum.map(results, fn results_map ->
+      keep_requested_metrics(results_map, requested_metrics)
+    end)
   end
 
-  def remove_internal_visits_metric(result) when is_map(result) do
-    Map.delete(result, :__internal_visits)
+  def keep_requested_metrics(results, requested_metrics) do
+    Map.drop(results, @manually_removable_metrics -- requested_metrics)
   end
 
   @doc """
@@ -34,39 +42,12 @@ defmodule Plausible.Stats.Util do
   In order for us to be able to calculate it based on the
   results returned by the database query, the visitors metric
   needs to be queried.
-
-  Before returning those results to the client though, we
-  probably want to remove the visitors metric from the result
-  since it was not really asked for. For that, we can use the
-  `maybe_remove_visitors_metric/1` function
   """
   def maybe_add_visitors_metric(metrics) do
     if :conversion_rate in metrics and :visitors not in metrics do
       metrics ++ [:visitors]
     else
       metrics
-    end
-  end
-
-  @doc """
-  This function removes the manually added `visitors` metric
-  from the results returned by the db query (either aggregate
-  map or breakdown list). See `maybe_add_visitors_metric/1`
-  for more information.
-  """
-  def maybe_remove_visitors_metric(results, asked_metrics) when is_list(results) do
-    if :visitors not in asked_metrics do
-      Enum.map(results, &Map.delete(&1, :visitors))
-    else
-      results
-    end
-  end
-
-  def maybe_remove_visitors_metric(results, asked_metrics) when is_map(results) do
-    if :visitors not in asked_metrics do
-      Map.delete(results, :visitors)
-    else
-      results
     end
   end
 
