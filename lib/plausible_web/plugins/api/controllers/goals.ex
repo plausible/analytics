@@ -31,7 +31,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
 
     case API.Goals.create(site, goal_or_goals) do
       {:ok, goals} ->
-        location_headers = Enum.map(goals, &{"location", goals_url(base_uri(), :get, &1.id)})
+        location_headers =
+          Enum.map(goals, &{"location", plugins_api_goals_url(conn, :get, &1.id)})
 
         conn
         |> prepend_resp_headers(location_headers)

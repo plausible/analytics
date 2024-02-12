@@ -7,7 +7,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Pagination do
     namespace: PlausibleWeb.Plugins.API,
     root: ""
 
-  alias PlausibleWeb.Plugins.API.Router.Helpers
+  alias PlausibleWeb.Router.Helpers
 
   def render_metadata_links(meta, helper_fn, helper_fn_args, existing_params \\ %{}) do
     render(__MODULE__, "pagination.json", %{
@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Plugins.API.Views.Pagination do
           |> Map.merge(existing_params)
 
         args = [
-          PlausibleWeb.Plugins.API.base_uri()
+          PlausibleWeb.Endpoint
           | List.wrap(helper_fn_args) ++ [query_params]
         ]
 

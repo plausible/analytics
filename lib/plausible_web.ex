@@ -62,8 +62,7 @@ defmodule PlausibleWeb do
     quote do
       use Phoenix.Controller, namespace: PlausibleWeb.Plugins.API
       import Plug.Conn
-      import PlausibleWeb.Plugins.API.Router.Helpers
-      import PlausibleWeb.Plugins.API, only: [base_uri: 0]
+      import PlausibleWeb.Router.Helpers
 
       alias PlausibleWeb.Plugins.API.Schemas
       alias PlausibleWeb.Plugins.API.Views
@@ -82,7 +81,7 @@ defmodule PlausibleWeb do
         namespace: PlausibleWeb.Plugins.API,
         root: ""
 
-      alias PlausibleWeb.Plugins.API.Router.Helpers
+      alias PlausibleWeb.Router.Helpers
       import PlausibleWeb.Plugins.API.Views.Pagination, only: [render_metadata_links: 4]
     end
   end

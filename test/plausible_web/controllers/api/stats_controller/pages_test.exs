@@ -112,6 +112,85 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
              ]
     end
 
+    test "returns top pages with :matches_member filter on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/1",
+          "meta.key": ["prop"],
+          "meta.value": ["bar"]
+        ),
+        build(:pageview,
+          pathname: "/2",
+          "meta.key": ["prop"],
+          "meta.value": ["foobar"]
+        ),
+        build(:pageview,
+          pathname: "/3",
+          "meta.key": ["prop"],
+          "meta.value": ["baar"]
+        ),
+        build(:pageview,
+          pathname: "/4",
+          "meta.key": ["another"],
+          "meta.value": ["bar"]
+        ),
+        build(:pageview, pathname: "/5"),
+        build(:pageview,
+          pathname: "/6",
+          "meta.key": ["prop"],
+          "meta.value": ["near"]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{"prop" => "~bar|nea"}})
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"visitors" => 1, "name" => "/1"},
+               %{"visitors" => 1, "name" => "/2"},
+               %{"visitors" => 1, "name" => "/6"}
+             ]
+    end
+
+    test "returns top pages with multiple filters on custom pageview props", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/1",
+          "meta.key": ["prop", "number"],
+          "meta.value": ["bar", "1"]
+        ),
+        build(:pageview,
+          pathname: "/2",
+          "meta.key": ["prop", "number"],
+          "meta.value": ["bar", "2"]
+        ),
+        build(:pageview,
+          pathname: "/3",
+          "meta.key": ["prop"],
+          "meta.value": ["bar"]
+        ),
+        build(:pageview,
+          pathname: "/4",
+          "meta.key": ["number"],
+          "meta.value": ["bar"]
+        ),
+        build(:pageview, pathname: "/5")
+      ])
+
+      filters = Jason.encode!(%{props: %{"prop" => "bar", "number" => "1"}})
+      conn = get(conn, "/api/stats/#{site.domain}/pages?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{"visitors" => 1, "name" => "/1"}
+             ]
+    end
+
     test "calculates bounce_rate and time_on_page with :is filter on custom pageview props",
          %{conn: conn, site: site} do
       populate_stats(site, [

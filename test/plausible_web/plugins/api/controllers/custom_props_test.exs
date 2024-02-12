@@ -22,8 +22,8 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
 
   describe "unauthorized calls" do
     for {method, url} <- [
-          {:put, Routes.custom_props_url(base_uri(), :enable)},
-          {:delete, Routes.custom_props_url(base_uri(), :disable)}
+          {:put, Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)},
+          {:delete, Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :disable)}
         ] do
       test "unauthorized call: #{method} #{url}", %{conn: conn} do
         conn
@@ -44,7 +44,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
       site = Plausible.Repo.preload(site, :owner)
       insert(:growth_subscription, user: site.owner)
 
-      url = Routes.custom_props_url(base_uri(), :enable)
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
       payload = %{
         custom_prop: %{key: "author"}
@@ -68,7 +68,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
       site = Plausible.Repo.preload(site, :owner)
       insert(:growth_subscription, user: site.owner)
 
-      url = Routes.custom_props_url(base_uri(), :enable)
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
       payload = %{
         custom_props: [
@@ -92,7 +92,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
 
   describe "put /custom_prop - enable single prop" do
     test "validates input according to the schema", %{conn: conn, token: token, site: site} do
-      url = Routes.custom_props_url(base_uri(), :enable)
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
       conn
       |> authenticate(site.domain, token)
@@ -103,7 +103,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
     end
 
     test "enables single custom prop", %{conn: conn, token: token, site: site} do
-      url = Routes.custom_props_url(base_uri(), :enable)
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
       payload = %{
         custom_prop: %{key: "author"}
@@ -130,7 +130,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
     end
 
     test "is idempotent", %{conn: conn, token: token, site: site} do
-      url = Routes.custom_props_url(base_uri(), :enable)
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
       initial_conn =
         conn
@@ -166,7 +166,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
 
   describe "put /custom_props - bulk creation" do
     test "creates many custom props", %{conn: conn, token: token, site: site} do
-      url = Routes.custom_props_url(base_uri(), :enable)
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
       payload = %{
         custom_props: [
@@ -209,7 +209,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
     test "disable one prop", %{conn: conn, site: site, token: token} do
       {:ok, ["author"]} = Plausible.Plugins.API.CustomProps.enable(site, "author")
 
-      url = Routes.custom_props_url(base_uri(), :enable)
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
       payload = %{custom_prop: %{key: "author"}}
 
@@ -226,7 +226,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CustomPropsTest do
       {:ok, [_, _, _]} =
         Plausible.Plugins.API.CustomProps.enable(site, ["author", "category", "third"])
 
-      url = Routes.custom_props_url(base_uri(), :enable)
+      url = Routes.plugins_api_custom_props_url(PlausibleWeb.Endpoint, :enable)
 
       payload = %{
         custom_props: [

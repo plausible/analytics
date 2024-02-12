@@ -10,8 +10,12 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
   attr(:goals, :list, required: true)
   attr(:domain, :string, required: true)
   attr(:filter_text, :string)
+  attr(:site, Plausible.Site, required: true)
 
   def render(assigns) do
+    revenue_goals_enabled? = Plausible.Billing.Feature.RevenueGoals.enabled?(assigns.site)
+    assigns = assign(assigns, :revenue_goals_enabled?, revenue_goals_enabled?)
+
     ~H"""
     <div>
       <div class="border-t border-gray-200 pt-4 sm:flex sm:items-center sm:justify-between">
@@ -56,13 +60,22 @@ defmodule PlausibleWeb.Live.GoalSettings.List do
               <span class="text-sm font-medium text-gray-900 dark:text-gray-100 w-3/4">
                 <div class="flex">
                   <span class="truncate">
-                    <%= goal %>
-                    <br />
+                    <%= if not @revenue_goals_enabled? && goal.currency do %>
+                      <div class="text-gray-600 flex items-center">
+                        <Heroicons.lock_closed class="w-4 h-4 mr-1 inline" />
+                        <span><%= goal %></span>
+                      </div>
+                    <% else %>
+                      <%= goal %>
+                    <% end %>
                     <span class="text-sm text-gray-400 block mt-1 font-normal">
                       <span :if={goal.page_path}>Pageview</span>
                       <span :if={goal.event_name && !goal.currency}>Custom Event</span>
-                      <span :if={goal.currency}>
+                      <span :if={goal.currency && @revenue_goals_enabled?}>
                         Revenue Goal
+                      </span>
+                      <span :if={goal.currency && not @revenue_goals_enabled?} class="text-red-600">
+                        Unlock Revenue Goals by upgrading to a business plan
                       </span>
                       <span :if={not Enum.empty?(goal.funnels)}> - belongs to funnel(s)</span>
                     </span>
