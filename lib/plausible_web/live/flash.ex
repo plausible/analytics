@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.Flash do
 
   def flash_messages(assigns) do
     ~H"""
-    <div id="liveview-flash">
+    <div>
       <div
         :if={@flash != %{} or Application.get_env(:plausible, :environment) == "dev"}
         class="inset-0 z-50 fixed flex flex-col-reverse items-center sm:items-end justify-start sm:justify-end px-4 py-6 pointer-events-none sm:p-6"

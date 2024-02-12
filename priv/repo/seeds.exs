@@ -49,6 +49,8 @@ site =
     ]
   )
 
+Plausible.Factory.insert_list(29, :ip_rule, site: site)
+
 Plausible.Factory.insert(:google_auth,
   user: user,
   site: site,

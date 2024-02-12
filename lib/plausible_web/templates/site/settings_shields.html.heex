@@ -1,0 +1,7 @@
+<%= live_render(@conn, PlausibleWeb.Live.Shields.Tabs,
+  session: %{
+    "site_id" => @site.id,
+    "domain" => @site.domain,
+    "remote_ip" => PlausibleWeb.RemoteIP.get(@conn)
+  }
+) %>
