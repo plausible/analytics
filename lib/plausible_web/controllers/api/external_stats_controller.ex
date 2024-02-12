@@ -4,7 +4,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb.Plugs.ErrorHandler
   alias Plausible.Stats.Query
 
-  @stats_api_metrics [
+  @metrics [
     :visitors,
     :visits,
     :pageviews,
@@ -14,6 +14,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     :events,
     :conversion_rate
   ]
+
+  @metric_mappings Enum.into(@metrics, %{}, fn metric -> {to_string(metric), metric} end)
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
@@ -117,10 +119,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {:error, reason}
 
       metrics ->
-        # Only call `String.to_existing_atom/1` to convert atoms
-        # existing in the current module (a generally good practice).
-        _existing = @stats_api_metrics
-        {:ok, Enum.map(metrics, &String.to_existing_atom/1)}
+        {:ok, Enum.map(metrics, &Map.fetch!(@metric_mappings, &1))}
     end
   end
 
