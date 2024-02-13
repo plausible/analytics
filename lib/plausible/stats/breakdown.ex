@@ -201,7 +201,7 @@ defmodule Plausible.Stats.Breakdown do
 
   defp breakdown_sessions(site, query, property, metrics, pagination) do
     from(s in query_sessions(site, query),
-      order_by: [desc: fragment("uniq(?)", s.user_id), asc: fragment("min(?)", s.start)],
+      order_by: [desc: fragment("uniq(?)", s.user_id)],
       select: %{}
     )
     |> filter_converted_sessions(site, query)
