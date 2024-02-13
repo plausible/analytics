@@ -401,7 +401,10 @@ config :plausible, Plausible.IngestRepo,
   transport_opts: ch_transport_opts,
   flush_interval_ms: ch_flush_interval_ms,
   max_buffer_size: ch_max_buffer_size,
-  pool_size: ingest_pool_size
+  pool_size: ingest_pool_size,
+  settings: [
+    materialized_views_ignore_errors: 1
+  ]
 
 config :plausible, Plausible.AsyncInsertRepo,
   queue_target: 500,
@@ -411,7 +414,8 @@ config :plausible, Plausible.AsyncInsertRepo,
   pool_size: 1,
   settings: [
     async_insert: 1,
-    wait_for_async_insert: 0
+    wait_for_async_insert: 0,
+    materialized_views_ignore_errors: 1
   ]
 
 config :plausible, Plausible.ImportDeletionRepo,
