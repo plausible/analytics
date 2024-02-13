@@ -14,7 +14,7 @@ defmodule Plausible.Repo.Migrations.AddSiteImports do
       timestamps()
     end
 
-    create index(:site_imports, [:site_id])
+    create index(:site_imports, [:site_id, :start_date])
     create index(:site_imports, [:imported_by_id])
   end
 end
