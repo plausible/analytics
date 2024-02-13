@@ -29,9 +29,10 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
       # before_start callback triggered
       assert_received {:before_start, import_id}
 
-      job
-      |> Repo.reload!()
-      |> ImportAnalytics.perform()
+      assert :ok =
+               job
+               |> Repo.reload!()
+               |> ImportAnalytics.perform()
 
       assert [%{id: ^import_id, status: :completed}] = Plausible.Imported.list_all_imports(site)
 
@@ -47,9 +48,10 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
 
       {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
-      job
-      |> Repo.reload!()
-      |> ImportAnalytics.perform()
+      assert :ok =
+               job
+               |> Repo.reload!()
+               |> ImportAnalytics.perform()
 
       site = Repo.reload!(site)
       assert site.stats_start_date == nil
@@ -63,9 +65,10 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
 
       {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
-      job
-      |> Repo.reload!()
-      |> ImportAnalytics.perform()
+      assert :ok =
+               job
+               |> Repo.reload!()
+               |> ImportAnalytics.perform()
 
       assert_email_delivered_with(
         to: [user],
@@ -80,9 +83,10 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
 
       {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
-      job
-      |> Repo.reload!()
-      |> ImportAnalytics.perform()
+      assert {:discard, "Something went wrong"} =
+               job
+               |> Repo.reload!()
+               |> ImportAnalytics.perform()
 
       assert [%{status: :failed}] = Plausible.Imported.list_all_imports(site)
     end
@@ -98,9 +102,10 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
         build(:imported_visitors, import_id: job.args.import_id, pageviews: 10)
       ])
 
-      job
-      |> Repo.reload!()
-      |> ImportAnalytics.perform()
+      assert {:discard, _} =
+               job
+               |> Repo.reload!()
+               |> ImportAnalytics.perform()
 
       assert eventually(fn ->
                count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
@@ -118,9 +123,10 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
 
       {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
-      job
-      |> Repo.reload!()
-      |> ImportAnalytics.perform()
+      assert {:discard, _} =
+               job
+               |> Repo.reload!()
+               |> ImportAnalytics.perform()
 
       assert_email_delivered_with(
         to: [user],

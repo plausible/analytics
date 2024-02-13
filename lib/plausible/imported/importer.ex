@@ -25,6 +25,9 @@ defmodule Plausible.Imported.Importer do
     by synchronous. The callback is expected to return either `:ok` or `{:ok, %{...}}`
     on successful import or `{:error, ...}` on failure. The map in success tuple is
     used for updating site import struct and is passed to `on_success/2` callback.
+    Please note that error tuple should be only returned on errors that can't be
+    recovered from. For transient errors, the import should throw an exception or
+    simply crash.
   * `before_start/1` - Optional callback run right before scheduling import job. It's
     expected to either return `:ok` for the import to proceed or `{:error, ...}` tuple,
     which will be returned from `new_import/3` call.

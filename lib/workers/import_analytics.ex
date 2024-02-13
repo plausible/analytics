@@ -43,7 +43,7 @@ defmodule Plausible.Workers.ImportAnalytics do
 
         import_fail(site_import)
 
-        {:error, error}
+        {:discard, error}
     end
   end
 
