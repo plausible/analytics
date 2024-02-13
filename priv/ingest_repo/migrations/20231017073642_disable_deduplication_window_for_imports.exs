@@ -14,17 +14,11 @@ defmodule Plausible.IngestRepo.Migrations.DisableDeduplicationWindowForImports d
   )
 
   def up do
-    cluster_query = "SELECT 1 FROM system.replicas WHERE table = 'imported_visitors'"
-
-    cluster? =
-      case Ecto.Adapters.SQL.query(Plausible.IngestRepo, cluster_query) do
-        {:ok, %{rows: []}} -> false
-        {:ok, _} -> true
-      end
+    on_cluster = Plausible.MigrationUtils.on_cluster_statement("imported_visitors")
 
     for table <- @import_tables do
       execute """
-      ALTER TABLE #{table} #{if cluster?, do: "ON CLUSTER '{cluster}'"}  MODIFY SETTING replicated_deduplication_window = 0
+      ALTER TABLE #{table} #{on_cluster}  MODIFY SETTING replicated_deduplication_window = 0
       """
     end
   end
