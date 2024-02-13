@@ -813,15 +813,11 @@ defmodule PlausibleWeb.SiteController do
       site
       |> Plausible.Site.remove_imported_data()
       |> Repo.update!()
-
-      conn
-      |> put_flash(:success, "Imported data has been cleared")
-      |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
-    else
-      conn
-      |> put_flash(:error, "No data has been imported")
-      |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
     end
+
+    conn
+    |> put_flash(:success, "Imported data has been cleared")
+    |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
   def change_domain(conn, _params) do
