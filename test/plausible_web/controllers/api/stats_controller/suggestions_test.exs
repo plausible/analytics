@@ -282,6 +282,51 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
              ]
     end
 
+    test "allowing excluding keys", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Uku Taht"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["logged_in"],
+          "meta.value": ["false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["dark_mode"],
+          "meta.value": ["true"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&exclude=[\"author\",\"logged_in\"]"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "dark_mode", "value" => "dark_mode"}
+             ]
+    end
+
     test "returns suggestions found in time frame", %{
       conn: conn,
       site: site

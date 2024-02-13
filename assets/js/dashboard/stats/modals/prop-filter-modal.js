@@ -34,7 +34,7 @@ function PropFilterModal(props) {
   const query = parseQuery(props.location.search, props.site)
   const [formState, setFormState] = useState(getFormState(query))
 
-  const selectedPropKeys = useMemo(() => Object.values(formState.values).map((value) => value.propKey), [formState])
+  const selectedPropKeys = useMemo(() => Object.values(formState.values).map((value) => value.propKey).filter((value) => value), [formState])
 
   function onPropKeySelect(id, selectedOptions) {
     const newPropKey = selectedOptions.length === 0 ? null : selectedOptions[0]

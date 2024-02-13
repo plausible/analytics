@@ -5,7 +5,7 @@ defmodule Plausible.Stats.FilterSuggestions do
   import Plausible.Stats.Base
   alias Plausible.Stats.Query
 
-  def filter_suggestions(site, query, "country", filter_search) do
+  def filter_suggestions(site, query, "country", filter_search, _exclude) do
     matches = Location.search_country(filter_search)
 
     q =
@@ -28,7 +28,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     end)
   end
 
-  def filter_suggestions(site, query, "region", "") do
+  def filter_suggestions(site, query, "region", "", _exclude) do
     from(
       e in query_sessions(site, query),
       group_by: e.subdivision1_code,
@@ -48,7 +48,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     end)
   end
 
-  def filter_suggestions(site, query, "region", filter_search) do
+  def filter_suggestions(site, query, "region", filter_search, _exclude) do
     matches = Location.search_subdivision(filter_search)
 
     q =
@@ -71,7 +71,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     end)
   end
 
-  def filter_suggestions(site, query, "city", "") do
+  def filter_suggestions(site, query, "city", "", _exclude) do
     from(
       e in query_sessions(site, query),
       group_by: e.city_geoname_id,
@@ -91,7 +91,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     end)
   end
 
-  def filter_suggestions(site, query, "city", filter_search) do
+  def filter_suggestions(site, query, "city", filter_search, _exclude) do
     filter_search = String.downcase(filter_search)
 
     q =
@@ -118,7 +118,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     end)
   end
 
-  def filter_suggestions(site, _query, "goal", filter_search) do
+  def filter_suggestions(site, _query, "goal", filter_search, _exclude) do
     site
     |> Plausible.Goals.for_site()
     |> Enum.map(fn x -> if x.event_name, do: x.event_name, else: "Visit #{x.page_path}" end)
@@ -131,7 +131,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> wrap_suggestions()
   end
 
-  def filter_suggestions(site, query, "prop_key", filter_search) do
+  def filter_suggestions(site, query, "prop_key", filter_search, exclude) do
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
     from(e in base_event_query(site, query),
@@ -139,6 +139,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       as: :meta,
       select: meta.key,
       where: fragment("? ilike ?", meta.key, ^filter_query),
+      where: meta.key not in ^exclude,
       group_by: meta.key,
       order_by: [desc: fragment("count(*)")],
       limit: 25
@@ -148,7 +149,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> wrap_suggestions()
   end
 
-  def filter_suggestions(site, query, "prop_value", filter_search) do
+  def filter_suggestions(site, query, "prop_value", filter_search, _exclude) do
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
     {"event:props:" <> key, _filter} = Query.get_filter_by_prefix(query, "event:props")
@@ -180,7 +181,7 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> wrap_suggestions()
   end
 
-  def filter_suggestions(site, query, filter_name, filter_search) do
+  def filter_suggestions(site, query, filter_name, filter_search, _exclude) do
     filter_search = if filter_search == nil, do: "", else: filter_search
 
     filter_query =

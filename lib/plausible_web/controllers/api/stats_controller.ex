@@ -1273,10 +1273,11 @@ defmodule PlausibleWeb.Api.StatsController do
     site = conn.assigns[:site]
 
     query = Query.from(site, params)
+    exclude = Jason.decode!(params["exclude"] || "[]")
 
     json(
       conn,
-      Stats.filter_suggestions(site, query, params["filter_name"], params["q"])
+      Stats.filter_suggestions(site, query, params["filter_name"], params["q"], exclude)
     )
   end
 

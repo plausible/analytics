@@ -92,9 +92,7 @@ export default function PlausibleCombobox(props) {
   }
 
   function isOptionDisabled(option) {
-    const optionAlreadySelected = props.values.some((val) => val.value === option.value)
-    const optionDisabled = (props.disabledOptions || []).some((val) => val?.value === option.value)
-    return optionAlreadySelected || optionDisabled
+    return props.values.some((val) => val.value === option.value)
   }
 
   function fetchOptions(query) {
