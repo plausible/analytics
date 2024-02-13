@@ -21,8 +21,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPI do
     case Tokens.find(token_value) do
       {:ok, token} ->
         {:ok, token} = Tokens.update_last_seen(token)
-        site = Plausible.Imported.load_import_data(token.site)
-        {:ok, Plug.Conn.assign(conn, :authorized_site, site)}
+        {:ok, Plug.Conn.assign(conn, :authorized_site, token.site)}
 
       {:error, :not_found} ->
         Errors.unauthorized(conn)
