@@ -9,7 +9,7 @@ defmodule Plausible.Workers.ImportAnalytics do
   use Oban.Worker,
     queue: :analytics_imports,
     max_attempts: 3,
-    unique: [fields: [:args], period: 60]
+    unique: [fields: [:args], keys: [:import_id], period: 60]
 
   alias Plausible.Imported.ImportSources
   alias Plausible.Imported.Importer
