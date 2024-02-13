@@ -55,6 +55,14 @@ defmodule Plausible.Site do
     field :entry_type, :string, virtual: true
     field :pinned_at, :naive_datetime, virtual: true
 
+    # Used for caching imports data for the duration of the whole request
+    # to avoid multiple identical fetches. Populated by plugs putting
+    # `site` in `assigns`.
+    field :import_data_loaded, :boolean, default: false, virtual: true
+    field :earliest_import_start_date, :date, virtual: true
+    field :earliest_import_end_date, :date, virtual: true
+    field :complete_import_ids, {:array, :integer}, default: [], virtual: true
+
     timestamps()
   end
 

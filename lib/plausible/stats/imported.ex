@@ -16,7 +16,7 @@ defmodule Plausible.Stats.Imported do
         query,
         metrics
       ) do
-    import_ids = Plausible.Imported.list_complete_import_ids(site)
+    import_ids = site.complete_import_ids
 
     imported_q =
       from(v in "imported_visitors",
@@ -110,7 +110,7 @@ defmodule Plausible.Stats.Imported do
           {"imported_#{dim}s", String.to_existing_atom(dim)}
       end
 
-    import_ids = Plausible.Imported.list_complete_import_ids(site)
+    import_ids = site.complete_import_ids
 
     imported_q =
       from(
@@ -321,7 +321,7 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, query, :aggregate, metrics) do
-    import_ids = Plausible.Imported.list_complete_import_ids(site)
+    import_ids = site.complete_import_ids
 
     imported_q =
       from(

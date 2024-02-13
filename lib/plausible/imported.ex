@@ -33,9 +33,27 @@ defmodule Plausible.Imported do
   ]
 
   @table_names Enum.map(@tables, & &1.__schema__(:source))
+  # Maximum number of complete imports to account for when querying stats
+  @max_complete_imports 5
 
   @spec tables() :: [String.t()]
   def tables, do: @table_names
+
+  @spec load_import_data(Site.t()) :: Site.t()
+  def load_import_data(%{import_data_loaded: true} = site), do: site
+
+  def load_import_data(site) do
+    complete_import_ids = list_complete_import_ids(site)
+    earliest_import = get_earliest_import(site) || %{}
+
+    %{
+      site
+      | import_data_loaded: true,
+        earliest_import_start_date: Map.get(earliest_import, :start_date),
+        earliest_import_end_date: Map.get(earliest_import, :end_date),
+        complete_import_ids: complete_import_ids
+    }
+  end
 
   @spec list_all_imports(Site.t()) :: [SiteImport.t()]
   def list_all_imports(site) do
@@ -48,7 +66,8 @@ defmodule Plausible.Imported do
     ids =
       from(i in SiteImport,
         where: i.site_id == ^site.id and i.status == ^:completed,
-        select: i.id
+        select: i.id,
+        limit: @max_complete_imports
       )
       |> Repo.all()
 
