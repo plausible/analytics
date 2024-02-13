@@ -2,7 +2,10 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
   use Plausible.DataCase, async: true
   use Plausible.Test.Support.HTTPMocker
 
+  alias Plausible.Imported.SiteImport
   alias Plausible.Imported.UniversalAnalytics
+
+  require Plausible.Imported.SiteImport
 
   setup [:create_user, :create_new_site]
 
@@ -39,7 +42,7 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
                  source: :universal_analytics,
                  start_date: ~D[2023-10-01],
                  end_date: ~D[2024-01-02],
-                 status: :pending
+                 status: SiteImport.pending()
                }
              ] = Plausible.Imported.list_all_imports(site)
 

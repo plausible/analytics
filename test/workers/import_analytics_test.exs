@@ -2,7 +2,10 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
   use Plausible.DataCase
   use Bamboo.Test
 
+  alias Plausible.Imported.SiteImport
   alias Plausible.Workers.ImportAnalytics
+
+  require Plausible.Imported.SiteImport
 
   @moduletag capture_log: true
 
@@ -24,7 +27,7 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
 
       {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
 
-      assert [%{status: :pending}] = Plausible.Imported.list_all_imports(site)
+      assert [%{status: SiteImport.pending()}] = Plausible.Imported.list_all_imports(site)
 
       # before_start callback triggered
       assert_received {:before_start, import_id}
@@ -34,7 +37,8 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
                |> Repo.reload!()
                |> ImportAnalytics.perform()
 
-      assert [%{id: ^import_id, status: :completed}] = Plausible.Imported.list_all_imports(site)
+      assert [%{id: ^import_id, status: SiteImport.completed()}] =
+               Plausible.Imported.list_all_imports(site)
 
       # on_success callback triggered
       assert_received {:on_success, ^import_id}
@@ -88,7 +92,7 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
                |> Repo.reload!()
                |> ImportAnalytics.perform()
 
-      assert [%{status: :failed}] = Plausible.Imported.list_all_imports(site)
+      assert [%{status: SiteImport.failed()}] = Plausible.Imported.list_all_imports(site)
     end
 
     test "clears any orphaned data during import", %{import_opts: import_opts} do

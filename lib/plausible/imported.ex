@@ -20,6 +20,8 @@ defmodule Plausible.Imported do
   alias Plausible.Repo
   alias Plausible.Site
 
+  require Plausible.Imported.SiteImport
+
   @tables [
     Imported.Visitor,
     Imported.Source,
@@ -65,7 +67,7 @@ defmodule Plausible.Imported do
   def list_complete_import_ids(site) do
     ids =
       from(i in SiteImport,
-        where: i.site_id == ^site.id and i.status == ^:completed,
+        where: i.site_id == ^site.id and i.status == ^SiteImport.completed(),
         select: i.id,
         limit: @max_complete_imports
       )
@@ -83,13 +85,18 @@ defmodule Plausible.Imported do
   def get_earliest_import(site) do
     first_import =
       from(i in SiteImport,
-        where: i.site_id == ^site.id and i.status == :completed,
+        where: i.site_id == ^site.id and i.status == ^SiteImport.completed(),
         order_by: i.start_date,
         limit: 1
       )
       |> Repo.one()
 
-    [site.imported_data, first_import]
+    legacy_import =
+      if site.imported_data && site.imported_data.status == "ok" do
+        site.imported_data
+      end
+
+    [legacy_import, first_import]
     |> Enum.reject(&is_nil/1)
     |> Enum.min_by(& &1.start_date, Date, fn -> nil end)
   end

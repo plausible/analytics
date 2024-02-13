@@ -8,6 +8,10 @@ defmodule PlausibleWeb.SiteControllerTest do
   import Mox
   import Plausible.Test.Support.HTML
 
+  alias Plausible.Imported.SiteImport
+
+  require Plausible.Imported.SiteImport
+
   @v4_business_plan_id "857105"
 
   setup :verify_on_exit!
@@ -1274,7 +1278,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert site_import.source == :universal_analytics
       assert site_import.end_date == ~D[2022-03-01]
-      assert site_import.status == :pending
+      assert site_import.status == SiteImport.pending()
     end
 
     test "schedules an import job in Oban", %{conn: conn, site: site} do
