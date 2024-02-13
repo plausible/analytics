@@ -6,7 +6,6 @@ defmodule Plausible.Site do
   import Ecto.Changeset
   alias Plausible.Auth.User
   alias Plausible.Site.GoogleAuth
-  alias Plausible.Timezones
 
   @type t() :: %__MODULE__{}
 
@@ -177,37 +176,6 @@ defmodule Plausible.Site do
 
   def remove_imported_data(site) do
     change(site, imported_data: nil)
-  end
-
-  @doc """
-  Returns the date of the first recorded stat in the timezone configured by the user.
-  This function does 2 transformations:
-    UTC %NaiveDateTime{} -> Local %DateTime{} -> Local %Date
-
-  ## Examples
-
-    iex> Plausible.Site.local_start_date(%Plausible.Site{stats_start_date: nil})
-    nil
-
-    iex> utc_start = ~N[2022-09-28 00:00:00]
-    iex> tz = "Europe/Helsinki"
-    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-    iex> Plausible.Site.local_start_date(site)
-    ~D[2022-09-28]
-
-    iex> utc_start = ~N[2022-09-28 00:00:00]
-    iex> tz = "America/Los_Angeles"
-    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-    iex> Plausible.Site.local_start_date(site)
-    ~D[2022-09-27]
-  """
-  def local_start_date(%__MODULE__{stats_start_date: nil}) do
-    nil
-  end
-
-  def local_start_date(site) do
-    site.stats_start_date
-    |> Timezones.to_date_in_timezone(site.timezone)
   end
 
   defp clean_domain(changeset) do
