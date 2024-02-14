@@ -1252,7 +1252,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         |> get("/#{site.domain}/import/google-analytics/view-id", %{
           "access_token" => "token",
           "refresh_token" => "foo",
-          "expires_at" => "2022-09-22T20:01:37.112777"
+          "expires_at" => "2022-09-22T20:01:37.112777",
+          "legacy" => "true"
         })
         |> html_response(200)
 
@@ -1271,7 +1272,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         "end_date" => "2022-03-01",
         "access_token" => "token",
         "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777"
+        "expires_at" => "2022-09-22T20:01:37.112777",
+        "legacy" => "true"
       })
 
       [site_import] = Plausible.Imported.list_all_imports(site)
@@ -1288,7 +1290,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         "end_date" => "2022-03-01",
         "access_token" => "token",
         "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777"
+        "expires_at" => "2022-09-22T20:01:37.112777",
+        "legacy" => "true"
       })
 
       assert [%{id: import_id}] = Plausible.Imported.list_all_imports(site)

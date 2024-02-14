@@ -4,10 +4,12 @@ defmodule PlausibleWeb.SiteController do
   alias Plausible.Sites
   alias Plausible.Billing.Quota
 
-  plug PlausibleWeb.RequireAccountPlug
+  plug(PlausibleWeb.RequireAccountPlug)
 
-  plug PlausibleWeb.AuthorizeSiteAccess,
-       [:owner, :admin, :super_admin] when action not in [:new, :create_site]
+  plug(
+    PlausibleWeb.AuthorizeSiteAccess,
+    [:owner, :admin, :super_admin] when action not in [:new, :create_site]
+  )
 
   def new(conn, _params) do
     current_user = conn.assigns[:current_user]
@@ -62,10 +64,11 @@ defmodule PlausibleWeb.SiteController do
 
     is_first_site =
       !Repo.exists?(
-        from sm in Plausible.Site.Membership,
+        from(sm in Plausible.Site.Membership,
           where:
             sm.user_id == ^user.id and
               sm.site_id != ^site.id
+        )
       )
 
     conn
@@ -144,7 +147,7 @@ defmodule PlausibleWeb.SiteController do
 
   def settings_visibility(conn, _params) do
     site = conn.assigns[:site]
-    shared_links = Repo.all(from l in Plausible.Site.SharedLink, where: l.site_id == ^site.id)
+    shared_links = Repo.all(from(l in Plausible.Site.SharedLink, where: l.site_id == ^site.id))
 
     conn
     |> render("settings_visibility.html",
@@ -394,7 +397,7 @@ defmodule PlausibleWeb.SiteController do
 
   def disable_weekly_report(conn, _params) do
     site = conn.assigns[:site]
-    Repo.delete_all(from wr in Plausible.Site.WeeklyReport, where: wr.site_id == ^site.id)
+    Repo.delete_all(from(wr in Plausible.Site.WeeklyReport, where: wr.site_id == ^site.id))
 
     conn
     |> put_flash(:success, "You will not receive weekly email reports going forward")
@@ -448,7 +451,7 @@ defmodule PlausibleWeb.SiteController do
 
   def disable_monthly_report(conn, _params) do
     site = conn.assigns[:site]
-    Repo.delete_all(from mr in Plausible.Site.MonthlyReport, where: mr.site_id == ^site.id)
+    Repo.delete_all(from(mr in Plausible.Site.MonthlyReport, where: mr.site_id == ^site.id))
 
     conn
     |> put_flash(:success, "You will not receive monthly email reports going forward")
@@ -508,7 +511,7 @@ defmodule PlausibleWeb.SiteController do
 
   def disable_spike_notification(conn, _params) do
     site = conn.assigns[:site]
-    Repo.delete_all(from mr in Plausible.Site.SpikeNotification, where: mr.site_id == ^site.id)
+    Repo.delete_all(from(mr in Plausible.Site.SpikeNotification, where: mr.site_id == ^site.id))
 
     conn
     |> put_flash(:success, "Spike notification disabled")
@@ -624,9 +627,10 @@ defmodule PlausibleWeb.SiteController do
     site_id = site.id
 
     case Repo.delete_all(
-           from l in Plausible.Site.SharedLink,
+           from(l in Plausible.Site.SharedLink,
              where: l.slug == ^slug,
              where: l.site_id == ^site_id
+           )
          ) do
       {1, _} ->
         conn
@@ -644,7 +648,8 @@ defmodule PlausibleWeb.SiteController do
         "view_id" => view_id,
         "access_token" => access_token,
         "refresh_token" => refresh_token,
-        "expires_at" => expires_at
+        "expires_at" => expires_at,
+        "legacy" => legacy
       }) do
     site = conn.assigns[:site]
 
@@ -656,6 +661,7 @@ defmodule PlausibleWeb.SiteController do
       access_token: access_token,
       refresh_token: refresh_token,
       expires_at: expires_at,
+      legacy: legacy,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
@@ -663,8 +669,16 @@ defmodule PlausibleWeb.SiteController do
   def import_from_google_view_id_form(conn, %{
         "access_token" => access_token,
         "refresh_token" => refresh_token,
-        "expires_at" => expires_at
+        "expires_at" => expires_at,
+        "legacy" => legacy
       }) do
+    redirect_route =
+      if legacy == "true" do
+        Routes.site_path(conn, :settings_integrations, conn.assigns.site.domain)
+      else
+        Routes.site_path(conn, :settings_imports_exports, conn.assigns.site.domain)
+      end
+
     case Plausible.Google.Api.list_views(access_token) do
       {:ok, view_ids} ->
         conn
@@ -675,6 +689,7 @@ defmodule PlausibleWeb.SiteController do
           expires_at: expires_at,
           site: conn.assigns.site,
           view_ids: view_ids,
+          legacy: legacy,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
@@ -684,7 +699,7 @@ defmodule PlausibleWeb.SiteController do
           :error,
           "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
         )
-        |> redirect(to: Routes.site_path(conn, :settings_general, conn.assigns.site.domain))
+        |> redirect(external: redirect_route)
 
       {:error, _any} ->
         conn
@@ -692,7 +707,7 @@ defmodule PlausibleWeb.SiteController do
           :error,
           "We were unable to list your Google Analytics properties. If the problem persists, please contact support for assistance."
         )
-        |> redirect(to: Routes.site_path(conn, :settings_general, conn.assigns.site.domain))
+        |> redirect(external: redirect_route)
     end
   end
 
@@ -702,7 +717,8 @@ defmodule PlausibleWeb.SiteController do
         "view_id" => view_id,
         "access_token" => access_token,
         "refresh_token" => refresh_token,
-        "expires_at" => expires_at
+        "expires_at" => expires_at,
+        "legacy" => legacy
       }) do
     site = conn.assigns[:site]
     start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
@@ -721,6 +737,7 @@ defmodule PlausibleWeb.SiteController do
           site: site,
           view_ids: view_ids,
           selected_view_id_error: "No data found. Nothing to import",
+          legacy: legacy,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
@@ -732,7 +749,8 @@ defmodule PlausibleWeb.SiteController do
                 view_id: view_id,
                 access_token: access_token,
                 refresh_token: refresh_token,
-                expires_at: expires_at
+                expires_at: expires_at,
+                legacy: legacy
               )
           )
         else
@@ -742,7 +760,8 @@ defmodule PlausibleWeb.SiteController do
                 view_id: view_id,
                 access_token: access_token,
                 refresh_token: refresh_token,
-                expires_at: expires_at
+                expires_at: expires_at,
+                legacy: legacy
               )
           )
         end
@@ -753,11 +772,13 @@ defmodule PlausibleWeb.SiteController do
         "view_id" => view_id,
         "access_token" => access_token,
         "refresh_token" => refresh_token,
-        "expires_at" => expires_at
+        "expires_at" => expires_at,
+        "legacy" => legacy
       }) do
     site = conn.assigns[:site]
 
     start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
+
     end_date = Plausible.Sites.stats_start_date(site) || Timex.today(site.timezone)
 
     {:ok, {view_name, view_id}} = Plausible.Google.Api.get_view(access_token, view_id)
@@ -773,6 +794,7 @@ defmodule PlausibleWeb.SiteController do
       selected_view_id_name: view_name,
       start_date: start_date,
       end_date: end_date,
+      legacy: legacy,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
@@ -783,10 +805,18 @@ defmodule PlausibleWeb.SiteController do
         "end_date" => end_date,
         "access_token" => access_token,
         "refresh_token" => refresh_token,
-        "expires_at" => expires_at
+        "expires_at" => expires_at,
+        "legacy" => legacy
       }) do
     site = conn.assigns.site
     current_user = conn.assigns.current_user
+
+    redirect_route =
+      if legacy == "true" do
+        Routes.site_path(conn, :settings_integrations, site.domain)
+      else
+        Routes.site_path(conn, :settings_imports_exports, site.domain)
+      end
 
     {:ok, _} =
       Plausible.Imported.UniversalAnalytics.new_import(
@@ -797,12 +827,57 @@ defmodule PlausibleWeb.SiteController do
         end_date: end_date,
         access_token: access_token,
         refresh_token: refresh_token,
-        token_expires_at: expires_at
+        token_expires_at: expires_at,
+        legacy: legacy == "true"
       )
 
     conn
     |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
-    |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
+    |> redirect(external: redirect_route)
+  end
+
+  def forget_import(conn, %{"import_id" => import_id}) do
+    site = conn.assigns.site
+
+    cond do
+      import_id == 0 ->
+        Oban.cancel_all_jobs(
+          from(j in Oban.Job,
+            where:
+              j.queue == "analytics_imports" and
+                fragment("(? ->> 'import_id')::int", j.args) == 0
+          )
+        )
+
+        Plausible.Purge.delete_imported_stats!(site, 0)
+
+        site
+        |> Plausible.Site.remove_imported_data()
+        |> Repo.update!()
+
+      site_import = Plausible.Imported.get_import(import_id) ->
+        Oban.cancel_all_jobs(
+          from(j in Oban.Job,
+            where:
+              j.queue == "analytics_imports" and
+                fragment("(? ->> 'import_id')::int", j.args) == ^site_import.id
+          )
+        )
+
+        Plausible.Purge.delete_imported_stats!(site_import)
+
+        Plausible.Repo.delete!(site_import)
+
+        if site_import.legacy do
+          site
+          |> Plausible.Site.remove_imported_data()
+          |> Repo.update!()
+        end
+    end
+
+    conn
+    |> put_flash(:success, "Imported data has been cleared")
+    |> redirect(external: Routes.site_path(conn, :settings_imports_exports, site.domain))
   end
 
   def forget_imported(conn, _params) do
@@ -822,10 +897,11 @@ defmodule PlausibleWeb.SiteController do
 
     if import_ids != [] do
       Oban.cancel_all_jobs(
-        from j in Oban.Job,
+        from(j in Oban.Job,
           where:
             j.queue == "analytics_imports" and
               fragment("(? ->> 'import_id')::int", j.args) in ^import_ids
+        )
       )
 
       Plausible.Purge.delete_imported_stats!(site)

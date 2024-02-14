@@ -20,7 +20,8 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
                  end_date: "2024-01-02",
                  access_token: "access123",
                  refresh_token: "refresh123",
-                 token_expires_at: expires_at
+                 token_expires_at: expires_at,
+                 legacy: true
                )
 
       assert %Oban.Job{

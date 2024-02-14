@@ -11,7 +11,9 @@
   </header>
 
   <div class="mt-5 flex gap-x-4">
-    <PlausibleWeb.Components.Generic.button_link_bright href="">
+    <PlausibleWeb.Components.Generic.button_link_bright href={
+      Plausible.Google.Api.import_authorize_url(@site.id, "import", false)
+    }>
       <img src="/images/icon/universal_analytics_logo.svg" alt="New Universal Analytics import" />
     </PlausibleWeb.Components.Generic.button_link_bright>
 
@@ -53,7 +55,7 @@
             </p>
           </div>
           <%= link("Delete import",
-            to: "/#{URI.encode_www_form(@site.domain)}/settings/forget-imported",
+            to: "/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{site_import.id}",
             method: :delete,
             class:
               "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150"

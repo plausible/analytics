@@ -48,6 +48,7 @@ defmodule Plausible.Imported.SiteImport do
       end
 
     %__MODULE__{
+      id: 0,
       legacy: true,
       start_date: data.start_date,
       end_date: data.end_date,

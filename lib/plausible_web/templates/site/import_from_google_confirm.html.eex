@@ -4,6 +4,7 @@
   <%= hidden_input(f, :access_token, value: @access_token) %>
   <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
   <%= hidden_input(f, :expires_at, value: @expires_at) %>
+  <%= hidden_input(f, :legacy, value: @legacy) %>
 
   <%= case @start_date do %>
     <% {:ok, start_date} -> %>
