@@ -104,7 +104,7 @@ defmodule Plausible.Ingestion.Request do
   end
 
   defp put_remote_ip(changeset, conn) do
-    Changeset.put_change(changeset, :remote_ip, PlausibleWeb.RemoteIp.get(conn))
+    Changeset.put_change(changeset, :remote_ip, PlausibleWeb.RemoteIP.get(conn))
   end
 
   defp parse_body(conn) do

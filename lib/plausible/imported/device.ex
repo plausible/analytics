@@ -5,6 +5,7 @@ defmodule Plausible.Imported.Device do
   @primary_key false
   schema "imported_devices" do
     field :site_id, Ch, type: "UInt64"
+    field :import_id, Ch, type: "UInt64"
     field :date, :date
     field :device, :string
     field :visitors, Ch, type: "UInt64"

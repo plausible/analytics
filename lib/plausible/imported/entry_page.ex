@@ -5,6 +5,7 @@ defmodule Plausible.Imported.EntryPage do
   @primary_key false
   schema "imported_entry_pages" do
     field :site_id, Ch, type: "UInt64"
+    field :import_id, Ch, type: "UInt64"
     field :date, :date
     field :entry_page, :string
     field :visitors, Ch, type: "UInt64"

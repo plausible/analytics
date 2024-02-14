@@ -6,7 +6,6 @@ defmodule Plausible.Site do
   import Ecto.Changeset
   alias Plausible.Auth.User
   alias Plausible.Site.GoogleAuth
-  alias Plausible.Timezones
 
   @type t() :: %__MODULE__{}
 
@@ -54,6 +53,14 @@ defmodule Plausible.Site do
     # "pinned_site" or "site", where invitations are first.
     field :entry_type, :string, virtual: true
     field :pinned_at, :naive_datetime, virtual: true
+
+    # Used for caching imports data for the duration of the whole request
+    # to avoid multiple identical fetches. Populated by plugs putting
+    # `site` in `assigns`.
+    field :import_data_loaded, :boolean, default: false, virtual: true
+    field :earliest_import_start_date, :date, virtual: true
+    field :earliest_import_end_date, :date, virtual: true
+    field :complete_import_ids, {:array, :integer}, default: [], virtual: true
 
     timestamps()
   end
@@ -159,7 +166,6 @@ defmodule Plausible.Site do
 
   def import_success(site) do
     change(site,
-      stats_start_date: site.imported_data.start_date,
       imported_data: %{status: "ok"}
     )
   end
@@ -168,48 +174,8 @@ defmodule Plausible.Site do
     change(site, imported_data: %{status: "error"})
   end
 
-  def set_imported_source(site, imported_source) do
-    change(site,
-      imported_data: %Plausible.Site.ImportedData{
-        end_date: Timex.today(),
-        source: imported_source
-      }
-    )
-  end
-
   def remove_imported_data(site) do
     change(site, imported_data: nil)
-  end
-
-  @doc """
-  Returns the date of the first recorded stat in the timezone configured by the user.
-  This function does 2 transformations:
-    UTC %NaiveDateTime{} -> Local %DateTime{} -> Local %Date
-
-  ## Examples
-
-    iex> Plausible.Site.local_start_date(%Plausible.Site{stats_start_date: nil})
-    nil
-
-    iex> utc_start = ~N[2022-09-28 00:00:00]
-    iex> tz = "Europe/Helsinki"
-    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-    iex> Plausible.Site.local_start_date(site)
-    ~D[2022-09-28]
-
-    iex> utc_start = ~N[2022-09-28 00:00:00]
-    iex> tz = "America/Los_Angeles"
-    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-    iex> Plausible.Site.local_start_date(site)
-    ~D[2022-09-27]
-  """
-  def local_start_date(%__MODULE__{stats_start_date: nil}) do
-    nil
-  end
-
-  def local_start_date(site) do
-    site.stats_start_date
-    |> Timezones.to_date_in_timezone(site.timezone)
   end
 
   defp clean_domain(changeset) do

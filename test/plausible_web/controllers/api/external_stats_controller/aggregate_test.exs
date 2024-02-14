@@ -116,22 +116,28 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              }
     end
 
-    test "validates that session metrics cannot be used with event:name filter", %{
-      conn: conn,
-      site: site
-    } do
-      conn =
-        get(conn, "/api/v1/stats/aggregate", %{
-          "site_id" => site.domain,
-          "period" => "30d",
-          "metrics" => "pageviews,visit_duration",
-          "filters" => "event:name==Signup"
-        })
+    for property <- ["event:name", "event:goal", "event:props:custom_prop"] do
+      test "validates that session metrics cannot be used with #{property} filter", %{
+        conn: conn,
+        site: site
+      } do
+        prop = unquote(property)
 
-      assert json_response(conn, 400) == %{
-               "error" =>
-                 "Session metric `visit_duration` cannot be queried when using a filter on `event:name`."
-             }
+        if prop == "event:goal", do: insert(:goal, %{site: site, event_name: "some_value"})
+
+        conn =
+          get(conn, "/api/v1/stats/aggregate", %{
+            "site_id" => site.domain,
+            "period" => "30d",
+            "metrics" => "pageviews,visit_duration",
+            "filters" => "#{prop}==some_value"
+          })
+
+        assert json_response(conn, 400) == %{
+                 "error" =>
+                   "Session metric `visit_duration` cannot be queried when using a filter on `#{prop}`."
+               }
+      end
     end
 
     test "validates that views_per_visit cannot be used with event:page filter", %{
@@ -400,6 +406,17 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   end
 
   describe "filters" do
+    test "event:goal filter returns 400 when goal not configured", %{conn: conn, site: site} do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "filters" => "event:goal==Register|Visit /register"
+        })
+
+      assert %{"error" => msg} = json_response(conn, 400)
+      assert msg =~ "The goal `Register` is not configured for this site. Find out how"
+    end
+
     test "can filter by source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -861,6 +878,194 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       assert json_response(conn, 200)["results"] == %{
                "pageviews" => %{"value" => 0},
                "visitors" => %{"value" => 2}
+             }
+    end
+
+    test "filtering by a custom event goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Signup",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "NotConfigured",
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events",
+          "filters" => "event:goal==Signup"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "events" => %{"value" => 3}
+             }
+    end
+
+    test "filtering by a revenue goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Purchase",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:event,
+          name: "Purchase",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      insert(:goal, site: site, currency: :USD, event_name: "Purchase")
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,events",
+          "filters" => "event:goal==Purchase"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "events" => %{"value" => 3}
+             }
+    end
+
+    test "filtering by a simple pageview goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/register",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/register",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          pathname: "/register",
+          user_id: @user_id,
+          timestamp: ~N[2021-01-01 00:25:00]
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      insert(:goal, %{site: site, page_path: "/register"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "visitors,pageviews",
+          "filters" => "event:goal==Visit /register"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "pageviews" => %{"value" => 3}
+             }
+    end
+
+    test "filtering by a wildcard pageview goal", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/blog/post-1"),
+        build(:pageview, pathname: "/blog/post-2", user_id: @user_id),
+        build(:pageview, pathname: "/blog", user_id: @user_id),
+        build(:pageview, pathname: "/")
+      ])
+
+      insert(:goal, %{site: site, page_path: "/blog**"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,pageviews",
+          "filters" => "event:goal==Visit /blog**"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "pageviews" => %{"value" => 3}
+             }
+    end
+
+    test "filtering by multiple custom event goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event, name: "Signup"),
+        build(:event, name: "Purchase", user_id: @user_id),
+        build(:event, name: "Purchase", user_id: @user_id),
+        build(:pageview)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, event_name: "Purchase"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,events",
+          "filters" => "event:goal==Signup|Purchase"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "events" => %{"value" => 3}
+             }
+    end
+
+    test "filtering by multiple mixed goals", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/account/register"),
+        build(:pageview, pathname: "/register", user_id: @user_id),
+        build(:event, name: "Signup", user_id: @user_id),
+        build(:pageview)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+      insert(:goal, %{site: site, page_path: "/**register"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "metrics" => "visitors,events,pageviews",
+          "filters" => "event:goal==Signup|Visit /**register"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "visitors" => %{"value" => 2},
+               "events" => %{"value" => 3},
+               "pageviews" => %{"value" => 2}
              }
     end
 

@@ -194,13 +194,14 @@ defmodule Plausible.Stats.Breakdown do
   defp include_none_result?({:member, values}), do: Enum.member?(values, "(none)")
   defp include_none_result?({:not_member, values}), do: !Enum.member?(values, "(none)")
   defp include_none_result?({:matches, _}), do: false
+  defp include_none_result?({:matches_member, _}), do: false
   defp include_none_result?(_), do: true
 
   defp breakdown_sessions(_, _, _, [], _), do: []
 
   defp breakdown_sessions(site, query, property, metrics, pagination) do
     from(s in query_sessions(site, query),
-      order_by: [desc: fragment("uniq(?)", s.user_id), asc: fragment("min(?)", s.start)],
+      order_by: [desc: fragment("uniq(?)", s.user_id)],
       select: %{}
     )
     |> filter_converted_sessions(site, query)
@@ -434,24 +435,6 @@ defmodule Plausible.Stats.Breakdown do
       select_merge: %{page: e.pathname},
       order_by: {:asc, e.pathname}
     )
-  end
-
-  defp do_group_by(
-         %Ecto.Query{from: %Ecto.Query.FromExpr{source: {"events" <> _, _}}} = q,
-         "event:page_match"
-       ) do
-    case Map.get(q, :__private_match_sources__) do
-      match_exprs when is_list(match_exprs) ->
-        from(
-          e in q,
-          group_by: fragment("index"),
-          select_merge: %{
-            index: fragment("arrayJoin(indices) as index"),
-            page_match: fragment("?[index]", ^match_exprs)
-          },
-          order_by: {:asc, fragment("index")}
-        )
-    end
   end
 
   defp do_group_by(q, "visit:source") do

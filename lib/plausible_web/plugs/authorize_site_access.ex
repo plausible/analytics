@@ -47,6 +47,8 @@ defmodule PlausibleWeb.AuthorizeSiteAccess do
         Sentry.Context.set_extra_context(%{site_id: site.id, domain: site.domain})
         Plausible.OpenTelemetry.add_site_attributes(site)
 
+        site = Plausible.Imported.load_import_data(site)
+
         merge_assigns(conn, site: site, current_user_role: role)
       else
         PlausibleWeb.ControllerHelpers.render_error(conn, 404) |> halt

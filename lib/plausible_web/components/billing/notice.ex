@@ -277,7 +277,7 @@ defmodule PlausibleWeb.Components.Billing.Notice do
     plan =
       Plans.get_regular_plan(billable_user.subscription, only_non_expired: true)
 
-    trial? = Plausible.Billing.on_trial?(assigns.billable_user)
+    trial? = Plausible.Users.on_trial?(assigns.billable_user)
     growth? = plan && plan.kind == :growth
 
     cond do
@@ -296,7 +296,10 @@ defmodule PlausibleWeb.Components.Billing.Notice do
         """
 
       true ->
-        ~H"please contact hello@plausible.io to upgrade your subscription"
+        ~H"""
+        please contact <a href="mailto:hello@plausible.io" class="underline">hello@plausible.io</a>
+        to upgrade your subscription
+        """
     end
   end
 

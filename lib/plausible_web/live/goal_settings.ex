@@ -61,6 +61,7 @@ defmodule PlausibleWeb.Live.GoalSettings do
         goals={@displayed_goals}
         domain={@domain}
         filter_text={@filter_text}
+        site={@site}
       />
     </div>
     """

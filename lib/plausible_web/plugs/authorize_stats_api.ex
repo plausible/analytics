@@ -16,6 +16,7 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
          :ok <- check_api_key_rate_limit(api_key),
          {:ok, site} <- verify_access(api_key, conn.params["site_id"]) do
       Plausible.OpenTelemetry.add_site_attributes(site)
+      site = Plausible.Imported.load_import_data(site)
       assign(conn, :site, site)
     else
       {:error, :missing_api_key} ->
@@ -45,7 +46,7 @@ defmodule PlausibleWeb.AuthorizeStatsApiPlug do
       {:error, :upgrade_required} ->
         H.payment_required(
           conn,
-          "#{Plausible.Billing.Feature.StatsAPI.display_name()} is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+          "The account that owns this API key does not have access to Stats API. Please make sure you're using the API key of a subscriber account and that the subscription plan includes Stats API"
         )
 
       {:error, :site_locked} ->

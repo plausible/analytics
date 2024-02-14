@@ -5,41 +5,6 @@ defmodule Plausible.BillingTest do
   alias Plausible.Billing
   alias Plausible.Billing.Subscription
 
-  describe "trial_days_left" do
-    test "is 30 days for new signup" do
-      user = insert(:user)
-
-      assert Billing.trial_days_left(user) == 30
-    end
-
-    test "is based on trial_expiry_date" do
-      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: 1))
-
-      assert Billing.trial_days_left(user) == 1
-    end
-  end
-
-  describe "on_trial?" do
-    @describetag :full_build_only
-    test "is true with >= 0 trial days left" do
-      user = insert(:user)
-
-      assert Billing.on_trial?(user)
-    end
-
-    test "is false with < 0 trial days left" do
-      user = insert(:user, trial_expiry_date: Timex.shift(Timex.now(), days: -1))
-
-      refute Billing.on_trial?(user)
-    end
-
-    test "is false if user has subscription" do
-      user = insert(:user, subscription: build(:subscription))
-
-      refute Billing.on_trial?(user)
-    end
-  end
-
   describe "check_needs_to_upgrade" do
     test "is false for a trial user" do
       user = insert(:user)
@@ -394,6 +359,22 @@ defmodule Plausible.BillingTest do
   end
 
   describe "subscription_payment_succeeded" do
+    @tag :full_build_only
+    test "updates accept_traffic_until" do
+      user = insert(:user)
+      subscription = insert(:subscription, user: user)
+
+      refute user.accept_traffic_until
+
+      Billing.subscription_payment_succeeded(%{
+        "alert_name" => "subscription_payment_succeeded",
+        "subscription_id" => subscription.paddle_subscription_id
+      })
+
+      user = Plausible.Users.with_subscription(user.id)
+      assert user.accept_traffic_until == Date.add(user.subscription.next_bill_date, 30)
+    end
+
     test "sets the next bill amount and date, last bill date" do
       user = insert(:user)
       subscription = insert(:subscription, user: user)

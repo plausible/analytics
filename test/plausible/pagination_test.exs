@@ -18,7 +18,7 @@ defmodule Plausible.PaginationTest do
     refute pagination.metadata.before
   end
 
-  test "limit can be overriden", %{query: q} do
+  test "limit can be overridden", %{query: q} do
     pagination = Pagination.paginate(q, %{"limit" => 3}, cursor_fields: [id: :desc])
 
     assert Enum.count(pagination.entries) == 3

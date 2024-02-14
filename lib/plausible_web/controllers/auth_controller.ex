@@ -304,7 +304,7 @@ defmodule PlausibleWeb.AuthController do
   @email_change_interval :timer.hours(1)
 
   defp check_ip_rate_limit(conn) do
-    ip_address = PlausibleWeb.RemoteIp.get(conn)
+    ip_address = PlausibleWeb.RemoteIP.get(conn)
 
     case RateLimit.check_rate("login:ip:#{ip_address}", @login_interval, @login_limit) do
       {:allow, _} -> :ok

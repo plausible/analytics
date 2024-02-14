@@ -60,13 +60,14 @@ defmodule PlausibleWeb.Api.ExternalController do
         e -> "error: #{inspect(e)}"
       end
 
-    sites_cache_health =
-      if postgres_health == "ok" and Plausible.Site.Cache.ready?() do
+    cache_health =
+      if postgres_health == "ok" and Plausible.Site.Cache.ready?() and
+           Plausible.Shield.IPRuleCache.ready?() do
         "ok"
       end
 
     status =
-      case {postgres_health, clickhouse_health, sites_cache_health} do
+      case {postgres_health, clickhouse_health, cache_health} do
         {"ok", "ok", "ok"} -> 200
         _ -> 500
       end
@@ -75,7 +76,7 @@ defmodule PlausibleWeb.Api.ExternalController do
     |> json(%{
       postgres: postgres_health,
       clickhouse: clickhouse_health,
-      sites_cache: sites_cache_health
+      sites_cache: cache_health
     })
   end
 

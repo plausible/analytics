@@ -27,8 +27,35 @@ defmodule Plausible.Application do
         id: :cachex_sessions
       ),
       {Plausible.Site.Cache, []},
-      {Plausible.Site.Cache.Warmer.All, []},
-      {Plausible.Site.Cache.Warmer.RecentlyUpdated, []},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Site.Cache.All,
+         cache_impl: Plausible.Site.Cache,
+         interval: :timer.minutes(15) + Enum.random(1..:timer.seconds(10)),
+         warmer_fn: :refresh_all
+       ]},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Site.Cache.RecentlyUpdated,
+         cache_impl: Plausible.Site.Cache,
+         interval: :timer.seconds(30),
+         warmer_fn: :refresh_updated_recently
+       ]},
+      {Plausible.Shield.IPRuleCache, []},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Shield.IPRuleCache.All,
+         cache_impl: Plausible.Shield.IPRuleCache,
+         interval: :timer.minutes(3) + Enum.random(1..:timer.seconds(10)),
+         warmer_fn: :refresh_all
+       ]},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Shield.IPRuleCache.RecentlyUpdated,
+         cache_impl: Plausible.Shield.IPRuleCache,
+         interval: :timer.seconds(35),
+         warmer_fn: :refresh_updated_recently
+       ]},
       {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
       PlausibleWeb.Endpoint,
       {Oban, Application.get_env(:plausible, Oban)},

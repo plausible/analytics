@@ -11,6 +11,23 @@ defmodule Plausible.Users do
   alias Plausible.Billing.Subscription
   alias Plausible.Repo
 
+  @spec on_trial?(Auth.User.t()) :: boolean()
+  on_full_build do
+    def on_trial?(%Auth.User{trial_expiry_date: nil}), do: false
+
+    def on_trial?(user) do
+      user = with_subscription(user)
+      not Plausible.Billing.Subscriptions.active?(user.subscription) && trial_days_left(user) >= 0
+    end
+  else
+    def on_trial?(_), do: true
+  end
+
+  @spec trial_days_left(Auth.User.t()) :: integer()
+  def trial_days_left(user) do
+    Timex.diff(user.trial_expiry_date, Timex.today(), :days)
+  end
+
   @spec update_accept_traffic_until(Auth.User.t()) :: Auth.User.t()
   def update_accept_traffic_until(user) do
     user
@@ -24,7 +41,7 @@ defmodule Plausible.Users do
       user = with_subscription(user)
 
       cond do
-        Plausible.Billing.on_trial?(user) ->
+        Plausible.Users.on_trial?(user) ->
           Timex.shift(user.trial_expiry_date,
             days: Auth.User.trial_accept_traffic_until_offset_days()
           )
@@ -86,7 +103,7 @@ defmodule Plausible.Users do
   end
 
   defp last_subscription_query(user_id) do
-    from(subscription in Plausible.Billing.Subscription,
+    from(subscription in Subscription,
       where: subscription.user_id == ^user_id,
       order_by: [desc: subscription.inserted_at],
       limit: 1

@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Plugins.API.Spec do
   OpenAPI specification for the Plugins API
   """
   alias OpenApiSpex.{Components, Info, OpenApi, Paths, Server}
-  alias PlausibleWeb.Plugins.API.Router
+  alias PlausibleWeb.Router
   @behaviour OpenApi
 
   @impl OpenApi
@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Plugins.API.Spec do
       servers: [
         %Server{
           description: "This server",
-          url: to_string(PlausibleWeb.Plugins.API.base_uri()),
+          url: PlausibleWeb.Endpoint.url(),
           variables: %{}
         }
       ],

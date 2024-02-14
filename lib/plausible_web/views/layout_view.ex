@@ -51,6 +51,9 @@ defmodule PlausibleWeb.LayoutView do
       end,
       [key: "Custom Properties", value: "properties", icon: :document_text],
       [key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square],
+      if FunWithFlags.enabled?(:shields, for: conn.assigns[:current_user]) do
+        [key: "Shields", value: "shields", icon: :shield_exclamation]
+      end,
       [key: "Email Reports", value: "email-reports", icon: :envelope],
       if conn.assigns[:current_user_role] == :owner do
         [key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle]
@@ -59,7 +62,7 @@ defmodule PlausibleWeb.LayoutView do
   end
 
   def trial_notificaton(user) do
-    case Plausible.Billing.trial_days_left(user) do
+    case Plausible.Users.trial_days_left(user) do
       days when days > 1 ->
         "#{days} trial days left"
 
