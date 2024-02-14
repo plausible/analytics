@@ -1,5 +1,20 @@
 defmodule ObanErrorReporter do
-  def handle_event([:oban, :job, :exception], measure, %{job: job} = meta, _) do
+  require Logger
+
+  def handle_event(name, measurements, metadata, _) do
+    # handling telemetry event in a try/catch block
+    # to avoid handler detachment in the case of an error
+    # see https://hexdocs.pm/telemetry/telemetry.html#attach/4
+    try do
+      handle_event(name, measurements, metadata)
+    catch
+      kind, reason ->
+        message = Exception.format(kind, reason, __STACKTRACE__)
+        Logger.error(message)
+    end
+  end
+
+  defp handle_event([:oban, :job, :exception], measure, %{job: job} = meta) do
     extra =
       job
       |> Map.take([:id, :args, :meta, :queue, :worker])
@@ -10,13 +25,13 @@ defmodule ObanErrorReporter do
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
   end
 
-  def handle_event([:oban, :notifier, :exception], _timing, meta, _) do
+  defp handle_event([:oban, :notifier, :exception], _timing, meta) do
     extra = Map.take(meta, ~w(channel payload)a)
 
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
   end
 
-  def handle_event([:oban, :plugin, :exception], _timing, meta, _) do
+  defp handle_event([:oban, :plugin, :exception], _timing, meta) do
     extra = Map.take(meta, ~w(plugin)a)
 
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
