@@ -40,7 +40,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              } in res["top_stats"]
     end
 
-    test "counts total visits", %{conn: conn, site: site} do
+    test "experimental session count", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: 3421, timestamp: ~N[2020-12-31 23:30:00]),
         build(:pageview, user_id: @user_id, timestamp: ~N[2020-12-31 23:59:00]),
@@ -58,7 +58,14 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Total visits", "value" => 2} in res["top_stats"]
+      assert res["top_stats"] == [
+               %{"name" => "Unique visitors", "value" => 2},
+               %{"name" => "Total visits", "value" => 2},
+               %{"name" => "Total pageviews", "value" => 2},
+               %{"name" => "Views per visit", "value" => 2.0},
+               %{"name" => "Bounce rate", "value" => 0},
+               %{"name" => "Visit duration", "value" => 120}
+             ]
     end
 
     test "counts pages per visit", %{conn: conn, site: site} do
