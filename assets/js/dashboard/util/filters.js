@@ -102,7 +102,7 @@ export function parseQueryFilter(query, filter) {
 
 export function isFilteringOnFixedValue(query, filter) {
   const { type, clauses } = parseQueryFilter(query, filter)
-  return type == FILTER_TYPES.is && clauses.length == 1
+  return type == FILTER_OPERATIONS.is && clauses.length == 1
 }
 
 export function formatFilterGroup(filterGroup) {
