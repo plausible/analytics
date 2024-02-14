@@ -282,4 +282,3 @@ defimpl FunWithFlags.Actor, for: Plausible.Site do
     "site:#{domain}"
   end
 end
-
