@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-2BF32E1E.js"></script>
+    <script src="dist/sidebar_items-832F8877.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -183,8 +183,7 @@ asynchronously.</p></li><li><p><a href="https://clickhouse.com/docs/en/sql-refer
 
       </div>
 
-        <div class="summary-synopsis"><p>Deletes imported stats from Google Analytics, and clears the
-<code class="inline">stats_start_date</code> field.</p></div>
+        <div class="summary-synopsis"><p>Deletes imported stats from and clears the <code class="inline">stats_start_date</code> field.</p></div>
 
     </div>
 
@@ -228,7 +227,7 @@ asynchronously.</p></li><li><p><a href="https://clickhouse.com/docs/en/sql-refer
     </a>
     <h1 class="signature" translate="no">delete_imported_stats!(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L41" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L48" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -240,12 +239,14 @@ asynchronously.</p></li><li><p><a href="https://clickhouse.com/docs/en/sql-refer
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> delete_imported_stats!(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: :ok</pre>
+          <pre translate="no"><span class="attribute">@spec</span> delete_imported_stats!(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>() | <a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>()) ::
+  :ok</pre>
 
       </div>
 
-<p>Deletes imported stats from Google Analytics, and clears the
-<code class="inline">stats_start_date</code> field.</p>
+<p>Deletes imported stats from and clears the <code class="inline">stats_start_date</code> field.</p><p>The <code class="inline">stats_start_date</code> is expected to get repopulated the next time
+<a href="Plausible.Sites.html#stats_start_date/1"><code class="inline">Plausible.Sites.stats_start_date/1</code></a> is called.</p><p>If the input argument is a site, all imported stats are deleted. If it's a site import,
+only imported stats for that import are deleted.</p>
   </section>
 </section>
 <section class="detail" id="delete_native_stats!/1">
@@ -257,7 +258,7 @@ asynchronously.</p></li><li><p><a href="https://clickhouse.com/docs/en/sql-refer
     </a>
     <h1 class="signature" translate="no">delete_native_stats!(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L56" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L80" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -285,7 +286,7 @@ asynchronously.</p></li><li><p><a href="https://clickhouse.com/docs/en/sql-refer
     </a>
     <h1 class="signature" translate="no">reset!(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L62" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/purge.ex#L86" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

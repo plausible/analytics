@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.31.1">
+    <meta name="project" content="Plausible v0.0.1">
+
+
+    <title>Plausible.Imported.Importer — Plausible v0.0.1</title>
+    <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
+
+
+    <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
+    <script src="dist/handlebars.templates-43PMFBC7.js"></script>
+    <script src="dist/sidebar_items-832F8877.js"></script>
+
+      <script src="docs_config.js"></script>
+
+    <script async src="dist/html-L4O5OK2K.js"></script>
+
+
+  </head>
+  <body data-type="modules" class="page-behaviour">
+    <script>
+
+      try {
+        var settings = JSON.parse(localStorage.getItem('ex_doc:settings') || '{}');
+
+        if (settings.theme === 'dark' ||
+           ((settings.theme === 'system' || settings.theme == null) &&
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+           ) {
+          document.body.classList.add('dark')
+        }
+      } catch (error) { }
+    </script>
+
+<div class="main">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<div class="background-layer"></div>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+        <a href="readme.html" class="sidebar-projectImage">
+          <img src="assets/logo.png" alt="Plausible" />
+        </a>
+
+      <div>
+        <a href="readme.html" class="sidebar-projectName" translate="no">
+Plausible
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.0.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-listNav" class="sidebar-listNav" role="tablist">
+      <li>
+        <button id="extras-list-tab-button" role="tab" data-type="extras" aria-controls="extras-tab-panel" aria-selected="true" tabindex="0">
+Pages
+        </button>
+      </li>
+
+        <li>
+          <button id="modules-list-tab-button" role="tab" data-type="modules" aria-controls="modules-tab-panel" aria-selected="false" tabindex="-1">
+            Modules
+          </button>
+        </li>
+
+
+        <li>
+          <button id="tasks-list-tab-button" role="tab" data-type="tasks" aria-controls="tasks-tab-panel" aria-selected="false" tabindex="-1">
+            <span translate="no">Mix</span> Tasks
+          </button>
+        </li>
+
+    </ul>
+  </div>
+
+  <div id="extras-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="extras-list-tab-button">
+    <ul id="extras-full-list" class="full-list"></ul>
+  </div>
+
+    <div id="modules-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="modules-list-tab-button" hidden>
+      <ul id="modules-full-list" class="full-list"></ul>
+    </div>
+
+
+    <div id="tasks-tab-panel" class="sidebar-tabpanel" role="tabpanel" aria-labelledby="tasks-list-tab-button" hidden>
+      <ul id="tasks-full-list" class="full-list"></ul>
+    </div>
+
+</nav>
+
+<main class="content">
+  <output role="status" id="toast"></output>
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+      <div class="top-search">
+        <div class="search-settings">
+          <form class="search-bar" action="search.html">
+            <label class="search-label">
+              <span class="sr-only">Search documentation of Plausible</span>
+              <input name="q" type="text" class="search-input" placeholder="Search Documentation (press /)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            </label>
+            <button type="submit" class="search-button" aria-label="Submit Search">
+              <i class="ri-search-2-line ri-lg" aria-hidden="true" title="Submit search"></i>
+            </button>
+            <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+              <i class="ri-close-line ri-lg" title="Cancel search"></i>
+            </button>
+          </form>
+          <div class="autocomplete">
+          </div>
+          <button class="icon-settings display-settings">
+            <i class="ri-settings-3-line"></i>
+            <span class="sr-only">Settings</span>
+          </button>
+        </div>
+
+      </div>
+
+<h1>
+
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L1" title="View Source" class="icon-action" rel="help">
+      <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+      <span class="sr-only">View Source</span>
+    </a>
+
+  <span translate="no">Plausible.Imported.Importer</span> <small>behaviour</small>
+  <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
+
+</h1>
+
+
+  <section id="moduledoc">
+<p>Behaviour that should be implemented for each import source.</p><p>All imports are executed as background jobs run via <a href="Plausible.Workers.ImportAnalytics.html"><code class="inline">Plausible.Workers.ImportAnalytics</code></a>
+Oban worker. Each import source must define a module conforming <code class="inline">Importer</code> behaviour.</p><p>The callbacks that need to be implemented:</p><ul><li><code class="inline">name/0</code> - Returns import source name as an atom. Example: <code class="inline">:universal_analytics</code>.</li><li><code class="inline">label/0</code> - Descriptive, display friendly name of the source.
+Example: &quot;Google Analytics&quot;.</li><li><code class="inline">email_template/0</code> - Name of the email template to use for notifications in
+<a href="PlausibleWeb.Email.html"><code class="inline">PlausibleWeb.Email</code></a> (<code class="inline">import_success</code> and <code class="inline">import_failure</code>). The template
+should have content customized for a particular source.</li><li><code class="inline">parse_args/1</code> - Receives Oban job arguments coming from <code class="inline">new_import/3</code>. Whatever
+options were passed to <code class="inline">new_import/3</code> will be present in the input map with string
+keys and values serialized to primitives. If, for instance <code class="inline">start_date: ~D[2024-01-03]</code>
+is passed as an option, <code class="inline">parse_args/1</code> receives <code class="inline">%{..., &quot;start_date&quot; =&gt; &quot;2024-01-03&quot;}</code>.
+The expectation is parsing the map values producing a keyword list of options to
+pass to <code class="inline">import_data/2</code>.</li><li><code class="inline">import_data/2</code> - Receives site import struct and options produced by <code class="inline">parse_args/1</code>.
+This is where all the import processing is done. The way the import is implemented
+is entirely arbitrary except the requirement that the process as a whole must
+by synchronous. The callback is expected to return either <code class="inline">:ok</code> or <code class="inline">{:ok, %{...}}</code>
+on successful import or <code class="inline">{:error, ...}</code> on failure. The map in success tuple is
+used for updating site import struct and is passed to <code class="inline">on_success/2</code> callback.
+Please note that error tuple should be only returned on errors that can't be
+recovered from. For transient errors, the import should throw an exception or
+simply crash.</li><li><code class="inline">before_start/1</code> - Optional callback run right before scheduling import job. It's
+expected to either return <code class="inline">:ok</code> for the import to proceed or <code class="inline">{:error, ...}</code> tuple,
+which will be returned from <code class="inline">new_import/3</code> call.</li><li><code class="inline">on_success/2</code> - Optional callback run once site import is completed. Receives map
+returned from <code class="inline">import_data/2</code>. Expected to always return <code class="inline">:ok</code>.</li><li><code class="inline">on_failure/1</code> - Optional callback run when import job fails permanently.</li></ul><p>All sources must be added to the list in <a href="Plausible.Imported.ImportSources.html"><code class="inline">Plausible.Imported.ImportSources</code></a>.</p><p>In order to schedule a new import job using a given source, respective importer's
+<code class="inline">new_import/3</code> function must be called. It accepts site, user who is doing the import
+and any options necessary to carry out the import.</p><p>There's an expectation that <code class="inline">start_date</code> and <code class="inline">end_date</code> are provided either as options
+passed to <code class="inline">new_import/3</code> or data in map returned from <code class="inline">import_data/2</code>. If these parameters
+are not provided, the import will eventually crash. These parameters define time range
+of imported data which is in turn used for efficient querying.</p><p>Logic running inside <code class="inline">import_data/2</code> is expected to populated all <code class="inline">imported_*</code> tables
+in ClickHouse with <code class="inline">import_id</code> column set to site import's ID.</p><p>Managing any configuration or authentication prior to running import is outside of
+scope of importer logic and is expected to be implemented separately.</p><h2 id="module-running-import-fully-synchronously" class="section-heading">
+  <a href="#module-running-import-fully-synchronously" class="hover-link">
+    <i class="ri-link-m" aria-hidden="true"></i>
+  </a>
+  <span class="text">Running import fully synchronously</span>
+</h2>
+<p>In case it's necessary to run the whole import job fully synchronously, the
+<a href="Plausible.Workers.ImportAnalytics.html"><code class="inline">Plausible.Workers.ImportAnalytics</code></a> worker sends an <a href="https://hexdocs.pm/oban/2.17.2/Oban.Notifier.html"><code class="inline">Oban.Notifier</code></a> message
+on completion, failure or transient failure of the import.</p><p>A basic usage scenario looks like this:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2244370846-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">job</span><span class="p" data-group-id="2244370846-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Plausible.Imported.NoopImporter</span><span class="o">.</span><span class="n">new_import</span><span class="p" data-group-id="2244370846-2">(</span><span class="w">
+  </span><span class="n">site</span><span class="p">,</span><span class="w">
+  </span><span class="n">user</span><span class="p">,</span><span class="w">
+  </span><span class="ss">start_date</span><span class="p">:</span><span class="w"> </span><span class="ld">~D[2005-01-01]</span><span class="p">,</span><span class="w">
+  </span><span class="ss">end_date</span><span class="p">:</span><span class="w"> </span><span class="nc">Date</span><span class="o">.</span><span class="n">utc_today</span><span class="p" data-group-id="2244370846-3">(</span><span class="p" data-group-id="2244370846-3">)</span><span class="p">,</span><span class="w">
+  </span><span class="c1"># this option is necessary to setup the calling process as listener</span><span class="w">
+  </span><span class="ss">listen?</span><span class="p">:</span><span class="w"> </span><span class="no">true</span><span class="w">
+</span><span class="p" data-group-id="2244370846-2">)</span><span class="w">
+
+</span><span class="n">import_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">job</span><span class="o">.</span><span class="n">args</span><span class="p" data-group-id="2244370846-4">[</span><span class="ss">:import_id</span><span class="p" data-group-id="2244370846-4">]</span><span class="w">
+
+</span><span class="k">receive</span><span class="w"> </span><span class="k" data-group-id="2244370846-5">do</span><span class="w">
+  </span><span class="p" data-group-id="2244370846-6">{</span><span class="ss">:notification</span><span class="p">,</span><span class="w"> </span><span class="ss">:analytics_imports_jobs</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2244370846-7">%{</span><span class="s">&quot;complete&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">^</span><span class="n">import_id</span><span class="p" data-group-id="2244370846-7">}</span><span class="p" data-group-id="2244370846-6">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="2244370846-8">(</span><span class="s">&quot;Job completed&quot;</span><span class="p" data-group-id="2244370846-8">)</span><span class="w">
+
+  </span><span class="p" data-group-id="2244370846-9">{</span><span class="ss">:notification</span><span class="p">,</span><span class="w"> </span><span class="ss">:analytics_imports_jobs</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2244370846-10">%{</span><span class="s">&quot;transient_fail&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">^</span><span class="n">import_id</span><span class="p" data-group-id="2244370846-10">}</span><span class="p" data-group-id="2244370846-9">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="2244370846-11">(</span><span class="s">&quot;Job failed transiently&quot;</span><span class="p" data-group-id="2244370846-11">)</span><span class="w">
+
+  </span><span class="p" data-group-id="2244370846-12">{</span><span class="ss">:notification</span><span class="p">,</span><span class="w"> </span><span class="ss">:analytics_imports_jobs</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="2244370846-13">%{</span><span class="s">&quot;fail&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="o">^</span><span class="n">import_id</span><span class="p" data-group-id="2244370846-13">}</span><span class="p" data-group-id="2244370846-12">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="2244370846-14">(</span><span class="s">&quot;Job failed permanently&quot;</span><span class="p" data-group-id="2244370846-14">)</span><span class="w">
+</span><span class="k" data-group-id="2244370846-5">after</span><span class="w">
+  </span><span class="mi">15_000</span><span class="w"> </span><span class="o">-&gt;</span><span class="w">
+    </span><span class="nc">IO</span><span class="o">.</span><span class="n">puts</span><span class="p" data-group-id="2244370846-15">(</span><span class="s">&quot;Job didn&#39;t finish in 15 seconds&quot;</span><span class="p" data-group-id="2244370846-15">)</span><span class="w">
+</span><span class="k" data-group-id="2244370846-5">end</span></code></pre><p>In a more realistic scenario, job scheduling will be done inside a GenServer process
+like LiveView, where notifications can be listened for via <code class="inline">handle_info/2</code>.</p>
+  </section>
+
+
+  <section id="summary" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h1>
+<div class="summary-callbacks summary">
+  <h2>
+    <a href="#callbacks">Callbacks</a>
+  </h2>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:before_start/1" translate="no">before_start(t)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:email_template/0" translate="no">email_template()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:import_data/2" translate="no">import_data(t, t)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:label/0" translate="no">label()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:name/0" translate="no">name()</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:on_failure/1" translate="no">on_failure(t)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:on_success/2" translate="no">on_success(t, map)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#c:parse_args/1" translate="no">parse_args(map)</a>
+
+      </div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="callbacks" class="details-list">
+    <h1 class="section-heading">
+      <a class="hover-link" href="#callbacks">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Callbacks</span>
+    </h1>
+    <div class="callbacks-list">
+<section class="detail" id="c:before_start/1">
+
+  <div class="detail-header">
+    <a href="#c:before_start/1" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">before_start(t)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L102" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> before_start(<a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>()) ::
+  :ok | {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="c:email_template/0">
+
+  <div class="detail-header">
+    <a href="#c:email_template/0" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">email_template()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L99" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> email_template() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="c:import_data/2">
+
+  <div class="detail-header">
+    <a href="#c:import_data/2" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">import_data(t, t)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L101" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> import_data(<a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="c:label/0">
+
+  <div class="detail-header">
+    <a href="#c:label/0" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">label()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L98" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> label() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="c:name/0">
+
+  <div class="detail-header">
+    <a href="#c:name/0" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">name()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L97" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> name() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">atom</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="c:on_failure/1">
+
+  <div class="detail-header">
+    <a href="#c:on_failure/1" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">on_failure(t)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L104" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> on_failure(<a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="c:on_success/2">
+
+  <div class="detail-header">
+    <a href="#c:on_success/2" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">on_success(t, map)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L103" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> on_success(<a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="c:parse_args/1">
+
+  <div class="detail-header">
+    <a href="#c:parse_args/1" class="detail-link" title="Link to this callback">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this callback</span>
+    </a>
+    <h1 class="signature" translate="no">parse_args(map)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/importer.ex#L100" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@callback</span> parse_args(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+
+    </div>
+  </section>
+
+      <footer class="footer">
+        <p>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Search HexDocs packages">
+              Search HexDocs
+            </button>
+
+              <a href="Plausible.epub" title="ePub version">
+                Download ePub version
+              </a>
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.31.1) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+      </footer>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true})</script>
+
+  </body>
+</html>

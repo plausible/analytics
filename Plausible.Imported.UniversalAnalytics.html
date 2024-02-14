@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-2BF32E1E.js"></script>
+    <script src="dist/sidebar_items-832F8877.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -154,28 +154,6 @@ Pages
       </a>
       <span class="text">Summary</span>
     </h1>
-<div class="summary-types summary">
-  <h2>
-    <a href="#types">Types</a>
-  </h2>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:import_opt/0" translate="no">import_opt()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#t:job_opt/0" translate="no">job_opt()</a>
-
-      </div>
-
-    </div>
-
-</div>
 <div class="summary-functions summary">
   <h2>
     <a href="#functions">Functions</a>
@@ -183,7 +161,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#create_job/2" translate="no">create_job(site, opts)</a>
+        <a href="#from_report/4" translate="no">from_report(data, site_id, import_id, table)</a>
 
       </div>
 
@@ -191,15 +169,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#from_report/3" translate="no">from_report(data, site_id, table)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#import/2" translate="no">import(site, opts)</a>
+        <a href="#import_data/2" translate="no">import_data(site_import, opts)</a>
 
       </div>
 
@@ -209,15 +179,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#name/0" translate="no">name()</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#parse_args/1" translate="no">parse_args(args)</a>
+        <a href="#new_import/3" translate="no">new_import(site, user, opts)</a>
 
       </div>
 
@@ -228,83 +190,6 @@ Pages
   </section>
 
 
-  <section id="types" class="details-list">
-    <h1 class="section-heading">
-      <a class="hover-link" href="#types">
-        <i class="ri-link-m" aria-hidden="true"></i>
-      </a>
-      <span class="text">Types</span>
-    </h1>
-    <div class="types-list">
-<section class="detail" id="t:import_opt/0">
-
-  <div class="detail-header">
-    <a href="#t:import_opt/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">import_opt()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L17" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> import_opt() ::
-  {:view_id, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}
-  | {:date_range, <a href="https://hexdocs.pm/elixir/Date.Range.html#t:t/0">Date.Range.t</a>()}
-  | {:auth, {<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="t:job_opt/0">
-
-  <div class="detail-header">
-    <a href="#t:job_opt/0" class="detail-link" title="Link to this type">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this type</span>
-    </a>
-    <h1 class="signature" translate="no">job_opt()</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L12" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@type</span> job_opt() ::
-  {:view_id, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()}
-  | {:start_date
-     | :end_date
-     | :access_token
-     | :refresh_token
-     | :token_expires_at, <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}</pre>
-
-      </div>
-
-
-  </section>
-</section>
-
-    </div>
-  </section>
-
   <section id="functions" class="details-list">
     <h1 class="section-heading">
       <a class="hover-link" href="#functions">
@@ -313,44 +198,16 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="create_job/2">
+<section class="detail" id="from_report/4">
 
   <div class="detail-header">
-    <a href="#create_job/2" class="detail-link" title="Link to this function">
+    <a href="#from_report/4" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">create_job(site, opts)</h1>
+    <h1 class="signature" translate="no">from_report(data, site_id, import_id, table)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L29" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> create_job(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), [<a href="#t:job_opt/0">job_opt</a>()]) :: <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="from_report/3">
-
-  <div class="detail-header">
-    <a href="#from_report/3" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">from_report(data, site_id, table)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L97" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L106" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -363,16 +220,16 @@ Pages
 
   </section>
 </section>
-<section class="detail" id="import/2">
+<section class="detail" id="import_data/2">
 
   <div class="detail-header">
-    <a href="#import/2" class="detail-link" title="Link to this function">
+    <a href="#import_data/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">import(site, opts)</h1>
+    <h1 class="signature" translate="no">import_data(site_import, opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L77" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L86" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -381,27 +238,21 @@ Pages
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> import(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), [<a href="#t:import_opt/0">import_opt</a>()]) :: :ok | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
-
-      </div>
 
 <p>Imports stats from a Google Analytics UA view to a Plausible site.</p><p>This function fetches Google Analytics reports which are then passed in batches
 to Clickhouse by the <a href="Plausible.Imported.Buffer.html"><code class="inline">Plausible.Imported.Buffer</code></a> process.</p>
   </section>
 </section>
-<section class="detail" id="name/0">
+<section class="detail" id="new_import/3">
 
   <div class="detail-header">
-    <a href="#name/0" class="detail-link" title="Link to this function">
+    <a href="#new_import/3" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">name()</h1>
+    <h1 class="signature" translate="no">new_import(site, user, opts)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L26" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L6" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -413,35 +264,8 @@ to Clickhouse by the <a href="Plausible.Imported.Buffer.html"><code class="inlin
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> name() :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()</pre>
-
-      </div>
-
-
-  </section>
-</section>
-<section class="detail" id="parse_args/1">
-
-  <div class="detail-header">
-    <a href="#parse_args/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">parse_args(args)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/universal_analytics.ex#L50" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> parse_args(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()) :: [<a href="#t:import_opt/0">import_opt</a>()]</pre>
+          <pre translate="no"><span class="attribute">@spec</span> new_import(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(), <a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>(), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) ::
+  {:ok, <a href="https://hexdocs.pm/oban/2.17.2/Oban.Job.html#t:t/0">Oban.Job.t</a>()} | {:error, <a href="https://hexdocs.pm/ecto/3.11.1/Ecto.Changeset.html#t:t/0">Ecto.Changeset.t</a>()}</pre>
 
       </div>
 

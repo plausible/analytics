@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-2BF32E1E.js"></script>
+    <script src="dist/sidebar_items-832F8877.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -131,7 +131,7 @@ Pages
 
 <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
@@ -141,6 +141,12 @@ Pages
 
 </h1>
 
+
+  <section id="moduledoc">
+<p>Context for managing site statistics imports.</p><p>Currently following importers are implemented:</p><ul><li><a href="Plausible.Imported.UniversalAnalytics.html"><code class="inline">Plausible.Imported.UniversalAnalytics</code></a> - existing mechanism, for legacy Google
+analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausible.Imported.NoopImporter.html"><code class="inline">Plausible.Imported.NoopImporter</code></a> - importer stub, used mainly for testing purposes</li><li><a href="Plausible.Imported.CSVImporter.html"><code class="inline">Plausible.Imported.CSVImporter</code></a> - a placeholder stub for CSV importer that will
+be added soon</li></ul><p>For more information on implementing importers, see <a href="Plausible.Imported.Importer.html"><code class="inline">Plausible.Imported.Importer</code></a>.</p>
+  </section>
 
 
   <section id="summary" class="details-list">
@@ -157,7 +163,39 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#forget/1" translate="no">forget(site)</a>
+        <a href="#delete_imports_for_site/1" translate="no">delete_imports_for_site(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#get_earliest_import/1" translate="no">get_earliest_import(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_all_imports/1" translate="no">list_all_imports(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#list_complete_import_ids/1" translate="no">list_complete_import_ids(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#load_import_data/1" translate="no">load_import_data(site)</a>
 
       </div>
 
@@ -184,16 +222,16 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="forget/1">
+<section class="detail" id="delete_imports_for_site/1">
 
   <div class="detail-header">
-    <a href="#forget/1" class="detail-link" title="Link to this function">
+    <a href="#delete_imports_for_site/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">forget(site)</h1>
+    <h1 class="signature" translate="no">delete_imports_for_site(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site.ex#L10" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L105" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -202,6 +240,125 @@ Pages
   </div>
 
   <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> delete_imports_for_site(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: :ok</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="get_earliest_import/1">
+
+  <div class="detail-header">
+    <a href="#get_earliest_import/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_earliest_import(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L85" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_earliest_import(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) ::
+  <a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>() | nil</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="list_all_imports/1">
+
+  <div class="detail-header">
+    <a href="#list_all_imports/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">list_all_imports(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L61" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_all_imports(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: [<a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>()]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="list_complete_import_ids/1">
+
+  <div class="detail-header">
+    <a href="#list_complete_import_ids/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">list_complete_import_ids(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L67" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> list_complete_import_ids(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: [<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()]</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="load_import_data/1">
+
+  <div class="detail-header">
+    <a href="#load_import_data/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">load_import_data(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L45" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> load_import_data(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()</pre>
+
+      </div>
 
 
   </section>
@@ -215,7 +372,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">tables()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site.ex#L8" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L42" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

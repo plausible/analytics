@@ -84,8 +84,11 @@ Plausible.HTTPClient.html
 Plausible.Helpers.JSON.html
 Plausible.ImportDeletionRepo.html
 Plausible.Imported.Buffer.html
+Plausible.Imported.CSVImporter.html
 Plausible.Imported.ImportSources.html
+Plausible.Imported.Importer.html
 Plausible.Imported.NoopImporter.html
+Plausible.Imported.SiteImport.html
 Plausible.Imported.UniversalAnalytics.html
 Plausible.Imported.html
 Plausible.IngestRepo.html
@@ -343,8 +346,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-C50543F6.js
-dist/sidebar_items-2BF32E1E.js
+dist/search_data-7D8A7221.js
+dist/sidebar_items-832F8877.js
 index.html
 readme.html
 search.html
