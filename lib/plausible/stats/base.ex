@@ -138,7 +138,7 @@ defmodule Plausible.Stats.Base do
       from(
         s in "sessions_v2",
         where: s.site_id == ^site.id,
-        where: s.start >= ^first_datetime and s.start < ^last_datetime
+        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
       )
 
     on_full_build do

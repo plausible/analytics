@@ -42,17 +42,36 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "counts total visits", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 3421, timestamp: ~N[2020-12-31 23:30:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2020-12-31 23:59:00]),
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:01:00]),
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 10:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 15:00:00])
+        build(:pageview, user_id: 2, timestamp: ~N[2020-12-31 23:59:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, user_id: 617_235, timestamp: ~N[2021-01-03 00:00:00])
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01")
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Total visits", "value" => 3} in res["top_stats"]
+      assert %{"name" => "Total visits", "value" => 2} in res["top_stats"]
+    end
+
+    test "counts total visits at the end", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, user_id: 3421, timestamp: ~N[2020-12-31 23:30:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 23:59:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-02 00:01:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-01 23:59:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-02 00:01:00]),
+        build(:pageview, user_id: 617_235, timestamp: ~N[2021-01-03 00:00:00])
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01")
+
+      res = json_response(conn, 200)
+
+      assert %{"name" => "Total visits", "value" => 2} in res["top_stats"]
     end
 
     test "counts pages per visit", %{conn: conn, site: site} do
