@@ -1,4 +1,4 @@
-import {formatISO} from './util/date'
+import { formatISO } from './util/date'
 
 let abortController = new AbortController()
 let SHARED_LINK_AUTH = null
@@ -36,14 +36,15 @@ function serializeFilters(filters) {
   return JSON.stringify(cleaned)
 }
 
-export function serializeQuery(query, extraQuery=[]) {
+export function serializeQuery(query, extraQuery = []) {
   const queryObj = {}
-  if (query.period)  { queryObj.period = query.period  }
-  if (query.date)    { queryObj.date = formatISO(query.date)  }
-  if (query.from)    { queryObj.from = formatISO(query.from)  }
-  if (query.to)      { queryObj.to = formatISO(query.to)  }
-  if (query.filters) { queryObj.filters = serializeFilters(query.filters)  }
-  if (query.with_imported) { queryObj.with_imported = query.with_imported  }
+  if (query.period) { queryObj.period = query.period }
+  if (query.date) { queryObj.date = formatISO(query.date) }
+  if (query.from) { queryObj.from = formatISO(query.from) }
+  if (query.to) { queryObj.to = formatISO(query.to) }
+  if (query.filters) { queryObj.filters = serializeFilters(query.filters) }
+  if (query.experimental_session_count) { queryObj.experimental_session_count = query.experimental_session_count }
+  if (query.with_imported) { queryObj.with_imported = query.with_imported }
   if (SHARED_LINK_AUTH) { queryObj.auth = SHARED_LINK_AUTH }
 
   if (query.comparison) {
@@ -58,11 +59,11 @@ export function serializeQuery(query, extraQuery=[]) {
   return '?' + serialize(queryObj)
 }
 
-export function get(url, query={}, ...extraQuery) {
-  const headers = SHARED_LINK_AUTH ? {'X-Shared-Link-Auth': SHARED_LINK_AUTH} : {}
+export function get(url, query = {}, ...extraQuery) {
+  const headers = SHARED_LINK_AUTH ? { 'X-Shared-Link-Auth': SHARED_LINK_AUTH } : {}
   url = url + serializeQuery(query, extraQuery)
-  return fetch(url, {signal: abortController.signal, headers: headers})
-    .then( response => {
+  return fetch(url, { signal: abortController.signal, headers: headers })
+    .then(response => {
       if (!response.ok) {
         return response.json().then((msg) => {
           throw new ApiError(msg.error, msg)
