@@ -63,6 +63,27 @@ defmodule PlausibleWeb.Components.Generic do
     """
   end
 
+  attr(:href, :string, required: true)
+  attr(:class, :string, default: "")
+  attr(:rest, :global)
+
+  slot(:inner_block)
+
+  def button_link_bright(assigns) do
+    ~H"""
+    <.link
+      href={@href}
+      class={[
+        "inline-flex items-center justify-center gap-x-2 rounded-md border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-gray-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-100 disabled:bg-gray-400 dark:disabled:bg-gray-800",
+        @class
+      ]}
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %>
+    </.link>
+    """
+  end
+
   attr(:slug, :string, required: true)
 
   def docs_info(assigns) do
