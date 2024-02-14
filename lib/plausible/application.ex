@@ -2,10 +2,13 @@ defmodule Plausible.Application do
   @moduledoc false
 
   use Application
+  use Plausible
 
   require Logger
 
   def start(_type, _args) do
+    on_full_build(do: Plausible.License.ensure_valid_license())
+
     children = [
       Plausible.Repo,
       Plausible.ClickhouseRepo,
