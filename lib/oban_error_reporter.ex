@@ -22,32 +22,31 @@ defmodule ObanErrorReporter do
     Sentry.capture_exception(meta.reason, stacktrace: meta.stacktrace, extra: extra)
   end
 
-  # NOTE: To be cleaned up once #3700 is released
-  @analytics_queues ["analytics_imports", "google_analytics_imports"]
-
   defp on_job_exception(%Oban.Job{
-         queue: queue,
-         args: %{"site_id" => site_id, "source" => source},
+         queue: "analytics_imports",
+         args: %{"import_id" => import_id},
          state: "executing",
          attempt: attempt,
          max_attempts: max_attempts
        })
-       when queue in @analytics_queues and attempt >= max_attempts do
-    site = Plausible.Repo.get(Plausible.Site, site_id)
+       when attempt >= max_attempts do
+    site_import = Plausible.Repo.get(Plausible.Imported.SiteImport, import_id)
 
-    if site do
-      Plausible.Workers.ImportAnalytics.import_failed(source, site)
+    if site_import do
+      Plausible.Workers.ImportAnalytics.import_fail(site_import)
     end
   end
 
   defp on_job_exception(%Oban.Job{
-         queue: queue,
-         args: %{"site_id" => site_id},
+         queue: "analytics_imports",
+         args: %{"import_id" => import_id},
          state: "executing"
-       })
-       when queue in @analytics_queues do
-    site = Plausible.Repo.get(Plausible.Site, site_id)
-    Plausible.Purge.delete_imported_stats!(site)
+       }) do
+    site_import = Plausible.Repo.get(Plausible.Imported.SiteImport, import_id)
+
+    if site_import do
+      Plausible.Workers.ImportAnalytics.import_fail_transient(site_import)
+    end
   end
 
   defp on_job_exception(_job), do: :ignore

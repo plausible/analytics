@@ -40,7 +40,7 @@ defmodule Plausible.Google.ApiTest do
     {:ok, buffer} = Plausible.Imported.Buffer.start_link()
 
     persist_fn = fn table, rows ->
-      records = UniversalAnalytics.from_report(rows, site.id, table)
+      records = UniversalAnalytics.from_report(rows, site.id, _import_id = 123, table)
       Plausible.Imported.Buffer.insert_many(buffer, table, records)
     end
 
@@ -82,7 +82,7 @@ defmodule Plausible.Google.ApiTest do
     {:ok, buffer} = Plausible.Imported.Buffer.start_link()
 
     persist_fn = fn table, rows ->
-      records = UniversalAnalytics.from_report(rows, site.id, table)
+      records = UniversalAnalytics.from_report(rows, site.id, _import_id = 123, table)
       Plausible.Imported.Buffer.insert_many(buffer, table, records)
     end
 

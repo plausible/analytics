@@ -3,6 +3,8 @@ defmodule PlausibleWeb.Api.StatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
+
+  alias Plausible.Imported.SiteImport
   alias Plausible.Stats
   alias Plausible.Stats.{Query, Comparisons}
   alias PlausibleWeb.Api.Helpers, as: H
@@ -132,6 +134,8 @@ defmodule PlausibleWeb.Api.StatsController do
       present_index = present_index_for(site, query, labels)
       full_intervals = build_full_intervals(query, labels)
 
+      site_import = Plausible.Imported.get_earliest_import(site)
+
       json(conn, %{
         plot: plot_timeseries(timeseries_result, selected_metric),
         labels: labels,
@@ -140,7 +144,7 @@ defmodule PlausibleWeb.Api.StatsController do
         present_index: present_index,
         interval: query.interval,
         with_imported: with_imported?(query, comparison_query),
-        imported_source: site.imported_data && site.imported_data.source,
+        imported_source: site_import && SiteImport.label(site_import),
         full_intervals: full_intervals
       })
     else
@@ -216,12 +220,14 @@ defmodule PlausibleWeb.Api.StatsController do
 
       {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
 
+      site_import = Plausible.Imported.get_earliest_import(site)
+
       json(conn, %{
         top_stats: top_stats,
         interval: query.interval,
         sample_percent: sample_percent,
         with_imported: with_imported?(query, comparison_query),
-        imported_source: site.imported_data && site.imported_data.source,
+        imported_source: site_import && SiteImport.label(site_import),
         comparing_from: comparison_query && comparison_query.date_range.first,
         comparing_to: comparison_query && comparison_query.date_range.last,
         from: query.date_range.first,

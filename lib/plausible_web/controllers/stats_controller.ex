@@ -309,6 +309,7 @@ defmodule PlausibleWeb.StatsController do
     cond do
       !shared_link.site.locked ->
         shared_link = Plausible.Repo.preload(shared_link, site: :owner)
+        stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
 
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
@@ -318,7 +319,7 @@ defmodule PlausibleWeb.StatsController do
           has_goals: Sites.has_goals?(shared_link.site),
           funnels: list_funnels(shared_link.site),
           has_props: Plausible.Props.configured?(shared_link.site),
-          stats_start_date: shared_link.site.stats_start_date,
+          stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: title(conn, shared_link.site),
           offer_email_report: false,
