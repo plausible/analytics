@@ -58,8 +58,15 @@ defmodule Plausible.Imported do
 
   @spec list_all_imports(Site.t()) :: [SiteImport.t()]
   def list_all_imports(site) do
-    from(i in SiteImport, where: i.site_id == ^site.id)
-    |> Repo.all()
+    imports =
+      from(i in SiteImport, where: i.site_id == ^site.id, order_by: [desc: i.inserted_at])
+      |> Repo.all()
+
+    if site.imported_data && not Enum.any?(imports, & &1.legacy) do
+      [SiteImport.from_legacy(site.imported_data) | imports]
+    else
+      imports
+    end
   end
 
   @spec list_complete_import_ids(Site.t()) :: [non_neg_integer()]

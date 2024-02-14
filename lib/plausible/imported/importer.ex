@@ -155,7 +155,7 @@ defmodule Plausible.Imported.Importer do
   def new_import(source, site, user, opts, before_start_fun) do
     import_params =
       opts
-      |> Keyword.take([:start_date, :end_date])
+      |> Keyword.take([:start_date, :end_date, :legacy])
       |> Keyword.put(:source, source)
       |> Map.new()
 
