@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - IP Block List in Site Settings
+- Allow filtering with `contains`/`matches` operator for Sources, Browsers and Operating Systems.
 - Allow filtering by multiple custom properties
 - Wildcard and member filtering on the Stats API `event:goal` property
 - Allow filtering with `contains`/`matches` operator for custom properties

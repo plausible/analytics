@@ -1,6 +1,7 @@
 import React from 'react';
 
 import * as storage from '../../util/storage'
+import { isFilteringOnFixedValue } from '../../util/filters'
 import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
@@ -161,12 +162,12 @@ export default class Devices extends React.Component {
   renderContent() {
     switch (this.state.mode) {
       case 'browser':
-        if (this.props.query.filters.browser) {
+        if (isFilteringOnFixedValue(this.props.query, 'browser')) {
           return <BrowserVersions site={this.props.site} query={this.props.query} />
         }
         return <Browsers site={this.props.site} query={this.props.query} />
       case 'os':
-        if (this.props.query.filters.os) {
+        if (isFilteringOnFixedValue(this.props.query, 'os')) {
           return <OperatingSystemVersions site={this.props.site} query={this.props.query} />
         }
         return <OperatingSystems site={this.props.site} query={this.props.query} />

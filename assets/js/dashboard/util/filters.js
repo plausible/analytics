@@ -10,9 +10,7 @@ export const FILTER_GROUPS = {
   'props': ['prop_key', 'prop_value']
 }
 
-export const ALLOW_FREE_CHOICE = new Set(
-  FILTER_GROUPS['page'].concat(FILTER_GROUPS['utm']).concat(['prop_value'])
-)
+export const NO_CONTAINS_OPERATOR = new Set(['goal', 'screen'].concat(FILTER_GROUPS['location']))
 
 export const FILTER_OPERATIONS = {
   isNot: 'is not',
@@ -31,7 +29,7 @@ export function supportsIsNot(filterName) {
 }
 
 export function isFreeChoiceFilter(filterName) {
-  return ALLOW_FREE_CHOICE.has(filterName)
+  return !NO_CONTAINS_OPERATOR.has(filterName)
 }
 
 // As of March 2023, Safari does not support negative lookbehind regexes. In case it throws an error, falls back to plain | matching. This means
@@ -100,6 +98,11 @@ export function parseQueryFilter(query, filter) {
   const clauses = values.map((value, index) => { return {value, label: labels[index]}})
 
   return {type, clauses}
+}
+
+export function isFilteringOnFixedValue(query, filter) {
+  const { type, clauses } = parseQueryFilter(query, filter)
+  return type == FILTER_OPERATIONS.is && clauses.length == 1
 }
 
 export function formatFilterGroup(filterGroup) {
