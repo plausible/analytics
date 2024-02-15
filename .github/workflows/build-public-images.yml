@@ -12,12 +12,18 @@ jobs:
   build:
     runs-on: buildjet-16vcpu-ubuntu-2204
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: plausible/analytics
+          images: |
+            plausible/analytics
+            ghcr.io/plausible/analytics
           tags: |
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
@@ -34,6 +40,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
         id: docker_build
