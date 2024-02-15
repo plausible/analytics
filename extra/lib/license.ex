@@ -1,7 +1,7 @@
 defmodule Plausible.License do
   @moduledoc """
-    This module ensures that you cannot utilize the Plausible Analytics Enterprise Edition without a valid license key.
-    The modules contained within the ee/ and assets/js/dashboard/ee directories are Copyright © Plausible Insights OÜ.
+    This module ensures that you cannot run Plausible Analytics Enterprise Edition without a valid license key.
+    The software contained within the ee/ and assets/js/dashboard/ee directories are Copyright © Plausible Insights OÜ.
     We have made this code available solely for informational and transparency purposes. No rights are granted to use,
     distribute, or exploit this software in any form.
 
@@ -13,7 +13,7 @@ defmodule Plausible.License do
   require Logger
 
   def ensure_valid_license do
-    if not has_valid_license?() do
+    if Mix.env() != :dev and not has_valid_license?() do
       Logger.error(
         "Invalid or no license key provided for Plausible Analytics Enterprise Edition. Please contact hello@plausible.io to acquire a license."
       )
