@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-AD72482F.js"></script>
+    <script src="dist/sidebar_items-7320A3C1.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -161,7 +161,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#calculate_cr/2" translate="no">calculate_cr(unique_visitors, converted_visitors)</a>
+        <a href="#remove_internal_visits_metric/1" translate="no">remove_internal_visits_metric(result)</a>
 
       </div>
 
@@ -169,24 +169,13 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#keep_requested_metrics/2" translate="no">keep_requested_metrics(results, requested_metrics)</a>
+        <a href="#remove_internal_visits_metric/2" translate="no">remove_internal_visits_metric(results, metrics)</a>
 
       </div>
 
-        <div class="summary-synopsis"><p>Sometimes we need to manually add metrics in order to calculate the value for
-other metrics. E.g</p></div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#maybe_add_visitors_metric/1" translate="no">maybe_add_visitors_metric(metrics)</a>
-
-      </div>
-
-        <div class="summary-synopsis"><p>This function adds the <code class="inline">visitors</code> metric into the list of
-given metrics if it's not already there and if there is a
-<code class="inline">conversion_rate</code> metric in the list.</p></div>
+        <div class="summary-synopsis"><p><code class="inline">__internal_visits</code> is fetched when querying bounce rate and visit duration, as it
+is needed to calculate these from imported data. This function removes that metric
+from all entries in the results list.</p></div>
 
     </div>
 
@@ -203,16 +192,16 @@ given metrics if it's not already there and if there is a
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="calculate_cr/2">
+<section class="detail" id="remove_internal_visits_metric/1">
 
   <div class="detail-header">
-    <a href="#calculate_cr/2" class="detail-link" title="Link to this function">
+    <a href="#remove_internal_visits_metric/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">calculate_cr(unique_visitors, converted_visitors)</h1>
+    <h1 class="signature" translate="no">remove_internal_visits_metric(result)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L54" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L20" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -225,16 +214,16 @@ given metrics if it's not already there and if there is a
 
   </section>
 </section>
-<section class="detail" id="keep_requested_metrics/2">
+<section class="detail" id="remove_internal_visits_metric/2">
 
   <div class="detail-header">
-    <a href="#keep_requested_metrics/2" class="detail-link" title="Link to this function">
+    <a href="#remove_internal_visits_metric/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">keep_requested_metrics(results, requested_metrics)</h1>
+    <h1 class="signature" translate="no">remove_internal_visits_metric(results, metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L22" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L11" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -244,41 +233,9 @@ given metrics if it's not already there and if there is a
 
   <section class="docstring">
 
-<p>Sometimes we need to manually add metrics in order to calculate the value for
-other metrics. E.g:</p><ul><li><p><code class="inline">__internal_visits</code> is fetched when querying bounce rate and visit duration,
-as it is needed to calculate these from imported data.</p></li><li><p><code class="inline">visitors</code> metric might be added manually via <a href="#maybe_add_visitors_metric/1"><code class="inline">maybe_add_visitors_metric/1</code></a>,
-in order to be able to calculate conversion rate.</p></li></ul><p>This function can be used for stripping those metrics from a breakdown (list),
-or an aggregate (map) result. We do not want to return metrics that we're not
-requested.</p>
-  </section>
-</section>
-<section class="detail" id="maybe_add_visitors_metric/1">
-
-  <div class="detail-header">
-    <a href="#maybe_add_visitors_metric/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">maybe_add_visitors_metric(metrics)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L46" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-<p>This function adds the <code class="inline">visitors</code> metric into the list of
-given metrics if it's not already there and if there is a
-<code class="inline">conversion_rate</code> metric in the list.</p><p>Currently, the conversion rate cannot be queried from the
-database with a simple select clause - instead, we need to
-fetch the database result first, and then manually add it
-into the aggregate map or every entry of thebreakdown list.</p><p>In order for us to be able to calculate it based on the
-results returned by the database query, the visitors metric
-needs to be queried.</p>
+<p><code class="inline">__internal_visits</code> is fetched when querying bounce rate and visit duration, as it
+is needed to calculate these from imported data. This function removes that metric
+from all entries in the results list.</p>
   </section>
 </section>
 
