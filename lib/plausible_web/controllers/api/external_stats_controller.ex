@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  alias Plausible.Stats.Query
+  alias Plausible.Stats.{Query, Compare, Comparisons}
 
   @metrics [
     :visitors,
@@ -34,7 +34,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
          :ok <- ensure_custom_props_access(site, query) do
       results =
         if params["compare"] == "previous_period" do
-          {:ok, prev_query} = Plausible.Stats.Comparisons.compare(site, query, "previous_period")
+          {:ok, prev_query} = Comparisons.compare(site, query, "previous_period")
 
           [prev_result, curr_result] =
             Plausible.ClickhouseRepo.parallel_tasks([
@@ -44,12 +44,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
           Enum.map(curr_result, fn {metric, %{value: current_val}} ->
             %{value: prev_val} = prev_result[metric]
+            change = Compare.calculate_change(metric, prev_val, current_val)
 
-            {metric,
-             %{
-               value: current_val,
-               change: percent_change(prev_val, current_val)
-             }}
+            {metric, %{value: current_val, change: change}}
           end)
           |> Enum.into(%{})
         else
@@ -248,19 +245,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       json(conn, %{results: graph})
     else
       err_tuple -> send_json_error_response(conn, err_tuple)
-    end
-  end
-
-  defp percent_change(old_count, new_count) do
-    cond do
-      old_count == 0 and new_count > 0 ->
-        100
-
-      old_count == 0 and new_count == 0 ->
-        0
-
-      true ->
-        round((new_count - old_count) / old_count * 100)
     end
   end
 

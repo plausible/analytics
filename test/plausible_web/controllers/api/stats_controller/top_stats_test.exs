@@ -1094,7 +1094,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert %{
-               "change" => -50,
+               "change" => -33.4,
                "comparison_value" => 66.7,
                "name" => "Conversion rate",
                "value" => 33.3
