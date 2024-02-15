@@ -1,9 +1,9 @@
 defmodule Plausible.Stats.Aggregate do
+  alias Plausible.Stats.Query
   use Plausible.ClickhouseRepo
   use Plausible
-  import Plausible.Stats.{Base, Imported}
+  import Plausible.Stats.{Base, Imported, Util}
   import Ecto.Query
-  alias Plausible.Stats.{Query, Util}
 
   @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
@@ -26,13 +26,8 @@ defmodule Plausible.Stats.Aggregate do
 
     Query.trace(query, metrics)
 
-    event_metrics =
-      metrics
-      |> Util.maybe_add_visitors_metric()
-      |> Enum.filter(&(&1 in @event_metrics))
-
+    event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     event_task = fn -> aggregate_events(site, query, event_metrics) end
-
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
     session_task = fn -> aggregate_sessions(site, query, session_metrics) end
 
@@ -45,36 +40,10 @@ defmodule Plausible.Stats.Aggregate do
 
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
-    |> maybe_put_cr(site, query, metrics)
-    |> Util.keep_requested_metrics(metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
     |> Enum.map(fn {metric, value} -> {metric, %{value: value}} end)
     |> Enum.into(%{})
-  end
-
-  defp maybe_put_cr(aggregate_result, site, query, metrics) do
-    if :conversion_rate in metrics do
-      all =
-        query
-        |> Query.remove_event_filters([:goal, :props])
-        |> then(fn query -> aggregate_events(site, query, [:visitors]) end)
-        |> Map.fetch!(:visitors)
-
-      converted = aggregate_result.visitors
-
-      cr = Util.calculate_cr(all, converted)
-
-      aggregate_result = Map.put(aggregate_result, :conversion_rate, cr)
-
-      if :total_visitors in metrics do
-        Map.put(aggregate_result, :total_visitors, all)
-      else
-        aggregate_result
-      end
-    else
-      aggregate_result
-    end
   end
 
   defp aggregate_events(_, _, []), do: %{}
@@ -94,7 +63,7 @@ defmodule Plausible.Stats.Aggregate do
     |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
-    |> Util.keep_requested_metrics(metrics)
+    |> remove_internal_visits_metric()
   end
 
   defp aggregate_time_on_page(site, query) do

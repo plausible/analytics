@@ -6,30 +6,34 @@ defmodule Plausible.Stats.Filters do
   alias Plausible.Stats.Filters.{DashboardFilterParser, StatsAPIFilterParser}
 
   @visit_props [
-    :source,
-    :referrer,
-    :utm_medium,
-    :utm_source,
-    :utm_campaign,
-    :utm_content,
-    :utm_term,
-    :screen,
-    :device,
-    :browser,
-    :browser_version,
-    :os,
-    :os_version,
-    :country,
-    :region,
-    :city,
-    :entry_page,
-    :exit_page
+    "source",
+    "referrer",
+    "utm_medium",
+    "utm_source",
+    "utm_campaign",
+    "utm_content",
+    "utm_term",
+    "screen",
+    "device",
+    "browser",
+    "browser_version",
+    "os",
+    "os_version",
+    "country",
+    "region",
+    "city",
+    "entry_page",
+    "exit_page"
   ]
-  def visit_props(), do: @visit_props |> Enum.map(&to_string/1)
+  def visit_props(), do: @visit_props
 
-  @event_props [:name, :page, :goal]
+  @event_props [
+    "name",
+    "page",
+    "goal"
+  ]
 
-  def event_props(), do: @event_props |> Enum.map(&to_string/1)
+  def event_props(), do: @event_props
 
   @doc """
   Parses different filter formats.
@@ -63,11 +67,4 @@ defmodule Plausible.Stats.Filters do
 
   def parse(filters) when is_map(filters), do: DashboardFilterParser.parse_and_prefix(filters)
   def parse(_), do: %{}
-
-  def without_prefix(property) do
-    property
-    |> String.split(":")
-    |> List.last()
-    |> String.to_existing_atom()
-  end
 end
