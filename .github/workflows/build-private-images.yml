@@ -16,12 +16,18 @@ jobs:
     if: ${{ github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'deploy-to-staging') }}
     runs-on: buildjet-16vcpu-ubuntu-2204
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5.0.0
         with:
-          images: plausible/analytics-private
+          images: |
+            plausible/analytics-private
+            ghcr.io/plausible/analytics/ee
           tags: |
             type=ref,event=pr
             type=ref,event=branch
@@ -35,6 +41,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
         id: docker_build
