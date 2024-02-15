@@ -30,42 +30,9 @@
     </PlausibleWeb.Components.Generic.button_link_bright>
   </div>
 
-  <header class="relative border-b border-gray-200 pb-4">
-    <h3 class="mt-8 text-md leading-6 font-medium text-gray-900 dark:text-gray-100">
-      Existing Imports
-    </h3>
-    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
-      A maximum of 5 imports at any time is allowed.
-    </p>
-  </header>
-
-  <%= if @site_imports != [] do %>
-    <ul>
-      <%= for site_import <- @site_imports do %>
-        <li class="py-4 flex items-center justify-between space-x-4">
-          <div class="flex flex-col">
-            <p class="text-sm leading-5 font-medium text-gray-900 dark:text-gray-100">
-              Import from <%= Plausible.Imported.SiteImport.label(site_import) %>
-              <Heroicons.check class="inline-block h-6 w-5 text-indigo-600 dark:text-green-600" />
-            </p>
-            <p class="text-sm leading-5 text-gray-500 dark:text-gray-200">
-              From <%= PlausibleWeb.TextHelpers.format_date(site_import.start_date) %> to <%= PlausibleWeb.TextHelpers.format_date(
-                site_import.end_date
-              ) %>
-            </p>
-          </div>
-          <%= link("Delete import",
-            to: "/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{site_import.id}",
-            method: :delete,
-            class:
-              "inline-block mt-4 px-4 py-2 border border-gray-300 dark:border-gray-500 text-sm leading-5 font-medium rounded-md text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:outline-none focus:border-blue-300 focus:ring active:text-red-800 active:bg-gray-50 transition ease-in-out duration-150"
-          ) %>
-        </li>
-      <% end %>
-    </ul>
-  <% else %>
-    <p>There are no imports yet.</p>
-  <% end %>
+  <%= live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
+    session: %{"domain" => @site.domain}
+  ) %>
 
   <header class="relative border-b border-gray-200 pb-4">
     <h2 class="mt-8 text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">

@@ -279,7 +279,6 @@ defmodule PlausibleWeb.SiteController do
       conn
       |> render("settings_imports_exports.html",
         site: site,
-        site_imports: Plausible.Imported.list_all_imports(site),
         dogfood_page_path: "/:dashboard/settings/imports-exports",
         connect_live_socket: true,
         layout: {PlausibleWeb.LayoutView, "site_settings.html"}

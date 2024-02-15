@@ -205,11 +205,21 @@ defmodule Plausible.Imported.Importer do
     Oban.Notifier.notify(Oban, @oban_channel, %{event => site_import.id})
   end
 
+  @doc """
+  Allows to explicitly start listening for importer job notifications.
+
+  Listener must explicitly filter out a subset of imports that apply to the given context.
+  """
+  @spec listen() :: :ok
+  def listen() do
+    :ok = Oban.Notifier.listen([@oban_channel])
+  end
+
   defp schedule_job(site_import, opts) do
     {listen?, opts} = Keyword.pop(opts, :listen?, false)
 
     if listen? do
-      :ok = Oban.Notifier.listen([@oban_channel])
+      :ok = listen()
     end
 
     opts
