@@ -4,6 +4,19 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb.Plugs.ErrorHandler
   alias Plausible.Stats.Query
 
+  @metrics [
+    :visitors,
+    :visits,
+    :pageviews,
+    :views_per_visit,
+    :bounce_rate,
+    :visit_duration,
+    :events,
+    :conversion_rate
+  ]
+
+  @metric_mappings Enum.into(@metrics, %{}, fn metric -> {to_string(metric), metric} end)
+
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
     query = Query.from(site, %{"period" => "realtime"})
@@ -96,13 +109,6 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   @default_breakdown_limit 100
   defp validate_or_default_limit(_), do: {:ok, @default_breakdown_limit}
 
-  defp event_only_property?("event:name"), do: true
-  defp event_only_property?("event:goal"), do: true
-  defp event_only_property?("event:props:" <> _), do: true
-  defp event_only_property?(_), do: false
-
-  @event_metrics ["visitors", "pageviews", "events"]
-  @session_metrics ["visits", "bounce_rate", "visit_duration", "views_per_visit"]
   defp parse_and_validate_metrics(params, property, query) do
     metrics =
       Map.get(params, "metrics", "visitors")
@@ -113,7 +119,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {:error, reason}
 
       metrics ->
-        {:ok, Enum.map(metrics, &String.to_existing_atom/1)}
+        {:ok, Enum.map(metrics, &Map.fetch!(@metric_mappings, &1))}
     end
   end
 
@@ -155,26 +161,61 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end)
   end
 
-  defp validate_metric("events", nil, %{include_imported: true}) do
-    {:error, "Metric `events` cannot be queried with imported data"}
+  defp validate_metric("conversion_rate" = metric, property, query) do
+    cond do
+      property == "event:goal" ->
+        {:ok, metric}
+
+      query.filters["event:goal"] ->
+        {:ok, metric}
+
+      true ->
+        {:error,
+         "Metric `#{metric}` can only be queried in a goal breakdown or with a goal filter"}
+    end
   end
 
-  defp validate_metric(metric, _, _) when metric in @event_metrics, do: {:ok, metric}
+  defp validate_metric("events" = metric, _, query) do
+    if query.include_imported do
+      {:error, "Metric `#{metric}` cannot be queried with imported data"}
+    else
+      {:ok, metric}
+    end
+  end
 
-  defp validate_metric(metric, property, query) when metric in @session_metrics do
-    event_only_filter = Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
+  defp validate_metric(metric, _, _) when metric in ["visitors", "pageviews"] do
+    {:ok, metric}
+  end
 
+  defp validate_metric("views_per_visit" = metric, property, query) do
     cond do
-      metric == "views_per_visit" && query.filters["event:page"] ->
+      query.filters["event:page"] ->
         {:error, "Metric `#{metric}` cannot be queried with a filter on `event:page`."}
 
-      metric == "views_per_visit" && property != nil ->
+      property != nil ->
         {:error, "Metric `#{metric}` is not supported in breakdown queries."}
 
+      true ->
+        validate_session_metric(metric, property, query)
+    end
+  end
+
+  defp validate_metric(metric, property, query)
+       when metric in ["visits", "bounce_rate", "visit_duration"] do
+    validate_session_metric(metric, property, query)
+  end
+
+  defp validate_metric(metric, _, _) do
+    {:error,
+     "The metric `#{metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"}
+  end
+
+  defp validate_session_metric(metric, property, query) do
+    cond do
       event_only_property?(property) ->
         {:error, "Session metric `#{metric}` cannot be queried for breakdown by `#{property}`."}
 
-      event_only_filter ->
+      event_only_filter = find_event_only_filter(query) ->
         {:error,
          "Session metric `#{metric}` cannot be queried when using a filter on `#{event_only_filter}`."}
 
@@ -183,10 +224,14 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     end
   end
 
-  defp validate_metric(metric, _, _) do
-    {:error,
-     "The metric `#{metric}` is not recognized. Find valid metrics from the documentation: https://plausible.io/docs/stats-api#metrics"}
+  defp find_event_only_filter(query) do
+    Map.keys(query.filters) |> Enum.find(&event_only_property?/1)
   end
+
+  defp event_only_property?("event:name"), do: true
+  defp event_only_property?("event:goal"), do: true
+  defp event_only_property?("event:props:" <> _), do: true
+  defp event_only_property?(_), do: false
 
   def timeseries(conn, params) do
     site = Repo.preload(conn.assigns.site, :owner)

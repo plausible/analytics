@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Display `Total visitors`, `Conversions`, and `CR` in the "Details" views of Countries, Regions and Cities (when filtering by a goal)
+- Add `conversion_rate` to Regions and Cities reports (when filtering by a goal)
+- Add the `conversion_rate` metric to Stats API Breakdown and Aggregate endpoints
 - IP Block List in Site Settings
 - Allow filtering with `contains`/`matches` operator for Sources, Browsers and Operating Systems.
 - Allow filtering by multiple custom properties
