@@ -242,3 +242,9 @@ defmodule Plausible.Site do
     end
   end
 end
+
+defimpl FunWithFlags.Actor, for: Plausible.Site do
+  def id(%{domain: domain}) do
+    "site:#{domain}"
+  end
+end

@@ -132,14 +132,18 @@ defmodule Plausible.Stats.Base do
   }
 
   def query_sessions(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
+    {first_datetime, last_datetime} =
+      utc_boundaries(query, site)
+
+    q = from(s in "sessions_v2", where: s.site_id == ^site.id)
 
     sessions_q =
-      from(
-        s in "sessions_v2",
-        where: s.site_id == ^site.id,
-        where: s.start >= ^first_datetime and s.start < ^last_datetime
-      )
+      if FunWithFlags.enabled?(:experimental_session_count, for: site) or
+           query.experimental_session_count? do
+        from s in q, where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
+      else
+        from s in q, where: s.start >= ^first_datetime and s.start < ^last_datetime
+      end
 
     on_full_build do
       sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
