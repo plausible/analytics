@@ -28,7 +28,7 @@ COPY mix.lock ./
 COPY config ./config
 RUN mix local.hex --force && \
   mix local.rebar --force && \
-  mix deps.get --only prod && \
+  HEX_HTTP_TIMEOUT=120 mix deps.get --only prod && \
   mix deps.compile
 
 COPY assets/package.json assets/package-lock.json ./assets/
@@ -64,20 +64,15 @@ ENV LANG=C.UTF-8
 ARG MIX_ENV=small
 ENV MIX_ENV=$MIX_ENV
 
-# we are creating the user early to prevent packages taking this UID
 RUN adduser -S -H -u 999 -G nogroup plausible -g 'Plausible Analytics'
 
-# TODO one RUN for apk?
 RUN apk upgrade --no-cache
 RUN apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
-# --chmod=a+rX is not strictly necessary since mix release creates 755 files by default
 COPY --from=buildcontainer --chmod=a+rX /app/_build/${MIX_ENV}/rel/plausible /app
 COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
-# we are setting the user in the very end to avoid permission problems
 USER 999
-
 WORKDIR /app
 ENV LISTEN_IP=0.0.0.0
 ENTRYPOINT ["/entrypoint.sh"]
