@@ -28,7 +28,7 @@ COPY mix.lock ./
 COPY config ./config
 RUN mix local.hex --force && \
   mix local.rebar --force && \
-  HEX_HTTP_TIMEOUT=120 mix deps.get --only prod && \
+  mix deps.get --only prod && \
   mix deps.compile
 
 COPY assets/package.json assets/package-lock.json ./assets/
