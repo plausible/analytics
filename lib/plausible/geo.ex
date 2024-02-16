@@ -22,6 +22,9 @@ defmodule Plausible.Geo do
     * `:edition` - the name of the MaxMind database to be downloaded from MaxMind
       servers. Defaults to `GeoLite2-City`.
 
+    * `:cache_dir` - if set, the downloaded .mmdb files are cached there across
+      restarts.
+
     * `:async` - when used, configures the database loading to run
       asynchronously.
 
@@ -45,8 +48,11 @@ defmodule Plausible.Geo do
         maxmind_opts = [license_key: license_key]
 
         loader_opts =
-          if database_cache_file = opts[:database_cache_file] do
-            [database_cache_file: database_cache_file]
+          if is_binary(opts[:cache_dir]) do
+            [
+              database_cache_file:
+                String.to_charlist(Path.join(opts[:cache_dir], edition <> ".mmdb.gz"))
+            ]
           else
             [:no_cache]
           end
