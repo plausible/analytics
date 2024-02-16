@@ -61,23 +61,22 @@ LABEL maintainer="plausible.io <hello@plausible.io>"
 ARG BUILD_METADATA={}
 ENV BUILD_METADATA=$BUILD_METADATA
 ENV LANG=C.UTF-8
+
 ARG MIX_ENV=small
 ENV MIX_ENV=$MIX_ENV
 
-RUN apk upgrade --no-cache
+RUN apk upgrade --no-cache && \
+  apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
-RUN apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
-
-COPY ./rel/docker-entrypoint.sh /entrypoint.sh
-
-RUN chmod a+x /entrypoint.sh && \
-  adduser -h /app -u 1000 -s /bin/sh -D plausibleuser
-
-COPY --from=buildcontainer /app/_build/${MIX_ENV}/rel/plausible /app
-RUN chown -R plausibleuser:plausibleuser /app
-USER plausibleuser
 WORKDIR /app
-ENV LISTEN_IP=0.0.0.0
+
+RUN adduser -u 1000 -s /bin/sh -D plausibleuser && \
+  chown plausibleuser /app
+
+USER plausibleuser
+
+COPY --from=buildcontainer --chown=plausibleuser:plausibleuser /app/_build/prod/rel/plausible /app
+COPY --chown=plausibleuser:plausibleuser ./rel/docker-entrypoint.sh /entrypoint.sh
+
 ENTRYPOINT ["/entrypoint.sh"]
-EXPOSE 8000
 CMD ["run"]
