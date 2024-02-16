@@ -51,6 +51,7 @@ All notable changes to this project will be documented in this file.
 - Allow custom event timeseries in stats API plausible/analytics#3505
 - Fixes for sites with UTF characters in domain plausible/analytics#3560
 - Fix crash when using special characters in filter plausible/analytics#3634
+- Allow running the container with arbitrary UID plausible/analytics#2986
 
 ## v2.0.0 - 2023-07-12
 
