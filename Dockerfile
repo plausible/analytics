@@ -59,18 +59,18 @@ FROM alpine:3.18.4
 LABEL maintainer="plausible.io <hello@plausible.io>"
 
 ARG BUILD_METADATA={}
-ARG MIX_ENV=small
-
 ENV BUILD_METADATA=$BUILD_METADATA
-ENV MIX_ENV=$MIX_ENV
 ENV LANG=C.UTF-8
+
+ARG MIX_ENV=small
+ENV MIX_ENV=$MIX_ENV
 
 RUN adduser -S -H -u 999 -G nogroup plausible -g 'Plausible Analytics'
 
 RUN apk upgrade --no-cache && \
   apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
-COPY --from=buildcontainer --chmod=a+rX /app/_build/prod/rel/plausible /app
+COPY --from=buildcontainer --chmod=a+rX /app/_build/${MIX_ENV}/rel/plausible /app
 COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
 USER 999
