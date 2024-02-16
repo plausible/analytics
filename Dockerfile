@@ -63,7 +63,7 @@ ARG MIX_ENV=small
 
 ENV BUILD_METADATA=$BUILD_METADATA
 ENV MIX_ENV=$MIX_ENV
-ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
+ENV LANG=C.UTF-8
 ENV LISTEN_IP=0.0.0.0
 
 WORKDIR /app
@@ -79,4 +79,5 @@ COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 USER plausibleuser
 
 ENTRYPOINT ["/entrypoint.sh"]
+EXPOSE 8000
 CMD ["run"]
