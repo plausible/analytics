@@ -63,7 +63,7 @@ defmodule Plausible.Stats.Aggregate do
     |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
-    |> remove_internal_visits_metric()
+    |> remove_internal_metrics()
   end
 
   defp aggregate_time_on_page(site, query) do

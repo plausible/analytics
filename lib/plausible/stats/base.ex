@@ -335,6 +335,8 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, [:views_per_visit | rest], query) do
     from(s in q,
       select_merge: %{
+        __internal_pageviews: fragment("toUInt32(sum(sign * pageviews))"),
+        __internal_visits: fragment("toUInt32(sum(sign))"),
         views_per_visit:
           fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
       }

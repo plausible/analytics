@@ -211,7 +211,7 @@ defmodule Plausible.Stats.Breakdown do
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
     |> transform_keys(%{operating_system: :os})
-    |> remove_internal_visits_metric(metrics)
+    |> remove_internal_metrics(metrics)
   end
 
   defp breakdown_events(_, _, _, [], _), do: []
