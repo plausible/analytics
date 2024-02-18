@@ -67,7 +67,7 @@ defmodule Plausible.MixProject do
       {:bcrypt_elixir, "~> 3.0"},
       {:bypass, "~> 2.1", only: [:dev, :test, :small_test]},
       {:cachex, "~> 3.4"},
-      {:ecto_ch, "~> 0.3"},
+      {:ecto_ch, "~> 0.3.2"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
       {:combination, "~> 0.0.3"},
@@ -127,6 +127,7 @@ defmodule Plausible.MixProject do
       {:mjml_eex, "~> 0.9.0"},
       {:mjml, "~> 1.5.0"},
       {:heroicons, "~> 0.5.0"},
+      {:zstream, "~> 0.6.4"},
       {:zxcvbn, git: "https://github.com/techgaun/zxcvbn-elixir.git"},
       {:open_api_spex, "~> 3.18"},
       {:joken, "~> 2.5"},
@@ -135,7 +136,10 @@ defmodule Plausible.MixProject do
       {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :small_dev]},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :small_dev]},
       {:ex_json_logger, "~> 1.4.0"},
-      {:ecto_network, "~> 1.5.0"}
+      {:ecto_network, "~> 1.5.0"},
+      {:ex_aws, "~> 2.5"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:sweet_xml, "~> 0.7.4"}
     ]
   end
 

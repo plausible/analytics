@@ -61,8 +61,15 @@ defmodule PlausibleWeb.Endpoint do
   plug(PromEx.Plug, prom_ex_module: Plausible.PromEx)
   plug(Plug.Telemetry, event_prefix: [:phoenix, :endpoint])
 
+  max_multpart_length =
+    on_full_build do
+      _default = 8_000_000
+    else
+      _100MB = 100_000_000
+    end
+
   plug(Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json],
+    parsers: [:urlencoded, {:multipart, length: max_multpart_length}, :json],
     pass: ["*/*"],
     json_decoder: Phoenix.json_library()
   )
