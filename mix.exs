@@ -135,7 +135,10 @@ defmodule Plausible.MixProject do
       {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :small_dev]},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :small_dev]},
       {:ex_json_logger, "~> 1.4.0"},
-      {:ecto_network, "~> 1.5.0"}
+      {:ecto_network, "~> 1.5.0"},
+      {:ex_aws, "~> 2.5"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:sweet_xml, "~> 0.7.4"}
     ]
   end
 
