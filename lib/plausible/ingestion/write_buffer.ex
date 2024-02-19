@@ -130,7 +130,8 @@ defmodule Plausible.Ingestion.WriteBuffer do
       |> Ch.RowBinary.encode_names_and_types(types)
       |> IO.iodata_to_binary()
 
-    insert_sql = "INSERT INTO #{schema.__schema__(:source)} FORMAT RowBinaryWithNamesAndTypes"
+    insert_sql =
+      "INSERT INTO #{schema.__schema__(:source)} (#{Enum.join(fields, ", ")}) FORMAT RowBinaryWithNamesAndTypes"
 
     %{
       fields: fields,
