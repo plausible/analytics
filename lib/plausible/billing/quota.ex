@@ -271,7 +271,7 @@ defmodule Plausible.Billing.Quota do
     we can ensure inviting the same person(s) to more than 1 sites is allowed
   """
   def team_member_usage(user, opts \\ []) do
-    Keyword.validate(opts, site: nil, exclude_emails: [])
+    {:ok, opts} = Keyword.validate(opts, site: nil, exclude_emails: [])
 
     user
     |> team_member_usage_query(opts)
