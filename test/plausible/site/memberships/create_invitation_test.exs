@@ -82,6 +82,58 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
     end
 
+    @tag :full_build_only
+    test "allows inviting users who were already invited to other sites, within the limit" do
+      owner = insert(:user)
+
+      memberships =
+        [
+          build(:site_membership, user: owner, role: :owner)
+        ]
+
+      site = insert(:site, memberships: memberships)
+
+      invite = fn site, email ->
+        CreateInvitation.create_invitation(site, owner, email, :viewer)
+      end
+
+      assert {:ok, _} = invite.(site, "i1@example.com")
+      assert {:ok, _} = invite.(site, "i2@example.com")
+      assert {:ok, _} = invite.(site, "i3@example.com")
+      assert {:error, {:over_limit, 3}} = invite.(site, "i4@example.com")
+
+      site2 = insert(:site, memberships: memberships)
+
+      assert {:ok, _} = invite.(site2, "i3@example.com")
+    end
+
+    @tag :full_build_only
+    test "allows inviting users who are already members of other sites, within the limit" do
+      [u1, u2, u3, u4] = insert_list(4, :user)
+
+      memberships =
+        [
+          build(:site_membership, user: u1, role: :owner),
+          build(:site_membership, user: u2, role: :viewer),
+          build(:site_membership, user: u3, role: :viewer)
+        ]
+
+      site =
+        insert(:site,
+          memberships: memberships ++ [build(:site_membership, user: u4, role: :viewer)]
+        )
+
+      site2 = insert(:site, memberships: memberships)
+
+      invite = fn site, email ->
+        CreateInvitation.create_invitation(site, u1, email, :viewer)
+      end
+
+      assert {:error, {:over_limit, 3}} = invite.(site, "another@example.com")
+      assert {:error, :already_a_member} = invite.(site, u4.email)
+      assert {:ok, _} = invite.(site2, u4.email)
+    end
+
     test "sends ownership transfer email when invitation role is owner" do
       inviter = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
