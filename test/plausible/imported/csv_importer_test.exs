@@ -29,27 +29,14 @@ defmodule Plausible.Imported.CSVImporterTest do
         "imported_visitors"
       ]
 
-      start_date = "20231001"
-      end_date = "20240102"
-
       uploads =
         Enum.map(tables, fn table ->
-          filename = "#{table}_#{start_date}_#{end_date}.csv"
+          filename = "#{table}.csv"
           s3_path = "#{site.id}/#{filename}"
           %{"filename" => filename, "s3_path" => s3_path}
         end)
 
-      min_max_date_range =
-        uploads
-        |> Enum.map(& &1["filename"])
-        |> CSVImporter.extract_min_max_date_range()
-
-      assert {:ok, job} =
-               CSVImporter.new_import(site, user,
-                 start_date: min_max_date_range.first,
-                 end_date: min_max_date_range.last,
-                 uploads: uploads
-               )
+      assert {:ok, job} = CSVImporter.new_import(site, user, uploads: uploads)
 
       assert %Oban.Job{args: %{"import_id" => import_id, "uploads" => ^uploads} = args} =
                Repo.reload!(job)
@@ -58,8 +45,8 @@ defmodule Plausible.Imported.CSVImporterTest do
                %{
                  id: ^import_id,
                  source: :csv,
-                 start_date: ~D[2023-10-01],
-                 end_date: ~D[2024-01-02],
+                 start_date: ~D[0001-01-01],
+                 end_date: ~D[0001-01-01],
                  status: SiteImport.pending()
                }
              ] = Plausible.Imported.list_all_imports(site)

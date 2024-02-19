@@ -15,41 +15,6 @@ defmodule Plausible.Imported.CSVImporter do
   @impl true
   def email_template(), do: "google_analytics_import.html"
 
-  @doc ~S"""
-  Extracts min/max dates from the date ranges specified in the upload files.
-
-  Examples:
-
-      iex> extract_min_max_date_range([])
-      ** (ArgumentError) filenames cannot be empty
-
-      iex> extract_min_max_date_range(["my_data.csv"])
-      ** (ArgumentError) filename "my_data.csv"  does not conform to the expected "#{table}_#{start_date}_#{end_date}.csv" format
-
-      iex> extract_min_max_date_range(["imported_devices_00010101_20250101.csv"])
-      Date.range(~D[0001-01-01], ~D[2025-01-01])
-
-      iex> extract_min_max_date_range(["imported_devices_00010101_09990101.csv", "imported_browsers_10010101_20250101.csv"])
-      Date.range(~D[0001-01-01], ~D[2025-01-01])
-
-  """
-  @spec extract_min_max_date_range([String.t()]) :: Date.Range.t()
-  def extract_min_max_date_range(filenames) do
-    if Enum.empty?(filenames) do
-      raise ArgumentError, message: "filenames cannot be empty"
-    end
-
-    ranges =
-      Enum.map(filenames, fn filename ->
-        [_table, start_date, end_date] = parse_filename!(filename)
-        Date.range(start_date, end_date)
-      end)
-
-    min = Enum.min_by(ranges, & &1.first)
-    max = Enum.max_by(ranges, & &1.last)
-    Date.range(min.first, max.last)
-  end
-
   @impl true
   def parse_args(%{"uploads" => uploads}), do: [uploads: uploads]
 
@@ -66,36 +31,54 @@ defmodule Plausible.Imported.CSVImporter do
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    Enum.each(uploads, fn upload ->
-      %{"filename" => filename, "s3_path" => s3_path} = upload
+    # TODO what if it succeeds for some tables and then fails? Should the other tables be dropped?
+    ranges =
+      Enum.each(uploads, fn upload ->
+        %{"filename" => filename, "s3_path" => s3_path} = upload
 
-      ".csv" = Path.extname(filename)
-      table = Path.rootname(filename)
-      ensure_importable_table!(table)
+        ".csv" = Path.extname(filename)
+        table = Path.rootname(filename)
+        ensure_importable_table!(table)
 
-      s3_structure = input_structure!(table)
-      s3_url = Plausible.S3.import_clickhouse_url(s3_path)
+        s3_structure = input_structure!(table)
+        s3_url = Plausible.S3.import_clickhouse_url(s3_path)
 
-      statement =
-        """
-        INSERT INTO {table:Identifier} \
-        SELECT {site_id:UInt64} AS site_id, {import_id:UInt64} AS import_id, * \
-        FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String})\
-        """
+        statement =
+          """
+          INSERT INTO {table:Identifier} \
+          SELECT {site_id:UInt64} AS site_id, {import_id:UInt64} AS import_id, * \
+          FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String})\
+          """
 
-      params = %{
-        "table" => table,
-        "site_id" => site_id,
-        "import_id" => import_id,
-        "s3_url" => s3_url,
-        "s3_access_key_id" => s3_access_key_id,
-        "s3_secret_access_key" => s3_secret_access_key,
-        "s3_format" => "CSVWithNames",
-        "s3_structure" => s3_structure
-      }
+        params = %{
+          "table" => table,
+          "site_id" => site_id,
+          "import_id" => import_id,
+          "s3_url" => s3_url,
+          "s3_access_key_id" => s3_access_key_id,
+          "s3_secret_access_key" => s3_secret_access_key,
+          "s3_format" => "CSVWithNames",
+          "s3_structure" => s3_structure
+        }
 
-      Ch.query!(ch, statement, params, timeout: :infinity)
-    end)
+        Ch.query!(ch, statement, params, timeout: :infinity)
+
+        %Ch.Result{rows: [[min_date, max_date]]}
+
+        Ch.query!(
+          ch,
+          "SELECT min(date), max(date) FROM {table:Identifier} WHERE site_id = {site_id:UInt64} AND import_id = {import_id:UInt64}",
+          %{"table" => table, "site_id" => site_id, "import_id" => import_id}
+        )
+
+        Date.range(min_date, max_date)
+      end)
+
+    {:ok,
+     %{
+       start_date: Enum.min_by(ranges, & &1.first),
+       end_date: Enum.max_by(ranges, & &1.last)
+     }}
   end
 
   input_structures = %{
