@@ -19,7 +19,12 @@ defmodule Plausible.S3 do
   @doc """
   Returns S3 URL for an object to be used by ClickHouse during imports from S3.
 
-  In the current implementation the bucket always goes into the path component.
+  In the current implementation the bucket goes into the path component:
+
+      ${S3_ENDPOINT}/${S3_IMPORTS_BUCKET}/${S3_PATH}
+
+      https://s3.us-east-1.amazonaws.com/my-plausible-imports/1/imported_browsers.csv
+
   """
   @spec import_clickhouse_url(Path.t()) :: :uri_string.uri_string()
   def import_clickhouse_url(s3_path) do
