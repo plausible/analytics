@@ -87,6 +87,8 @@ jobs:
           AWS_EC2_METADATA_DISABLED: true
       - name: Run tests (S3)
         run: mix test --only minio --max-failures 1 --warnings-as-errors
+        env:
+          S3_HOST_FOR_CLICKHOUSE: 172.17.0.1
       - name: Check Dialyzer
         run: mix dialyzer
 env:
