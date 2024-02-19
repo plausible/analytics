@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-7320A3C1.js"></script>
+    <script src="dist/sidebar_items-4CB40722.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -317,7 +317,7 @@ with the following structure is returned</p></div>
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#team_member_usage/1" translate="no">team_member_usage(user)</a>
+        <a href="#team_member_usage/2" translate="no">team_member_usage(user, opts \\ [])</a>
 
       </div>
 
@@ -531,7 +531,7 @@ Returns true if usage is equal to the limit.</p></div>
     </a>
     <h1 class="signature" translate="no">allowed_features_for(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L438" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L466" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -554,7 +554,7 @@ ability to use all features during their trial.</p>
     </a>
     <h1 class="signature" translate="no">below_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L471" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L499" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -609,7 +609,7 @@ in a background job instead (see <code class="inline">check_usage.ex</code>).</p
     </a>
     <h1 class="signature" translate="no">ensure_within_plan_limits(user_or_usage, plan, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L383" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L411" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -645,7 +645,7 @@ the other limits are not exceeded.</p>
     </a>
     <h1 class="signature" translate="no">features_usage(user)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L308" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L336" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -727,12 +727,12 @@ this user owns + StatsAPI if the user has a configured Stats API key.</p><p>Give
 
 <p>Queries the ClickHouse database for the monthly pageview usage. If the given user's
 subscription is <code class="inline">active</code>, <code class="inline">past_due</code>, or a <code class="inline">deleted</code> (but not yet expired), a map
-with the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="0771339083-1">%{</span><span class="w">
-  </span><span class="ss">current_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="0771339083-2">(</span><span class="p" data-group-id="0771339083-2">)</span><span class="p">,</span><span class="w">
-  </span><span class="ss">last_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="0771339083-3">(</span><span class="p" data-group-id="0771339083-3">)</span><span class="p">,</span><span class="w">
-  </span><span class="ss">penultimate_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="0771339083-4">(</span><span class="p" data-group-id="0771339083-4">)</span><span class="w">
-</span><span class="p" data-group-id="0771339083-1">}</span></code></pre><p>In all other cases of the subscription status (or a <code class="inline">free_10k</code> subscription which
-does not have a <code class="inline">last_bill_date</code> defined) - the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="7431636465-1">%{</span><span class="ss">last_30_days</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="7431636465-2">(</span><span class="p" data-group-id="7431636465-2">)</span><span class="p" data-group-id="7431636465-1">}</span></code></pre><p>Given only a user as input, the usage is queried from across all the sites that the
+with the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="0234893618-1">%{</span><span class="w">
+  </span><span class="ss">current_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="0234893618-2">(</span><span class="p" data-group-id="0234893618-2">)</span><span class="p">,</span><span class="w">
+  </span><span class="ss">last_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="0234893618-3">(</span><span class="p" data-group-id="0234893618-3">)</span><span class="p">,</span><span class="w">
+  </span><span class="ss">penultimate_cycle</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="0234893618-4">(</span><span class="p" data-group-id="0234893618-4">)</span><span class="w">
+</span><span class="p" data-group-id="0234893618-1">}</span></code></pre><p>In all other cases of the subscription status (or a <code class="inline">free_10k</code> subscription which
+does not have a <code class="inline">last_bill_date</code> defined) - the following structure is returned:</p><pre><code class="makeup elixir" translate="no"><span class="p" data-group-id="2324192788-1">%{</span><span class="ss">last_30_days</span><span class="p">:</span><span class="w"> </span><span class="n">usage_cycle</span><span class="p" data-group-id="2324192788-2">(</span><span class="p" data-group-id="2324192788-2">)</span><span class="p" data-group-id="2324192788-1">}</span></code></pre><p>Given only a user as input, the usage is queried from across all the sites that the
 user owns. Alternatively, given an optional argument of <code class="inline">site_ids</code>, the usage from
 across all those sites is queried instead.</p>
   </section>
@@ -843,16 +843,18 @@ across all those sites is queried instead.</p>
 
   </section>
 </section>
-<section class="detail" id="team_member_usage/1">
+<section class="detail" id="team_member_usage/2">
+
+    <span id="team_member_usage/1"></span>
 
   <div class="detail-header">
-    <a href="#team_member_usage/1" class="detail-link" title="Link to this function">
+    <a href="#team_member_usage/2" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">team_member_usage(user)</h1>
+    <h1 class="signature" translate="no">team_member_usage(user, opts \\ [])</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L270" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L273" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -862,14 +864,9 @@ across all those sites is queried instead.</p>
 
   <section class="docstring">
 
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> team_member_usage(<a href="Plausible.Auth.User.html#t:t/0">Plausible.Auth.User.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">integer</a>()</pre>
-
-      </div>
-
 <p>Returns the total count of team members associated with the user's sites.</p><ul><li><p>The given user (i.e. the owner) is not counted as a team member.</p></li><li><p>Pending invitations are counted as team members even before accepted.</p></li><li><p>Users are counted uniquely - i.e. even if an account is associated with
-many sites owned by the given user, they still count as one team member.</p></li></ul>
+many sites owned by the given user, they still count as one team member.</p></li><li><p>Specific e-mails can be excluded from the count, so that where necessary,
+we can ensure inviting the same person(s) to more than 1 sites is allowed</p></li></ul>
   </section>
 </section>
 <section class="detail" id="usage/2">
@@ -938,7 +935,7 @@ many sites owned by the given user, they still count as one team member.</p></li
     </a>
     <h1 class="signature" translate="no">within_limit?(usage, limit)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L480" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/billing/quota.ex#L508" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
