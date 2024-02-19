@@ -17,10 +17,6 @@
     The invitation will expire in 48 hours
   </p>
 
-  <%= if @conn.assigns[:error] do %>
-    <div class="text-red-500 text-xs italic mt-4"><%= @conn.assigns[:error] %></div>
-  <% end %>
-
   <div class="my-6">
     <%= label(f, :email, "Email address",
       class: "block text-sm font-medium text-gray-700 dark:text-gray-300"
@@ -45,6 +41,10 @@
       ) %>
     </div>
     <%= error_tag(f, :email) %>
+
+    <%= if @conn.assigns[:error] do %>
+      <div class="text-red-500 text-xs mb-4"><%= @conn.assigns[:error] %></div>
+    <% end %>
   </div>
 
   <fieldset x-data="{selectedOption: null}">
@@ -105,7 +105,7 @@
   </fieldset>
 
   <div class="mt-6">
-    <%= submit(class: "button w-full disabled:cursor-not-allowed", disabled: Map.get(assigns, :is_at_limit, false)) do %>
+    <%= submit(class: "button w-full") do %>
       <svg
         class="w-5 h-5 mr-1"
         fill="currentColor"
