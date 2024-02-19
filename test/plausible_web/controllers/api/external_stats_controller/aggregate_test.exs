@@ -1207,19 +1207,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         %{
           site_id: site.id,
           session_id: 1000,
-          country_code: "EE",
           name: "pageview"
         },
         %{
           site_id: site.id,
           session_id: 1000,
-          country_code: "EE",
           name: "pageview"
         },
         %{
           site_id: site.id,
           session_id: 1000,
-          country_code: "EE",
           name: "pageview"
         }
       ])
