@@ -82,9 +82,8 @@ defmodule Plausible.TestUtils do
           |> Map.put(:site_id, pageview.site.id)
 
         Factory.build(:pageview, pageview)
-        |> Map.from_struct()
-        |> Map.delete(:__meta__)
         |> update_in([:timestamp], &to_naive_truncate/1)
+        |> Map.delete(:_factory_event)
       end)
 
     Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, pageviews)
@@ -94,9 +93,8 @@ defmodule Plausible.TestUtils do
     events =
       Enum.map(events, fn event ->
         Factory.build(:event, event)
-        |> Map.from_struct()
-        |> Map.delete(:__meta__)
         |> update_in([:timestamp], &to_naive_truncate/1)
+        |> Map.delete(:_factory_event)
       end)
 
     Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, events)
@@ -150,7 +148,7 @@ defmodule Plausible.TestUtils do
       event = Map.put(event, :site_id, site.id)
 
       case event do
-        %Plausible.ClickhouseEventV2{} ->
+        %{_factory_event: true} ->
           event
 
         imported_event ->
@@ -181,7 +179,7 @@ defmodule Plausible.TestUtils do
       end)
       |> Enum.split_with(fn event ->
         case event do
-          %Plausible.ClickhouseEventV2{} ->
+          %{_factory_event: true} ->
             true
 
           _ ->
@@ -196,14 +194,42 @@ defmodule Plausible.TestUtils do
   defp populate_native_stats(events) do
     sessions =
       Enum.reduce(events, %{}, fn event, sessions ->
-        # :TODO: Handle session parameters separately
-        session_id = Plausible.Session.CacheStore.on_event(event, event, nil)
+        # :KLUDGE: Callsites should not use :referrer, etc directly and instead
+        # nest it under session: %{ referrer: "foo" }. This is left here
+        # for backwards compatibility / to avoid breaking too many PRs.
+        session_params =
+          event
+          |> Map.take([
+            :referrer,
+            :referrer_source,
+            :utm_medium,
+            :utm_source,
+            :utm_campaign,
+            :utm_content,
+            :utm_term,
+            :country_code,
+            :subdivision1_code,
+            :subdivision2_code,
+            :city_geoname_id,
+            :screen_size,
+            :operating_system,
+            :operating_system_version,
+            :browser,
+            :browser_version
+          ])
+          |> Map.merge(Map.get(event, :session, %{}))
+
+        session_id = Plausible.Session.CacheStore.on_event(event, session_params, nil)
         Map.put(sessions, {event.site_id, event.user_id}, session_id)
       end)
 
     Enum.each(events, fn event ->
-      event = Map.put(event, :session_id, sessions[{event.site_id, event.user_id}])
-      Plausible.Event.WriteBuffer.insert(event)
+      clickhouse_event =
+        %Plausible.ClickhouseEventV2{}
+        |> Map.merge(event)
+        |> Map.put(:session_id, sessions[{event.site_id, event.user_id}])
+
+      Plausible.Event.WriteBuffer.insert(clickhouse_event)
     end)
 
     Plausible.Session.WriteBuffer.flush()
