@@ -7,8 +7,7 @@ defmodule Plausible.Imported do
   * `Plausible.Imported.UniversalAnalytics` - existing mechanism, for legacy Google
     analytics formerly known as "Google Analytics"
   * `Plausible.Imported.NoopImporter` - importer stub, used mainly for testing purposes
-  * `Plausible.Imported.CSVImporter` - a placeholder stub for CSV importer that will
-    be added soon
+  * `Plausible.Imported.CSVImporter` - CSV importer from S3
 
   For more information on implementing importers, see `Plausible.Imported.Importer`.
   """
