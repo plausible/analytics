@@ -196,7 +196,8 @@ defmodule Plausible.TestUtils do
   defp populate_native_stats(events) do
     sessions =
       Enum.reduce(events, %{}, fn event, sessions ->
-        session_id = Plausible.Session.CacheStore.on_event(event, nil)
+        # :TODO: Handle session parameters separately
+        session_id = Plausible.Session.CacheStore.on_event(event, event, nil)
         Map.put(sessions, {event.site_id, event.user_id}, session_id)
       end)
 
