@@ -36,8 +36,9 @@ defmodule Plausible.Imported.CSVImporter do
 
       ".csv" = Path.extname(filename)
       table = Path.rootname(filename)
+      ensure_importable_table!(table)
 
-      s3_structure = input_structure(table)
+      s3_structure = input_structure!(table)
       s3_url = Plausible.S3.import_clickhouse_url(s3_path)
 
       statement =
@@ -83,10 +84,11 @@ defmodule Plausible.Imported.CSVImporter do
   }
 
   for {table, input_structure} <- input_structures do
-    defp input_structure(unquote(table)), do: unquote(input_structure)
+    defp input_structure!(unquote(table)), do: unquote(input_structure)
+    defp ensure_importable_table!(unquote(table)), do: :ok
   end
 
-  defp input_structure(table) do
+  defp ensure_importable_table!(table) do
     raise ArgumentError, "table #{table} is not supported for data import"
   end
 end
