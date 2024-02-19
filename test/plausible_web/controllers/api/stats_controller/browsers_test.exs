@@ -6,9 +6,9 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
     test "returns top browsers by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, browser: "Chrome"),
-        build(:pageview, browser: "Chrome"),
-        build(:pageview, browser: "Firefox")
+        build(:pageview, session: %{browser: "Chrome"}),
+        build(:pageview, session: %{browser: "Chrome"}),
+        build(:pageview, session: %{browser: "Firefox"})
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/browsers?period=day")
@@ -26,21 +26,21 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          browser: "Chrome"
+          session: %{browser: "Chrome"}
         ),
         build(:pageview,
           user_id: 123,
-          browser: "Chrome",
+          session: %{browser: "Chrome"},
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          browser: "Firefox",
+          session: %{browser: "Firefox"},
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
         build(:pageview,
-          browser: "Safari"
+          session: %{browser: "Safari"}
         )
       ])
 
@@ -59,23 +59,23 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          browser: "Chrome",
+          session: %{browser: "Chrome"},
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
           user_id: 123,
-          browser: "Chrome",
+          session: %{browser: "Chrome"},
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          browser: "Firefox",
+          session: %{browser: "Firefox"},
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
         build(:pageview,
-          browser: "Safari"
+          session: %{browser: "Safari"}
         )
       ])
 
@@ -90,8 +90,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: 1, browser: "Chrome"),
-        build(:pageview, user_id: 2, browser: "Chrome"),
+        build(:pageview, user_id: 1, session: %{browser: "Chrome"}),
+        build(:pageview, user_id: 2, session: %{browser: "Chrome"}),
         build(:event, user_id: 1, name: "Signup")
       ])
 
@@ -111,7 +111,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
     test "returns top browsers including imported data", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, browser: "Chrome"),
+        build(:pageview, session: %{browser: "Chrome"}),
         build(:imported_browsers, browser: "Chrome"),
         build(:imported_browsers, browser: "Firefox"),
         build(:imported_visitors, visitors: 2)
@@ -156,7 +156,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          browser: ""
+          session: %{browser: ""}
         )
       ])
 
@@ -173,10 +173,10 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
     test "returns top browser versions by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, browser: "Chrome", browser_version: "78.0"),
-        build(:pageview, browser: "Chrome", browser_version: "78.0"),
-        build(:pageview, browser: "Chrome", browser_version: "77.0"),
-        build(:pageview, browser: "Firefox", browser_version: "88.0")
+        build(:pageview, session: %{browser: "Chrome", browser_version: "78.0"}),
+        build(:pageview, session: %{browser: "Chrome", browser_version: "78.0"}),
+        build(:pageview, session: %{browser: "Chrome", browser_version: "77.0"}),
+        build(:pageview, session: %{browser: "Firefox", browser_version: "88.0"})
       ])
 
       filters = Jason.encode!(%{browser: "Chrome"})
@@ -195,7 +195,7 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
 
     test "returns results for (not set)", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, browser: "", browser_version: "")
+        build(:pageview, session: %{browser: "", browser_version: ""})
       ])
 
       filters = Jason.encode!(%{browser: "(not set)"})

@@ -6,9 +6,9 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
 
     test "returns screen sizes by new visitors", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, screen_size: "Desktop"),
-        build(:pageview, screen_size: "Desktop"),
-        build(:pageview, screen_size: "Laptop")
+        build(:pageview, session: %{screen_size: "Desktop"}),
+        build(:pageview, session: %{screen_size: "Desktop"}),
+        build(:pageview, session: %{screen_size: "Laptop"})
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/screen-sizes?period=day")
@@ -22,10 +22,10 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
     test "returns (not set) when appropriate", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          screen_size: ""
+          session: %{screen_size: ""}
         ),
         build(:pageview,
-          screen_size: "Desktop"
+          session: %{screen_size: "Desktop"}
         )
       ])
 
@@ -53,21 +53,21 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          screen_size: "Desktop"
+          session: %{screen_size: "Desktop"}
         ),
         build(:pageview,
           user_id: 123,
-          screen_size: "Desktop",
+          session: %{screen_size: "Desktop"},
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          screen_size: "Mobile",
+          session: %{screen_size: "Mobile"},
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
         build(:pageview,
-          screen_size: "Tablet"
+          session: %{screen_size: "Tablet"}
         )
       ])
 
@@ -86,23 +86,23 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          screen_size: "Desktop",
+          session: %{screen_size: "Desktop"},
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
           user_id: 123,
-          screen_size: "Desktop",
+          session: %{screen_size: "Desktop"},
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          screen_size: "Mobile",
+          session: %{screen_size: "Mobile"},
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
         build(:pageview,
-          screen_size: "Tablet"
+          session: %{screen_size: "Tablet"}
         )
       ])
 
@@ -117,9 +117,9 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
 
     test "returns screen sizes by new visitors with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, screen_size: "Desktop"),
-        build(:pageview, screen_size: "Desktop"),
-        build(:pageview, screen_size: "Laptop")
+        build(:pageview, session: %{screen_size: "Desktop"}),
+        build(:pageview, session: %{screen_size: "Desktop"}),
+        build(:pageview, session: %{screen_size: "Laptop"})
       ])
 
       populate_stats(site, [
@@ -146,8 +146,8 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
 
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: 1, screen_size: "Desktop"),
-        build(:pageview, user_id: 2, screen_size: "Desktop"),
+        build(:pageview, user_id: 1, session: %{screen_size: "Desktop"}),
+        build(:pageview, user_id: 2, session: %{screen_size: "Desktop"}),
         build(:event, user_id: 1, name: "Signup")
       ])
 
@@ -167,11 +167,11 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
 
     test "returns screen sizes with not_member filter type", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, referrer_source: "Google", screen_size: "Desktop"),
-        build(:pageview, referrer_source: "Bad source", screen_size: "Desktop"),
-        build(:pageview, referrer_source: "Google", screen_size: "Desktop"),
-        build(:pageview, referrer_source: "Twitter", screen_size: "Mobile"),
-        build(:pageview, referrer_source: "Second bad source", screen_size: "Mobile")
+        build(:pageview, session: %{referrer_source: "Google", screen_size: "Desktop"}),
+        build(:pageview, session: %{referrer_source: "Bad source", screen_size: "Desktop"}),
+        build(:pageview, session: %{referrer_source: "Google", screen_size: "Desktop"}),
+        build(:pageview, session: %{referrer_source: "Twitter", screen_size: "Mobile"}),
+        build(:pageview, session: %{referrer_source: "Second bad source", screen_size: "Mobile"})
       ])
 
       filters = Jason.encode!(%{"source" => "!Bad source|Second bad source"})
