@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
     end
 
     @tag :full_build_only
-    test "display a ntoice when is over limit", %{conn: conn, user: user} do
+    test "display a notice when is over limit", %{conn: conn, user: user} do
       memberships = [
         build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)
       ]
