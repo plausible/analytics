@@ -266,14 +266,27 @@ defmodule Plausible.Billing.Quota do
 
   * Users are counted uniquely - i.e. even if an account is associated with
     many sites owned by the given user, they still count as one team member.
+
+  * Specific e-mails can be excluded from the count, so that where necessary,
+    we can ensure inviting the same person(s) to more than 1 sites is allowed
   """
-  def team_member_usage(user) do
-    Plausible.Repo.aggregate(team_member_usage_query(user), :count)
+  def team_member_usage(user, opts \\ []) do
+    {:ok, opts} = Keyword.validate(opts, site: nil, exclude_emails: [])
+
+    user
+    |> team_member_usage_query(opts)
+    |> Plausible.Repo.aggregate(:count)
   end
 
-  @doc false
-  def team_member_usage_query(user, site \\ nil) do
+  defp team_member_usage_query(user, opts) do
     owned_sites_query = owned_sites_query(user)
+
+    excluded_emails =
+      opts
+      |> Keyword.get(:exclude_emails, [])
+      |> List.wrap()
+
+    site = opts[:site]
 
     owned_sites_query =
       if site do
@@ -290,12 +303,27 @@ defmodule Plausible.Billing.Quota do
         where: sm.role != :owner,
         select: u.email
 
-    from i in Plausible.Auth.Invitation,
-      inner_join: os in subquery(owned_sites_query),
-      on: i.site_id == os.site_id,
-      where: i.role != :owner,
-      select: i.email,
-      union: ^team_members_query
+    team_members_query =
+      if excluded_emails != [] do
+        team_members_query |> where([..., u], u.email not in ^excluded_emails)
+      else
+        team_members_query
+      end
+
+    query =
+      from i in Plausible.Auth.Invitation,
+        inner_join: os in subquery(owned_sites_query),
+        on: i.site_id == os.site_id,
+        where: i.role != :owner,
+        select: i.email,
+        union: ^team_members_query
+
+    if excluded_emails != [] do
+      query
+      |> where([i], i.email not in ^excluded_emails)
+    else
+      query
+    end
   end
 
   @spec features_usage(User.t() | Site.t()) :: [atom()]

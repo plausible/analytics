@@ -46,7 +46,10 @@ defmodule PlausibleWeb.Site.MembershipController do
 
   def invite_member(conn, %{"email" => email, "role" => role}) do
     site_domain = conn.assigns[:site].domain
-    site = Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+
+    site =
+      Sites.get_for_user!(conn.assigns[:current_user].id, site_domain)
+      |> Plausible.Repo.preload(:owner)
 
     case Memberships.create_invitation(site, conn.assigns.current_user, email, role) do
       {:ok, invitation} ->
@@ -71,7 +74,9 @@ defmodule PlausibleWeb.Site.MembershipController do
             "Your account is limited to #{limit} team members. You can upgrade your plan to increase this limit.",
           site: site,
           layout: {PlausibleWeb.LayoutView, "focus.html"},
-          skip_plausible_tracking: true
+          skip_plausible_tracking: true,
+          is_at_limit: true,
+          team_member_limit: limit
         )
 
       {:error, %Ecto.Changeset{} = changeset} ->
