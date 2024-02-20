@@ -778,7 +778,7 @@ defmodule PlausibleWeb.SiteController do
 
     start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
 
-    end_date = Plausible.Sites.stats_start_date(site) || Timex.today(site.timezone)
+    end_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
 
     {:ok, {view_name, view_id}} = Plausible.Google.Api.get_view(access_token, view_id)
 
