@@ -1037,7 +1037,19 @@ defmodule PlausibleWeb.Api.StatsController do
       |> transform_keys(%{os_version: :name})
       |> add_percentages(site, query)
 
-    json(conn, versions)
+    if params["csv"] do
+      if Map.has_key?(query.filters, "event:goal") do
+        versions
+        |> transform_keys(%{name: :version, os: :name, visitors: :conversions})
+        |> to_csv([:name, :version, :conversions, :conversion_rate])
+      else
+        versions
+        |> transform_keys(%{name: :version, os: :name})
+        |> to_csv([:name, :version, :visitors])
+      end
+    else
+      json(conn, versions)
+    end
   end
 
   def screen_sizes(conn, params) do

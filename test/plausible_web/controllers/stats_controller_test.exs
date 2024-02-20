@@ -151,6 +151,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert ~c"entry_pages.csv" in zip
       assert ~c"exit_pages.csv" in zip
       assert ~c"operating_systems.csv" in zip
+      assert ~c"operating_system_versions.csv" in zip
       assert ~c"pages.csv" in zip
       assert ~c"regions.csv" in zip
       assert ~c"sources.csv" in zip
@@ -285,6 +286,33 @@ defmodule PlausibleWeb.StatsControllerTest do
                ["2021-10-04", "0", "0", "0", "0.0", "", ""],
                ["2021-10-11", "0", "0", "0", "0.0", "", ""],
                ["2021-10-18", "3", "3", "3", "1.0", "67", "20"],
+               [""]
+             ]
+    end
+
+    test "exports operating system versions", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
+        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
+        build(:pageview, operating_system: "Mac", operating_system_version: "13")
+      ])
+
+      conn = get(conn, "/#{site.domain}/export")
+
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      {_filename, os_versions} =
+        Enum.find(zip, fn {filename, _data} -> filename == ~c"operating_system_versions.csv" end)
+
+      assert parse_csv(os_versions) == [
+               ["name", "version", "visitors"],
+               ["Mac", "14", "3"],
+               ["Ubuntu", "20.04", "2"],
+               ["Mac", "13", "1"],
                [""]
              ]
     end

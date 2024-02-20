@@ -621,8 +621,9 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:os_version") do
     from(
       s in q,
-      group_by: s.operating_system_version,
+      group_by: [s.operating_system, s.operating_system_version],
       select_merge: %{
+        os: fragment("if(empty(?), ?, ?)", s.operating_system, @not_set, s.operating_system),
         os_version:
           fragment(
             "if(empty(?), ?, ?)",
