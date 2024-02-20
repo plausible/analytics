@@ -1,8 +1,6 @@
-defmodule PlausibleWeb.Live.Shields.Tabs do
+defmodule PlausibleWeb.Live.Shields.IPAddresses do
   @moduledoc """
-  Currently only a placeholder module. Once more shields
-  are implemented it will display tabs with counters,
-  linking to their respective live views.
+  LiveView for IP Addresses Shield
   """
   use PlausibleWeb, :live_view
   use Phoenix.HTML
