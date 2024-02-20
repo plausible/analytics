@@ -64,15 +64,23 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:class, :string, default: "")
   attr(:theme, :string, default: "primary")
   attr(:method, :string, default: nil)
+  attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
 
   slot(:inner_block)
 
   def button_link(assigns) do
+    theme_class =
+      if assigns.disabled do
+        "bg-gray-400 dark:text-white dark:text-gray-400 dark:bg-gray-700 pointer-events-none cursor-default"
+      else
+        @button_themes[assigns.theme]
+      end
+
     assigns =
       assign(assigns,
         button_base_class: @button_base_class,
-        theme_class: @button_themes[assigns.theme]
+        theme_class: theme_class
       )
 
     ~H"""
