@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.ShieldsTest do
+defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
   use PlausibleWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Live.ShieldsTest do
 
   describe "IP Rules - static" do
     test "renders ip rules page with empty list", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/settings/shields")
+      conn = get(conn, "/#{site.domain}/settings/shields/ip_addresses")
       resp = html_response(conn, 200)
 
       assert resp =~ "No IP Rules configured for this Site"
@@ -24,7 +24,7 @@ defmodule PlausibleWeb.Live.ShieldsTest do
       {:ok, r2} =
         Shields.add_ip_rule(site, %{"inet" => "127.0.0.2", "description" => "Bob"})
 
-      conn = get(conn, "/#{site.domain}/settings/shields")
+      conn = get(conn, "/#{site.domain}/settings/shields/ip_addresses")
       resp = html_response(conn, 200)
 
       assert resp =~ "127.0.0.1"
@@ -45,7 +45,7 @@ defmodule PlausibleWeb.Live.ShieldsTest do
     end
 
     test "add rule button is rendered", %{conn: conn, site: site} do
-      conn = get(conn, "/#{site.domain}/settings/shields")
+      conn = get(conn, "/#{site.domain}/settings/shields/ip_addresses")
       resp = html_response(conn, 200)
 
       assert element_exists?(resp, ~s/button#add-ip-rule[x-data]/)
@@ -61,7 +61,7 @@ defmodule PlausibleWeb.Live.ShieldsTest do
                  Shields.add_ip_rule(site, %{"inet" => "1.1.1.#{i}"})
       end
 
-      conn = get(conn, "/#{site.domain}/settings/shields")
+      conn = get(conn, "/#{site.domain}/settings/shields/ip_addresses")
       resp = html_response(conn, 200)
 
       refute element_exists?(resp, ~s/button#add-ip-rule[x-data]/)
@@ -200,7 +200,7 @@ defmodule PlausibleWeb.Live.ShieldsTest do
 
     defp get_liveview(conn, site) do
       conn = assign(conn, :live_module, PlausibleWeb.Live.Shields)
-      {:ok, lv, _html} = live(conn, "/#{site.domain}/settings/shields")
+      {:ok, lv, _html} = live(conn, "/#{site.domain}/settings/shields/ip_addresses")
 
       lv
     end
