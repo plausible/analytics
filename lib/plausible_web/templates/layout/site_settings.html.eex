@@ -14,6 +14,12 @@
         <div class="hidden lg:block">
           <%= for [key: key, value: val, icon: icon] <- settings_tabs(@conn) do %>
             <%= render("_settings_tab.html", icon: icon, this_tab: val, text: key, site: @site, conn: @conn) %>
+            <%= if val == "shields" do %>
+              <div class="ml-6">
+              <%= render("_settings_tab.html", icon: :home_modern, this_tab: "", text: "IP Addresses", site: @site, conn: @conn) %>
+              <%= render("_settings_tab.html", icon: :globe_alt, this_tab: "", text: "Countries", site: @site, conn: @conn) %>
+              </div>
+            <% end %>
           <% end %>
         </div>
       </div>
