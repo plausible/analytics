@@ -143,6 +143,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert ~c"visitors.csv" in zip
       assert ~c"browsers.csv" in zip
+      assert ~c"browser_versions.csv" in zip
       assert ~c"cities.csv" in zip
       assert ~c"conversions.csv" in zip
       assert ~c"countries.csv" in zip
