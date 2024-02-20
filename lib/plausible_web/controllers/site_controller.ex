@@ -253,13 +253,15 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_shields(conn, _params) do
+  def settings_shields(conn, params) do
     site = conn.assigns.site
+    shield = Map.get(params, "shield", "ip")
 
     conn
     |> render("settings_shields.html",
       site: site,
       dogfood_page_path: "/:dashboard/settings/shields",
+      selected_shield: shield,
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
