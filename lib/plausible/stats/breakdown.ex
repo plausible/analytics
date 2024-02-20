@@ -139,7 +139,7 @@ defmodule Plausible.Stats.Breakdown do
       site
       |> breakdown_events(query, "event:page", event_metrics, pagination)
       |> maybe_add_time_on_page(site, query, metrics)
-      |> maybe_add_cr(site, query, property, metrics)
+      |> maybe_add_cr(site, query, property, metrics, pagination)
       |> Util.keep_requested_metrics(metrics)
 
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
@@ -187,7 +187,7 @@ defmodule Plausible.Stats.Breakdown do
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
     breakdown_sessions(site, query, property, metrics_to_select, pagination)
-    |> maybe_add_cr(site, query, property, metrics)
+    |> maybe_add_cr(site, query, property, metrics, pagination)
     |> Util.keep_requested_metrics(metrics)
   end
 
@@ -659,12 +659,12 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp maybe_add_cr(breakdown_results, site, query, property, metrics) do
+  defp maybe_add_cr(breakdown_results, site, query, property, metrics, pagination \\ nil) do
     cond do
       :conversion_rate not in metrics -> breakdown_results
       Enum.empty?(breakdown_results) -> breakdown_results
       is_nil(property) -> add_absolute_cr(breakdown_results, site, query)
-      true -> add_cr(breakdown_results, site, query, property, metrics)
+      true -> add_cr(breakdown_results, site, query, property, metrics, pagination)
     end
   end
 
@@ -679,7 +679,7 @@ defmodule Plausible.Stats.Breakdown do
   #  * Y is the number of all visitors for this breakdown
   #    result without the `event:goal` and `event:props:*`
   #    filters.
-  defp add_cr(breakdown_results, site, query, property, metrics) do
+  defp add_cr(breakdown_results, site, query, property, metrics, pagination) do
     property_atom = Plausible.Stats.Filters.without_prefix(property)
 
     items =
@@ -693,24 +693,61 @@ defmodule Plausible.Stats.Breakdown do
     # Here, we're always only interested in the first page of results
     # - the :member filter makes sure that the results always match with
     # the items in the given breakdown_results list
-    pagination = {length(items), 1}
+    page = 1
+
+    # For browser_versions we need to fetch a lot more entries than the
+    # pagination limit. This is because many browsers can correspond to
+    # a single version number and we need to make sure that the results
+    # without goal filter will include all combinations of browsers and
+    # their versions that were present in the `breakdown_results` array.
+    {pagination_limit, find_match_fn} =
+      if property_atom == :browser_version do
+        pagination_limit = min(elem(pagination, 0) * 10, 3_000)
+
+        find_match_fn = fn total, conversion ->
+          total[:browser_version] == conversion[:browser_version] &&
+            total[:browser] == conversion[:browser]
+        end
+
+        {pagination_limit, find_match_fn}
+      else
+        {elem(pagination, 0),
+         fn total, conversion ->
+           total[property_atom] == conversion[property_atom]
+         end}
+      end
+
+    pagination = {pagination_limit, page}
 
     res_without_goal = breakdown(site, query_without_goal, property, [:visitors], pagination)
 
     Enum.map(breakdown_results, fn item ->
-      without_goal =
-        Enum.find(res_without_goal, fn s ->
-          Map.fetch!(s, property_atom) == Map.fetch!(item, property_atom)
-        end)
+      without_goal = Enum.find(res_without_goal, &find_match_fn.(&1, item))
 
-      item =
-        item
-        |> Map.put(:conversion_rate, Util.calculate_cr(without_goal.visitors, item.visitors))
+      {conversion_rate, total_visitors} =
+        if without_goal do
+          {Util.calculate_cr(without_goal.visitors, item.visitors), without_goal.visitors}
+        else
+          Sentry.capture_message(
+            "Unable to find a conversion_rate divisor from a breakdown response",
+            extra: %{
+              domain: site.domain,
+              query: query,
+              property: property,
+              pagination: pagination,
+              item_not_found: item
+            }
+          )
+
+          {"N/A", "N/A"}
+        end
 
       if :total_visitors in metrics do
-        Map.put(item, :total_visitors, without_goal.visitors)
-      else
         item
+        |> Map.put(:conversion_rate, conversion_rate)
+        |> Map.put(:total_visitors, total_visitors)
+      else
+        Map.put(item, :conversion_rate, conversion_rate)
       end
     end)
   end

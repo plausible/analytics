@@ -2320,6 +2320,45 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "returns conversion_rate for a browser_version breakdown with pagination limit", %{
+      site: site,
+      conn: conn
+    } do
+      populate_stats(site, [
+        build(:pageview, browser: "Firefox", browser_version: "110"),
+        build(:pageview, browser: "Firefox", browser_version: "110"),
+        build(:pageview, browser: "Chrome", browser_version: "110"),
+        build(:pageview, browser: "Chrome", browser_version: "110"),
+        build(:pageview, browser: "Avast Secure Browser", browser_version: "110"),
+        build(:pageview, browser: "Avast Secure Browser", browser_version: "110"),
+        build(:event, name: "Signup", browser: "Edge", browser_version: "110")
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "property" => "visit:browser_version",
+          "filters" => "event:goal==Signup",
+          "metrics" => "visitors,conversion_rate",
+          "page" => 1,
+          "limit" => 1
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "browser" => "Edge",
+                   "browser_version" => "110",
+                   "visitors" => 1,
+                   "conversion_rate" => 100.0
+                 }
+               ]
+             }
+    end
+
     test "all metrics for breakdown by visit prop", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
