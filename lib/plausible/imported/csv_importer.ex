@@ -31,9 +31,8 @@ defmodule Plausible.Imported.CSVImporter do
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    # TODO what if it succeeds for some tables and then fails? Should the other tables be dropped?
     ranges =
-      Enum.each(uploads, fn upload ->
+      Enum.map(uploads, fn upload ->
         %{"filename" => filename, "s3_path" => s3_path} = upload
 
         ".csv" = Path.extname(filename)
@@ -63,13 +62,12 @@ defmodule Plausible.Imported.CSVImporter do
 
         Ch.query!(ch, statement, params, timeout: :infinity)
 
-        %Ch.Result{rows: [[min_date, max_date]]}
-
-        Ch.query!(
-          ch,
-          "SELECT min(date), max(date) FROM {table:Identifier} WHERE site_id = {site_id:UInt64} AND import_id = {import_id:UInt64}",
-          %{"table" => table, "site_id" => site_id, "import_id" => import_id}
-        )
+        %Ch.Result{rows: [[min_date, max_date]]} =
+          Ch.query!(
+            ch,
+            "SELECT min(date), max(date) FROM {table:Identifier} WHERE site_id = {site_id:UInt64} AND import_id = {import_id:UInt64}",
+            %{"table" => table, "site_id" => site_id, "import_id" => import_id}
+          )
 
         Date.range(min_date, max_date)
       end)
@@ -104,25 +102,9 @@ defmodule Plausible.Imported.CSVImporter do
   for {table, input_structure} <- input_structures do
     defp input_structure!(unquote(table)), do: unquote(input_structure)
     defp ensure_importable_table!(unquote(table)), do: :ok
-
-    defp parse_filename!(
-           <<unquote(table)::bytes, ?_, start_date::8-bytes, ?_, end_date::8-bytes, ".csv">>
-         ) do
-      [
-        unquote(table),
-        Timex.parse!(start_date, "{YYYY}{0M}{0D}"),
-        Timex.parse!(end_date, "{YYYY}{0M}{0D}")
-      ]
-    end
   end
 
   defp ensure_importable_table!(table) do
     raise ArgumentError, "table #{table} is not supported for data import"
-  end
-
-  defp parse_filename!(filename) do
-    raise ArgumentError,
-          "filename #{inspect(filename)} " <>
-            ~S[ does not conform to the expected "#{table}_#{start_date}_#{end_date}.csv" format]
   end
 end

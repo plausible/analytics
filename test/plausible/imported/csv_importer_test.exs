@@ -36,7 +36,13 @@ defmodule Plausible.Imported.CSVImporterTest do
           %{"filename" => filename, "s3_path" => s3_path}
         end)
 
-      assert {:ok, job} = CSVImporter.new_import(site, user, uploads: uploads)
+      assert {:ok, job} =
+               CSVImporter.new_import(site, user,
+                 # to satisfy the non null constraints on the table I'm providing "0" dates (according to ClickHouse)
+                 start_date: ~D[1970-01-01],
+                 end_date: ~D[1970-01-01],
+                 uploads: uploads
+               )
 
       assert %Oban.Job{args: %{"import_id" => import_id, "uploads" => ^uploads} = args} =
                Repo.reload!(job)
@@ -45,8 +51,8 @@ defmodule Plausible.Imported.CSVImporterTest do
                %{
                  id: ^import_id,
                  source: :csv,
-                 start_date: ~D[0001-01-01],
-                 end_date: ~D[0001-01-01],
+                 start_date: ~D[1970-01-01],
+                 end_date: ~D[1970-01-01],
                  status: SiteImport.pending()
                }
              ] = Plausible.Imported.list_all_imports(site)
