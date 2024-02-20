@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS sessions_v2_tmp_versioned <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
