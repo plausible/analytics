@@ -18,6 +18,14 @@ if (document.querySelectorAll('[data-modal]').length > 0) {
         new CustomEvent('close-modal', { bubbles: true, detail: e.detail.id })
       )
   })
+
+  window.addEventListener(`phx:open-modal`, (e) => {
+    document
+      .getElementById(e.detail.id)
+      .dispatchEvent(
+        new CustomEvent('open-modal', { bubbles: true, detail: e.detail.id })
+      )
+  })
 }
 
 const triggers = document.querySelectorAll('[data-dropdown-trigger]')

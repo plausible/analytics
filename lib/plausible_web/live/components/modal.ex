@@ -96,6 +96,21 @@ defmodule PlausibleWeb.Live.Components.Modal do
     def open(id) do
       "$dispatch('open-modal', '#{id}')"
     end
+
+    @spec preopen(String.t()) :: String.t()
+    def preopen(id) do
+      "$dispatch('preopen-modal', '#{id}')"
+    end
+
+    @spec close(String.t()) :: String.t()
+    def close(id) do
+      "$dispatch('close-modal', '#{id}')"
+    end
+  end
+
+  @spec open(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
+  def open(socket, id) do
+    Phoenix.LiveView.push_event(socket, "open-modal", %{id: id})
   end
 
   @spec close(Phoenix.LiveView.Socket.t(), String.t()) :: Phoenix.LiveView.Socket.t()
@@ -140,6 +155,11 @@ defmodule PlausibleWeb.Live.Components.Modal do
       x-data="{
         firstLoadDone: false,
         modalOpen: false,
+        preopenModal() {
+          document.body.style['overflow-y'] = 'hidden';
+          liveSocket.execJS($el, $el.dataset.onclose);
+          this.modalOpen = true;
+        },
         openModal() {
           document.body.style['overflow-y'] = 'hidden';
 
@@ -161,6 +181,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
         }
       }"
       x-on:open-modal.window={"if ($event.detail === '#{@id}') openModal()"}
+      x-on:preopen-modal.window={"if ($event.detail === '#{@id}') preopenModal()"}
       x-on:close-modal.window={"if ($event.detail === '#{@id}') closeModal()"}
       data-onopen={LiveView.JS.push("open", target: @myself)}
       data-onclose={LiveView.JS.push("close", target: @myself)}
