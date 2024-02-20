@@ -19,7 +19,18 @@ defmodule PlausibleWeb.Components.Generic do
     }
   }
 
+  @button_themes %{
+    "primary" => "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600",
+    "bright" =>
+      "border border-gray-200 bg-gray-100 text-gray-800 hover:bg-gray-200 focus-visible:outline-gray-100",
+    "danger" =>
+      "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:border-blue-300 active:text-red-800"
+  }
+
+  @button_base_class "inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 text-sm font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
+
   attr(:type, :string, default: "button")
+  attr(:theme, :string, default: "primary")
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
@@ -27,12 +38,19 @@ defmodule PlausibleWeb.Components.Generic do
   slot(:inner_block)
 
   def button(assigns) do
+    assigns =
+      assign(assigns,
+        button_base_class: @button_base_class,
+        theme_class: @button_themes[assigns.theme]
+      )
+
     ~H"""
     <button
       type={@type}
       disabled={@disabled}
       class={[
-        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700",
+        @button_base_class,
+        @theme_class,
         @class
       ]}
       {@rest}
@@ -44,37 +62,26 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, required: true)
   attr(:class, :string, default: "")
+  attr(:theme, :string, default: "primary")
+  attr(:method, :string, default: nil)
   attr(:rest, :global)
 
   slot(:inner_block)
 
   def button_link(assigns) do
+    assigns =
+      assign(assigns,
+        button_base_class: @button_base_class,
+        theme_class: @button_themes[assigns.theme]
+      )
+
     ~H"""
     <.link
       href={@href}
+      method={@method}
       class={[
-        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400 dark:disabled:bg-gray-800",
-        @class
-      ]}
-      {@rest}
-    >
-      <%= render_slot(@inner_block) %>
-    </.link>
-    """
-  end
-
-  attr(:href, :string, required: true)
-  attr(:class, :string, default: "")
-  attr(:rest, :global)
-
-  slot(:inner_block)
-
-  def button_link_bright(assigns) do
-    ~H"""
-    <.link
-      href={@href}
-      class={[
-        "inline-flex items-center justify-center gap-x-2 rounded-md border border-gray-200 bg-gray-100 px-3.5 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-gray-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-100 disabled:bg-gray-400 dark:disabled:bg-gray-800",
+        @button_base_class,
+        @theme_class,
         @class
       ]}
       {@rest}
