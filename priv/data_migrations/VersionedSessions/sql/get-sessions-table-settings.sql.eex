@@ -1,4 +1,4 @@
-SELECT extract(engine_full, 'SETTINGS .+')
+SELECT engine, extract(engine_full, 'SETTINGS .+')
 FROM system.tables
 WHERE database = currentDatabase()
   AND name = 'sessions_v2'
