@@ -696,26 +696,38 @@ defmodule Plausible.Stats.Breakdown do
     # the items in the given breakdown_results list
     page = 1
 
-    # For browser_versions we need to fetch a lot more entries than the
-    # pagination limit. This is because many browsers can correspond to
-    # a single version number and we need to make sure that the results
-    # without goal filter will include all combinations of browsers and
-    # their versions that were present in the `breakdown_results` array.
+    # For browser/os versions we need to fetch a lot more entries than the
+    # pagination limit. This is because many entries can correspond to a
+    # single version number and we need to make sure that the results
+    # without goal filter will include all those combinations of browsers/os-s
+    # and their versions that were present in the `breakdown_results` array.
     {pagination_limit, find_match_fn} =
-      if property_atom == :browser_version do
-        pagination_limit = min(elem(pagination, 0) * 10, 3_000)
+      cond do
+        property_atom == :browser_version ->
+          pagination_limit = min(elem(pagination, 0) * 10, 3_000)
 
-        find_match_fn = fn total, conversion ->
-          total[:browser_version] == conversion[:browser_version] &&
-            total[:browser] == conversion[:browser]
-        end
+          find_match_fn = fn total, conversion ->
+            total[:browser_version] == conversion[:browser_version] &&
+              total[:browser] == conversion[:browser]
+          end
 
-        {pagination_limit, find_match_fn}
-      else
-        {elem(pagination, 0),
-         fn total, conversion ->
-           total[property_atom] == conversion[property_atom]
-         end}
+          {pagination_limit, find_match_fn}
+
+        property_atom == :os_version ->
+          pagination_limit = min(elem(pagination, 0) * 5, 3_000)
+
+          find_match_fn = fn total, conversion ->
+            total[:os_version] == conversion[:os_version] &&
+              total[:os] == conversion[:os]
+          end
+
+          {pagination_limit, find_match_fn}
+
+        true ->
+          {elem(pagination, 0),
+           fn total, conversion ->
+             total[property_atom] == conversion[property_atom]
+           end}
       end
 
     pagination = {pagination_limit, page}

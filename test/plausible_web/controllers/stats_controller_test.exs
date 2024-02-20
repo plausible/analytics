@@ -508,6 +508,51 @@ defmodule PlausibleWeb.StatsControllerTest do
                [""]
              ]
     end
+
+    test "exports conversions and conversion rate for operating system versions", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:event,
+          name: "Signup",
+          operating_system: "Ubuntu",
+          operating_system_version: "20.04"
+        ),
+        build(:event,
+          name: "Signup",
+          operating_system: "Ubuntu",
+          operating_system_version: "20.04"
+        ),
+        build(:event,
+          name: "Signup",
+          operating_system: "Lubuntu",
+          operating_system_version: "20.04"
+        )
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn = get(conn, "/#{site.domain}/export?filters=#{Jason.encode!(%{goal: "Signup"})}")
+
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      {_filename, os_versions} =
+        Enum.find(zip, fn {filename, _data} -> filename == ~c"operating_system_versions.csv" end)
+
+      assert parse_csv(os_versions) == [
+               ["name", "version", "conversions", "conversion_rate"],
+               ["Mac", "14", "3", "75.0"],
+               ["Ubuntu", "20.04", "2", "100.0"],
+               ["Lubuntu", "20.04", "1", "100.0"],
+               [""]
+             ]
+    end
   end
 
   describe "GET /share/:domain?auth=:auth" do
