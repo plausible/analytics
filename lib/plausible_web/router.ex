@@ -360,7 +360,6 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:website/settings/integrations", SiteController, :settings_integrations
     get "/:website/settings/shields", SiteController, :settings_shields
-    get "/:website/settings/shields/:shield", SiteController, :settings_shields
 
     put "/:website/settings/features/visibility/:setting",
         SiteController,

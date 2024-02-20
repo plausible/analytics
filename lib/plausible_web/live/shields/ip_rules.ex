@@ -235,18 +235,14 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
            Map.put(params, "added_by", "#{user.name} <#{user.email}>")
          ) do
       {:ok, rule} ->
-        new_count = socket.assigns.ip_rules_count + 1
-
         socket =
           socket
           |> Modal.close("ip-rule-form-modal")
           |> assign(
             form: new_form(),
             ip_rules: [rule | socket.assigns.ip_rules],
-            ip_rules_count: new_count
+            ip_rules_count: socket.assigns.ip_rules_count + 1
           )
-
-        send(self(), {:update, ip_rules_count: new_count})
 
         send_flash(
           :success,
@@ -268,14 +264,10 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
       "IP rule removed successfully. Traffic will be resumed within a few minutes."
     )
 
-    new_count = socket.assigns.ip_rules_count - 1
-
-    send(self(), {:update, ip_rules_count: new_count})
-
     {:noreply,
      socket
      |> assign(
-       ip_rules_count: new_count,
+       ip_rules_count: socket.assigns.ip_rules_count - 1,
        ip_rules: Enum.reject(socket.assigns.ip_rules, &(&1.id == rule_id))
      )}
   end
