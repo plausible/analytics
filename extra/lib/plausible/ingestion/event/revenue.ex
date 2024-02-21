@@ -7,7 +7,10 @@ defmodule Plausible.Ingestion.Event.Revenue do
         %Plausible.Ingestion.Event{request: %{revenue_source: %Money{} = revenue_source}} = event
       ) do
     matching_goal =
-      Enum.find(event.site.revenue_goals, &(&1.event_name == event.clickhouse_event_attrs.name))
+      Enum.find(
+        event.site.revenue_goals,
+        &(&1.event_name == event.clickhouse_event.changes[:name])
+      )
 
     cond do
       is_nil(matching_goal) ->

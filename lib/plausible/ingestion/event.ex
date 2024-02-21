@@ -12,9 +12,8 @@ defmodule Plausible.Ingestion.Event do
 
   defstruct domain: nil,
             site: nil,
-            clickhouse_event_attrs: %{},
             clickhouse_session_attrs: %{},
-            clickhouse_event: nil,
+            clickhouse_event: %ClickhouseEventV2{} |> Ecto.Changeset.change(),
             dropped?: false,
             drop_reason: nil,
             request: nil,
@@ -32,9 +31,8 @@ defmodule Plausible.Ingestion.Event do
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
           site: %Plausible.Site{} | nil,
-          clickhouse_event_attrs: map(),
           clickhouse_session_attrs: %{},
-          clickhouse_event: %ClickhouseEventV2{} | nil,
+          clickhouse_event: %Ecto.Changeset{},
           dropped?: boolean(),
           drop_reason: drop_reason(),
           request: Request.t(),
@@ -142,7 +140,9 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp update_event_attrs(%__MODULE__{} = event, %{} = attrs) do
-    struct!(event, clickhouse_event_attrs: Map.merge(event.clickhouse_event_attrs, attrs))
+    struct!(event,
+      clickhouse_event: Plausible.ClickhouseEventV2.update(event.clickhouse_event, attrs)
+    )
   end
 
   defp update_session_attrs(%__MODULE__{} = event, %{} = attrs) do
@@ -263,19 +263,16 @@ defmodule Plausible.Ingestion.Event do
         generate_user_id(
           event.request,
           event.domain,
-          event.clickhouse_event_attrs.hostname,
+          event.clickhouse_event.changes[:hostname],
           event.salts.current
         )
     })
   end
 
   defp validate_clickhouse_event(%__MODULE__{} = event) do
-    clickhouse_event =
-      event
-      |> Map.fetch!(:clickhouse_event_attrs)
-      |> ClickhouseEventV2.new()
+    event_asdas = event.clickhouse_event |> Plausible.ClickhouseEventV2.validate()
 
-    case Ecto.Changeset.apply_action(clickhouse_event, nil) do
+    case Ecto.Changeset.apply_action(event_asdas, nil) do
       {:ok, valid_clickhouse_event} ->
         %{event | clickhouse_event: valid_clickhouse_event}
 
