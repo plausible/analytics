@@ -92,7 +92,7 @@
         <% end %>
         <PlausibleWeb.Components.Google.button
           id="analytics-connect"
-          to={Plausible.Google.Api.import_authorize_url(@site.id, "import", false)}
+          to={Plausible.Google.Api.import_authorize_url(@site.id, "import", true)}
         />
     <% end %>
   <% else %>
