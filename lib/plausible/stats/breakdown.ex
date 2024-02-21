@@ -732,10 +732,10 @@ defmodule Plausible.Stats.Breakdown do
             "Unable to find a conversion_rate divisor from a breakdown response",
             extra: %{
               domain: site.domain,
-              query: query,
+              query: inspect(query),
               property: property,
-              pagination: pagination,
-              item_not_found: item
+              pagination: inspect(pagination),
+              item_not_found: inspect(item)
             }
           )
 
