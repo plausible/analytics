@@ -17,12 +17,7 @@ defmodule Plausible.Plugins.API.Capabilities do
           site = Plausible.Repo.preload(site, :owner)
           result = mod.check_availability(site.owner)
           feature = Module.split(mod) |> List.last()
-
-          if result == :ok do
-            {feature, true}
-          else
-            {feature, false}
-          end
+          {feature, result == :ok}
         end)
       else
         Plausible.Billing.Feature.list_short_names()
