@@ -837,15 +837,7 @@ defmodule PlausibleWeb.SiteController do
     site = conn.assigns.site
 
     cond do
-      import_id == 0 ->
-        Oban.cancel_all_jobs(
-          from(j in Oban.Job,
-            where:
-              j.queue == "analytics_imports" and
-                fragment("(? ->> 'import_id')::int", j.args) == 0
-          )
-        )
-
+      import_id == "0" ->
         Plausible.Purge.delete_imported_stats!(site, 0)
 
         site
