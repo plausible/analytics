@@ -43,7 +43,8 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
                  source: :universal_analytics,
                  start_date: ~D[2023-10-01],
                  end_date: ~D[2024-01-02],
-                 status: SiteImport.pending()
+                 status: SiteImport.pending(),
+                 legacy: true
                }
              ] = Plausible.Imported.list_all_imports(site)
 
@@ -61,6 +62,35 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
       assert opts[:view_id] == 123
       assert opts[:date_range] == Date.range(~D[2023-10-01], ~D[2024-01-02])
       assert opts[:auth] == {"access123", "refresh123", expires_at}
+    end
+
+    test "creates SiteImport with legacy flag set to false when instructed", %{
+      user: user,
+      site: site
+    } do
+      expires_at = NaiveDateTime.to_iso8601(NaiveDateTime.utc_now())
+
+      assert {:ok, job} =
+               UniversalAnalytics.new_import(site, user,
+                 view_id: 123,
+                 start_date: "2023-10-01",
+                 end_date: "2024-01-02",
+                 access_token: "access123",
+                 refresh_token: "refresh123",
+                 token_expires_at: expires_at,
+                 legacy: false
+               )
+
+      assert %Oban.Job{args: %{"import_id" => import_id}} = Repo.reload!(job)
+
+      assert [
+               %{
+                 id: ^import_id,
+                 legacy: false
+               }
+             ] = Plausible.Imported.list_all_imports(site)
+
+      assert %{imported_data: nil} = Repo.reload!(site)
     end
   end
 
