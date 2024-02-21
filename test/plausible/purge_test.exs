@@ -108,26 +108,46 @@ defmodule Plausible.PurgeTest do
     ])
 
     Enum.each(Plausible.Imported.tables(), fn table ->
-      query = from(imported in table, where: imported.import_id == ^site_import1.id)
+      query =
+        from(imported in table,
+          where: imported.site_id == ^site.id and imported.import_id == ^site_import1.id
+        )
+
       assert await_clickhouse_count(query, 1)
 
-      query = from(imported in table, where: imported.import_id == ^site_import2.id)
+      query =
+        from(imported in table,
+          where: imported.site_id == ^site.id and imported.import_id == ^site_import2.id
+        )
+
       assert await_clickhouse_count(query, 1)
 
-      query = from(imported in table, where: imported.import_id == 0)
+      query =
+        from(imported in table, where: imported.site_id == ^site.id and imported.import_id == 0)
+
       assert await_clickhouse_count(query, 1)
     end)
 
     assert :ok == Plausible.Purge.delete_imported_stats!(site, 0)
 
     Enum.each(Plausible.Imported.tables(), fn table ->
-      query = from(imported in table, where: imported.import_id == ^site_import1.id)
+      query =
+        from(imported in table,
+          where: imported.site_id == ^site.id and imported.import_id == ^site_import1.id
+        )
+
       assert await_clickhouse_count(query, 1)
 
-      query = from(imported in table, where: imported.import_id == ^site_import2.id)
+      query =
+        from(imported in table,
+          where: imported.site_id == ^site.id and imported.import_id == ^site_import2.id
+        )
+
       assert await_clickhouse_count(query, 1)
 
-      query = from(imported in table, where: imported.import_id == 0)
+      query =
+        from(imported in table, where: imported.site_id == ^site.id and imported.import_id == 0)
+
       assert await_clickhouse_count(query, 0)
     end)
   end
