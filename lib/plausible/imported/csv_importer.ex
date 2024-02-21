@@ -45,7 +45,7 @@ defmodule Plausible.Imported.CSVImporter do
         statement =
           """
           INSERT INTO {table:Identifier} \
-          SELECT {site_id:UInt64} AS site_id, {import_id:UInt64} AS import_id, * \
+          SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
           FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String})\
           """
 
@@ -74,8 +74,8 @@ defmodule Plausible.Imported.CSVImporter do
 
     {:ok,
      %{
-       start_date: Enum.min_by(ranges, & &1.first),
-       end_date: Enum.max_by(ranges, & &1.last)
+       start_date: Enum.min_by(ranges, & &1.first, Date).first,
+       end_date: Enum.max_by(ranges, & &1.last, Date).last
      }}
   end
 
