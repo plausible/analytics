@@ -1,4 +1,4 @@
-defmodule PlausibleWeb.Live.Shields.IPAddresses do
+defmodule PlausibleWeb.Live.Shields.Countries do
   @moduledoc """
   LiveView for IP Addresses Shield
   """
@@ -11,7 +11,6 @@ defmodule PlausibleWeb.Live.Shields.IPAddresses do
   def mount(
         _params,
         %{
-          "remote_ip" => remote_ip,
           "domain" => domain,
           "current_user_id" => user_id
         },
@@ -23,12 +22,11 @@ defmodule PlausibleWeb.Live.Shields.IPAddresses do
         Sites.get_for_user!(user_id, domain, [:owner, :admin, :super_admin])
       end)
       |> assign_new(:ip_rules_count, fn %{site: site} ->
-        Shields.count_ip_rules(site)
+        0
       end)
       |> assign_new(:current_user, fn ->
         Plausible.Repo.get(Plausible.Auth.User, user_id)
       end)
-      |> assign_new(:remote_ip, fn -> remote_ip end)
 
     {:ok, socket}
   end
@@ -38,12 +36,11 @@ defmodule PlausibleWeb.Live.Shields.IPAddresses do
     <div>
       <.flash_messages flash={@flash} />
       <.live_component
-        module={PlausibleWeb.Live.Shields.IPRules}
+        module={PlausibleWeb.Live.Shields.CountryRules}
         current_user={@current_user}
-        ip_rules_count={@ip_rules_count}
+        country_rules_count={@ip_rules_count}
         site={@site}
-        remote_ip={@remote_ip}
-        id="ip-rules-#{@current_user.id}"
+        id="country-rules-#{@current_user.id}"
       />
     </div>
     """
