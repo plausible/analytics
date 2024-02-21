@@ -105,6 +105,7 @@ Plausible.MigrationUtils.html
 Plausible.OpenTelemetry.Sampler.html
 Plausible.PaddleApi.Mock.html
 Plausible.Pagination.html
+Plausible.Plugins.API.Capabilities.html
 Plausible.Plugins.API.CustomProps.html
 Plausible.Plugins.API.Goals.html
 Plausible.Plugins.API.SharedLinks.html
@@ -259,10 +260,12 @@ PlausibleWeb.Live.Sites.html
 PlausibleWeb.MJML.StatsReport.html
 PlausibleWeb.PageController.html
 PlausibleWeb.PageView.html
+PlausibleWeb.Plugins.API.Controllers.Capabilities.html
 PlausibleWeb.Plugins.API.Controllers.CustomProps.html
 PlausibleWeb.Plugins.API.Controllers.Goals.html
 PlausibleWeb.Plugins.API.Controllers.SharedLinks.html
 PlausibleWeb.Plugins.API.Errors.html
+PlausibleWeb.Plugins.API.Schemas.Capabilities.html
 PlausibleWeb.Plugins.API.Schemas.CustomProp.DisableRequest.html
 PlausibleWeb.Plugins.API.Schemas.CustomProp.EnableRequest.html
 PlausibleWeb.Plugins.API.Schemas.CustomProp.ListResponse.html
@@ -289,6 +292,7 @@ PlausibleWeb.Plugins.API.Schemas.SharedLink.html
 PlausibleWeb.Plugins.API.Schemas.Unauthorized.html
 PlausibleWeb.Plugins.API.Schemas.UnprocessableEntity.html
 PlausibleWeb.Plugins.API.Spec.html
+PlausibleWeb.Plugins.API.Views.Capabilities.html
 PlausibleWeb.Plugins.API.Views.CustomProp.html
 PlausibleWeb.Plugins.API.Views.Error.html
 PlausibleWeb.Plugins.API.Views.Goal.html
@@ -346,8 +350,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-F55D3595.js
-dist/sidebar_items-4CB40722.js
+dist/search_data-F9C6AB8A.js
+dist/sidebar_items-9FAA0A0A.js
 index.html
 readme.html
 search.html
