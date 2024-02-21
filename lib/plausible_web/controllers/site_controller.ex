@@ -271,9 +271,7 @@ defmodule PlausibleWeb.SiteController do
   end
 
   def settings_imports_exports(conn, _params) do
-    site =
-      conn.assigns.site
-      |> Repo.preload([:google_auth])
+    site = conn.assigns.site
 
     if FunWithFlags.enabled?(:imports_exports) do
       conn
