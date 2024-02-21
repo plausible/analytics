@@ -3,6 +3,7 @@ defmodule Plausible.Plugins.API.Capabilities do
   Context module for querying API capabilities
   """
   require Plausible.Billing.Feature
+  alias Plausible.Billing.Feature
 
   @spec get(Plug.Conn.t()) :: {:ok, map()}
   def get(conn) do
@@ -12,16 +13,15 @@ defmodule Plausible.Plugins.API.Capabilities do
 
     features =
       if site do
-        Plausible.Billing.Feature.list()
+        Feature.list()
         |> Enum.map(fn mod ->
           site = Plausible.Repo.preload(site, :owner)
           result = mod.check_availability(site.owner)
-          feature = Module.split(mod) |> List.last()
+          feature = mod |> Module.split() |> List.last()
           {feature, result == :ok}
         end)
       else
-        Plausible.Billing.Feature.list_short_names()
-        |> Enum.map(&{&1, false})
+        Enum.map(Feature.list_short_names(), &{&1, false})
       end
 
     {:ok,
