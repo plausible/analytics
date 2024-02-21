@@ -885,13 +885,6 @@ defmodule PlausibleWeb.SiteController do
       |> Plausible.Imported.list_all_imports()
       |> Enum.map(& &1.id)
 
-    import_ids =
-      if site.imported_data do
-        [0 | import_ids]
-      else
-        import_ids
-      end
-
     if import_ids != [] do
       Oban.cancel_all_jobs(
         from(j in Oban.Job,
