@@ -5,7 +5,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
   describe "examples" do
     test "Capabilities" do
       assert_schema(
-        Schemas.Capabilities.schema().example |> IO.inspect(label: :example),
+        Schemas.Capabilities.schema().example,
         "Capabilities",
         spec()
       )
