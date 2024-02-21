@@ -77,6 +77,10 @@ defmodule Plausible.Imported.CSVImporter do
        start_date: Enum.min_by(ranges, & &1.first, Date).first,
        end_date: Enum.max_by(ranges, & &1.last, Date).last
      }}
+  rescue
+    # we are cancelling on any ArgumentError or ClickHouse errors
+    e in [ArgumentError, Ch.Error] ->
+      {:error, Exception.message(e)}
   end
 
   input_structures = %{
