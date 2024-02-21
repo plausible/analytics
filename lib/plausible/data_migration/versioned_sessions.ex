@@ -16,11 +16,7 @@ defmodule Plausible.DataMigration.VersionedSessions do
 
     unique_suffix = Timex.now() |> Timex.format!(@suffix_format)
 
-    cluster? =
-      case run_sql("check-replicas") do
-        {:ok, %{num_rows: 0}} -> false
-        {:ok, %{num_rows: 1}} -> true
-      end
+    cluster? = Plausible.MigrationUtils.clustered_table?("sessions_v2")
 
     {:ok, %{rows: partitions}} = run_sql("list-partitions")
     partitions = Enum.map(partitions, fn [part] -> part end)
