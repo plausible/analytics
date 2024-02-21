@@ -12,7 +12,7 @@ defmodule Plausible.IngestRepo.Migrations.CreateEventsV2SessionColumns do
     session_country_code: {"LowCardinality(FixedString(2))", ""},
     session_subdivision1_code: {"LowCardinality(String)", ""},
     session_subdivision2_code: {"LowCardinality(String)", ""},
-    session_city_geoname_id: {"UInt64", ""},
+    session_city_geoname_id: {"UInt32", ""},
     session_screen_size: {"LowCardinality(String)", ""},
     session_operating_system: {"LowCardinality(String)", ""},
     session_operating_system_version: {"LowCardinality(String)", ""},
