@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Components.Generic do
   @button_themes %{
     "primary" => "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600",
     "bright" =>
-      "border border-gray-200 bg-gray-100 text-gray-800 hover:bg-gray-200 focus-visible:outline-gray-100",
+      "border border-gray-200 bg-gray-100 dark:bg-gray-300 text-gray-800 hover:bg-gray-200 focus-visible:outline-gray-100",
     "danger" =>
       "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:border-blue-300 active:text-red-800"
   }
