@@ -1093,6 +1093,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   end
 
   describe "metrics" do
+    test "validates that conversion_rate cannot be queried without a goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate"
+        })
+
+      assert %{"error" => msg} = json_response(conn, 400)
+
+      assert msg ==
+               "Metric `conversion_rate` can only be queried in a goal breakdown or with a goal filter"
+    end
+
     test "shows pageviews,visits,views_per_visit for last 7d", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,

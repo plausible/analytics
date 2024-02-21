@@ -20,8 +20,24 @@ class ModalTable extends React.Component {
       .then((res) => this.setState({loading: false, list: res}))
   }
 
+  showConversionRate() {
+    return !!this.state.query.filters.goal
+  }
+
+  showPercentage() {
+    return this.props.showPercentage && !this.showConversionRate()
+  }
+
   label() {
-    return this.state.query.period === 'realtime' ? 'Current visitors' : 'Visitors'
+    if (this.state.query.period === 'realtime') {
+      return 'Current visitors'
+    }
+
+    if (this.showConversionRate()) {
+      return 'Conversions'
+    }
+
+    return 'Visitors'
   }
 
   renderTableItem(tableItem) {
@@ -40,11 +56,10 @@ class ModalTable extends React.Component {
             {tableItem.name}
           </Link>
         </td>
-        <td className="p-2 w-32 font-medium" align="right">
-          {numberFormatter(tableItem.visitors)}
-          {tableItem.percentage >= 0 &&
-            <span className="inline-block text-xs w-8 pl-1 text-right">({tableItem.percentage}%)</span> }
-        </td>
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(tableItem.total_visitors)}</td>}
+        <td className="p-2 w-32 font-medium" align="right">{numberFormatter(tableItem.visitors)}</td>
+        {this.showPercentage() && <td className="p-2 w-32 font-medium" align="right">{tableItem.percentage}</td>}
+        {this.showConversionRate() && <td className="p-2 w-32 font-medium" align="right">{numberFormatter(tableItem.conversion_rate)}%</td>}
       </tr>
     )
   }
@@ -66,19 +81,11 @@ class ModalTable extends React.Component {
             <table className="w-max overflow-x-auto md:w-full table-striped table-fixed">
               <thead>
                 <tr>
-                  <th
-                    className="p-2 w-48 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                    align="left"
-                  >
-                    {this.props.keyLabel}
-                  </th>
-                  <th
-                    // eslint-disable-next-line max-len
-                    className="p-2 w-32 lg:w-1/2 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400"
-                    align="right"
-                  >
-                    {this.label()}
-                  </th>
+                  <th className="p-2 w-48 md:w-56 lg:w-1/3 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="left">{this.props.keyLabel}</th>
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right" >Total Visitors</th>}
+                  <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">{this.label()}</th>
+                  {this.showPercentage() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">%</th>}
+                  {this.showConversionRate() && <th className="p-2 w-32 text-xs tracking-wide font-bold text-gray-500 dark:text-gray-400" align="right">CR</th>}
                 </tr>
               </thead>
               <tbody>
