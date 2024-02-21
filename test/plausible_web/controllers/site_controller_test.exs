@@ -636,6 +636,68 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /:website/settings/imports-exports" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "renders empty imports list", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, ~s|a[data-to]|, "data-to") =~
+               "https://accounts.google.com/o/oauth2/"
+
+      assert resp =~ "Import Data"
+      assert resp =~ "Existing Imports"
+      assert resp =~ "There are no imports yet"
+      assert resp =~ "Export Data"
+    end
+
+    test "renders imports in import list", %{conn: conn, site: site} do
+      {:ok, opts} = add_imported_data(%{site: site})
+      site = Map.new(opts).site
+
+      site_import1 = insert(:site_import, site: site, status: SiteImport.pending())
+      site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
+      site_import3 = insert(:site_import, site: site, status: SiteImport.completed())
+      site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
+
+      populate_stats(site, site_import3.id, [
+        build(:imported_visitors, pageviews: 77),
+        build(:imported_visitors, pageviews: 21)
+      ])
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      resp = html_response(conn, 200)
+
+      buttons = find(resp, ~s|button[phx-click="delete-import-select"]|)
+      assert length(buttons) == 5
+
+      assert element_exists?(resp, ~s|button[phx-click="delete-import-select"][phx-value-id=0]|)
+
+      assert element_exists?(
+               resp,
+               ~s|button[phx-click="delete-import-select"][phx-value-id=#{site_import1.id}]|
+             )
+
+      assert element_exists?(
+               resp,
+               ~s|button[phx-click="delete-import-select"][phx-value-id=#{site_import2.id}]|
+             )
+
+      assert element_exists?(
+               resp,
+               ~s|button[phx-click="delete-import-select"][phx-value-id=#{site_import3.id}]|
+             )
+
+      assert resp =~ "(98 page views)"
+
+      assert element_exists?(
+               resp,
+               ~s|button[phx-click="delete-import-select"][phx-value-id=#{site_import4.id}]|
+             )
+    end
+  end
+
   describe "GET /:website/settings/integrations for self-hosting" do
     setup [:create_user, :log_in, :create_site]
 
