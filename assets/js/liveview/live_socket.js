@@ -1,4 +1,5 @@
 import "phoenix_html"
+import flatpickr from "flatpickr"
 import Alpine from 'alpinejs'
 import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
@@ -16,6 +17,19 @@ if (csrfToken && websocketUrl) {
         setTimeout(afterMetrics, 5000)
         params.callback = afterMetrics
         window.plausible(event_name, params)
+      })
+    }
+  }
+  Hooks.DatePicker = {
+    mounted() {
+      flatpickr(this.el, {
+        maxDate: 'today',
+        showMonths: 1,
+        static: true,
+        animate: true,
+        onChange: (_selected, dateStr) => {
+          document.getElementById(this.el.id + "-display").innerHTML = dateStr
+        }
       })
     }
   }
