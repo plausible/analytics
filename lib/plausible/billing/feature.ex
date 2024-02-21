@@ -87,6 +87,18 @@ defmodule Plausible.Billing.Feature do
     @features
   end
 
+  @doc """
+  Lists all the feature short names, e.g. RevenueGoals
+  """
+  defmacro list_short_names() do
+    @features
+    |> Enum.map(fn mod ->
+      Module.split(mod)
+      |> List.last()
+      |> String.to_existing_atom()
+    end)
+  end
+
   @doc false
   defmacro __using__(opts \\ []) do
     quote location: :keep do
