@@ -73,7 +73,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
   test "plug optionally doesn't halt when no authorization header is passed" do
     conn =
       build_conn()
-      |> AuthorizePluginsAPI.call(send_resp?: false)
+      |> AuthorizePluginsAPI.call(send_error?: false)
 
     refute conn.halted
   end

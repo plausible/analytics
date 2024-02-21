@@ -11,15 +11,15 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPI do
   def init(opts), do: opts
 
   def call(conn, opts \\ []) do
-    send_resp? =
-      Keyword.get(opts, :send_resp?, true)
+    send_error? =
+      Keyword.get(opts, :send_error?, true)
 
     with {:ok, token} <- extract_token(conn),
          {:ok, conn} <- authorize(conn, token) do
       conn
     else
       {:unauthorized, conn} ->
-        if send_resp? do
+        if send_error? do
           Errors.unauthorized(conn)
         else
           conn

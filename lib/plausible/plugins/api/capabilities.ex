@@ -7,7 +7,7 @@ defmodule Plausible.Plugins.API.Capabilities do
 
   @spec get(Plug.Conn.t()) :: {:ok, map()}
   def get(conn) do
-    conn = PlausibleWeb.Plugs.AuthorizePluginsAPI.call(conn, send_resp?: false)
+    conn = PlausibleWeb.Plugs.AuthorizePluginsAPI.call(conn, send_error?: false)
 
     site = conn.assigns[:authorized_site]
 
