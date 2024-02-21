@@ -742,7 +742,7 @@ unless s3_disabled? do
   s3_missing_env = Enum.filter(s3_env, &is_nil(&1.value))
 
   unless s3_missing_env == [] do
-    raise """
+    raise ArgumentError, """
     Missing S3 configuration. Please set #{s3_missing_env |> Enum.map(& &1.name) |> Enum.join(", ")} environment variable(s):
 
     #{s3_missing_env |> Enum.map(fn %{name: name, example: example} -> "\t#{name}=#{example}" end) |> Enum.join("\n")}

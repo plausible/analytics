@@ -78,7 +78,7 @@ defmodule Plausible.Imported.CSVImporter do
        end_date: Enum.max_by(ranges, & &1.last, Date).last
      }}
   rescue
-    # we are cancelling on any ArgumentError or ClickHouse errors
+    # we are cancelling on any argument or ClickHouse errors
     e in [ArgumentError, Ch.Error] ->
       {:error, Exception.message(e)}
   end
