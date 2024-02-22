@@ -77,10 +77,11 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
             <.live_component
               submit_name="country_rule[country_code]"
               submit_value={f[:country_code].value}
+              display_value=""
               module={PlausibleWeb.Live.Components.ComboBox}
               suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
               id={f[:country_code].id}
-              suggestions_limit={10}
+              suggestions_limit={300}
               options={options(@country_rules)}
             />
 
@@ -249,6 +250,5 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
     |> Enum.reject(fn {country_code, _} ->
       country_code in Enum.map(country_rules, & &1.country_code)
     end)
-    |> Enum.take(10)
   end
 end
