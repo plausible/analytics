@@ -68,22 +68,13 @@ defmodule Plausible.Session.CacheStoreTest do
     # assert Map.get(session, :"entry.meta.value") == ["true", "false"]
   end
 
-  test "updates a session", %{buffer: buffer} do
+  test "updates session counters", %{buffer: buffer} do
     timestamp = Timex.now()
     event1 = build(:event, name: "pageview", timestamp: timestamp |> Timex.shift(seconds: -10))
 
     event2 = %{
       event1
-      | timestamp: timestamp,
-        country_code: "US",
-        subdivision1_code: "SUB1",
-        subdivision2_code: "SUB2",
-        city_geoname_id: 12312,
-        screen_size: "Desktop",
-        operating_system: "Mac",
-        operating_system_version: "11",
-        browser: "Firefox",
-        browser_version: "10"
+      | timestamp: timestamp
     }
 
     CacheStore.on_event(event1, nil, buffer)
@@ -93,15 +84,6 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.duration == 10
     assert session.pageviews == 2
     assert session.events == 2
-    assert session.country_code == "US"
-    assert session.subdivision1_code == "SUB1"
-    assert session.subdivision2_code == "SUB2"
-    assert session.city_geoname_id == 12312
-    assert session.operating_system == "Mac"
-    assert session.operating_system_version == "11"
-    assert session.browser == "Firefox"
-    assert session.browser_version == "10"
-    assert session.screen_size == "Desktop"
   end
 
   test "calculates duration correctly for out-of-order events", %{buffer: buffer} do

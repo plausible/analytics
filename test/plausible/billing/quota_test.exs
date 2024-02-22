@@ -360,6 +360,29 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert Quota.team_member_usage(me) == 0
     end
+
+    test "excludes specific emails from limit calculation" do
+      me = insert(:user)
+      member = insert(:user)
+
+      site_i_own =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: me, role: :owner),
+            build(:site_membership, user: member, role: :admin)
+          ]
+        )
+
+      insert(:invitation, site: site_i_own, inviter: me)
+      insert(:invitation, site: site_i_own, inviter: member)
+      invitation = insert(:invitation, site: site_i_own, inviter: me, email: "foo@example.com")
+
+      assert Quota.team_member_usage(me) == 4
+      assert Quota.team_member_usage(me, exclude_emails: "arbitrary@example.com") == 4
+      assert Quota.team_member_usage(me, exclude_emails: member.email) == 3
+      assert Quota.team_member_usage(me, exclude_emails: invitation.email) == 3
+      assert Quota.team_member_usage(me, exclude_emails: [member.email, invitation.email]) == 2
+    end
   end
 
   describe "team_member_limit/1" do
