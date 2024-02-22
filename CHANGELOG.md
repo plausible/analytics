@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Group `operating_system_versions` by `operating_system` in Stats API breakdown
+- Add `operating_system_versions.csv` into the CSV export
 - Display `Total visitors`, `Conversions`, and `CR` in the "Details" views of Countries, Regions and Cities (when filtering by a goal)
 - Add `conversion_rate` to Regions and Cities reports (when filtering by a goal)
 - Add the `conversion_rate` metric to Stats API Breakdown and Aggregate endpoints

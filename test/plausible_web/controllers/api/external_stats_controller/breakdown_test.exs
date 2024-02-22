@@ -532,32 +532,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
 
   test "breakdown by visit:os_version", %{conn: conn, site: site} do
     populate_stats(site, [
-      build(:pageview,
-        operating_system_version: "10.5",
-        timestamp: ~N[2021-01-01 00:00:00]
-      ),
-      build(:pageview,
-        operating_system_version: "10.5",
-        timestamp: ~N[2021-01-01 00:25:00]
-      ),
-      build(:pageview,
-        operating_system_version: "10.6",
-        timestamp: ~N[2021-01-01 00:00:00]
-      )
+      build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+      build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+      build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+      build(:pageview, operating_system_version: "14"),
+      build(:pageview, operating_system: "Windows", operating_system_version: "11"),
+      build(:pageview, operating_system: "Windows", operating_system_version: "11")
     ])
 
     conn =
       get(conn, "/api/v1/stats/breakdown", %{
         "site_id" => site.domain,
         "period" => "day",
-        "date" => "2021-01-01",
         "property" => "visit:os_version"
       })
 
     assert json_response(conn, 200) == %{
              "results" => [
-               %{"os_version" => "10.5", "visitors" => 2},
-               %{"os_version" => "10.6", "visitors" => 1}
+               %{"os_version" => "14", "visitors" => 3, "os" => "Mac"},
+               %{"os_version" => "11", "visitors" => 2, "os" => "Windows"},
+               %{"os_version" => "14", "visitors" => 1, "os" => "(not set)"}
              ]
            }
   end
