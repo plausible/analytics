@@ -702,8 +702,8 @@ defmodule Plausible.Stats.Breakdown do
     # without goal filter will include all those combinations of browsers/os-s
     # and their versions that were present in the `breakdown_results` array.
     {pagination_limit, find_match_fn} =
-      cond do
-        property_atom == :browser_version ->
+      case property_atom do
+        :browser_version ->
           pagination_limit = min(elem(pagination, 0) * 10, 3_000)
 
           find_match_fn = fn total, conversion ->
@@ -713,7 +713,7 @@ defmodule Plausible.Stats.Breakdown do
 
           {pagination_limit, find_match_fn}
 
-        property_atom == :os_version ->
+        :os_version ->
           pagination_limit = min(elem(pagination, 0) * 5, 3_000)
 
           find_match_fn = fn total, conversion ->
@@ -723,7 +723,7 @@ defmodule Plausible.Stats.Breakdown do
 
           {pagination_limit, find_match_fn}
 
-        true ->
+        _ ->
           {elem(pagination, 0),
            fn total, conversion ->
              total[property_atom] == conversion[property_atom]
