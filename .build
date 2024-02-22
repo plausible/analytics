@@ -62,6 +62,7 @@ Plausible.ConfigHelpers.html
 Plausible.DataCase.html
 Plausible.DataMigration.NumericIDs.html
 Plausible.DataMigration.Repo.html
+Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
 Plausible.DebugReplayInfo.html
 Plausible.Ecto.EventName.html
@@ -350,8 +351,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-80E2293D.js
-dist/sidebar_items-BABBE1A2.js
+dist/search_data-C0A79C8F.js
+dist/sidebar_items-B50757C9.js
 index.html
 readme.html
 search.html
