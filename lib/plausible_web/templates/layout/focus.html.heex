@@ -13,12 +13,7 @@
       <meta name="csrf-token" content={Plug.CSRFProtection.get_csrf_token()} />
       <meta name="websocket-url" content={websocket_url()} />
     <% end %>
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, "/images/ /plausible_favicon.png")}
-    />
+    <PlausibleWeb.Components.Layout.favicon conn={@conn} />
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
     <%= render("_tracking.html", assigns) %>
