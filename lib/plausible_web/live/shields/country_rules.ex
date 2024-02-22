@@ -9,8 +9,6 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
   alias PlausibleWeb.Live.Components.Modal
   alias Plausible.Shields
   alias Plausible.Shield
-  import PlausibleWeb.Live.Components.Form
-  import PlausibleWeb.Components.Generic
 
   def update(assigns, socket) do
     socket =
@@ -48,7 +46,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
             class="mt-4 sm:ml-4 sm:mt-0 justify-self-end"
           >
             <PlausibleWeb.Components.Generic.button
-              id="add-ip-rule"
+              id="add-country-rule"
               x-data
               x-on:click={Modal.JS.open("country-rule-form-modal")}
             >
@@ -78,14 +76,12 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
 
             <.live_component
               submit_name="country_rule[country_code]"
+              submit_value={f[:country_code].value}
               module={PlausibleWeb.Live.Components.ComboBox}
               suggest_fun={&PlausibleWeb.Live.Components.ComboBox.StaticSearch.suggest/2}
-              id="country_code"
-              options={
-                Location.Country.all()
-                |> Enum.sort_by(& &1.name)
-                |> Enum.map(fn c -> {c.alpha_2, c.flag <> " " <> c.name} end)
-              }
+              id={f[:country_code].id}
+              suggestions_limit={10}
+              options={options(@country_rules)}
             />
 
             <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
@@ -185,7 +181,6 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
   end
 
   def handle_event("save-country-rule", %{"country_rule" => params}, socket) do
-    IO.inspect(params)
     user = socket.assigns.current_user
 
     case Shields.add_country_rule(
@@ -193,14 +188,21 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
            Map.put(params, "added_by", "#{user.name} <#{user.email}>")
          ) do
       {:ok, rule} ->
+        country_rules = [rule | socket.assigns.country_rules]
+
         socket =
           socket
           |> Modal.close("country-rule-form-modal")
           |> assign(
             form: new_form(),
-            country_rules: [rule | socket.assigns.country_rules],
+            country_rules: country_rules,
             country_rules_count: socket.assigns.country_rules_count + 1
           )
+
+        send_update(PlausibleWeb.Live.Components.ComboBox,
+          id: "country_rule_country_code",
+          display_value: ""
+        )
 
         send_flash(
           :success,
@@ -210,7 +212,6 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
         {:noreply, socket}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        changeset |> IO.inspect(label: :cs)
         {:noreply, assign(socket, form: to_form(changeset))}
     end
   end
@@ -239,5 +240,15 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
     %Shield.CountryRule{}
     |> Shield.CountryRule.changeset(%{})
     |> to_form()
+  end
+
+  defp options(country_rules) do
+    Location.Country.all()
+    |> Enum.sort_by(& &1.name)
+    |> Enum.map(fn c -> {c.alpha_2, c.flag <> " " <> c.name} end)
+    |> Enum.reject(fn {country_code, _} ->
+      country_code in Enum.map(country_rules, & &1.country_code)
+    end)
+    |> Enum.take(10)
   end
 end
