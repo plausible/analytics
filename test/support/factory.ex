@@ -286,6 +286,12 @@ defmodule Plausible.Factory do
     }
   end
 
+  def country_rule_factory do
+    %Plausible.Shield.CountryRule{
+      added_by: "Mr Seed <user@plausible.test>"
+    }
+  end
+
   defp hash_key() do
     Keyword.fetch!(
       Application.get_env(:plausible, PlausibleWeb.Endpoint),
