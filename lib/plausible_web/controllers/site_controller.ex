@@ -263,7 +263,7 @@ defmodule PlausibleWeb.SiteController do
       shield: shield,
       dogfood_page_path: "/:dashboard/settings/shields/#{shield}",
       connect_live_socket: true,
-        layout: {PlausibleWeb.LayoutView, "site_settings.html"}
+      layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
   end
 

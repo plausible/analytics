@@ -8,10 +8,10 @@
       }
     ) %>
   <% "countries" -> %>
-  <%= live_render(@conn, PlausibleWeb.Live.Shields.Countries,
+    <%= live_render(@conn, PlausibleWeb.Live.Shields.Countries,
       session: %{
-      "site_id" => @site.id,
-      "domain" => @site.domain
+        "site_id" => @site.id,
+        "domain" => @site.domain
       }
-      ) %>
-  <% end %>
+    ) %>
+<% end %>
