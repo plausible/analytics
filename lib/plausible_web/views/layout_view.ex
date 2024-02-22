@@ -40,19 +40,11 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
-  def light_logo_path() do
+  def logo_path(filename) do
     if full_build?() do
-      "/images/ee/logo_light.svg"
+      Path.join("/images/ee/", filename)
     else
-      "/images/ce/logo_light.svg"
-    end
-  end
-
-  def dark_logo_path() do
-    if full_build?() do
-      "/images/ee/logo_dark.svg"
-    else
-      "/images/ce/logo_dark.svg"
+      Path.join("/images/ce/", filename)
     end
   end
 

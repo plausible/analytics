@@ -6,7 +6,7 @@
           <%= img_tag(
             PlausibleWeb.Router.Helpers.static_path(
               @conn,
-              dark_logo_path()
+              logo_path("logo_dark.svg")
             ),
             class: "w-44 -mt-2 hidden dark:inline",
             alt: "Plausible logo",
@@ -15,7 +15,7 @@
           <%= img_tag(
             PlausibleWeb.Router.Helpers.static_path(
               @conn,
-              light_logo_path()
+              logo_path("logo_light.svg")
             ),
             class: "w-44 -mt-2 inline dark:hidden",
             alt: "Plausible logo",

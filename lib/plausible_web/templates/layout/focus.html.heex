@@ -17,7 +17,7 @@
       rel="icon"
       type="image/png"
       sizes="32x32"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png")}
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, "/images/ /plausible_favicon.png")}
     />
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
     <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
@@ -29,16 +29,16 @@
         <%= img_tag(
           PlausibleWeb.Router.Helpers.static_path(
             @conn,
-            dark_logo_path()
+            logo_path("logo_dark.svg")
           ),
           class: "w-44 hidden dark:inline",
           alt: "Plausible logo",
           loading: "lazy"
         ) %>
         <%= img_tag(
-          PlausibleWeb.Router.Helpers.static_path(
+          PlausibleWeb.Router.Helpers .static_path(
             @conn,
-            light_logo_path()
+            logo_path("logo_light.svg")
           ),
           class: "w-44 inline dark:hidden",
           alt: "Plausible logo",
