@@ -13,7 +13,7 @@ defmodule Plausible.License do
   require Logger
 
   def ensure_valid_license do
-    if Mix.env() == :prod and not has_valid_license?() do
+    if config_env() == :prod and not has_valid_license?() do
       Logger.error(
         "Invalid or no license key provided for Plausible Enterprise Edition. Please contact hello@plausible.io to acquire a license."
       )
