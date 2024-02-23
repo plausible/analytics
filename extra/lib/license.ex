@@ -12,23 +12,31 @@ defmodule Plausible.License do
 
   require Logger
 
-  def ensure_valid_license do
-    if config_env() == :prod and not has_valid_license?() do
-      Logger.error(
-        "Invalid or no license key provided for Plausible Enterprise Edition. Please contact hello@plausible.io to acquire a license."
-      )
+  if Mix.env() == :prod do
+    def ensure_valid_license do
+      if has_valid_license?() do
+        :ok
+      else
+        Logger.error(
+          "Invalid or no license key provided for Plausible Enterprise Edition. Please contact hello@plausible.io to acquire a license."
+        )
 
-      Logger.error("Shutting down")
-      System.stop()
+        Logger.error("Shutting down")
+        System.stop()
+      end
     end
-  end
 
-  @license_hash "4qidue2klxynf4vrprlxuouwjos7dnyn4nsquamkrfhtn3ts6ova===="
-  defp has_valid_license?() do
-    hash =
-      :crypto.hash(:sha256, Application.fetch_env!(:plausible, :license_key))
-      |> Base.encode32(case: :lower)
+    @license_hash "4qidue2klxynf4vrprlxuouwjos7dnyn4nsquamkrfhtn3ts6ova===="
+    defp has_valid_license?() do
+      hash =
+        :crypto.hash(:sha256, Application.fetch_env!(:plausible, :license_key))
+        |> Base.encode32(case: :lower)
 
-    hash == @license_hash
+      hash == @license_hash
+    end
+  else
+    def ensure_valid_license do
+      :ok
+    end
   end
 end
