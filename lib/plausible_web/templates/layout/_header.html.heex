@@ -6,15 +6,18 @@
           <%= img_tag(
             PlausibleWeb.Router.Helpers.static_path(
               @conn,
-              "/images/icon/plausible_logo_dark.png"
+              logo_path("logo_dark.svg")
             ),
-            class: "h-8 w-auto sm:h-10 -mt-2 hidden dark:inline",
+            class: "w-44 -mt-2 hidden dark:inline",
             alt: "Plausible logo",
             loading: "lazy"
           ) %>
           <%= img_tag(
-            PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_logo.png"),
-            class: "h-8 w-auto sm:h-10 -mt-2 inline dark:hidden",
+            PlausibleWeb.Router.Helpers.static_path(
+              @conn,
+              logo_path("logo_light.svg")
+            ),
+            class: "w-44 -mt-2 inline dark:hidden",
             alt: "Plausible logo",
             loading: "lazy"
           ) %>

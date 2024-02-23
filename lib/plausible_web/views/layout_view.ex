@@ -40,6 +40,14 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def logo_path(filename) do
+    if full_build?() do
+      Path.join("/images/ee/", filename)
+    else
+      Path.join("/images/ce/", filename)
+    end
+  end
+
   def settings_tabs(conn) do
     [
       [key: "General", value: "general", icon: :rocket_launch],
