@@ -10,10 +10,20 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPI do
 
   def init(opts), do: opts
 
-  def call(conn, _opts \\ []) do
+  def call(conn, opts \\ []) do
+    send_error? =
+      Keyword.get(opts, :send_error?, true)
+
     with {:ok, token} <- extract_token(conn),
          {:ok, conn} <- authorize(conn, token) do
       conn
+    else
+      {:unauthorized, conn} ->
+        if send_error? do
+          Errors.unauthorized(conn)
+        else
+          conn
+        end
     end
   end
 
@@ -24,7 +34,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPI do
         {:ok, Plug.Conn.assign(conn, :authorized_site, token.site)}
 
       {:error, :not_found} ->
-        Errors.unauthorized(conn)
+        {:unauthorized, conn}
     end
   end
 
@@ -37,7 +47,7 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPI do
       end
     else
       _ ->
-        Errors.unauthorized(conn)
+        {:unauthorized, conn}
     end
   end
 end

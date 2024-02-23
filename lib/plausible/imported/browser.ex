@@ -5,6 +5,7 @@ defmodule Plausible.Imported.Browser do
   @primary_key false
   schema "imported_browsers" do
     field :site_id, Ch, type: "UInt64"
+    field :import_id, Ch, type: "UInt64"
     field :date, :date
     field :browser, :string
     field :visitors, Ch, type: "UInt64"

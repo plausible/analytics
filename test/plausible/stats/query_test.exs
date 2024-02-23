@@ -120,7 +120,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time shows hourly if site is completely new", %{site: site} do
-    site = Map.put(site, :stats_start_date, Timex.now())
+    site = Map.put(site, :stats_start_date, Timex.now() |> Timex.to_date())
     q = Query.from(site, %{"period" => "all"})
 
     assert q.date_range.first == Timex.today()
@@ -130,7 +130,9 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time shows daily if site is more than a day old", %{site: site} do
-    site = Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(days: -1))
+    site =
+      Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(days: -1) |> Timex.to_date())
+
     q = Query.from(site, %{"period" => "all"})
 
     assert q.date_range.first == Timex.today() |> Timex.shift(days: -1)
@@ -140,7 +142,9 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time shows monthly if site is more than a month old", %{site: site} do
-    site = Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1))
+    site =
+      Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1) |> Timex.to_date())
+
     q = Query.from(site, %{"period" => "all"})
 
     assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)
@@ -150,7 +154,9 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time uses passed interval different from the default interval", %{site: site} do
-    site = Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1))
+    site =
+      Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1) |> Timex.to_date())
+
     q = Query.from(site, %{"period" => "all", "interval" => "week"})
 
     assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)

@@ -70,6 +70,14 @@ defmodule PlausibleWeb.Plugs.AuthorizePluginsAPITest do
            }
   end
 
+  test "plug optionally doesn't halt when no authorization header is passed" do
+    conn =
+      build_conn()
+      |> AuthorizePluginsAPI.call(send_error?: false)
+
+    refute conn.halted
+  end
+
   test "plug updates last seen timestamp" do
     site = insert(:site, domain: "pass.example.com")
     {:ok, token, raw} = Tokens.create(site, "Some token")

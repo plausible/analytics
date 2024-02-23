@@ -145,6 +145,21 @@ defmodule Plausible.TestUtils do
     :ok
   end
 
+  def populate_stats(site, import_id, events) do
+    Enum.map(events, fn event ->
+      event = Map.put(event, :site_id, site.id)
+
+      case event do
+        %Plausible.ClickhouseEventV2{} ->
+          event
+
+        imported_event ->
+          Map.put(imported_event, :import_id, import_id)
+      end
+    end)
+    |> populate_stats
+  end
+
   def populate_stats(site, events) do
     Enum.map(events, fn event ->
       Map.put(event, :site_id, site.id)

@@ -189,13 +189,50 @@ defmodule Plausible.Sites do
     end
   end
 
+  @spec clear_stats_start_date!(Site.t()) :: Site.t()
+  def clear_stats_start_date!(site) do
+    site
+    |> Ecto.Changeset.change(stats_start_date: nil)
+    |> Plausible.Repo.update!()
+  end
+
+  @doc """
+  Returns the date of the first recorded stat in the timezone configured by the user.
+  This function does 2 transformations:
+    UTC %NaiveDateTime{} -> Local %DateTime{} -> Local %Date
+
+  ## Examples
+
+    iex> Plausible.Site.local_start_date(%Plausible.Site{stats_start_date: nil})
+    nil
+
+    iex> utc_start = ~N[2022-09-28 00:00:00]
+    iex> tz = "Europe/Helsinki"
+    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
+    iex> Plausible.Site.local_start_date(site)
+    ~D[2022-09-28]
+
+    iex> utc_start = ~N[2022-09-28 00:00:00]
+    iex> tz = "America/Los_Angeles"
+    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
+    iex> Plausible.Site.local_start_date(site)
+    ~D[2022-09-27]
+  """
+  @spec local_start_date(Site.t()) :: Date.t() | nil
+  def local_start_date(site) do
+    if stats_start_date = stats_start_date(site) do
+      Plausible.Timezones.to_date_in_timezone(stats_start_date, site.timezone)
+    end
+  end
+
   @spec stats_start_date(Site.t()) :: Date.t() | nil
   @doc """
   Returns the date of the first event of the given site, or `nil` if the site
   does not have stats yet.
 
   If this is the first time the function is called for the site, it queries
-  Clickhouse and saves the date in the sites table.
+  imported stats and Clickhouse, choosing the earliest start date and saves
+  it in the sites table.
   """
   def stats_start_date(site)
 
@@ -204,7 +241,17 @@ defmodule Plausible.Sites do
   end
 
   def stats_start_date(%Site{} = site) do
-    if start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site) do
+    site = Plausible.Imported.load_import_data(site)
+
+    start_date =
+      [
+        site.earliest_import_start_date,
+        Plausible.Stats.Clickhouse.pageview_start_date_local(site)
+      ]
+      |> Enum.reject(&is_nil/1)
+      |> Enum.min(Date, fn -> nil end)
+
+    if start_date do
       updated_site =
         site
         |> Site.set_stats_start_date(start_date)

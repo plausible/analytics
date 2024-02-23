@@ -404,7 +404,10 @@ config :plausible, Plausible.IngestRepo,
   transport_opts: ch_transport_opts,
   flush_interval_ms: ch_flush_interval_ms,
   max_buffer_size: ch_max_buffer_size,
-  pool_size: ingest_pool_size
+  pool_size: ingest_pool_size,
+  settings: [
+    materialized_views_ignore_errors: 1
+  ]
 
 config :plausible, Plausible.AsyncInsertRepo,
   queue_target: 500,
@@ -414,7 +417,8 @@ config :plausible, Plausible.AsyncInsertRepo,
   pool_size: 1,
   settings: [
     async_insert: 1,
-    wait_for_async_insert: 0
+    wait_for_async_insert: 0,
+    materialized_views_ignore_errors: 1
   ]
 
 config :plausible, Plausible.ImportDeletionRepo,
@@ -527,8 +531,6 @@ base_queues = [
   check_stats_emails: 1,
   site_setup_emails: 1,
   clean_invitations: 1,
-  # NOTE: to be removed once #3700 is released
-  google_analytics_imports: 1,
   analytics_imports: 1,
   domain_change_transition: 1,
   check_accept_traffic_until: 1

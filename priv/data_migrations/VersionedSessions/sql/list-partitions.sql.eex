@@ -1,0 +1,5 @@
+SELECT distinct(partition)
+FROM system.parts
+WHERE database = currentDatabase()
+  AND table = 'sessions_v2'
+ORDER BY partition

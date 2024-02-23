@@ -8,6 +8,10 @@ defmodule PlausibleWeb.SiteControllerTest do
   import Mox
   import Plausible.Test.Support.HTML
 
+  alias Plausible.Imported.SiteImport
+
+  require Plausible.Imported.SiteImport
+
   @v4_business_plan_id "857105"
 
   setup :verify_on_exit!
@@ -1260,7 +1264,7 @@ defmodule PlausibleWeb.SiteControllerTest do
   describe "POST /:website/settings/google-import" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "adds in-progress imported tag to site", %{conn: conn, site: site} do
+    test "creates site import instance", %{conn: conn, site: site} do
       post(conn, "/#{site.domain}/settings/google-import", %{
         "view_id" => "123",
         "start_date" => "2018-03-01",
@@ -1270,12 +1274,11 @@ defmodule PlausibleWeb.SiteControllerTest do
         "expires_at" => "2022-09-22T20:01:37.112777"
       })
 
-      imported_data = Repo.reload(site).imported_data
+      [site_import] = Plausible.Imported.list_all_imports(site)
 
-      assert imported_data
-      assert imported_data.source == "Google Analytics"
-      assert imported_data.end_date == ~D[2022-03-01]
-      assert imported_data.status == "importing"
+      assert site_import.source == :universal_analytics
+      assert site_import.end_date == ~D[2022-03-01]
+      assert site_import.status == SiteImport.pending()
     end
 
     test "schedules an import job in Oban", %{conn: conn, site: site} do
@@ -1288,11 +1291,12 @@ defmodule PlausibleWeb.SiteControllerTest do
         "expires_at" => "2022-09-22T20:01:37.112777"
       })
 
+      assert [%{id: import_id}] = Plausible.Imported.list_all_imports(site)
+
       assert_enqueued(
         worker: Plausible.Workers.ImportAnalytics,
         args: %{
-          "source" => "Google Analytics",
-          "site_id" => site.id,
+          "import_id" => import_id,
           "view_id" => "123",
           "start_date" => "2018-03-01",
           "end_date" => "2022-03-01",
@@ -1313,9 +1317,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.reload(site).imported_data == nil
     end
 
-    test "removes actual imported data from Clickhouse", %{conn: conn, site: site} do
-      Plausible.Site.start_import(site, ~D[2022-01-01], Timex.today(), "Google Analytics")
-      |> Repo.update!()
+    test "removes actual imported data from Clickhouse", %{conn: conn, user: user, site: site} do
+      Plausible.Imported.NoopImporter.new_import(
+        site,
+        user,
+        start_date: ~D[2022-01-01],
+        end_date: Timex.today()
+      )
 
       populate_stats(site, [
         build(:imported_visitors, pageviews: 10)
@@ -1329,20 +1337,14 @@ defmodule PlausibleWeb.SiteControllerTest do
              end)
     end
 
-    test "cancels Oban job if it exists", %{conn: conn, site: site} do
+    test "cancels Oban job if it exists", %{conn: conn, user: user, site: site} do
       {:ok, job} =
-        Plausible.Workers.ImportAnalytics.new(%{
-          "source" => "Google Analytics",
-          "site_id" => site.id,
-          "view_id" => "123",
-          "start_date" => "2022-01-01",
-          "end_date" => "2023-01-01",
-          "access_token" => "token"
-        })
-        |> Oban.insert()
-
-      Plausible.Site.start_import(site, ~D[2022-01-01], Timex.today(), "Google Analytics")
-      |> Repo.update!()
+        Plausible.Imported.NoopImporter.new_import(
+          site,
+          user,
+          start_date: ~D[2022-01-01],
+          end_date: Timex.today()
+        )
 
       populate_stats(site, [
         build(:imported_visitors, pageviews: 10)

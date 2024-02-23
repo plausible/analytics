@@ -55,16 +55,6 @@ defmodule Plausible.Session.CacheStore do
         duration: Timex.diff(event.timestamp, session.start, :second) |> abs,
         pageviews:
           if(event.name == "pageview", do: session.pageviews + 1, else: session.pageviews),
-        country_code: session.country_code || event.country_code,
-        subdivision1_code: session.subdivision1_code || event.subdivision1_code,
-        subdivision2_code: session.subdivision2_code || event.subdivision2_code,
-        city_geoname_id: session.city_geoname_id || event.city_geoname_id,
-        operating_system: session.operating_system || event.operating_system,
-        operating_system_version:
-          session.operating_system_version || event.operating_system_version,
-        browser: session.browser || event.browser,
-        browser_version: session.browser_version || event.browser_version,
-        screen_size: session.screen_size || event.screen_size,
         events: session.events + 1
     }
   end
