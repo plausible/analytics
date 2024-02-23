@@ -8,7 +8,7 @@
     <meta name="project" content="Plausible v0.0.1">
 
 
-    <title>Plausible.Stats.Funnel — Plausible v0.0.1</title>
+    <title>Plausible.License — Plausible v0.0.1</title>
     <link rel="stylesheet" href="dist/html-elixir-FM2CSD74.css" />
 
 
@@ -131,20 +131,24 @@ Pages
 
 <h1>
 
-    <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/funnel.ex#L1" title="View Source" class="icon-action" rel="help">
+    <a href="https://github.com/plausible/analytics/blob/main/extra/lib/license.ex#L1" title="View Source" class="icon-action" rel="help">
       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
       <span class="sr-only">View Source</span>
     </a>
 
-  <span translate="no">Plausible.Stats.Funnel</span> 
+  <span translate="no">Plausible.License</span> 
   <small class="app-vsn" translate="no">(Plausible v0.0.1)</small>
 
 </h1>
 
 
   <section id="moduledoc">
-<p>Module responsible for funnel evaluation, i.e. building and executing
-ClickHouse funnel query based on <a href="Plausible.Funnel.html"><code class="inline">Plausible.Funnel</code></a> definition.</p>
+<p>  This module ensures that you cannot run Plausible Analytics Enterprise Edition without a valid license key.
+  The software contained within the ee/ and assets/js/dashboard/ee directories are Copyright © Plausible Insights OÜ.
+  We have made this code available solely for informational and transparency purposes. No rights are granted to use,
+  distribute, or exploit this software in any form.</p><p>  Any attempt to disable or modify the behavior of this module will be considered a violation of copyright.
+  If you wish to use the Plausible Analytics Enterprise Edition for your own requirements, please contact us
+  at hello@plausible.io to discuss obtaining a license.</p>
   </section>
 
 
@@ -162,7 +166,7 @@ ClickHouse funnel query based on <a href="Plausible.Funnel.html"><code class="in
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#funnel/3" translate="no">funnel(site, query, funnel_id)</a>
+        <a href="#ensure_valid_license/0" translate="no">ensure_valid_license()</a>
 
       </div>
 
@@ -181,16 +185,16 @@ ClickHouse funnel query based on <a href="Plausible.Funnel.html"><code class="in
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="funnel/3">
+<section class="detail" id="ensure_valid_license/0">
 
   <div class="detail-header">
-    <a href="#funnel/3" class="detail-link" title="Link to this function">
+    <a href="#ensure_valid_license/0" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">funnel(site, query, funnel_id)</h1>
+    <h1 class="signature" translate="no">ensure_valid_license()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/plausible/stats/funnel.ex#L20" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/extra/lib/license.ex#L38" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -199,17 +203,6 @@ ClickHouse funnel query based on <a href="Plausible.Funnel.html"><code class="in
   </div>
 
   <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> funnel(
-  <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>(),
-  <a href="Plausible.Stats.Query.html#t:t/0">Plausible.Stats.Query.t</a>(),
-  <a href="Plausible.Funnel.html#t:t/0">Plausible.Funnel.t</a>() | <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">pos_integer</a>()
-) ::
-  {:ok, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()} | {:error, :funnel_not_found}</pre>
-
-      </div>
 
 
   </section>
