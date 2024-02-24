@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        postgres_version: [13, 14, 15]
+        postgres_version: [14, 15, 16]
 
     services:
       postgres:
