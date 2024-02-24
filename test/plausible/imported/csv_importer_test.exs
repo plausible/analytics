@@ -1,17 +1,24 @@
 defmodule Plausible.Imported.CSVImporterTest do
   use Plausible.DataCase, async: true
-
-  doctest Plausible.Imported.CSVImporter, import: true
+  alias Plausible.Imported.{CSVImporter, SiteImport}
+  alias Testcontainers.MinioContainer
+  require SiteImport
 
   @moduletag :minio
 
-  # uses https://min.io
-  # docker run -d --rm -p 9000:9000 -p 9001:9001 --name minio minio/minio server /data --console-address ":9001"
-  # docker exec minio mc alias set local http://localhost:9000 minioadmin minioadmin
-  # docker exec minio mc mb local/imports
+  setup_all do
+    Testcontainers.start_link()
 
-  alias Plausible.Imported.{CSVImporter, SiteImport}
-  require SiteImport
+    {:ok, minio} = Testcontainers.start_container(MinioContainer.new())
+    on_exit(fn -> :ok = Testcontainers.stop_container(minio.container_id) end)
+    connection_opts = MinioContainer.connection_opts(minio)
+
+    bucket = "imports"
+    ExAws.request!(ExAws.S3.put_bucket(bucket, "us-east-1"), connection_opts)
+    on_exit(fn -> ExAws.request!(ExAws.S3.delete_bucket(bucket), connection_opts) end)
+
+    {:ok, container: minio, bucket: bucket}
+  end
 
   describe "new_import/3 and parse_args/1" do
     setup [:create_user, :create_new_site]
@@ -32,8 +39,11 @@ defmodule Plausible.Imported.CSVImporterTest do
       uploads =
         Enum.map(tables, fn table ->
           filename = "#{table}.csv"
-          s3_path = "#{site.id}/#{filename}"
-          %{"filename" => filename, "s3_path" => s3_path}
+
+          %{
+            "filename" => filename,
+            "s3_url" => "https://bucket-name.s3.eu-north-1.amazonaws.com/#{site.id}/#{filename}"
+          }
         end)
 
       assert {:ok, job} =
@@ -65,7 +75,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   describe "import_data/2" do
     setup [:create_user, :create_new_site]
 
-    test "imports tables from S3", %{site: site, user: user} do
+    test "imports tables from S3", %{site: site, user: user, bucket: bucket, container: minio} do
       csvs = [
         %{
           name: "imported_browsers.csv",
@@ -291,16 +301,18 @@ defmodule Plausible.Imported.CSVImporterTest do
         }
       ]
 
+      connection_opts = MinioContainer.connection_opts(minio)
+
       on_exit(fn ->
         keys = Enum.map(csvs, fn csv -> "#{site.id}/#{csv.name}" end)
-        ExAws.request!(ExAws.S3.delete_all_objects("imports", keys))
+        ExAws.request!(ExAws.S3.delete_all_objects(bucket, keys), connection_opts)
       end)
 
       uploads =
         for %{name: name, body: body} <- csvs do
           key = "#{site.id}/#{name}"
-          ExAws.request!(ExAws.S3.put_object("imports", key, body, content_type: "text/csv"))
-          %{"filename" => name, "s3_path" => key}
+          ExAws.request!(ExAws.S3.put_object(bucket, key, body), connection_opts)
+          %{"filename" => name, "s3_url" => s3_url(minio, bucket, key)}
         end
 
       {:ok, job} =
@@ -328,7 +340,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
-    test "fails on invalid CSV", %{site: site, user: user} do
+    test "fails on invalid CSV", %{site: site, user: user, bucket: bucket, container: minio} do
       csvs = [
         %{
           name: "imported_browsers.csv",
@@ -352,23 +364,24 @@ defmodule Plausible.Imported.CSVImporterTest do
         }
       ]
 
+      connection_opts = MinioContainer.connection_opts(minio)
+
       on_exit(fn ->
         keys = Enum.map(csvs, fn csv -> "#{site.id}/#{csv.name}" end)
-        ExAws.request!(ExAws.S3.delete_all_objects("imports", keys))
+        ExAws.request!(ExAws.S3.delete_all_objects(bucket, keys), connection_opts)
       end)
 
       uploads =
         for %{name: name, body: body} <- csvs do
           key = "#{site.id}/#{name}"
-          ExAws.request!(ExAws.S3.put_object("imports", key, body, content_type: "text/csv"))
-          %{"filename" => name, "s3_path" => key}
+          ExAws.request!(ExAws.S3.put_object(bucket, key, body), connection_opts)
+          %{"filename" => name, "s3_url" => s3_url(minio, bucket, key)}
         end
 
       {:ok, job} =
         CSVImporter.new_import(
           site,
           user,
-          # to satisfy the non null constraints on the table I'm providing "0" dates (according to ClickHouse)
           start_date: ~D[1970-01-01],
           end_date: ~D[1970-01-01],
           uploads: uploads
@@ -379,7 +392,6 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert {:discard, message} = Plausible.Workers.ImportAnalytics.perform(job)
       assert message =~ "CANNOT_PARSE_INPUT_ASSERTION_FAILED"
 
-      # on successfull import the start and end dates are updated
       assert %SiteImport{id: import_id, source: :csv, status: :failed} =
                Repo.get_by!(SiteImport, site_id: site.id)
 
@@ -387,5 +399,10 @@ defmodule Plausible.Imported.CSVImporterTest do
       imported_browsers_q = from b in "imported_browsers", where: b.import_id == ^import_id
       assert Plausible.ClickhouseRepo.aggregate(imported_browsers_q, :count) == 0
     end
+  end
+
+  defp s3_url(minio, bucket, key) do
+    port = minio |> MinioContainer.connection_opts() |> Keyword.fetch!(:port)
+    Path.join(["http://172.17.0.1:#{port}", bucket, key])
   end
 end

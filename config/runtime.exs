@@ -727,10 +727,6 @@ unless s3_disabled? do
     %{
       name: "S3_ENDPOINT",
       example: "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
-    },
-    %{
-      name: "S3_IMPORTS_BUCKET",
-      example: "my-imports-bucket"
     }
   ]
 
@@ -765,8 +761,4 @@ unless s3_disabled? do
     scheme: s3_scheme <> "://",
     host: s3_host,
     port: s3_port
-
-  config :plausible, Plausible.S3,
-    imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET"),
-    host_for_clickhouse: get_var_from_path_or_env(config_dir, "S3_HOST_FOR_CLICKHOUSE")
 end

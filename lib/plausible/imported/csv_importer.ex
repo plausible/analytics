@@ -33,14 +33,13 @@ defmodule Plausible.Imported.CSVImporter do
 
     ranges =
       Enum.map(uploads, fn upload ->
-        %{"filename" => filename, "s3_path" => s3_path} = upload
+        %{"filename" => filename, "s3_url" => s3_url} = upload
 
         ".csv" = Path.extname(filename)
         table = Path.rootname(filename)
         ensure_importable_table!(table)
 
         s3_structure = input_structure!(table)
-        s3_url = Plausible.S3.import_clickhouse_url(s3_path)
 
         statement =
           """
@@ -49,16 +48,17 @@ defmodule Plausible.Imported.CSVImporter do
           FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String})\
           """
 
-        params = %{
-          "table" => table,
-          "site_id" => site_id,
-          "import_id" => import_id,
-          "s3_url" => s3_url,
-          "s3_access_key_id" => s3_access_key_id,
-          "s3_secret_access_key" => s3_secret_access_key,
-          "s3_format" => "CSVWithNames",
-          "s3_structure" => s3_structure
-        }
+        params =
+          %{
+            "table" => table,
+            "site_id" => site_id,
+            "import_id" => import_id,
+            "s3_url" => s3_url,
+            "s3_access_key_id" => s3_access_key_id,
+            "s3_secret_access_key" => s3_secret_access_key,
+            "s3_format" => "CSVWithNames",
+            "s3_structure" => s3_structure
+          }
 
         Ch.query!(ch, statement, params, timeout: :infinity)
 

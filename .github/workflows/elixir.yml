@@ -74,21 +74,9 @@ jobs:
       - name: Check Credo Warnings
         run: mix credo diff --from-git-merge-base origin/master
       - name: Run tests
-        run: mix test --include slow --max-failures 1 --warnings-as-errors
+        run: mix test --include slow --include minio --max-failures 1 --warnings-as-errors
       - name: Run tests (small build)
-        run: MIX_ENV=small_test mix test --include slow --max-failures 1 --warnings-as-errors
-      - name: Start MinIO (for S3 tests)
-        run: docker run -d -p 9000:9000 minio/minio server /data
-      - name: Create s3://imports bucket
-        run: aws --endpoint-url http://127.0.0.1:9000/ s3 mb s3://imports
-        env:
-          AWS_ACCESS_KEY_ID: minioadmin
-          AWS_SECRET_ACCESS_KEY: minioadmin
-          AWS_EC2_METADATA_DISABLED: true
-      - name: Run tests (S3)
-        run: mix test --only minio --max-failures 1 --warnings-as-errors
-        env:
-          S3_HOST_FOR_CLICKHOUSE: 172.17.0.1
+        run: MIX_ENV=small_test mix test --include slow --max-failures 1 --warnings-as-errors   
       - name: Check Dialyzer
         run: mix dialyzer
 env:
