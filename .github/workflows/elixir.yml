@@ -76,7 +76,7 @@ jobs:
       - name: Run tests
         run: mix test --include slow --include minio --max-failures 1 --warnings-as-errors
       - name: Run tests (small build)
-        run: MIX_ENV=small_test mix test --include slow --max-failures 1 --warnings-as-errors   
+        run: MIX_ENV=small_test mix test --include slow --max-failures 1 --warnings-as-errors
       - name: Check Dialyzer
         run: mix dialyzer
 env:
