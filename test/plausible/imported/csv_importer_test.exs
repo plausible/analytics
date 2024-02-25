@@ -13,11 +13,11 @@ defmodule Plausible.Imported.CSVImporterTest do
     on_exit(fn -> :ok = Testcontainers.stop_container(minio.container_id) end)
     connection_opts = MinioContainer.connection_opts(minio)
 
-    bucket = "imports"
-    ExAws.request!(ExAws.S3.put_bucket(bucket, "us-east-1"), connection_opts)
-    on_exit(fn -> ExAws.request!(ExAws.S3.delete_bucket(bucket), connection_opts) end)
+    s3 = fn op -> ExAws.request!(op, connection_opts) end
+    s3.(ExAws.S3.put_bucket("imports", "us-east-1"))
+    on_exit(fn -> s3.(ExAws.S3.delete_bucket("imports")) end)
 
-    {:ok, container: minio, bucket: bucket}
+    {:ok, container: minio, s3: s3}
   end
 
   describe "new_import/3 and parse_args/1" do
@@ -75,7 +75,7 @@ defmodule Plausible.Imported.CSVImporterTest do
   describe "import_data/2" do
     setup [:create_user, :create_new_site]
 
-    test "imports tables from S3", %{site: site, user: user, bucket: bucket, container: minio} do
+    test "imports tables from S3", %{site: site, user: user, s3: s3, container: minio} do
       csvs = [
         %{
           name: "imported_browsers.csv",
@@ -301,18 +301,16 @@ defmodule Plausible.Imported.CSVImporterTest do
         }
       ]
 
-      connection_opts = MinioContainer.connection_opts(minio)
-
       on_exit(fn ->
         keys = Enum.map(csvs, fn csv -> "#{site.id}/#{csv.name}" end)
-        ExAws.request!(ExAws.S3.delete_all_objects(bucket, keys), connection_opts)
+        s3.(ExAws.S3.delete_all_objects("imports", keys))
       end)
 
       uploads =
         for %{name: name, body: body} <- csvs do
           key = "#{site.id}/#{name}"
-          ExAws.request!(ExAws.S3.put_object(bucket, key, body), connection_opts)
-          %{"filename" => name, "s3_url" => s3_url(minio, bucket, key)}
+          s3.(ExAws.S3.put_object("imports", key, body))
+          %{"filename" => name, "s3_url" => s3_url(minio, "imports", key)}
         end
 
       {:ok, job} =
@@ -340,7 +338,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
-    test "fails on invalid CSV", %{site: site, user: user, bucket: bucket, container: minio} do
+    test "fails on invalid CSV", %{site: site, user: user, s3: s3, container: minio} do
       csvs = [
         %{
           name: "imported_browsers.csv",
@@ -364,18 +362,16 @@ defmodule Plausible.Imported.CSVImporterTest do
         }
       ]
 
-      connection_opts = MinioContainer.connection_opts(minio)
-
       on_exit(fn ->
         keys = Enum.map(csvs, fn csv -> "#{site.id}/#{csv.name}" end)
-        ExAws.request!(ExAws.S3.delete_all_objects(bucket, keys), connection_opts)
+        s3.(ExAws.S3.delete_all_objects("imports", keys))
       end)
 
       uploads =
         for %{name: name, body: body} <- csvs do
           key = "#{site.id}/#{name}"
-          ExAws.request!(ExAws.S3.put_object(bucket, key, body), connection_opts)
-          %{"filename" => name, "s3_url" => s3_url(minio, bucket, key)}
+          s3.(ExAws.S3.put_object("imports", key, body))
+          %{"filename" => name, "s3_url" => s3_url(minio, "imports", key)}
         end
 
       {:ok, job} =
@@ -398,6 +394,157 @@ defmodule Plausible.Imported.CSVImporterTest do
       # ensure no browser left behind
       imported_browsers_q = from b in "imported_browsers", where: b.import_id == ^import_id
       assert await_clickhouse_count(imported_browsers_q, 0)
+    end
+  end
+
+  describe "export -> import" do
+    setup [:create_user, :create_new_site]
+
+    setup do
+      tmp_dir =
+        Path.join(
+          System.tmp_dir!(),
+          "plausible-csv-importer-test-#{inspect(self())}-#{System.system_time(:millisecond)}"
+        )
+
+      File.mkdir!(tmp_dir)
+      on_exit(fn -> File.rmdir!(tmp_dir) end)
+      tmp_path = fn path -> Path.join(tmp_dir, path) end
+
+      {:ok, tmp_path: tmp_path}
+    end
+
+    test "it works", %{site: site, user: user, s3: s3, tmp_path: tmp_path, container: minio} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 123,
+          pathname: "/",
+          timestamp:
+            Timex.shift(~N[2021-10-20 12:00:00], minutes: -1) |> NaiveDateTime.truncate(:second),
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409,
+          referrer_source: "Google"
+        ),
+        build(:pageview,
+          user_id: 123,
+          pathname: "/some-other-page",
+          timestamp:
+            Timex.shift(~N[2021-10-20 12:00:00], minutes: -2) |> NaiveDateTime.truncate(:second),
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409,
+          referrer_source: "Google"
+        ),
+        build(:pageview,
+          pathname: "/",
+          timestamp:
+            Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
+          utm_medium: "search",
+          utm_campaign: "ads",
+          utm_source: "google",
+          utm_content: "content",
+          utm_term: "term",
+          browser: "Firefox",
+          browser_version: "120",
+          operating_system: "Mac",
+          operating_system_version: "14"
+        ),
+        build(:pageview,
+          timestamp:
+            Timex.shift(~N[2021-10-20 12:00:00], months: -1) |> NaiveDateTime.truncate(:second),
+          country_code: "EE",
+          browser: "Firefox",
+          browser_version: "120",
+          operating_system: "Mac",
+          operating_system_version: "14"
+        ),
+        build(:pageview,
+          timestamp:
+            Timex.shift(~N[2021-10-20 12:00:00], months: -5) |> NaiveDateTime.truncate(:second),
+          utm_campaign: "ads",
+          country_code: "EE",
+          referrer_source: "Google",
+          browser: "FirefoxNoVersion",
+          operating_system: "MacNoVersion"
+        ),
+        build(:event,
+          timestamp:
+            Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
+          name: "Signup",
+          "meta.key": ["variant"],
+          "meta.value": ["A"]
+        )
+      ])
+
+      # export archive to s3
+      s3.(ExAws.S3.put_bucket("exports", "us-east-1"))
+      on_exit(fn -> s3.(ExAws.S3.delete_bucket("exports")) end)
+
+      Oban.insert!(
+        Plausible.Workers.ExportCSV.new(%{
+          "site_id" => site.id,
+          "email_to" => user.email,
+          "s3_bucket" => "exports",
+          "s3_path" => "#{site.id}/Plausible.zip",
+          "s3_config_overrides" => Map.new(MinioContainer.connection_opts(minio))
+        })
+      )
+
+      on_exit(fn -> s3.(ExAws.S3.delete_object("exports", "#{site.id}/Plausible.zip")) end)
+      assert %{success: 1} = Oban.drain_queue(queue: :s3_csv_export, with_safety: false)
+
+      # download archive
+      on_exit(fn -> File.rm(tmp_path.("Plausible.zip")) end)
+
+      s3.(
+        ExAws.S3.download_file(
+          "exports",
+          "/#{site.id}/Plausible.zip",
+          tmp_path.("Plausible.zip")
+        )
+      )
+
+      # unzip archive
+      {:ok, files} = :zip.unzip(to_charlist(tmp_path.("Plausible.zip")), cwd: tmp_path.("/"))
+      on_exit(fn -> Enum.each(files, &File.rm!/1) end)
+
+      # upload csvs
+      on_exit(fn ->
+        keys = Enum.map(files, fn file -> "#{site.id}/#{Path.basename(file)}" end)
+        s3.(ExAws.S3.delete_all_objects("imports", keys))
+      end)
+
+      uploads =
+        Enum.map(files, fn file ->
+          key = "#{site.id}/#{Path.basename(file)}"
+          s3.(ExAws.S3.put_object("imports", key, File.read!(file)))
+          %{"filename" => Path.basename(file), "s3_url" => s3_url(minio, "imports", key)}
+        end)
+
+      # run importer
+      {:ok, job} =
+        CSVImporter.new_import(
+          site,
+          user,
+          start_date: ~D[1970-01-01],
+          end_date: ~D[1970-01-01],
+          uploads: uploads
+        )
+
+      job = Repo.reload!(job)
+
+      assert :ok = Plausible.Workers.ImportAnalytics.perform(job)
+
+      # validate import
+      assert %SiteImport{
+               start_date: ~D[2021-05-20],
+               end_date: ~D[2021-10-20],
+               source: :csv,
+               status: :completed
+             } = Repo.get_by!(SiteImport, site_id: site.id)
+
+      assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 5
     end
   end
 

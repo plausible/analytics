@@ -4,6 +4,60 @@ defmodule Plausible.S3 do
   """
 
   @doc """
+  Chunks and uploads Zip archive to the provided S3 destination.
+
+  Returns a presigned URL to download the exported Zip archive from S3.
+  The URL expires in 24 hours.
+
+  In the current implementation the bucket always goes into the path component.
+  """
+  @spec export_upload_multipart(Enumerable.t(), String.t(), Path.t(), keyword) ::
+          :uri_string.uri_string()
+  def export_upload_multipart(stream, s3_bucket, s3_path, config_overrides \\ []) do
+    config = ExAws.Config.new(:s3)
+
+    # 5 MiB is the smallest chunk size AWS S3 supports
+    chunk_into_parts(stream, 5 * 1024 * 1024)
+    |> ExAws.S3.upload(s3_bucket, s3_path,
+      content_disposition: ~s|attachment; filename="Plausible.zip"|,
+      content_type: "application/zip"
+    )
+    |> ExAws.request!(config_overrides)
+
+    {:ok, download_url} =
+      ExAws.S3.presigned_url(config, :get, s3_bucket, s3_path, expires_in: _24hr = 86_400)
+
+    download_url
+  end
+
+  defp chunk_into_parts(stream, min_part_size) do
+    Stream.chunk_while(
+      stream,
+      _acc = %{buffer_size: 0, buffer: [], min_part_size: min_part_size},
+      _chunk_fun = &buffer_until_big_enough/2,
+      _after_fun = &flush_leftovers/1
+    )
+  end
+
+  defp buffer_until_big_enough(data, acc) do
+    %{buffer_size: prev_buffer_size, buffer: prev_buffer, min_part_size: min_part_size} = acc
+    new_buffer_size = prev_buffer_size + IO.iodata_length(data)
+    new_buffer = [prev_buffer | data]
+
+    if new_buffer_size > min_part_size do
+      # NOTE: PR to make ExAws.Operation.ExAws.Operation.S3.put_content_length_header/3 accept iodata
+      {:cont, IO.iodata_to_binary(new_buffer), %{acc | buffer_size: 0, buffer: []}}
+    else
+      {:cont, %{acc | buffer_size: new_buffer_size, buffer: new_buffer}}
+    end
+  end
+
+  defp flush_leftovers(acc) do
+    # NOTE: PR to make ExAws.Operation.ExAws.Operation.S3.put_content_length_header/3 accept iodata
+    {:cont, IO.iodata_to_binary(acc.buffer), %{acc | buffer_size: 0, buffer: []}}
+  end
+
+  @doc """
   Returns `access_key_id` and `secret_access_key` to be used by ClickHouse during imports from S3.
   """
   @spec import_clickhouse_credentials ::
