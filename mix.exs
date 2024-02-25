@@ -140,7 +140,8 @@ defmodule Plausible.MixProject do
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
       {:sweet_xml, "~> 0.7.4"},
-      {:testcontainers, "~> 1.6", only: [:test, :small_test]}
+      {:testcontainers, "~> 1.6", only: [:test, :small_test]},
+      {:zstream, "~> 0.6.4"}
     ]
   end
 

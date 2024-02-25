@@ -554,7 +554,8 @@ cloud_queues = [
   trial_notification_emails: 1,
   check_usage: 1,
   notify_annual_renewal: 1,
-  lock_sites: 1
+  lock_sites: 1,
+  s3_csv_export: 1
 ]
 
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
@@ -742,6 +743,10 @@ unless s3_disabled? do
     %{
       name: "S3_ENDPOINT",
       example: "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+    },
+    %{
+      name: "S3_EXPORTS_BUCKET",
+      example: "my-exports-bucket"
     }
   ]
 
@@ -776,4 +781,6 @@ unless s3_disabled? do
     scheme: s3_scheme <> "://",
     host: s3_host,
     port: s3_port
+
+  config :plausible, Plausible.S3, exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET")
 end

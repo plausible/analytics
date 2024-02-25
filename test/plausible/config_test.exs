@@ -197,7 +197,8 @@ defmodule Plausible.ConfigTest do
         {"S3_ACCESS_KEY_ID", nil},
         {"S3_SECRET_ACCESS_KEY", nil},
         {"S3_REGION", nil},
-        {"S3_ENDPOINT", nil}
+        {"S3_ENDPOINT", nil},
+        {"S3_EXPORTS_BUCKET", nil}
       ]
 
       result =
@@ -210,12 +211,13 @@ defmodule Plausible.ConfigTest do
       assert %ArgumentError{} = result
 
       assert Exception.message(result) == """
-             Missing S3 configuration. Please set S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION, S3_ENDPOINT environment variable(s):
+             Missing S3 configuration. Please set S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION, S3_ENDPOINT, S3_EXPORTS_BUCKET environment variable(s):
 
              \tS3_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
              \tS3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
              \tS3_REGION=us-east-1
              \tS3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+             \tS3_EXPORTS_BUCKET=my-exports-bucket
              """
     end
 
@@ -224,7 +226,8 @@ defmodule Plausible.ConfigTest do
         {"S3_ACCESS_KEY_ID", "AKIAIOSFODNN7EXAMPLE"},
         {"S3_SECRET_ACCESS_KEY", nil},
         {"S3_REGION", "eu-north-1"},
-        {"S3_ENDPOINT", nil}
+        {"S3_ENDPOINT", nil},
+        {"S3_EXPORTS_BUCKET", nil}
       ]
 
       result =
@@ -237,10 +240,11 @@ defmodule Plausible.ConfigTest do
       assert %ArgumentError{} = result
 
       assert Exception.message(result) == """
-             Missing S3 configuration. Please set S3_SECRET_ACCESS_KEY, S3_ENDPOINT environment variable(s):
+             Missing S3 configuration. Please set S3_SECRET_ACCESS_KEY, S3_ENDPOINT, S3_EXPORTS_BUCKET environment variable(s):
 
              \tS3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
              \tS3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+             \tS3_EXPORTS_BUCKET=my-exports-bucket
              """
     end
 
@@ -249,7 +253,8 @@ defmodule Plausible.ConfigTest do
         {"S3_ACCESS_KEY_ID", "minioadmin"},
         {"S3_SECRET_ACCESS_KEY", "minioadmin"},
         {"S3_REGION", "us-east-1"},
-        {"S3_ENDPOINT", "http://localhost:6000"}
+        {"S3_ENDPOINT", "http://localhost:6000"},
+        {"S3_EXPORTS_BUCKET", "my-exports"}
       ]
 
       config = runtime_config(env)
@@ -260,6 +265,10 @@ defmodule Plausible.ConfigTest do
                secret_access_key: "minioadmin",
                region: "us-east-1",
                s3: [scheme: "http://", host: "localhost", port: 6000]
+             ]
+
+      assert get_in(config, [:plausible, Plausible.S3]) == [
+               exports_bucket: "my-exports"
              ]
     end
   end
