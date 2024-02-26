@@ -101,6 +101,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
             placeholder={@placeholder}
             x-on:focus="open"
             phx-change="search"
+            x-on:keydown="open"
             phx-target={@myself}
             phx-debounce={200}
             value={@display_value}
