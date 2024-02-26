@@ -1,7 +1,17 @@
-<%= live_render(@conn, PlausibleWeb.Live.Shields.Tabs,
-  session: %{
-    "site_id" => @site.id,
-    "domain" => @site.domain,
-    "remote_ip" => PlausibleWeb.RemoteIP.get(@conn)
-  }
-) %>
+<%= case @shield do %>
+  <% "ip_addresses" -> %>
+    <%= live_render(@conn, PlausibleWeb.Live.Shields.IPAddresses,
+      session: %{
+        "site_id" => @site.id,
+        "domain" => @site.domain,
+        "remote_ip" => PlausibleWeb.RemoteIP.get(@conn)
+      }
+    ) %>
+  <% "countries" -> %>
+    <%= live_render(@conn, PlausibleWeb.Live.Shields.Countries,
+      session: %{
+        "site_id" => @site.id,
+        "domain" => @site.domain
+      }
+    ) %>
+<% end %>
