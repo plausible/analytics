@@ -27,6 +27,7 @@ defmodule Plausible.Ingestion.Event do
           | :invalid
           | :dc_ip
           | :site_ip_blocklist
+          | :site_country_blocklist
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
