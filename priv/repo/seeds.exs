@@ -50,6 +50,8 @@ site =
   )
 
 Plausible.Factory.insert_list(29, :ip_rule, site: site)
+Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")
+Plausible.Factory.insert(:country_rule, site: site, country_code: "EE")
 
 Plausible.Factory.insert(:google_auth,
   user: user,
@@ -82,7 +84,13 @@ put_random_time = fn
   date, 0 ->
     current_hour = Time.utc_now().hour
     current_minute = Time.utc_now().minute
-    random_time = Time.new!(:rand.uniform(current_hour), :rand.uniform(current_minute - 1), 0)
+
+    random_time =
+      Time.new!(
+        Enum.random(0..current_hour),
+        Enum.random(0..current_minute),
+        0
+      )
 
     date
     |> NaiveDateTime.new!(random_time)
