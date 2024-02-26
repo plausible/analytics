@@ -72,6 +72,7 @@ defmodule PlausibleWeb.LayoutView do
         %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
       end
     ]
+        |> Enum.reject(&is_nil/1)
   end
 
   def flat_settings_options(conn) do
