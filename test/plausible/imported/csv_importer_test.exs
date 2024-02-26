@@ -397,7 +397,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # ensure no browser left behind
       imported_browsers_q = from b in "imported_browsers", where: b.import_id == ^import_id
-      assert Plausible.ClickhouseRepo.aggregate(imported_browsers_q, :count) == 0
+      assert await_clickhouse_count(imported_browsers_q, 0)
     end
   end
 
