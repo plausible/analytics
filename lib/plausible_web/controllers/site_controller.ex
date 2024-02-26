@@ -253,13 +253,15 @@ defmodule PlausibleWeb.SiteController do
     )
   end
 
-  def settings_shields(conn, _params) do
+  def settings_shields(conn, %{"shield" => shield})
+      when shield in ["ip_addresses", "countries"] do
     site = conn.assigns.site
 
     conn
     |> render("settings_shields.html",
       site: site,
-      dogfood_page_path: "/:dashboard/settings/shields",
+      shield: shield,
+      dogfood_page_path: "/:dashboard/settings/shields/#{shield}",
       connect_live_socket: true,
       layout: {PlausibleWeb.LayoutView, "site_settings.html"}
     )
