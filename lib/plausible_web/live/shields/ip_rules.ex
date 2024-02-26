@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 </th>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
+                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100 md:block hidden"
                 >
                   Description
                 </th>
@@ -185,7 +185,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                       Allowed
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm font-normal whitespace-nowrap truncate max-w-xs">
+                  <td class="px-6 py-4 text-sm font-normal whitespace-nowrap truncate max-w-xs md:block hidden">
                     <span :if={rule.description} title={rule.description}>
                       <%= rule.description %>
                     </span>
