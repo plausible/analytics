@@ -190,6 +190,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
             country_rules_count: socket.assigns.country_rules_count + 1
           )
 
+        # Make sure to clear the combobox input after adding a country rule, on subsequent modal reopening
         send_update(PlausibleWeb.Live.Components.ComboBox,
           id: "country_rule_country_code",
           display_value: ""
