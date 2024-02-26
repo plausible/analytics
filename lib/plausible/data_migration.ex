@@ -68,10 +68,15 @@ defmodule Plausible.DataMigration do
       end
 
       defp do_run(name, query) do
-        {:ok, res} = @repo.query(query, [], timeout: :infinity)
-        IO.puts("    #{IO.ANSI.yellow()}#{name} #{IO.ANSI.green()}Done!#{IO.ANSI.reset()}\n")
-        IO.puts(String.duplicate("-", 78))
-        {:ok, res}
+        case @repo.query(query, [], timeout: :infinity) do
+          {:ok, res} ->
+            IO.puts("    #{IO.ANSI.yellow()}#{name} #{IO.ANSI.green()}Done!#{IO.ANSI.reset()}\n")
+            IO.puts(String.duplicate("-", 78))
+            {:ok, res}
+
+          result ->
+            result
+        end
       end
 
       defp unwrap_with_io(name, assigns) do

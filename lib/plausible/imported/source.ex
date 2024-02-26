@@ -5,6 +5,7 @@ defmodule Plausible.Imported.Source do
   @primary_key false
   schema "imported_sources" do
     field :site_id, Ch, type: "UInt64"
+    field :import_id, Ch, type: "UInt64"
     field :date, :date
     field :source, :string
     field :utm_medium, :string

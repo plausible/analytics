@@ -16,9 +16,12 @@ defmodule Plausible.Stats.Imported do
         query,
         metrics
       ) do
+    import_ids = site.complete_import_ids
+
     imported_q =
       from(v in "imported_visitors",
         where: v.site_id == ^site.id,
+        where: v.import_id in ^import_ids,
         where: v.date >= ^query.date_range.first and v.date <= ^query.date_range.last,
         select: %{}
       )
@@ -107,11 +110,14 @@ defmodule Plausible.Stats.Imported do
           {"imported_#{dim}s", String.to_existing_atom(dim)}
       end
 
+    import_ids = site.complete_import_ids
+
     imported_q =
       from(
         i in table,
         group_by: field(i, ^dim),
         where: i.site_id == ^site.id,
+        where: i.import_id in ^import_ids,
         where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
         where: i.visitors > 0,
         select: %{}
@@ -315,10 +321,13 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, query, :aggregate, metrics) do
+    import_ids = site.complete_import_ids
+
     imported_q =
       from(
         i in "imported_visitors",
         where: i.site_id == ^site.id,
+        where: i.import_id in ^import_ids,
         where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
         select: %{}
       )

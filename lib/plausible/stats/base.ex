@@ -111,71 +111,11 @@ defmodule Plausible.Stats.Base do
       end
 
     q =
-      case Query.get_filter_by_prefix(query, "event:props") do
-        {"event:props:" <> prop_name, {:is, value}} ->
-          if value == "(none)" do
-            from(
-              e in q,
-              where: not has_key(e, :meta, ^prop_name)
-            )
-          else
-            from(
-              e in q,
-              where: has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) == ^value
-            )
-          end
-
-        {"event:props:" <> prop_name, {:is_not, value}} ->
-          if value == "(none)" do
-            from(
-              e in q,
-              where: has_key(e, :meta, ^prop_name)
-            )
-          else
-            from(
-              e in q,
-              where:
-                not has_key(e, :meta, ^prop_name) or get_by_key(e, :meta, ^prop_name) != ^value
-            )
-          end
-
-        {"event:props:" <> prop_name, {:matches, value}} ->
-          regex = page_regex(value)
-
-          from(
-            e in q,
-            where:
-              has_key(e, :meta, ^prop_name) and
-                fragment("match(?, ?)", get_by_key(e, :meta, ^prop_name), ^regex)
-          )
-
-        {"event:props:" <> prop_name, {:member, values}} ->
-          none_value_included = Enum.member?(values, "(none)")
-
-          from(
-            e in q,
-            where:
-              (has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) in ^values) or
-                (^none_value_included and not has_key(e, :meta, ^prop_name))
-          )
-
-        {"event:props:" <> prop_name, {:not_member, values}} ->
-          none_value_included = Enum.member?(values, "(none)")
-
-          from(
-            e in q,
-            where:
-              (has_key(e, :meta, ^prop_name) and
-                 get_by_key(e, :meta, ^prop_name) not in ^values) or
-                (^none_value_included and
-                   has_key(e, :meta, ^prop_name) and
-                   get_by_key(e, :meta, ^prop_name) not in ^values) or
-                (not (^none_value_included) and not has_key(e, :meta, ^prop_name))
-          )
-
-        _ ->
-          q
-      end
+      Enum.reduce(
+        Query.get_all_filters_by_prefix(query, "event:props"),
+        q,
+        &filter_by_custom_prop/2
+      )
 
     q
   end
@@ -192,14 +132,18 @@ defmodule Plausible.Stats.Base do
   }
 
   def query_sessions(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
+    {first_datetime, last_datetime} =
+      utc_boundaries(query, site)
+
+    q = from(s in "sessions_v2", where: s.site_id == ^site.id)
 
     sessions_q =
-      from(
-        s in "sessions_v2",
-        where: s.site_id == ^site.id,
-        where: s.start >= ^first_datetime and s.start < ^last_datetime
-      )
+      if FunWithFlags.enabled?(:experimental_session_count, for: site) or
+           query.experimental_session_count? do
+        from s in q, where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
+      else
+        from s in q, where: s.start >= ^first_datetime and s.start < ^last_datetime
+      end
 
     on_full_build do
       sessions_q = Plausible.Stats.Sampling.add_query_hint(sessions_q, query)
@@ -544,5 +488,81 @@ defmodule Plausible.Stats.Base do
       Map.get(groups, :event, []),
       Map.get(groups, :page, [])
     }
+  end
+
+  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is, "(none)"}}, q) do
+    from(
+      e in q,
+      where: not has_key(e, :meta, ^prop_name)
+    )
+  end
+
+  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is, value}}, q) do
+    from(
+      e in q,
+      where: has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) == ^value
+    )
+  end
+
+  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is_not, "(none)"}}, q) do
+    from(
+      e in q,
+      where: has_key(e, :meta, ^prop_name)
+    )
+  end
+
+  defp filter_by_custom_prop({"event:props:" <> prop_name, {:is_not, value}}, q) do
+    from(
+      e in q,
+      where: not has_key(e, :meta, ^prop_name) or get_by_key(e, :meta, ^prop_name) != ^value
+    )
+  end
+
+  defp filter_by_custom_prop({"event:props:" <> prop_name, {:matches, value}}, q) do
+    regex = page_regex(value)
+
+    from(
+      e in q,
+      where:
+        has_key(e, :meta, ^prop_name) and
+          fragment("match(?, ?)", get_by_key(e, :meta, ^prop_name), ^regex)
+    )
+  end
+
+  defp filter_by_custom_prop({"event:props:" <> prop_name, {:member, values}}, q) do
+    none_value_included = Enum.member?(values, "(none)")
+
+    from(
+      e in q,
+      where:
+        (has_key(e, :meta, ^prop_name) and get_by_key(e, :meta, ^prop_name) in ^values) or
+          (^none_value_included and not has_key(e, :meta, ^prop_name))
+    )
+  end
+
+  defp filter_by_custom_prop({"event:props:" <> prop_name, {:not_member, values}}, q) do
+    none_value_included = Enum.member?(values, "(none)")
+
+    from(
+      e in q,
+      where:
+        (has_key(e, :meta, ^prop_name) and
+           get_by_key(e, :meta, ^prop_name) not in ^values) or
+          (^none_value_included and
+             has_key(e, :meta, ^prop_name) and
+             get_by_key(e, :meta, ^prop_name) not in ^values) or
+          (not (^none_value_included) and not has_key(e, :meta, ^prop_name))
+    )
+  end
+
+  defp filter_by_custom_prop({"event:props:" <> prop_name, {:matches_member, clauses}}, q) do
+    regexes = Enum.map(clauses, &page_regex/1)
+
+    from(
+      e in q,
+      where:
+        has_key(e, :meta, ^prop_name) and
+          fragment("arrayExists(k -> match(?, k), ?)", get_by_key(e, :meta, ^prop_name), ^regexes)
+    )
   end
 end

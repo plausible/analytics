@@ -9,8 +9,6 @@ defmodule Plausible.Stats.Clickhouse do
   alias Plausible.Stats.Query
   alias Plausible.Timezones
 
-  @no_ref "Direct / None"
-
   @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
   def pageview_start_date_local(site) do
     datetime =
@@ -83,89 +81,32 @@ defmodule Plausible.Stats.Clickhouse do
 
   def usage_breakdown([], _date_range), do: {0, 0}
 
-  def top_sources(site, query, limit, page, show_noref \\ false, include_details) do
+  def top_sources_for_spike(site, query, limit, page) do
     offset = (page - 1) * limit
 
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
+
     referrers =
-      from(s in base_session_query(site, query),
+      from(s in "sessions_v2",
+        select: %{
+          name: s.referrer_source,
+          count: uniq(s.user_id)
+        },
+        where: s.site_id == ^site.id,
+        # Note: This query intentionally uses session end timestamp to get currently active users
+        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime,
+        where: s.referrer_source != "",
         group_by: s.referrer_source,
-        order_by: [desc: uniq(s.user_id), asc: fragment("min(start)")],
+        order_by: [desc: uniq(s.user_id), asc: s.referrer_source],
         limit: ^limit,
         offset: ^offset
       )
-      |> filter_converted_sessions(site, query)
 
-    referrers =
-      if show_noref do
-        referrers
-      else
-        from(s in referrers, where: s.referrer_source != "")
-      end
-
-    referrers = apply_page_as_entry_page(referrers, site, query)
-
-    referrers =
-      if include_details do
-        from(
-          s in referrers,
-          select: %{
-            name:
-              fragment(
-                "if(empty(?), ?, ?) as name",
-                s.referrer_source,
-                @no_ref,
-                s.referrer_source
-              ),
-            url: fragment("any(?)", s.referrer),
-            count: uniq(s.user_id),
-            bounce_rate: bounce_rate(),
-            visit_duration: visit_duration()
-          }
-        )
-      else
-        from(
-          s in referrers,
-          select: %{
-            name:
-              fragment(
-                "if(empty(?), ?, ?) as name",
-                s.referrer_source,
-                @no_ref,
-                s.referrer_source
-              ),
-            url: fragment("any(?)", s.referrer),
-            count: uniq(s.user_id)
-          }
-        )
-      end
+    on_full_build do
+      referrers = Plausible.Stats.Sampling.add_query_hint(referrers, 10_000_000)
+    end
 
     ClickhouseRepo.all(referrers)
-    |> Enum.map(fn ref ->
-      Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
-    end)
-  end
-
-  defp filter_converted_sessions(db_query, site, query) do
-    goal = query.filters["goal"]
-    page = query.filters[:page]
-
-    if is_binary(goal) || is_binary(page) do
-      converted_sessions =
-        from(e in base_query(site, query),
-          select: %{session_id: fragment("DISTINCT ?", e.session_id)}
-        )
-
-      from(s in db_query,
-        join: cs in subquery(converted_sessions),
-        on: s.session_id == cs.session_id
-      )
-    else
-      db_query
-    end
-  end
-
-  defp apply_page_as_entry_page(db_query, _site, query) do
-    include_path_filter_entry(db_query, query.filters[:page])
   end
 
   def current_visitors(site, query) do
@@ -296,128 +237,6 @@ defmodule Plausible.Stats.Clickhouse do
         interval: NaiveDateTime.add(first, offset, :hour),
         visitors: 0
       }
-    end
-  end
-
-  defp base_session_query(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
-
-    q =
-      from(s in "sessions_v2",
-        where: s.site_id == ^site.id,
-        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
-      )
-
-    on_full_build do
-      q = Plausible.Stats.Sampling.add_query_hint(q, 10_000_000)
-    end
-
-    q =
-      if query.filters["source"] do
-        source = query.filters["source"]
-        source = if source == @no_ref, do: "", else: source
-        from(s in q, where: s.referrer_source == ^source)
-      else
-        q
-      end
-
-    q =
-      if query.filters["screen"] do
-        size = query.filters["screen"]
-        from(s in q, where: s.screen_size == ^size)
-      else
-        q
-      end
-
-    q =
-      if query.filters["browser"] do
-        browser = query.filters["browser"]
-        from(s in q, where: s.browser == ^browser)
-      else
-        q
-      end
-
-    q =
-      if query.filters["browser_version"] do
-        version = query.filters["browser_version"]
-        from(s in q, where: s.browser_version == ^version)
-      else
-        q
-      end
-
-    q =
-      if query.filters["os"] do
-        os = query.filters["os"]
-        from(s in q, where: s.operating_system == ^os)
-      else
-        q
-      end
-
-    q =
-      if query.filters["os_version"] do
-        version = query.filters["os_version"]
-        from(s in q, where: s.operating_system_version == ^version)
-      else
-        q
-      end
-
-    q =
-      if query.filters["country"] do
-        country = query.filters["country"]
-        from(s in q, where: s.country_code == ^country)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_medium"] do
-        utm_medium = query.filters["utm_medium"]
-        from(s in q, where: s.utm_medium == ^utm_medium)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_source"] do
-        utm_source = query.filters["utm_source"]
-        from(s in q, where: s.utm_source == ^utm_source)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_campaign"] do
-        utm_campaign = query.filters["utm_campaign"]
-        from(s in q, where: s.utm_campaign == ^utm_campaign)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_content"] do
-        utm_content = query.filters["utm_content"]
-        from(s in q, where: s.utm_content == ^utm_content)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_term"] do
-        utm_term = query.filters["utm_term"]
-        from(s in q, where: s.utm_term == ^utm_term)
-      else
-        q
-      end
-
-    q = include_path_filter_entry(q, query.filters["entry_page"])
-
-    q = include_path_filter_exit(q, query.filters["exit_page"])
-
-    if query.filters["referrer"] do
-      ref = query.filters["referrer"]
-      from(s in q, where: s.referrer == ^ref)
-    else
-      q
     end
   end
 
@@ -665,52 +484,6 @@ defmodule Plausible.Stats.Clickhouse do
           from(e in db_query, where: e.pathname != ^path)
         else
           from(e in db_query, where: e.pathname == ^path)
-        end
-      end
-    else
-      db_query
-    end
-  end
-
-  defp include_path_filter_entry(db_query, path) do
-    if path do
-      {negated, path} = check_negated_filter(path)
-      {contains_regex, path_regex} = convert_path_regex(path)
-
-      if contains_regex do
-        if negated do
-          from(e in db_query, where: fragment("not(match(?, ?))", e.entry_page, ^path_regex))
-        else
-          from(e in db_query, where: fragment("match(?, ?)", e.entry_page, ^path_regex))
-        end
-      else
-        if negated do
-          from(e in db_query, where: e.entry_page != ^path)
-        else
-          from(e in db_query, where: e.entry_page == ^path)
-        end
-      end
-    else
-      db_query
-    end
-  end
-
-  defp include_path_filter_exit(db_query, path) do
-    if path do
-      {negated, path} = check_negated_filter(path)
-      {contains_regex, path_regex} = convert_path_regex(path)
-
-      if contains_regex do
-        if negated do
-          from(e in db_query, where: fragment("not(match(?, ?))", e.exit_page, ^path_regex))
-        else
-          from(e in db_query, where: fragment("match(?, ?)", e.exit_page, ^path_regex))
-        end
-      else
-        if negated do
-          from(e in db_query, where: e.exit_page != ^path)
-        else
-          from(e in db_query, where: e.exit_page == ^path)
         end
       end
     else

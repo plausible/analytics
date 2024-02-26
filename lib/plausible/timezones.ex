@@ -22,7 +22,14 @@ defmodule Plausible.Timezones do
 
   @spec to_date_in_timezone(Date.t() | NaiveDateTime.t() | DateTime.t(), String.t()) :: Date.t()
   def to_date_in_timezone(dt, timezone) do
-    utc_dt = Timex.Timezone.convert(dt, "UTC")
+    utc_dt =
+      case dt do
+        %Date{} ->
+          Timex.to_datetime(dt, "UTC")
+
+        dt ->
+          Timex.Timezone.convert(dt, "UTC")
+      end
 
     case Timex.Timezone.convert(utc_dt, timezone) do
       %DateTime{} = tz_dt ->

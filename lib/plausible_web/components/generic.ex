@@ -134,9 +134,10 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :id, :any, default: nil
-  attr :href, :string, required: true
+  attr :href, :string, default: "#"
   attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
+  attr :rest, :global
   slot :inner_block
 
   def styled_link(assigns) do
@@ -145,6 +146,7 @@ defmodule PlausibleWeb.Components.Generic do
       new_tab={@new_tab}
       href={@href}
       class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 " <> @class}
+      {@rest}
     >
       <%= render_slot(@inner_block) %>
     </.unstyled_link>

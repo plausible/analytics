@@ -5,6 +5,7 @@ defmodule Plausible.Imported.Location do
   @primary_key false
   schema "imported_locations" do
     field :site_id, Ch, type: "UInt64"
+    field :import_id, Ch, type: "UInt64"
     field :date, :date
     field :country, :string
     field :region, :string

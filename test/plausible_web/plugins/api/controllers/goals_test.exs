@@ -30,11 +30,11 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
 
   describe "unauthorized calls" do
     for {method, url} <- [
-          {:get, Routes.goals_url(base_uri(), :index)},
-          {:get, Routes.goals_url(base_uri(), :get, 1)},
-          {:put, Routes.goals_url(base_uri(), :create, %{})},
-          {:delete, Routes.goals_url(base_uri(), :delete, 1)},
-          {:delete, Routes.goals_url(base_uri(), :delete_bulk, %{})}
+          {:get, Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :index)},
+          {:get, Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :get, 1)},
+          {:put, Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create, %{})},
+          {:delete, Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :delete, 1)},
+          {:delete, Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :delete_bulk, %{})}
         ] do
       test "unauthorized call: #{method} #{url}", %{conn: conn} do
         conn
@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       site = Plausible.Repo.preload(site, :owner)
       insert(:growth_subscription, user: site.owner)
 
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{
         goal_type: "Goal.Revenue",
@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       site = Plausible.Repo.preload(site, :owner)
       insert(:growth_subscription, user: site.owner)
 
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{
         goals: [
@@ -111,7 +111,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
 
   describe "put /goals - create a single goal" do
     test "validates input according to the schema", %{conn: conn, token: token, site: site} do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       conn
       |> authenticate(site.domain, token)
@@ -122,7 +122,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
 
     test "creates a custom event goal", %{conn: conn, token: token, site: site} do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{goal_type: "Goal.CustomEvent", goal: %{event_name: "Signup"}}
 
@@ -146,14 +146,18 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.goals_url(base_uri(), :get, List.first(resp.goals).goal.id)
+               Routes.plugins_api_goals_url(
+                 PlausibleWeb.Endpoint,
+                 :get,
+                 List.first(resp.goals).goal.id
+               )
 
       assert [%{event_name: "Signup"}] = Plausible.Goals.for_site(site)
     end
 
     @tag :full_build_only
     test "creates a revenue goal", %{conn: conn, token: token, site: site} do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{
         goal_type: "Goal.Revenue",
@@ -180,7 +184,11 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.goals_url(base_uri(), :get, List.first(resp.goals).goal.id)
+               Routes.plugins_api_goals_url(
+                 PlausibleWeb.Endpoint,
+                 :get,
+                 List.first(resp.goals).goal.id
+               )
 
       assert [%{event_name: "Purchase", currency: :EUR}] = Plausible.Goals.for_site(site)
     end
@@ -191,7 +199,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       site: site
     } do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{
         goal_type: "Goal.Revenue",
@@ -220,7 +228,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       site: site
     } do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       {:ok, _} = Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
 
@@ -240,7 +248,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
 
     test "creates a pageview goal", %{conn: conn, token: token, site: site} do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{goal_type: "Goal.Pageview", goal: %{path: "/checkout"}}
       assert_request_schema(payload, "Goal.CreateRequest.Pageview", spec())
@@ -263,13 +271,17 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       [location] = get_resp_header(conn, "location")
 
       assert location ==
-               Routes.goals_url(base_uri(), :get, List.first(resp.goals).goal.id)
+               Routes.plugins_api_goals_url(
+                 PlausibleWeb.Endpoint,
+                 :get,
+                 List.first(resp.goals).goal.id
+               )
 
       assert [%{page_path: "/checkout"}] = Plausible.Goals.for_site(site)
     end
 
     test "is idempotent", %{conn: conn, token: token, site: site} do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       initial_conn =
         conn
@@ -296,7 +308,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
   describe "put /goals - bulk creation" do
     @tag :full_build_only
     test "creates a goal of each type", %{conn: conn, token: token, site: site} do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload = %{
         goals: [
@@ -330,9 +342,26 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
 
       [l1, l2, l3] = get_resp_header(conn, "location")
 
-      assert l1 == Routes.goals_url(base_uri(), :get, Enum.at(resp.goals, 0).goal.id)
-      assert l2 == Routes.goals_url(base_uri(), :get, Enum.at(resp.goals, 1).goal.id)
-      assert l3 == Routes.goals_url(base_uri(), :get, Enum.at(resp.goals, 2).goal.id)
+      assert l1 ==
+               Routes.plugins_api_goals_url(
+                 PlausibleWeb.Endpoint,
+                 :get,
+                 Enum.at(resp.goals, 0).goal.id
+               )
+
+      assert l2 ==
+               Routes.plugins_api_goals_url(
+                 PlausibleWeb.Endpoint,
+                 :get,
+                 Enum.at(resp.goals, 1).goal.id
+               )
+
+      assert l3 ==
+               Routes.plugins_api_goals_url(
+                 PlausibleWeb.Endpoint,
+                 :get,
+                 Enum.at(resp.goals, 2).goal.id
+               )
 
       assert Enum.count(resp.goals) == 3
 
@@ -347,7 +376,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       # if this test fails due to implementation change, consider what to do with the pagination meta
       # object returned in the response and also revise how funnels are created based on a list of goals
       # - the funnels creation endpoint will likely reuse this schema's constraints
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       payload =
         Enum.map(1..9, fn i ->
@@ -371,7 +400,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
 
     @tag :full_build_only
     test "is idempotent", %{conn: conn, token: token, site: site} do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       initial_conn =
         conn
@@ -410,7 +439,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       site: site
     } do
-      url = Routes.goals_url(base_uri(), :create)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :create)
 
       initial_conn =
         conn
@@ -438,7 +467,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
 
   describe "get /goals/:id" do
     test "validates input out of the box", %{conn: conn, token: token, site: site} do
-      url = Routes.goals_url(base_uri(), :get, "hello")
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :get, "hello")
 
       resp =
         conn
@@ -455,7 +484,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       {:ok, goal} =
         Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
 
-      url = Routes.goals_url(base_uri(), :get, goal.id)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :get, goal.id)
 
       resp =
         conn
@@ -473,7 +502,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     test "retrieves pageview goal by ID", %{conn: conn, site: site, token: token} do
       {:ok, goal} = Plausible.Goals.create(site, %{"page_path" => "/checkout"})
 
-      url = Routes.goals_url(base_uri(), :get, goal.id)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :get, goal.id)
 
       resp =
         conn
@@ -491,7 +520,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     test "retrieves custom event goal by ID", %{conn: conn, site: site, token: token} do
       {:ok, goal} = Plausible.Goals.create(site, %{"event_name" => "Signup"})
 
-      url = Routes.goals_url(base_uri(), :get, goal.id)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :get, goal.id)
 
       resp =
         conn
@@ -513,7 +542,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       token: token,
       site: site
     } do
-      url = Routes.goals_url(base_uri(), :index)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :index)
 
       resp =
         conn
@@ -538,7 +567,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       {:ok, g2} = Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "EUR"})
       {:ok, g3} = Plausible.Goals.create(site, %{"page_path" => "/checkout"})
 
-      url = Routes.goals_url(base_uri(), :index)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :index)
 
       resp =
         conn
@@ -570,7 +599,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
         insert(:goal, site: site, event_name: "Goal #{i}")
       end
 
-      url = Routes.goals_url(base_uri(), :index, limit: 2)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :index, limit: 2)
 
       initial_conn = authenticate(conn, site.domain, token)
 
@@ -612,7 +641,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       {:ok, %{id: goal_id}} =
         Plausible.Goals.create(site, %{"event_name" => "Purchase", "currency" => "USD"})
 
-      url = Routes.goals_url(base_uri(), :delete, goal_id)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :delete, goal_id)
 
       conn
       |> authenticate(site.domain, token)
@@ -623,7 +652,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
     end
 
     test "is idempotent", %{conn: conn, site: site, token: token} do
-      url = Routes.goals_url(base_uri(), :delete, 666)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :delete, 666)
 
       conn
       |> authenticate(site.domain, token)
@@ -643,7 +672,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.GoalsTest do
       {:ok, g3} =
         Plausible.Goals.create(site, %{"page_path" => "/home"})
 
-      url = Routes.goals_url(base_uri(), :delete_bulk)
+      url = Routes.plugins_api_goals_url(PlausibleWeb.Endpoint, :delete_bulk)
 
       payload = %{
         goal_ids: [

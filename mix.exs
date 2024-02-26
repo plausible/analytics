@@ -134,7 +134,8 @@ defmodule Plausible.MixProject do
       {:scrivener_ecto, "~> 2.0"},
       {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :small_dev]},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :small_dev]},
-      {:ex_json_logger, "~> 1.4.0"}
+      {:ex_json_logger, "~> 1.4.0"},
+      {:ecto_network, "~> 1.5.0"}
     ]
   end
 
@@ -157,7 +158,7 @@ defmodule Plausible.MixProject do
   defp docs do
     [
       main: "readme",
-      logo: "priv/static/images/icon/plausible_favicon.png",
+      logo: "priv/static/images/ee/favicon-32x32.png",
       extras:
         Path.wildcard("guides/**/*.md") ++
           [

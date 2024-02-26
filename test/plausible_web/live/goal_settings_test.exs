@@ -25,6 +25,24 @@ defmodule PlausibleWeb.Live.GoalSettingsTest do
       assert resp =~ "Revenue Goal"
     end
 
+    @tag :full_build_only
+    test "lists Revenue Goals with feature availability annotation if the plan does not cover them",
+         %{conn: conn, user: user, site: site} do
+      {:ok, [_, _, g3]} = setup_goals(site)
+
+      user
+      |> Plausible.Auth.User.end_trial()
+      |> Plausible.Repo.update!()
+
+      conn = get(conn, "/#{site.domain}/settings/goals")
+
+      resp = html_response(conn, 200)
+
+      assert g3.currency
+      assert resp =~ to_string(g3)
+      assert resp =~ "Unlock Revenue Goals by upgrading to a business plan"
+    end
+
     test "lists goals with delete actions", %{conn: conn, site: site} do
       {:ok, goals} = setup_goals(site)
       conn = get(conn, "/#{site.domain}/settings/goals")

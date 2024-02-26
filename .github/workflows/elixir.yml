@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        postgres_version: [13, 14, 15]
+        postgres_version: [14, 15, 16]
 
     services:
       postgres:
@@ -55,7 +55,7 @@ jobs:
           elixir-version: ${{steps.versions.outputs.elixir}}
           otp-version: ${{ steps.versions.outputs.erlang}}
       - name: Restore dependencies cache
-        uses: buildjet/cache@v3
+        uses: buildjet/cache@v4
         with:
           path: |
             deps

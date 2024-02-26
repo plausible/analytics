@@ -3,7 +3,7 @@ import { withRouter } from 'react-router-dom'
 
 import FilterTypeSelector from "../../components/filter-type-selector";
 import Combobox from '../../components/combobox'
-import { FILTER_GROUPS, parseQueryFilter, formatFilterGroup, formattedFilters, toFilterQuery, FILTER_TYPES } from '../../util/filters'
+import { FILTER_GROUPS, parseQueryFilter, formatFilterGroup, formattedFilters, toFilterQuery, FILTER_OPERATIONS } from '../../util/filters'
 import { parseQuery } from '../../query'
 import * as api from '../../api'
 import { apiPath, siteBasePath } from '../../util/url'
@@ -32,7 +32,7 @@ class RegularFilterModal extends React.Component {
     super(props)
     const query = parseQuery(props.location.search, props.site)
     const formState = getFormState(props.filterGroup, query)
-    
+
     this.handleKeydown = this.handleKeydown.bind(this)
     this.state = { query, formState }
   }
@@ -92,7 +92,7 @@ class RegularFilterModal extends React.Component {
   fetchOptions(filter) {
     return (input) => {
       const { query, formState } = this.state
-      if (formState[filter].type === FILTER_TYPES.contains) {return Promise.resolve([])}
+      if (formState[filter].type === FILTER_OPERATIONS.contains) {return Promise.resolve([])}
 
       const formFilters = Object.fromEntries(
         Object.entries(formState)

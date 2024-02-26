@@ -23,7 +23,7 @@ defmodule Plausible.Workers.SpikeNotifier do
       current_visitors = clickhouse.current_visitors(notification.site, query)
 
       if current_visitors >= notification.threshold do
-        sources = clickhouse.top_sources(notification.site, query, 3, 1, true)
+        sources = clickhouse.top_sources_for_spike(notification.site, query, 3, 1)
         notify(notification, current_visitors, sources)
       end
     end

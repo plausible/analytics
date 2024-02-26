@@ -8,7 +8,8 @@ defmodule Plausible.Stats.Query do
             sample_threshold: 20_000_000,
             imported_data_requested: false,
             include_imported: false,
-            now: nil
+            now: nil,
+            experimental_session_count?: false
 
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Filters, Interval}
@@ -21,6 +22,7 @@ defmodule Plausible.Stats.Query do
     query =
       __MODULE__
       |> struct!(now: now)
+      |> put_experimental_session_count(params)
       |> put_period(site, params)
       |> put_interval(params)
       |> put_parsed_filters(params)
@@ -32,6 +34,14 @@ defmodule Plausible.Stats.Query do
     end
 
     query
+  end
+
+  defp put_experimental_session_count(query, params) do
+    if Map.get(params, "experimental_session_count") == "true" do
+      struct!(query, experimental_session_count?: true)
+    else
+      query
+    end
   end
 
   defp put_period(query, site, %{"period" => "realtime"}) do
@@ -121,7 +131,7 @@ defmodule Plausible.Stats.Query do
 
   defp put_period(query, site, %{"period" => "all"}) do
     now = today(site.timezone)
-    start_date = Plausible.Site.local_start_date(site) || now
+    start_date = Plausible.Sites.local_start_date(site) || now
 
     struct!(query,
       period: "all",
@@ -208,6 +218,12 @@ defmodule Plausible.Stats.Query do
     end)
   end
 
+  def get_all_filters_by_prefix(query, prefix) do
+    Enum.filter(query.filters, fn {prop, _value} ->
+      String.starts_with?(prop, prefix)
+    end)
+  end
+
   defp today(tz) do
     Timex.now(tz) |> Timex.to_date()
   end
@@ -245,9 +261,8 @@ defmodule Plausible.Stats.Query do
   @spec include_imported?(t(), Plausible.Site.t(), boolean()) :: boolean()
   def include_imported?(query, site, requested?) do
     cond do
-      is_nil(site.imported_data) -> false
-      site.imported_data.status != "ok" -> false
-      Timex.after?(query.date_range.first, site.imported_data.end_date) -> false
+      is_nil(site.earliest_import_end_date) -> false
+      Date.after?(query.date_range.first, site.earliest_import_end_date) -> false
       Enum.any?(query.filters) -> false
       query.period == "realtime" -> false
       true -> requested?

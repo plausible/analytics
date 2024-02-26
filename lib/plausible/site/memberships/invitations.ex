@@ -89,7 +89,7 @@ defmodule Plausible.Site.Memberships.Invitations do
 
     defp team_member_usage_after_transfer(site, new_owner) do
       current_usage = Quota.team_member_usage(new_owner)
-      site_usage = Repo.aggregate(Quota.team_member_usage_query(site.owner, site), :count)
+      site_usage = Quota.team_member_usage(site.owner, site: site)
 
       extra_usage =
         if Plausible.Sites.is_member?(new_owner.id, site), do: 0, else: 1

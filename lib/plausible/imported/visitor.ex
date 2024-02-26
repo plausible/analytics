@@ -5,6 +5,7 @@ defmodule Plausible.Imported.Visitor do
   @primary_key false
   schema "imported_visitors" do
     field :site_id, Ch, type: "UInt64"
+    field :import_id, Ch, type: "UInt64"
     field :date, :date
     field :visitors, Ch, type: "UInt64"
     field :pageviews, Ch, type: "UInt64"

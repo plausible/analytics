@@ -40,6 +40,14 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def logo_path(filename) do
+    if full_build?() do
+      Path.join("/images/ee/", filename)
+    else
+      Path.join("/images/ce/", filename)
+    end
+  end
+
   def settings_tabs(conn) do
     [
       [key: "General", value: "general", icon: :rocket_launch],
@@ -51,6 +59,9 @@ defmodule PlausibleWeb.LayoutView do
       end,
       [key: "Custom Properties", value: "properties", icon: :document_text],
       [key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square],
+      if FunWithFlags.enabled?(:shields, for: conn.assigns[:current_user]) do
+        [key: "Shields", value: "shields", icon: :shield_exclamation]
+      end,
       [key: "Email Reports", value: "email-reports", icon: :envelope],
       if conn.assigns[:current_user_role] == :owner do
         [key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle]

@@ -5,6 +5,7 @@ defmodule Plausible.Imported.OperatingSystem do
   @primary_key false
   schema "imported_operating_systems" do
     field :site_id, Ch, type: "UInt64"
+    field :import_id, Ch, type: "UInt64"
     field :date, :date
     field :operating_system, :string
     field :visitors, Ch, type: "UInt64"
