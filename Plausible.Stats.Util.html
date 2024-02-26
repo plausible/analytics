@@ -245,8 +245,8 @@ given metrics if it's not already there and if there is a
   <section class="docstring">
 
 <p>Sometimes we need to manually add metrics in order to calculate the value for
-other metrics. E.g:</p><ul><li><p><code class="inline">__internal_visits</code> is fetched when querying bounce rate and visit duration,
-as it is needed to calculate these from imported data.</p></li><li><p><code class="inline">visitors</code> metric might be added manually via <a href="#maybe_add_visitors_metric/1"><code class="inline">maybe_add_visitors_metric/1</code></a>,
+other metrics. E.g:</p><ul><li><p><code class="inline">__internal_visits</code> is fetched when querying bounce rate, visit duration,
+or views_per_visit, as it is needed to calculate these from imported data.</p></li><li><p><code class="inline">visitors</code> metric might be added manually via <a href="#maybe_add_visitors_metric/1"><code class="inline">maybe_add_visitors_metric/1</code></a>,
 in order to be able to calculate conversion rate.</p></li></ul><p>This function can be used for stripping those metrics from a breakdown (list),
 or an aggregate (map) result. We do not want to return metrics that we're not
 requested.</p>
