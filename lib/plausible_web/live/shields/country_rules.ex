@@ -38,7 +38,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
             Reject incoming traffic from specific countries
           </p>
 
-          <PlausibleWeb.Components.Generic.docs_info slug="excluding" />
+          <PlausibleWeb.Components.Generic.docs_info slug="countries" />
         </header>
         <div class="border-t border-gray-200 pt-4 grid">
           <div
