@@ -130,7 +130,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
               <%= for rule <- @country_rules do %>
                 <% country = Location.Country.get_country(rule.country_code) %>
                 <tr class="text-gray-900 dark:text-gray-100">
-                  <td class="px-6 py-4 text-xs font-medium">
+                  <td class="px-6 py-4 text-sm font-medium">
                     <div class="flex items-center">
                       <span
                         id={"country-#{rule.id}"}
