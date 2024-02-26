@@ -77,15 +77,15 @@ defmodule Plausible.Shields do
         if count(schema, site_id) >= max do
           changeset =
             schema
-            |> struct()
-            |> schema.changeset(Map.put(params, "site_id", site_id))
+            |> struct(site_id: site_id)
+            |> schema.changeset(params)
             |> Ecto.Changeset.add_error(field, "maximum reached")
 
           {:error, changeset}
         else
           schema
-          |> struct()
-          |> schema.changeset(Map.put(params, "site_id", site_id))
+          |> struct(site_id: site_id)
+          |> schema.changeset(params)
           |> Repo.insert()
         end
 
