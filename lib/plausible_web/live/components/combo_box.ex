@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Live.Components.ComboBox do
   and updates the suggestions asynchronously. This way, you can render
   the component without having to wait for suggestions to load.
 
-  If you explicitly need to make the operation sychronous, you may
+  If you explicitly need to make the operation synchronous, you may
   pass `async={false}` option.
 
   If your initial `options` are not provided up-front at initial render,
