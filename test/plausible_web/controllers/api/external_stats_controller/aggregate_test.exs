@@ -420,7 +420,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "visits" => %{"value" => 5, "change" => 150},
                "pageviews" => %{"value" => 9, "change" => -10},
                "bounce_rate" => %{"value" => 40, "change" => -10},
-               "views_per_visit" => %{"value" => 1.0, "change" => 100},
+               "views_per_visit" => %{"value" => 1.8, "change" => -64},
                "visit_duration" => %{"value" => 20, "change" => -80}
              }
     end

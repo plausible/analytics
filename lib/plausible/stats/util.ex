@@ -9,8 +9,8 @@ defmodule Plausible.Stats.Util do
   Sometimes we need to manually add metrics in order to calculate the value for
   other metrics. E.g:
 
-  * `__internal_visits` is fetched when querying bounce rate and visit duration,
-    as it is needed to calculate these from imported data.
+  * `__internal_visits` is fetched when querying bounce rate, visit duration,
+    or views_per_visit, as it is needed to calculate these from imported data.
 
   * `visitors` metric might be added manually via `maybe_add_visitors_metric/1`,
     in order to be able to calculate conversion rate.

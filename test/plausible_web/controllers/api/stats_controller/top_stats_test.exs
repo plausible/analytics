@@ -387,7 +387,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   describe "GET /api/stats/top-stats - with imported data" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
-    test "merges imported data into all top stat metrics except views_per_visit", %{
+    test "merges imported data into all top stat metrics", %{
       conn: conn,
       site: site
     } do
@@ -418,7 +418,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                %{"name" => "Unique visitors", "value" => 3},
                %{"name" => "Total visits", "value" => 3},
                %{"name" => "Total pageviews", "value" => 4},
-               %{"name" => "Views per visit", "value" => 1.5},
+               %{"name" => "Views per visit", "value" => 1.33},
                %{"name" => "Bounce rate", "value" => 33},
                %{"name" => "Visit duration", "value" => 303}
              ]
