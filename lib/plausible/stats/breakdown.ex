@@ -35,8 +35,9 @@ defmodule Plausible.Stats.Breakdown do
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
     no_revenue = {nil, metrics -- @revenue_metrics}
+
     {revenue_goals, metrics} =
-      on_full_build do 
+      on_full_build do
         if Plausible.Billing.Feature.RevenueGoals.enabled?(site) do
           revenue_goals = Enum.filter(event_goals, &Plausible.Goal.Revenue.revenue?/1)
           metrics = if Enum.empty?(revenue_goals), do: metrics -- @revenue_metrics, else: metrics
