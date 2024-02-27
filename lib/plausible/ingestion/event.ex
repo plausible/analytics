@@ -34,7 +34,7 @@ defmodule Plausible.Ingestion.Event do
           domain: String.t() | nil,
           site: %Plausible.Site{} | nil,
           clickhouse_event_attrs: map(),
-          clickhouse_session_attrs: %{},
+          clickhouse_session_attrs: map(),
           clickhouse_event: %ClickhouseEventV2{} | nil,
           dropped?: boolean(),
           drop_reason: drop_reason(),
