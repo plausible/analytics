@@ -137,6 +137,27 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :site_ip_blocklist
   end
 
+  test "event pipeline drops a request when country is on blocklist" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    conn = %{conn | remote_ip: {216, 160, 83, 56}}
+
+    %{country_code: cc} = Plausible.Ingestion.Geolocation.lookup("216.160.83.56")
+    {:ok, _} = Plausible.Shields.add_country_rule(site, %{"country_code" => cc})
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :site_country_blocklist
+  end
+
   test "event pipeline drops events for site with accept_trafic_until in the past" do
     yesterday = Date.add(Date.utc_today(), -1)
 
