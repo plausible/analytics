@@ -20,7 +20,7 @@ defmodule Plausible.Imported.SiteImport do
     field :end_date, :date
     field :source, Ecto.Enum, values: ImportSources.names()
     field :status, Ecto.Enum, values: @statuses
-    field :legacy, :boolean
+    field :legacy, :boolean, default: false
 
     belongs_to :site, Site
     belongs_to :imported_by, User

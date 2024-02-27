@@ -1378,7 +1378,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         build(:imported_visitors, pageviews: 10)
       ])
 
-      assert [%{id: ^import_id}] = Plausible.Imported.list_all_imports(site)
+      assert [%{id: ^import_id}, %{id: 0}] = Plausible.Imported.list_all_imports(site)
 
       assert eventually(fn ->
                count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
