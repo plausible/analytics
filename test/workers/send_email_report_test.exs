@@ -81,7 +81,7 @@ defmodule Plausible.Workers.SendEmailReportTest do
         build(:pageview,
           user_id: 123,
           timestamp: Timex.shift(now, days: -7),
-          session: %{referrer_source: "Google"}
+          session_referrer_source: "Google"
         ),
         build(:pageview, user_id: 123, timestamp: Timex.shift(now, days: -7)),
         build(:pageview, timestamp: Timex.shift(now, days: -7))

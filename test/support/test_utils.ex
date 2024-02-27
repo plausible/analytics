@@ -194,32 +194,7 @@ defmodule Plausible.TestUtils do
   defp populate_native_stats(events) do
     sessions =
       Enum.reduce(events, %{}, fn event, sessions ->
-        # :KLUDGE: Callsites should not use :referrer, etc directly and instead
-        # nest it under session: %{ referrer: "foo" }. This is left here
-        # for backwards compatibility / to avoid breaking too many PRs.
-        session_params =
-          event
-          |> Map.take([
-            :referrer,
-            :referrer_source,
-            :utm_medium,
-            :utm_source,
-            :utm_campaign,
-            :utm_content,
-            :utm_term,
-            :country_code,
-            :subdivision1_code,
-            :subdivision2_code,
-            :city_geoname_id,
-            :screen_size,
-            :operating_system,
-            :operating_system_version,
-            :browser,
-            :browser_version
-          ])
-          |> Map.merge(Map.get(event, :session, %{}))
-
-        session_id = Plausible.Session.CacheStore.on_event(event, session_params, nil)
+        session_id = Plausible.Session.CacheStore.on_event(event, session_params(event), nil)
         Map.put(sessions, {event.site_id, event.user_id}, session_id)
       end)
 
@@ -239,6 +214,51 @@ defmodule Plausible.TestUtils do
   defp populate_imported_stats(events) do
     Enum.group_by(events, &Map.fetch!(&1, :table), &Map.delete(&1, :table))
     |> Enum.map(fn {table, events} -> Plausible.Imported.Buffer.insert_all(table, events) end)
+  end
+
+  @old_session_attributes [
+    :referrer,
+    :referrer_source,
+    :utm_medium,
+    :utm_source,
+    :utm_campaign,
+    :utm_content,
+    :utm_term,
+    :country_code,
+    :subdivision1_code,
+    :subdivision2_code,
+    :city_geoname_id,
+    :screen_size,
+    :operating_system,
+    :operating_system_version,
+    :browser,
+    :browser_version
+  ]
+
+  defp session_params(event) do
+    event
+    |> Enum.reduce(%{}, fn {key, value}, acc ->
+      str_key = Atom.to_string(key)
+
+      cond do
+        String.starts_with?(str_key, "session_") and key != :session_id ->
+          session_key =
+            str_key
+            |> String.trim("session_")
+            |> String.to_existing_atom()
+
+          Map.put(acc, session_key, value)
+
+        Enum.member?(@old_session_attributes, key) ->
+          # :KLUDGE: Callsites should not use :referrer, etc directly and instead
+          # use session_referrer: "foo". This is left here  for backwards compatibility
+          # and to avoid breaking too many PRs.
+          Map.put(acc, key, value)
+
+        true ->
+          acc
+      end
+    end)
   end
 
   def relative_time(shifts) do

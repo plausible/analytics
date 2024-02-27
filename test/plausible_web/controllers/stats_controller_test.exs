@@ -387,57 +387,47 @@ defmodule PlausibleWeb.StatsControllerTest do
         pathname: "/",
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], minutes: -1) |> NaiveDateTime.truncate(:second),
-        session: %{
-          country_code: "EE",
-          subdivision1_code: "EE-37",
-          city_geoname_id: 588_409,
-          referrer_source: "Google"
-        }
+        session_country_code: "EE",
+        session_subdivision1_code: "EE-37",
+        session_city_geoname_id: 588_409,
+        session_referrer_source: "Google"
       ),
       build(:pageview,
         user_id: 123,
         pathname: "/some-other-page",
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], minutes: -2) |> NaiveDateTime.truncate(:second),
-        session: %{
-          country_code: "EE",
-          subdivision1_code: "EE-37",
-          city_geoname_id: 588_409,
-          referrer_source: "Google"
-        }
+        session_country_code: "EE",
+        session_subdivision1_code: "EE-37",
+        session_city_geoname_id: 588_409,
+        session_referrer_source: "Google"
       ),
       build(:pageview,
         pathname: "/",
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
-        session: %{
-          utm_medium: "search",
-          utm_campaign: "ads",
-          utm_source: "google",
-          utm_content: "content",
-          utm_term: "term",
-          browser: "Firefox",
-          browser_version: "120"
-        }
+        session_utm_medium: "search",
+        session_utm_campaign: "ads",
+        session_utm_source: "google",
+        session_utm_content: "content",
+        session_utm_term: "term",
+        session_browser: "Firefox",
+        session_browser_version: "120"
       ),
       build(:pageview,
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], months: -1) |> NaiveDateTime.truncate(:second),
-        session: %{
-          country_code: "EE",
-          browser: "Firefox",
-          browser_version: "120"
-        }
+        session_country_code: "EE",
+        session_browser: "Firefox",
+        session_browser_version: "120"
       ),
       build(:pageview,
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], months: -5) |> NaiveDateTime.truncate(:second),
-        session: %{
-          utm_campaign: "ads",
-          country_code: "EE",
-          referrer_source: "Google",
-          browser: "FirefoxNoVersion"
-        }
+        session_utm_campaign: "ads",
+        session_country_code: "EE",
+        session_referrer_source: "Google",
+        session_browser: "FirefoxNoVersion"
       ),
       build(:event,
         timestamp:

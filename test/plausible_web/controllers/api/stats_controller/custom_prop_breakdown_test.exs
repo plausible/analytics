@@ -688,14 +688,14 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
     test "Property breakdown with prop and goal filter", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: 1, session: %{utm_campaign: "campaignA"}),
+        build(:pageview, user_id: 1, session_utm_campaign: "campaignA"),
         build(:event,
           user_id: 1,
           name: "ButtonClick",
           "meta.key": ["variant"],
           "meta.value": ["A"]
         ),
-        build(:pageview, user_id: 2, session: %{utm_campaign: "campaignA"}),
+        build(:pageview, user_id: 2, session_utm_campaign: "campaignA"),
         build(:event,
           user_id: 2,
           name: "ButtonClick",
@@ -710,9 +710,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
         Jason.encode!(%{
           goal: "ButtonClick",
           props: %{variant: "A"},
-          session: %{
-            utm_campaign: "campaignA"
-          }
+          session_utm_campaign: "campaignA"
         })
 
       prop_key = "variant"
@@ -735,15 +733,15 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
     test "Property breakdown with goal and source filter", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: 1, session: %{referrer_source: "Google"}),
+        build(:pageview, user_id: 1, session_referrer_source: "Google"),
         build(:event,
           user_id: 1,
           name: "ButtonClick",
           "meta.key": ["variant"],
           "meta.value": ["A"]
         ),
-        build(:pageview, user_id: 2, session: %{referrer_source: "Google"}),
-        build(:pageview, user_id: 3, session: %{referrer_source: "ignore"}),
+        build(:pageview, user_id: 2, session_referrer_source: "Google"),
+        build(:pageview, user_id: 3, session_referrer_source: "ignore"),
         build(:event,
           user_id: 3,
           name: "ButtonClick",
@@ -965,7 +963,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       populate_stats(site, [
         build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
         build(:pageview,
-          session: %{browser: "Chrome"},
+          session_browser: "Chrome",
           "meta.key": [prop_key],
           "meta.value": ["Sipsik"]
         )

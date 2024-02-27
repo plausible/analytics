@@ -9,34 +9,24 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          }
+          session_referrer_source: "Google",
+          session_referrer: "google.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          }
+          session_referrer_source: "Google",
+          session_referrer: "google.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          }
+          session_referrer_source: "Google",
+          session_referrer: "google.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          }
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          }
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com"
         ),
         build(:pageview)
       ])
@@ -53,10 +43,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top sources with :is filter on custom pageview props", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           user_id: 123,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -67,28 +55,22 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           timestamp: ~N[2021-01-01 00:01:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           "meta.key": ["author"],
           "meta.value": ["John Doe"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           "meta.key": ["author"],
           "meta.value": ["John Doe"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Facebook",
-            referrer: "facebook.com"
-          },
+          session_referrer_source: "Facebook",
+          session_referrer: "facebook.com",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -113,10 +95,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           "meta.key": ["author"],
           "meta.value": ["John Doe"],
           user_id: 123,
@@ -129,26 +109,20 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           timestamp: ~N[2021-01-01 00:01:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           "meta.key": ["author"],
           "meta.value": ["other"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Facebook",
-            referrer: "facebook.com"
-          },
+          session_referrer_source: "Facebook",
+          session_referrer: "facebook.com",
           "meta.key": ["author"],
           "meta.value": ["John Doe"],
           timestamp: ~N[2021-01-01 00:00:00]
@@ -175,10 +149,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           "meta.key": ["author"],
           "meta.value": ["John Doe"],
           user_id: 123,
@@ -189,26 +161,20 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           timestamp: ~N[2021-01-01 00:01:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           "meta.key": ["author"],
           "meta.value": ["other"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Facebook",
-            referrer: "facebook.com"
-          },
+          session_referrer_source: "Facebook",
+          session_referrer: "facebook.com",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Facebook",
-            referrer: "facebook.com"
-          },
+          session_referrer_source: "Facebook",
+          session_referrer: "facebook.com",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -233,10 +199,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           "meta.key": ["logged_in"],
           "meta.value": ["true"],
           user_id: 123,
@@ -249,28 +213,22 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           timestamp: ~N[2021-01-01 00:01:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           "meta.key": ["author"],
           "meta.value": ["other"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           "meta.key": ["author"],
           "meta.value": ["another"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Facebook",
-            referrer: "facebook.com"
-          },
+          session_referrer_source: "Facebook",
+          session_referrer: "facebook.com",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -291,9 +249,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
     test "returns top sources with imported data", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, session: %{referrer_source: "Google", referrer: "google.com"}),
-        build(:pageview, session: %{referrer_source: "Google", referrer: "google.com"}),
-        build(:pageview, session: %{referrer_source: "DuckDuckGo", referrer: "duckduckgo.com"})
+        build(:pageview, session_referrer_source: "Google", session_referrer: "google.com"),
+        build(:pageview, session_referrer_source: "Google", session_referrer: "google.com"),
+        build(:pageview,
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com"
+        )
       ])
 
       populate_stats(site, [
@@ -325,26 +286,20 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "calculates bounce rate and visit duration for sources", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -377,26 +332,20 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -466,24 +415,18 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top sources in realtime report", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           timestamp: relative_time(minutes: -3)
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           timestamp: relative_time(minutes: -2)
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           timestamp: relative_time(minutes: -1)
         )
       ])
@@ -499,22 +442,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "can paginate the results", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          }
+          session_referrer_source: "Google",
+          session_referrer: "google.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          }
+          session_referrer_source: "Google",
+          session_referrer: "google.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          }
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com"
         ),
         build(:imported_sources,
           source: "DuckDuckGo"
@@ -536,17 +473,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
     test "shows sources for a page", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, pathname: "/page1", session: %{referrer_source: "Google"}),
-        build(:pageview, pathname: "/page1", session: %{referrer_source: "Google"}),
+        build(:pageview, pathname: "/page1", session_referrer_source: "Google"),
+        build(:pageview, pathname: "/page1", session_referrer_source: "Google"),
         build(:pageview,
           user_id: 1,
           pathname: "/page2",
-          session: %{referrer_source: "DuckDuckGo"}
+          session_referrer_source: "DuckDuckGo"
         ),
         build(:pageview,
           user_id: 1,
           pathname: "/page1",
-          session: %{referrer_source: "DuckDuckGo"}
+          session_referrer_source: "DuckDuckGo"
         )
       ])
 
@@ -566,17 +503,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top utm_mediums by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{utm_medium: "social"},
+          session_utm_medium: "social",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_medium: "social"},
+          session_utm_medium: "social",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{utm_medium: "email"},
+          session_utm_medium: "email",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -646,17 +583,17 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "filters out entries without utm_medium present", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{utm_medium: "social"},
+          session_utm_medium: "social",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_medium: "social"},
+          session_utm_medium: "social",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{utm_medium: ""},
+          session_utm_medium: "",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -718,21 +655,21 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top utm_campaigns by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{utm_campaign: "profile"},
+          session_utm_campaign: "profile",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_campaign: "profile"},
+          session_utm_campaign: "profile",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{utm_campaign: "august"},
+          session_utm_campaign: "august",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_campaign: "august"},
+          session_utm_campaign: "august",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -802,21 +739,21 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "filters out entries without utm_campaign present", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{utm_campaign: "profile"},
+          session_utm_campaign: "profile",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_campaign: "profile"},
+          session_utm_campaign: "profile",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{utm_campaign: ""},
+          session_utm_campaign: "",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_campaign: ""},
+          session_utm_campaign: "",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -878,21 +815,21 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top utm_sources by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{utm_source: "Twitter"},
+          session_utm_source: "Twitter",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_source: "Twitter"},
+          session_utm_source: "Twitter",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{utm_source: "newsletter"},
+          session_utm_source: "newsletter",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_source: "newsletter"},
+          session_utm_source: "newsletter",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -926,21 +863,21 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top utm_terms by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{utm_term: "oat milk"},
+          session_utm_term: "oat milk",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_term: "oat milk"},
+          session_utm_term: "oat milk",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{utm_term: "Sweden"},
+          session_utm_term: "Sweden",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_term: "Sweden"},
+          session_utm_term: "Sweden",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -1010,21 +947,21 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "filters out entries without utm_term present", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{utm_term: "oat milk"},
+          session_utm_term: "oat milk",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_term: "oat milk"},
+          session_utm_term: "oat milk",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{utm_term: ""},
+          session_utm_term: "",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_term: ""},
+          session_utm_term: "",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -1086,21 +1023,21 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top utm_contents by unique user ids", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{utm_content: "ad"},
+          session_utm_content: "ad",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_content: "ad"},
+          session_utm_content: "ad",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{utm_content: "blog"},
+          session_utm_content: "blog",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_content: "blog"},
+          session_utm_content: "blog",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -1170,21 +1107,21 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "filters out entries without utm_content present", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{utm_content: "ad"},
+          session_utm_content: "ad",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_content: "ad"},
+          session_utm_content: "ad",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{utm_content: ""},
+          session_utm_content: "",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{utm_content: ""},
+          session_utm_content: "",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -1249,7 +1186,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       populate_stats(site, [
         build(:pageview,
-          session: %{referrer_source: "Twitter"},
+          session_referrer_source: "Twitter",
           user_id: @user_id
         ),
         build(:event,
@@ -1257,7 +1194,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           user_id: @user_id
         ),
         build(:pageview,
-          session: %{referrer_source: "Twitter"}
+          session_referrer_source: "Twitter"
         )
       ])
 
@@ -1287,10 +1224,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top referrers with goal filter + :is prop filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           user_id: 123,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -1302,19 +1237,15 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           timestamp: ~N[2021-01-01 00:01:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           "meta.key": ["logged_in"],
           "meta.value": ["true"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:event,
-          session: %{
-            referrer_source: "Facebook",
-            referrer: "facebook.com"
-          },
+          session_referrer_source: "Facebook",
+          session_referrer: "facebook.com",
           name: "Download",
           "meta.key": ["method", "logged_in"],
           "meta.value": ["HTTP", "false"],
@@ -1343,10 +1274,8 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top referrers with goal filter + prop :is_not filter", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          },
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com",
           user_id: 123,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -1359,20 +1288,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
         ),
         build(:event,
           name: "Download",
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           "meta.key": ["method", "logged_in"],
           "meta.value": ["HTTP", "true"],
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:event,
           name: "Download",
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          },
+          session_referrer_source: "Google",
+          session_referrer: "google.com",
           "meta.key": ["method", "logged_in"],
           "meta.value": ["HTTP", "false"],
           timestamp: ~N[2021-01-01 00:00:00]
@@ -1409,7 +1334,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       populate_stats(site, [
         build(:pageview,
-          session: %{referrer_source: "Twitter"},
+          session_referrer_source: "Twitter",
           user_id: @user_id
         ),
         build(:pageview,
@@ -1417,7 +1342,7 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
           user_id: @user_id
         ),
         build(:pageview,
-          session: %{referrer_source: "Twitter"}
+          session_referrer_source: "Twitter"
         )
       ])
 
@@ -1446,28 +1371,20 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top referrers for a particular source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com"
-          }
+          session_referrer_source: "10words",
+          session_referrer: "10words.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com"
-          }
+          session_referrer_source: "10words",
+          session_referrer: "10words.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com/page1"
-          }
+          session_referrer_source: "10words",
+          session_referrer: "10words.com/page1"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "ignored",
-            referrer: "ignored"
-          }
+          session_referrer_source: "ignored",
+          session_referrer: "ignored"
         )
       ])
 
@@ -1486,33 +1403,25 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "calculates bounce rate and visit duration for referrer urls", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com"
-          },
+          session_referrer_source: "10words",
+          session_referrer: "10words.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com"
-          },
+          session_referrer_source: "10words",
+          session_referrer: "10words.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com"
-          },
+          session_referrer_source: "10words",
+          session_referrer: "10words.com",
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "ignored",
-            referrer: "ignored"
-          },
+          session_referrer_source: "ignored",
+          session_referrer: "ignored",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -1538,22 +1447,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
 
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          }
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          }
+          session_referrer_source: "Google",
+          session_referrer: "google.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          }
+          session_referrer_source: "Google",
+          session_referrer: "google.com"
         )
       ])
 
@@ -1572,22 +1475,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     } do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com"
-          }
+          session_referrer_source: "DuckDuckGo",
+          session_referrer: "duckduckgo.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          }
+          session_referrer_source: "Google",
+          session_referrer: "google.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "Google",
-            referrer: "google.com"
-          }
+          session_referrer_source: "Google",
+          session_referrer: "google.com"
         )
       ])
 
@@ -1607,16 +1504,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top referring urls for a custom goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com"
-          }
+          session_referrer_source: "10words",
+          session_referrer: "10words.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com"
-          },
+          session_referrer_source: "10words",
+          session_referrer: "10words.com",
           user_id: @user_id
         ),
         build(:event,
@@ -1649,16 +1542,12 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
     test "returns top referring urls for a pageview goal", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com"
-          }
+          session_referrer_source: "10words",
+          session_referrer: "10words.com"
         ),
         build(:pageview,
-          session: %{
-            referrer_source: "10words",
-            referrer: "10words.com"
-          },
+          session_referrer_source: "10words",
+          session_referrer: "10words.com",
           user_id: @user_id
         ),
         build(:pageview,
