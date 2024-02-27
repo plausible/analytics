@@ -815,7 +815,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by operating system version", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_operating_system_version: "105",
+          session_operating_system_version: "10.5",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),

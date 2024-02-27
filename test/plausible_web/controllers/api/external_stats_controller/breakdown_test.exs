@@ -2178,12 +2178,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       site: site
     } do
       populate_stats(site, [
-        build(:event, pathname: "/en/register"),
+        build(:event, pathname: "/en/register", name: "pageview"),
         build(:event, pathname: "/en/register", name: "Signup"),
         build(:event, pathname: "/en/register", name: "Signup"),
         build(:event, pathname: "/it/register", name: "Signup", user_id: 1),
         build(:event, pathname: "/it/register", name: "Signup", user_id: 1),
-        build(:event, pathname: "/it/register")
+        build(:event, pathname: "/it/register", name: "pageview")
       ])
 
       insert(:goal, %{site: site, event_name: "Signup"})
@@ -2220,7 +2220,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       site: site
     } do
       populate_stats(site, [
-        build(:event, pathname: "/en/register"),
+        build(:event, pathname: "/en/register", name: "pageview"),
         build(:event, pathname: "/en/register", name: "Signup")
       ])
 
@@ -2250,12 +2250,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       site: site
     } do
       populate_stats(site, [
-        build(:event, screen_size: "Mobile"),
+        build(:event, screen_size: "Mobile", name: "pageview"),
         build(:event, screen_size: "Mobile", name: "AddToCart"),
         build(:event, screen_size: "Mobile", name: "AddToCart"),
         build(:event, screen_size: "Desktop", name: "AddToCart", user_id: 1),
         build(:event, screen_size: "Desktop", name: "Purchase", user_id: 1),
-        build(:event, screen_size: "Desktop")
+        build(:event, screen_size: "Desktop", name: "pageview")
       ])
 
       # Make sure that revenue goals are treated the same
@@ -2295,7 +2295,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       site: site
     } do
       populate_stats(site, [
-        build(:event, screen_size: "Mobile"),
+        build(:event, screen_size: "Mobile", name: "pageview"),
         build(:event, screen_size: "Mobile", name: "AddToCart")
       ])
 
