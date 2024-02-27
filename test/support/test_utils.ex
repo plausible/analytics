@@ -221,17 +221,15 @@ defmodule Plausible.TestUtils do
     |> Enum.reduce(%{}, fn {key, value}, acc ->
       str_key = Atom.to_string(key)
 
-      cond do
-        String.starts_with?(str_key, "session_") and key != :session_id ->
-          session_key =
-            str_key
-            |> String.trim("session_")
-            |> String.to_existing_atom()
+      if String.starts_with?(str_key, "session_") and key != :session_id do
+        session_key =
+          str_key
+          |> String.trim("session_")
+          |> String.to_existing_atom()
 
-          Map.put(acc, session_key, value)
-
-        true ->
-          acc
+        Map.put(acc, session_key, value)
+      else
+        acc
       end
     end)
   end
