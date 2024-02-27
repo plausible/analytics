@@ -643,7 +643,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       resp = html_response(conn, 200)
 
-      assert text_of_attr(resp, ~s|a[data-to]|, "data-to") =~
+      assert text_of_attr(resp, ~s|a[href]|, "href") =~
                "https://accounts.google.com/o/oauth2/"
 
       assert resp =~ "Import Data"
@@ -669,7 +669,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       resp = html_response(conn, 200)
 
-      buttons = find(resp, ~s|a[data-method="DELETE"]|)
+      buttons = find(resp, ~s|button[data-method="delete"]|)
       assert length(buttons) == 5
 
       assert resp =~ "(98 page views)"

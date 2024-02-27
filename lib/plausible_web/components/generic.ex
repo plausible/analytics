@@ -63,7 +63,6 @@ defmodule PlausibleWeb.Components.Generic do
   attr(:href, :string, required: true)
   attr(:class, :string, default: "")
   attr(:theme, :string, default: "primary")
-  attr(:method, :string, default: nil)
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
 
@@ -86,7 +85,6 @@ defmodule PlausibleWeb.Components.Generic do
     ~H"""
     <.link
       href={@href}
-      method={@method}
       class={[
         @button_base_class,
         @theme_class,
@@ -255,7 +253,6 @@ defmodule PlausibleWeb.Components.Generic do
   attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
   attr :id, :any, default: nil
-  attr :method, :string, default: nil
   attr :rest, :global
   slot :inner_block
 
@@ -271,7 +268,6 @@ defmodule PlausibleWeb.Components.Generic do
           @class
         ]}
         href={@href}
-        method={@method}
         target="_blank"
         rel="noopener noreferrer"
         {@rest}
@@ -282,7 +278,7 @@ defmodule PlausibleWeb.Components.Generic do
       """
     else
       ~H"""
-      <.link class={@class} href={@href} method={@method} {@rest}>
+      <.link class={@class} href={@href} {@rest}>
         <%= render_slot(@inner_block) %>
       </.link>
       """

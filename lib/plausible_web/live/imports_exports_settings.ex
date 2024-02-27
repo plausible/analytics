@@ -91,10 +91,11 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
             ) %>)
           </p>
         </div>
-        <.button_link
-          href={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
+        <.button
+          data-to={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
           theme="danger"
-          method="DELETE"
+          data-method="delete"
+          data-csrf={Plug.CSRFProtection.get_csrf_token()}
           class="sm:ml-3 sm:w-auto w-full"
           data-confirm="Are you sure you want to delete this import?"
         >
@@ -104,7 +105,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
           <span :if={entry.live_status not in [SiteImport.completed(), SiteImport.failed()]}>
             Cancel Import
           </span>
-        </.button_link>
+        </.button>
       </li>
     </ul>
     """
