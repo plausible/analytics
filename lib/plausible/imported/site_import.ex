@@ -41,10 +41,10 @@ defmodule Plausible.Imported.SiteImport do
   @spec from_legacy(Site.ImportedData.t()) :: t()
   def from_legacy(%Site.ImportedData{} = data) do
     status =
-      cond do
-        data.status == "ok" -> completed()
-        data.status == "error" -> failed()
-        true -> importing()
+      case data.status do
+        "ok" -> completed()
+        "error" -> failed()
+        _ -> importing()
       end
 
     %__MODULE__{
