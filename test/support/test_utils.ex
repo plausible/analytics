@@ -216,25 +216,6 @@ defmodule Plausible.TestUtils do
     |> Enum.map(fn {table, events} -> Plausible.Imported.Buffer.insert_all(table, events) end)
   end
 
-  @old_session_attributes [
-    :referrer,
-    :referrer_source,
-    :utm_medium,
-    :utm_source,
-    :utm_campaign,
-    :utm_content,
-    :utm_term,
-    :country_code,
-    :subdivision1_code,
-    :subdivision2_code,
-    :city_geoname_id,
-    :screen_size,
-    :operating_system,
-    :operating_system_version,
-    :browser,
-    :browser_version
-  ]
-
   defp session_params(event) do
     event
     |> Enum.reduce(%{}, fn {key, value}, acc ->
@@ -248,12 +229,6 @@ defmodule Plausible.TestUtils do
             |> String.to_existing_atom()
 
           Map.put(acc, session_key, value)
-
-        Enum.member?(@old_session_attributes, key) ->
-          # :KLUDGE: Callsites should not use :referrer, etc directly and instead
-          # use session_referrer: "foo". This is left here  for backwards compatibility
-          # and to avoid breaking too many PRs.
-          Map.put(acc, key, value)
 
         true ->
           acc
