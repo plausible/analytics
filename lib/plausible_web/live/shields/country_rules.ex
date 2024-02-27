@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                       <span
                         id={"country-#{rule.id}"}
                         class="mr-4 cursor-help border-b border-dotted border-gray-400"
-                        title={"Added at #{Plausible.Timezones.to_date_in_timezone(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                        title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                       >
                         <%= country.flag %> <%= country.name %>
                       </span>
@@ -241,5 +241,11 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
     |> Enum.reject(fn {country_code, _} ->
       country_code in Enum.map(country_rules, & &1.country_code)
     end)
+  end
+
+  defp format_added_at(dt, tz) do
+    dt
+    |> Plausible.Timezones.to_datetime_in_timezone(tz)
+    |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
   end
 end

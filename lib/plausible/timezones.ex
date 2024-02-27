@@ -22,25 +22,13 @@ defmodule Plausible.Timezones do
 
   @spec to_date_in_timezone(Date.t() | NaiveDateTime.t() | DateTime.t(), String.t()) :: Date.t()
   def to_date_in_timezone(dt, timezone) do
-    utc_dt =
-      case dt do
-        %Date{} ->
-          Timex.to_datetime(dt, "UTC")
+    to_datetime_in_timezone(dt, timezone) |> Timex.to_date()
+  end
 
-        dt ->
-          Timex.Timezone.convert(dt, "UTC")
-      end
-
-    case Timex.Timezone.convert(utc_dt, timezone) do
-      %DateTime{} = tz_dt ->
-        Timex.to_date(tz_dt)
-
-      %Timex.AmbiguousDateTime{after: after_dt} ->
-        Timex.to_date(after_dt)
-
-      {:error, {:could_not_resolve_timezone, _, _, _}} ->
-        dt
-    end
+  @spec to_datetime_in_timezone(Date.t() | NaiveDateTime.t() | DateTime.t(), String.t()) ::
+          DateTime.t()
+  def to_datetime_in_timezone(dt, timezone) do
+    dt |> Timex.to_datetime("UTC") |> Timex.Timezone.convert(timezone)
   end
 
   defp build_option(timezone_code, acc, now) do

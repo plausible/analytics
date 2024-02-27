@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                       <span
                         id={"inet-#{rule.id}"}
                         class="font-mono mr-4 cursor-help border-b border-dotted border-gray-400"
-                        title={"Added at #{Plausible.Timezones.to_date_in_timezone(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
+                        title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                       >
                         <%= rule.inet %>
                       </span>
@@ -285,5 +285,11 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
 
   defp ip_rule_present?(rules, ip) do
     not is_nil(Enum.find(rules, &(to_string(&1.inet) == ip)))
+  end
+
+  defp format_added_at(dt, tz) do
+    dt
+    |> Plausible.Timezones.to_datetime_in_timezone(tz)
+    |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
   end
 end
