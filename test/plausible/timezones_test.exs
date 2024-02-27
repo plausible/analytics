@@ -51,7 +51,7 @@ defmodule Plausible.TimezonesTest do
                hour: 7,
                time_zone: "Etc/GMT-12",
                zone_abbr: "+12",
-               utc_offset: 43200,
+               utc_offset: 43_200,
                std_offset: 0
              }
 
