@@ -476,6 +476,20 @@ case mailer_adapter do
       retries: get_var_from_path_or_env(config_dir, "SMTP_RETRIES") || 2,
       no_mx_lookups: get_var_from_path_or_env(config_dir, "SMTP_MX_LOOKUPS_ENABLED") || true
 
+  "Bamboo.Mua" ->
+    config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
+
+    if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
+      port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)
+      username = get_var_from_path_or_env(config_dir, "SMTP_USER_NAME")
+      password = get_var_from_path_or_env(config_dir, "SMTP_USER_PWD")
+
+      config :plausible, Plausible.Mailer,
+        auth: [username: username, password: password],
+        relay: relay,
+        port: port
+    end
+
   "Bamboo.LocalAdapter" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
 
