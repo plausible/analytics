@@ -435,6 +435,11 @@ defmodule PlausibleWeb.StatsControllerTest do
         pathname: "/",
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
+        session_utm_medium: "search",
+        session_utm_campaign: "ads",
+        session_utm_source: "google",
+        session_utm_content: "content",
+        session_utm_term: "term",
         session_browser: "Firefox",
         session_browser_version: "120",
         session_operating_system: "Mac",

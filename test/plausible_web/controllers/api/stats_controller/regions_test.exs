@@ -5,29 +5,29 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
     defp seed(%{site: site}) do
       populate_stats(site, [
         build(:pageview,
-          sessions_country_code: "EE",
-          sessions_subdivision1_code: "EE-37",
-          sessions_city_geoname_id: 588_409
+          session_country_code: "EE",
+          session_subdivision1_code: "EE-37",
+          session_city_geoname_id: 588_409
         ),
         build(:pageview,
-          sessions_country_code: "EE",
-          sessions_subdivision1_code: "EE-37",
-          sessions_city_geoname_id: 588_409
+          session_country_code: "EE",
+          session_subdivision1_code: "EE-37",
+          session_city_geoname_id: 588_409
         ),
         build(:pageview,
-          sessions_country_code: "EE",
-          sessions_subdivision1_code: "EE-37",
-          sessions_city_geoname_id: 588_409
+          session_country_code: "EE",
+          session_subdivision1_code: "EE-37",
+          session_city_geoname_id: 588_409
         ),
         build(:pageview,
-          sessions_country_code: "EE",
-          sessions_subdivision1_code: "EE-39",
-          sessions_city_geoname_id: 591_632
+          session_country_code: "EE",
+          session_subdivision1_code: "EE-39",
+          session_city_geoname_id: 591_632
         ),
         build(:pageview,
-          sessions_country_code: "EE",
-          sessions_subdivision1_code: "EE-39",
-          sessions_city_geoname_id: 591_632
+          session_country_code: "EE",
+          session_subdivision1_code: "EE-39",
+          session_city_geoname_id: 591_632
         )
       ])
     end
