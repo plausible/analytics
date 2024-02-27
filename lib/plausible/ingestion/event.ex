@@ -237,7 +237,6 @@ defmodule Plausible.Ingestion.Event do
         drop(event, :site_country_blocklist)
 
       _ ->
-        :lookup_failed
         event
     end
   end
