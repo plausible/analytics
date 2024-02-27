@@ -5,7 +5,7 @@ defmodule Plausible.Repo.Migrations.ShieldCountryRules do
     create table(:shield_rules_country, primary_key: false) do
       add(:id, :uuid, primary_key: true)
       add :site_id, references(:sites, on_delete: :delete_all), null: false
-      add :country_code, :text
+      add :country_code, :text, null: false
       add :action, :string, default: "deny", null: false
       add :added_by, :string
       timestamps()
