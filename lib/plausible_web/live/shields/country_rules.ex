@@ -134,7 +134,6 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                     <div class="flex items-center">
                       <span
                         id={"country-#{rule.id}"}
-                        id={"country-#{rule.id}"}
                         class="mr-4 cursor-help border-b border-dotted border-gray-400"
                         title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                       >
