@@ -11,7 +11,6 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
   alias Plausible.Imported
   alias Plausible.Imported.SiteImport
   alias Plausible.Sites
-  alias PlausibleWeb.Live.Components.Modal
 
   require Plausible.Imported.SiteImport
 
@@ -39,11 +38,7 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
 
     :ok = Imported.listen()
 
-    {:ok,
-     assign(socket,
-       import_to_delete: nil,
-       max_imports: Imported.max_complete_imports()
-     )}
+    {:ok, assign(socket, max_imports: Imported.max_complete_imports())}
   end
 
   def render(assigns) do
@@ -96,12 +91,12 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
             ) %>)
           </p>
         </div>
-        <.button
+        <.button_link
+          href={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{entry.site_import.id}"}
           theme="danger"
-          x-data
-          x-on:click={Modal.JS.preopen("import-delete-modal")}
-          phx-click="delete-import-select"
-          phx-value-id={entry.site_import.id}
+          method="DELETE"
+          class="sm:ml-3 sm:w-auto w-full"
+          data-confirm="Are you sure you want to delete this import?"
         >
           <span :if={entry.live_status in [SiteImport.completed(), SiteImport.failed()]}>
             Delete Import
@@ -109,56 +104,10 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
           <span :if={entry.live_status not in [SiteImport.completed(), SiteImport.failed()]}>
             Cancel Import
           </span>
-        </.button>
+        </.button_link>
       </li>
     </ul>
-
-    <.live_component module={Modal} id="import-delete-modal">
-      <p :if={@import_to_delete}>
-        Are you sure you want to delete <b><%= SiteImport.label(@import_to_delete) %></b>
-        import
-        from <b><%= format_date(@import_to_delete.start_date) %></b>
-        to <b><%= format_date(@import_to_delete.end_date) %></b>?
-      </p>
-
-      <div :if={@import_to_delete} class="sm:px-4 px-6 py-3 sm:flex sm:flex-row-reverse">
-        <.button_link
-          href={"/#{URI.encode_www_form(@site.domain)}/settings/forget-import/#{@import_to_delete.id}"}
-          theme="danger"
-          method="DELETE"
-          class="sm:ml-3 sm:w-auto w-full"
-        >
-          Delete Import
-        </.button_link>
-        <.button
-          class="sm:mt-0 mt-3 sm:w-auto w-full"
-          x-on:click={Modal.JS.close("import-delete-modal")}
-        >
-          Cancel
-        </.button>
-      </div>
-    </.live_component>
     """
-  end
-
-  def handle_event("delete-import-select", %{"id" => import_id}, socket) do
-    import_id = String.to_integer(import_id)
-
-    import_to_delete =
-      Enum.find_value(socket.assigns.site_imports, fn
-        %{site_import: %{id: ^import_id} = site_import} ->
-          site_import
-
-        _ ->
-          nil
-      end)
-
-    socket =
-      socket
-      |> assign(:import_to_delete, import_to_delete)
-      |> Modal.open("import-delete-modal")
-
-    {:noreply, socket}
   end
 
   def handle_info({:notification, :analytics_imports_jobs, status}, socket) do

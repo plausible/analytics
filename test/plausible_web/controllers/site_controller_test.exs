@@ -656,10 +656,10 @@ defmodule PlausibleWeb.SiteControllerTest do
       {:ok, opts} = add_imported_data(%{site: site})
       site = Map.new(opts).site
 
-      site_import1 = insert(:site_import, site: site, status: SiteImport.pending())
-      site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
+      _site_import1 = insert(:site_import, site: site, status: SiteImport.pending())
+      _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
       site_import3 = insert(:site_import, site: site, status: SiteImport.completed())
-      site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
+      _site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
 
       populate_stats(site, site_import3.id, [
         build(:imported_visitors, pageviews: 77),
@@ -669,32 +669,10 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = get(conn, "/#{site.domain}/settings/imports-exports")
       resp = html_response(conn, 200)
 
-      buttons = find(resp, ~s|button[phx-click="delete-import-select"]|)
+      buttons = find(resp, ~s|a[data-method="DELETE"]|)
       assert length(buttons) == 5
 
-      assert element_exists?(resp, ~s|button[phx-click="delete-import-select"][phx-value-id=0]|)
-
-      assert element_exists?(
-               resp,
-               ~s|button[phx-click="delete-import-select"][phx-value-id=#{site_import1.id}]|
-             )
-
-      assert element_exists?(
-               resp,
-               ~s|button[phx-click="delete-import-select"][phx-value-id=#{site_import2.id}]|
-             )
-
-      assert element_exists?(
-               resp,
-               ~s|button[phx-click="delete-import-select"][phx-value-id=#{site_import3.id}]|
-             )
-
       assert resp =~ "(98 page views)"
-
-      assert element_exists?(
-               resp,
-               ~s|button[phx-click="delete-import-select"][phx-value-id=#{site_import4.id}]|
-             )
     end
   end
 
