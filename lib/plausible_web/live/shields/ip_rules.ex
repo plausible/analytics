@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             title="Maximum number of addresses reached"
           >
             <p>
-              You've reached the maximum number of IP addresses you can block. Please remove one before adding another.
+              You've reached the maximum number of IP addresses you can block (<%= Shields.maximum_ip_rules() %>). Please remove one before adding another.
             </p>
           </PlausibleWeb.Components.Generic.notice>
         </div>
@@ -144,7 +144,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                 </th>
                 <th
                   scope="col"
-                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100"
+                  class="px-6 py-3 text-xs font-medium text-left text-gray-500 uppercase dark:text-gray-100 md:block hidden"
                 >
                   Description
                 </th>
@@ -161,7 +161,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                       <span
                         id={"inet-#{rule.id}"}
                         class="font-mono mr-4 cursor-help border-b border-dotted border-gray-400"
-                        title={"Added at #{rule.updated_at} by #{rule.added_by}"}
+                        title={"Added at #{format_added_at(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                       >
                         <%= rule.inet %>
                       </span>
@@ -185,7 +185,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
                       Allowed
                     </span>
                   </td>
-                  <td class="px-6 py-4 text-sm font-normal whitespace-nowrap truncate max-w-xs">
+                  <td class="px-6 py-4 text-sm font-normal whitespace-nowrap truncate max-w-xs md:block hidden">
                     <span :if={rule.description} title={rule.description}>
                       <%= rule.description %>
                     </span>
@@ -232,7 +232,8 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
 
     case Shields.add_ip_rule(
            socket.assigns.site.id,
-           Map.put(params, "added_by", "#{user.name} <#{user.email}>")
+           params,
+           added_by: user
          ) do
       {:ok, rule} ->
         socket =
@@ -284,5 +285,11 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
 
   defp ip_rule_present?(rules, ip) do
     not is_nil(Enum.find(rules, &(to_string(&1.inet) == ip)))
+  end
+
+  defp format_added_at(dt, tz) do
+    dt
+    |> Plausible.Timezones.to_datetime_in_timezone(tz)
+    |> Timex.format!("{YYYY}-{0M}-{0D} {h24}:{m}:{s}")
   end
 end

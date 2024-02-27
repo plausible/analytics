@@ -27,6 +27,7 @@ defmodule Plausible.Ingestion.Event do
           | :invalid
           | :dc_ip
           | :site_ip_blocklist
+          | :site_country_blocklist
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -97,11 +98,12 @@ defmodule Plausible.Ingestion.Event do
     [
       &drop_datacenter_ip/1,
       &drop_shield_rule_ip/1,
+      &put_geolocation/1,
+      &drop_shield_rule_country/1,
       &put_user_agent/1,
       &put_basic_info/1,
       &put_referrer/1,
       &put_utm_tags/1,
-      &put_geolocation/1,
       &put_props/1,
       &put_revenue/1,
       &put_salts/1,
@@ -231,6 +233,21 @@ defmodule Plausible.Ingestion.Event do
         update_attrs(event, result)
     end
   end
+
+  defp drop_shield_rule_country(
+         %__MODULE__{domain: domain, clickhouse_event_attrs: %{country_code: cc}} = event
+       )
+       when is_binary(domain) and is_binary(cc) do
+    case Plausible.Shield.CountryRuleCache.get({domain, String.upcase(cc)}) do
+      %Plausible.Shield.CountryRule{action: :deny} ->
+        drop(event, :site_country_blocklist)
+
+      _ ->
+        event
+    end
+  end
+
+  defp drop_shield_rule_country(%__MODULE__{} = event), do: event
 
   defp put_props(%__MODULE__{request: %{props: %{} = props}} = event) do
     # defensive: ensuring the keys/values are always in the same order

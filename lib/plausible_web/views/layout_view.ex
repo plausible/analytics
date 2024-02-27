@@ -50,23 +50,44 @@ defmodule PlausibleWeb.LayoutView do
 
   def settings_tabs(conn) do
     [
-      [key: "General", value: "general", icon: :rocket_launch],
-      [key: "People", value: "people", icon: :users],
-      [key: "Visibility", value: "visibility", icon: :eye],
-      [key: "Goals", value: "goals", icon: :check_circle],
+      %{key: "General", value: "general", icon: :rocket_launch},
+      %{key: "People", value: "people", icon: :users},
+      %{key: "Visibility", value: "visibility", icon: :eye},
+      %{key: "Goals", value: "goals", icon: :check_circle},
       on_full_build do
-        [key: "Funnels", value: "funnels", icon: :funnel]
+        %{key: "Funnels", value: "funnels", icon: :funnel}
       end,
-      [key: "Custom Properties", value: "properties", icon: :document_text],
-      [key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square],
-      if FunWithFlags.enabled?(:shields, for: conn.assigns[:current_user]) do
-        [key: "Shields", value: "shields", icon: :shield_exclamation]
-      end,
-      [key: "Email Reports", value: "email-reports", icon: :envelope],
+      %{key: "Custom Properties", value: "properties", icon: :document_text},
+      %{key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square},
+      %{
+        key: "Shields",
+        icon: :shield_exclamation,
+        value: [
+          %{key: "IP Addresses", value: "shields/ip_addresses"},
+          %{key: "Countries", value: "shields/countries"}
+        ]
+      },
+      %{key: "Email Reports", value: "email-reports", icon: :envelope},
       if conn.assigns[:current_user_role] == :owner do
-        [key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle]
+        %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
       end
     ]
+    |> Enum.reject(&is_nil/1)
+  end
+
+  def flat_settings_options(conn) do
+    conn
+    |> settings_tabs()
+    |> Enum.map(fn
+      %{value: value, key: key} when is_binary(value) ->
+        {key, value}
+
+      %{value: submenu_items, key: parent_key} when is_list(submenu_items) ->
+        Enum.map(submenu_items, fn submenu_item ->
+          {"#{parent_key}: #{submenu_item.key}", submenu_item.value}
+        end)
+    end)
+    |> List.flatten()
   end
 
   def trial_notificaton(user) do
@@ -97,7 +118,11 @@ defmodule PlausibleWeb.LayoutView do
     render(layout, Map.put(assigns, :inner_layout, content))
   end
 
+  def is_current_tab(_, nil) do
+    false
+  end
+
   def is_current_tab(conn, tab) do
-    List.last(conn.path_info) == tab
+    String.ends_with?(Enum.join(conn.path_info, "/"), tab)
   end
 end

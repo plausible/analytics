@@ -134,7 +134,7 @@ defmodule PlausibleWeb.Live.Components.Modal do
     ~H"""
     <div
       id={@id}
-      class="relative z-50 [&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
+      class="relative z-[49] [&[data-phx-ref]_div.modal-dialog]:hidden [&[data-phx-ref]_div.modal-loading]:block"
       data-modal
       x-cloak
       x-data="{
