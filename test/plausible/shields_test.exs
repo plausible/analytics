@@ -80,8 +80,12 @@ defmodule Plausible.ShieldsTest do
     end
 
     test "with added_by", %{site: site} do
-      assert {:ok, rule} = add_ip_rule(site, %{"inet" => "1.1.1.1", "added_by" => "test"})
-      assert rule.added_by == "test"
+      assert {:ok, rule} =
+               add_ip_rule(site, %{"inet" => "1.1.1.1"},
+                 added_by: build(:user, name: "Joe", email: "joe@example.com")
+               )
+
+      assert rule.added_by == "Joe <joe@example.com>"
     end
   end
 
@@ -179,6 +183,35 @@ defmodule Plausible.ShieldsTest do
                     {:constraint_name, "shield_rules_country_site_id_country_code_index"}
                   ]}
              ]
+    end
+
+    test "over limit", %{site: site} do
+      country_codes =
+        Location.Country.all()
+        |> Enum.take(Plausible.Shields.maximum_country_rules())
+        |> Enum.map(& &1.alpha_2)
+
+      for cc <- country_codes do
+        assert {:ok, _} =
+                 add_country_rule(site, %{"country_code" => cc})
+      end
+
+      assert count_country_rules(site) == maximum_country_rules()
+
+      assert {:error, changeset} =
+               add_country_rule(site, %{"country_code" => "US"})
+
+      refute changeset.valid?
+      assert changeset.errors == [country_code: {"maximum reached", []}]
+    end
+
+    test "with added_by", %{site: site} do
+      assert {:ok, rule} =
+               add_country_rule(site, %{"country_code" => "EE"},
+                 added_by: build(:user, name: "Joe", email: "joe@example.com")
+               )
+
+      assert rule.added_by == "Joe <joe@example.com>"
     end
   end
 

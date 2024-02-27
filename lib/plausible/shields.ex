@@ -18,10 +18,13 @@ defmodule Plausible.Shields do
     list(Shield.IPRule, site_or_id)
   end
 
-  @spec add_ip_rule(Site.t() | non_neg_integer(), map()) ::
+  @spec add_ip_rule(Site.t() | non_neg_integer(), map(), Keyword.t()) ::
           {:ok, Shield.IPRule.t()} | {:error, Ecto.Changeset.t()}
-  def add_ip_rule(site_or_id, params) do
-    add(Shield.IPRule, site_or_id, {:inet, @maximum_ip_rules}, params)
+  def add_ip_rule(site_or_id, params, opts \\ []) do
+    opts =
+      Keyword.put(opts, :limit, {:inet, @maximum_ip_rules})
+
+    add(Shield.IPRule, site_or_id, params, opts)
   end
 
   @spec remove_ip_rule(Site.t() | non_neg_integer(), String.t()) :: :ok
@@ -39,10 +42,11 @@ defmodule Plausible.Shields do
     list(Shield.CountryRule, site_or_id)
   end
 
-  @spec add_country_rule(Site.t() | non_neg_integer(), map()) ::
+  @spec add_country_rule(Site.t() | non_neg_integer(), map(), Keyword.t()) ::
           {:ok, Shield.CountryRule.t()} | {:error, Ecto.Changeset.t()}
-  def add_country_rule(site_or_id, params) do
-    add(Shield.CountryRule, site_or_id, {:country_code, @maximum_country_rules}, params)
+  def add_country_rule(site_or_id, params, opts \\ []) do
+    opts = Keyword.put(opts, :limit, {:country_code, @maximum_country_rules})
+    add(Shield.CountryRule, site_or_id, params, opts)
   end
 
   @spec remove_country_rule(Site.t() | non_neg_integer(), String.t()) :: :ok
@@ -67,11 +71,13 @@ defmodule Plausible.Shields do
     )
   end
 
-  defp add(schema, %Site{id: id}, max, params) do
-    add(schema, id, max, params)
+  defp add(schema, %Site{id: id}, params, opts) do
+    add(schema, id, params, opts)
   end
 
-  defp add(schema, site_id, {field, max}, params) when is_integer(site_id) do
+  defp add(schema, site_id, params, opts) when is_integer(site_id) do
+    {field, max} = Keyword.fetch!(opts, :limit)
+
     Repo.transaction(fn ->
       result =
         if count(schema, site_id) >= max do
@@ -84,7 +90,7 @@ defmodule Plausible.Shields do
           {:error, changeset}
         else
           schema
-          |> struct(site_id: site_id)
+          |> struct(site_id: site_id, added_by: format_added_by(opts[:added_by]))
           |> schema.changeset(params)
           |> Repo.insert()
         end
@@ -112,4 +118,7 @@ defmodule Plausible.Shields do
   defp count(schema, site_id) when is_integer(site_id) do
     Repo.aggregate(from(r in schema, where: r.site_id == ^site_id), :count)
   end
+
+  defp format_added_by(nil), do: ""
+  defp format_added_by(%Plausible.Auth.User{} = user), do: "#{user.name} <#{user.email}>"
 end

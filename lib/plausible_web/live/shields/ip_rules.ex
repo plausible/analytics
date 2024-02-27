@@ -232,7 +232,8 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
 
     case Shields.add_ip_rule(
            socket.assigns.site.id,
-           Map.put(params, "added_by", "#{user.name} <#{user.email}>")
+           params,
+           added_by: user
          ) do
       {:ok, rule} ->
         socket =
