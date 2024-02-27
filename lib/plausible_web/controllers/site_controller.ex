@@ -273,7 +273,7 @@ defmodule PlausibleWeb.SiteController do
   def settings_imports_exports(conn, _params) do
     site = conn.assigns.site
 
-    if FunWithFlags.enabled?(:imports_exports) do
+    if FunWithFlags.enabled?(:imports_exports, for: site) do
       conn
       |> render("settings_imports_exports.html",
         site: site,
