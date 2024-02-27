@@ -94,7 +94,7 @@ defmodule PlausibleWeb.Plugins.API.Controllers.CapabilitiesTest do
         |> put_req_header("content-type", "application/json")
         |> authenticate(site.domain, token)
         |> get(Routes.plugins_api_capabilities_url(PlausibleWeb.Endpoint, :index))
-        |> json_response(resp, 200)
+        |> json_response(200)
 
       assert resp ==
                %{
