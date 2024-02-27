@@ -68,6 +68,7 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
 
       refute element_exists?(resp, ~s/button#add-country-rule[x-data]/)
       assert resp =~ "Maximum number of countries reached"
+      assert resp =~ "You've reached the maximum number of countries you can block (30)"
     end
   end
 

@@ -66,6 +66,7 @@ defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
 
       refute element_exists?(resp, ~s/button#add-ip-rule[x-data]/)
       assert resp =~ "Maximum number of addresses reached"
+      assert resp =~ "You've reached the maximum number of IP addresses you can block (30)"
     end
   end
 

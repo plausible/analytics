@@ -62,7 +62,7 @@ defmodule PlausibleWeb.Live.Shields.IPRules do
             title="Maximum number of addresses reached"
           >
             <p>
-              You've reached the maximum number of IP addresses you can block. Please remove one before adding another.
+              You've reached the maximum number of IP addresses you can block (<%= Shields.maximum_ip_rules() %>). Please remove one before adding another.
             </p>
           </PlausibleWeb.Components.Generic.notice>
         </div>
