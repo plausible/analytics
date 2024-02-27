@@ -17,7 +17,7 @@ defmodule PlausibleWeb.Plugins.API.Schemas.Capabilities do
     required: [:authorized, :data_domain, :features],
     properties: %{
       authorized: %Schema{type: :boolean},
-      data_domain: %Schema{type: :string},
+      data_domain: %Schema{type: :string, nullable: true},
       features: %Schema{
         type: :object,
         required: @features,
