@@ -2250,12 +2250,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       site: site
     } do
       populate_stats(site, [
-        build(:event, screen_size: "Mobile", name: "pageview"),
-        build(:event, screen_size: "Mobile", name: "AddToCart"),
-        build(:event, screen_size: "Mobile", name: "AddToCart"),
-        build(:event, screen_size: "Desktop", name: "AddToCart", user_id: 1),
-        build(:event, screen_size: "Desktop", name: "Purchase", user_id: 1),
-        build(:event, screen_size: "Desktop", name: "pageview")
+        build(:event, session_screen_size: "Mobile", name: "pageview"),
+        build(:event, session_screen_size: "Mobile", name: "AddToCart"),
+        build(:event, session_screen_size: "Mobile", name: "AddToCart"),
+        build(:event, session_screen_size: "Desktop", name: "AddToCart", user_id: 1),
+        build(:event, session_screen_size: "Desktop", name: "Purchase", user_id: 1),
+        build(:event, session_screen_size: "Desktop", name: "pageview")
       ])
 
       # Make sure that revenue goals are treated the same
@@ -2295,8 +2295,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       site: site
     } do
       populate_stats(site, [
-        build(:event, screen_size: "Mobile", name: "pageview"),
-        build(:event, screen_size: "Mobile", name: "AddToCart")
+        build(:event, session_screen_size: "Mobile", name: "pageview"),
+        build(:event, session_screen_size: "Mobile", name: "AddToCart")
       ])
 
       insert(:goal, %{site: site, event_name: "AddToCart"})
@@ -2325,13 +2325,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
       conn: conn
     } do
       populate_stats(site, [
-        build(:pageview, browser: "Firefox", browser_version: "110"),
-        build(:pageview, browser: "Firefox", browser_version: "110"),
-        build(:pageview, browser: "Chrome", browser_version: "110"),
-        build(:pageview, browser: "Chrome", browser_version: "110"),
-        build(:pageview, browser: "Avast Secure Browser", browser_version: "110"),
-        build(:pageview, browser: "Avast Secure Browser", browser_version: "110"),
-        build(:event, name: "Signup", browser: "Edge", browser_version: "110")
+        build(:pageview, session_browser: "Firefox", session_browser_version: "110"),
+        build(:pageview, session_browser: "Firefox", session_browser_version: "110"),
+        build(:pageview, session_browser: "Chrome", session_browser_version: "110"),
+        build(:pageview, session_browser: "Chrome", session_browser_version: "110"),
+        build(:pageview, session_browser: "Avast Secure Browser", session_browser_version: "110"),
+        build(:pageview, session_browser: "Avast Secure Browser", session_browser_version: "110"),
+        build(:event, name: "Signup", session_browser: "Edge", session_browser_version: "110")
       ])
 
       insert(:goal, site: site, event_name: "Signup")

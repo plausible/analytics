@@ -292,12 +292,18 @@ defmodule PlausibleWeb.StatsControllerTest do
 
     test "exports operating system versions", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
-        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
-        build(:pageview, operating_system: "Mac", operating_system_version: "13")
+        build(:pageview, session_operating_system: "Mac", session_operating_system_version: "14"),
+        build(:pageview, session_operating_system: "Mac", session_operating_system_version: "14"),
+        build(:pageview, session_operating_system: "Mac", session_operating_system_version: "14"),
+        build(:pageview,
+          session_operating_system: "Ubuntu",
+          session_operating_system_version: "20.04"
+        ),
+        build(:pageview,
+          session_operating_system: "Ubuntu",
+          session_operating_system_version: "20.04"
+        ),
+        build(:pageview, session_operating_system: "Mac", session_operating_system_version: "13")
       ])
 
       conn = get(conn, "/#{site.domain}/export")
@@ -519,24 +525,36 @@ defmodule PlausibleWeb.StatsControllerTest do
       site: site
     } do
       populate_stats(site, [
-        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
-        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
-        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:pageview, session_operating_system: "Mac", session_operating_system_version: "14"),
         build(:event,
           name: "Signup",
-          operating_system: "Ubuntu",
-          operating_system_version: "20.04"
+          session_operating_system: "Mac",
+          session_operating_system_version: "14"
         ),
         build(:event,
           name: "Signup",
-          operating_system: "Ubuntu",
-          operating_system_version: "20.04"
+          session_operating_system: "Mac",
+          session_operating_system_version: "14"
         ),
         build(:event,
           name: "Signup",
-          operating_system: "Lubuntu",
-          operating_system_version: "20.04"
+          session_operating_system: "Mac",
+          session_operating_system_version: "14"
+        ),
+        build(:event,
+          name: "Signup",
+          session_operating_system: "Ubuntu",
+          session_operating_system_version: "20.04"
+        ),
+        build(:event,
+          name: "Signup",
+          session_operating_system: "Ubuntu",
+          session_operating_system_version: "20.04"
+        ),
+        build(:event,
+          name: "Signup",
+          session_operating_system: "Lubuntu",
+          session_operating_system_version: "20.04"
         )
       ])
 

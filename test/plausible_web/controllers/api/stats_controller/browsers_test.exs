@@ -176,16 +176,16 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
       site: site
     } do
       populate_stats(site, [
-        build(:event, browser: "Chrome", browser_version: "110", name: "Signup"),
-        build(:event, browser: "Chrome", browser_version: "110", name: "Signup"),
-        build(:pageview, browser: "Chrome", browser_version: "110"),
-        build(:pageview, browser: "Chrome", browser_version: "121"),
-        build(:pageview, browser: "Chrome", browser_version: "121"),
-        build(:event, browser: "Firefox", browser_version: "121", name: "Signup"),
-        build(:pageview, browser: "Firefox", browser_version: "110"),
-        build(:pageview, browser: "Firefox", browser_version: "110"),
-        build(:pageview, browser: "Firefox", browser_version: "110"),
-        build(:pageview, browser: "Firefox", browser_version: "110")
+        build(:event, session_browser: "Chrome", session_browser_version: "110", name: "Signup"),
+        build(:event, session_browser: "Chrome", session_browser_version: "110", name: "Signup"),
+        build(:pageview, session_browser: "Chrome", session_browser_version: "110"),
+        build(:pageview, session_browser: "Chrome", session_browser_version: "121"),
+        build(:pageview, session_browser: "Chrome", session_browser_version: "121"),
+        build(:event, session_browser: "Firefox", session_browser_version: "121", name: "Signup"),
+        build(:pageview, session_browser: "Firefox", session_browser_version: "110"),
+        build(:pageview, session_browser: "Firefox", session_browser_version: "110"),
+        build(:pageview, session_browser: "Firefox", session_browser_version: "110"),
+        build(:pageview, session_browser: "Firefox", session_browser_version: "110")
       ])
 
       insert(:goal, site: site, event_name: "Signup")

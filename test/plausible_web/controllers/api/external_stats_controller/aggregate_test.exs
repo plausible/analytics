@@ -1349,10 +1349,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     } do
       populate_stats(site, [
         build(:event, name: "Signup"),
-        build(:event, name: "Signup", browser: "Chrome"),
-        build(:event, name: "Signup", browser: "Firefox", user_id: 123),
-        build(:event, name: "Signup", browser: "Firefox", user_id: 123),
-        build(:pageview, browser: "Firefox"),
+        build(:event, name: "Signup", session_browser: "Chrome"),
+        build(:event, name: "Signup", session_browser: "Firefox", user_id: 123),
+        build(:event, name: "Signup", session_browser: "Firefox", user_id: 123),
+        build(:pageview, session_browser: "Firefox"),
         build(:pageview)
       ])
 
