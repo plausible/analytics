@@ -135,7 +135,7 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
                       <span
                         id={"country-#{rule.id}"}
                         class="mr-4 cursor-help border-b border-dotted border-gray-400"
-                        title={"Added at #{rule.updated_at} by #{rule.added_by}"}
+                        title={"Added at #{Plausible.Timezones.to_date_in_timezone(rule.inserted_at, @site.timezone)} by #{rule.added_by}"}
                       >
                         <%= country.flag %> <%= country.name %>
                       </span>
