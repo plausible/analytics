@@ -291,13 +291,16 @@ secure_cookie =
   |> get_var_from_path_or_env("SECURE_COOKIE", if(is_selfhost, do: "false", else: "true"))
   |> String.to_existing_atom()
 
+license_key = get_var_from_path_or_env(config_dir, "LICENSE_KEY", "")
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
   super_admin_user_ids: super_admin_user_ids,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
-  log_failed_login_attempts: log_failed_login_attempts
+  log_failed_login_attempts: log_failed_login_attempts,
+  license_key: license_key
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,

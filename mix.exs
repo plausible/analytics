@@ -158,7 +158,7 @@ defmodule Plausible.MixProject do
   defp docs do
     [
       main: "readme",
-      logo: "priv/static/images/icon/plausible_favicon.png",
+      logo: "priv/static/images/ee/favicon-32x32.png",
       extras:
         Path.wildcard("guides/**/*.md") ++
           [

@@ -143,6 +143,7 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert ~c"visitors.csv" in zip
       assert ~c"browsers.csv" in zip
+      assert ~c"browser_versions.csv" in zip
       assert ~c"cities.csv" in zip
       assert ~c"conversions.csv" in zip
       assert ~c"countries.csv" in zip
@@ -150,6 +151,7 @@ defmodule PlausibleWeb.StatsControllerTest do
       assert ~c"entry_pages.csv" in zip
       assert ~c"exit_pages.csv" in zip
       assert ~c"operating_systems.csv" in zip
+      assert ~c"operating_system_versions.csv" in zip
       assert ~c"pages.csv" in zip
       assert ~c"regions.csv" in zip
       assert ~c"sources.csv" in zip
@@ -287,6 +289,33 @@ defmodule PlausibleWeb.StatsControllerTest do
                [""]
              ]
     end
+
+    test "exports operating system versions", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
+        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
+        build(:pageview, operating_system: "Mac", operating_system_version: "13")
+      ])
+
+      conn = get(conn, "/#{site.domain}/export")
+
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      {_filename, os_versions} =
+        Enum.find(zip, fn {filename, _data} -> filename == ~c"operating_system_versions.csv" end)
+
+      assert parse_csv(os_versions) == [
+               ["name", "version", "visitors"],
+               ["Mac", "14", "3"],
+               ["Ubuntu", "20.04", "2"],
+               ["Mac", "13", "1"],
+               [""]
+             ]
+    end
   end
 
   defp parse_csv(file_content) when is_binary(file_content) do
@@ -406,20 +435,19 @@ defmodule PlausibleWeb.StatsControllerTest do
         pathname: "/",
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
-        session_utm_medium: "search",
-        session_utm_campaign: "ads",
-        session_utm_source: "google",
-        session_utm_content: "content",
-        session_utm_term: "term",
         session_browser: "Firefox",
-        session_browser_version: "120"
+        session_browser_version: "120",
+        session_operating_system: "Mac",
+        session_operating_system_version: "14"
       ),
       build(:pageview,
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], months: -1) |> NaiveDateTime.truncate(:second),
         session_country_code: "EE",
         session_browser: "Firefox",
-        session_browser_version: "120"
+        session_browser_version: "120",
+        session_operating_system: "Mac",
+        session_operating_system_version: "14"
       ),
       build(:pageview,
         timestamp:
@@ -427,7 +455,8 @@ defmodule PlausibleWeb.StatsControllerTest do
         session_utm_campaign: "ads",
         session_country_code: "EE",
         session_referrer_source: "Google",
-        session_browser: "FirefoxNoVersion"
+        session_browser: "FirefoxNoVersion",
+        session_operating_system: "MacNoVersion"
       ),
       build(:event,
         timestamp:
@@ -476,6 +505,51 @@ defmodule PlausibleWeb.StatsControllerTest do
                ["property", "value", "visitors", "events", "conversion_rate"],
                ["author", "marko", "2", "2", "50.0"],
                ["author", "uku", "1", "1", "25.0"],
+               [""]
+             ]
+    end
+
+    test "exports conversions and conversion rate for operating system versions", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, operating_system: "Mac", operating_system_version: "14"),
+        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:event,
+          name: "Signup",
+          operating_system: "Ubuntu",
+          operating_system_version: "20.04"
+        ),
+        build(:event,
+          name: "Signup",
+          operating_system: "Ubuntu",
+          operating_system_version: "20.04"
+        ),
+        build(:event,
+          name: "Signup",
+          operating_system: "Lubuntu",
+          operating_system_version: "20.04"
+        )
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn = get(conn, "/#{site.domain}/export?filters=#{Jason.encode!(%{goal: "Signup"})}")
+
+      assert response = response(conn, 200)
+      {:ok, zip} = :zip.unzip(response, [:memory])
+
+      {_filename, os_versions} =
+        Enum.find(zip, fn {filename, _data} -> filename == ~c"operating_system_versions.csv" end)
+
+      assert parse_csv(os_versions) == [
+               ["name", "version", "conversions", "conversion_rate"],
+               ["Mac", "14", "3", "75.0"],
+               ["Ubuntu", "20.04", "2", "100.0"],
+               ["Lubuntu", "20.04", "1", "100.0"],
                [""]
              ]
     end

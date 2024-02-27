@@ -1313,17 +1313,13 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{
                  "total_visitors" => 2,
                  "visitors" => 1,
-                 "visits" => 1,
                  "name" => "/page1",
-                 "visit_duration" => 0,
                  "conversion_rate" => 50.0
                },
                %{
                  "total_visitors" => 1,
                  "visitors" => 1,
-                 "visits" => 1,
                  "name" => "/page2",
-                 "visit_duration" => 900,
                  "conversion_rate" => 100.0
                }
              ]
@@ -1508,14 +1504,12 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                  "name" => "/exit1",
                  "visitors" => 1,
                  "total_visitors" => 1,
-                 "visits" => 1,
                  "conversion_rate" => 100.0
                },
                %{
                  "name" => "/exit2",
                  "visitors" => 1,
                  "total_visitors" => 1,
-                 "visits" => 1,
                  "conversion_rate" => 100.0
                }
              ]
