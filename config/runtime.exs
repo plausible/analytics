@@ -108,8 +108,10 @@ super_admin_user_ids =
   |> Enum.filter(& &1)
 
 env = get_var_from_path_or_env(config_dir, "ENVIRONMENT", "prod")
-mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.SMTPAdapter")
-mailer_email = get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "hello@plausible.local")
+mailer_adapter = get_var_from_path_or_env(config_dir, "MAILER_ADAPTER", "Bamboo.Mua")
+
+mailer_email =
+  get_var_from_path_or_env(config_dir, "MAILER_EMAIL", "plausible-ce@#{base_url.host}")
 
 mailer_email =
   if mailer_name = get_var_from_path_or_env(config_dir, "MAILER_NAME") do
@@ -462,22 +464,20 @@ case mailer_adapter do
       hackney_opts: [recv_timeout: :timer.seconds(10)],
       api_key: get_var_from_path_or_env(config_dir, "SENDGRID_API_KEY")
 
-  "Bamboo.SMTPAdapter" ->
-    config :plausible, Plausible.Mailer,
-      adapter: Bamboo.SMTPAdapter,
-      server: get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR", "mail"),
-      hostname: base_url.host,
-      port: get_var_from_path_or_env(config_dir, "SMTP_HOST_PORT", "25"),
-      username: get_var_from_path_or_env(config_dir, "SMTP_USER_NAME"),
-      password: get_var_from_path_or_env(config_dir, "SMTP_USER_PWD"),
-      tls: :if_available,
-      allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-      ssl: get_var_from_path_or_env(config_dir, "SMTP_HOST_SSL_ENABLED") || false,
-      retries: get_var_from_path_or_env(config_dir, "SMTP_RETRIES") || 2,
-      no_mx_lookups: get_var_from_path_or_env(config_dir, "SMTP_MX_LOOKUPS_ENABLED") || true
-
-  "Bamboo.Mua" ->
+  smtp_adapter when smtp_adapter in ["Bamboo.SMTPAdapter", "Bamboo.Mua"] ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
+
+    if smtp_adapter == "Bamboo.SMTPAdapter" do
+      Logger.warning(
+        "Bamboo.SMTPAdapter has been replaced with Bamboo.Mua, falling back to using Bamboo.Mua"
+      )
+    end
+
+    for env_var <- ["SMTP_MX_LOOKUPS_ENABLED", "SMTP_RETRIES", "SMTP_HOST_SSL_ENABLED"] do
+      if get_var_from_path_or_env(config_dir, env_var) do
+        Logger.warning("#{env_var} env var is no longer supported")
+      end
+    end
 
     if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
       port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)

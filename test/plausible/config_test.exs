@@ -4,7 +4,7 @@ defmodule Plausible.ConfigTest do
   describe "mailer" do
     test "mailer email default" do
       env = [{"MAILER_EMAIL", nil}]
-      assert get_in(runtime_config(env), [:plausible, :mailer_email]) == "hello@plausible.local"
+      assert get_in(runtime_config(env), [:plausible, :mailer_email]) == "plausible-ce@localhost"
     end
 
     test "mailer email custom" do
@@ -16,7 +16,7 @@ defmodule Plausible.ConfigTest do
       env = [{"MAILER_EMAIL", nil}, {"MAILER_NAME", "John"}]
 
       assert get_in(runtime_config(env), [:plausible, :mailer_email]) ==
-               {"John", "hello@plausible.local"}
+               {"John", "plausible-ce@localhost"}
 
       env = [{"MAILER_EMAIL", "custom@mailer.email"}, {"MAILER_NAME", "John"}]
 
@@ -24,21 +24,11 @@ defmodule Plausible.ConfigTest do
                {"John", "custom@mailer.email"}
     end
 
-    test "defaults to Bamboo.SMTPAdapter" do
+    test "defaults to Bamboo.Mua" do
       env = {"MAILER_ADAPTER", nil}
 
       assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
-               adapter: Bamboo.SMTPAdapter,
-               server: "mail",
-               hostname: "localhost",
-               port: "25",
-               username: nil,
-               password: nil,
-               tls: :if_available,
-               allowed_tls_versions: [:tlsv1, :"tlsv1.1", :"tlsv1.2"],
-               ssl: false,
-               retries: 2,
-               no_mx_lookups: true
+               adapter: Bamboo.Mua
              ]
     end
 
@@ -113,7 +103,7 @@ defmodule Plausible.ConfigTest do
              ]
     end
 
-    test "Bamboo.SMTPAdapter" do
+    test "Bamboo.SMTPAdapter is deprecated" do
       env = [
         {"MAILER_ADAPTER", "Bamboo.SMTPAdapter"},
         {"SMTP_HOST_ADDR", "localhost"},
@@ -125,19 +115,22 @@ defmodule Plausible.ConfigTest do
         {"SMTP_MX_LOOKUPS_ENABLED", "true"}
       ]
 
-      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
-               {:adapter, Bamboo.SMTPAdapter},
-               {:server, "localhost"},
-               {:hostname, "localhost"},
-               {:port, "2525"},
-               {:username, "neo"},
-               {:password, "one"},
-               {:tls, :if_available},
-               {:allowed_tls_versions, [:tlsv1, :"tlsv1.1", :"tlsv1.2"]},
-               {:ssl, "true"},
-               {:retries, "3"},
-               {:no_mx_lookups, "true"}
-             ]
+      log =
+        ExUnit.CaptureLog.capture_log(fn ->
+          assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+                   adapter: Bamboo.Mua,
+                   auth: [username: "neo", password: "one"],
+                   relay: "localhost",
+                   port: 2525
+                 ]
+        end)
+
+      assert log =~
+               "[warning] Bamboo.SMTPAdapter has been replaced with Bamboo.Mua, falling back to using Bamboo.Mua"
+
+      assert log =~ "[warning] SMTP_MX_LOOKUPS_ENABLED env var is no longer supported"
+      assert log =~ "[warning] SMTP_RETRIES env var is no longer supported"
+      assert log =~ "[warning] SMTP_HOST_SSL_ENABLED env var is no longer supported"
     end
 
     test "Bamboo.Mua (no config)" do

@@ -36,6 +36,7 @@ All notable changes to this project will be documented in this file.
 - Removed the `prop_names` returned in the Stats API `event:goal` breakdown response
 - Removed the `prop-breakdown.csv` file from CSV export
 - Deprecated `CLICKHOUSE_MAX_BUFFER_SIZE`
+- Drop `Bamboo.SMTPAdapter`
 
 ### Changed
 - Limit the number of Goal Conversions shown on the dashboard and render a "Details" link when there are more entries to show
@@ -43,6 +44,7 @@ All notable changes to this project will be documented in this file.
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
 - GA/SC sections moved to new settings: Integrations
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
+- Make `Bamboo.Mua` the default as opposed to `Bamboo.SMTPAdapter`
 
 ### Fixed
 - Fix `conversion_rate` metric in a `browser_versions` breakdown
