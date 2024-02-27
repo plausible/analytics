@@ -36,3 +36,9 @@ postgres-prod: ## Start a container with the same version of postgres as the one
 
 postgres-stop: ## Stop and remove the postgres container
 	docker stop plausible_db && docker rm plausible_db
+
+minio: ## Start a transient container with a recent version of minio (s3)
+	docker run -d --rm -p 6000:6000 -p 6001:6001 --name plausible_minio minio/minio server /data --address ":6000" --console-address ":6001"
+
+minio-stop: ## Stop and remove the minio container
+	docker stop plausible_minio
