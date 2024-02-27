@@ -57,8 +57,11 @@ defmodule PlausibleWeb.Live.ImportsExportsSettings do
       </p>
     </header>
 
-    <div :if={Enum.empty?(@site_imports)}>
-      <p>There are no imports yet.</p>
+    <div
+      :if={Enum.empty?(@site_imports)}
+      class="text-gray-800 dark:text-gray-200 text-center mt-8 mb-12"
+    >
+      <p>There are no imports yet for this site.</p>
     </div>
     <ul :if={not Enum.empty?(@site_imports)}>
       <li :for={entry <- @site_imports} class="py-4 flex items-center justify-between space-x-4">

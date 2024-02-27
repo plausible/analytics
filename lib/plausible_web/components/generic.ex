@@ -72,7 +72,7 @@ defmodule PlausibleWeb.Components.Generic do
   def button_link(assigns) do
     theme_class =
       if assigns.disabled do
-        "bg-gray-400 dark:text-white dark:text-gray-400 dark:bg-gray-700 pointer-events-none cursor-default"
+        "bg-gray-400 text-white dark:text-white dark:text-gray-400 dark:bg-gray-700 pointer-events-none cursor-default"
       else
         @button_themes[assigns.theme]
       end
