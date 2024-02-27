@@ -176,7 +176,8 @@ defmodule PlausibleWeb.Live.Shields.CountryRules do
 
     case Shields.add_country_rule(
            socket.assigns.site.id,
-           Map.put(params, "added_by", "#{user.name} <#{user.email}>")
+           params,
+           added_by: user
          ) do
       {:ok, rule} ->
         country_rules = [rule | socket.assigns.country_rules]

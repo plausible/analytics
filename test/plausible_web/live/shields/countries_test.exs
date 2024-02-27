@@ -83,7 +83,7 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
       assert submit_button(html, ~s/form[phx-submit="save-country-rule"]/)
     end
 
-    test "submitting a valid country saves it", %{conn: conn, site: site} do
+    test "submitting a valid country saves it", %{conn: conn, site: site, user: user} do
       lv = get_liveview(conn, site)
 
       lv
@@ -96,7 +96,14 @@ defmodule PlausibleWeb.Live.Shields.CountriesTest do
 
       assert html =~ "Estonia"
 
-      assert [%{country_code: "EE"}] = Shields.list_country_rules(site)
+      added_by = "#{user.name} <#{user.email}>"
+
+      assert [%{id: id, country_code: "EE", added_by: ^added_by}] =
+               Shields.list_country_rules(site)
+
+      tooltip = text_of_attr(html, "#country-#{id}", "title")
+      assert tooltip =~ "Added at #{Date.utc_today()}"
+      assert tooltip =~ "by #{added_by}"
     end
 
     test "clicking Remove deletes the rule", %{conn: conn, site: site} do
