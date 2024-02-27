@@ -40,7 +40,7 @@
               <li class="w-full sm:w-auto">
                 <.dropdown>
                   <:button class="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800">
-                    <span class="font-medium truncate dark:text-gray-100">
+                    <span class="font-medium truncate dark:text-gray-100 hidden md:block">
                       <%= @conn.assigns[:current_user].name %>
                     </span>
                     <%= img_tag(Plausible.Auth.User.profile_img_url(@conn.assigns[:current_user]),

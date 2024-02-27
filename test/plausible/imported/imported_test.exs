@@ -1211,7 +1211,7 @@ defmodule Plausible.ImportedTest do
                    %{"name" => "Unique visitors", "value" => 1},
                    %{"name" => "Total visits", "value" => 1},
                    %{"name" => "Total pageviews", "value" => 1},
-                   %{"name" => "Views per visit", "value" => +0.0},
+                   %{"name" => "Views per visit", "value" => 1.0},
                    %{"name" => "Bounce rate", "value" => 0},
                    %{"name" => "Visit duration", "value" => 60}
                  ]
