@@ -240,7 +240,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp drop_shield_rule_country(
-         %__MODULE__{domain: domain, clickhouse_event_attrs: %{country_code: cc}} = event
+         %__MODULE__{domain: domain, clickhouse_session_attrs: %{country_code: cc}} = event
        )
        when is_binary(domain) and is_binary(cc) do
     case Plausible.Shield.CountryRuleCache.get({domain, String.upcase(cc)}) do
