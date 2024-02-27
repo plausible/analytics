@@ -140,6 +140,31 @@ defmodule Plausible.ConfigTest do
              ]
     end
 
+    test "Bamboo.Mua (no config)" do
+      env = [{"MAILER_ADAPTER", "Bamboo.Mua"}]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua}
+             ]
+    end
+
+    test "Bamboo.Mua (relay config)" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_HOST_ADDR", "localhost"},
+        {"SMTP_HOST_PORT", "2525"},
+        {"SMTP_USER_NAME", "neo"},
+        {"SMTP_USER_PWD", "one"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua},
+               {:auth, [username: "neo", password: "one"]},
+               {:relay, "localhost"},
+               {:port, 2525}
+             ]
+    end
+
     test "unknown adapter raises" do
       env = {"MAILER_ADAPTER", "Bamboo.FakeAdapter"}
 
