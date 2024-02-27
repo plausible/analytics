@@ -89,7 +89,7 @@ defmodule Plausible.Imported.CSVImporter do
     "imported_devices" =>
       "date Date, device String, visitors UInt64, visits UInt64, visit_duration UInt64, bounces UInt32",
     "imported_entry_pages" =>
-      "date Date, entry_page String, visitors UInt64, entrances UInt64, visit_duration UInt64, bounces UInt64",
+      "date Date, entry_page String, visitors UInt64, entrances UInt64, visit_duration UInt64, bounces UInt32",
     "imported_exit_pages" => "date Date, exit_page String, visitors UInt64, exits UInt64",
     "imported_locations" =>
       "date Date, country String, region String, city UInt64, visitors UInt64, visits UInt64, visit_duration UInt64, bounces UInt32",
