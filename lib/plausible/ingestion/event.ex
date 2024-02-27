@@ -221,9 +221,15 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_geolocation(%__MODULE__{} = event) do
-    result = Plausible.Ingestion.Geolocation.lookup(event.request.remote_ip) || %{}
+    case event.request.ip_classification do
+      "anonymous_vpn_ip" ->
+        result = %{country_code: "A1"}
+        update_attrs(event, result)
 
-    update_attrs(event, result)
+      _any ->
+        result = Plausible.Ingestion.Geolocation.lookup(event.request.remote_ip) || %{}
+        update_attrs(event, result)
+    end
   end
 
   defp put_props(%__MODULE__{request: %{props: %{} = props}} = event) do
