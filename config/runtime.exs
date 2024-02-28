@@ -348,7 +348,6 @@ config :sentry,
   tags: %{app_version: sentry_app_version},
   client: Plausible.Sentry.Client,
   send_max_attempts: 1,
-  filter: Plausible.SentryFilter,
   before_send: {Plausible.SentryFilter, :before_send}
 
 config :plausible, :paddle,
