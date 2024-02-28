@@ -1,0 +1,7 @@
+SELECT arraySort(groupUniqArray(partition)), arraySort(groupArray(name))
+FROM system.parts
+WHERE active
+  AND database = currentDatabase()
+  AND table = 'events_v2'
+  AND partition >= '<%= @min_partition %>'
+  AND partition <= '<%= @max_partition %>'

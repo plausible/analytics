@@ -1,0 +1,7 @@
+SELECT
+    name,
+    path,
+    formatReadableSize(total_space - free_space) AS full_space,
+    formatReadableSize(total_space),
+    round((total_space - free_space) / total_space * 100, 2)
+FROM system.disks
