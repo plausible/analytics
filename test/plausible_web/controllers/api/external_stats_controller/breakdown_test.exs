@@ -83,6 +83,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "param validation" do
+    test "time_on_page is not supported in breakdown queries other than by event:page", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "visit:source",
+          "filters" => "event:page==/A",
+          "metrics" => "time_on_page"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Metric `time_on_page` is not supported in breakdown queries (except `event:page` breakdown)"
+             }
+    end
+
     test "does not allow querying conversion_rate without a goal filter", %{
       conn: conn,
       site: site

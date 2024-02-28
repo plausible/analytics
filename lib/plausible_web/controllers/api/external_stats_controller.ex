@@ -12,7 +12,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
     :bounce_rate,
     :visit_duration,
     :events,
-    :conversion_rate
+    :conversion_rate,
+    :time_on_page
   ]
 
   @metric_mappings Enum.into(@metrics, %{}, fn metric -> {to_string(metric), metric} end)
@@ -156,6 +157,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {:error, reason} -> {:halt, {:error, reason}}
       end
     end)
+  end
+
+  defp validate_metric("time_on_page" = metric, property, query) do
+    cond do
+      property == "event:page" ->
+        {:ok, metric}
+
+      not is_nil(property) ->
+        {:error,
+         "Metric `#{metric}` is not supported in breakdown queries (except `event:page` breakdown)"}
+
+      query.filters["event:page"] ->
+        {:ok, metric}
+
+      true ->
+        {:error,
+         "Metric `#{metric}` can only be queried in a page breakdown or with a page filter."}
+    end
   end
 
   defp validate_metric("conversion_rate" = metric, property, query) do

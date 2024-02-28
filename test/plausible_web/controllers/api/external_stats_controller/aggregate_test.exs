@@ -189,6 +189,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                  "Session metric `views_per_visit` cannot be queried when using a filter on `event:name`."
              }
     end
+
+    test "validates that time_on_page cannot be queried without a page filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "time_on_page"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Metric `time_on_page` can only be queried in a page breakdown or with a page filter."
+             }
+    end
   end
 
   test "aggregates a single metric", %{conn: conn, site: site} do
@@ -1298,6 +1314,43 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   end
 
   describe "metrics" do
+    test "time_on_page with a page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/A",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/another",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/A",
+          user_id: 321,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/another",
+          user_id: 321,
+          timestamp: ~N[2021-01-01 00:01:20]
+        ),
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"time_on_page" => %{"value" => 70}}
+    end
+
     test "conversion_rate when goal filter is applied", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event, name: "Signup"),
