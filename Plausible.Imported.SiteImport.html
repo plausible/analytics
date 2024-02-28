@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-679F5E33.js"></script>
+    <script src="dist/sidebar_items-65293FE3.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -215,6 +215,14 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#from_legacy/1" translate="no">from_legacy(data)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#importing/0" translate="no">importing()</a>
 
       </div>
@@ -286,6 +294,7 @@ Pages
   imported_by: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   imported_by_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   inserted_at: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
+  legacy: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   site: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   site_id: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
   source: <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">term</a>(),
@@ -322,7 +331,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">complete_changeset(site_import, params \\ %{})</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L57" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L77" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -350,7 +359,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">completed()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L31" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L32" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -374,7 +383,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">create_changeset(site, user, params)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L41" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L61" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -403,7 +412,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">fail_changeset(site_import)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L65" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L85" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -431,7 +440,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">failed()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L31" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L32" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -446,6 +455,34 @@ Pages
 
   </section>
 </section>
+<section class="detail" id="from_legacy/1">
+
+  <div class="detail-header">
+    <a href="#from_legacy/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">from_legacy(data)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L42" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> from_legacy(<a href="Plausible.Site.ImportedData.html#t:t/0">Plausible.Site.ImportedData.t</a>()) :: <a href="#t:t/0">t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="importing/0">
 
   <div class="detail-header">
@@ -455,7 +492,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">importing()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L31" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L32" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -479,7 +516,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">label(arg1)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L37" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L38" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -507,7 +544,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">pending()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L31" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L32" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -531,7 +568,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">start_changeset(site_import)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L51" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/site_import.ex#L71" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>

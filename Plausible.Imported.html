@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-679F5E33.js"></script>
+    <script src="dist/sidebar_items-65293FE3.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -178,6 +178,14 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#get_import/1" translate="no">get_import(import_id)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#list_all_imports/1" translate="no">list_all_imports(site)</a>
 
       </div>
@@ -194,7 +202,25 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#listen/0" translate="no">listen()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>See <a href="Plausible.Imported.Importer.html#listen/0"><code class="inline">Plausible.Imported.Importer.listen/0</code></a>.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#load_import_data/1" translate="no">load_import_data(site)</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#max_complete_imports/0" translate="no">max_complete_imports()</a>
 
       </div>
 
@@ -230,7 +256,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">delete_imports_for_site(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L104" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L121" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -258,7 +284,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">get_earliest_import(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L84" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L101" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -278,6 +304,34 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
   </section>
 </section>
+<section class="detail" id="get_import/1">
+
+  <div class="detail-header">
+    <a href="#get_import/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_import(import_id)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L63" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_import(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()) :: <a href="Plausible.Imported.SiteImport.html#t:t/0">Plausible.Imported.SiteImport.t</a>() | nil</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="list_all_imports/1">
 
   <div class="detail-header">
@@ -287,7 +341,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">list_all_imports(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L60" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L70" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -315,7 +369,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
     </a>
     <h1 class="signature" translate="no">list_complete_import_ids(site)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L66" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L83" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -334,6 +388,28 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
   </section>
 </section>
+<section class="detail" id="listen/0">
+
+  <div class="detail-header">
+    <a href="#listen/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">listen()</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L67" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+<p>See <a href="Plausible.Imported.Importer.html#listen/0"><code class="inline">Plausible.Imported.Importer.listen/0</code></a>.</p>
+  </section>
+</section>
 <section class="detail" id="load_import_data/1">
 
   <div class="detail-header">
@@ -342,6 +418,34 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature" translate="no">load_import_data(site)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L47" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> load_import_data(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()</pre>
+
+      </div>
+
+
+  </section>
+</section>
+<section class="detail" id="max_complete_imports/0">
+
+  <div class="detail-header">
+    <a href="#max_complete_imports/0" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">max_complete_imports()</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported.ex#L44" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -355,7 +459,7 @@ analytics formerly known as &quot;Google Analytics&quot;</li><li><a href="Plausi
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> load_import_data(<a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()) :: <a href="Plausible.Site.html#t:t/0">Plausible.Site.t</a>()</pre>
+          <pre translate="no"><span class="attribute">@spec</span> max_complete_imports() :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">non_neg_integer</a>()</pre>
 
       </div>
 

@@ -251,6 +251,7 @@ PlausibleWeb.Live.FunnelSettings.html
 PlausibleWeb.Live.GoalSettings.Form.html
 PlausibleWeb.Live.GoalSettings.List.html
 PlausibleWeb.Live.GoalSettings.html
+PlausibleWeb.Live.ImportsExportsSettings.html
 PlausibleWeb.Live.Plugins.API.Settings.html
 PlausibleWeb.Live.Plugins.API.TokenForm.html
 PlausibleWeb.Live.PropsSettings.Form.html
@@ -357,8 +358,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-AA77C992.js
-dist/sidebar_items-679F5E33.js
+dist/search_data-3C463D62.js
+dist/sidebar_items-65293FE3.js
 index.html
 readme.html
 search.html
