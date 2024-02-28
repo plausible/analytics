@@ -114,8 +114,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
       database = String.trim(uri.path, "/")
 
       if uri.userinfo do
-        [username, password] =
-          if uri.userinfo, do: String.split(uri.userinfo, ":"), else: [nil, nil]
+        [username, password] = String.split(uri.userinfo, ":")
 
         "USER '#{username}' PASSWORD '#{password}' DB '#{database}'"
       else
