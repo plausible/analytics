@@ -339,21 +339,17 @@ else
     database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
 end
 
-included_environments = if sentry_dsn, do: ["prod", "staging", "dev"], else: []
 sentry_app_version = runtime_metadata[:version] || app_version
 
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
-  included_environments: included_environments,
   release: sentry_app_version,
   tags: %{app_version: sentry_app_version},
-  enable_source_code_context: true,
-  root_source_code_path: [File.cwd!()],
   client: Plausible.Sentry.Client,
   send_max_attempts: 1,
   filter: Plausible.SentryFilter,
-  before_send_event: {Plausible.SentryFilter, :before_send}
+  before_send: {Plausible.SentryFilter, :before_send}
 
 config :plausible, :paddle,
   vendor_auth_code: paddle_auth_code,

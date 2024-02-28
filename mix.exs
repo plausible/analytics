@@ -119,7 +119,7 @@ defmodule Plausible.MixProject do
       {:public_suffix, git: "https://github.com/axelson/publicsuffix-elixir"},
       {:ref_inspector, "~> 2.0"},
       {:referrer_blocklist, git: "https://github.com/plausible/referrer-blocklist.git"},
-      {:sentry, "~> 8.0"},
+      {:sentry, "~> 10.0"},
       {:siphash, "~> 3.2"},
       {:timex, "~> 3.7"},
       {:ua_inspector, "~> 3.0"},
@@ -151,7 +151,6 @@ defmodule Plausible.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate", "test", "clean_clickhouse"],
-      sentry_recompile: ["compile", "deps.compile sentry --force"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       "assets.build": [
         "tailwind default",

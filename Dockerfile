@@ -47,8 +47,7 @@ RUN npm run deploy --prefix ./tracker && \
   mix assets.deploy && \
   mix phx.digest priv/static && \
   mix download_country_database && \
-  # https://hexdocs.pm/sentry/Sentry.Sources.html#module-source-code-storage
-  mix sentry_recompile
+  mix sentry.package_source_code
 
 WORKDIR /app
 COPY rel rel
