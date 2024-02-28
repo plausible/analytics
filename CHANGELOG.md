@@ -45,6 +45,7 @@ All notable changes to this project will be documented in this file.
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
 
 ### Fixed
+- Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
 - Fix `conversion_rate` metric in a `browser_versions` breakdown
 - Calculate `conversion_rate` percentage change in the same way like `bounce_rate` (subtraction instead of division)
 - Calculate `bounce_rate` percentage change in the Stats API in the same way as it's done in the dashboard
