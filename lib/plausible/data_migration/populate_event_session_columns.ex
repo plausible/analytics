@@ -28,7 +28,6 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
     Logger.info("Starting mutation on #{length(partitions)} partition(s)")
 
     for partition <- partitions do
-      # TODO: Update column names once other PRs are in.
       {:ok, _} = run_sql("update-table", cluster?: cluster?, partition: partition)
     end
 
