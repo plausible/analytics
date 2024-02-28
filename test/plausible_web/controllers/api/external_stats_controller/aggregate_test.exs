@@ -371,6 +371,31 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "conversion_rate" => %{"value" => 50.0, "change" => 16.7}
              }
     end
+
+    test "can compare time_on_page with previous period", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A", user_id: 111, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 111, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, pathname: "/A", user_id: 999, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 999, timestamp: ~N[2021-01-02 00:01:30])
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-02",
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A",
+          "compare" => "previous_period"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "time_on_page" => %{"value" => 90, "change" => 50.0}
+             }
+    end
   end
 
   describe "with imported data" do
