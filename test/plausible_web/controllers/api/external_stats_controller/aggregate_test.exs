@@ -205,6 +205,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                  "Metric `time_on_page` can only be queried in a page breakdown or with a page filter."
              }
     end
+
+    test "validates that time_on_page cannot be queried with a goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A;event:goal==Signup"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Metric `time_on_page` cannot be queried when filtering by `event:goal`"
+             }
+    end
   end
 
   test "aggregates a single metric", %{conn: conn, site: site} do

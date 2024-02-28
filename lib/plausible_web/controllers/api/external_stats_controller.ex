@@ -161,6 +161,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
 
   defp validate_metric("time_on_page" = metric, property, query) do
     cond do
+      query.filters["event:goal"] ->
+        {:error, "Metric `#{metric}` cannot be queried when filtering by `event:goal`"}
+
       property == "event:page" ->
         {:ok, metric}
 
