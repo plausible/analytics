@@ -65,7 +65,19 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
         max_partition: max_partition
       )
 
-    [[mutations, parts_to_do, running_for, total_size, todo_size, progress, _, _]] =
+    [
+      [
+        mutations,
+        parts_to_do,
+        running_for,
+        total_size,
+        todo_size,
+        progress,
+        latest_fail_reason,
+        _,
+        _
+      ]
+    ] =
       mutation_results
 
     {:ok, %{rows: [[merges]]}} = run_sql("get-merges-progress")
@@ -94,6 +106,12 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
       if progress > 0 do
         estimated_time_left = running_for / progress / 100 - running_for
         Logger.info("  Estimated #{progress}% done, #{format_duration(estimated_time_left)} left")
+      end
+
+      if latest_fail_reason do
+        Logger.warning(
+          "  Some mutations might be failing. ClickHouse report: #{latest_fail_reason}"
+        )
       end
     end
 
