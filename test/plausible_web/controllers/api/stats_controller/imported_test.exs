@@ -1,4 +1,4 @@
-defmodule Plausible.ImportedTest do
+defmodule PlausibleWeb.Api.StatsController.ImportedTest do
   use PlausibleWeb.ConnCase
   use Timex
 

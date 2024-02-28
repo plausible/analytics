@@ -20,37 +20,43 @@ defmodule Plausible.Imported.UniversalAnalytics do
 
   @impl true
   def before_start(site_import) do
-    site = Repo.preload(site_import, :site).site
+    if site_import.legacy do
+      site = Repo.preload(site_import, :site).site
 
-    site
-    |> Plausible.Site.start_import(
-      site_import.start_date,
-      site_import.end_date,
-      label()
-    )
-    |> Repo.update!()
+      site
+      |> Plausible.Site.start_import(
+        site_import.start_date,
+        site_import.end_date,
+        label()
+      )
+      |> Repo.update!()
+    end
 
     :ok
   end
 
   @impl true
   def on_success(site_import, _extra_data) do
-    site = Repo.preload(site_import, :site).site
+    if site_import.legacy do
+      site = Repo.preload(site_import, :site).site
 
-    site
-    |> Plausible.Site.import_success()
-    |> Repo.update!()
+      site
+      |> Plausible.Site.import_success()
+      |> Repo.update!()
+    end
 
     :ok
   end
 
   @impl true
   def on_failure(site_import) do
-    site = Repo.preload(site_import, :site).site
+    if site_import.legacy do
+      site = Repo.preload(site_import, :site).site
 
-    site
-    |> Plausible.Site.import_failure()
-    |> Repo.update!()
+      site
+      |> Plausible.Site.import_failure()
+      |> Repo.update!()
+    end
 
     :ok
   end

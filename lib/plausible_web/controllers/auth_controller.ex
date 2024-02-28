@@ -697,8 +697,23 @@ defmodule PlausibleWeb.AuthController do
   end
 
   def google_auth_callback(conn, %{"error" => error, "state" => state} = params) do
-    [site_id, _redirect_to] = Jason.decode!(state)
+    [site_id, _redirected_to, legacy] =
+      case Jason.decode!(state) do
+        [site_id, redirect_to] ->
+          [site_id, redirect_to, true]
+
+        [site_id, redirect_to, legacy] ->
+          [site_id, redirect_to, legacy]
+      end
+
     site = Repo.get(Plausible.Site, site_id)
+
+    redirect_route =
+      if legacy do
+        Routes.site_path(conn, :settings_integrations, site.domain)
+      else
+        Routes.site_path(conn, :settings_imports_exports, site.domain)
+      end
 
     case error do
       "access_denied" ->
@@ -707,7 +722,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We were unable to authenticate your Google Analytics account. Please check that you have granted us permission to 'See and download your Google Analytics data' and try again."
         )
-        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: redirect_route)
 
       message when message in ["server_error", "temporarily_unavailable"] ->
         conn
@@ -715,7 +730,7 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We are unable to authenticate your Google Analytics account because Google's authentication service is temporarily unavailable. Please try again in a few moments."
         )
-        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: redirect_route)
 
       _any ->
         Sentry.capture_message("Google OAuth callback failed. Reason: #{inspect(params)}")
@@ -725,13 +740,22 @@ defmodule PlausibleWeb.AuthController do
           :error,
           "We were unable to authenticate your Google Analytics account. If the problem persists, please contact support for assistance."
         )
-        |> redirect(external: Routes.site_path(conn, :settings_general, site.domain))
+        |> redirect(external: redirect_route)
     end
   end
 
   def google_auth_callback(conn, %{"code" => code, "state" => state}) do
     res = Plausible.Google.HTTP.fetch_access_token(code)
-    [site_id, redirect_to] = Jason.decode!(state)
+
+    [site_id, redirect_to, legacy] =
+      case Jason.decode!(state) do
+        [site_id, redirect_to] ->
+          [site_id, redirect_to, true]
+
+        [site_id, redirect_to, legacy] ->
+          [site_id, redirect_to, legacy]
+      end
+
     site = Repo.get(Plausible.Site, site_id)
     expires_at = NaiveDateTime.add(NaiveDateTime.utc_now(), res["expires_in"])
 
@@ -742,7 +766,8 @@ defmodule PlausibleWeb.AuthController do
             Routes.site_path(conn, :import_from_google_view_id_form, site.domain,
               access_token: res["access_token"],
               refresh_token: res["refresh_token"],
-              expires_at: NaiveDateTime.to_iso8601(expires_at)
+              expires_at: NaiveDateTime.to_iso8601(expires_at),
+              legacy: legacy
             )
         )
 

@@ -229,5 +229,26 @@ defmodule Plausible.Workers.ImportAnalyticsTest do
         assert_receive {:notification, :analytics_imports_jobs, %{"transient_fail" => ^import_id}}
       end)
     end
+
+    test "sends oban notification to calling process on completion when listener setup separately",
+         %{
+           import_opts: import_opts
+         } do
+      Ecto.Adapters.SQL.Sandbox.unboxed_run(Plausible.Repo, fn ->
+        user = insert(:user, trial_expiry_date: Timex.today() |> Timex.shift(days: 1))
+        site = insert(:site, members: [user])
+
+        {:ok, job} = Plausible.Imported.NoopImporter.new_import(site, user, import_opts)
+        import_id = job.args[:import_id]
+
+        :ok = Plausible.Imported.Importer.listen()
+
+        job
+        |> Repo.reload!()
+        |> ImportAnalytics.perform()
+
+        assert_receive {:notification, :analytics_imports_jobs, %{"complete" => ^import_id}}
+      end)
+    end
   end
 end

@@ -40,6 +40,9 @@ defmodule Plausible.Imported do
   @spec tables() :: [String.t()]
   def tables, do: @table_names
 
+  @spec max_complete_imports() :: non_neg_integer()
+  def max_complete_imports(), do: @max_complete_imports
+
   @spec load_import_data(Site.t()) :: Site.t()
   def load_import_data(%{import_data_loaded: true} = site), do: site
 
@@ -56,10 +59,24 @@ defmodule Plausible.Imported do
     }
   end
 
+  @spec get_import(non_neg_integer()) :: SiteImport.t() | nil
+  def get_import(import_id) do
+    Repo.get(SiteImport, import_id)
+  end
+
+  defdelegate listen(), to: Imported.Importer
+
   @spec list_all_imports(Site.t()) :: [SiteImport.t()]
   def list_all_imports(site) do
-    from(i in SiteImport, where: i.site_id == ^site.id)
-    |> Repo.all()
+    imports =
+      from(i in SiteImport, where: i.site_id == ^site.id, order_by: [desc: i.inserted_at])
+      |> Repo.all()
+
+    if site.imported_data && not Enum.any?(imports, & &1.legacy) do
+      imports ++ [SiteImport.from_legacy(site.imported_data)]
+    else
+      imports
+    end
   end
 
   @spec list_complete_import_ids(Site.t()) :: [non_neg_integer()]

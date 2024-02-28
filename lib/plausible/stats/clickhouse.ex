@@ -39,6 +39,17 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
+  @spec imported_pageview_counts(Plausible.Site.t()) :: %{non_neg_integer() => non_neg_integer()}
+  def imported_pageview_counts(site) do
+    from(i in "imported_visitors",
+      where: i.site_id == ^site.id,
+      group_by: i.import_id,
+      select: {i.import_id, sum(i.pageviews)}
+    )
+    |> Plausible.ClickhouseRepo.all()
+    |> Map.new()
+  end
+
   def usage_breakdown([d | _] = domains, date_range) when is_binary(d) do
     Enum.chunk_every(domains, 300)
     |> Enum.reduce({0, 0}, fn domains, {pageviews_total, custom_events_total} ->
