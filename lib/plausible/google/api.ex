@@ -1,5 +1,5 @@
 defmodule Plausible.Google.Api do
-  alias Plausible.Google.{ReportRequest, HTTP}
+  alias Plausible.Google.{GA4, ReportRequest, HTTP}
   use Timex
   require Logger
 
@@ -17,9 +17,12 @@ defmodule Plausible.Google.Api do
       Jason.encode!([site_id, redirect_to])
   end
 
-  def import_authorize_url(site_id, redirect_to, legacy \\ true) do
+  def import_authorize_url(site_id, redirect_to, opts \\ []) do
+    legacy = Keyword.get(opts, :legacy, true)
+    ga4 = Keyword.get(opts, :ga4, false)
+
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
-      Jason.encode!([site_id, redirect_to, legacy])
+      Jason.encode!([site_id, redirect_to, legacy, ga4])
   end
 
   def fetch_verified_properties(auth) do
@@ -69,6 +72,26 @@ defmodule Plausible.Google.Api do
     end
   end
 
+  def list_properties(access_token) do
+    case HTTP.list_accounts_for_user(access_token) do
+      {:ok, %{"accountSummaries" => accounts}} ->
+        accounts =
+          accounts
+          |> Enum.filter(& &1["propertySummaries"])
+          |> Enum.map(fn account ->
+            {"#{account["displayName"]} (#{account["account"]})",
+             Enum.map(account["propertySummaries"], fn property ->
+               {"#{property["displayName"]} (#{property["property"]})", property["property"]}
+             end)}
+          end)
+
+        {:ok, accounts}
+
+      error ->
+        error
+    end
+  end
+
   defp view_hostname(view) do
     case view do
       %{"websiteUrl" => url} when is_binary(url) -> url |> URI.parse() |> Map.get(:host)
@@ -95,6 +118,22 @@ defmodule Plausible.Google.Api do
           |> Enum.find(fn {_name, id} -> id == lookup_id end)
 
         {:ok, view}
+
+      {:error, cause} ->
+        {:error, cause}
+    end
+  end
+
+  def get_property(access_token, lookup_property) do
+    case list_properties(access_token) do
+      {:ok, properties} ->
+        property =
+          properties
+          |> Enum.map(&elem(&1, 1))
+          |> List.flatten()
+          |> Enum.find(fn {_name, property} -> property == lookup_property end)
+
+        {:ok, property}
 
       {:error, cause} ->
         {:error, cause}
@@ -180,6 +219,60 @@ defmodule Plausible.Google.Api do
         else
           Process.sleep(attempt * sleep_time)
           fetch_and_persist(report_request, Keyword.merge(opts, attempt: attempt + 1))
+        end
+    end
+  end
+
+  def import_ga4_analytics(date_range, property, auth, persist_fn) do
+    with {:ok, access_token} <- maybe_refresh_token(auth) do
+      do_import_ga4_analytics(date_range, property, access_token, persist_fn)
+    end
+  end
+
+  defp do_import_ga4_analytics(date_range, property, access_token, persist_fn) do
+    Enum.reduce_while(GA4.ReportRequest.full_report(), :ok, fn report_request, :ok ->
+      report_request = %GA4.ReportRequest{
+        report_request
+        | date_range: date_range,
+          property: property,
+          access_token: access_token,
+          offset: 0,
+          limit: @per_page
+      }
+
+      case fetch_and_persist_ga4(report_request, persist_fn: persist_fn) do
+        :ok -> {:cont, :ok}
+        {:error, _} = error -> {:halt, error}
+      end
+    end)
+  end
+
+  @spec fetch_and_persist_ga4(GA4.ReportRequest.t(), Keyword.t()) ::
+          :ok | {:error, term()}
+  def fetch_and_persist_ga4(%GA4.ReportRequest{} = report_request, opts \\ []) do
+    persist_fn = Keyword.fetch!(opts, :persist_fn)
+    attempt = Keyword.get(opts, :attempt, 1)
+    sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
+
+    case HTTP.get_ga4_report(report_request) do
+      {:ok, {rows, row_count}} ->
+        :ok = persist_fn.(report_request.dataset, rows)
+
+        if report_request.offset + @per_page < row_count do
+          fetch_and_persist(
+            %GA4.ReportRequest{report_request | offset: report_request.offset + @per_page},
+            opts
+          )
+        else
+          :ok
+        end
+
+      {:error, cause} ->
+        if attempt >= @max_attempts do
+          {:error, cause}
+        else
+          Process.sleep(attempt * sleep_time)
+          fetch_and_persist_ga4(report_request, Keyword.merge(opts, attempt: attempt + 1))
         end
     end
   end

@@ -385,6 +385,16 @@ defmodule PlausibleWeb.Router do
 
     get "/:website/import/google-analytics/confirm", SiteController, :import_from_google_confirm
     post "/:website/settings/google-import", SiteController, :import_from_google
+
+    get "/:website/import/google-analytics4/property",
+        SiteController,
+        :import_from_ga4_property_form
+
+    post "/:website/import/google-analytics4/property", SiteController, :import_from_ga4_property
+
+    get "/:website/import/google-analytics4/confirm", SiteController, :import_from_ga4_confirm
+    post "/:website/settings/google4-import", SiteController, :import_from_ga4
+
     delete "/:website/settings/forget-imported", SiteController, :forget_imported
     delete "/:website/settings/forget-import/:import_id", SiteController, :forget_import
 
