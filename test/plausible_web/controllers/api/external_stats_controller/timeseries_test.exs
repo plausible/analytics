@@ -661,7 +661,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          referrer_source: "Google",
+          session_referrer_source: "Google",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
@@ -683,7 +683,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
         build(:pageview,
-          referrer_source: "Google",
+          session_referrer_source: "Google",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -703,7 +703,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by referrer", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          referrer: "https://facebook.com",
+          session_referrer: "https://facebook.com",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
@@ -724,7 +724,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by utm_medium", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          utm_medium: "social",
+          session_utm_medium: "social",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
@@ -745,7 +745,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by utm_source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          utm_source: "Twitter",
+          session_utm_source: "Twitter",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
@@ -766,7 +766,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by utm_campaign", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          utm_campaign: "profile",
+          session_utm_campaign: "profile",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
@@ -787,7 +787,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by device type", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          screen_size: "Desktop",
+          session_screen_size: "Desktop",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
@@ -808,13 +808,13 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by browser", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          browser: "Chrome",
-          browser_version: "56.1",
+          session_browser: "Chrome",
+          session_browser_version: "56.1",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          browser: "Chrome",
-          browser_version: "55",
+          session_browser: "Chrome",
+          session_browser_version: "55",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
@@ -835,18 +835,18 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
     test "can filter by operating system", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          operating_system: "Mac",
-          operating_system_version: "10.5",
+          session_operating_system: "Mac",
+          session_operating_system_version: "10.5",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          operating_system: "Something else",
-          operating_system_version: "10.5",
+          session_operating_system: "Something else",
+          session_operating_system_version: "10.5",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
-          operating_system: "Mac",
-          operating_system_version: "10.4",
+          session_operating_system: "Mac",
+          session_operating_system_version: "10.4",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])
@@ -868,14 +868,12 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       populate_stats(site, [
         build(:pageview,
           user_id: @user_id,
-          country_code: "EE",
-          operating_system_version: "10.5",
+          session_country_code: "EE",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           user_id: @user_id,
-          country_code: "EE",
-          operating_system_version: "10.5",
+          session_country_code: "EE",
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])

@@ -154,18 +154,18 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
       test "Sources are imported", %{conn: conn, site: site, import_id: import_id} do
         populate_stats(site, [
           build(:pageview,
-            referrer_source: "Google",
-            referrer: "google.com",
+            session_referrer_source: "Google",
+            session_referrer: "google.com",
             timestamp: ~N[2021-01-01 00:00:00]
           ),
           build(:pageview,
-            referrer_source: "Google",
-            referrer: "google.com",
+            session_referrer_source: "Google",
+            session_referrer: "google.com",
             timestamp: ~N[2021-01-01 00:00:00]
           ),
           build(:pageview,
-            referrer_source: "DuckDuckGo",
-            referrer: "duckduckgo.com",
+            session_referrer_source: "DuckDuckGo",
+            session_referrer: "duckduckgo.com",
             timestamp: ~N[2021-01-01 00:00:00]
           )
         ])
@@ -296,11 +296,11 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
       } do
         populate_stats(site, [
           build(:pageview,
-            utm_medium: "social",
+            session_utm_medium: "social",
             timestamp: ~N[2021-01-01 00:00:00]
           ),
           build(:pageview,
-            utm_medium: "social",
+            session_utm_medium: "social",
             timestamp: ~N[2021-01-01 12:00:00]
           )
         ])
@@ -367,8 +367,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_id: import_id
       } do
         populate_stats(site, [
-          build(:pageview, utm_campaign: "profile", timestamp: ~N[2021-01-01 00:00:00]),
-          build(:pageview, utm_campaign: "august", timestamp: ~N[2021-01-01 00:00:00])
+          build(:pageview, session_utm_campaign: "profile", timestamp: ~N[2021-01-01 00:00:00]),
+          build(:pageview, session_utm_campaign: "august", timestamp: ~N[2021-01-01 00:00:00])
         ])
 
         import_data(
@@ -455,9 +455,9 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_id: import_id
       } do
         populate_stats(site, [
-          build(:pageview, utm_term: "oat milk", timestamp: ~N[2021-01-01 00:00:00]),
-          build(:pageview, utm_term: "Sweden", timestamp: ~N[2021-01-01 00:00:00]),
-          build(:pageview, utm_term: "Sweden", timestamp: ~N[2021-01-01 00:00:00])
+          build(:pageview, session_utm_term: "oat milk", timestamp: ~N[2021-01-01 00:00:00]),
+          build(:pageview, session_utm_term: "Sweden", timestamp: ~N[2021-01-01 00:00:00]),
+          build(:pageview, session_utm_term: "Sweden", timestamp: ~N[2021-01-01 00:00:00])
         ])
 
         import_data(
@@ -544,8 +544,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_id: import_id
       } do
         populate_stats(site, [
-          build(:pageview, utm_content: "ad", timestamp: ~N[2021-01-01 00:00:00]),
-          build(:pageview, utm_content: "blog", timestamp: ~N[2021-01-01 00:00:00])
+          build(:pageview, session_utm_content: "ad", timestamp: ~N[2021-01-01 00:00:00]),
+          build(:pageview, session_utm_content: "blog", timestamp: ~N[2021-01-01 00:00:00])
         ])
 
         import_data(
@@ -817,15 +817,15 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
       } do
         populate_stats(site, [
           build(:pageview,
-            country_code: "EE",
+            session_country_code: "EE",
             timestamp: ~N[2021-01-01 00:15:00]
           ),
           build(:pageview,
-            country_code: "EE",
+            session_country_code: "EE",
             timestamp: ~N[2021-01-01 00:15:00]
           ),
           build(:pageview,
-            country_code: "GB",
+            session_country_code: "GB",
             timestamp: ~N[2021-01-01 00:15:00]
           )
         ])
@@ -890,15 +890,15 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
       } do
         populate_stats(site, import_id, [
           build(:pageview,
-            country_code: "EE",
+            session_country_code: "EE",
             timestamp: ~N[2021-01-01 00:15:00]
           ),
           build(:pageview,
-            country_code: "EE",
+            session_country_code: "EE",
             timestamp: ~N[2021-01-01 00:15:00]
           ),
           build(:pageview,
-            country_code: "GB",
+            session_country_code: "GB",
             timestamp: ~N[2021-01-01 00:15:00]
           ),
           build(:imported_visitors, date: ~D[2021-01-01], visitors: 2)
@@ -972,9 +972,9 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_id: import_id
       } do
         populate_stats(site, import_id, [
-          build(:pageview, screen_size: "Desktop", timestamp: ~N[2021-01-01 00:15:00]),
-          build(:pageview, screen_size: "Desktop", timestamp: ~N[2021-01-01 00:15:00]),
-          build(:pageview, screen_size: "Laptop", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview, session_screen_size: "Desktop", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview, session_screen_size: "Desktop", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview, session_screen_size: "Laptop", timestamp: ~N[2021-01-01 00:15:00]),
           build(:imported_visitors, date: ~D[2021-01-01], visitors: 2)
         ])
 
@@ -1023,8 +1023,8 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_id: import_id
       } do
         populate_stats(site, import_id, [
-          build(:pageview, browser: "Chrome", timestamp: ~N[2021-01-01 00:15:00]),
-          build(:pageview, browser: "Firefox", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview, session_browser: "Chrome", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview, session_browser: "Firefox", timestamp: ~N[2021-01-01 00:15:00]),
           build(:imported_visitors, visitors: 2, date: ~D[2021-01-01])
         ])
 
@@ -1076,9 +1076,12 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         import_id: import_id
       } do
         populate_stats(site, import_id, [
-          build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
-          build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
-          build(:pageview, operating_system: "GNU/Linux", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview, session_operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview, session_operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview,
+            session_operating_system: "GNU/Linux",
+            timestamp: ~N[2021-01-01 00:15:00]
+          ),
           build(:imported_visitors, date: ~D[2021-01-01], visitors: 2)
         ])
 

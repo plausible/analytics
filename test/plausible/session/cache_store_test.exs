@@ -17,24 +17,27 @@ defmodule Plausible.Session.CacheStoreTest do
     event =
       build(:event,
         name: "pageview",
-        referrer: "ref",
-        referrer_source: "refsource",
-        utm_medium: "medium",
-        utm_source: "source",
-        utm_campaign: "campaign",
-        utm_content: "content",
-        utm_term: "term",
-        browser: "browser",
-        browser_version: "55",
-        country_code: "EE",
-        screen_size: "Desktop",
-        operating_system: "Mac",
-        operating_system_version: "11",
         "meta.key": ["logged_in", "darkmode"],
         "meta.value": ["true", "false"]
       )
 
-    CacheStore.on_event(event, nil, buffer)
+    session_params = %{
+      referrer: "ref",
+      referrer_source: "refsource",
+      utm_medium: "medium",
+      utm_source: "source",
+      utm_campaign: "campaign",
+      utm_content: "content",
+      utm_term: "term",
+      browser: "browser",
+      browser_version: "55",
+      country_code: "EE",
+      screen_size: "Desktop",
+      operating_system: "Mac",
+      operating_system_version: "11"
+    }
+
+    CacheStore.on_event(event, session_params, nil, buffer)
 
     assert_receive({WriteBuffer, :insert, [sessions]})
     assert [session] = sessions
@@ -49,19 +52,19 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.duration == 0
     assert session.pageviews == 1
     assert session.events == 1
-    assert session.referrer == event.referrer
-    assert session.referrer_source == event.referrer_source
-    assert session.utm_medium == event.utm_medium
-    assert session.utm_source == event.utm_source
-    assert session.utm_campaign == event.utm_campaign
-    assert session.utm_content == event.utm_content
-    assert session.utm_term == event.utm_term
-    assert session.country_code == event.country_code
-    assert session.screen_size == event.screen_size
-    assert session.operating_system == event.operating_system
-    assert session.operating_system_version == event.operating_system_version
-    assert session.browser == event.browser
-    assert session.browser_version == event.browser_version
+    assert session.referrer == Map.get(session_params, :referrer)
+    assert session.referrer_source == Map.get(session_params, :referrer_source)
+    assert session.utm_medium == Map.get(session_params, :utm_medium)
+    assert session.utm_source == Map.get(session_params, :utm_source)
+    assert session.utm_campaign == Map.get(session_params, :utm_campaign)
+    assert session.utm_content == Map.get(session_params, :utm_content)
+    assert session.utm_term == Map.get(session_params, :utm_term)
+    assert session.country_code == Map.get(session_params, :country_code)
+    assert session.screen_size == Map.get(session_params, :screen_size)
+    assert session.operating_system == Map.get(session_params, :operating_system)
+    assert session.operating_system_version == Map.get(session_params, :operating_system_version)
+    assert session.browser == Map.get(session_params, :browser)
+    assert session.browser_version == Map.get(session_params, :browser_version)
     assert session.timestamp == event.timestamp
     assert session.start === event.timestamp
     # assert Map.get(session, :"entry.meta.key") == ["logged_in", "darkmode"]
@@ -77,8 +80,8 @@ defmodule Plausible.Session.CacheStoreTest do
       | timestamp: timestamp
     }
 
-    CacheStore.on_event(event1, nil, buffer)
-    CacheStore.on_event(event2, nil, buffer)
+    CacheStore.on_event(event1, %{}, nil, buffer)
+    CacheStore.on_event(event2, %{}, nil, buffer)
     assert_receive({WriteBuffer, :insert, [[_negative_record, session]]})
     assert session.is_bounce == false
     assert session.duration == 10
@@ -92,8 +95,8 @@ defmodule Plausible.Session.CacheStoreTest do
 
     event2 = %{event1 | timestamp: timestamp}
 
-    CacheStore.on_event(event1, nil, buffer)
-    CacheStore.on_event(event2, nil, buffer)
+    CacheStore.on_event(event1, %{}, nil, buffer)
+    CacheStore.on_event(event2, %{}, nil, buffer)
 
     assert_receive({WriteBuffer, :insert, [[_negative_record, session]]})
     assert session.duration == 10
@@ -108,7 +111,7 @@ defmodule Plausible.Session.CacheStoreTest do
     end
 
     defp flush(events) do
-      for e <- events, do: CacheStore.on_event(e, nil)
+      for e <- events, do: CacheStore.on_event(e, %{}, nil)
       Plausible.Session.WriteBuffer.flush()
     end
 

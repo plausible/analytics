@@ -6,9 +6,9 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
 
     test "returns top countries by new visitors", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, country_code: "EE"),
-        build(:pageview, country_code: "EE"),
-        build(:pageview, country_code: "GB"),
+        build(:pageview, session_country_code: "EE"),
+        build(:pageview, session_country_code: "EE"),
+        build(:pageview, session_country_code: "GB"),
         build(:imported_locations, country: "EE"),
         build(:imported_locations, country: "GB"),
         build(:imported_visitors, visitors: 2)
@@ -59,7 +59,7 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
 
     test "ignores unknown country code ZZ", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, country_code: "ZZ"),
+        build(:pageview, session_country_code: "ZZ"),
         build(:imported_locations, country: "ZZ")
       ])
 
@@ -72,16 +72,16 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 1,
-          country_code: "EE"
+          session_country_code: "EE"
         ),
         build(:event, user_id: 1, name: "Signup"),
         build(:pageview,
           user_id: 2,
-          country_code: "EE"
+          session_country_code: "EE"
         ),
         build(:pageview,
           user_id: 3,
-          country_code: "GB"
+          session_country_code: "GB"
         ),
         build(:event, user_id: 3, name: "Signup")
       ])
@@ -119,21 +119,21 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          country_code: "EE"
+          session_country_code: "EE"
         ),
         build(:pageview,
           user_id: 123,
-          country_code: "EE",
+          session_country_code: "EE",
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          country_code: "GB",
+          session_country_code: "GB",
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
         build(:pageview,
-          country_code: "US"
+          session_country_code: "US"
         )
       ])
 
@@ -159,23 +159,23 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          country_code: "EE",
+          session_country_code: "EE",
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
           user_id: 123,
-          country_code: "EE",
+          session_country_code: "EE",
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          country_code: "GB",
+          session_country_code: "GB",
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
         build(:pageview,
-          country_code: "GB"
+          session_country_code: "GB"
         )
       ])
 
@@ -200,17 +200,17 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
     } do
       populate_stats(site, [
         build(:pageview,
-          country_code: "EE",
+          session_country_code: "EE",
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          country_code: "GB",
+          session_country_code: "GB",
           "meta.key": ["logged_in"],
           "meta.value": ["true"]
         ),
         build(:pageview,
-          country_code: "GB"
+          session_country_code: "GB"
         )
       ])
 
@@ -235,22 +235,22 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
     } do
       populate_stats(site, [
         build(:pageview,
-          country_code: "EE",
+          session_country_code: "EE",
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          country_code: "EE",
+          session_country_code: "EE",
           "meta.key": ["author"],
           "meta.value": [""]
         ),
         build(:pageview,
-          country_code: "GB",
+          session_country_code: "GB",
           "meta.key": ["logged_in"],
           "meta.value": ["true"]
         ),
         build(:pageview,
-          country_code: "GB"
+          session_country_code: "GB"
         )
       ])
 
@@ -271,9 +271,9 @@ defmodule PlausibleWeb.Api.StatsController.CountriesTest do
 
     test "when list is filtered by country returns one country only", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, country_code: "EE"),
-        build(:pageview, country_code: "EE"),
-        build(:pageview, country_code: "GB")
+        build(:pageview, session_country_code: "EE"),
+        build(:pageview, session_country_code: "EE"),
+        build(:pageview, session_country_code: "GB")
       ])
 
       filters = Jason.encode!(%{country: "GB"})

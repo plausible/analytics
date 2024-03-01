@@ -57,9 +57,12 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for sources", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "10words")
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], session_referrer_source: "Bing"),
+        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], session_referrer_source: "Bing"),
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:00],
+          session_referrer_source: "10words"
+        )
       ])
 
       conn =
@@ -73,7 +76,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for countries", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/", country_code: "US")
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:01],
+          pathname: "/",
+          session_country_code: "US"
+        )
       ])
 
       conn =
@@ -89,8 +96,8 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       {:ok, [site: site]} = create_new_site(%{user: user})
 
       populate_stats(site, [
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-37"),
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-39")
+        build(:pageview, session_country_code: "EE", session_subdivision1_code: "EE-37"),
+        build(:pageview, session_country_code: "EE", session_subdivision1_code: "EE-39")
       ])
 
       conn =
@@ -106,8 +113,16 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       {:ok, [site: site]} = create_new_site(%{user: user})
 
       populate_stats(site, [
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-37", city_geoname_id: 588_409),
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-39", city_geoname_id: 591_632)
+        build(:pageview,
+          session_country_code: "EE",
+          session_subdivision1_code: "EE-37",
+          session_city_geoname_id: 588_409
+        ),
+        build(:pageview,
+          session_country_code: "EE",
+          session_subdivision1_code: "EE-39",
+          session_city_geoname_id: 591_632
+        )
       ])
 
       conn =
@@ -134,7 +149,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:pageview,
           timestamp: ~N[2019-01-01 23:00:00],
           pathname: "/",
-          screen_size: "Desktop"
+          session_screen_size: "Desktop"
         )
       ])
 
@@ -146,7 +161,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for browsers", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], pathname: "/", browser: "Chrome")
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:00],
+          pathname: "/",
+          session_browser: "Chrome"
+        )
       ])
 
       conn =
@@ -161,8 +180,8 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       populate_stats(site, [
         build(:pageview,
           timestamp: ~N[2019-01-01 00:00:00],
-          browser: "Chrome",
-          browser_version: "78.0"
+          session_browser: "Chrome",
+          session_browser_version: "78.0"
         )
       ])
 
@@ -177,7 +196,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for OS", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 00:00:00], operating_system: "Mac")
+        build(:pageview, timestamp: ~N[2019-01-01 00:00:00], session_operating_system: "Mac")
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/suggestions/os?period=month&date=2019-01-01")
@@ -191,8 +210,8 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       populate_stats(site, [
         build(:pageview,
           timestamp: ~N[2019-01-01 00:00:00],
-          operating_system: "Mac",
-          operating_system_version: "10.15"
+          session_operating_system: "Mac",
+          session_operating_system_version: "10.15"
         )
       ])
 
@@ -222,7 +241,7 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
         build(:pageview,
           timestamp: ~N[2019-01-01 23:00:00],
           pathname: "/",
-          referrer: "10words.com/page1"
+          session_referrer: "10words.com/page1"
         )
       ])
 

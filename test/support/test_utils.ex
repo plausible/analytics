@@ -82,9 +82,8 @@ defmodule Plausible.TestUtils do
           |> Map.put(:site_id, pageview.site.id)
 
         Factory.build(:pageview, pageview)
-        |> Map.from_struct()
-        |> Map.delete(:__meta__)
         |> update_in([:timestamp], &to_naive_truncate/1)
+        |> Map.delete(:_factory_event)
       end)
 
     Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, pageviews)
@@ -94,9 +93,8 @@ defmodule Plausible.TestUtils do
     events =
       Enum.map(events, fn event ->
         Factory.build(:event, event)
-        |> Map.from_struct()
-        |> Map.delete(:__meta__)
         |> update_in([:timestamp], &to_naive_truncate/1)
+        |> Map.delete(:_factory_event)
       end)
 
     Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, events)
@@ -150,7 +148,7 @@ defmodule Plausible.TestUtils do
       event = Map.put(event, :site_id, site.id)
 
       case event do
-        %Plausible.ClickhouseEventV2{} ->
+        %{_factory_event: true} ->
           event
 
         imported_event ->
@@ -181,7 +179,7 @@ defmodule Plausible.TestUtils do
       end)
       |> Enum.split_with(fn event ->
         case event do
-          %Plausible.ClickhouseEventV2{} ->
+          %{_factory_event: true} ->
             true
 
           _ ->
@@ -196,13 +194,17 @@ defmodule Plausible.TestUtils do
   defp populate_native_stats(events) do
     sessions =
       Enum.reduce(events, %{}, fn event, sessions ->
-        session_id = Plausible.Session.CacheStore.on_event(event, nil)
+        session_id = Plausible.Session.CacheStore.on_event(event, session_params(event), nil)
         Map.put(sessions, {event.site_id, event.user_id}, session_id)
       end)
 
     Enum.each(events, fn event ->
-      event = Map.put(event, :session_id, sessions[{event.site_id, event.user_id}])
-      Plausible.Event.WriteBuffer.insert(event)
+      clickhouse_event =
+        %Plausible.ClickhouseEventV2{}
+        |> Map.merge(event)
+        |> Map.put(:session_id, sessions[{event.site_id, event.user_id}])
+
+      Plausible.Event.WriteBuffer.insert(clickhouse_event)
     end)
 
     Plausible.Session.WriteBuffer.flush()
@@ -212,6 +214,24 @@ defmodule Plausible.TestUtils do
   defp populate_imported_stats(events) do
     Enum.group_by(events, &Map.fetch!(&1, :table), &Map.delete(&1, :table))
     |> Enum.map(fn {table, events} -> Plausible.Imported.Buffer.insert_all(table, events) end)
+  end
+
+  defp session_params(event) do
+    event
+    |> Enum.reduce(%{}, fn {key, value}, acc ->
+      str_key = Atom.to_string(key)
+
+      if String.starts_with?(str_key, "session_") and key != :session_id do
+        session_key =
+          str_key
+          |> String.trim("session_")
+          |> String.to_existing_atom()
+
+        Map.put(acc, session_key, value)
+      else
+        acc
+      end
+    end)
   end
 
   def relative_time(shifts) do

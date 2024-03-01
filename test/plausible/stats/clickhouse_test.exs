@@ -228,22 +228,22 @@ defmodule Plausible.Stats.ClickhouseTest do
       populate_stats(site, [
         build(:pageview,
           pathname: "/",
-          referrer_source: "Twitter"
+          session_referrer_source: "Twitter"
         ),
         build(:pageview,
           pathname: "/plausible.io"
         ),
         build(:pageview,
           pathname: "/plausible.io",
-          referrer_source: "Google"
+          session_referrer_source: "Google"
         ),
         build(:pageview,
           pathname: "/plausible.io",
-          referrer_source: "Google"
+          session_referrer_source: "Google"
         ),
         build(:pageview,
           pathname: "/plausible.io",
-          referrer_source: "Bing"
+          session_referrer_source: "Bing"
         )
       ])
 
