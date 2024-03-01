@@ -1164,9 +1164,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     metrics =
       if query.filters["event:goal"] do
-        [:visitors, :events, :conversion_rate, :percentage] ++ @revenue_metrics
+        [:visitors, :events, :conversion_rate] ++ @revenue_metrics
       else
-        [:visitors, :events] ++ @revenue_metrics
+        [:visitors, :events, :percentage] ++ @revenue_metrics
       end
 
     Stats.breakdown(site, query, prefixed_prop, metrics, pagination)

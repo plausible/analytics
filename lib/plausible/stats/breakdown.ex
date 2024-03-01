@@ -108,27 +108,9 @@ defmodule Plausible.Stats.Breakdown do
 
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
-    {_limit, page} = pagination
-
-    none_result =
-      if page == 1 && include_none_result?(query.filters[property]) do
-        none_query = Query.put_filter(query, property, {:is, "(none)"})
-
-        from(e in base_event_query(site, none_query),
-          select: %{},
-          select_merge: %{^custom_prop => "(none)"},
-          having: fragment("uniq(?)", e.user_id) > 0
-        )
-        |> select_event_metrics(metrics_to_select)
-        |> ClickhouseRepo.all()
-      else
-        []
-      end
-
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
     breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select, pagination)
-    |> Kernel.++(none_result)
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
     |> Enum.sort_by(& &1[sorting_key(metrics_to_select)], :desc)
     |> maybe_add_cr(site, query, nil, metrics)
@@ -214,14 +196,6 @@ defmodule Plausible.Stats.Breakdown do
     end)
     |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
   end
-
-  defp include_none_result?({:is, value}), do: value == "(none)"
-  defp include_none_result?({:is_not, "(none)"}), do: false
-  defp include_none_result?({:member, values}), do: Enum.member?(values, "(none)")
-  defp include_none_result?({:not_member, values}), do: !Enum.member?(values, "(none)")
-  defp include_none_result?({:matches, _}), do: false
-  defp include_none_result?({:matches_member, _}), do: false
-  defp include_none_result?(_), do: true
 
   defp breakdown_sessions(_, _, _, [], _), do: []
 
@@ -446,10 +420,19 @@ defmodule Plausible.Stats.Breakdown do
        ) do
     from(
       e in q,
-      where: has_key(e, :meta, ^prop),
-      select_merge: %{^prop => get_by_key(e, :meta, ^prop)},
-      group_by: get_by_key(e, :meta, ^prop),
-      order_by: {:asc, get_by_key(e, :meta, ^prop)}
+      select_merge: %{
+        ^prop =>
+          selected_as(
+            fragment(
+              "if(not empty(?), ?, '(none)')",
+              get_by_key(e, :meta, ^prop),
+              get_by_key(e, :meta, ^prop)
+            ),
+            :breakdown_prop_value
+          )
+      },
+      group_by: selected_as(:breakdown_prop_value),
+      order_by: {:asc, selected_as(:breakdown_prop_value)}
     )
   end
 
