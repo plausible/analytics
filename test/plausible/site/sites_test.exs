@@ -46,7 +46,7 @@ defmodule Plausible.SitesTest do
       assert Sites.stats_start_date(site) == nil
     end
 
-    test "is date if first pageview if site does have stats" do
+    test "is date if site does have stats" do
       site = insert(:site)
 
       populate_stats(site, [
@@ -67,6 +67,33 @@ defmodule Plausible.SitesTest do
 
       assert Sites.stats_start_date(site) == Timex.today(site.timezone)
       assert Repo.reload!(site).stats_start_date == Timex.today(site.timezone)
+    end
+  end
+
+  describe "native_stats_start_date" do
+    test "is nil if site has no stats" do
+      site = insert(:site)
+
+      assert Sites.native_stats_start_date(site) == nil
+    end
+
+    test "is date if site does have stats" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview)
+      ])
+
+      assert Sites.native_stats_start_date(site) == Timex.today(site.timezone)
+    end
+
+    test "ignores imported stats" do
+      site = insert(:site)
+      insert(:site_import, site: site)
+      {:ok, opts} = add_imported_data(%{site: site})
+      site = Map.new(opts).site
+
+      assert Sites.native_stats_start_date(site) == nil
     end
   end
 

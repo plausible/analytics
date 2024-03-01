@@ -50,6 +50,20 @@ defmodule Plausible.Factory do
     }
   end
 
+  def site_import_factory do
+    today = Date.utc_today()
+
+    %Plausible.Imported.SiteImport{
+      site: build(:site),
+      imported_by: build(:user),
+      start_date: Date.add(today, -200),
+      end_date: today,
+      source: :universal_analytics,
+      status: :completed,
+      legacy: false
+    }
+  end
+
   def ch_session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 

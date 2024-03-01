@@ -16,9 +16,12 @@ defmodule PlausibleWeb.Components.Billing.Notice do
           title="You have outgrown your Plausible subscription tier"
           class="shadow-md dark:shadow-none"
         >
-          In order to keep your stats running, we require you to upgrade your account to accommodate your new usage levels. Please contact us to discuss a new custom plan.
-          <.link href="mailto:enterprise@plausible.io" class="whitespace-nowrap font-semibold">
-            Contact us <span aria-hidden="true"> &rarr;</span>
+          In order to keep your stats running, we require you to upgrade your account to accommodate your new usage levels.
+          <.link
+            href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+            class="whitespace-nowrap font-semibold"
+          >
+            Upgrade now <span aria-hidden="true"> &rarr;</span>
           </.link>
         </.notice>
       </aside>

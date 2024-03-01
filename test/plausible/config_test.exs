@@ -140,6 +140,31 @@ defmodule Plausible.ConfigTest do
              ]
     end
 
+    test "Bamboo.Mua (no config)" do
+      env = [{"MAILER_ADAPTER", "Bamboo.Mua"}]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua}
+             ]
+    end
+
+    test "Bamboo.Mua (relay config)" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_HOST_ADDR", "localhost"},
+        {"SMTP_HOST_PORT", "2525"},
+        {"SMTP_USER_NAME", "neo"},
+        {"SMTP_USER_PWD", "one"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua},
+               {:auth, [username: "neo", password: "one"]},
+               {:relay, "localhost"},
+               {:port, 2525}
+             ]
+    end
+
     test "unknown adapter raises" do
       env = {"MAILER_ADAPTER", "Bamboo.FakeAdapter"}
 
@@ -163,6 +188,79 @@ defmodule Plausible.ConfigTest do
     test "is false by default" do
       env = {"LOG_FAILED_LOGIN_ATTEMPTS", nil}
       assert get_in(runtime_config(env), [:plausible, :log_failed_login_attempts]) == false
+    end
+  end
+
+  describe "s3" do
+    test "has required env vars" do
+      env = [
+        {"S3_ACCESS_KEY_ID", nil},
+        {"S3_SECRET_ACCESS_KEY", nil},
+        {"S3_REGION", nil},
+        {"S3_ENDPOINT", nil}
+      ]
+
+      result =
+        try do
+          runtime_config(env)
+        rescue
+          e -> e
+        end
+
+      assert %ArgumentError{} = result
+
+      assert Exception.message(result) == """
+             Missing S3 configuration. Please set S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION, S3_ENDPOINT environment variable(s):
+
+             \tS3_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+             \tS3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+             \tS3_REGION=us-east-1
+             \tS3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+             """
+    end
+
+    test "renders only missing env vars" do
+      env = [
+        {"S3_ACCESS_KEY_ID", "AKIAIOSFODNN7EXAMPLE"},
+        {"S3_SECRET_ACCESS_KEY", nil},
+        {"S3_REGION", "eu-north-1"},
+        {"S3_ENDPOINT", nil}
+      ]
+
+      result =
+        try do
+          runtime_config(env)
+        rescue
+          e -> e
+        end
+
+      assert %ArgumentError{} = result
+
+      assert Exception.message(result) == """
+             Missing S3 configuration. Please set S3_SECRET_ACCESS_KEY, S3_ENDPOINT environment variable(s):
+
+             \tS3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+             \tS3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+             """
+    end
+
+    test "works when everything is set" do
+      env = [
+        {"S3_ACCESS_KEY_ID", "minioadmin"},
+        {"S3_SECRET_ACCESS_KEY", "minioadmin"},
+        {"S3_REGION", "us-east-1"},
+        {"S3_ENDPOINT", "http://localhost:6000"}
+      ]
+
+      config = runtime_config(env)
+
+      assert config[:ex_aws] == [
+               http_client: Plausible.S3.Client,
+               access_key_id: "minioadmin",
+               secret_access_key: "minioadmin",
+               region: "us-east-1",
+               s3: [scheme: "http://", host: "localhost", port: 6000]
+             ]
     end
   end
 

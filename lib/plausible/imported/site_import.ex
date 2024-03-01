@@ -20,6 +20,7 @@ defmodule Plausible.Imported.SiteImport do
     field :end_date, :date
     field :source, Ecto.Enum, values: ImportSources.names()
     field :status, Ecto.Enum, values: @statuses
+    field :legacy, :boolean, default: false
 
     belongs_to :site, Site
     belongs_to :imported_by, User
@@ -37,10 +38,29 @@ defmodule Plausible.Imported.SiteImport do
   def label(%__MODULE__{source: source}), do: ImportSources.by_name(source).label()
   def label(%Site.ImportedData{source: source}), do: source
 
+  @spec from_legacy(Site.ImportedData.t()) :: t()
+  def from_legacy(%Site.ImportedData{} = data) do
+    status =
+      case data.status do
+        "ok" -> completed()
+        "error" -> failed()
+        _ -> importing()
+      end
+
+    %__MODULE__{
+      id: 0,
+      legacy: true,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      source: :universal_analytics,
+      status: status
+    }
+  end
+
   @spec create_changeset(Site.t(), User.t(), map()) :: Ecto.Changeset.t()
   def create_changeset(site, user, params) do
     %__MODULE__{}
-    |> cast(params, [:source, :start_date, :end_date])
+    |> cast(params, [:source, :start_date, :end_date, :legacy])
     |> validate_required([:source])
     |> put_assoc(:site, site)
     |> put_assoc(:imported_by, user)

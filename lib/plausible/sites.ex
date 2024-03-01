@@ -246,7 +246,7 @@ defmodule Plausible.Sites do
     start_date =
       [
         site.earliest_import_start_date,
-        Plausible.Stats.Clickhouse.pageview_start_date_local(site)
+        native_stats_start_date(site)
       ]
       |> Enum.reject(&is_nil/1)
       |> Enum.min(Date, fn -> nil end)
@@ -259,6 +259,11 @@ defmodule Plausible.Sites do
 
       updated_site.stats_start_date
     end
+  end
+
+  @spec native_stats_start_date(Site.t()) :: Date.t() | nil
+  def native_stats_start_date(site) do
+    Plausible.Stats.Clickhouse.pageview_start_date_local(site)
   end
 
   def has_stats?(site) do

@@ -58,17 +58,19 @@ defmodule Plausible.Purge do
 
   def delete_imported_stats!(%Plausible.Imported.SiteImport{} = site_import) do
     site_import = Repo.preload(site_import, :site)
+    delete_imported_stats!(site_import.site, site_import.id)
 
+    :ok
+  end
+
+  def delete_imported_stats!(%Plausible.Site{} = site, import_id) do
     Enum.each(Plausible.Imported.tables(), fn table ->
       sql = "ALTER TABLE #{table} DELETE WHERE site_id = {$0:UInt64} AND import_id = {$1:UInt64}"
 
-      Ecto.Adapters.SQL.query!(Plausible.ImportDeletionRepo, sql, [
-        site_import.site_id,
-        site_import.id
-      ])
+      Ecto.Adapters.SQL.query!(Plausible.ImportDeletionRepo, sql, [site.id, import_id])
     end)
 
-    Plausible.Sites.clear_stats_start_date!(site_import.site)
+    Plausible.Sites.clear_stats_start_date!(site)
 
     :ok
   end

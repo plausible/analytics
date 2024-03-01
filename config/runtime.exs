@@ -476,6 +476,20 @@ case mailer_adapter do
       retries: get_var_from_path_or_env(config_dir, "SMTP_RETRIES") || 2,
       no_mx_lookups: get_var_from_path_or_env(config_dir, "SMTP_MX_LOOKUPS_ENABLED") || true
 
+  "Bamboo.Mua" ->
+    config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
+
+    if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
+      port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)
+      username = get_var_from_path_or_env(config_dir, "SMTP_USER_NAME")
+      password = get_var_from_path_or_env(config_dir, "SMTP_USER_PWD")
+
+      config :plausible, Plausible.Mailer,
+        auth: [username: username, password: password],
+        relay: relay,
+        port: port
+    end
+
   "Bamboo.LocalAdapter" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
 
@@ -703,4 +717,62 @@ if not is_selfhost do
     end
 
   config :plausible, Plausible.Site, default_ingest_threshold: site_default_ingest_threshold
+end
+
+s3_disabled? =
+  config_dir
+  |> get_var_from_path_or_env("S3_DISABLED", "true")
+  |> String.to_existing_atom()
+
+unless s3_disabled? do
+  s3_env = [
+    %{
+      name: "S3_ACCESS_KEY_ID",
+      example: "AKIAIOSFODNN7EXAMPLE"
+    },
+    %{
+      name: "S3_SECRET_ACCESS_KEY",
+      example: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    },
+    %{
+      name: "S3_REGION",
+      example: "us-east-1"
+    },
+    %{
+      name: "S3_ENDPOINT",
+      example: "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+    }
+  ]
+
+  s3_env =
+    Enum.map(s3_env, fn var ->
+      Map.put(var, :value, get_var_from_path_or_env(config_dir, var.name))
+    end)
+
+  s3_missing_env = Enum.filter(s3_env, &is_nil(&1.value))
+
+  unless s3_missing_env == [] do
+    raise ArgumentError, """
+    Missing S3 configuration. Please set #{s3_missing_env |> Enum.map(& &1.name) |> Enum.join(", ")} environment variable(s):
+
+    #{s3_missing_env |> Enum.map(fn %{name: name, example: example} -> "\t#{name}=#{example}" end) |> Enum.join("\n")}
+    """
+  end
+
+  s3_env_value = fn name ->
+    s3_env |> Enum.find(&(&1.name == name)) |> Map.fetch!(:value)
+  end
+
+  config :ex_aws,
+    http_client: Plausible.S3.Client,
+    access_key_id: s3_env_value.("S3_ACCESS_KEY_ID"),
+    secret_access_key: s3_env_value.("S3_SECRET_ACCESS_KEY"),
+    region: s3_env_value.("S3_REGION")
+
+  %URI{scheme: s3_scheme, host: s3_host, port: s3_port} = URI.parse(s3_env_value.("S3_ENDPOINT"))
+
+  config :ex_aws, :s3,
+    scheme: s3_scheme <> "://",
+    host: s3_host,
+    port: s3_port
 end

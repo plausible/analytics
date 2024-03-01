@@ -636,6 +636,46 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
+  describe "GET /:website/settings/imports-exports" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "renders empty imports list", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, ~s|a[href]|, "href") =~
+               "https://accounts.google.com/o/oauth2/"
+
+      assert resp =~ "Import Data"
+      assert resp =~ "Existing Imports"
+      assert resp =~ "There are no imports yet"
+      assert resp =~ "Export Data"
+    end
+
+    test "renders imports in import list", %{conn: conn, site: site} do
+      {:ok, opts} = add_imported_data(%{site: site})
+      site = Map.new(opts).site
+
+      _site_import1 = insert(:site_import, site: site, status: SiteImport.pending())
+      _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
+      site_import3 = insert(:site_import, site: site, status: SiteImport.completed())
+      _site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
+
+      populate_stats(site, site_import3.id, [
+        build(:imported_visitors, pageviews: 77),
+        build(:imported_visitors, pageviews: 21)
+      ])
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      resp = html_response(conn, 200)
+
+      buttons = find(resp, ~s|button[data-method="delete"]|)
+      assert length(buttons) == 5
+
+      assert resp =~ "(98 page views)"
+    end
+  end
+
   describe "GET /:website/settings/integrations for self-hosting" do
     setup [:create_user, :log_in, :create_site]
 
@@ -1252,7 +1292,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         |> get("/#{site.domain}/import/google-analytics/view-id", %{
           "access_token" => "token",
           "refresh_token" => "foo",
-          "expires_at" => "2022-09-22T20:01:37.112777"
+          "expires_at" => "2022-09-22T20:01:37.112777",
+          "legacy" => "true"
         })
         |> html_response(200)
 
@@ -1271,7 +1312,8 @@ defmodule PlausibleWeb.SiteControllerTest do
         "end_date" => "2022-03-01",
         "access_token" => "token",
         "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777"
+        "expires_at" => "2022-09-22T20:01:37.112777",
+        "legacy" => "true"
       })
 
       [site_import] = Plausible.Imported.list_all_imports(site)
@@ -1288,10 +1330,11 @@ defmodule PlausibleWeb.SiteControllerTest do
         "end_date" => "2022-03-01",
         "access_token" => "token",
         "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777"
+        "expires_at" => "2022-09-22T20:01:37.112777",
+        "legacy" => "true"
       })
 
-      assert [%{id: import_id}] = Plausible.Imported.list_all_imports(site)
+      assert [%{id: import_id, legacy: true}] = Plausible.Imported.list_all_imports(site)
 
       assert_enqueued(
         worker: Plausible.Workers.ImportAnalytics,
@@ -1308,8 +1351,81 @@ defmodule PlausibleWeb.SiteControllerTest do
     end
   end
 
-  describe "DELETE /:website/settings/:forget_imported" do
-    setup [:create_user, :log_in, :create_new_site]
+  describe "DELETE /:website/settings/:forget_import/:import_id" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
+
+    test "removes site import, associated data and cancels oban job for a particular import", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      {:ok, job} =
+        Plausible.Imported.NoopImporter.new_import(
+          site,
+          user,
+          start_date: ~D[2022-01-01],
+          end_date: Timex.today()
+        )
+
+      %{args: %{import_id: import_id}} = job
+
+      # legacy stats
+      populate_stats(site, [
+        build(:imported_visitors, pageviews: 12)
+      ])
+
+      populate_stats(site, import_id, [
+        build(:imported_visitors, pageviews: 10)
+      ])
+
+      assert [%{id: ^import_id}, %{id: 0}] = Plausible.Imported.list_all_imports(site)
+
+      assert eventually(fn ->
+               count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+               {count == 22, count}
+             end)
+
+      delete(conn, "/#{site.domain}/settings/forget-import/#{import_id}")
+
+      assert eventually(fn ->
+               count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+               {count == 12, count}
+             end)
+
+      assert Repo.reload(job).state == "cancelled"
+    end
+
+    test "removes legacy site import along with associated data when instructed", %{
+      conn: conn,
+      site: site
+    } do
+      other_site_import = insert(:site_import, site: site)
+
+      # legacy stats
+      populate_stats(site, [
+        build(:imported_visitors, pageviews: 12)
+      ])
+
+      populate_stats(site, other_site_import.id, [
+        build(:imported_visitors, pageviews: 10)
+      ])
+
+      assert eventually(fn ->
+               count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+               {count == 22, count}
+             end)
+
+      delete(conn, "/#{site.domain}/settings/forget-import/0")
+
+      assert eventually(fn ->
+               count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+               {count == 10, count}
+             end)
+    end
+  end
+
+  describe "DELETE /:website/settings/forget_imported" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "removes imported_data field from site", %{conn: conn, site: site} do
       delete(conn, "/#{site.domain}/settings/forget-imported")

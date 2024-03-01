@@ -64,6 +64,7 @@ defmodule Plausible.MixProject do
       {:bamboo_phoenix, "~> 1.0.0"},
       {:bamboo_postmark, git: "https://github.com/plausible/bamboo_postmark.git", branch: "main"},
       {:bamboo_smtp, "~> 4.1"},
+      {:bamboo_mua, "~> 0.1.4"},
       {:bcrypt_elixir, "~> 3.0"},
       {:bypass, "~> 2.1", only: [:dev, :test, :small_test]},
       {:cachex, "~> 3.4"},
@@ -135,7 +136,11 @@ defmodule Plausible.MixProject do
       {:esbuild, "~> 0.7", runtime: Mix.env() in [:dev, :small_dev]},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() in [:dev, :small_dev]},
       {:ex_json_logger, "~> 1.4.0"},
-      {:ecto_network, "~> 1.5.0"}
+      {:ecto_network, "~> 1.5.0"},
+      {:ex_aws, "~> 2.5"},
+      {:ex_aws_s3, "~> 2.5"},
+      {:sweet_xml, "~> 0.7.4"},
+      {:testcontainers, "~> 1.6", only: [:test, :small_test]}
     ]
   end
 
