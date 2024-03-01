@@ -229,7 +229,11 @@ defmodule Plausible.Stats.Base do
   def select_event_metrics(q, [:visitors | rest]) do
     from(e in q,
       select_merge: %{
-        visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+        visitors:
+          selected_as(
+            fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id),
+            :visitors
+          )
       }
     )
     |> select_event_metrics(rest)
@@ -256,6 +260,12 @@ defmodule Plausible.Stats.Base do
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
       }
     )
+    |> select_event_metrics(rest)
+  end
+
+  def select_event_metrics(q, [:percentage | rest]) do
+    q
+    |> add_visitors_percentage
     |> select_event_metrics(rest)
   end
 
@@ -315,7 +325,11 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, [:visitors | rest], query) do
     from(s in q,
       select_merge: %{
-        visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
+        visitors:
+          selected_as(
+            fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id),
+            :visitors
+          )
       }
     )
     |> select_session_metrics(rest, query)
@@ -350,6 +364,12 @@ defmodule Plausible.Stats.Base do
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
       }
     )
+    |> select_session_metrics(rest, query)
+  end
+
+  def select_session_metrics(q, [:percentage | rest], query) do
+    q
+    |> add_visitors_percentage
     |> select_session_metrics(rest, query)
   end
 
@@ -564,6 +584,22 @@ defmodule Plausible.Stats.Base do
       where:
         has_key(e, :meta, ^prop_name) and
           fragment("arrayExists(k -> match(?, k), ?)", get_by_key(e, :meta, ^prop_name), ^regexes)
+    )
+  end
+
+  defp add_visitors_percentage(q) do
+    from(e in q,
+      select_merge: %{
+        __total_visitors:
+          selected_as(fragment("sum(?) OVER ()", selected_as(:visitors)), :__total_visitors),
+        percentage:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            selected_as(:__total_visitors),
+            selected_as(:visitors),
+            selected_as(:__total_visitors)
+          )
+      }
     )
   end
 end

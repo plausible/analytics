@@ -3,7 +3,7 @@ defmodule Plausible.Stats.Util do
   Utilities for modifying stat results
   """
 
-  @manually_removable_metrics [:__internal_visits, :visitors]
+  @manually_removable_metrics [:__internal_visits, :visitors, :__total_visitors]
 
   @doc """
   Sometimes we need to manually add metrics in order to calculate the value for

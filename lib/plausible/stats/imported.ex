@@ -457,7 +457,11 @@ defmodule Plausible.Stats.Imported do
   defp select_joined_metrics(q, [:visitors | rest]) do
     q
     |> select_merge([s, i], %{
-      :visitors => fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
+      :visitors =>
+        selected_as(
+          fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors),
+          :visitors
+        )
     })
     |> select_joined_metrics(rest)
   end
@@ -521,6 +525,29 @@ defmodule Plausible.Stats.Imported do
   defp select_joined_metrics(q, [:sample_percent | rest]) do
     q
     |> select_merge([s, i], %{sample_percent: s.sample_percent})
+    |> select_joined_metrics(rest)
+  end
+
+  defp select_joined_metrics(q, [:percentage | rest]) do
+    q
+    |> select_merge([s, i], %{
+      __total_visitors:
+        selected_as(
+          fragment(
+            "coalesce(sum(?) OVER (), 0) + coalesce(sum(?) OVER (), 0)",
+            s.visitors,
+            i.visitors
+          ),
+          :__total_visitors
+        ),
+      percentage:
+        fragment(
+          "if(? > 0, round(? / ? * 100, 1), null)",
+          selected_as(:__total_visitors),
+          selected_as(:visitors),
+          selected_as(:__total_visitors)
+        )
+    })
     |> select_joined_metrics(rest)
   end
 

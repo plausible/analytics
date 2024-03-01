@@ -14,7 +14,7 @@ defmodule Plausible.Stats.Breakdown do
 
   @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
-  @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
+  @event_metrics [:visitors, :pageviews, :events, :percentage] ++ @revenue_metrics
 
   # These metrics can be asked from the `breakdown/5` function,
   # but they are different from regular metrics such as `visitors`,
@@ -253,6 +253,7 @@ defmodule Plausible.Stats.Breakdown do
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
     |> transform_keys(%{operating_system: :os})
+    |> Util.keep_requested_metrics(metrics)
   end
 
   defp maybe_add_time_on_page(event_results, site, query, metrics) do
