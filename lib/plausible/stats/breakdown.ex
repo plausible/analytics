@@ -87,12 +87,14 @@ defmodule Plausible.Stats.Breakdown do
           }
         )
         |> select_event_metrics(metrics_to_select -- @revenue_metrics)
+        |> add_revenue_as_nil_selects(metrics_to_select)
         |> ClickhouseRepo.all()
       else
         []
       end
 
-    zip_results(event_results, page_results, :goal, metrics_to_select)
+    (event_results ++ page_results)
+    |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
     |> maybe_add_cr(site, query, nil, metrics)
     |> Util.keep_requested_metrics(metrics)
   end
@@ -795,6 +797,16 @@ defmodule Plausible.Stats.Breakdown do
 
   defp sorting_key(metrics) do
     if Enum.member?(metrics, :visitors), do: :visitors, else: List.first(metrics)
+  end
+
+  defp add_revenue_as_nil_selects(q, metrics) do
+    columns_with_nils =
+      @revenue_metrics
+      |> Enum.filter(&Enum.member?(metrics, &1))
+      |> Enum.map(&{&1, nil})
+      |> Enum.into(%{})
+
+    from(e in q, select_merge: ^columns_with_nils)
   end
 
   defp transform_keys(results, keys_to_replace) do
