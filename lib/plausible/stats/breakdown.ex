@@ -80,9 +80,8 @@ defmodule Plausible.Stats.Breakdown do
             name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
           }
         )
-        |> select_event_metrics(metrics_to_select -- @revenue_metrics)
-        # :TODO: Add test where revenue metric is first / doesn't match the rest.
-        |> add_revenue_as_nil_selects(metrics_to_select)
+        # All revenue columns will be set as nils
+        |> select_event_metrics(metrics_to_select, true)
         |> apply_pagination(pagination)
       else
         nil
@@ -814,16 +813,6 @@ defmodule Plausible.Stats.Breakdown do
 
   defp sorting_key(metrics) do
     if Enum.member?(metrics, :visitors), do: :visitors, else: List.first(metrics)
-  end
-
-  defp add_revenue_as_nil_selects(q, metrics) do
-    columns_with_nils =
-      @revenue_metrics
-      |> Enum.filter(&Enum.member?(metrics, &1))
-      |> Enum.map(&{&1, nil})
-      |> Enum.into(%{})
-
-    from(e in q, select_merge: ^columns_with_nils)
   end
 
   defp transform_keys(results, keys_to_replace) do
