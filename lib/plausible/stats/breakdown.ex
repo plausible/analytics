@@ -109,7 +109,7 @@ defmodule Plausible.Stats.Breakdown do
 
     if full_q do
       full_q
-      |> add_absolute_cr2(site, query, metrics)
+      |> maybe_add_absolute_conversion_rate(site, query, metrics)
       |> ClickhouseRepo.all()
       |> transform_keys(%{name: :goal})
       |> cast_revenue_metrics_to_money(revenue_goals)
@@ -132,10 +132,15 @@ defmodule Plausible.Stats.Breakdown do
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
     breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select)
+    |> maybe_add_absolute_conversion_rate(site, query, metrics)
     |> paginate_and_execute(metrics_to_select, pagination)
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
+<<<<<<< HEAD
     |> sort_results(metrics_to_select)
     |> maybe_add_cr(site, query, nil, metrics)
+=======
+    |> Enum.sort_by(& &1[sorting_key(metrics_to_select)], :desc)
+>>>>>>> 194e6c584 (Calculate CR for property breakdowns)
     |> Util.keep_requested_metrics(metrics)
   end
 
@@ -448,18 +453,18 @@ defmodule Plausible.Stats.Breakdown do
     from(
       e in q,
       select_merge: %{
-        ^prop =>
+        name:
           selected_as(
             fragment(
               "if(not empty(?), ?, '(none)')",
               get_by_key(e, :meta, ^prop),
               get_by_key(e, :meta, ^prop)
             ),
-            :breakdown_prop_value
+            :name
           )
       },
-      group_by: selected_as(:breakdown_prop_value),
-      order_by: {:asc, selected_as(:breakdown_prop_value)}
+      group_by: selected_as(:name),
+      order_by: {:asc, selected_as(:name)}
     )
   end
 
@@ -681,7 +686,7 @@ defmodule Plausible.Stats.Breakdown do
     cond do
       :conversion_rate not in metrics -> breakdown_results
       Enum.empty?(breakdown_results) -> breakdown_results
-      is_nil(property) -> add_absolute_cr(breakdown_results, site, query)
+      is_nil(property) -> "Impossible branch"
       true -> add_cr(breakdown_results, site, query, property, metrics, pagination)
     end
   end
@@ -782,26 +787,6 @@ defmodule Plausible.Stats.Breakdown do
     end)
   end
 
-  # Similar to `add_cr/5`, injects a conversion_rate metric into
-  # every breakdown result. However, a single divisor is used in
-  # the CR calculation across all breakdown results. That is the
-  # number of visitors without `event:goal` and `event:props:*`
-  # filters.
-  #
-  # This is useful when we're only interested in the conversions
-  # themselves - not how well a certain property such as browser
-  # or page converted.
-  defp add_absolute_cr(breakdown_results, site, query) do
-    total_q = Query.remove_event_filters(query, [:goal, :props])
-
-    %{visitors: %{value: total_visitors}} = Plausible.Stats.aggregate(site, total_q, [:visitors])
-
-    breakdown_results
-    |> Enum.map(fn goal ->
-      Map.put(goal, :conversion_rate, Util.calculate_cr(total_visitors, goal[:visitors]))
-    end)
-  end
-
   defp sort_results(results, metrics) do
     Enum.sort_by(
       results,
@@ -815,7 +800,7 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-  defp add_absolute_cr2(q, site, query, metrics) do
+  defp maybe_add_absolute_conversion_rate(q, site, query, metrics) do
     if :conversion_rate in metrics do
       total_query = query |> Query.remove_event_filters([:goal, :props])
 
