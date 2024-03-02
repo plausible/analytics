@@ -52,17 +52,16 @@ defmodule Plausible.Stats.Breakdown do
 
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
-    event_results =
+    event_q =
       if Enum.any?(event_goals) do
         site
-        |> breakdown(event_query, "event:name", metrics_to_select, pagination, skip_tracing: true)
-        |> transform_keys(%{name: :goal})
-        |> cast_revenue_metrics_to_money(revenue_goals)
+        |> breakdown_events(event_query, "event:name", metrics_to_select)
+        |> apply_pagination(pagination)
       else
-        []
+        nil
       end
 
-    page_results =
+    page_q =
       if Enum.any?(pageview_goals) do
         page_exprs = Enum.map(pageview_goals, & &1.page_path)
         page_regexes = Enum.map(page_exprs, &page_regex/1)
@@ -78,18 +77,34 @@ defmodule Plausible.Stats.Breakdown do
           array_join: index in fragment("indices"),
           group_by: index,
           select: %{
-            goal: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
+            name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
           }
         )
         |> select_event_metrics(metrics_to_select -- @revenue_metrics)
         |> add_revenue_as_nil_selects(metrics_to_select)
         |> apply_pagination(pagination)
-        |> ClickhouseRepo.all()
       else
-        []
+        nil
       end
 
-    (event_results ++ page_results)
+    results =
+      case {event_q, page_q} do
+        {nil, nil} ->
+          []
+
+        {event_q, nil} ->
+          event_q |> ClickhouseRepo.all()
+
+        {nil, page_q} ->
+          page_q |> ClickhouseRepo.all()
+
+        {event_q, page_q} ->
+          from(e in event_q, union_all: ^page_q) |> ClickhouseRepo.all()
+      end
+
+    results
+    |> transform_keys(%{name: :goal})
+    |> cast_revenue_metrics_to_money(revenue_goals)
     |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
     |> maybe_add_cr(site, query, nil, metrics)
     |> Util.keep_requested_metrics(metrics)
