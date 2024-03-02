@@ -80,15 +80,14 @@ defmodule Plausible.Stats.Breakdown do
               e.pathname,
               ^page_regexes
             ) and e.name == "pageview",
-          group_by: fragment("index"),
+          array_join: index in fragment("indices"),
+          group_by: index,
           select: %{
-            index: fragment("arrayJoin(indices) as index"),
-            goal: fragment("concat('Visit ', ?[index])", ^page_exprs)
+            goal: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
           }
         )
         |> select_event_metrics(metrics_to_select -- @revenue_metrics)
         |> ClickhouseRepo.all()
-        |> Enum.map(fn row -> Map.delete(row, :index) end)
       else
         []
       end
