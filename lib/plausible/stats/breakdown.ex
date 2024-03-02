@@ -110,7 +110,8 @@ defmodule Plausible.Stats.Breakdown do
 
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
-    breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select, pagination)
+    breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select)
+    |> paginate_and_execute(metrics_to_select, pagination)
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
     |> sort_results(metrics_to_select)
     |> maybe_add_cr(site, query, nil, metrics)
@@ -125,7 +126,8 @@ defmodule Plausible.Stats.Breakdown do
 
     event_result =
       site
-      |> breakdown_events(query, "event:page", event_metrics, pagination)
+      |> breakdown_events(query, "event:page", event_metrics)
+      |> paginate_and_execute(event_metrics, pagination)
       |> maybe_add_time_on_page(site, query, metrics)
       |> maybe_add_cr(site, query, property, metrics, pagination)
       |> Util.keep_requested_metrics(metrics)
@@ -149,7 +151,8 @@ defmodule Plausible.Stats.Breakdown do
       {limit, _page} = pagination
 
       session_result =
-        breakdown_sessions(site, new_query, "visit:entry_page", session_metrics, {limit, 1})
+        breakdown_sessions(site, new_query, "visit:entry_page", session_metrics)
+        |> paginate_and_execute(session_metrics, {limit, 1})
         |> transform_keys(%{entry_page: :page})
 
       metrics = metrics ++ [:page]
@@ -166,7 +169,9 @@ defmodule Plausible.Stats.Breakdown do
 
   def breakdown(site, query, "event:name" = property, metrics, pagination, opts) do
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
-    breakdown_events(site, query, property, metrics, pagination)
+
+    breakdown_events(site, query, property, metrics)
+    |> paginate_and_execute(metrics, pagination)
   end
 
   def breakdown(site, query, property, metrics, pagination, opts) do
@@ -174,7 +179,8 @@ defmodule Plausible.Stats.Breakdown do
 
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
-    breakdown_sessions(site, query, property, metrics_to_select, pagination)
+    breakdown_sessions(site, query, property, metrics_to_select)
+    |> paginate_and_execute(metrics, pagination)
     |> maybe_add_cr(site, query, property, metrics, pagination)
     |> Util.keep_requested_metrics(metrics)
   end
@@ -197,9 +203,7 @@ defmodule Plausible.Stats.Breakdown do
     |> sort_results(metrics)
   end
 
-  defp breakdown_sessions(_, _, _, [], _), do: []
-
-  defp breakdown_sessions(site, query, property, metrics, pagination) do
+  defp breakdown_sessions(site, query, property, metrics) do
     from(s in query_sessions(site, query),
       order_by: [desc: fragment("uniq(?)", s.user_id)],
       select: %{}
@@ -209,15 +213,9 @@ defmodule Plausible.Stats.Breakdown do
     |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, property, metrics)
     |> add_percentage_metric(site, query, metrics)
-    |> apply_pagination(pagination)
-    |> ClickhouseRepo.all()
-    |> transform_keys(%{operating_system: :os})
-    |> Util.keep_requested_metrics(metrics)
   end
 
-  defp breakdown_events(_, _, _, [], _), do: []
-
-  defp breakdown_events(site, query, property, metrics, pagination) do
+  defp breakdown_events(site, query, property, metrics) do
     from(e in base_event_query(site, query),
       order_by: [desc: fragment("uniq(?)", e.user_id)],
       select: %{}
@@ -226,6 +224,12 @@ defmodule Plausible.Stats.Breakdown do
     |> select_event_metrics(metrics)
     |> merge_imported(site, query, property, metrics)
     |> add_percentage_metric(site, query, metrics)
+  end
+
+  defp paginate_and_execute(_, [], _), do: []
+
+  defp paginate_and_execute(q, metrics, pagination) do
+    q
     |> apply_pagination(pagination)
     |> ClickhouseRepo.all()
     |> transform_keys(%{operating_system: :os})
