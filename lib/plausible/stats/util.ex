@@ -7,7 +7,8 @@ defmodule Plausible.Stats.Util do
     :__internal_visits,
     :visitors,
     :__total_visitors,
-    :__breakdown_value
+    :__breakdown_value,
+    :total_visitors
   ]
 
   @doc """

@@ -87,16 +87,16 @@ defmodule Plausible.Stats.Breakdown do
         nil
       end
 
-    results =
+    full_q =
       case {event_q, page_q} do
         {nil, nil} ->
-          []
+          nil
 
         {event_q, nil} ->
-          event_q |> ClickhouseRepo.all()
+          event_q
 
         {nil, page_q} ->
-          page_q |> ClickhouseRepo.all()
+          page_q
 
         {event_q, page_q} ->
           from(
@@ -105,14 +105,18 @@ defmodule Plausible.Stats.Breakdown do
             order_by: [desc: e.visitors]
           )
           |> apply_pagination(pagination)
-          |> ClickhouseRepo.all()
       end
 
-    results
-    |> transform_keys(%{name: :goal})
-    |> cast_revenue_metrics_to_money(revenue_goals)
-    |> maybe_add_cr(site, query, nil, metrics)
-    |> Util.keep_requested_metrics(metrics)
+    if full_q do
+      full_q
+      |> add_absolute_cr2(site, query, metrics)
+      |> ClickhouseRepo.all()
+      |> transform_keys(%{name: :goal})
+      |> cast_revenue_metrics_to_money(revenue_goals)
+      |> Util.keep_requested_metrics(metrics)
+    else
+      []
+    end
   end
 
   def breakdown(site, query, "event:props:" <> custom_prop = property, metrics, pagination, opts) do
@@ -809,6 +813,34 @@ defmodule Plausible.Stats.Breakdown do
       end,
       :desc
     )
+  end
+
+  defp add_absolute_cr2(q, site, query, metrics) do
+    if :conversion_rate in metrics do
+      total_query = query |> Query.remove_event_filters([:goal, :props])
+
+      total_q =
+        from(e in base_event_query(site, total_query),
+          select: %{
+            total_visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+          }
+        )
+
+      from(e in Ecto.Query.subquery(q),
+        select_merge: %{
+          total_visitors: selected_as(subquery(total_q), :total_visitors),
+          conversion_rate:
+            fragment(
+              "if(? > 0, round(? / ? * 100, 1), null)",
+              selected_as(:total_visitors),
+              e.visitors,
+              selected_as(:total_visitors)
+            )
+        }
+      )
+    else
+      q
+    end
   end
 
   defp sorting_key(metrics) do
