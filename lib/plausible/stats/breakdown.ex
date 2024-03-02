@@ -135,8 +135,6 @@ defmodule Plausible.Stats.Breakdown do
     |> maybe_add_absolute_conversion_rate(site, query, metrics)
     |> paginate_and_execute(metrics_to_select, pagination)
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
-    |> sort_results(metrics_to_select)
-    |> Util.keep_requested_metrics(metrics)
   end
 
   def breakdown(site, query, "event:page" = property, metrics, pagination, opts) do
@@ -151,7 +149,6 @@ defmodule Plausible.Stats.Breakdown do
       |> maybe_add_group_conversion_rate(&breakdown_events/4, site, query, property, metrics)
       |> paginate_and_execute(metrics, pagination)
       |> maybe_add_time_on_page(site, query, metrics)
-      |> Util.keep_requested_metrics(metrics)
 
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
@@ -201,9 +198,8 @@ defmodule Plausible.Stats.Breakdown do
     metrics_to_select = Util.maybe_add_visitors_metric(metrics) -- @computed_metrics
 
     breakdown_sessions(site, query, property, metrics_to_select)
+    |> maybe_add_group_conversion_rate(&breakdown_sessions/4, site, query, property, metrics)
     |> paginate_and_execute(metrics, pagination)
-    |> maybe_add_cr(site, query, property, metrics, pagination)
-    |> Util.keep_requested_metrics(metrics)
   end
 
   defp zip_results(event_result, session_result, property, metrics) do
@@ -692,23 +688,18 @@ defmodule Plausible.Stats.Breakdown do
     Enum.reduce(fields, nil, &fields_equal/2)
   end
 
-  defp fields_equal(field, nil),
-    do: Ecto.Query.dynamic([a, b], field(a, ^field) == field(b, ^field))
-
-  defp fields_equal(field, condition),
-    do: Ecto.Query.dynamic([a, b], field(a, ^field) == field(b, ^field) and ^condition)
-
-  defp maybe_add_cr(breakdown_results, site, query, property, metrics, pagination \\ nil) do
-    cond do
-      :conversion_rate not in metrics -> breakdown_results
-      Enum.empty?(breakdown_results) -> breakdown_results
-      is_nil(property) -> "Impossible branch"
-      true -> add_cr(breakdown_results, site, query, property, metrics, pagination)
-    end
+  def outer_order_by(fields) do
+    Enum.map(fields, fn field_name -> {:asc, Ecto.Query.dynamic([q], field(q, ^field_name))} end)
   end
 
-  # This function injects a conversion_rate metric into every
-  # breakdown result map. It is calculated as X / Y, where:
+  defp fields_equal(field_name, nil),
+    do: Ecto.Query.dynamic([a, b], field(a, ^field_name) == field(b, ^field_name))
+
+  defp fields_equal(field_name, condition),
+    do: Ecto.Query.dynamic([a, b], field(a, ^field_name) == field(b, ^field_name) and ^condition)
+
+  # This function injects a conversion_rate metric into
+  # a breakdown query. It is calculated as X / Y, where:
   #
   #   * X is the number of conversions for a breakdown
   #     result (conversion = number of visitors who
@@ -718,6 +709,7 @@ defmodule Plausible.Stats.Breakdown do
   #  * Y is the number of all visitors for this breakdown
   #    result without the `event:goal` and `event:props:*`
   #    filters.
+<<<<<<< HEAD
   defp add_cr(breakdown_results, site, query, property, metrics, pagination) do
     property_atom = Plausible.Stats.Filters.without_prefix(property)
 
@@ -816,6 +808,8 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
+=======
+>>>>>>> d7fcfaa43 (CR with order_by)
   def maybe_add_group_conversion_rate(q, breakdown_fn, site, query, property, metrics) do
     if :conversion_rate in metrics do
       event_metrics =
@@ -838,8 +832,9 @@ defmodule Plausible.Stats.Breakdown do
               e.visitors,
               c.visitors
             )
-        }
-        # :TODO: order_by
+        },
+        order_by: [desc: e.visitors],
+        order_by: ^outer_order_by(group_by_field_names(property))
       )
     else
       q
