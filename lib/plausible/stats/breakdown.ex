@@ -81,6 +81,7 @@ defmodule Plausible.Stats.Breakdown do
           }
         )
         |> select_event_metrics(metrics_to_select -- @revenue_metrics)
+        # :TODO: Add test where revenue metric is first / doesn't match the rest.
         |> add_revenue_as_nil_selects(metrics_to_select)
         |> apply_pagination(pagination)
       else
@@ -99,13 +100,18 @@ defmodule Plausible.Stats.Breakdown do
           page_q |> ClickhouseRepo.all()
 
         {event_q, page_q} ->
-          from(e in event_q, union_all: ^page_q) |> ClickhouseRepo.all()
+          from(
+            e in Ecto.Query.subquery(Ecto.Query.union_all(event_q, ^page_q)),
+            # :TODO: Handle other orderings
+            order_by: [desc: e.visitors]
+          )
+          |> apply_pagination(pagination)
+          |> ClickhouseRepo.all()
       end
 
     results
     |> transform_keys(%{name: :goal})
     |> cast_revenue_metrics_to_money(revenue_goals)
-    |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
     |> maybe_add_cr(site, query, nil, metrics)
     |> Util.keep_requested_metrics(metrics)
   end
