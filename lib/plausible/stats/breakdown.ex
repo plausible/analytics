@@ -62,9 +62,6 @@ defmodule Plausible.Stats.Breakdown do
         []
       end
 
-    {limit, page} = pagination
-    offset = (page - 1) * limit
-
     page_results =
       if Enum.any?(pageview_goals) do
         page_exprs = Enum.map(pageview_goals, & &1.page_path)
@@ -72,8 +69,6 @@ defmodule Plausible.Stats.Breakdown do
 
         from(e in base_event_query(site, query),
           order_by: [desc: fragment("uniq(?)", e.user_id)],
-          limit: ^limit,
-          offset: ^offset,
           where:
             fragment(
               "notEmpty(multiMatchAllIndices(?, ?) as indices)",
@@ -88,6 +83,7 @@ defmodule Plausible.Stats.Breakdown do
         )
         |> select_event_metrics(metrics_to_select -- @revenue_metrics)
         |> add_revenue_as_nil_selects(metrics_to_select)
+        |> apply_pagination(pagination)
         |> ClickhouseRepo.all()
       else
         []
