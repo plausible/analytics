@@ -135,12 +135,7 @@ defmodule Plausible.Stats.Breakdown do
     |> maybe_add_absolute_conversion_rate(site, query, metrics)
     |> paginate_and_execute(metrics_to_select, pagination)
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
-<<<<<<< HEAD
     |> sort_results(metrics_to_select)
-    |> maybe_add_cr(site, query, nil, metrics)
-=======
-    |> Enum.sort_by(& &1[sorting_key(metrics_to_select)], :desc)
->>>>>>> 194e6c584 (Calculate CR for property breakdowns)
     |> Util.keep_requested_metrics(metrics)
   end
 
@@ -152,10 +147,10 @@ defmodule Plausible.Stats.Breakdown do
 
     event_result =
       site
-      |> breakdown_events(query, "event:page", event_metrics)
-      |> paginate_and_execute(event_metrics, pagination)
+      |> breakdown_events(query, property, event_metrics)
+      |> maybe_add_group_conversion_rate(&breakdown_events/4, site, query, property, metrics)
+      |> paginate_and_execute(metrics, pagination)
       |> maybe_add_time_on_page(site, query, metrics)
-      |> maybe_add_cr(site, query, property, metrics, pagination)
       |> Util.keep_requested_metrics(metrics)
 
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
@@ -682,6 +677,27 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
+  defp group_by_field_names("event:props:" <> _prop), do: [:name]
+  defp group_by_field_names("event:page"), do: [:page]
+  defp group_by_field_names("visit:region"), do: [:subdivision1_code]
+  defp group_by_field_names("visit:os"), do: [:operating_system]
+
+  defp group_by_field_names("visit:os_version"),
+    do: [:operating_system, :operating_system_version]
+
+  defp group_by_field_names("visit:browser_version"), do: [:browser, :browser_version]
+  defp group_by_field_names(property), do: [Plausible.Stats.Filters.without_prefix(property)]
+
+  defp on_matches_group_by(fields) do
+    Enum.reduce(fields, nil, &fields_equal/2)
+  end
+
+  defp fields_equal(field, nil),
+    do: Ecto.Query.dynamic([a, b], field(a, ^field) == field(b, ^field))
+
+  defp fields_equal(field, condition),
+    do: Ecto.Query.dynamic([a, b], field(a, ^field) == field(b, ^field) and ^condition)
+
   defp maybe_add_cr(breakdown_results, site, query, property, metrics, pagination \\ nil) do
     cond do
       :conversion_rate not in metrics -> breakdown_results
@@ -798,6 +814,36 @@ defmodule Plausible.Stats.Breakdown do
       end,
       :desc
     )
+  end
+
+  def maybe_add_group_conversion_rate(q, breakdown_fn, site, query, property, metrics) do
+    if :conversion_rate in metrics do
+      event_metrics =
+        metrics
+        |> Util.maybe_add_visitors_metric()
+        |> Enum.filter(&(&1 in @event_metrics))
+
+      groups_totals_query = query |> Query.remove_event_filters([:goal, :props])
+      groups_breakdown_q = breakdown_fn.(site, groups_totals_query, property, event_metrics)
+
+      from(e in Ecto.Query.subquery(q),
+        left_join: c in subquery(groups_breakdown_q),
+        on: ^on_matches_group_by(group_by_field_names(property)),
+        select_merge: %{
+          total_visitors: c.visitors,
+          conversion_rate:
+            fragment(
+              "if(? > 0, round(? / ? * 100, 1), null)",
+              c.visitors,
+              e.visitors,
+              c.visitors
+            )
+        }
+        # :TODO: order_by
+      )
+    else
+      q
+    end
   end
 
   defp maybe_add_absolute_conversion_rate(q, site, query, metrics) do
