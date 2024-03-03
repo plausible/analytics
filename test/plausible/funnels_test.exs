@@ -3,7 +3,7 @@ defmodule Plausible.FunnelsTest do
   @moduletag :full_build_only
 
   use Plausible
-  use Journey
+  use Plausible.Test.Support.Journey
 
   on_full_build do
     alias Plausible.Goals
@@ -238,13 +238,16 @@ defmodule Plausible.FunnelsTest do
             [g1, g2, g3]
           )
 
-        populate_stats(site, [
-          build(:pageview, pathname: "/go/to/blog/foo", user_id: 123),
-          build(:event, name: "Signup", user_id: 123),
-          build(:pageview, pathname: "/checkout", user_id: 123),
-          build(:pageview, pathname: "/go/to/blog/bar", user_id: 666),
-          build(:event, name: "Signup", user_id: 666)
-        ])
+        journey site do
+          pageview "/go/to/blog/foo"
+          custom_event "Signup"
+          pageview "/checkout"
+        end
+
+        journey site do
+          pageview "/go/to/blog/foo"
+          custom_event "Signup"
+        end
 
         query = Plausible.Stats.Query.from(site, %{"period" => "all"})
 
@@ -336,28 +339,38 @@ defmodule Plausible.FunnelsTest do
                 }} = funnel_data
       end
 
-      @tag :slow
-      test "sampling", %{site: site, steps: [g1, g2, g3 | _]} do
+      def rand_ua do
+        :crypto.strong_rand_bytes(10) |> Base.encode64()
+      end
+
+      # @tag :slow
+      @tag timeout: :timer.minutes(2)
+      test "sampling", %{steps: [g1, g2, g3 | _]} do
+        site = insert(:site, domain: "1.1.1.1")
+
         {:ok, funnel} =
           Funnels.create(
             site,
-            "From blog to signup and purchase",
+            "From blog to signup",
             [g1, g2, g3]
           )
 
-        stats =
-          1..50_000
-          |> Enum.flat_map(fn _ ->
-            user_id = SipHash.hash!("0123456789ABCDEF", :crypto.strong_rand_bytes(64))
+        journey site,
+          manual: SpamJourney,
+          ip: &random_ipv6/0,
+          user_agent: nil do
+          pageview "/go/to/blog/foo"
+          custom_event "Signup"
+          pageview "/checkout"
+        end
 
-            [
-              build(:pageview, pathname: "/go/to/blog/foo", user_id: user_id),
-              build(:event, name: "Signup", user_id: user_id),
-              build(:pageview, pathname: "/checkout", user_id: user_id)
-            ]
-          end)
+        1..50_000
+        |> Task.async_stream(fn i ->
+          SpamJourney.run()
+        end)
+        |> Stream.run()
 
-        populate_stats(site, stats)
+        IO.inspect(:done)
 
         query =
           Plausible.Stats.Query.from(site, %{"period" => "all", "sample_threshold" => "10000"})
@@ -366,5 +379,11 @@ defmodule Plausible.FunnelsTest do
         assert_in_delta funnel_data[:all_visitors], 50_000, 5000
       end
     end
+  end
+
+  def mytimeit(label, f) do
+    {time, result} = :timer.tc(f)
+    IO.inspect(time / 1_000, label: label)
+    result
   end
 end

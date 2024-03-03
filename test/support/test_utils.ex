@@ -280,4 +280,11 @@ defmodule Plausible.TestUtils do
   def random_ip() do
     Enum.map_join(1..4, ".", fn _ -> Enum.random(1..254) end)
   end
+
+  def random_ipv6() do
+    <<a1::16, a2::16, a3::16, a4::16, a5::16, a6::16, a7::16, a8::16>> =
+      :crypto.strong_rand_bytes(16)
+
+    "#{Base.encode16(<<a1>>, case: :lower)}:#{Base.encode16(<<a2>>, case: :lower)}:#{Base.encode16(<<a3>>, case: :lower)}:#{Base.encode16(<<a4>>, case: :lower)}:#{Base.encode16(<<a5>>, case: :lower)}:#{Base.encode16(<<a6>>, case: :lower)}:#{Base.encode16(<<a7>>, case: :lower)}:#{Base.encode16(<<a8>>, case: :lower)}"
+  end
 end
