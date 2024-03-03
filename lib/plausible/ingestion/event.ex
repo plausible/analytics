@@ -65,6 +65,8 @@ defmodule Plausible.Ingestion.Event do
 
   @spec build_and_buffer(Request.t()) :: {:ok, %{buffered: [t()], dropped: [t()]}}
   def build_and_buffer(%Request{domains: domains} = request) do
+    # IO.inspect(request, label: request.remote_ip)
+
     processed_events =
       if spam_referrer?(request) do
         for domain <- domains, do: drop(new(domain, request), :spam_referrer)
@@ -138,10 +140,12 @@ defmodule Plausible.Ingestion.Event do
 
   defp process_unless_dropped(%__MODULE__{} = initial_event, pipeline) do
     Enum.reduce_while(pipeline, initial_event, fn pipeline_step, acc_event ->
-      case pipeline_step.(acc_event) do
-        %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
-        %__MODULE__{dropped?: false} = event -> {:cont, event}
-      end
+      timeit(inspect(pipeline_step), fn ->
+        case pipeline_step.(acc_event) do
+          %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
+          %__MODULE__{dropped?: false} = event -> {:cont, event}
+        end
+      end)
     end)
   end
 
@@ -523,4 +527,14 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp spam_referrer?(_), do: false
+
+  def timeit(label, f) do
+    {time, result} = :timer.tc(f)
+
+    if time / 1_000 > 1 do
+      # IO.inspect(time / 1_000, label: label)
+    end
+
+    result
+  end
 end
