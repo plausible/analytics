@@ -31,7 +31,7 @@ defmodule Journey do
     (state.conn || build_conn(:post, "/api/events", payload))
     |> put_req_header("content-type", "application/json")
     |> put_req_header("x-forwarded-for", state.ip)
-    |> put_req_header("user-agent", state.user_agent |> IO.inspect(label: :ua))
+    |> put_req_header("user-agent", state.user_agent)
   end
 
   defp eval_now(now) when is_function(now, 0), do: now.()
