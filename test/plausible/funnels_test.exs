@@ -3,6 +3,7 @@ defmodule Plausible.FunnelsTest do
   @moduletag :full_build_only
 
   use Plausible
+  use Journey
 
   on_full_build do
     alias Plausible.Goals
@@ -171,14 +172,29 @@ defmodule Plausible.FunnelsTest do
             ]
           )
 
-        populate_stats(site, [
-          build(:pageview, pathname: "/irrelevant/page/not/in/funnel", user_id: 999),
-          build(:pageview, pathname: "/go/to/blog/foo", user_id: 123),
-          build(:event, name: "Signup", user_id: 123),
-          build(:pageview, pathname: "/checkout", user_id: 123),
-          build(:pageview, pathname: "/go/to/blog/bar", user_id: 666),
-          build(:event, name: "Signup", user_id: 666)
-        ])
+        journey site do
+          pageview("/irrelevant/page/not/in/funnel")
+        end
+
+        journey site do
+          pageview("/go/to/blog/foo")
+          custom_event("Signup")
+          pageview("/checkout")
+        end
+
+        journey site do
+          pageview("/go/to/blog/bar")
+          custom_event("Signup")
+        end
+
+        # populate_stats(site, [
+        #   build(:pageview, pathname: "/irrelevant/page/not/in/funnel", user_id: 999),
+        #   build(:pageview, pathname: "/go/to/blog/foo", user_id: 123),
+        #   build(:event, name: "Signup", user_id: 123),
+        #   build(:pageview, pathname: "/checkout", user_id: 123),
+        #   build(:pageview, pathname: "/go/to/blog/bar", user_id: 666),
+        #   build(:event, name: "Signup", user_id: 666)
+        # ])
 
         query = Plausible.Stats.Query.from(site, %{"period" => "all"})
 
