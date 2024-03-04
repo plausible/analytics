@@ -133,7 +133,8 @@ defmodule Plausible.Stats.Breakdown do
 
     breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select)
     |> maybe_add_absolute_conversion_rate(site, query, metrics)
-    |> paginate_and_execute(metrics_to_select, pagination)
+    |> paginate_and_execute(metrics, pagination)
+    |> transform_keys(%{name: custom_prop})
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
   end
 
@@ -674,14 +675,10 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   defp group_by_field_names("event:props:" <> _prop), do: [:name]
-  defp group_by_field_names("event:page"), do: [:page]
-  defp group_by_field_names("visit:region"), do: [:subdivision1_code]
   defp group_by_field_names("visit:os"), do: [:operating_system]
-
-  defp group_by_field_names("visit:os_version"),
-    do: [:operating_system, :operating_system_version]
-
+  defp group_by_field_names("visit:os_version"), do: [:os, :os_version]
   defp group_by_field_names("visit:browser_version"), do: [:browser, :browser_version]
+
   defp group_by_field_names(property), do: [Plausible.Stats.Filters.without_prefix(property)]
 
   defp on_matches_group_by(fields) do
