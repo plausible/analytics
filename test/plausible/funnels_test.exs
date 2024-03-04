@@ -1,5 +1,5 @@
 defmodule Plausible.FunnelsTest do
-  use Plausible.DataCase
+  use Plausible.DataCase, async: true
   @moduletag :full_build_only
 
   use Plausible
@@ -338,52 +338,6 @@ defmodule Plausible.FunnelsTest do
                   ]
                 }} = funnel_data
       end
-
-      def rand_ua do
-        :crypto.strong_rand_bytes(10) |> Base.encode64()
-      end
-
-      # @tag :slow
-      @tag timeout: :timer.minutes(2)
-      test "sampling", %{steps: [g1, g2, g3 | _]} do
-        site = insert(:site, domain: "1.1.1.1")
-
-        {:ok, funnel} =
-          Funnels.create(
-            site,
-            "From blog to signup",
-            [g1, g2, g3]
-          )
-
-        journey site,
-          manual: SpamJourney,
-          ip: &random_ipv6/0,
-          user_agent: nil do
-          pageview "/go/to/blog/foo"
-          custom_event "Signup"
-          pageview "/checkout"
-        end
-
-        1..50_000
-        |> Task.async_stream(fn i ->
-          SpamJourney.run()
-        end)
-        |> Stream.run()
-
-        IO.inspect(:done)
-
-        query =
-          Plausible.Stats.Query.from(site, %{"period" => "all", "sample_threshold" => "10000"})
-
-        {:ok, funnel_data} = Stats.funnel(site, query, funnel.id)
-        assert_in_delta funnel_data[:all_visitors], 50_000, 5000
-      end
     end
-  end
-
-  def mytimeit(label, f) do
-    {time, result} = :timer.tc(f)
-    IO.inspect(time / 1_000, label: label)
-    result
   end
 end

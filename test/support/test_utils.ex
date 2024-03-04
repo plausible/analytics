@@ -285,6 +285,7 @@ defmodule Plausible.TestUtils do
     <<a1::16, a2::16, a3::16, a4::16, a5::16, a6::16, a7::16, a8::16>> =
       :crypto.strong_rand_bytes(16)
 
-    "#{Base.encode16(<<a1>>, case: :lower)}:#{Base.encode16(<<a2>>, case: :lower)}:#{Base.encode16(<<a3>>, case: :lower)}:#{Base.encode16(<<a4>>, case: :lower)}:#{Base.encode16(<<a5>>, case: :lower)}:#{Base.encode16(<<a6>>, case: :lower)}:#{Base.encode16(<<a7>>, case: :lower)}:#{Base.encode16(<<a8>>, case: :lower)}"
+    [a1, a2, a3, a4, a5, a6, a7, a8]
+    |> Enum.map_join(":", &Base.encode16(<<&1>>, case: :lower))
   end
 end
