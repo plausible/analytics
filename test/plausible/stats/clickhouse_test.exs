@@ -67,7 +67,7 @@ defmodule Plausible.Stats.ClickhouseTest do
 
       journey site, now: ~N[2023-10-25 15:00:00] do
         pageview "/", idle: 60
-        pageviuw "/"
+        pageview "/"
       end
 
       assert %{
