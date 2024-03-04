@@ -53,7 +53,7 @@ defmodule Plausible.Cache do
     Application.fetch_env!(:plausible, __MODULE__)[:enabled] == true
   end
 
-  #credo:disable-for-this-file Credo.Check.Refactor.LongQuoteBlocks
+  # credo:disable-for-this-file Credo.Check.Refactor.LongQuoteBlocks
   defmacro __using__(_opts) do
     quote do
       require Logger
