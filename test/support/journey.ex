@@ -1,4 +1,6 @@
 defmodule Plausible.Test.Support.Journey do
+  @moduletag "TODO"
+
   defmacro __using__(_) do
     quote do
       require Plausible.Test.Support.Journey
@@ -14,7 +16,7 @@ defmodule Plausible.Test.Support.Journey do
 
   def run(site, state, journey) do
     conn = new_conn(state)
-
+    # credo:disable-for-this-file Credo.Check.Warning.UnusedEnumOperation
     Enum.reduce(journey, state, fn
       {:pageview, [url, opts]}, state ->
         payload =
