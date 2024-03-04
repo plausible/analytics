@@ -56,7 +56,6 @@ defmodule Plausible.Stats.ClickhouseTest do
       fixed_now = ~N[2023-10-26 10:00:15]
       site = insert(:site)
 
-
       journey site, now: ~N[2023-10-25 13:58:00] do
         pageview "/"
       end
@@ -192,8 +191,8 @@ defmodule Plausible.Stats.ClickhouseTest do
       user_id = 111
 
       journey site, now: ~N[2023-10-25 15:59:00] do
-       pageview "/", idle: 60
-       pageview "/"
+        pageview "/", idle: 60
+        pageview "/"
       end
 
       result = Clickhouse.last_24h_visitors_hourly_intervals([site], fixed_now)[site.domain]
