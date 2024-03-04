@@ -818,6 +818,7 @@ defmodule Plausible.Billing.QuotaTest do
     end
 
     test "returns usage and date_range for the given billing month", %{user: user} do
+      # test
       last_bill_date = ~D[2023-06-03]
       today = ~D[2023-06-05]
 

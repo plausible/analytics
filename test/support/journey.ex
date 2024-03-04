@@ -169,6 +169,7 @@ defmodule Plausible.Test.Support.Journey do
   end
 
   defp __journey__(mod, site, state, block, mod_override) do
+    Code.compiler_options(ignore_module_conflict: true)
     quote do
       defmodule :"#{module_name(unquote(mod), unquote(site), unquote(state), unquote(mod_override))}" do
         Module.register_attribute(__MODULE__, :journey, accumulate: true)
