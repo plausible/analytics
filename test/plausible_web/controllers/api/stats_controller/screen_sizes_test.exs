@@ -188,7 +188,7 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       populate_stats(site, [
         build(:imported_devices, device: "Desktop", date: ~D[2021-01-01]),
         build(:imported_devices, device: "Laptop", date: ~D[2021-01-01]),
-        build(:imported_visitors, visitors: 2, date: ~D[2021-01-01])
+        build(:imported_visitors, visitors: 1, date: ~D[2021-01-01])
       ])
 
       conn =
@@ -199,8 +199,8 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         })
 
       assert json_response(conn, 200) == [
-               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.7},
-               %{"name" => "Laptop", "visitors" => 2, "percentage" => 66.7}
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 100},
+               %{"name" => "Laptop", "visitors" => 2, "percentage" => 100}
              ]
     end
 

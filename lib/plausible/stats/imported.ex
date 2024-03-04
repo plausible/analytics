@@ -321,16 +321,8 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, query, :aggregate, metrics) do
-    import_ids = site.complete_import_ids
-
     imported_q =
-      from(
-        i in "imported_visitors",
-        where: i.site_id == ^site.id,
-        where: i.import_id in ^import_ids,
-        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
-        select: %{}
-      )
+      imported_visitors(site, query)
       |> select_imported_metrics(metrics)
 
     from(
@@ -342,6 +334,23 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, _, _, _, _), do: q
+
+  def total_imported_visitors(site, query) do
+    imported_visitors(site, query)
+    |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
+  end
+
+  defp imported_visitors(site, query) do
+    import_ids = site.complete_import_ids
+
+    from(
+      i in "imported_visitors",
+      where: i.site_id == ^site.id,
+      where: i.import_id in ^import_ids,
+      where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+      select: %{}
+    )
+  end
 
   defp select_imported_metrics(q, []), do: q
 
@@ -525,29 +534,6 @@ defmodule Plausible.Stats.Imported do
   defp select_joined_metrics(q, [:sample_percent | rest]) do
     q
     |> select_merge([s, i], %{sample_percent: s.sample_percent})
-    |> select_joined_metrics(rest)
-  end
-
-  defp select_joined_metrics(q, [:percentage | rest]) do
-    q
-    |> select_merge([s, i], %{
-      __total_visitors:
-        selected_as(
-          fragment(
-            "coalesce(sum(?) OVER (), 0) + coalesce(sum(?) OVER (), 0)",
-            s.visitors,
-            i.visitors
-          ),
-          :__total_visitors
-        ),
-      percentage:
-        fragment(
-          "if(? > 0, round(? / ? * 100, 1), null)",
-          selected_as(:__total_visitors),
-          selected_as(:visitors),
-          selected_as(:__total_visitors)
-        )
-    })
     |> select_joined_metrics(rest)
   end
 
