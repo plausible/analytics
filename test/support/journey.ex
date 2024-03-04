@@ -8,7 +8,6 @@ defmodule Plausible.Test.Support.Journey do
 
       Module.register_attribute(__MODULE__, :journey_index, accumulate: false)
       Module.put_attribute(__MODULE__, :journey_index, 0)
-
     end
   end
 
@@ -164,7 +163,6 @@ defmodule Plausible.Test.Support.Journey do
   defp aliased(other), do: other
 
   defp __journey__(mod, site, state, block) do
-
     quote do
       defmodule unquote(mod) do
         Module.register_attribute(__MODULE__, :journey, accumulate: true)
