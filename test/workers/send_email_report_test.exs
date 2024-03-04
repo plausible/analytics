@@ -122,7 +122,6 @@ defmodule Plausible.Workers.SendEmailReportTest do
         pageview "/"
       end
 
-
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
 
       assert_delivered_email_matches(%{
