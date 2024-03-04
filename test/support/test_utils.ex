@@ -6,6 +6,7 @@ defmodule Plausible.TestUtils do
     quote do
       require Plausible.TestUtils
       import Plausible.TestUtils
+      use Plausible.Test.Support.Journey
     end
   end
 
@@ -264,5 +265,9 @@ defmodule Plausible.TestUtils do
 
     [a1, a2, a3, a4, a5, a6, a7, a8]
     |> Enum.map_join(":", &Base.encode16(<<&1>>, case: :lower))
+  end
+
+  def tomorrow(now) do
+    NaiveDateTime.add(now, 1, :day)
   end
 end

@@ -13,6 +13,7 @@ defmodule Plausible.Ingestion.Event do
   defstruct domain: nil,
             site: nil,
             clickhouse_event_attrs: %{},
+            clickhouse_session_attrs: %{},
             clickhouse_event: nil,
             dropped?: false,
             drop_reason: nil,
@@ -33,6 +34,7 @@ defmodule Plausible.Ingestion.Event do
           domain: String.t() | nil,
           site: %Plausible.Site{} | nil,
           clickhouse_event_attrs: map(),
+          clickhouse_session_attrs: map(),
           clickhouse_event: %ClickhouseEventV2{} | nil,
           dropped?: boolean(),
           drop_reason: drop_reason(),
@@ -161,8 +163,12 @@ defmodule Plausible.Ingestion.Event do
     struct!(event, fields)
   end
 
-  defp update_attrs(%__MODULE__{} = event, %{} = attrs) do
+  defp update_event_attrs(%__MODULE__{} = event, %{} = attrs) do
     struct!(event, clickhouse_event_attrs: Map.merge(event.clickhouse_event_attrs, attrs))
+  end
+
+  defp update_session_attrs(%__MODULE__{} = event, %{} = attrs) do
+    struct!(event, clickhouse_session_attrs: Map.merge(event.clickhouse_session_attrs, attrs))
   end
 
   defp drop_datacenter_ip(%__MODULE__{} = event) do
@@ -197,7 +203,7 @@ defmodule Plausible.Ingestion.Event do
         drop(event, :bot)
 
       %UAInspector.Result{} = user_agent ->
-        update_attrs(event, %{
+        update_session_attrs(event, %{
           operating_system: os_name(user_agent),
           operating_system_version: os_version(user_agent),
           browser: browser_name(user_agent),
@@ -211,7 +217,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_basic_info(%__MODULE__{} = event) do
-    update_attrs(event, %{
+    update_event_attrs(event, %{
       domain: event.domain,
       site_id: event.site.id,
       timestamp: event.request.timestamp,
@@ -224,7 +230,7 @@ defmodule Plausible.Ingestion.Event do
   defp put_referrer(%__MODULE__{} = event) do
     ref = parse_referrer(event.request.uri, event.request.referrer)
 
-    update_attrs(event, %{
+    update_session_attrs(event, %{
       referrer_source: get_referrer_source(event.request, ref),
       referrer: clean_referrer(ref)
     })
@@ -233,7 +239,7 @@ defmodule Plausible.Ingestion.Event do
   defp put_utm_tags(%__MODULE__{} = event) do
     query_params = event.request.query_params
 
-    update_attrs(event, %{
+    update_session_attrs(event, %{
       utm_medium: query_params["utm_medium"],
       utm_source: query_params["utm_source"],
       utm_campaign: query_params["utm_campaign"],
@@ -245,17 +251,16 @@ defmodule Plausible.Ingestion.Event do
   defp put_geolocation(%__MODULE__{} = event) do
     case event.request.ip_classification do
       "anonymous_vpn_ip" ->
-        result = %{country_code: "A1"}
-        update_attrs(event, result)
+        update_session_attrs(event, %{country_code: "A1"})
 
       _any ->
         result = Plausible.Ingestion.Geolocation.lookup(event.request.remote_ip) || %{}
-        update_attrs(event, result)
+        update_session_attrs(event, result)
     end
   end
 
   defp drop_shield_rule_country(
-         %__MODULE__{domain: domain, clickhouse_event_attrs: %{country_code: cc}} = event
+         %__MODULE__{domain: domain, clickhouse_session_attrs: %{country_code: cc}} = event
        )
        when is_binary(domain) and is_binary(cc) do
     case Plausible.Shield.CountryRuleCache.get({domain, String.upcase(cc)}) do
@@ -273,7 +278,7 @@ defmodule Plausible.Ingestion.Event do
     # defensive: ensuring the keys/values are always in the same order
     {keys, values} = Enum.unzip(props)
 
-    update_attrs(event, %{
+    update_event_attrs(event, %{
       "meta.key": keys,
       "meta.value": values
     })
@@ -284,7 +289,7 @@ defmodule Plausible.Ingestion.Event do
   defp put_revenue(event) do
     on_full_build do
       attrs = Plausible.Ingestion.Event.Revenue.get_revenue_attrs(event)
-      update_attrs(event, attrs)
+      update_event_attrs(event, attrs)
     else
       event
     end
@@ -295,7 +300,7 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp put_user_id(%__MODULE__{} = event) do
-    update_attrs(event, %{
+    update_event_attrs(event, %{
       user_id:
         generate_user_id(
           event.request,

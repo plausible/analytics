@@ -3,6 +3,9 @@ defmodule Plausible.Test.Support.Journey do
     quote do
       require Plausible.Test.Support.Journey
       import Plausible.Test.Support.Journey
+
+      Module.register_attribute(__MODULE__, :journey_index, accumulate: false)
+      Module.put_attribute(__MODULE__, :journey_index, 0)
     end
   end
 
@@ -14,26 +17,50 @@ defmodule Plausible.Test.Support.Journey do
 
     Enum.reduce(journey, state, fn
       {:pageview, [url, opts]}, state ->
-        payload = %{
-          name: "pageview",
-          domain: site.domain,
-          url: build_url(site, url, opts)
-        }
+        payload =
+          %{
+            name: "pageview",
+            domain: site.domain,
+            url: build_url(site, url, opts)
+          }
+          |> add_common_body_params(opts)
 
         conn
         |> Plug.Adapters.Test.Conn.conn(:post, "/api/events", payload)
-        |> ingest(state, Keyword.get(opts, :idle, 1))
+        |> ingest(state, invoke_if_function(Keyword.get(opts, :idle, 1), state.now))
 
       {:custom_event, [name, opts]}, state ->
-        payload = %{name: name, domain: site.domain, url: build_url(site, "/", opts)}
+        payload =
+          %{name: name, domain: site.domain, url: build_url(site, "/", opts)}
+          |> add_common_body_params(opts)
+
+        payload =
+          if opts[:props] do
+            Map.put(payload, :props, opts[:props])
+          else
+            payload
+          end
 
         conn
         |> conn(:post, "/api/events", payload)
-        |> ingest(state, Keyword.get(opts, :idle, 1))
+        |> ingest(state, invoke_if_function(Keyword.get(opts, :idle, 1), state.now))
     end)
 
     if !state[:manual] do
       flush_buffers()
+    end
+  end
+
+  defp add_common_body_params(payload, params) do
+    params =
+      params
+      |> Enum.into(%{})
+      |> Map.take(~w[referrer]a)
+
+    if Enum.empty?(params) do
+      payload
+    else
+      Map.merge(payload, params)
     end
   end
 
@@ -73,13 +100,25 @@ defmodule Plausible.Test.Support.Journey do
   defp invoke_if_function(f) when is_function(f, 0), do: f.()
   defp invoke_if_function(value), do: value
 
+  defp invoke_if_function(f, arg) when is_function(f, 1), do: f.(arg)
+  defp invoke_if_function(value, _), do: value
+
   def flush_buffers do
     Plausible.Session.WriteBuffer.flush()
     Plausible.Event.WriteBuffer.flush()
   end
 
-  defp ingest(conn, state, idle_offset) do
+  defp ingest(conn, state, idle) do
     now = invoke_if_function(state.now)
+
+    idle_offset =
+      case idle do
+        n when is_integer(n) ->
+          n
+
+        %NaiveDateTime{} = ndt ->
+          NaiveDateTime.diff(ndt, now, :second)
+      end
 
     {:ok, request} =
       Plausible.Ingestion.Request.build(conn, now)
@@ -107,26 +146,39 @@ defmodule Plausible.Test.Support.Journey do
   end
 
   defmacro journey(site, state \\ [], do: block) do
-    mod = :"#{__CALLER__.module}.Journey#{:erlang.phash2(binding())}"
-    __journey__(aliased(state[:manual]) || mod, site, state, block)
+    idx = Module.get_attribute(__CALLER__.module, :journey_index)
+    idx = idx + 1
+
+    Module.put_attribute(__CALLER__.module, :journey_index, idx)
+    mod = :"#{__CALLER__.module}.Journey#{idx}"
+
+    __journey__(mod, site, state, block, aliased(state[:manual]))
   end
 
   defp aliased({:__aliases__, _, mod}), do: Module.concat(mod)
   defp aliased(other), do: other
 
-  defp __journey__(mod, site, state, block) do
+  defmacro module_name(mod, site, state, nil) do
+    :"#{mod}_#{:erlang.phash2({site, state})}"
+  end
+
+  defmacro module_name(_, _, _, manual) do
+    manual
+  end
+
+  defp __journey__(mod, site, state, block, mod_override) do
     quote do
-      defmodule unquote(mod) do
+      defmodule :"#{module_name(unquote(mod), unquote(site), unquote(state), unquote(mod_override))}" do
         Module.register_attribute(__MODULE__, :journey, accumulate: true)
         @site unquote(site)
         @initial_state default(Enum.into(unquote(state), %{}))
 
         unquote(block)
 
-        def run(overrides \\ %{}) do
+        def run() do
           Plausible.Test.Support.Journey.run(
             @site,
-            Map.merge(@initial_state, overrides),
+            @initial_state,
             Enum.reverse(@journey)
           )
         end
@@ -134,10 +186,18 @@ defmodule Plausible.Test.Support.Journey do
         def flush() do
           Plausible.Test.Support.Journey.flush_buffers()
         end
+
+        def run_many(n) do
+          1..n
+          |> Task.async_stream(fn _ -> run() end)
+          |> Stream.run()
+
+          flush()
+        end
       end
 
       if is_nil(unquote(state)[:manual]) do
-        unquote(mod).run()
+        :"#{module_name(unquote(mod), unquote(site), unquote(state), unquote(mod_override))}".run()
       end
     end
   end
