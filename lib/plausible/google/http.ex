@@ -22,7 +22,7 @@ defmodule Plausible.Google.HTTP do
     end
   end
 
-  def fetch_access_token(code) do
+  def fetch_access_token!(code) do
     url = "#{api_url()}/oauth2/v4/token"
     headers = [{"Content-Type", "application/x-www-form-urlencoded"}]
 

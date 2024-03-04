@@ -232,7 +232,7 @@ defmodule PlausibleWeb.SiteController do
 
     search_console_domains =
       if site.google_auth do
-        Plausible.Google.Api.fetch_verified_properties(site.google_auth)
+        Plausible.Google.API.fetch_verified_properties(site.google_auth)
       end
 
     imported_pageviews =
@@ -676,7 +676,7 @@ defmodule PlausibleWeb.SiteController do
         Routes.site_path(conn, :settings_imports_exports, conn.assigns.site.domain)
       end
 
-    case Plausible.Google.Api.list_views(access_token) do
+    case Plausible.Google.UA.API.list_views(access_token) do
       {:ok, view_ids} ->
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -715,7 +715,7 @@ defmodule PlausibleWeb.SiteController do
       }) do
     redirect_route = Routes.site_path(conn, :settings_imports_exports, conn.assigns.site.domain)
 
-    case Plausible.Google.Api.list_properties(access_token) do
+    case Plausible.Google.GA4.API.list_properties(access_token) do
       {:ok, properties} ->
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -753,11 +753,11 @@ defmodule PlausibleWeb.SiteController do
         "expires_at" => expires_at
       }) do
     site = conn.assigns.site
-    start_date = Plausible.Google.GA4.HTTP.get_analytics_start_date(property, access_token)
+    start_date = Plausible.Google.GA4.API.get_analytics_start_date(property, access_token)
 
     case start_date do
       {:ok, nil} ->
-        {:ok, properties} = Plausible.Google.Api.list_properties(access_token)
+        {:ok, properties} = Plausible.Google.GA4.API.list_properties(access_token)
 
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -794,12 +794,12 @@ defmodule PlausibleWeb.SiteController do
         "legacy" => legacy
       }) do
     site = conn.assigns[:site]
-    start_date = Plausible.Google.UA.HTTP.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.UA.API.get_analytics_start_date(view_id, access_token)
 
     case start_date do
       {:ok, nil} ->
         site = conn.assigns[:site]
-        {:ok, view_ids} = Plausible.Google.Api.list_views(access_token)
+        {:ok, view_ids} = Plausible.Google.UA.API.list_views(access_token)
 
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -850,11 +850,11 @@ defmodule PlausibleWeb.SiteController do
       }) do
     site = conn.assigns[:site]
 
-    start_date = Plausible.Google.UA.HTTP.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.UA.API.get_analytics_start_date(view_id, access_token)
 
     end_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
 
-    {:ok, {view_name, view_id}} = Plausible.Google.Api.get_view(access_token, view_id)
+    {:ok, {view_name, view_id}} = Plausible.Google.UA.API.get_view(access_token, view_id)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -880,11 +880,12 @@ defmodule PlausibleWeb.SiteController do
       }) do
     site = conn.assigns.site
 
-    start_date = Plausible.Google.GA4.HTTP.get_analytics_start_date(property, access_token)
+    start_date = Plausible.Google.GA4.API.get_analytics_start_date(property, access_token)
 
     end_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
 
-    {:ok, {property_name, property}} = Plausible.Google.Api.get_property(access_token, property)
+    {:ok, {property_name, property}} =
+      Plausible.Google.GA4.API.get_property(access_token, property)
 
     conn
     |> assign(:skip_plausible_tracking, true)

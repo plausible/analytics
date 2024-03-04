@@ -57,7 +57,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
     end
 
     try do
-      Plausible.Google.Api.import_ga4_analytics(date_range, property, auth, persist_fn)
+      Plausible.Google.GA4.API.import_analytics(date_range, property, auth, persist_fn)
     after
       Plausible.Imported.Buffer.flush(buffer)
       Plausible.Imported.Buffer.stop(buffer)
