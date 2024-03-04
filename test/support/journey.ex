@@ -1,5 +1,5 @@
 defmodule Plausible.Test.Support.Journey do
-  @moduletag "TODO"
+  @moduledoc "TODO"
 
   defmacro __using__(_) do
     quote do
