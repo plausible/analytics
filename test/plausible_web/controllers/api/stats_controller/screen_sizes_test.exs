@@ -19,6 +19,32 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
              ]
     end
 
+    test "returns screen sizes for user making multiple sessions", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          session_screen_size: "Desktop",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 1,
+          session_screen_size: "Laptop",
+          timestamp: ~N[2021-01-01 05:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/screen-sizes", %{
+          "period" => "day",
+          "date" => "2021-01-01"
+        })
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Desktop", "visitors" => 1, "percentage" => 100},
+               %{"name" => "Laptop", "visitors" => 1, "percentage" => 100}
+             ]
+    end
+
     test "returns (not set) when appropriate", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
@@ -141,6 +167,40 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
                %{"name" => "Desktop", "visitors" => 2, "percentage" => 40},
                %{"name" => "Laptop", "visitors" => 2, "percentage" => 40},
                %{"name" => "Mobile", "visitors" => 1, "percentage" => 20}
+             ]
+    end
+
+    test "returns screen sizes for user making multiple sessions by no of visitors with imported data",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          user_id: 1,
+          session_screen_size: "Desktop",
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          user_id: 1,
+          session_screen_size: "Laptop",
+          timestamp: ~N[2021-01-01 05:00:00]
+        )
+      ])
+
+      populate_stats(site, [
+        build(:imported_devices, device: "Desktop", date: ~D[2021-01-01]),
+        build(:imported_devices, device: "Laptop", date: ~D[2021-01-01]),
+        build(:imported_visitors, visitors: 2, date: ~D[2021-01-01])
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/screen-sizes", %{
+          "period" => "day",
+          "date" => "2021-01-01",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200) == [
+               %{"name" => "Desktop", "visitors" => 2, "percentage" => 66.7},
+               %{"name" => "Laptop", "visitors" => 2, "percentage" => 66.7}
              ]
     end
 
