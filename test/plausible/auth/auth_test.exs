@@ -20,9 +20,9 @@ defmodule Plausible.AuthTest do
       user = insert(:user)
       site = insert(:site, members: [user])
 
-      populate_stats(site, [
-        build(:pageview)
-      ])
+      journey site do
+        pageview "/"
+      end
 
       assert Auth.has_active_sites?(user)
     end

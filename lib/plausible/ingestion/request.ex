@@ -138,6 +138,7 @@ defmodule Plausible.Ingestion.Request do
 
     if is_binary(referrer) do
       referrer = String.slice(referrer, 0..(@max_url_size - 1))
+
       Changeset.put_change(changeset, :referrer, referrer)
     else
       changeset

@@ -3,7 +3,6 @@ defmodule Plausible.FunnelsTest do
   @moduletag :full_build_only
 
   use Plausible
-  use Plausible.Test.Support.Journey
 
   on_full_build do
     alias Plausible.Goals

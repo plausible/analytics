@@ -77,15 +77,14 @@ defmodule Plausible.Workers.SendEmailReportTest do
       site = insert(:site, domain: "test-site.com", inserted_at: Timex.shift(now, days: -8))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
-      populate_stats(site, [
-        build(:pageview,
-          user_id: 123,
-          timestamp: Timex.shift(now, days: -7),
-          session_referrer_source: "Google"
-        ),
-        build(:pageview, user_id: 123, timestamp: Timex.shift(now, days: -7)),
-        build(:pageview, timestamp: Timex.shift(now, days: -7))
-      ])
+      journey site, now: Timex.shift(now, days: -7) do
+        pageview "/", referrer: "https://google.com"
+        pageview "/"
+      end
+
+      journey site, now: Timex.shift(now, days: -7) do
+        pageview "/"
+      end
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
 
@@ -110,12 +109,19 @@ defmodule Plausible.Workers.SendEmailReportTest do
       site = insert(:site, inserted_at: Timex.shift(now, days: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
-      populate_stats(site, [
-        build(:pageview, timestamp: two_weeks_ago),
-        build(:pageview, user_id: 1, timestamp: week_ago),
-        build(:pageview, user_id: 2, timestamp: week_ago),
-        build(:pageview, user_id: 2, timestamp: week_ago)
-      ])
+      journey site, now: two_weeks_ago do
+        pageview "/"
+      end
+
+      journey site, now: week_ago do
+        pageview "/"
+      end
+
+      journey site, now: week_ago do
+        pageview "/"
+        pageview "/"
+      end
+
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
 
@@ -145,12 +151,18 @@ defmodule Plausible.Workers.SendEmailReportTest do
       site = insert(:site, inserted_at: Timex.shift(now, days: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
-      populate_stats(site, [
-        build(:pageview, user_id: 1, timestamp: two_weeks_ago),
-        build(:pageview, user_id: 2, timestamp: two_weeks_ago),
-        build(:pageview, user_id: 2, timestamp: two_weeks_ago),
-        build(:pageview, timestamp: week_ago)
-      ])
+      journey site, now: two_weeks_ago do
+        pageview "/"
+      end
+
+      journey site, now: two_weeks_ago do
+        pageview "/"
+        pageview "/"
+      end
+
+      journey site, now: week_ago do
+        pageview "/"
+      end
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
 
@@ -180,10 +192,13 @@ defmodule Plausible.Workers.SendEmailReportTest do
       site = insert(:site, inserted_at: Timex.shift(now, days: -15))
       insert(:weekly_report, site: site, recipients: ["user@email.com"])
 
-      populate_stats(site, [
-        build(:pageview, timestamp: two_weeks_ago),
-        build(:pageview, timestamp: week_ago)
-      ])
+      journey site, now: two_weeks_ago do
+        pageview "/"
+      end
+
+      journey site, now: week_ago do
+        pageview "/"
+      end
 
       perform_job(SendEmailReport, %{"site_id" => site.id, "interval" => "weekly"})
 

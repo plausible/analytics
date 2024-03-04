@@ -44,20 +44,15 @@ defmodule Plausible.FunnelsSamplingTest do
         )
 
       Plausible.Site.Cache.refresh_all()
+      journey = MassJourney
 
-      journey site, manual: MassJourney, ip: &random_ipv6/0, user_agent: "JourneyBrowser" do
+      journey site, manual: journey, ip: &random_ipv6/0, user_agent: "JourneyBrowser" do
         pageview "/go/to/blog/foo"
         custom_event "Signup"
         pageview "/checkout"
       end
 
-      1..50_000
-      |> Task.async_stream(fn _ ->
-        MassJourney.run()
-      end)
-      |> Stream.run()
-
-      MassJourney.flush()
+      journey.run_many(50_000)
 
       query =
         Plausible.Stats.Query.from(site, %{"period" => "all", "sample_threshold" => "10000"})

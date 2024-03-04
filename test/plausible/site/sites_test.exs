@@ -49,9 +49,9 @@ defmodule Plausible.SitesTest do
     test "is date if site does have stats" do
       site = insert(:site)
 
-      populate_stats(site, [
-        build(:pageview)
-      ])
+      journey site do
+        pageview "/"
+      end
 
       assert Sites.stats_start_date(site) == Timex.today(site.timezone)
     end

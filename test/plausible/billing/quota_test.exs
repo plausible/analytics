@@ -634,14 +634,25 @@ defmodule Plausible.Billing.QuotaTest do
 
       now = NaiveDateTime.utc_now()
 
-      populate_stats(site, [
-        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
-      ])
+      journey site, now: Timex.shift(now, days: -10) do
+        custom_event "custom"
+      end
+
+      journey site, now: Timex.shift(now, days: -9) do
+        pageview "/"
+      end
+
+      journey site, now: Timex.shift(now, days: -8) do
+        pageview "/"
+      end
+
+      journey site, now: Timex.shift(now, days: -7) do
+        pageview "/"
+      end
+
+      journey site, now: Timex.shift(now, days: -6) do
+        custom_event "custom"
+      end
 
       assert %{
                last_30_days: %{
@@ -665,14 +676,29 @@ defmodule Plausible.Billing.QuotaTest do
 
       now = NaiveDateTime.utc_now()
 
-      populate_stats(site, [
-        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
-        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
-        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
-      ])
+      journey site, now: Timex.shift(now, days: -40) do
+        custom_event "custom"
+      end
+
+      journey site, now: Timex.shift(now, days: -10) do
+        custom_event "custom"
+      end
+
+      journey site, now: Timex.shift(now, days: -9) do
+        pageview "/"
+      end
+
+      journey site, now: Timex.shift(now, days: -8) do
+        pageview "/"
+      end
+
+      journey site, now: Timex.shift(now, days: -7) do
+        pageview "/"
+      end
+
+      journey site, now: Timex.shift(now, days: -6) do
+        custom_event "custom"
+      end
 
       assert %{
                current_cycle: %{
@@ -711,14 +737,29 @@ defmodule Plausible.Billing.QuotaTest do
       now = NaiveDateTime.utc_now()
 
       for site <- [site1, site2, site3] do
-        populate_stats(site, [
-          build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
-          build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
-          build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
-          build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
-          build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
-          build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
-        ])
+        journey site, now: Timex.shift(now, days: -40) do
+          custom_event "custom"
+        end
+
+        journey site, now: Timex.shift(now, days: -10) do
+          custom_event "custom"
+        end
+
+        journey site, now: Timex.shift(now, days: -9) do
+          pageview "/"
+        end
+
+        journey site, now: Timex.shift(now, days: -8) do
+          pageview "/"
+        end
+
+        journey site, now: Timex.shift(now, days: -7) do
+          pageview "/"
+        end
+
+        journey site, now: Timex.shift(now, days: -6) do
+          custom_event "custom"
+        end
       end
 
       assert %{
@@ -749,23 +790,29 @@ defmodule Plausible.Billing.QuotaTest do
       user = insert(:user)
       site = insert(:site, members: [user])
 
-      populate_stats(site, [
-        build(:event, timestamp: ~N[2023-04-01 00:00:00], name: "custom"),
-        build(:event, timestamp: ~N[2023-04-02 00:00:00], name: "custom"),
-        build(:event, timestamp: ~N[2023-04-03 00:00:00], name: "custom"),
-        build(:event, timestamp: ~N[2023-04-04 00:00:00], name: "custom"),
-        build(:event, timestamp: ~N[2023-04-05 00:00:00], name: "custom"),
-        build(:event, timestamp: ~N[2023-05-01 00:00:00], name: "pageview"),
-        build(:event, timestamp: ~N[2023-05-02 00:00:00], name: "pageview"),
-        build(:event, timestamp: ~N[2023-05-03 00:00:00], name: "pageview"),
-        build(:event, timestamp: ~N[2023-05-04 00:00:00], name: "pageview"),
-        build(:event, timestamp: ~N[2023-05-05 00:00:00], name: "pageview"),
-        build(:event, timestamp: ~N[2023-06-01 00:00:00], name: "custom"),
-        build(:event, timestamp: ~N[2023-06-02 00:00:00], name: "custom"),
-        build(:event, timestamp: ~N[2023-06-03 00:00:00], name: "custom"),
-        build(:event, timestamp: ~N[2023-06-04 00:00:00], name: "custom"),
-        build(:event, timestamp: ~N[2023-06-05 00:00:00], name: "custom")
-      ])
+      journey site, now: ~N[2023-04-01 00:00:00] do
+        custom_event "customx1", idle: &tomorrow/1
+        custom_event "customx2", idle: &tomorrow/1
+        custom_event "customx3", idle: &tomorrow/1
+        custom_event "customx4", idle: &tomorrow/1
+        custom_event "customx5"
+      end
+
+      journey site, now: ~N[2023-05-01 00:00:00] do
+        pageview "/", idle: &tomorrow/1
+        pageview "/", idle: &tomorrow/1
+        pageview "/", idle: &tomorrow/1
+        pageview "/", idle: &tomorrow/1
+        pageview "/", idle: &tomorrow/1
+      end
+
+      journey site, now: ~N[2023-06-01 00:00:00] do
+        custom_event "custom", idle: &tomorrow/1
+        custom_event "custom", idle: &tomorrow/1
+        custom_event "custom", idle: &tomorrow/1
+        custom_event "custom", idle: &tomorrow/1
+        custom_event "custom"
+      end
 
       {:ok, %{user: user}}
     end
@@ -807,9 +854,9 @@ defmodule Plausible.Billing.QuotaTest do
           ]
         )
 
-      populate_stats(different_site, [
-        build(:event, timestamp: ~N[2023-05-05 00:00:00], name: "custom")
-      ])
+      journey different_site, now: ~N[2023-05-05 00:00:00] do
+        custom_event "custom"
+      end
 
       last_bill_date = ~D[2023-06-03]
       today = ~D[2023-06-05]

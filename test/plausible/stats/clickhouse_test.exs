@@ -56,14 +56,19 @@ defmodule Plausible.Stats.ClickhouseTest do
       fixed_now = ~N[2023-10-26 10:00:15]
       site = insert(:site)
 
-      user_id = 111
 
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2023-10-25 13:59:00]),
-        build(:pageview, timestamp: ~N[2023-10-25 13:58:00]),
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 15:00:00]),
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 15:01:00])
-      ])
+      journey site, now: ~N[2023-10-25 13:58:00] do
+        pageview "/"
+      end
+
+      journey site, now: ~N[2023-10-25 13:59:00] do
+        pageview "/"
+      end
+
+      journey site, now: ~N[2023-10-25 15:00:00] do
+        pageview "/", idle: 60
+        pageviuw "/"
+      end
 
       assert %{
                change: 100,
@@ -104,21 +109,31 @@ defmodule Plausible.Stats.ClickhouseTest do
       site2 = insert(:site)
       site3 = insert(:site)
 
-      user_id = 111
+      journey site1, now: ~N[2023-10-25 13:00:00] do
+        pageview "/", idle: 60
+        pageview "/"
+      end
 
-      populate_stats(site1, [
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 13:00:00]),
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 13:01:00]),
-        build(:pageview, timestamp: ~N[2023-10-25 15:59:00]),
-        build(:pageview, timestamp: ~N[2023-10-25 15:58:00])
-      ])
+      journey site1, now: ~N[2023-10-25 15:58:00] do
+        pageview "/"
+      end
 
-      populate_stats(site2, [
-        build(:pageview, timestamp: ~N[2023-10-25 13:59:00]),
-        build(:pageview, timestamp: ~N[2023-10-25 13:58:00]),
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 15:00:00]),
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 15:01:00])
-      ])
+      journey site1, now: ~N[2023-10-25 15:59:00] do
+        pageview "/"
+      end
+
+      journey site2, now: ~N[2023-10-25 13:58:00] do
+        pageview "/"
+      end
+
+      journey site2, now: ~N[2023-10-25 13:59:00] do
+        pageview "/"
+      end
+
+      journey site2, now: ~N[2023-10-25 15:00:00] do
+        pageview "/", idle: 60
+        pageview "/"
+      end
 
       assert result =
                Clickhouse.last_24h_visitors_hourly_intervals([site1, site2, site3], fixed_now)
@@ -144,13 +159,25 @@ defmodule Plausible.Stats.ClickhouseTest do
       fixed_now = ~N[2023-10-26 10:00:15]
       site = insert(:site)
 
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2023-10-24 11:58:00]),
-        build(:pageview, timestamp: ~N[2023-10-24 12:59:00]),
-        build(:pageview, timestamp: ~N[2023-10-25 13:59:00]),
-        build(:pageview, timestamp: ~N[2023-10-25 13:58:00]),
-        build(:pageview, timestamp: ~N[2023-10-25 13:59:00])
-      ])
+      journey site, now: ~N[2023-10-24 11:58:00] do
+        pageview "/"
+      end
+
+      journey site, now: ~N[2023-10-24 12:59:00] do
+        pageview "/"
+      end
+
+      journey site, now: ~N[2023-10-25 13:59:00] do
+        pageview "/"
+      end
+
+      journey site, now: ~N[2023-10-25 13:58:00] do
+        pageview "/"
+      end
+
+      journey site, now: ~N[2023-10-25 13:59:00] do
+        pageview "/"
+      end
 
       assert %{
                change: 50,
@@ -164,10 +191,10 @@ defmodule Plausible.Stats.ClickhouseTest do
 
       user_id = 111
 
-      populate_stats(site, [
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 15:59:00]),
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 16:00:00])
-      ])
+      journey site, now: ~N[2023-10-25 15:59:00] do
+       pageview "/", idle: 60
+       pageview "/"
+      end
 
       result = Clickhouse.last_24h_visitors_hourly_intervals([site], fixed_now)[site.domain]
       assert result[:visitors] == 1
@@ -177,14 +204,18 @@ defmodule Plausible.Stats.ClickhouseTest do
       fixed_now = ~N[2023-10-26 10:00:15]
       site = insert(:site)
 
-      user_id = 111
+      journey site, now: ~N[2023-10-25 15:00:00] do
+        pageview "/", idle: 60 * 60
+        pageview "/"
+      end
 
-      populate_stats(site, [
-        build(:pageview, timestamp: ~N[2023-10-25 13:59:00]),
-        build(:pageview, timestamp: ~N[2023-10-25 13:58:00]),
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 15:00:00]),
-        build(:pageview, user_id: user_id, timestamp: ~N[2023-10-25 16:00:00])
-      ])
+      journey site, now: ~N[2023-10-25 13:58:00] do
+        pageview "/"
+      end
+
+      journey site, now: ~N[2023-10-25 13:59:00] do
+        pageview "/"
+      end
 
       assert %{
                change: 100,
@@ -225,27 +256,25 @@ defmodule Plausible.Stats.ClickhouseTest do
       site = insert(:site)
       query = Plausible.Stats.Query.from(site, %{"period" => "all"})
 
-      populate_stats(site, [
-        build(:pageview,
-          pathname: "/",
-          session_referrer_source: "Twitter"
-        ),
-        build(:pageview,
-          pathname: "/plausible.io"
-        ),
-        build(:pageview,
-          pathname: "/plausible.io",
-          session_referrer_source: "Google"
-        ),
-        build(:pageview,
-          pathname: "/plausible.io",
-          session_referrer_source: "Google"
-        ),
-        build(:pageview,
-          pathname: "/plausible.io",
-          session_referrer_source: "Bing"
-        )
-      ])
+      journey site do
+        pageview "/", referrer: "https://twitter.com"
+      end
+
+      journey site do
+        pageview "/plausible.io"
+      end
+
+      journey site do
+        pageview "/plausible.io", referrer: "https://google.com"
+      end
+
+      journey site do
+        pageview "/plausible.io", referrer: "https://google.com"
+      end
+
+      journey site do
+        pageview "/plausible.io", referrer: "https://bing.com"
+      end
 
       assert [
                %{count: 2, name: "Google"},
