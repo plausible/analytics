@@ -753,7 +753,7 @@ defmodule PlausibleWeb.SiteController do
         "expires_at" => expires_at
       }) do
     site = conn.assigns.site
-    start_date = Plausible.Google.HTTP.get_analytics_ga4_start_date(property, access_token)
+    start_date = Plausible.Google.GA4.HTTP.get_analytics_start_date(property, access_token)
 
     case start_date do
       {:ok, nil} ->
@@ -794,7 +794,7 @@ defmodule PlausibleWeb.SiteController do
         "legacy" => legacy
       }) do
     site = conn.assigns[:site]
-    start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.UA.HTTP.get_analytics_start_date(view_id, access_token)
 
     case start_date do
       {:ok, nil} ->
@@ -850,7 +850,7 @@ defmodule PlausibleWeb.SiteController do
       }) do
     site = conn.assigns[:site]
 
-    start_date = Plausible.Google.HTTP.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.UA.HTTP.get_analytics_start_date(view_id, access_token)
 
     end_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
 
@@ -880,7 +880,7 @@ defmodule PlausibleWeb.SiteController do
       }) do
     site = conn.assigns.site
 
-    start_date = Plausible.Google.HTTP.get_analytics_ga4_start_date(property, access_token)
+    start_date = Plausible.Google.GA4.HTTP.get_analytics_start_date(property, access_token)
 
     end_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
 

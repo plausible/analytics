@@ -1,5 +1,5 @@
 defmodule Plausible.Google.Api do
-  alias Plausible.Google.{GA4, ReportRequest, HTTP}
+  alias Plausible.Google.{GA4, UA, HTTP}
   use Timex
   require Logger
 
@@ -62,7 +62,7 @@ defmodule Plausible.Google.Api do
   Lists Google Analytics views grouped by hostname.
   """
   def list_views(access_token) do
-    case HTTP.list_views_for_user(access_token) do
+    case UA.HTTP.list_views_for_user(access_token) do
       {:ok, %{"items" => views}} ->
         views = Enum.group_by(views, &view_hostname/1, &view_names/1)
         {:ok, views}
@@ -73,7 +73,7 @@ defmodule Plausible.Google.Api do
   end
 
   def list_properties(access_token) do
-    case HTTP.list_accounts_for_user(access_token) do
+    case GA4.HTTP.list_accounts_for_user(access_token) do
       {:ok, %{"accountSummaries" => accounts}} ->
         accounts =
           accounts
@@ -176,8 +176,8 @@ defmodule Plausible.Google.Api do
   end
 
   defp do_import_analytics(date_range, view_id, access_token, persist_fn) do
-    Enum.reduce_while(ReportRequest.full_report(), :ok, fn report_request, :ok ->
-      report_request = %ReportRequest{
+    Enum.reduce_while(UA.ReportRequest.full_report(), :ok, fn report_request, :ok ->
+      report_request = %UA.ReportRequest{
         report_request
         | date_range: date_range,
           view_id: view_id,
@@ -193,20 +193,20 @@ defmodule Plausible.Google.Api do
     end)
   end
 
-  @spec fetch_and_persist(ReportRequest.t(), Keyword.t()) ::
+  @spec fetch_and_persist(UA.ReportRequest.t(), Keyword.t()) ::
           :ok | {:error, term()}
-  def fetch_and_persist(%ReportRequest{} = report_request, opts \\ []) do
+  def fetch_and_persist(%UA.ReportRequest{} = report_request, opts \\ []) do
     persist_fn = Keyword.fetch!(opts, :persist_fn)
     attempt = Keyword.get(opts, :attempt, 1)
     sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
 
-    case HTTP.get_report(report_request) do
+    case UA.HTTP.get_report(report_request) do
       {:ok, {rows, next_page_token}} ->
         :ok = persist_fn.(report_request.dataset, rows)
 
         if next_page_token do
           fetch_and_persist(
-            %ReportRequest{report_request | page_token: next_page_token},
+            %UA.ReportRequest{report_request | page_token: next_page_token},
             opts
           )
         else
@@ -254,7 +254,7 @@ defmodule Plausible.Google.Api do
     attempt = Keyword.get(opts, :attempt, 1)
     sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
 
-    case HTTP.get_ga4_report(report_request) do
+    case GA4.HTTP.get_report(report_request) do
       {:ok, {rows, row_count}} ->
         :ok = persist_fn.(report_request.dataset, rows)
 

@@ -22,7 +22,9 @@
     <PlausibleWeb.Components.Generic.button_link
       class="w-36 h-20"
       theme="bright"
-      href={Plausible.Google.Api.import_authorize_url(@site.id, "import", legacy: false, ga4: true)}
+      href={
+        Plausible.Google.Api.import_authorize_url(@site.id, "import", legacy: false, ga4: true)
+      }
     >
       <img
         src="/images/icon/google_analytics_4_logo.svg"
