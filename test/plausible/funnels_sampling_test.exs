@@ -32,7 +32,6 @@ defmodule Plausible.FunnelsSamplingTest do
 
     setup_patch_env(Plausible.Cache, enabled: true)
 
-    @tag :slow
     test "sampling", %{steps: [g1, g2, g3]} do
       site = insert(:site, domain: "1.1.1.1")
 
