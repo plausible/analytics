@@ -770,7 +770,7 @@ defmodule PlausibleWeb.AuthController do
         if ga4 do
           redirect(conn,
             external:
-              Routes.site_path(conn, :import_from_ga4_property_form, site.domain,
+              Routes.google_analytics4_path(conn, :property_form, site.domain,
                 access_token: res["access_token"],
                 refresh_token: res["refresh_token"],
                 expires_at: NaiveDateTime.to_iso8601(expires_at)
@@ -779,7 +779,7 @@ defmodule PlausibleWeb.AuthController do
         else
           redirect(conn,
             external:
-              Routes.site_path(conn, :import_from_google_view_id_form, site.domain,
+              Routes.universal_analytics_path(conn, :view_id_form, site.domain,
                 access_token: res["access_token"],
                 refresh_token: res["refresh_token"],
                 expires_at: NaiveDateTime.to_iso8601(expires_at),

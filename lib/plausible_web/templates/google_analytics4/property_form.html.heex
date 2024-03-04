@@ -1,4 +1,4 @@
-<%= form_for @conn, Routes.site_path(@conn, :import_from_ga4_property, @site.domain), [class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+<%= form_for @conn, Routes.google_analytics4_path(@conn, :property, @site.domain), [class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
   <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics 4</h2>
 
   <%= hidden_input(f, :access_token, value: @access_token) %>
