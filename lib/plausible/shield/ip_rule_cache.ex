@@ -38,6 +38,8 @@ defmodule Plausible.Shield.IPRuleCache do
   end
 
   @impl true
+  def get_from_source({_, "0.0.0.0"}), do: nil
+
   def get_from_source({domain, address}) do
     query =
       base_db_query()

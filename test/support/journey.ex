@@ -6,23 +6,30 @@ defmodule Plausible.Test.Support.Journey do
     end
   end
 
-  import Phoenix.ConnTest
+  import Plug.Adapters.Test.Conn, only: [conn: 4]
   import Plug.Conn
 
   def run(site, state, journey) do
+    conn = new_conn(state)
+
     Enum.reduce(journey, state, fn
       {:pageview, [url, opts]}, state ->
         payload = %{
           name: "pageview",
           domain: site.domain,
-          url: build_url(site.domain, url, opts)
+          url: build_url(site, url, opts)
         }
 
-        payload |> new_conn(state) |> ingest(state, Keyword.get(opts, :idle, 1))
+        conn
+        |> Plug.Adapters.Test.Conn.conn(:post, "/api/events", payload)
+        |> ingest(state, Keyword.get(opts, :idle, 1))
 
       {:custom_event, [name, opts]}, state ->
-        payload = %{name: name, domain: site.domain, url: build_url(site.domain, "/", opts)}
-        payload |> new_conn(state) |> ingest(state, Keyword.get(opts, :idle, 1))
+        payload = %{name: name, domain: site.domain, url: build_url(site, "/", opts)}
+
+        conn
+        |> conn(:post, "/api/events", payload)
+        |> ingest(state, Keyword.get(opts, :idle, 1))
     end)
 
     if !state[:manual] do
@@ -30,12 +37,26 @@ defmodule Plausible.Test.Support.Journey do
     end
   end
 
-  defp build_url(domain, url, _opts) do
-    "https://" <> Path.join(domain, url)
+  def build_url(site, path, params) do
+    if params[:url] do
+      params[:url]
+    else
+      site_domain = site.domain |> URI.encode_www_form()
+
+      query_string =
+        params
+        |> Enum.into(%{})
+        |> Map.take(~w[utm_source utm_medium utm_campaign utm_term utm_content]a)
+        |> URI.encode_query()
+
+      uri = URI.new!("https://" <> Path.join(site_domain, path))
+      uri = %{uri | query: query_string}
+      to_string(uri)
+    end
   end
 
-  defp new_conn(payload, state) do
-    (state.conn || build_conn(:post, "/api/events", payload))
+  defp new_conn(state) do
+    (state.conn || %Plug.Conn{})
     |> put_req_header("content-type", "application/json")
     |> maybe_add_header("x-forwarded-for", invoke_if_function(state.ip))
     |> maybe_add_header("user-agent", invoke_if_function(state.user_agent))
