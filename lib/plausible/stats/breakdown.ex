@@ -4,6 +4,7 @@ defmodule Plausible.Stats.Breakdown do
   use Plausible.Stats.Fragments
 
   import Plausible.Stats.{Base, Imported}
+  import Ecto.Query
   require OpenTelemetry.Tracer, as: Tracer
   alias Plausible.Stats.{Query, Util}
 
@@ -100,7 +101,7 @@ defmodule Plausible.Stats.Breakdown do
 
         {event_q, page_q} ->
           from(
-            e in Ecto.Query.subquery(Ecto.Query.union_all(event_q, ^page_q)),
+            e in subquery(union_all(event_q, ^page_q)),
             # :TODO: Handle other orderings
             order_by: [desc: e.visitors]
           )
@@ -109,7 +110,7 @@ defmodule Plausible.Stats.Breakdown do
 
     if full_q do
       full_q
-      |> maybe_add_absolute_conversion_rate(site, query, metrics)
+      |> maybe_add_conversion_rate(site, query, metrics)
       |> ClickhouseRepo.all()
       |> transform_keys(%{name: :goal})
       |> cast_revenue_metrics_to_money(revenue_goals)
@@ -132,7 +133,7 @@ defmodule Plausible.Stats.Breakdown do
     if !Keyword.get(opts, :skip_tracing), do: trace(query, property, metrics)
 
     breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select)
-    |> maybe_add_absolute_conversion_rate(site, query, metrics)
+    |> maybe_add_conversion_rate(site, query, metrics)
     |> paginate_and_execute(metrics, pagination)
     |> transform_keys(%{name: custom_prop})
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
@@ -686,14 +687,14 @@ defmodule Plausible.Stats.Breakdown do
   end
 
   def outer_order_by(fields) do
-    Enum.map(fields, fn field_name -> {:asc, Ecto.Query.dynamic([q], field(q, ^field_name))} end)
+    Enum.map(fields, fn field_name -> {:asc, dynamic([q], field(q, ^field_name))} end)
   end
 
   defp fields_equal(field_name, nil),
-    do: Ecto.Query.dynamic([a, b], field(a, ^field_name) == field(b, ^field_name))
+    do: dynamic([a, b], field(a, ^field_name) == field(b, ^field_name))
 
   defp fields_equal(field_name, condition),
-    do: Ecto.Query.dynamic([a, b], field(a, ^field_name) == field(b, ^field_name) and ^condition)
+    do: dynamic([a, b], field(a, ^field_name) == field(b, ^field_name) and ^condition)
 
   # This function injects a conversion_rate metric into
   # a breakdown query. It is calculated as X / Y, where:
@@ -817,7 +818,7 @@ defmodule Plausible.Stats.Breakdown do
       groups_totals_query = query |> Query.remove_event_filters([:goal, :props])
       groups_breakdown_q = breakdown_fn.(site, groups_totals_query, property, event_metrics)
 
-      from(e in Ecto.Query.subquery(q),
+      from(e in subquery(q),
         left_join: c in subquery(groups_breakdown_q),
         on: ^on_matches_group_by(group_by_field_names(property)),
         select_merge: %{
@@ -838,7 +839,10 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  defp maybe_add_absolute_conversion_rate(q, site, query, metrics) do
+  # Adds conversion_rate metric to query, calculated as
+  # X / Y where Y is the same breakdown value without goal or props
+  # filters.
+  defp maybe_add_conversion_rate(q, site, query, metrics) do
     if :conversion_rate in metrics do
       total_query = query |> Query.remove_event_filters([:goal, :props])
 
@@ -849,7 +853,8 @@ defmodule Plausible.Stats.Breakdown do
           }
         )
 
-      from(e in Ecto.Query.subquery(q),
+      # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
+      from(e in subquery(q),
         select_merge: %{
           total_visitors: selected_as(subquery(total_q), :total_visitors),
           conversion_rate:
@@ -883,8 +888,8 @@ defmodule Plausible.Stats.Breakdown do
     offset = (page - 1) * limit
 
     q
-    |> Ecto.Query.limit(^limit)
-    |> Ecto.Query.offset(^offset)
+    |> limit(^limit)
+    |> offset(^offset)
   end
 
   defp trace(query, property, metrics) do
