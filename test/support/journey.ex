@@ -9,7 +9,6 @@ defmodule Plausible.Test.Support.Journey do
       Module.register_attribute(__MODULE__, :journey_index, accumulate: false)
       Module.put_attribute(__MODULE__, :journey_index, 0)
 
-      Code.compiler_options(ignore_module_conflict: true)
     end
   end
 
@@ -150,6 +149,8 @@ defmodule Plausible.Test.Support.Journey do
   end
 
   defmacro journey(site, state \\ [], do: block) do
+    Code.compiler_options(ignore_module_conflict: true)
+
     idx = Module.get_attribute(__CALLER__.module, :journey_index)
     idx = idx + 1
 
