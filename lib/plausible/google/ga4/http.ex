@@ -48,6 +48,7 @@ defmodule Plausible.Google.GA4.HTTP do
       )
 
     with {:ok, %{body: body}} <- response,
+         # File.write!("fixture/ga4_report_#{report_request.dataset}.json", Jason.encode!(body)),
          {:ok, report} <- parse_report_from_response(body),
          row_count <- Map.get(report, "rowCount"),
          {:ok, report} <- convert_to_maps(report) do
