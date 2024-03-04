@@ -156,7 +156,7 @@ defmodule Plausible.Test.Support.Journey do
     Module.put_attribute(__CALLER__.module, :journey_index, idx)
     mod = :"#{__CALLER__.module}.Journey#{idx}"
 
-    __journey__(mod || aliased(state[:manual]), site, state, block)
+    __journey__(aliased(state[:manual]) || mod, site, state, block)
   end
 
   defp aliased({:__aliases__, _, mod}), do: Module.concat(mod)
