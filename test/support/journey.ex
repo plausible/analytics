@@ -8,6 +8,8 @@ defmodule Plausible.Test.Support.Journey do
 
       Module.register_attribute(__MODULE__, :journey_index, accumulate: false)
       Module.put_attribute(__MODULE__, :journey_index, 0)
+
+      Code.compiler_options(ignore_module_conflict: true)
     end
   end
 
@@ -154,24 +156,16 @@ defmodule Plausible.Test.Support.Journey do
     Module.put_attribute(__CALLER__.module, :journey_index, idx)
     mod = :"#{__CALLER__.module}.Journey#{idx}"
 
-    __journey__(mod, site, state, block, aliased(state[:manual]))
+    __journey__(mod || aliased(state[:manual]), site, state, block)
   end
 
   defp aliased({:__aliases__, _, mod}), do: Module.concat(mod)
   defp aliased(other), do: other
 
-  defmacro module_name(mod, site, state, nil) do
-    :"#{mod}_#{:erlang.phash2({site, state})}"
-  end
+  defp __journey__(mod, site, state, block) do
 
-  defmacro module_name(_, _, _, manual) do
-    manual
-  end
-
-  defp __journey__(mod, site, state, block, mod_override) do
-    Code.compiler_options(ignore_module_conflict: true)
     quote do
-      defmodule :"#{module_name(unquote(mod), unquote(site), unquote(state), unquote(mod_override))}" do
+      defmodule unquote(mod) do
         Module.register_attribute(__MODULE__, :journey, accumulate: true)
         @site unquote(site)
         @initial_state default(Enum.into(unquote(state), %{}))
@@ -200,7 +194,7 @@ defmodule Plausible.Test.Support.Journey do
       end
 
       if is_nil(unquote(state)[:manual]) do
-        :"#{module_name(unquote(mod), unquote(site), unquote(state), unquote(mod_override))}".run()
+        unquote(mod).run()
       end
     end
   end
