@@ -327,6 +327,42 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                |> Enum.find(&(&1["name"] == "Time on page"))
     end
 
+    test "bounce_rate is 0 when the page in filter was never a landing page", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A", user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+
+      assert %{"name" => "Bounce rate", "value" => 0} ==
+               conn
+               |> get(path)
+               |> json_response(200)
+               |> Map.fetch!("top_stats")
+               |> Enum.find(&(&1["name"] == "Bounce rate"))
+    end
+
+    test "time_on_page is 0 when it can't be calculated", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/")
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+      path = "/api/stats/#{site.domain}/top-stats?&filters=#{filters}"
+
+      assert %{"name" => "Time on page", "value" => 0} ==
+               conn
+               |> get(path)
+               |> json_response(200)
+               |> Map.fetch!("top_stats")
+               |> Enum.find(&(&1["name"] == "Time on page"))
+    end
+
     test "ignores page refresh when calculating time on page", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00], pathname: "/"),

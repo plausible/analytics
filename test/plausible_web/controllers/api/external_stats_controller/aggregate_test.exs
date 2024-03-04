@@ -414,6 +414,31 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "time_on_page" => %{"value" => 90, "change" => 50.0}
              }
     end
+
+    test "time_on_page change is nil if previous period returns a number but current period is nil",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A", user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 123, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-02 00:00:00])
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-02",
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A",
+          "compare" => "previous_period"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "time_on_page" => %{"value" => nil, "change" => nil}
+             }
+    end
   end
 
   describe "with imported data" do
@@ -1392,6 +1417,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         })
 
       assert json_response(conn, 200)["results"] == %{"time_on_page" => %{"value" => 70}}
+    end
+
+    test "time_on_page is returned as `nil` if it cannot be calculated", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"time_on_page" => %{"value" => nil}}
     end
 
     test "conversion_rate when goal filter is applied", %{conn: conn, site: site} do

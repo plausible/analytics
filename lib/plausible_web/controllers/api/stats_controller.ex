@@ -402,7 +402,10 @@ defmodule PlausibleWeb.Api.StatsController do
         top_stats_entry(current_results, prev_results, "Views per visit", :views_per_visit),
         top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate),
         top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration),
-        top_stats_entry(current_results, prev_results, "Time on page", :time_on_page)
+        top_stats_entry(current_results, prev_results, "Time on page", :time_on_page, fn
+          nil -> 0
+          value -> value
+        end)
       ]
       |> Enum.filter(& &1)
 
