@@ -79,7 +79,7 @@ defmodule Plausible.Test.Support.Journey do
         |> URI.encode_query()
 
       uri = URI.new!("https://" <> Path.join(site_domain, path))
-      uri = %{uri | query: query_string}
+      uri = %{uri | query: if(query_string != "", do: query_string)}
       to_string(uri)
     end
   end
@@ -128,7 +128,21 @@ defmodule Plausible.Test.Support.Journey do
     Plausible.Ingestion.Event.build_and_buffer(request)
 
     new_now = NaiveDateTime.add(now, idle_offset, :second)
+
+    if state.debug do
+      debug(conn, state, idle, now, new_now)
+    end
+
     Map.put(state, :now, new_now)
+  end
+
+  defp debug(conn, state, idle, now, new_now) do
+    IO.puts("\n[#{now}] Request:" <> IO.ANSI.yellow())
+    IO.puts("  #{conn.method} #{conn.request_path}?#{conn.query_string}" <> IO.ANSI.cyan())
+    IO.puts("  user-agent: #{state.user_agent}")
+    IO.puts("  x-forwarded-for: #{state.ip}" <> IO.ANSI.green())
+    IO.puts("  #{Jason.encode!(conn.body_params)}" <> IO.ANSI.reset())
+    IO.puts("[#{new_now}] Idle complete (#{inspect(idle)})")
   end
 
   defmacro default(state) do
@@ -144,6 +158,7 @@ defmodule Plausible.Test.Support.Journey do
       |> Map.update(:conn, nil, & &1)
       |> Map.update(:ip, unquote(default_ip), & &1)
       |> Map.update(:user_agent, unquote(default_user_agent), & &1)
+      |> Map.update(:debug, false, & &1)
     end
   end
 
