@@ -6,9 +6,9 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
 
     test "returns operating systems by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, session_operating_system: "Mac"),
-        build(:pageview, session_operating_system: "Mac"),
-        build(:pageview, session_operating_system: "Android")
+        build(:pageview, operating_system: "Mac"),
+        build(:pageview, operating_system: "Mac"),
+        build(:pageview, operating_system: "Android")
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/operating-systems?period=day")
@@ -22,10 +22,10 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
     test "returns (not set) when appropriate", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_operating_system: ""
+          operating_system: ""
         ),
         build(:pageview,
-          session_operating_system: "Linux"
+          operating_system: "Linux"
         )
       ])
 
@@ -48,8 +48,8 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
 
     test "calculates conversion_rate when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: 1, session_operating_system: "Mac"),
-        build(:pageview, user_id: 2, session_operating_system: "Mac"),
+        build(:pageview, user_id: 1, operating_system: "Mac"),
+        build(:pageview, user_id: 2, operating_system: "Mac"),
         build(:event, user_id: 1, name: "Signup")
       ])
 
@@ -75,21 +75,21 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          session_operating_system: "Mac"
+          operating_system: "Mac"
         ),
         build(:pageview,
           user_id: 123,
-          session_operating_system: "Mac",
+          operating_system: "Mac",
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          session_operating_system: "Windows",
+          operating_system: "Windows",
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
         build(:pageview,
-          session_operating_system: "Android"
+          operating_system: "Android"
         )
       ])
 
@@ -110,23 +110,23 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
-          session_operating_system: "Windows",
+          operating_system: "Windows",
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
           user_id: 123,
-          session_operating_system: "Windows",
+          operating_system: "Windows",
           "meta.key": ["author"],
           "meta.value": ["John Doe"]
         ),
         build(:pageview,
-          session_operating_system: "Mac",
+          operating_system: "Mac",
           "meta.key": ["author"],
           "meta.value": ["other"]
         ),
         build(:pageview,
-          session_operating_system: "Android"
+          operating_system: "Android"
         )
       ])
 
@@ -146,9 +146,9 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
       site: site
     } do
       populate_stats(site, [
-        build(:pageview, session_operating_system: "Mac"),
-        build(:pageview, session_operating_system: "Mac"),
-        build(:pageview, session_operating_system: "Android"),
+        build(:pageview, operating_system: "Mac"),
+        build(:pageview, operating_system: "Mac"),
+        build(:pageview, operating_system: "Android"),
         build(:imported_operating_systems, operating_system: "Mac"),
         build(:imported_operating_systems, operating_system: "Android"),
         build(:imported_visitors, visitors: 2)
@@ -172,8 +172,8 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
 
     test "imported data is ignored when filtering for goal", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: 1, session_operating_system: "Mac"),
-        build(:pageview, user_id: 2, session_operating_system: "Mac"),
+        build(:pageview, user_id: 1, operating_system: "Mac"),
+        build(:pageview, user_id: 2, operating_system: "Mac"),
         build(:imported_operating_systems, operating_system: "Mac"),
         build(:event, user_id: 1, name: "Signup")
       ])
@@ -200,20 +200,20 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
     test "returns top OS versions by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_operating_system: "Mac",
-          session_operating_system_version: "10.15"
+          operating_system: "Mac",
+          operating_system_version: "10.15"
         ),
         build(:pageview,
-          session_operating_system: "Mac",
-          session_operating_system_version: "10.16"
+          operating_system: "Mac",
+          operating_system_version: "10.16"
         ),
         build(:pageview,
-          session_operating_system: "Mac",
-          session_operating_system_version: "10.16"
+          operating_system: "Mac",
+          operating_system_version: "10.16"
         ),
         build(:pageview,
-          session_operating_system: "Android",
-          session_operating_system_version: "4"
+          operating_system: "Android",
+          operating_system_version: "4"
         )
       ])
 
