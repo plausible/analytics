@@ -430,7 +430,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         build(:imported_visitors, date: ~D[2023-01-01]),
         build(:imported_sources, date: ~D[2023-01-01]),
         build(:pageview,
-          session_referrer_source: "Google",
+          referrer_source: "Google",
           timestamp: ~N[2023-01-02 00:10:00]
         )
       ])
@@ -485,7 +485,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_referrer_source: "Google",
+          referrer_source: "Google",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -524,7 +524,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
           timestamp: ~N[2021-01-01 00:25:00]
         ),
         build(:pageview,
-          session_referrer_source: "Google",
+          referrer_source: "Google",
           timestamp: ~N[2021-01-01 00:00:00]
         )
       ])
@@ -549,7 +549,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by referrer", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_referrer: "https://facebook.com",
+          referrer: "https://facebook.com",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -579,9 +579,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
     test "wildcard referrer filter with special regex characters", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, session_referrer: "https://a.com"),
-        build(:pageview, session_referrer: "https://a.com"),
-        build(:pageview, session_referrer: "https://ab.com")
+        build(:pageview, referrer: "https://a.com"),
+        build(:pageview, referrer: "https://a.com"),
+        build(:pageview, referrer: "https://ab.com")
       ])
 
       conn =
@@ -597,7 +597,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by utm_medium", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_utm_medium: "social",
+          utm_medium: "social",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -628,7 +628,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by utm_source", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_utm_source: "Twitter",
+          utm_source: "Twitter",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -659,7 +659,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by utm_campaign", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_utm_campaign: "profile",
+          utm_campaign: "profile",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -690,7 +690,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by device type", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_screen_size: "Desktop",
+          screen_size: "Desktop",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -721,7 +721,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by browser", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_browser: "Chrome",
+          browser: "Chrome",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -752,8 +752,8 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by browser version", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_browser: "Chrome",
-          session_browser_version: "56",
+          browser: "Chrome",
+          browser_version: "56",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -784,7 +784,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by operating system", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_operating_system: "Mac",
+          operating_system: "Mac",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -815,7 +815,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by operating system version", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_operating_system_version: "10.5",
+          operating_system_version: "10.5",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -846,7 +846,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     test "can filter by country", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview,
-          session_country_code: "EE",
+          country_code: "EE",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -1138,7 +1138,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       populate_stats(site, [
         build(:pageview,
           pathname: "/blogpost",
-          session_country_code: "EE",
+          country_code: "EE",
           user_id: @user_id,
           timestamp: ~N[2021-01-01 00:00:00]
         ),
@@ -1349,10 +1349,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
     } do
       populate_stats(site, [
         build(:event, name: "Signup"),
-        build(:event, name: "Signup", session_browser: "Chrome"),
-        build(:event, name: "Signup", session_browser: "Firefox", user_id: 123),
-        build(:event, name: "Signup", session_browser: "Firefox", user_id: 123),
-        build(:pageview, session_browser: "Firefox"),
+        build(:event, name: "Signup", browser: "Chrome"),
+        build(:event, name: "Signup", browser: "Firefox", user_id: 123),
+        build(:event, name: "Signup", browser: "Firefox", user_id: 123),
+        build(:pageview, browser: "Firefox"),
         build(:pageview)
       ])
 
