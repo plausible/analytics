@@ -121,9 +121,10 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
 
   # See https://clickhouse.com/docs/en/sql-reference/dictionaries#clickhouse for context
   def get_dictionary_connection_params(opts \\ []) do
-    connection_params = Keyword.get(opts, :dictionary_connection_string)
+    dictionary_connection_string = Keyword.get(opts, :dictionary_connection_string)
 
-    if connection_params do
+    if dictionary_connection_string do
+      dictionary_connection_string
     else
       uri =
         Application.get_env(:plausible, Plausible.IngestRepo) |> Keyword.get(:url) |> URI.parse()
