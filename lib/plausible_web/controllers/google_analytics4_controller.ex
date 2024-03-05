@@ -50,7 +50,7 @@ defmodule PlausibleWeb.GoogleAnalytics4Controller do
         "expires_at" => expires_at
       }) do
     site = conn.assigns.site
-    start_date = Plausible.Google.GA4.API.get_analytics_start_date(property, access_token)
+    start_date = Plausible.Google.GA4.API.get_analytics_start_date(access_token, property)
 
     case start_date do
       {:ok, nil} ->
@@ -89,7 +89,7 @@ defmodule PlausibleWeb.GoogleAnalytics4Controller do
       }) do
     site = conn.assigns.site
 
-    start_date = Plausible.Google.GA4.API.get_analytics_start_date(property, access_token)
+    start_date = Plausible.Google.GA4.API.get_analytics_start_date(access_token, property)
 
     end_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
 

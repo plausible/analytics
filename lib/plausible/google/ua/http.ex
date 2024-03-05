@@ -115,7 +115,7 @@ defmodule Plausible.Google.UA.HTTP do
   end
 
   @earliest_valid_date "2005-01-01"
-  def get_analytics_start_date(view_id, access_token) do
+  def get_analytics_start_date(access_token, view_id) do
     params = %{
       reportRequests: [
         %{

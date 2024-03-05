@@ -139,7 +139,7 @@ defmodule Plausible.Google.GA4.HTTP do
   end
 
   @earliest_valid_date "2015-08-14"
-  def get_analytics_start_date(property, access_token) do
+  def get_analytics_start_date(access_token, property) do
     params = %{
       requests: [
         %{
@@ -160,7 +160,7 @@ defmodule Plausible.Google.GA4.HTTP do
     url = "#{reporting_api_url()}/v1beta/#{property}:batchRunReports"
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
-    case HTTPClient.post(url, headers, params) do
+    case HTTPClient.impl().post(url, headers, params) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         report = List.first(body["reports"])
 

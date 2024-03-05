@@ -82,7 +82,7 @@ defmodule PlausibleWeb.UniversalAnalyticsController do
         "legacy" => legacy
       }) do
     site = conn.assigns.site
-    start_date = Plausible.Google.UA.API.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.UA.API.get_analytics_start_date(access_token, view_id)
 
     case start_date do
       {:ok, nil} ->
@@ -137,7 +137,7 @@ defmodule PlausibleWeb.UniversalAnalyticsController do
       }) do
     site = conn.assigns.site
 
-    start_date = Plausible.Google.UA.API.get_analytics_start_date(view_id, access_token)
+    start_date = Plausible.Google.UA.API.get_analytics_start_date(access_token, view_id)
 
     end_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
 

@@ -15,6 +15,7 @@ defmodule Plausible.Google.GA4.API do
   @per_page 7_500
   @backoff_factor :timer.seconds(10)
   @max_attempts 5
+
   def list_properties(access_token) do
     case GA4.HTTP.list_accounts_for_user(access_token) do
       {:ok, %{"accountSummaries" => accounts}} ->
@@ -51,8 +52,8 @@ defmodule Plausible.Google.GA4.API do
     end
   end
 
-  def get_analytics_start_date(property, access_token) do
-    GA4.HTTP.get_analytics_start_date(property, access_token)
+  def get_analytics_start_date(access_token, property) do
+    GA4.HTTP.get_analytics_start_date(access_token, property)
   end
 
   def import_analytics(date_range, property, auth, persist_fn) do
