@@ -103,7 +103,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
       Logger.info("  Running for #{format_duration(running_for)}")
 
       if progress > 0 do
-        estimated_time_left = running_for / progress / 100 - running_for
+        estimated_time_left = round(running_for / progress / 100 - running_for)
         Logger.info("  Estimated #{progress}% done, #{format_duration(estimated_time_left)} left")
       end
 
