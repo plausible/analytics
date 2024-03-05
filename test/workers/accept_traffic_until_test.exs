@@ -26,14 +26,16 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
   end
 
   test "does not send any notifications when site has stats older than 2d" do
-    today = Date.utc_today()
-    next_week = today |> Date.add(+7)
+    today = NaiveDateTime.utc_now()
+    next_week = today |> NaiveDateTime.add(+7, :day)
 
     user = insert(:user, accept_traffic_until: next_week)
 
     :site
     |> insert(members: [user])
-    |> populate_stats([build(:pageview, timestamp: Date.add(today, -3))])
+    |> journey now: NaiveDateTime.add(today, -3, :day) do
+      pageview "/"
+    end
 
     {:ok, 1} = AcceptTrafficUntil.perform(nil)
 
@@ -41,15 +43,17 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
   end
 
   test "does send notification when last stat is 2d old" do
-    today = Date.utc_today()
-    next_week = today |> Date.add(+7)
+    today = NaiveDateTime.utc_now()
+    next_week = today |> NaiveDateTime.add(+7, :day)
 
     user =
       insert(:user, accept_traffic_until: next_week)
 
     :site
     |> insert(members: [user])
-    |> populate_stats([build(:pageview, timestamp: Date.add(today, -2))])
+    |> journey now: NaiveDateTime.add(today, -2, :day) do
+      pageview "/"
+    end
 
     {:ok, 1} = AcceptTrafficUntil.perform(nil)
 
@@ -60,7 +64,11 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     tomorrow = Date.utc_today() |> Date.add(+1)
     user = insert(:user, accept_traffic_until: tomorrow)
 
-    :site |> insert(members: [user]) |> populate_stats([build(:pageview)])
+    :site
+    |> insert(members: [user])
+    |> journey do
+      pageview "/"
+    end
 
     {:ok, 1} = AcceptTrafficUntil.perform(nil)
     assert_final_notification(user.email)
@@ -70,7 +78,7 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     next_week = Date.utc_today() |> Date.add(+7)
     user = insert(:user, accept_traffic_until: next_week)
 
-    :site |> insert(members: [user]) |> populate_stats([build(:pageview)])
+    :site |> insert(members: [user]) |> journey(do: pageview("/"))
 
     {:ok, 1} = AcceptTrafficUntil.perform(nil)
     assert_weekly_notification(user.email)
@@ -87,10 +95,10 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     user3 = insert(:user, accept_traffic_until: in_8_days, email: "nope@example.com")
     user4 = insert(:user, accept_traffic_until: today, email: "nope2@example.com")
 
-    :site |> insert(members: [user1]) |> populate_stats([build(:pageview)])
-    :site |> insert(members: [user2]) |> populate_stats([build(:pageview)])
-    :site |> insert(members: [user3]) |> populate_stats([build(:pageview)])
-    :site |> insert(members: [user4]) |> populate_stats([build(:pageview)])
+    :site |> insert(members: [user1]) |> journey(do: pageview("/"))
+    :site |> insert(members: [user2]) |> journey(do: pageview("/"))
+    :site |> insert(members: [user3]) |> journey(do: pageview("/"))
+    :site |> insert(members: [user4]) |> journey(do: pageview("/"))
 
     {:ok, 2} = AcceptTrafficUntil.perform(nil)
     assert_weekly_notification(user1.email)
@@ -105,12 +113,21 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
     user = insert(:user, email: email) |> Plausible.Auth.User.start_trial() |> Repo.update!()
     site = insert(:site, members: [user])
 
-    populate_stats(site, [
-      build(:pageview, timestamp: today),
-      build(:pageview, timestamp: Date.add(user.trial_expiry_date, 7)),
-      build(:pageview, timestamp: Date.add(user.trial_expiry_date, 8)),
-      build(:pageview, timestamp: Date.add(user.trial_expiry_date, 13))
-    ])
+    journey site do
+      pageview "/"
+    end
+
+    journey site, now: Date.add(user.trial_expiry_date, 7) do
+      pageview "/"
+    end
+
+    journey site, now: Date.add(user.trial_expiry_date, 8) do
+      pageview "/"
+    end
+
+    journey site, now: Date.add(user.trial_expiry_date, 13) do
+      pageview "/"
+    end
 
     # today's worker is no-op
     {:ok, 0} = AcceptTrafficUntil.perform(nil, today)

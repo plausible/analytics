@@ -111,7 +111,10 @@ defmodule Plausible.Test.Support.Journey do
   end
 
   defp ingest(conn, state, idle) do
-    now = invoke_if_function(state.now)
+    now =
+      state.now
+      |> invoke_if_function()
+      |> Plausible.Timezones.to_utc_datetime()
 
     idle_offset =
       case idle do

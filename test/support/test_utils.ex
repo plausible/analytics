@@ -2,6 +2,8 @@ defmodule Plausible.TestUtils do
   use Plausible.Repo
   alias Plausible.Factory
 
+  require Logger
+
   defmacro __using__(_) do
     quote do
       require Plausible.TestUtils

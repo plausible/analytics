@@ -7,7 +7,7 @@ defmodule Plausible.Timezones do
   end
 
   @spec to_utc_datetime(NaiveDateTime.t(), String.t()) :: DateTime.t()
-  def to_utc_datetime(naive_date_time, timezone) do
+  def to_utc_datetime(naive_date_time, timezone \\ "UTC") do
     case Timex.to_datetime(naive_date_time, timezone) do
       %DateTime{} = tz_dt ->
         Timex.Timezone.convert(tz_dt, "UTC")
