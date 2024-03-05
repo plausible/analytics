@@ -63,16 +63,12 @@ defmodule Plausible.Google.GA4.API do
 
   defp do_import_analytics(date_range, property, access_token, persist_fn) do
     Enum.reduce_while(GA4.ReportRequest.full_report(), :ok, fn report_request, :ok ->
-      report_request = %GA4.ReportRequest{
-        report_request
-        | date_range: date_range,
-          property: property,
-          access_token: access_token,
-          offset: 0,
-          limit: @per_page
-      }
-
-      case fetch_and_persist(report_request, persist_fn: persist_fn) do
+      case fetch_and_persist(report_request,
+             date_range: date_range,
+             property: property,
+             access_token: access_token,
+             persist_fn: persist_fn
+           ) do
         :ok -> {:cont, :ok}
         {:error, _} = error -> {:halt, error}
       end
@@ -82,6 +78,10 @@ defmodule Plausible.Google.GA4.API do
   @spec fetch_and_persist(GA4.ReportRequest.t(), Keyword.t()) ::
           :ok | {:error, term()}
   def fetch_and_persist(%GA4.ReportRequest{} = report_request, opts \\ []) do
+    date_range = Keyword.fetch!(opts, :date_range)
+    property = Keyword.fetch!(opts, :property)
+    access_token = Keyword.fetch!(opts, :access_token)
+    report_request = prepare_request(report_request, date_range, property, access_token)
     persist_fn = Keyword.fetch!(opts, :persist_fn)
     attempt = Keyword.get(opts, :attempt, 1)
     sleep_time = Keyword.get(opts, :sleep_time, @backoff_factor)
@@ -107,5 +107,16 @@ defmodule Plausible.Google.GA4.API do
           fetch_and_persist(report_request, Keyword.merge(opts, attempt: attempt + 1))
         end
     end
+  end
+
+  defp prepare_request(report_request, date_range, property, access_token) do
+    %GA4.ReportRequest{
+      report_request
+      | date_range: date_range,
+        property: property,
+        access_token: access_token,
+        offset: 0,
+        limit: @per_page
+    }
   end
 end

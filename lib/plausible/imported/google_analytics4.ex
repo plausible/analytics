@@ -48,8 +48,9 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
     date_range = Keyword.fetch!(opts, :date_range)
     property = Keyword.fetch!(opts, :property)
     auth = Keyword.fetch!(opts, :auth)
+    flush_interval_ms = Keyword.get(opts, :flush_interval_ms, 1000)
 
-    {:ok, buffer} = Plausible.Imported.Buffer.start_link()
+    {:ok, buffer} = Plausible.Imported.Buffer.start_link(flush_interval_ms: flush_interval_ms)
 
     persist_fn = fn table, rows ->
       records = from_report(rows, site_import.site_id, site_import.id, table)
