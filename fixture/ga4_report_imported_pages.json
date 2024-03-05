@@ -1,1 +1,232 @@
-{"kind":"analyticsData#batchRunReports","reports":[{"dimensionHeaders":[{"name":"date"},{"name":"hostName"},{"name":"pagePath"}],"kind":"analyticsData#runReport","metadata":{"currencyCode":"USD","timeZone":"Europe/Warsaw"},"metricHeaders":[{"name":"totalUsers","type":"TYPE_INTEGER"},{"name":"screenPageViews","type":"TYPE_INTEGER"},{"name":"userEngagementDuration","type":"TYPE_SECONDS"}],"rowCount":8,"rows":[{"dimensionValues":[{"value":"20240226"},{"value":"drawer.todo.computer"},{"value":"/blog/firstpost/"}],"metricValues":[{"value":"1"},{"value":"1"},{"value":"0"}]},{"dimensionValues":[{"value":"20240224"},{"value":"drawer-4l3.pages.dev"},{"value":"/"}],"metricValues":[{"value":"1"},{"value":"1"},{"value":"0"}]},{"dimensionValues":[{"value":"20240224"},{"value":"drawer.todo.computer"},{"value":"/"}],"metricValues":[{"value":"1"},{"value":"1"},{"value":"0"}]},{"dimensionValues":[{"value":"20240222"},{"value":"drawer.todo.computer"},{"value":"/"}],"metricValues":[{"value":"2"},{"value":"3"},{"value":"7"}]},{"dimensionValues":[{"value":"20240222"},{"value":"drawer.todo.computer"},{"value":"/blog/unicode-in-elixir/"}],"metricValues":[{"value":"2"},{"value":"7"},{"value":"21"}]},{"dimensionValues":[{"value":"20240222"},{"value":"drawer.todo.computer"},{"value":"/about/"}],"metricValues":[{"value":"1"},{"value":"1"},{"value":"0"}]},{"dimensionValues":[{"value":"20240222"},{"value":"drawer.todo.computer"},{"value":"/blog/"}],"metricValues":[{"value":"1"},{"value":"1"},{"value":"1"}]},{"dimensionValues":[{"value":"20240222"},{"value":"drawer.todo.computer"},{"value":"/blog/firstpost/"}],"metricValues":[{"value":"1"},{"value":"1"},{"value":"0"}]}]}]}
+{
+  "kind": "analyticsData#batchRunReports",
+  "reports": [
+    {
+      "dimensionHeaders": [
+        {
+          "name": "date"
+        },
+        {
+          "name": "hostName"
+        },
+        {
+          "name": "pagePath"
+        }
+      ],
+      "kind": "analyticsData#runReport",
+      "metadata": {
+        "currencyCode": "USD",
+        "timeZone": "Europe/Warsaw"
+      },
+      "metricHeaders": [
+        {
+          "name": "totalUsers",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "screenPageViews",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "userEngagementDuration",
+          "type": "TYPE_SECONDS"
+        }
+      ],
+      "rowCount": 8,
+      "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240226"
+            },
+            {
+              "value": "drawer.todo.computer"
+            },
+            {
+              "value": "/blog/firstpost/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240224"
+            },
+            {
+              "value": "drawer-4l3.pages.dev"
+            },
+            {
+              "value": "/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240224"
+            },
+            {
+              "value": "drawer.todo.computer"
+            },
+            {
+              "value": "/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "drawer.todo.computer"
+            },
+            {
+              "value": "/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "drawer.todo.computer"
+            },
+            {
+              "value": "/blog/unicode-in-elixir/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "7"
+            },
+            {
+              "value": "21"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "drawer.todo.computer"
+            },
+            {
+              "value": "/about/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "drawer.todo.computer"
+            },
+            {
+              "value": "/blog/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "drawer.todo.computer"
+            },
+            {
+              "value": "/blog/firstpost/"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

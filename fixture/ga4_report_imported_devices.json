@@ -1,1 +1,137 @@
-{"kind":"analyticsData#batchRunReports","reports":[{"dimensionHeaders":[{"name":"date"},{"name":"deviceCategory"}],"kind":"analyticsData#runReport","metadata":{"currencyCode":"USD","timeZone":"Europe/Warsaw"},"metricHeaders":[{"name":"totalUsers","type":"TYPE_INTEGER"},{"name":"sessions","type":"TYPE_INTEGER"},{"name":"bounces","type":"TYPE_INTEGER"},{"name":"userEngagementDuration","type":"TYPE_SECONDS"}],"rowCount":4,"rows":[{"dimensionValues":[{"value":"20240226"},{"value":"mobile"}],"metricValues":[{"value":"1"},{"value":"1"},{"value":"1"},{"value":"0"}]},{"dimensionValues":[{"value":"20240224"},{"value":"desktop"}],"metricValues":[{"value":"2"},{"value":"2"},{"value":"2"},{"value":"0"}]},{"dimensionValues":[{"value":"20240222"},{"value":"desktop"}],"metricValues":[{"value":"2"},{"value":"3"},{"value":"0"},{"value":"25"}]},{"dimensionValues":[{"value":"20240222"},{"value":"mobile"}],"metricValues":[{"value":"1"},{"value":"1"},{"value":"0"},{"value":"4"}]}]}]}
+{
+  "kind": "analyticsData#batchRunReports",
+  "reports": [
+    {
+      "dimensionHeaders": [
+        {
+          "name": "date"
+        },
+        {
+          "name": "deviceCategory"
+        }
+      ],
+      "kind": "analyticsData#runReport",
+      "metadata": {
+        "currencyCode": "USD",
+        "timeZone": "Europe/Warsaw"
+      },
+      "metricHeaders": [
+        {
+          "name": "totalUsers",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "sessions",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "bounces",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "userEngagementDuration",
+          "type": "TYPE_SECONDS"
+        }
+      ],
+      "rowCount": 4,
+      "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240226"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240224"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "desktop"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "25"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "mobile"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "4"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
