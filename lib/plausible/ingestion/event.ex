@@ -43,6 +43,26 @@ defmodule Plausible.Ingestion.Event do
           changeset: %Ecto.Changeset{}
         }
 
+  @session_properties [
+    :session_id,
+    :referrer,
+    :referrer_source,
+    :utm_medium,
+    :utm_source,
+    :utm_campaign,
+    :utm_content,
+    :utm_term,
+    :country_code,
+    :subdivision1_code,
+    :subdivision2_code,
+    :city_geoname_id,
+    :screen_size,
+    :operating_system,
+    :operating_system_version,
+    :browser,
+    :browser_version
+  ]
+
   @spec build_and_buffer(Request.t()) :: {:ok, %{buffered: [t()], dropped: [t()]}}
   def build_and_buffer(%Request{domains: domains} = request) do
     processed_events =
@@ -315,15 +335,18 @@ defmodule Plausible.Ingestion.Event do
         event.salts.previous
       )
 
-    session_id =
+    session =
       Plausible.Session.CacheStore.on_event(
         event.clickhouse_event,
         event.clickhouse_session_attrs,
         previous_user_id
       )
 
-    clickhouse_event = Map.put(event.clickhouse_event, :session_id, session_id)
-    %{event | clickhouse_event: clickhouse_event}
+    %{
+      event
+      | clickhouse_event:
+          Map.merge(event.clickhouse_event, Map.take(session, @session_properties))
+    }
   end
 
   defp write_to_buffer(%__MODULE__{clickhouse_event: clickhouse_event} = event) do

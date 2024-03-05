@@ -226,7 +226,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, request} = Request.build(conn)
 
     assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
-    assert event.clickhouse_event_attrs.hostname == "192.168.0.1"
+    assert event.clickhouse_event.hostname == "192.168.0.1"
   end
 
   test "Hostname is stored with public suffix processing" do
@@ -241,6 +241,6 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, request} = Request.build(conn)
 
     assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
-    assert event.clickhouse_event_attrs.hostname == "foo.netlify.app"
+    assert event.clickhouse_event.hostname == "foo.netlify.app"
   end
 end

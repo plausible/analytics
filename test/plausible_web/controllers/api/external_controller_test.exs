@@ -12,7 +12,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       {:ok, site: site}
     end
 
-    test "records the event", %{conn: conn, site: site} do
+    test "records the event and session", %{conn: conn, site: site} do
       params = %{
         domain: site.domain,
         name: "pageview",
@@ -26,6 +26,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> post("/api/event", params)
 
       pageview = get_event(site)
+      session = get_created_session(site)
 
       assert response(conn, 202) == "ok"
       assert pageview.hostname == "example.com"
@@ -33,6 +34,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.site_id == site.id
 
       assert pageview.pathname == "/"
+      assert pageview.session_id == session.session_id
     end
 
     test "works with Content-Type: text/plain", %{conn: conn, site: site} do
@@ -224,12 +226,17 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> post("/api/event", params)
 
       session = get_created_session(site)
+      event = get_event(site)
 
       assert response(conn, 202) == "ok"
       assert session.operating_system == "Mac"
       assert session.operating_system_version == "10.13"
       assert session.browser == "Chrome"
       assert session.browser_version == "70.0"
+      assert event.operating_system == "Mac"
+      assert event.operating_system_version == "10.13"
+      assert event.browser == "Chrome"
+      assert event.browser_version == "70.0"
     end
 
     test "parses referrer", %{conn: conn, site: site} do
@@ -265,10 +272,13 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
         |> post("/api/event", params)
 
       session = get_created_session(site)
+      event = get_event(site)
 
       assert response(conn, 202) == "ok"
       assert session.referrer == "facebook.com/page"
       assert session.referrer_source == "Facebook"
+      assert event.referrer == session.referrer
+      assert event.referrer_source == session.referrer_source
     end
 
     test "ignores event when referrer is a spammer", %{conn: conn, site: site} do
@@ -811,11 +821,16 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       |> post("/api/event", params)
 
       session = get_created_session(site)
+      event = get_event(site)
 
       assert session.country_code == "GB"
       assert session.subdivision1_code == "GB-ENG"
       assert session.subdivision2_code == "GB-WBK"
       assert session.city_geoname_id == 2_655_045
+      assert event.country_code == session.country_code
+      assert event.subdivision1_code == session.subdivision1_code
+      assert event.subdivision2_code == session.subdivision2_code
+      assert event.city_geoname_id == session.city_geoname_id
     end
 
     test "ignores unknown country code ZZ", %{conn: conn, site: site} do
@@ -1108,6 +1123,7 @@ defmodule PlausibleWeb.Api.ExternalControllerTest do
       assert pageview.hostname == "test.com"
       assert pageview.pathname == "/ﺝﻭﺎﺋﺯ-ﻮﻤﺳﺎﺒﻗﺎﺗ"
       assert session.utm_source == "%balle%"
+      assert pageview.utm_source == session.utm_source
     end
 
     test "can use double quotes in query params", %{conn: conn, site: site} do
