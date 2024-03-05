@@ -272,4 +272,22 @@ defmodule Plausible.TestUtils do
   def tomorrow(now) do
     NaiveDateTime.add(now, 1, :day)
   end
+
+  def rand_user_agent() do
+    [
+      "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/156.1.368858699 Mobile/18A393 Safari/604.1",
+      "Mozilla/5.0 (Linux; Android 9; SM-A305G Build/PPR1.180610.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.82 Mobile Safari/537.36 GSA/12.14.7.23.arm64",
+      "Mozilla/5.0 (Linux; Android 10; moto g(8) plus Build/QPIS30.28-Q3-28-26-3-4; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.66 Mobile Safari/537.36 GSA/12.14.7.23.arm64",
+      "com.google.GoogleMobile/156.1 iPhone/14.0.1 hw/iPhone10_4",
+      "Mozilla/5.0 (Linux; Android 10; vivo 1819 Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.66 Mobile Safari/537.36 GSA/12.14.7.23.arm64",
+      "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.2; Win64; x64; Trident/7.0; .NET4.0C; .NET4.0E; InfoPath.3; Tablet PC 2.0; HCTE; ms-office; MSOffice 15)",
+      "Mozilla/5.0 (Linux; Android 5.1; F5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.181 Mobile Safari/537.36",
+      "Mozilla/5.0 (Linux; Android 9; LM-X420 Build/PKQ1.190522.001; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/90.0.4430.66 Mobile Safari/537.36 GSA/12.14.7.23.arm",
+      "Mozilla/5.0 (Linux; Android 10; SM-A516B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.82 Mobile Safari/537.36",
+      "Mozilla/5.0 (Linux; Android 7.0; Mi-4c) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.66 Mobile Safari/537.36"
+    ]
+    |> Enum.random()
+  end
+
+  def rand_idle(_), do: Enum.random(1..100)
 end

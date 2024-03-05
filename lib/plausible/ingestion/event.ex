@@ -160,6 +160,7 @@ defmodule Plausible.Ingestion.Event do
       |> Keyword.put(:drop_reason, reason)
 
     emit_telemetry_dropped(event, reason)
+    IO.inspect(reason, label: :dropped)
     struct!(event, fields)
   end
 

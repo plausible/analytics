@@ -36,13 +36,6 @@ defmodule Plausible.Test.Support.Journey do
           %{name: name, domain: site.domain, url: build_url(site, "/", opts)}
           |> add_common_body_params(opts)
 
-        payload =
-          if opts[:props] do
-            Map.put(payload, :props, opts[:props])
-          else
-            payload
-          end
-
         conn
         |> conn(:post, "/api/events", payload)
         |> ingest(state, invoke_if_function(Keyword.get(opts, :idle, 1), state.now))
@@ -57,7 +50,7 @@ defmodule Plausible.Test.Support.Journey do
     params =
       params
       |> Enum.into(%{})
-      |> Map.take(~w[referrer]a)
+      |> Map.take(~w[revenue referrer url props]a)
 
     if Enum.empty?(params) do
       payload
@@ -142,7 +135,7 @@ defmodule Plausible.Test.Support.Journey do
   defp debug(conn, state, idle, now, new_now) do
     IO.puts("\n[#{now}] Request:" <> IO.ANSI.yellow())
     IO.puts("  #{conn.method} #{conn.request_path}?#{conn.query_string}" <> IO.ANSI.cyan())
-    IO.puts("  user-agent: #{state.user_agent}")
+    IO.puts("  user-agent: #{inspect(state.user_agent)}")
     IO.puts("  x-forwarded-for: #{state.ip}" <> IO.ANSI.green())
     IO.puts("  #{Jason.encode!(conn.body_params)}" <> IO.ANSI.reset())
     IO.puts("[#{new_now}] Idle complete (#{inspect(idle)})")
