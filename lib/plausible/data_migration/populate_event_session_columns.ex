@@ -25,7 +25,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
 
     {partitions, _, _, _} = get_partitions(opts)
 
-    Logger.info("Starting mutation on #{length(partitions)} partition(s)")
+    IO.puts("Starting mutation on #{length(partitions)} partition(s)")
 
     for partition <- partitions do
       {:ok, _} = run_sql("update-table", cluster?: cluster?, partition: partition)
@@ -33,7 +33,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
 
     wait_until_mutations_complete(opts)
 
-    Logger.info("Mutations seem done, cleaning up!")
+    IO.puts("Mutations seem done, cleaning up!")
     {:ok, _} = run_sql("drop-sessions-dictionary", cluster?: cluster?)
   end
 
@@ -42,7 +42,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
 
     report_progress(opts)
 
-    Logger.info("Killing running mutations")
+    IO.puts("Killing running mutations")
     {:ok, _} = run_sql("kill-running-mutations", cluster?: cluster?)
   end
 
@@ -82,29 +82,31 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
     {:ok, %{rows: [[merges]]}} = run_sql("get-merges-progress")
     {:ok, %{rows: disks}} = run_sql("get-disks")
 
+    IO.puts("\n\n#{Timex.now() |> Timex.format!("{ISO:Extended}")}")
+
     # List partitions that need to run
-    Logger.info(
+    IO.puts(
       "Progress report for partitions #{Enum.min(partitions)}-#{Enum.max(partitions)} (parts: #{length(parts)})"
     )
 
-    Logger.info("Disks overview:")
+    IO.puts("Disks overview:")
 
     for [name, path, full_space, total_space, full_percentage] <- disks do
-      Logger.info(
+      IO.puts(
         "  #{name} at #{path} is at #{full_space}/#{total_space} (#{full_percentage}% full)"
       )
     end
 
-    Logger.info("Currently #{mutations} mutation(s) are running.")
+    IO.puts("Currently #{mutations} mutation(s) are running.")
 
     if mutations > 0 do
-      Logger.info("  To do #{parts_to_do} parts, #{todo_size}")
-      Logger.info("  Out of #{length(parts)} parts, #{total_size}")
-      Logger.info("  Running for #{format_duration(running_for)}")
+      IO.puts("  To do #{parts_to_do} parts, #{todo_size}")
+      IO.puts("  Out of #{length(parts)} parts, #{total_size}")
+      IO.puts("  Running for #{format_duration(running_for)}")
 
       if progress > 0 do
         estimated_time_left = round(running_for / progress / 100 - running_for)
-        Logger.info("  Estimated #{progress}% done, #{format_duration(estimated_time_left)} left")
+        IO.puts("  Estimated #{progress}% done, #{format_duration(estimated_time_left)} left")
       end
 
       if latest_fail_reason do
@@ -114,7 +116,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
       end
     end
 
-    Logger.info("Currently #{merges} merge(s) are running relating to mutations.")
+    IO.puts("Currently #{merges} merge(s) are running relating to mutations.")
 
     mutations > 0
   end
