@@ -429,7 +429,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       populate_stats(site, [
         build(:imported_visitors, date: ~D[2023-01-01]),
         build(:imported_sources, date: ~D[2023-01-01]),
-        build(:pageview, referrer_source: "Google", timestamp: ~N[2023-01-02 00:10:00])
+        build(:pageview,
+          referrer_source: "Google",
+          timestamp: ~N[2023-01-02 00:10:00]
+        )
       ])
 
       conn =
@@ -1269,19 +1272,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         %{
           site_id: site.id,
           session_id: 1000,
-          country_code: "EE",
           name: "pageview"
         },
         %{
           site_id: site.id,
           session_id: 1000,
-          country_code: "EE",
           name: "pageview"
         },
         %{
           site_id: site.id,
           session_id: 1000,
-          country_code: "EE",
           name: "pageview"
         }
       ])

@@ -962,7 +962,11 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
       populate_stats(site, [
         build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
-        build(:pageview, browser: "Chrome", "meta.key": [prop_key], "meta.value": ["Sipsik"])
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": [prop_key],
+          "meta.value": ["Sipsik"]
+        )
       ])
 
       filters = Jason.encode!(%{browser: "Chrome"})

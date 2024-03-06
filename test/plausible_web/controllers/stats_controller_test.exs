@@ -295,8 +295,14 @@ defmodule PlausibleWeb.StatsControllerTest do
         build(:pageview, operating_system: "Mac", operating_system_version: "14"),
         build(:pageview, operating_system: "Mac", operating_system_version: "14"),
         build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
-        build(:pageview, operating_system: "Ubuntu", operating_system_version: "20.04"),
+        build(:pageview,
+          operating_system: "Ubuntu",
+          operating_system_version: "20.04"
+        ),
+        build(:pageview,
+          operating_system: "Ubuntu",
+          operating_system_version: "20.04"
+        ),
         build(:pageview, operating_system: "Mac", operating_system_version: "13")
       ])
 
@@ -412,34 +418,34 @@ defmodule PlausibleWeb.StatsControllerTest do
   defp populate_exported_stats(site) do
     populate_stats(site, [
       build(:pageview,
-        country_code: "EE",
-        subdivision1_code: "EE-37",
-        city_geoname_id: 588_409,
+        user_id: 123,
         pathname: "/",
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], minutes: -1) |> NaiveDateTime.truncate(:second),
-        referrer_source: "Google",
-        user_id: 123
-      ),
-      build(:pageview,
         country_code: "EE",
         subdivision1_code: "EE-37",
         city_geoname_id: 588_409,
+        referrer_source: "Google"
+      ),
+      build(:pageview,
+        user_id: 123,
         pathname: "/some-other-page",
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], minutes: -2) |> NaiveDateTime.truncate(:second),
-        referrer_source: "Google",
-        user_id: 123
+        country_code: "EE",
+        subdivision1_code: "EE-37",
+        city_geoname_id: 588_409,
+        referrer_source: "Google"
       ),
       build(:pageview,
         pathname: "/",
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         utm_medium: "search",
         utm_campaign: "ads",
         utm_source: "google",
         utm_content: "content",
         utm_term: "term",
-        timestamp:
-          Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         browser: "Firefox",
         browser_version: "120",
         operating_system: "Mac",
@@ -520,9 +526,21 @@ defmodule PlausibleWeb.StatsControllerTest do
     } do
       populate_stats(site, [
         build(:pageview, operating_system: "Mac", operating_system_version: "14"),
-        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
-        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
-        build(:event, name: "Signup", operating_system: "Mac", operating_system_version: "14"),
+        build(:event,
+          name: "Signup",
+          operating_system: "Mac",
+          operating_system_version: "14"
+        ),
+        build(:event,
+          name: "Signup",
+          operating_system: "Mac",
+          operating_system_version: "14"
+        ),
+        build(:event,
+          name: "Signup",
+          operating_system: "Mac",
+          operating_system_version: "14"
+        ),
         build(:event,
           name: "Signup",
           operating_system: "Ubuntu",

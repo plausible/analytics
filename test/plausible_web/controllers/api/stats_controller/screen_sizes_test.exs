@@ -171,7 +171,10 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
         build(:pageview, referrer_source: "Bad source", screen_size: "Desktop"),
         build(:pageview, referrer_source: "Google", screen_size: "Desktop"),
         build(:pageview, referrer_source: "Twitter", screen_size: "Mobile"),
-        build(:pageview, referrer_source: "Second bad source", screen_size: "Mobile")
+        build(:pageview,
+          referrer_source: "Second bad source",
+          screen_size: "Mobile"
+        )
       ])
 
       filters = Jason.encode!(%{"source" => "!Bad source|Second bad source"})

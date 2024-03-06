@@ -251,7 +251,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       populate_stats(site, [
         build(:pageview, referrer_source: "Google", referrer: "google.com"),
         build(:pageview, referrer_source: "Google", referrer: "google.com"),
-        build(:pageview, referrer_source: "DuckDuckGo", referrer: "duckduckgo.com")
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com"
+        )
       ])
 
       populate_stats(site, [
@@ -472,8 +475,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       populate_stats(site, [
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
-        build(:pageview, user_id: 1, pathname: "/page2", referrer_source: "DuckDuckGo"),
-        build(:pageview, user_id: 1, pathname: "/page1", referrer_source: "DuckDuckGo")
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page2",
+          referrer_source: "DuckDuckGo"
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page1",
+          referrer_source: "DuckDuckGo"
+        )
       ])
 
       filters = Jason.encode!(%{"page" => "/page1"})

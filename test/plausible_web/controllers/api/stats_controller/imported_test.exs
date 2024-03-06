@@ -1078,7 +1078,10 @@ defmodule PlausibleWeb.Api.StatsController.ImportedTest do
         populate_stats(site, import_id, [
           build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
           build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
-          build(:pageview, operating_system: "GNU/Linux", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview,
+            operating_system: "GNU/Linux",
+            timestamp: ~N[2021-01-01 00:15:00]
+          ),
           build(:imported_visitors, date: ~D[2021-01-01], visitors: 2)
         ])
 
