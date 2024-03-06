@@ -36,7 +36,10 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
     IO.puts("Starting mutation on #{length(partitions)} partition(s)")
 
     for partition <- partitions do
-      {:ok, _} = run_sql("update-table", cluster?: cluster?, partition: partition)
+      {:ok, _} =
+        run_sql("update-table", [cluster?: cluster?, partition: partition],
+          settings: [allow_nondeterministic_mutations: 1]
+        )
     end
 
     wait_until_mutations_complete(opts)

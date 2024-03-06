@@ -406,8 +406,7 @@ config :plausible, Plausible.IngestRepo,
   max_buffer_size: ch_max_buffer_size,
   pool_size: ingest_pool_size,
   settings: [
-    materialized_views_ignore_errors: 1,
-    allow_nondeterministic_mutations: 1
+    materialized_views_ignore_errors: 1
   ]
 
 config :plausible, Plausible.AsyncInsertRepo,
