@@ -606,7 +606,7 @@ defmodule Plausible.Stats.Base do
     |> select([e], total_visitors: fragment(@uniq_users_expression, e.user_id))
   end
 
-  defp total_visitors_subquery(site, %Query{include_imported: true} = query) do
+  def total_visitors_subquery(site, %Query{include_imported: true} = query) do
     dynamic(
       [e],
       selected_as(
@@ -617,7 +617,7 @@ defmodule Plausible.Stats.Base do
     )
   end
 
-  defp total_visitors_subquery(site, query) do
+  def total_visitors_subquery(site, query) do
     dynamic([e], selected_as(subquery(total_visitors(site, query)), :__total_visitors))
   end
 

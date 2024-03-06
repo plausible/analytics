@@ -846,26 +846,18 @@ defmodule Plausible.Stats.Breakdown do
     if :conversion_rate in metrics do
       total_query = query |> Query.remove_event_filters([:goal, :props])
 
-      total_q =
-        from(e in base_event_query(site, total_query),
-          select: %{
-            total_visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
-          }
-        )
-
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
-      from(e in subquery(q),
-        select_merge: %{
-          total_visitors: selected_as(subquery(total_q), :total_visitors),
-          conversion_rate:
-            fragment(
-              "if(? > 0, round(? / ? * 100, 1), null)",
-              selected_as(:total_visitors),
-              e.visitors,
-              selected_as(:total_visitors)
-            )
-        }
-      )
+      subquery(q)
+      |> select_merge(^%{total_visitors: total_visitors_subquery(site, total_query)})
+      |> select_merge([e], %{
+        conversion_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            selected_as(:__total_visitors),
+            e.visitors,
+            selected_as(:__total_visitors)
+          )
+      })
     else
       q
     end
