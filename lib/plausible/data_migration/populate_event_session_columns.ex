@@ -14,13 +14,21 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
 
   require Logger
 
+  # See https://clickhouse.com/docs/en/sql-reference/dictionaries#cache for meaning of these defaults
+  @default_dictionary_config %{
+    lifetime: 600_000,
+    size_in_cells: 1_000_000,
+    max_threads_for_updates: 6
+  }
+
   def run(opts \\ []) do
     cluster? = Plausible.MigrationUtils.clustered_table?("sessions_v2")
 
     {:ok, _} =
       run_sql("create-sessions-dictionary",
         cluster?: cluster?,
-        dictionary_connection_params: get_dictionary_connection_params(opts)
+        dictionary_connection_params: dictionary_connection_params(opts),
+        dictionary_config: dictionary_config(opts)
       )
 
     {partitions, _, _, _} = get_partitions(opts)
@@ -121,8 +129,13 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
     mutations > 0
   end
 
+  defp dictionary_config(opts) do
+    @default_dictionary_config
+    |> Map.merge(Keyword.get(opts, :dictionary_config, %{}))
+  end
+
   # See https://clickhouse.com/docs/en/sql-reference/dictionaries#clickhouse for context
-  def get_dictionary_connection_params(opts \\ []) do
+  defp dictionary_connection_params(opts) do
     dictionary_connection_string = Keyword.get(opts, :dictionary_connection_string)
 
     if dictionary_connection_string do

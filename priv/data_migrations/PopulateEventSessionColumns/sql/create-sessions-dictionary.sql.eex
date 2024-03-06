@@ -22,5 +22,11 @@ CREATE OR REPLACE DICTIONARY sessions_dict
 )
 PRIMARY KEY site_id, session_id
 SOURCE(CLICKHOUSE(TABLE sessions_v2 <%= @dictionary_connection_params %>))
-LIFETIME(600000)
-LAYOUT(complex_key_cache(size_in_cells 1000000 max_threads_for_updates 6 allow_read_expired_keys 1))
+LIFETIME(<%= @dictionary_config.lifetime %>)
+LAYOUT(
+    complex_key_cache(
+        size_in_cells <%= @dictionary_config.size_in_cells %>
+        max_threads_for_updates <%= @dictionary_config.max_threads_for_updates %>
+        allow_read_expired_keys 1
+    )
+)
