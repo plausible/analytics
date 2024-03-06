@@ -27,7 +27,8 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
     {:ok, _} =
       run_sql("create-sessions-dictionary",
         cluster?: cluster?,
-        dictionary_connection_params: dictionary_connection_params(opts),
+        dictionary_connection_params:
+          Keyword.get(opts, :dictionary_connection_string, dictionary_connection_params()),
         dictionary_config: dictionary_config(opts)
       )
 
@@ -138,24 +139,18 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
   end
 
   # See https://clickhouse.com/docs/en/sql-reference/dictionaries#clickhouse for context
-  defp dictionary_connection_params(opts) do
-    dictionary_connection_string = Keyword.get(opts, :dictionary_connection_string)
-
-    if dictionary_connection_string do
-      dictionary_connection_string
-    else
-      Plausible.IngestRepo.config()
-      |> Enum.map(fn config ->
-        case config do
-          {:database, database} -> "DB '#{database}'"
-          {:username, username} -> "USER '#{username}'"
-          {:password, password} -> "PASSWORD '#{password}'"
-          _ -> nil
-        end
-      end)
-      |> Enum.reject(&is_nil/1)
-      |> Enum.join(" ")
-    end
+  defp dictionary_connection_params() do
+    Plausible.IngestRepo.config()
+    |> Enum.map(fn config ->
+      case config do
+        {:database, database} -> "DB '#{database}'"
+        {:username, username} -> "USER '#{username}'"
+        {:password, password} -> "PASSWORD '#{password}'"
+        _ -> nil
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.join(" ")
   end
 
   defp get_partitions(opts) do
