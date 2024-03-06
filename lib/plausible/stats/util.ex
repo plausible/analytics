@@ -49,12 +49,4 @@ defmodule Plausible.Stats.Util do
       metrics
     end
   end
-
-  def calculate_cr(nil, _converted_visitors), do: nil
-
-  def calculate_cr(unique_visitors, converted_visitors) do
-    if unique_visitors > 0,
-      do: Float.round(converted_visitors / unique_visitors * 100, 1),
-      else: 0.0
-  end
 end

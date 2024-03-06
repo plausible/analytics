@@ -839,30 +839,6 @@ defmodule Plausible.Stats.Breakdown do
     end
   end
 
-  # Adds conversion_rate metric to query, calculated as
-  # X / Y where Y is the same breakdown value without goal or props
-  # filters.
-  defp maybe_add_conversion_rate(q, site, query, metrics) do
-    if :conversion_rate in metrics do
-      total_query = query |> Query.remove_event_filters([:goal, :props])
-
-      # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
-      subquery(q)
-      |> select_merge(^%{total_visitors: total_visitors_subquery(site, total_query)})
-      |> select_merge([e], %{
-        conversion_rate:
-          fragment(
-            "if(? > 0, round(? / ? * 100, 1), null)",
-            selected_as(:__total_visitors),
-            e.visitors,
-            selected_as(:__total_visitors)
-          )
-      })
-    else
-      q
-    end
-  end
-
   defp sorting_key(metrics) do
     if Enum.member?(metrics, :visitors), do: :visitors, else: List.first(metrics)
   end

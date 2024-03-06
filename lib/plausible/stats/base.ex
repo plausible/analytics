@@ -285,6 +285,14 @@ defmodule Plausible.Stats.Base do
     q |> select_event_metrics(rest, revenue_nils)
   end
 
+  def select_event_metrics(q, [:conversion_rate | rest], revenue_nils) do
+    q |> select_event_metrics(rest, revenue_nils)
+  end
+
+  def select_event_metrics(q, [:total_visitors | rest], revenue_nils) do
+    q |> select_event_metrics(rest, revenue_nils)
+  end
+
   def select_event_metrics(_, [unknown | _], _), do: raise("Unknown metric: #{unknown}")
 
   def select_session_metrics(q, [], _query), do: q
@@ -631,6 +639,30 @@ defmodule Plausible.Stats.Base do
             "if(? > 0, round(? / ? * 100, 1), null)",
             selected_as(:__total_visitors),
             selected_as(:visitors),
+            selected_as(:__total_visitors)
+          )
+      })
+    else
+      q
+    end
+  end
+
+  # Adds conversion_rate metric to query, calculated as
+  # X / Y where Y is the same breakdown value without goal or props
+  # filters.
+  def maybe_add_conversion_rate(q, site, query, metrics) do
+    if :conversion_rate in metrics do
+      total_query = query |> Query.remove_event_filters([:goal, :props])
+
+      # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
+      subquery(q)
+      |> select_merge(^%{total_visitors: total_visitors_subquery(site, total_query)})
+      |> select_merge([e], %{
+        conversion_rate:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            selected_as(:__total_visitors),
+            e.visitors,
             selected_as(:__total_visitors)
           )
       })
