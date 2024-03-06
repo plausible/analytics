@@ -82,8 +82,9 @@ defmodule Plausible.TestUtils do
           |> Map.put(:site_id, pageview.site.id)
 
         Factory.build(:pageview, pageview)
+        |> Map.from_struct()
+        |> Map.delete(:__meta__)
         |> update_in([:timestamp], &to_naive_truncate/1)
-        |> Map.delete(:_factory_event)
       end)
 
     Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, pageviews)
@@ -93,8 +94,9 @@ defmodule Plausible.TestUtils do
     events =
       Enum.map(events, fn event ->
         Factory.build(:event, event)
+        |> Map.from_struct()
+        |> Map.delete(:__meta__)
         |> update_in([:timestamp], &to_naive_truncate/1)
-        |> Map.delete(:_factory_event)
       end)
 
     Plausible.IngestRepo.insert_all(Plausible.ClickhouseEventV2, events)
@@ -148,7 +150,7 @@ defmodule Plausible.TestUtils do
       event = Map.put(event, :site_id, site.id)
 
       case event do
-        %{_factory_event: true} ->
+        %Plausible.ClickhouseEventV2{} ->
           event
 
         imported_event ->
@@ -179,7 +181,7 @@ defmodule Plausible.TestUtils do
       end)
       |> Enum.split_with(fn event ->
         case event do
-          %{_factory_event: true} ->
+          %Plausible.ClickhouseEventV2{} ->
             true
 
           _ ->
@@ -192,20 +194,13 @@ defmodule Plausible.TestUtils do
   end
 
   defp populate_native_stats(events) do
-    sessions =
-      Enum.reduce(events, %{}, fn event, sessions ->
-        session_id = Plausible.Session.CacheStore.on_event(event, event, nil)
-        Map.put(sessions, {event.site_id, event.user_id}, session_id)
-      end)
+    for event_params <- events do
+      session = Plausible.Session.CacheStore.on_event(event_params, event_params, nil)
 
-    Enum.each(events, fn event ->
-      clickhouse_event =
-        %Plausible.ClickhouseEventV2{}
-        |> Map.merge(event)
-        |> Map.put(:session_id, sessions[{event.site_id, event.user_id}])
-
-      Plausible.Event.WriteBuffer.insert(clickhouse_event)
-    end)
+      event_params
+      |> Map.merge(session)
+      |> Plausible.Event.WriteBuffer.insert()
+    end
 
     Plausible.Session.WriteBuffer.flush()
     Plausible.Event.WriteBuffer.flush()
