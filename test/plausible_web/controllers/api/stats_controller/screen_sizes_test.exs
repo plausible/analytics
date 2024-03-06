@@ -23,12 +23,12 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 1,
-          session_screen_size: "Desktop",
+          screen_size: "Desktop",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           user_id: 1,
-          session_screen_size: "Laptop",
+          screen_size: "Laptop",
           timestamp: ~N[2021-01-01 05:00:00]
         )
       ])
@@ -175,12 +175,12 @@ defmodule PlausibleWeb.Api.StatsController.ScreenSizesTest do
       populate_stats(site, [
         build(:pageview,
           user_id: 1,
-          session_screen_size: "Desktop",
+          screen_size: "Desktop",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           user_id: 1,
-          session_screen_size: "Laptop",
+          screen_size: "Laptop",
           timestamp: ~N[2021-01-01 05:00:00]
         )
       ])
