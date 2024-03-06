@@ -128,18 +128,17 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
     if dictionary_connection_string do
       dictionary_connection_string
     else
-      uri =
-        Application.get_env(:plausible, Plausible.IngestRepo) |> Keyword.get(:url) |> URI.parse()
-
-      database = String.trim(uri.path, "/")
-
-      if uri.userinfo do
-        [username, password] = String.split(uri.userinfo, ":")
-
-        "USER '#{username}' PASSWORD '#{password}' DB '#{database}'"
-      else
-        "DB '#{database}'"
-      end
+      Plausible.IngestRepo.config()
+      |> Enum.map(fn config ->
+        case config do
+          {:database, database} -> "DB '#{database}'"
+          {:username, username} -> "USER '#{username}'"
+          {:password, password} -> "PASSWORD '#{password}'"
+          _ -> nil
+        end
+      end)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.join(" ")
     end
   end
 
