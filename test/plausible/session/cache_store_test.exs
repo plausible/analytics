@@ -89,6 +89,61 @@ defmodule Plausible.Session.CacheStoreTest do
     assert session.events == 2
   end
 
+  test "initial pageview-specific attributes" do
+    site_id = new_site_id()
+
+    event =
+      build(:event,
+        name: "custom_event",
+        site_id: site_id,
+        pathname: "/path/1",
+        user_id: 1
+      )
+
+    flush([event])
+
+    session = get_session(site_id)
+
+    assert session.exit_page == ""
+    assert session.events == 1
+    assert session.pageviews == 0
+  end
+
+  test "updating pageview-specific attributes" do
+    site_id = new_site_id()
+
+    event1 =
+      build(:event,
+        name: "custom_event",
+        site_id: site_id,
+        pathname: "/path/1",
+        user_id: 1
+      )
+
+    event2 =
+      build(:pageview,
+        pathname: "/path/2",
+        site_id: site_id,
+        user_id: 1
+      )
+
+    event3 =
+      build(:event,
+        name: "custom_event",
+        site_id: site_id,
+        pathname: "/path/3",
+        user_id: 1
+      )
+
+    flush([event1, event2, event3])
+
+    session = get_session(site_id)
+
+    assert session.exit_page == "/path/2"
+    assert session.events == 3
+    assert session.pageviews == 1
+  end
+
   test "calculates duration correctly for out-of-order events", %{buffer: buffer} do
     timestamp = Timex.now()
     event1 = build(:event, name: "pageview", timestamp: timestamp |> Timex.shift(seconds: 10))
@@ -103,18 +158,6 @@ defmodule Plausible.Session.CacheStoreTest do
   end
 
   describe "collapse order" do
-    defp new_site_id() do
-      [[site_id]] =
-        Plausible.ClickhouseRepo.query!("select max(site_id) + rand() from sessions_v2 FINAL").rows
-
-      site_id
-    end
-
-    defp flush(events) do
-      for e <- events, do: CacheStore.on_event(e, %{}, nil)
-      Plausible.Session.WriteBuffer.flush()
-    end
-
     test "across parts" do
       e = build(:event, name: "pageview", site_id: new_site_id())
 
@@ -137,8 +180,7 @@ defmodule Plausible.Session.CacheStoreTest do
         %{e | pathname: "/exit"}
       ])
 
-      session_q = from s in Plausible.ClickhouseSessionV2, where: s.site_id == ^e.site_id
-      session = Plausible.ClickhouseRepo.one!(session_q)
+      session = get_session(e.site_id)
 
       refute session.is_bounce
       assert session.entry_page == "/"
@@ -166,5 +208,22 @@ defmodule Plausible.Session.CacheStoreTest do
       assert session.exit_page == "/exit"
       assert session.events == 4
     end
+  end
+
+  defp new_site_id() do
+    [[site_id]] =
+      Plausible.ClickhouseRepo.query!("select max(site_id) + rand() from sessions_v2 FINAL").rows
+
+    site_id
+  end
+
+  defp flush(events) do
+    for e <- events, do: CacheStore.on_event(e, %{}, nil)
+    Plausible.Session.WriteBuffer.flush()
+  end
+
+  defp get_session(site_id) do
+    session_q = from s in Plausible.ClickhouseSessionV2, where: s.site_id == ^site_id
+    Plausible.ClickhouseRepo.one!(session_q)
   end
 end
