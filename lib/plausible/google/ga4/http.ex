@@ -3,8 +3,9 @@ defmodule Plausible.Google.GA4.HTTP do
   HTTP client implementation for Google Analytics 4 API.
   """
 
-  require Logger
   alias Plausible.HTTPClient
+
+  require Logger
 
   @spec get_report(Plausible.Google.GA4.ReportRequest.t()) ::
           {:ok, {[map()], non_neg_integer()}} | {:error, any()}
@@ -55,10 +56,18 @@ defmodule Plausible.Google.GA4.HTTP do
       {:ok, {report, row_count}}
     else
       {:error, %{reason: %{status: status, body: body}}} ->
+        Logger.debug(
+          "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset} with code #{status}: #{inspect(body)}"
+        )
+
         Sentry.Context.set_extra_context(%{ga_response: %{body: body, status: status}})
         {:error, :request_failed}
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.debug(
+          "[#{inspect(__MODULE__)}:#{report_request.property}] Request failed for #{report_request.dataset}: #{inspect(reason)}"
+        )
+
         {:error, :request_failed}
     end
   end
