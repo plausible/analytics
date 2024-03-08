@@ -64,6 +64,7 @@ All notable changes to this project will be documented in this file.
 - Allow custom event timeseries in stats API plausible/analytics#3505
 - Fixes for sites with UTF characters in domain plausible/analytics#3560
 - Fix crash when using special characters in filter plausible/analytics#3634
+- Fix automatic scrolling to the bottom on the dashboard if previously selected properties tab plausible/analytics#3872
 
 ## v2.0.0 - 2023-07-12
 
