@@ -189,6 +189,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                  "Session metric `views_per_visit` cannot be queried when using a filter on `event:name`."
              }
     end
+
+    test "validates a metric isn't asked multiple times", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors,visitors"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Metrics cannot be queried multiple times."
+             }
+    end
   end
 
   test "aggregates a single metric", %{conn: conn, site: site} do
