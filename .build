@@ -61,6 +61,7 @@ Plausible.ClickhouseSessionV2.html
 Plausible.ConfigHelpers.html
 Plausible.DataCase.html
 Plausible.DataMigration.NumericIDs.html
+Plausible.DataMigration.PopulateEventSessionColumns.html
 Plausible.DataMigration.Repo.html
 Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
@@ -358,8 +359,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-FFF3D0FC.js
-dist/sidebar_items-FCD860C9.js
+dist/search_data-205221BD.js
+dist/sidebar_items-48F39658.js
 index.html
 readme.html
 search.html
