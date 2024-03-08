@@ -64,18 +64,15 @@ ENV LANG=C.UTF-8
 ARG MIX_ENV=small
 ENV MIX_ENV=$MIX_ENV
 
-RUN apk upgrade --no-cache
+RUN adduser -S -H -u 999 -G nogroup plausible -g 'Plausible Analytics'
 
+RUN apk upgrade --no-cache
 RUN apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
-COPY ./rel/docker-entrypoint.sh /entrypoint.sh
+COPY --from=buildcontainer --chmod=a+rX /app/_build/${MIX_ENV}/rel/plausible /app
+COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
-RUN chmod a+x /entrypoint.sh && \
-  adduser -h /app -u 1000 -s /bin/sh -D plausibleuser
-
-COPY --from=buildcontainer /app/_build/${MIX_ENV}/rel/plausible /app
-RUN chown -R plausibleuser:plausibleuser /app
-USER plausibleuser
+USER 999
 WORKDIR /app
 ENV LISTEN_IP=0.0.0.0
 ENTRYPOINT ["/entrypoint.sh"]

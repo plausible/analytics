@@ -48,7 +48,7 @@ jobs:
           build-args: |
             MIX_ENV=small
             BUILD_METADATA=${{ steps.meta.outputs.json }}
-            ERL_FLAGS=+JPperf true
+            ERL_FLAGS=+JMsingle true
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
