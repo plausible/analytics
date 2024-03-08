@@ -122,9 +122,7 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
       end
 
       if latest_fail_reason do
-        Logger.warning(
-          "  Some mutations might be failing. ClickHouse report: #{latest_fail_reason}"
-        )
+        IO.puts("  Some mutations might be failing. ClickHouse report: #{latest_fail_reason}")
       end
     end
 
