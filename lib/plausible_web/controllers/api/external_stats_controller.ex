@@ -150,12 +150,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp validate_all_metrics(metrics, property, query) do
-    Enum.reduce_while(metrics, [], fn metric, acc ->
-      case validate_metric(metric, property, query) do
-        {:ok, metric} -> {:cont, acc ++ [metric]}
-        {:error, reason} -> {:halt, {:error, reason}}
-      end
-    end)
+    if length(metrics) == length(Enum.uniq(metrics)) do
+      Enum.reduce_while(metrics, [], fn metric, acc ->
+        case validate_metric(metric, property, query) do
+          {:ok, metric} -> {:cont, acc ++ [metric]}
+          {:error, reason} -> {:halt, {:error, reason}}
+        end
+      end)
+    else
+      {:error, "Metrics cannot be queried multiple times."}
+    end
   end
 
   defp validate_metric("conversion_rate" = metric, property, query) do
