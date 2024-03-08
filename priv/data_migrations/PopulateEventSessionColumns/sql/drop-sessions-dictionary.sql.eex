@@ -1,0 +1,2 @@
+DROP DICTIONARY IF EXISTS sessions_dict
+<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
