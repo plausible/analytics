@@ -693,6 +693,9 @@ config :tzdata,
        :data_dir,
        get_var_from_path_or_env(config_dir, "STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
 
+# Temporarily disable tzdata auto-updating
+config :tzdata, :autoupdate, :disabled
+
 promex_disabled? =
   config_dir
   |> get_var_from_path_or_env("PROMEX_DISABLED", "true")
