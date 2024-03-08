@@ -139,13 +139,11 @@ defmodule Plausible.DataMigration.PopulateEventSessionColumns do
   # See https://clickhouse.com/docs/en/sql-reference/dictionaries#clickhouse for context
   defp dictionary_connection_params() do
     Plausible.IngestRepo.config()
-    |> Enum.map(fn config ->
-      case config do
-        {:database, database} -> "DB '#{database}'"
-        {:username, username} -> "USER '#{username}'"
-        {:password, password} -> "PASSWORD '#{password}'"
-        _ -> nil
-      end
+    |> Enum.map(fn
+      {:database, database} -> "DB '#{database}'"
+      {:username, username} -> "USER '#{username}'"
+      {:password, password} -> "PASSWORD '#{password}'"
+      _ -> nil
     end)
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" ")
