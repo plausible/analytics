@@ -869,13 +869,11 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
         build(:pageview,
           user_id: @user_id,
           country_code: "EE",
-          operating_system_version: "10.5",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           user_id: @user_id,
           country_code: "EE",
-          operating_system_version: "10.5",
           timestamp: ~N[2021-01-01 00:15:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:00:00])

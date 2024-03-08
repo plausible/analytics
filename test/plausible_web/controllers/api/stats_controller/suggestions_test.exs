@@ -59,7 +59,10 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
         build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "10words")
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:00],
+          referrer_source: "10words"
+        )
       ])
 
       conn =
@@ -73,7 +76,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for countries", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/", country_code: "US")
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:01],
+          pathname: "/",
+          country_code: "US"
+        )
       ])
 
       conn =
@@ -106,8 +113,16 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       {:ok, [site: site]} = create_new_site(%{user: user})
 
       populate_stats(site, [
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-37", city_geoname_id: 588_409),
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-39", city_geoname_id: 591_632)
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409
+        ),
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-39",
+          city_geoname_id: 591_632
+        )
       ])
 
       conn =
@@ -146,7 +161,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for browsers", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], pathname: "/", browser: "Chrome")
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:00],
+          pathname: "/",
+          browser: "Chrome"
+        )
       ])
 
       conn =

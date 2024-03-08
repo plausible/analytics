@@ -1,0 +1,21 @@
+ALTER TABLE events_v2
+<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+UPDATE
+    referrer = dictGet('sessions_dict', 'referrer', tuple(site_id, session_id)),
+    referrer_source = dictGet('sessions_dict', 'referrer_source', tuple(site_id, session_id)),
+    utm_medium = dictGet('sessions_dict', 'utm_medium', tuple(site_id, session_id)),
+    utm_source = dictGet('sessions_dict', 'utm_source', tuple(site_id, session_id)),
+    utm_campaign = dictGet('sessions_dict', 'utm_campaign', tuple(site_id, session_id)),
+    utm_content = dictGet('sessions_dict', 'utm_content', tuple(site_id, session_id)),
+    utm_term = dictGet('sessions_dict', 'utm_term', tuple(site_id, session_id)),
+    country_code = dictGet('sessions_dict', 'country_code', tuple(site_id, session_id)),
+    subdivision1_code = dictGet('sessions_dict', 'subdivision1_code', tuple(site_id, session_id)),
+    subdivision2_code = dictGet('sessions_dict', 'subdivision2_code', tuple(site_id, session_id)),
+    city_geoname_id = dictGet('sessions_dict', 'city_geoname_id', tuple(site_id, session_id)),
+    screen_size = dictGet('sessions_dict', 'screen_size', tuple(site_id, session_id)),
+    operating_system = dictGet('sessions_dict', 'operating_system', tuple(site_id, session_id)),
+    operating_system_version = dictGet('sessions_dict', 'operating_system_version', tuple(site_id, session_id)),
+    browser = dictGet('sessions_dict', 'browser', tuple(site_id, session_id)),
+    browser_version = dictGet('sessions_dict', 'browser_version', tuple(site_id, session_id))
+IN PARTITION '<%= @partition %>'
+WHERE 1=1

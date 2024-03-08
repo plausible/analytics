@@ -3,6 +3,28 @@ defmodule PlausibleWeb.Components.Layout do
 
   use Phoenix.Component
 
+  def favicon(assigns) do
+    ~H"""
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("apple-touch-icon.png"))}
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon-32x32.png"))}
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href={PlausibleWeb.Router.Helpers.static_path(@conn, logo_path("favicon-16x16.png"))}
+    />
+    """
+  end
+
   def theme_script(assigns) do
     ~H"""
     <script blocking="rendering">
@@ -39,4 +61,6 @@ defmodule PlausibleWeb.Components.Layout do
   end
 
   defp theme_preference(_assigns), do: "system"
+
+  defdelegate logo_path(path), to: PlausibleWeb.LayoutView
 end

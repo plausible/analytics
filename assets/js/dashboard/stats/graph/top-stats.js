@@ -69,9 +69,6 @@ export default class TopStats extends React.Component {
     let statName = stat.name.toLowerCase()
     statName = stat.value === 1 ? statName.slice(0, -1) : statName
 
-    const { topStatData, lastLoadTimestamp } = this.props
-    const showingImported = topStatData?.imported_source && topStatData?.with_imported
-
     return (
       <div>
         {query.comparison && <div className="whitespace-nowrap">
@@ -83,8 +80,7 @@ export default class TopStats extends React.Component {
           {this.topStatNumberLong(stat.name, stat.value)} {statName}
         </div>}
 
-        {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={lastLoadTimestamp}/>s ago</p>}
-        {stat.name === 'Views per visit' && showingImported && <p className="font-normal text-xs whitespace-nowrap">Based only on native data</p>}
+        {stat.name === 'Current visitors' && <p className="font-normal text-xs">Last updated <SecondsSinceLastLoad lastLoadTimestamp={this.props.lastLoadTimestamp}/>s ago</p>}
       </div>
     )
   }

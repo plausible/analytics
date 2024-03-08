@@ -3,40 +3,29 @@
     <div class="xl:grid xl:grid-cols-3 xl:gap-8">
       <div class="my-8 xl:my-0">
         <h4 class="font-semibold tracking-wider text-gray-300 leading-5">
-          <img src="/images/icon/plausible_logo_sm.png" class="inline-block w-6 mr-1" />
-          Plausible Analytics
+          <%= img_tag(
+            PlausibleWeb.Router.Helpers.static_path(
+              @conn,
+              logo_path("logo_dark.svg")
+            ),
+            class: "inline-block w-40 mr-1",
+            alt: "Plausible logo",
+            loading: "lazy"
+          ) %>
         </h4>
         <p class="mt-4 text-base text-gray-400 leading-6">
           <%= if full_build?() do %>
             Made and hosted in the EU <span class="text-lg">🇪🇺</span> <br />
+            Solely funded by our subscribers.
           <% end %>
-          Solely funded by our subscribers.<br />
+
+          <%= if small_build?() do %>
+            This dashboard is running on self-managed infrastructure, not tested by Plausible Analytics. We cannot vouch for its performance or reliability. For official managed hosting, check out
+            <.styled_link href="https://plausible.io">
+              plausible.io
+            </.styled_link>
+          <% end %>
         </p>
-        <%= if small_build?() do %>
-          <div class="mt-4">
-            <a
-              href="https://github.com/sponsors/plausible"
-              class="inline-flex items-center px-4 py-2 text-sm font-medium bg-gray-700 border border-transparent shadow-sm rounded-md text-gray-50 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              <svg
-                class="w-5 h-5 mr-2 -ml-1 text-pink-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                >
-                </path>
-              </svg>
-              Sponsor @plausible
-            </a>
-          </div>
-        <% end %>
       </div>
       <div class="grid grid-cols-2 gap-8 xl:col-span-2">
         <div class="md:grid md:grid-cols-2 md:gap-8 print:hidden">

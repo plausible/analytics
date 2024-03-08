@@ -194,16 +194,13 @@ defmodule Plausible.TestUtils do
   end
 
   defp populate_native_stats(events) do
-    sessions =
-      Enum.reduce(events, %{}, fn event, sessions ->
-        session_id = Plausible.Session.CacheStore.on_event(event, nil)
-        Map.put(sessions, {event.site_id, event.user_id}, session_id)
-      end)
+    for event_params <- events do
+      session = Plausible.Session.CacheStore.on_event(event_params, event_params, nil)
 
-    Enum.each(events, fn event ->
-      event = Map.put(event, :session_id, sessions[{event.site_id, event.user_id}])
-      Plausible.Event.WriteBuffer.insert(event)
-    end)
+      event_params
+      |> Map.merge(session)
+      |> Plausible.Event.WriteBuffer.insert()
+    end
 
     Plausible.Session.WriteBuffer.flush()
     Plausible.Event.WriteBuffer.flush()

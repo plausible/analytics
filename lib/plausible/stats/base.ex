@@ -10,6 +10,8 @@ defmodule Plausible.Stats.Base do
   @no_ref "Direct / None"
   @not_set "(not set)"
 
+  @uniq_users_expression "toUInt64(round(uniq(?) * any(_sample_factor)))"
+
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
@@ -229,7 +231,7 @@ defmodule Plausible.Stats.Base do
   def select_event_metrics(q, [:visitors | rest]) do
     from(e in q,
       select_merge: %{
-        visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", e.user_id)
+        visitors: selected_as(fragment(@uniq_users_expression, e.user_id), :visitors)
       }
     )
     |> select_event_metrics(rest)
@@ -257,6 +259,10 @@ defmodule Plausible.Stats.Base do
       }
     )
     |> select_event_metrics(rest)
+  end
+
+  def select_event_metrics(q, [:percentage | rest]) do
+    q |> select_event_metrics(rest)
   end
 
   def select_event_metrics(_, [unknown | _]), do: raise("Unknown metric: #{unknown}")
@@ -315,7 +321,11 @@ defmodule Plausible.Stats.Base do
   def select_session_metrics(q, [:visitors | rest], query) do
     from(s in q,
       select_merge: %{
-        visitors: fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id)
+        visitors:
+          selected_as(
+            fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id),
+            :visitors
+          )
       }
     )
     |> select_session_metrics(rest, query)
@@ -336,7 +346,8 @@ defmodule Plausible.Stats.Base do
     from(s in q,
       select_merge: %{
         views_per_visit:
-          fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
+          fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign),
+        __internal_visits: fragment("toUInt32(sum(sign))")
       }
     )
     |> select_session_metrics(rest, query)
@@ -350,6 +361,10 @@ defmodule Plausible.Stats.Base do
       }
     )
     |> select_session_metrics(rest, query)
+  end
+
+  def select_session_metrics(q, [:percentage | rest], query) do
+    q |> select_session_metrics(rest, query)
   end
 
   def dynamic_filter_condition(query, filter_key, db_field) do
@@ -564,5 +579,43 @@ defmodule Plausible.Stats.Base do
         has_key(e, :meta, ^prop_name) and
           fragment("arrayExists(k -> match(?, k), ?)", get_by_key(e, :meta, ^prop_name), ^regexes)
     )
+  end
+
+  defp total_visitors(site, query) do
+    base_event_query(site, query)
+    |> select([e], total_visitors: fragment(@uniq_users_expression, e.user_id))
+  end
+
+  defp total_visitors_subquery(site, %Query{include_imported: true} = query) do
+    dynamic(
+      [e],
+      selected_as(
+        subquery(total_visitors(site, query)) +
+          subquery(Plausible.Stats.Imported.total_imported_visitors(site, query)),
+        :__total_visitors
+      )
+    )
+  end
+
+  defp total_visitors_subquery(site, query) do
+    dynamic([e], selected_as(subquery(total_visitors(site, query)), :__total_visitors))
+  end
+
+  def add_percentage_metric(q, site, query, metrics) do
+    if :percentage in metrics do
+      q
+      |> select_merge(^%{__total_visitors: total_visitors_subquery(site, query)})
+      |> select_merge(%{
+        percentage:
+          fragment(
+            "if(? > 0, round(? / ? * 100, 1), null)",
+            selected_as(:__total_visitors),
+            selected_as(:visitors),
+            selected_as(:__total_visitors)
+          )
+      })
+    else
+      q
+    end
   end
 end

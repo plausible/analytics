@@ -13,13 +13,9 @@
       <meta name="websocket-url" content={websocket_url()} />
     <% end %>
     <meta name="robots" content={@conn.private.robots} />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href={PlausibleWeb.Router.Helpers.static_path(@conn, "/images/icon/plausible_favicon.png")}
-    />
-    <link rel="apple-touch-icon" href="/images/icon/apple-touch-icon.png" />
+
+    <PlausibleWeb.Components.Layout.favicon conn={@conn} />
+
     <title>
       <%= assigns[:title] ||
         "Plausible · Simple, privacy-friendly alternative to Google Analytics" %>

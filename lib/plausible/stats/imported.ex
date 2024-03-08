@@ -321,16 +321,8 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, site, query, :aggregate, metrics) do
-    import_ids = site.complete_import_ids
-
     imported_q =
-      from(
-        i in "imported_visitors",
-        where: i.site_id == ^site.id,
-        where: i.import_id in ^import_ids,
-        where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
-        select: %{}
-      )
+      imported_visitors(site, query)
       |> select_imported_metrics(metrics)
 
     from(
@@ -342,6 +334,23 @@ defmodule Plausible.Stats.Imported do
   end
 
   def merge_imported(q, _, _, _, _), do: q
+
+  def total_imported_visitors(site, query) do
+    imported_visitors(site, query)
+    |> select_merge([i], %{total_visitors: fragment("sum(?)", i.visitors)})
+  end
+
+  defp imported_visitors(site, query) do
+    import_ids = site.complete_import_ids
+
+    from(
+      i in "imported_visitors",
+      where: i.site_id == ^site.id,
+      where: i.import_id in ^import_ids,
+      where: i.date >= ^query.date_range.first and i.date <= ^query.date_range.last,
+      select: %{}
+    )
+  end
 
   defp select_imported_metrics(q, []), do: q
 
@@ -424,6 +433,16 @@ defmodule Plausible.Stats.Imported do
     |> select_imported_metrics(rest)
   end
 
+  defp select_imported_metrics(q, [:views_per_visit | rest]) do
+    q
+    |> where([i], i.pageviews > 0)
+    |> select_merge([i], %{
+      pageviews: sum(i.pageviews),
+      __internal_visits: sum(i.visits)
+    })
+    |> select_imported_metrics(rest)
+  end
+
   defp select_imported_metrics(q, [_ | rest]) do
     q
     |> select_imported_metrics(rest)
@@ -447,7 +466,11 @@ defmodule Plausible.Stats.Imported do
   defp select_joined_metrics(q, [:visitors | rest]) do
     q
     |> select_merge([s, i], %{
-      :visitors => fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors)
+      :visitors =>
+        selected_as(
+          fragment("coalesce(?, 0) + coalesce(?, 0)", s.visitors, i.visitors),
+          :visitors
+        )
     })
     |> select_joined_metrics(rest)
   end
@@ -462,8 +485,16 @@ defmodule Plausible.Stats.Imported do
 
   defp select_joined_metrics(q, [:views_per_visit | rest]) do
     q
-    |> select_merge([s, _i], %{
-      views_per_visit: s.views_per_visit
+    |> select_merge([s, i], %{
+      views_per_visit:
+        fragment(
+          "round((? + ? * coalesce(?, 0)) / (coalesce(?, 0) + coalesce(?, 0)), 2)",
+          i.pageviews,
+          s.views_per_visit,
+          s.__internal_visits,
+          i.__internal_visits,
+          s.__internal_visits
+        )
     })
     |> select_joined_metrics(rest)
   end

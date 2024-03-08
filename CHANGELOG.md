@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- County Block List in Site Settings
+- Query the `views_per_visit` metric based on imported data as well if possible
 - Group `operating_system_versions` by `operating_system` in Stats API breakdown
 - Add `operating_system_versions.csv` into the CSV export
 - Display `Total visitors`, `Conversions`, and `CR` in the "Details" views of Countries, Regions and Cities (when filtering by a goal)
@@ -27,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - Add support for 2FA authentication
 - Add 'browser_versions.csv' to CSV export
 - Add `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES` env var which defaults to `100000` (100KB)
+- Add alternative SMTP adapter plausible/analytics#3654
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
@@ -40,8 +43,10 @@ All notable changes to this project will be documented in this file.
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
 - GA/SC sections moved to new settings: Integrations
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
+- Validate metric isn't queried multiple times
 
 ### Fixed
+- Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
 - Fix `conversion_rate` metric in a `browser_versions` breakdown
 - Calculate `conversion_rate` percentage change in the same way like `bounce_rate` (subtraction instead of division)
 - Calculate `bounce_rate` percentage change in the Stats API in the same way as it's done in the dashboard

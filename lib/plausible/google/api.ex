@@ -17,9 +17,9 @@ defmodule Plausible.Google.Api do
       Jason.encode!([site_id, redirect_to])
   end
 
-  def import_authorize_url(site_id, redirect_to) do
+  def import_authorize_url(site_id, redirect_to, legacy \\ true) do
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
-      Jason.encode!([site_id, redirect_to])
+      Jason.encode!([site_id, redirect_to, legacy])
   end
 
   def fetch_verified_properties(auth) do

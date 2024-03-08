@@ -79,9 +79,9 @@ defmodule Plausible.Workers.SendEmailReportTest do
 
       populate_stats(site, [
         build(:pageview,
-          referrer_source: "Google",
           user_id: 123,
-          timestamp: Timex.shift(now, days: -7)
+          timestamp: Timex.shift(now, days: -7),
+          referrer_source: "Google"
         ),
         build(:pageview, user_id: 123, timestamp: Timex.shift(now, days: -7)),
         build(:pageview, timestamp: Timex.shift(now, days: -7))

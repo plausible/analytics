@@ -189,6 +189,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                  "Session metric `views_per_visit` cannot be queried when using a filter on `event:name`."
              }
     end
+
+    test "validates a metric isn't asked multiple times", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors,visitors"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Metrics cannot be queried multiple times."
+             }
+    end
   end
 
   test "aggregates a single metric", %{conn: conn, site: site} do
@@ -420,7 +435,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "visits" => %{"value" => 5, "change" => 150},
                "pageviews" => %{"value" => 9, "change" => -10},
                "bounce_rate" => %{"value" => 40, "change" => -10},
-               "views_per_visit" => %{"value" => 1.0, "change" => 100},
+               "views_per_visit" => %{"value" => 1.8, "change" => -64},
                "visit_duration" => %{"value" => 20, "change" => -80}
              }
     end
@@ -429,7 +444,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
       populate_stats(site, [
         build(:imported_visitors, date: ~D[2023-01-01]),
         build(:imported_sources, date: ~D[2023-01-01]),
-        build(:pageview, referrer_source: "Google", timestamp: ~N[2023-01-02 00:10:00])
+        build(:pageview,
+          referrer_source: "Google",
+          timestamp: ~N[2023-01-02 00:10:00]
+        )
       ])
 
       conn =
@@ -1269,19 +1287,16 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
         %{
           site_id: site.id,
           session_id: 1000,
-          country_code: "EE",
           name: "pageview"
         },
         %{
           site_id: site.id,
           session_id: 1000,
-          country_code: "EE",
           name: "pageview"
         },
         %{
           site_id: site.id,
           session_id: 1000,
-          country_code: "EE",
           name: "pageview"
         }
       ])

@@ -98,38 +98,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
-    test "(none) value is added as +1 to pagination limit", %{conn: conn, site: site} do
-      prop_key = "parim_s6ber"
-
-      populate_stats(site, [
-        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
-        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
-        build(:pageview)
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=1"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "visitors" => 2,
-                 "name" => "K2sna Kalle",
-                 "events" => 2,
-                 "percentage" => 66.7
-               },
-               %{
-                 "visitors" => 1,
-                 "name" => "(none)",
-                 "events" => 1,
-                 "percentage" => 33.3
-               }
-             ]
-    end
-
-    test "(none) value is only included on the first page of results", %{conn: conn, site: site} do
+    test "(none) value is included in pagination", %{conn: conn, site: site} do
       prop_key = "kaksik"
 
       populate_stats(site, [
@@ -144,13 +113,13 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       conn1 =
         get(
           conn,
-          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=1&page=1"
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=2&page=1"
         )
 
       conn2 =
         get(
           conn,
-          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=1&page=2"
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=2&page=2"
         )
 
       assert json_response(conn1, 200) == [
@@ -161,19 +130,19 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "percentage" => 50.0
                },
                %{
-                 "visitors" => 1,
-                 "name" => "(none)",
-                 "events" => 1,
-                 "percentage" => 16.7
+                 "visitors" => 2,
+                 "name" => "Teet",
+                 "events" => 2,
+                 "percentage" => 33.3
                }
              ]
 
       assert json_response(conn2, 200) == [
                %{
-                 "visitors" => 2,
-                 "name" => "Teet",
-                 "events" => 2,
-                 "percentage" => 33.3
+                 "visitors" => 1,
+                 "name" => "(none)",
+                 "events" => 1,
+                 "percentage" => 16.7
                }
              ]
     end
@@ -962,7 +931,11 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
       populate_stats(site, [
         build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
-        build(:pageview, browser: "Chrome", "meta.key": [prop_key], "meta.value": ["Sipsik"])
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": [prop_key],
+          "meta.value": ["Sipsik"]
+        )
       ])
 
       filters = Jason.encode!(%{browser: "Chrome"})

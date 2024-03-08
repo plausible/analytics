@@ -95,7 +95,7 @@ defmodule Plausible.Billing.Feature do
     |> Enum.map(fn mod ->
       Module.split(mod)
       |> List.last()
-      |> String.to_existing_atom()
+      |> String.to_atom()
     end)
   end
 

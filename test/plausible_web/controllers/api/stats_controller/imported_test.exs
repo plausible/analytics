@@ -1,4 +1,4 @@
-defmodule Plausible.ImportedTest do
+defmodule PlausibleWeb.Api.StatsController.ImportedTest do
   use PlausibleWeb.ConnCase
   use Timex
 
@@ -1078,7 +1078,10 @@ defmodule Plausible.ImportedTest do
         populate_stats(site, import_id, [
           build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
           build(:pageview, operating_system: "Mac", timestamp: ~N[2021-01-01 00:15:00]),
-          build(:pageview, operating_system: "GNU/Linux", timestamp: ~N[2021-01-01 00:15:00]),
+          build(:pageview,
+            operating_system: "GNU/Linux",
+            timestamp: ~N[2021-01-01 00:15:00]
+          ),
           build(:imported_visitors, date: ~D[2021-01-01], visitors: 2)
         ])
 
@@ -1211,7 +1214,7 @@ defmodule Plausible.ImportedTest do
                    %{"name" => "Unique visitors", "value" => 1},
                    %{"name" => "Total visits", "value" => 1},
                    %{"name" => "Total pageviews", "value" => 1},
-                   %{"name" => "Views per visit", "value" => +0.0},
+                   %{"name" => "Views per visit", "value" => 1.0},
                    %{"name" => "Bounce rate", "value" => 0},
                    %{"name" => "Visit duration", "value" => 60}
                  ]

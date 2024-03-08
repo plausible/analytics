@@ -4,11 +4,31 @@ defmodule PlausibleWeb.Api.StatsController.RegionsTest do
   describe "GET /api/stats/:domain/regions" do
     defp seed(%{site: site}) do
       populate_stats(site, [
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-37", city_geoname_id: 588_409),
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-37", city_geoname_id: 588_409),
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-37", city_geoname_id: 588_409),
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-39", city_geoname_id: 591_632),
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-39", city_geoname_id: 591_632)
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409
+        ),
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409
+        ),
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409
+        ),
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-39",
+          city_geoname_id: 591_632
+        ),
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-39",
+          city_geoname_id: 591_632
+        )
       ])
     end
 

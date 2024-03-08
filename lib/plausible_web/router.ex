@@ -359,7 +359,8 @@ defmodule PlausibleWeb.Router do
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:website/settings/integrations", SiteController, :settings_integrations
-    get "/:website/settings/shields", SiteController, :settings_shields
+    get "/:website/settings/shields/:shield", SiteController, :settings_shields
+    get "/:website/settings/imports-exports", SiteController, :settings_imports_exports
 
     put "/:website/settings/features/visibility/:setting",
         SiteController,
@@ -385,6 +386,7 @@ defmodule PlausibleWeb.Router do
     get "/:website/import/google-analytics/confirm", SiteController, :import_from_google_confirm
     post "/:website/settings/google-import", SiteController, :import_from_google
     delete "/:website/settings/forget-imported", SiteController, :forget_imported
+    delete "/:website/settings/forget-import/:import_id", SiteController, :forget_import
 
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats

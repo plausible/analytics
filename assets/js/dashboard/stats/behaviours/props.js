@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState } from "react"
 import ListReport from "../reports/list";
 import Combobox from '../../components/combobox'
 import * as api from '../../api'
@@ -14,10 +14,6 @@ export default function Properties(props) {
   const propKeyStorageNameForGoal = `${query.filters.goal}__prop_key__${site.domain}`
 
   const [propKey, setPropKey] = useState(choosePropKey())
-
-  useEffect(() => {
-    setPropKey(choosePropKey())
-  }, [query.filters.goal, query.filters.props])
 
   function singleGoalFilterApplied() {
     const goalFilter = query.filters.goal
