@@ -56,8 +56,10 @@
   </header>
 
   <div class="mt-4">
-    <PlausibleWeb.Components.Generic.button_link disabled href="">
-      Export to CSV
-    </PlausibleWeb.Components.Generic.button_link>
+    <.form :let={_} for={%{}} action={"/#{@site.domain}/settings/export"}>
+      <PlausibleWeb.Components.Generic.button type="submit">
+        Export to CSV
+      </PlausibleWeb.Components.Generic.button>
+    </.form>
   </div>
 </div>

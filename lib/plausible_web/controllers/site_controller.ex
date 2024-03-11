@@ -708,6 +708,22 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
+  def export(conn, _params) do
+    %{site: site, current_user: user} = conn.assigns
+
+    Oban.insert!(
+      Plausible.Workers.ExportCSV.new(%{
+        "site_id" => site.id,
+        "email_to" => user.email,
+        "s3_path" => "Plausible-#{site.id}.zip"
+      })
+    )
+
+    conn
+    |> put_flash(:info, "SCHEDULED. WAIT FOR MAIL")
+    |> redirect(to: Routes.site_path(conn, :settings_integrations, site.domain))
+  end
+
   def change_domain(conn, _params) do
     changeset = Plausible.Site.update_changeset(conn.assigns.site)
 
