@@ -39,6 +39,9 @@ postgres-stop: ## Stop and remove the postgres container
 
 minio: ## Start a transient container with a recent version of minio (s3)
 	docker run -d --rm -p 6000:6000 -p 6001:6001 --name plausible_minio minio/minio server /data --address ":6000" --console-address ":6001"
+	while ! docker exec plausible_minio mc alias set local http://localhost:6000 minioadmin minioadmin; do sleep 1; done
+	docker exec plausible_minio mc mb local/dev-exports
+	docker exec plausible_minio mc mb local/dev-imports
 
 minio-stop: ## Stop and remove the minio container
 	docker stop plausible_minio
