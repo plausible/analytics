@@ -37,7 +37,7 @@ defmodule Plausible.Site.Cache do
   def name(), do: @cache_name
 
   @impl true
-  def child_id(), do: :cachex_sites
+  def child_id(), do: :cache_sites
 
   @impl true
   def count_all() do
