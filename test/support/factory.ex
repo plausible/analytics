@@ -89,14 +89,13 @@ defmodule Plausible.Factory do
   def event_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
-    %{
+    %Plausible.ClickhouseEventV2{
       hostname: hostname,
       site_id: Enum.random(1000..10_000),
       pathname: "/",
       timestamp: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
       user_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate()),
-      _factory_event: true
+      session_id: SipHash.hash!(hash_key(), Ecto.UUID.generate())
     }
   end
 

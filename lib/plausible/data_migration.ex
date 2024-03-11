@@ -62,13 +62,13 @@ defmodule Plausible.DataMigration do
         |> EEx.eval_file(assigns: assigns)
       end
 
-      def run_sql(name, assigns \\ []) do
+      def run_sql(name, assigns \\ [], options \\ []) do
         query = unwrap(name, assigns)
-        do_run(name, query)
+        do_run(name, query, options)
       end
 
-      defp do_run(name, query) do
-        case @repo.query(query, [], timeout: :infinity) do
+      defp do_run(name, query, options \\ []) do
+        case @repo.query(query, [], [timeout: :infinity] ++ options) do
           {:ok, res} ->
             IO.puts("    #{IO.ANSI.yellow()}#{name} #{IO.ANSI.green()}Done!#{IO.ANSI.reset()}\n")
             IO.puts(String.duplicate("-", 78))

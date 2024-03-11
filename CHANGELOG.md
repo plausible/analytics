@@ -44,6 +44,7 @@ All notable changes to this project will be documented in this file.
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
 - GA/SC sections moved to new settings: Integrations
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
+- Validate metric isn't queried multiple times
 
 ### Fixed
 - Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
@@ -64,6 +65,7 @@ All notable changes to this project will be documented in this file.
 - Allow custom event timeseries in stats API plausible/analytics#3505
 - Fixes for sites with UTF characters in domain plausible/analytics#3560
 - Fix crash when using special characters in filter plausible/analytics#3634
+- Allow running the container with arbitrary UID plausible/analytics#2986
 
 ## v2.0.0 - 2023-07-12
 

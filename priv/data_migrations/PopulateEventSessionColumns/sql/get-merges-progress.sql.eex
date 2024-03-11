@@ -1,0 +1,4 @@
+SELECT count()
+FROM system.merges
+WHERE table = 'events_v2'
+  AND is_mutation

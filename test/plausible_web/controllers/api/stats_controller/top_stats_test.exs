@@ -547,9 +547,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "returns only visitors from a country based on alpha2 code", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, session_country_code: "US"),
-        build(:pageview, session_country_code: "US"),
-        build(:pageview, session_country_code: "EE")
+        build(:pageview, country_code: "US"),
+        build(:pageview, country_code: "US"),
+        build(:pageview, country_code: "EE")
       ])
 
       filters = Jason.encode!(%{country: "US"})
@@ -607,9 +607,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "returns only visitors with specific screen size", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, session_screen_size: "Desktop"),
-        build(:pageview, session_screen_size: "Desktop"),
-        build(:pageview, session_screen_size: "Mobile")
+        build(:pageview, screen_size: "Desktop"),
+        build(:pageview, screen_size: "Desktop"),
+        build(:pageview, screen_size: "Mobile")
       ])
 
       filters = Jason.encode!(%{screen: "Desktop"})
@@ -627,9 +627,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "returns only visitors with specific browser", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, session_browser: "Chrome"),
-        build(:pageview, session_browser: "Chrome"),
-        build(:pageview, session_browser: "Safari")
+        build(:pageview, browser: "Chrome"),
+        build(:pageview, browser: "Chrome"),
+        build(:pageview, browser: "Safari")
       ])
 
       filters = Jason.encode!(%{browser: "Chrome"})
@@ -647,9 +647,9 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
 
     test "returns only visitors with specific operating system", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, session_operating_system: "Mac"),
-        build(:pageview, session_operating_system: "Mac"),
-        build(:pageview, session_operating_system: "Windows")
+        build(:pageview, operating_system: "Mac"),
+        build(:pageview, operating_system: "Mac"),
+        build(:pageview, operating_system: "Windows")
       ])
 
       filters = Jason.encode!(%{os: "Mac"})
@@ -669,17 +669,17 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       populate_stats(site, [
         build(:pageview,
           user_id: @user_id,
-          session_referrer_source: "Google",
+          referrer_source: "Google",
           timestamp: ~N[2021-01-01 00:00:00]
         ),
         build(:pageview,
           user_id: @user_id,
-          session_referrer_source: "Google",
+          referrer_source: "Google",
           timestamp: ~N[2021-01-01 00:05:00]
         ),
         build(:pageview,
           user_id: @user_id,
-          session_referrer_source: "Google",
+          referrer_source: "Google",
           timestamp: ~N[2021-01-01 05:00:00]
         ),
         build(:pageview, timestamp: ~N[2021-01-01 00:10:00])
