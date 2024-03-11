@@ -2116,6 +2116,46 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "returns time_on_page as the only metric in an event:page breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/A", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 4, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, pathname: "/C", user_id: 4, timestamp: ~N[2021-01-01 00:02:30])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:page",
+          "metrics" => "time_on_page"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "page" => "/B",
+                   "time_on_page" => 90.0
+                 },
+                 %{
+                   "page" => "/A",
+                   "time_on_page" => 60.0
+                 },
+                 %{
+                   "page" => "/C",
+                   "time_on_page" => nil
+                 }
+               ]
+             }
+    end
+
     test "returns conversion_rate in an event:goal breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event, name: "Signup", user_id: 1),

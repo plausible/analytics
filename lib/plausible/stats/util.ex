@@ -36,20 +36,13 @@ defmodule Plausible.Stats.Util do
 
   @doc """
   This function adds the `visitors` metric into the list of
-  given metrics if it's not already there and if there is a
-  `conversion_rate` metric in the list.
-
-  Currently, the conversion rate cannot be queried from the
-  database with a simple select clause - instead, we need to
-  fetch the database result first, and then manually add it
-  into the aggregate map or every entry of thebreakdown list.
-
-  In order for us to be able to calculate it based on the
-  results returned by the database query, the visitors metric
-  needs to be queried.
+  given metrics if it's not already there and if it is needed
+  for any of the other metrics to be calculated.
   """
   def maybe_add_visitors_metric(metrics) do
-    if :conversion_rate in metrics and :visitors not in metrics do
+    needed? = Enum.any?([:conversion_rate, :time_on_page], &(&1 in metrics))
+
+    if needed? and :visitors not in metrics do
       metrics ++ [:visitors]
     else
       metrics
