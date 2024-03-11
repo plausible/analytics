@@ -81,7 +81,29 @@ defmodule Plausible.Test.Support.Journey do
     (state.conn || %Plug.Conn{})
     |> put_req_header("content-type", "application/json")
     |> maybe_add_header("x-forwarded-for", invoke_if_function(state.ip))
-    |> maybe_add_header("user-agent", invoke_if_function(state.user_agent))
+    |> prepare_device(state)
+  end
+
+  defp prepare_device(conn, state) do
+    case state[:browser] do
+      browser when is_atom(browser) and not is_nil(browser) ->
+        put_req_header(conn, "user-agent", sample_user_agent(browser))
+
+      nil ->
+        maybe_add_header(conn, "user-agent", invoke_if_function(state.user_agent))
+    end
+  end
+
+  defp sample_user_agent(Safari) do
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.3.1 Safari/605.1.1"
+  end
+
+  defp sample_user_agent(Edge) do
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0."
+  end
+
+  defp sample_user_agent(x) do
+    raise "User agent #{x} unsupported, add me :)"
   end
 
   defp maybe_add_header(conn, _header, nil) do
@@ -132,11 +154,11 @@ defmodule Plausible.Test.Support.Journey do
     Map.put(state, :now, new_now)
   end
 
-  defp debug(conn, state, idle, now, new_now) do
+  defp debug(conn, _state, idle, now, new_now) do
     IO.puts("\n[#{now}] Request:" <> IO.ANSI.yellow())
     IO.puts("  #{conn.method} #{conn.request_path}?#{conn.query_string}" <> IO.ANSI.cyan())
-    IO.puts("  user-agent: #{inspect(state.user_agent)}")
-    IO.puts("  x-forwarded-for: #{state.ip}" <> IO.ANSI.green())
+    IO.puts("  user-agent: #{get_req_header(conn, "user-agent")}")
+    IO.puts("  x-forwarded-for: #{get_req_header(conn, "x-forwarded-for")}" <> IO.ANSI.green())
     IO.puts("  #{Jason.encode!(conn.body_params)}" <> IO.ANSI.reset())
     IO.puts("[#{new_now}] Idle complete (#{inspect(idle)})")
   end

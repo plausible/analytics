@@ -175,13 +175,13 @@ defmodule Plausible.FunnelsTest do
           pageview "/irrelevant/page/not/in/funnel"
         end
 
-        journey site do
+        journey site, browser: Safari, debug: true do
           pageview "/go/to/blog/foo"
           custom_event "Signup"
           pageview "/checkout"
         end
 
-        journey site do
+        journey site, debug: true do
           pageview "/go/to/blog/bar"
           custom_event "Signup"
         end
