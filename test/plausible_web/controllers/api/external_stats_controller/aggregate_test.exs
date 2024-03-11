@@ -238,6 +238,22 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                "error" => "Metric `time_on_page` cannot be queried when filtering by `event:goal`"
              }
     end
+
+    test "validates that time_on_page cannot be queried with an event:name filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A;event:name==Signup"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Metric `time_on_page` cannot be queried when filtering by `event:name`"
+             }
+    end
   end
 
   test "aggregates a single metric", %{conn: conn, site: site} do

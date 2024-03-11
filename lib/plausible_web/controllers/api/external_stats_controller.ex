@@ -172,6 +172,9 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
       query.filters["event:goal"] ->
         {:error, "Metric `#{metric}` cannot be queried when filtering by `event:goal`"}
 
+      query.filters["event:name"] ->
+        {:error, "Metric `#{metric}` cannot be queried when filtering by `event:name`"}
+
       property == "event:page" ->
         {:ok, metric}
 
