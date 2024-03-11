@@ -20,7 +20,8 @@ defmodule Plausible.S3 do
     bucket = config(:exports_bucket)
 
     stream
-    |> chunk_into_parts(_5MiB = 5 * 1024 * 1024)
+    # 5 MiB is the smallest chunk size AWS S3 supports
+    |> chunk_into_parts(5 * 1024 * 1024)
     |> ExAws.S3.upload(bucket, s3_path,
       content_disposition: ~s|attachment; filename="Plausible.zip"|,
       content_type: "application/zip"
@@ -28,7 +29,7 @@ defmodule Plausible.S3 do
     |> ExAws.request!()
 
     {:ok, download_url} =
-      ExAws.S3.presigned_url(config, :get, bucket, s3_path, expires_in: _24hr = 86400)
+      ExAws.S3.presigned_url(config, :get, bucket, s3_path, expires_in: _24hr = 86_400)
 
     download_url
   end
