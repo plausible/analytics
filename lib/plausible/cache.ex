@@ -165,7 +165,7 @@ defmodule Plausible.Cache do
         end
       end
 
-      defdelegate size(cache_name \\ name()), to: Plausible.Cache.Stats
+      defdelegate size(cache_name \\ name()), to: Plausible.Cache.Adapter
       defdelegate hit_rate(cache_name \\ name()), to: Plausible.Cache.Stats
 
       @spec telemetry_event_refresh(atom(), atom()) :: list(atom())
