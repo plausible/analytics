@@ -40,7 +40,9 @@ defmodule Plausible.MixProject do
         :logger,
         :runtime_tools,
         :tls_certificate_check,
-        :opentelemetry_exporter
+        :opentelemetry_exporter,
+        :wx,
+        :observer
       ]
     ]
   end

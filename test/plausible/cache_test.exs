@@ -74,13 +74,28 @@ defmodule Plausible.CacheTest do
       :ok = ExampleCache.merge_items([{"item1", :item1}], cache_name: test)
       assert ExampleCache.get("item1", cache_name: test, force?: true)
 
+      # first read of item2 is evaluated from a function and stored
       assert "value" ==
                ExampleCache.get_or_store("item2", fn -> "value" end,
                  cache_name: test,
                  force?: true
                )
 
-      assert {:ok, %{hit_rate: 50.0}} = Plausible.Cache.Stats.gather(test)
+      # subsequent gets are read from cache and the function is disregarded
+      assert "value" ==
+               ExampleCache.get_or_store("item2", fn -> "disregard" end,
+                 cache_name: test,
+                 force?: true
+               )
+
+      assert "value" ==
+               ExampleCache.get_or_store("item2", fn -> "disregard" end,
+                 cache_name: test,
+                 force?: true
+               )
+
+      # 3 hits, 1 miss
+      assert {:ok, %{hit_rate: 75.0}} = Plausible.Cache.Stats.gather(test)
     end
   end
 
