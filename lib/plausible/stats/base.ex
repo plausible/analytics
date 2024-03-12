@@ -140,8 +140,7 @@ defmodule Plausible.Stats.Base do
     q = from(s in "sessions_v2", where: s.site_id == ^site.id)
 
     sessions_q =
-      if FunWithFlags.enabled?(:experimental_session_count, for: site) or
-           query.experimental_session_count? do
+      if query.experimental_session_count? do
         from s in q, where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
       else
         from s in q, where: s.start >= ^first_datetime and s.start < ^last_datetime
