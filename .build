@@ -67,6 +67,7 @@ Plausible.DataMigration.VersionedSessions.html
 Plausible.DataMigration.html
 Plausible.DebugReplayInfo.html
 Plausible.Ecto.EventName.html
+Plausible.Exports.html
 Plausible.Factory.html
 Plausible.Funnel.Const.html
 Plausible.Funnel.Step.html
@@ -184,6 +185,7 @@ Plausible.Workers.AcceptTrafficUntil.html
 Plausible.Workers.CheckUsage.html
 Plausible.Workers.CleanInvitations.html
 Plausible.Workers.ExpireDomainChangeTransitions.html
+Plausible.Workers.ExportCSV.html
 Plausible.Workers.ImportAnalytics.html
 Plausible.Workers.LockSites.html
 Plausible.Workers.NotifyAnnualRenewal.html
@@ -359,8 +361,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-BAFEF461.js
-dist/sidebar_items-48F39658.js
+dist/search_data-05EB5F1A.js
+dist/sidebar_items-C884178F.js
 index.html
 readme.html
 search.html
