@@ -5,19 +5,6 @@ defmodule Plausible.Stats.Aggregate do
   import Ecto.Query
   alias Plausible.Stats.{Query, Util}
 
-  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
-
-  @event_metrics [
-                   :visitors,
-                   :pageviews,
-                   :events,
-                   :sample_percent,
-                   :conversion_rate,
-                   :total_visitors
-                 ] ++ @revenue_metrics
-
-  @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
-
   def aggregate(site, query, metrics) do
     {currency, metrics} =
       on_full_build do
@@ -28,18 +15,18 @@ defmodule Plausible.Stats.Aggregate do
 
     Query.trace(query, metrics)
 
-    event_metrics =
+    {event_metrics, session_metrics, other_metrics} =
       metrics
       |> Util.maybe_add_visitors_metric()
-      |> Enum.filter(&(&1 in @event_metrics))
+      |> Plausible.Stats.TableDecider.partition_metrics(query)
 
     event_task = fn -> aggregate_events(site, query, event_metrics) end
 
-    session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
+    # session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
     session_task = fn -> aggregate_sessions(site, query, session_metrics) end
 
     time_on_page_task =
-      if :time_on_page in metrics do
+      if :time_on_page in other_metrics do
         fn -> aggregate_time_on_page(site, query) end
       else
         fn -> %{} end
