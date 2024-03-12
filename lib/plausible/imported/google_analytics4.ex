@@ -140,7 +140,7 @@ defmodule Plausible.Imported.GoogleAnalytics4 do
     }
   end
 
-  # NOTE: note exit pages metrics in GA4 API available for now
+  # NOTE: no exit pages metrics in GA4 API available for now
   # defp new_from_report(site_id, import_id, "imported_exit_pages", row) do
   #   %{
   #     site_id: site_id,
