@@ -185,8 +185,8 @@ other metrics. E.g</p></div>
       </div>
 
         <div class="summary-synopsis"><p>This function adds the <code class="inline">visitors</code> metric into the list of
-given metrics if it's not already there and if there is a
-<code class="inline">conversion_rate</code> metric in the list.</p></div>
+given metrics if it's not already there and if it is needed
+for any of the other metrics to be calculated.</p></div>
 
     </div>
 
@@ -212,7 +212,7 @@ given metrics if it's not already there and if there is a
     </a>
     <h1 class="signature" translate="no">calculate_cr(unique_visitors, converted_visitors)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L59" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L52" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -261,7 +261,7 @@ requested.</p>
     </a>
     <h1 class="signature" translate="no">maybe_add_visitors_metric(metrics)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L51" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/stats/util.ex#L42" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -272,13 +272,8 @@ requested.</p>
   <section class="docstring">
 
 <p>This function adds the <code class="inline">visitors</code> metric into the list of
-given metrics if it's not already there and if there is a
-<code class="inline">conversion_rate</code> metric in the list.</p><p>Currently, the conversion rate cannot be queried from the
-database with a simple select clause - instead, we need to
-fetch the database result first, and then manually add it
-into the aggregate map or every entry of thebreakdown list.</p><p>In order for us to be able to calculate it based on the
-results returned by the database query, the visitors metric
-needs to be queried.</p>
+given metrics if it's not already there and if it is needed
+for any of the other metrics to be calculated.</p>
   </section>
 </section>
 
