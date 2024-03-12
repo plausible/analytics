@@ -691,9 +691,6 @@ end
 
 config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data")
 
-# Temporarily disable tzdata auto-updating
-config :tzdata, :autoupdate, :disabled
-
 promex_disabled? =
   config_dir
   |> get_var_from_path_or_env("PROMEX_DISABLED", "true")
