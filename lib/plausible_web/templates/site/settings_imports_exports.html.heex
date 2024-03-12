@@ -56,10 +56,12 @@
   </header>
 
   <div class="mt-4">
-    <.form :let={_} for={%{}} action={"/#{@site.domain}/settings/export"}>
-      <PlausibleWeb.Components.Generic.button type="submit">
-        Export to CSV
-      </PlausibleWeb.Components.Generic.button>
-    </.form>
+    <PlausibleWeb.Components.Generic.button
+      data-method="post"
+      data-to={"/#{URI.encode_www_form(@site.domain)}/settings/export"}
+      data-csrf={Plug.CSRFProtection.get_csrf_token()}
+    >
+      Export to CSV
+    </PlausibleWeb.Components.Generic.button>
   </div>
 </div>
