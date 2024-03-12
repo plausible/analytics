@@ -15,9 +15,28 @@ defmodule Plausible.Imported.CSVImporterTest do
 
     s3 = fn op -> ExAws.request!(op, connection_opts) end
     s3.(ExAws.S3.put_bucket("imports", "us-east-1"))
-    on_exit(fn -> s3.(ExAws.S3.delete_bucket("imports")) end)
+    s3.(ExAws.S3.put_bucket("exports", "us-east-1"))
 
     {:ok, container: minio, s3: s3}
+  end
+
+  setup %{container: minio, s3: s3} do
+    connection_opts = MinioContainer.connection_opts(minio)
+
+    clean_bucket = fn bucket ->
+      ExAws.S3.list_objects_v2(bucket)
+      |> ExAws.stream!(connection_opts)
+      |> Stream.each(fn objects ->
+        keys = objects |> List.wrap() |> Enum.map(& &1.key)
+        s3.(ExAws.S3.delete_all_objects(bucket, keys))
+      end)
+      |> Stream.run()
+    end
+
+    clean_bucket.("imports")
+    clean_bucket.("exports")
+
+    :ok
   end
 
   describe "new_import/3 and parse_args/1" do
@@ -301,16 +320,11 @@ defmodule Plausible.Imported.CSVImporterTest do
         }
       ]
 
-      on_exit(fn ->
-        keys = Enum.map(csvs, fn csv -> "#{site.id}/#{csv.name}" end)
-        s3.(ExAws.S3.delete_all_objects("imports", keys))
-      end)
-
       uploads =
         for %{name: name, body: body} <- csvs do
           key = "#{site.id}/#{name}"
           s3.(ExAws.S3.put_object("imports", key, body))
-          %{"filename" => name, "s3_url" => s3_url(minio, "imports", key)}
+          %{"filename" => name, "s3_url" => minio_url(minio, "imports", key)}
         end
 
       {:ok, job} =
@@ -362,16 +376,11 @@ defmodule Plausible.Imported.CSVImporterTest do
         }
       ]
 
-      on_exit(fn ->
-        keys = Enum.map(csvs, fn csv -> "#{site.id}/#{csv.name}" end)
-        s3.(ExAws.S3.delete_all_objects("imports", keys))
-      end)
-
       uploads =
         for %{name: name, body: body} <- csvs do
           key = "#{site.id}/#{name}"
           s3.(ExAws.S3.put_object("imports", key, body))
-          %{"filename" => name, "s3_url" => s3_url(minio, "imports", key)}
+          %{"filename" => name, "s3_url" => minio_url(minio, "imports", key)}
         end
 
       {:ok, job} =
@@ -466,9 +475,6 @@ defmodule Plausible.Imported.CSVImporterTest do
       ])
 
       # export archive to s3
-      s3.(ExAws.S3.put_bucket("exports", "us-east-1"))
-      on_exit(fn -> s3.(ExAws.S3.delete_bucket("exports")) end)
-
       Oban.insert!(
         Plausible.Workers.ExportCSV.new(%{
           "site_id" => site.id,
@@ -479,11 +485,9 @@ defmodule Plausible.Imported.CSVImporterTest do
         })
       )
 
-      on_exit(fn -> s3.(ExAws.S3.delete_object("exports", "#{site.id}/Plausible.zip")) end)
       assert %{success: 1} = Oban.drain_queue(queue: :s3_csv_export, with_safety: false)
 
       # download archive
-
       s3.(
         ExAws.S3.download_file(
           "exports",
@@ -496,16 +500,11 @@ defmodule Plausible.Imported.CSVImporterTest do
       {:ok, files} = :zip.unzip(to_charlist(Path.join(tmp_dir, "Plausible.zip")), cwd: tmp_dir)
 
       # upload csvs
-      on_exit(fn ->
-        keys = Enum.map(files, fn file -> "#{site.id}/#{Path.basename(file)}" end)
-        s3.(ExAws.S3.delete_all_objects("imports", keys))
-      end)
-
       uploads =
         Enum.map(files, fn file ->
           key = "#{site.id}/#{Path.basename(file)}"
           s3.(ExAws.S3.put_object("imports", key, File.read!(file)))
-          %{"filename" => Path.basename(file), "s3_url" => s3_url(minio, "imports", key)}
+          %{"filename" => Path.basename(file), "s3_url" => minio_url(minio, "imports", key)}
         end)
 
       # run importer
@@ -519,7 +518,6 @@ defmodule Plausible.Imported.CSVImporterTest do
         )
 
       job = Repo.reload!(job)
-
       assert :ok = Plausible.Workers.ImportAnalytics.perform(job)
 
       # validate import
@@ -534,7 +532,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     end
   end
 
-  defp s3_url(minio, bucket, key) do
+  defp minio_url(minio, bucket, key) do
     port = minio |> MinioContainer.connection_opts() |> Keyword.fetch!(:port)
     Path.join(["http://172.17.0.1:#{port}", bucket, key])
   end
