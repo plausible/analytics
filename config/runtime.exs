@@ -554,7 +554,8 @@ cloud_queues = [
   trial_notification_emails: 1,
   check_usage: 1,
   notify_annual_renewal: 1,
-  lock_sites: 1
+  lock_sites: 1,
+  s3_csv_export: 1
 ]
 
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
