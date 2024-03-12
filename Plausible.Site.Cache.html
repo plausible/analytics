@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-48F39658.js"></script>
+    <script src="dist/sidebar_items-0FB86F5D.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -184,6 +184,14 @@ queried on each cache refresh.</p><p>Also see tests for more comprehensive examp
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#get_or_store/3" translate="no">get_or_store(key, fallback_fn, opts \\ [])</a>
+
+      </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#get_site_id/2" translate="no">get_site_id(domain, opts \\ [])</a>
 
       </div>
@@ -195,6 +203,8 @@ queried on each cache refresh.</p><p>Also see tests for more comprehensive examp
         <a href="#hit_rate/1" translate="no">hit_rate(cache_name \\ name())</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>See <a href="Plausible.Cache.Stats.html#hit_rate/1"><code class="inline">Plausible.Cache.Stats.hit_rate/1</code></a>.</p></div>
 
     </div>
 
@@ -239,6 +249,8 @@ going up asynchronously with an empty cache.</p></div>
         <a href="#size/1" translate="no">size(cache_name \\ name())</a>
 
       </div>
+
+        <div class="summary-synopsis"><p>See <a href="Plausible.Cache.Adapter.html#size/1"><code class="inline">Plausible.Cache.Adapter.size/1</code></a>.</p></div>
 
     </div>
 
@@ -329,6 +341,36 @@ going up asynchronously with an empty cache.</p></div>
 
   </section>
 </section>
+<section class="detail" id="get_or_store/3">
+
+    <span id="get_or_store/2"></span>
+
+  <div class="detail-header">
+    <a href="#get_or_store/3" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">get_or_store(key, fallback_fn, opts \\ [])</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/site/cache.ex#L24" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> get_or_store(<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>(), (-&gt; <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()), <a href="https://hexdocs.pm/elixir/Keyword.html#t:t/0">Keyword.t</a>()) :: <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>() | nil</pre>
+
+      </div>
+
+
+  </section>
+</section>
 <section class="detail" id="get_site_id/2">
 
     <span id="get_site_id/1"></span>
@@ -380,7 +422,7 @@ going up asynchronously with an empty cache.</p></div>
 
   <section class="docstring">
 
-
+<p>See <a href="Plausible.Cache.Stats.html#hit_rate/1"><code class="inline">Plausible.Cache.Stats.hit_rate/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="merge_items/2">
@@ -526,7 +568,7 @@ going up asynchronously with an empty cache.</p>
 
   <section class="docstring">
 
-
+<p>See <a href="Plausible.Cache.Adapter.html#size/1"><code class="inline">Plausible.Cache.Adapter.size/1</code></a>.</p>
   </section>
 </section>
 <section class="detail" id="telemetry_event_refresh/2">
