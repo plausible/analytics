@@ -19,7 +19,7 @@ defmodule Plausible.Shield.IPRuleCache do
   def name(), do: @cache_name
 
   @impl true
-  def child_id(), do: :cache_ip_blocklist
+  def child_id(), do: :cachex_ip_blocklist
 
   @impl true
   def count_all() do

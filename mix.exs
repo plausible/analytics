@@ -67,6 +67,7 @@ defmodule Plausible.MixProject do
       {:bamboo_mua, "~> 0.1.4"},
       {:bcrypt_elixir, "~> 3.0"},
       {:bypass, "~> 2.1", only: [:dev, :test, :small_test]},
+      {:cachex, "~> 3.4"},
       {:ecto_ch, "~> 0.3"},
       {:cloak, "~> 1.1"},
       {:cloak_ecto, "~> 1.2"},
@@ -139,8 +140,7 @@ defmodule Plausible.MixProject do
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
       {:sweet_xml, "~> 0.7.4"},
-      {:testcontainers, "~> 1.6", only: [:test, :small_test]},
-      {:con_cache, "~> 1.0"}
+      {:testcontainers, "~> 1.6", only: [:test, :small_test]}
     ]
   end
 

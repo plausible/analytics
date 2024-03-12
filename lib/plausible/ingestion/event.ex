@@ -388,9 +388,11 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
-    Plausible.Cache.Adapter.get(:user_agents, user_agent, fn ->
-      UAInspector.parse(user_agent)
-    end)
+    case Cachex.fetch(:user_agents, user_agent, &UAInspector.parse/1) do
+      {:ok, user_agent} -> user_agent
+      {:commit, user_agent} -> user_agent
+      _ -> nil
+    end
   end
 
   defp parse_user_agent(request), do: request
