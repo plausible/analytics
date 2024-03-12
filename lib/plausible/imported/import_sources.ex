@@ -4,6 +4,7 @@ defmodule Plausible.Imported.ImportSources do
   """
 
   @sources [
+    Plausible.Imported.GoogleAnalytics4,
     Plausible.Imported.UniversalAnalytics,
     Plausible.Imported.NoopImporter,
     Plausible.Imported.CSVImporter

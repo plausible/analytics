@@ -14,20 +14,22 @@
     <PlausibleWeb.Components.Generic.button_link
       class="w-36 h-20"
       theme="bright"
-      href={Plausible.Google.Api.import_authorize_url(@site.id, "import", false)}
+      href={Plausible.Google.API.import_authorize_url(@site.id, "import", legacy: false)}
     >
       <img src="/images/icon/universal_analytics_logo.svg" alt="New Universal Analytics import" />
     </PlausibleWeb.Components.Generic.button_link>
 
     <PlausibleWeb.Components.Generic.button_link
-      class="w-36 h-20 opacity-40 cursor-not-allowed"
+      class="w-36 h-20"
       theme="bright"
-      href=""
+      href={
+        Plausible.Google.API.import_authorize_url(@site.id, "import", legacy: false, ga4: true)
+      }
     >
       <img
         src="/images/icon/google_analytics_4_logo.svg"
         width="110"
-        alt="New Universal Analytics import"
+        alt="New Google Analytics 4 import"
       />
     </PlausibleWeb.Components.Generic.button_link>
 

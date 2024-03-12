@@ -1,4 +1,8 @@
-defmodule Plausible.Google.ReportRequest do
+defmodule Plausible.Google.UA.ReportRequest do
+  @moduledoc """
+  Report request struct for Universal Analytics API
+  """
+
   defstruct [
     :dataset,
     :dimensions,

@@ -1,4 +1,4 @@
-<%= form_for @conn, Routes.site_path(@conn, :import_from_google_view_id, @site.domain), [class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+<%= form_for @conn, Routes.universal_analytics_path(@conn, :view_id, @site.domain), [class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
   <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
 
   <%= hidden_input(f, :access_token, value: @access_token) %>
@@ -12,9 +12,9 @@
 
   <div class="mt-3">
     <%= styled_label(f, :view_id, "Google Analytics view") %>
-    <%= styled_select f, :view_id, @view_ids, prompt: "(Choose view)", required: "true" %>
+    <%= styled_select(f, :view_id, @view_ids, prompt: "(Choose view)", required: "true") %>
     <%= styled_error(@conn.assigns[:selected_view_id_error]) %>
   </div>
 
-  <%= submit "Continue ->", class: "button mt-6" %>
+  <%= submit("Continue ->", class: "button mt-6") %>
 <% end %>
