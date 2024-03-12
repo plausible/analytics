@@ -234,6 +234,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   end
 
   defp event_only_property?("event:name"), do: true
+  defp event_only_property?("event:page"), do: true
   defp event_only_property?("event:goal"), do: true
   defp event_only_property?("event:props:" <> _), do: true
   defp event_only_property?(_), do: false

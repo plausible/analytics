@@ -194,6 +194,7 @@ defmodule Plausible.Stats.Query do
     new_filters =
       Enum.filter(query.filters, fn {filter_key, _} ->
         cond do
+          :name in opts && filter_key == "event:name" -> false
           :page in opts && filter_key == "event:page" -> false
           :goal in opts && filter_key == "event:goal" -> false
           :props in opts && filter_key && String.starts_with?(filter_key, "event:props:") -> false
