@@ -50,37 +50,11 @@ defmodule Plausible.CacheTest do
           assert ExampleCache.get("key", force?: true, cache_name: NonExistingCache) == nil
         end)
 
-      assert log =~ "Error retrieving key from 'NonExistingCache'"
+      assert log =~ "Error retrieving key from 'NonExistingCache': :no_cache"
     end
 
     test "cache is not ready when it doesn't exist", %{test: test} do
       refute ExampleCache.ready?(test)
-    end
-  end
-
-  describe "stats tracking" do
-    test "get affects hit rate", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-      :ok = ExampleCache.merge_items([{"item1", :item1}], cache_name: test)
-      assert ExampleCache.get("item1", cache_name: test, force?: true)
-      assert {:ok, %{hit_rate: 100.0}} = Plausible.Cache.Stats.gather(test)
-      refute ExampleCache.get("item2", cache_name: test, force?: true)
-      assert {:ok, %{hit_rate: 50.0}} = Plausible.Cache.Stats.gather(test)
-    end
-
-    test "get_or_store affects hit rate", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
-      :ok = ExampleCache.merge_items([{"item1", :item1}], cache_name: test)
-      assert ExampleCache.get("item1", cache_name: test, force?: true)
-
-      assert "value" ==
-               ExampleCache.get_or_store("item2", fn -> "value" end,
-                 cache_name: test,
-                 force?: true
-               )
-
-      assert {:ok, %{hit_rate: 50.0}} = Plausible.Cache.Stats.gather(test)
     end
   end
 

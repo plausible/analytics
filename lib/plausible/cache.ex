@@ -8,10 +8,10 @@ defmodule Plausible.Cache do
       # - Optionally override `unwrap_cache_keys/1`
       # - Populate the cache with `Plausible.Cache.Warmer`
 
-  Serves as a wrapper around `Plausible.Cache.Adapter`, where the underlying
+  Serves as a thin wrapper around Cachex, but the underlying
   implementation can be transparently swapped.
 
-  Even though normally the relevant Adapter processes are started, cache access is disabled
+  Even though the Cachex process is started, cache access is disabled
   during tests via the `:plausible, #{__MODULE__}, enabled: bool()` application env key.
   This can be overridden on case by case basis, using the child specs options.
 
@@ -61,30 +61,26 @@ defmodule Plausible.Cache do
       @behaviour Plausible.Cache
       @modes [:all, :updated_recently]
 
-      alias Plausible.Cache.Adapter
-
       @spec get(any(), Keyword.t()) :: any() | nil
-      def get(key, opts \\ []) when is_list(opts) do
+      def get(key, opts \\ []) do
         cache_name = Keyword.get(opts, :cache_name, name())
         force? = Keyword.get(opts, :force?, false)
 
         if Plausible.Cache.enabled?() or force? do
-          Adapter.get(cache_name, key)
+          case Cachex.get(cache_name, key) do
+            {:ok, nil} ->
+              nil
+
+            {:ok, item} ->
+              item
+
+            {:error, e} ->
+              Logger.error("Error retrieving key from '#{inspect(cache_name)}': #{inspect(e)}")
+
+              nil
+          end
         else
           get_from_source(key)
-        end
-      end
-
-      @spec get_or_store(any(), (-> any()), Keyword.t()) :: any() | nil
-      def get_or_store(key, fallback_fn, opts \\ [])
-          when is_function(fallback_fn, 0) and is_list(opts) do
-        cache_name = Keyword.get(opts, :cache_name, name())
-        force? = Keyword.get(opts, :force?, false)
-
-        if Plausible.Cache.enabled?() or force? do
-          Adapter.get(cache_name, key, fallback_fn)
-        else
-          get_from_source(key) || fallback_fn.()
         end
       end
 
@@ -121,10 +117,10 @@ defmodule Plausible.Cache do
       def merge_items(new_items, opts) do
         new_items = unwrap_cache_keys(new_items)
         cache_name = Keyword.get(opts, :cache_name, name())
-        :ok = Adapter.put_many(cache_name, new_items)
+        true = Cachex.put_many!(cache_name, new_items)
 
         if Keyword.get(opts, :delete_stale_items?, true) do
-          old_keys = Adapter.keys(cache_name)
+          {:ok, old_keys} = Cachex.keys(cache_name)
 
           new = MapSet.new(Enum.into(new_items, [], fn {k, _} -> k end))
           old = MapSet.new(old_keys)
@@ -132,7 +128,7 @@ defmodule Plausible.Cache do
           old
           |> MapSet.difference(new)
           |> Enum.each(fn k ->
-            Adapter.delete(cache_name, k)
+            Cachex.del(cache_name, k)
           end)
         end
 
@@ -143,7 +139,11 @@ defmodule Plausible.Cache do
       def child_spec(opts) do
         cache_name = Keyword.get(opts, :cache_name, name())
         child_id = Keyword.get(opts, :child_id, child_id())
-        Adapter.child_spec(cache_name, child_id, opts)
+
+        Supervisor.child_spec(
+          {Cachex, name: cache_name, limit: nil, stats: true},
+          id: child_id
+        )
       end
 
       @doc """
@@ -154,7 +154,7 @@ defmodule Plausible.Cache do
       @spec ready?(atom()) :: boolean
       def ready?(cache_name \\ name()) do
         case size(cache_name) do
-          n when is_integer(n) and n > 0 ->
+          n when n > 0 ->
             true
 
           0 ->
@@ -165,8 +165,21 @@ defmodule Plausible.Cache do
         end
       end
 
-      defdelegate size(cache_name \\ name()), to: Plausible.Cache.Adapter
-      defdelegate hit_rate(cache_name \\ name()), to: Plausible.Cache.Stats
+      @spec size() :: non_neg_integer()
+      def size(cache_name \\ name()) do
+        case Cachex.size(cache_name) do
+          {:ok, size} -> size
+          _ -> 0
+        end
+      end
+
+      @spec hit_rate() :: number()
+      def hit_rate(cache_name \\ name()) do
+        case Cachex.stats(cache_name) do
+          {:ok, stats} -> Map.get(stats, :hit_rate, 0)
+          _ -> 0
+        end
+      end
 
       @spec telemetry_event_refresh(atom(), atom()) :: list(atom())
       def telemetry_event_refresh(cache_name \\ name(), mode) when mode in @modes do
