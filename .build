@@ -77,10 +77,15 @@ Plausible.Geo.html
 Plausible.Goal.Revenue.html
 Plausible.Goal.html
 Plausible.Goals.html
-Plausible.Google.Api.Mock.html
-Plausible.Google.Api.html
+Plausible.Google.API.Mock.html
+Plausible.Google.API.html
+Plausible.Google.GA4.API.html
+Plausible.Google.GA4.HTTP.html
+Plausible.Google.GA4.ReportRequest.html
 Plausible.Google.HTTP.html
-Plausible.Google.ReportRequest.html
+Plausible.Google.UA.API.html
+Plausible.Google.UA.HTTP.html
+Plausible.Google.UA.ReportRequest.html
 Plausible.HTTPClient.Interface.html
 Plausible.HTTPClient.Non200Error.html
 Plausible.HTTPClient.html
@@ -88,6 +93,7 @@ Plausible.Helpers.JSON.html
 Plausible.ImportDeletionRepo.html
 Plausible.Imported.Buffer.html
 Plausible.Imported.CSVImporter.html
+Plausible.Imported.GoogleAnalytics4.html
 Plausible.Imported.ImportSources.html
 Plausible.Imported.Importer.html
 Plausible.Imported.NoopImporter.html
@@ -236,6 +242,8 @@ PlausibleWeb.Favicon.html
 PlausibleWeb.FirstLaunchPlug.Test.html
 PlausibleWeb.FirstLaunchPlug.html
 PlausibleWeb.FormHelpers.html
+PlausibleWeb.GoogleAnalytics4Controller.html
+PlausibleWeb.GoogleAnalytics4View.html
 PlausibleWeb.InvitationController.html
 PlausibleWeb.LastSeenPlug.html
 PlausibleWeb.LayoutView.JWT.html
@@ -328,6 +336,8 @@ PlausibleWeb.StatsController.html
 PlausibleWeb.StatsView.html
 PlausibleWeb.Tracker.html
 PlausibleWeb.TwoFactor.Session.html
+PlausibleWeb.UniversalAnalyticsController.html
+PlausibleWeb.UniversalAnalyticsView.html
 PlausibleWeb.UnsubscribeController.html
 PlausibleWeb.UnsubscribeView.html
 PlausibleWeb.html
@@ -361,8 +371,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-05EB5F1A.js
-dist/sidebar_items-C884178F.js
+dist/search_data-F6404768.js
+dist/sidebar_items-BCB24ECB.js
 index.html
 readme.html
 search.html

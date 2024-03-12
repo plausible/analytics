@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-C884178F.js"></script>
+    <script src="dist/sidebar_items-BCB24ECB.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -157,23 +157,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#fetch_access_token/1" translate="no">fetch_access_token(code)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_analytics_start_date/2" translate="no">get_analytics_start_date(view_id, access_token)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#get_report/1" translate="no">get_report(report_request)</a>
+        <a href="#fetch_access_token!/1" translate="no">fetch_access_token!(code)</a>
 
       </div>
 
@@ -190,14 +174,6 @@ Pages
     <div class="summary-row">
       <div class="summary-signature">
         <a href="#list_stats/5" translate="no">list_stats(access_token, property, date_range, limit, page \\ nil)</a>
-
-      </div>
-
-    </div>
-
-    <div class="summary-row">
-      <div class="summary-signature">
-        <a href="#list_views_for_user/1" translate="no">list_views_for_user(access_token)</a>
 
       </div>
 
@@ -224,16 +200,16 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="fetch_access_token/1">
+<section class="detail" id="fetch_access_token!/1">
 
   <div class="detail-header">
-    <a href="#fetch_access_token/1" class="detail-link" title="Link to this function">
+    <a href="#fetch_access_token!/1" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">fetch_access_token(code)</h1>
+    <h1 class="signature" translate="no">fetch_access_token!(code)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L116" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L25" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -242,57 +218,6 @@ Pages
   </div>
 
   <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="get_analytics_start_date/2">
-
-  <div class="detail-header">
-    <a href="#get_analytics_start_date/2" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get_analytics_start_date(view_id, access_token)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L219" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="get_report/1">
-
-  <div class="detail-header">
-    <a href="#get_report/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">get_report(report_request)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L7" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-      <div class="specs">
-
-          <pre translate="no"><span class="attribute">@spec</span> get_report(<a href="Plausible.Google.ReportRequest.html#t:t/0">Plausible.Google.ReportRequest.t</a>()) ::
-  {:ok, {[<a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">map</a>()], <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | nil}} | {:error, <a href="https://hexdocs.pm/elixir/typespecs.html#basic-types">any</a>()}</pre>
-
-      </div>
 
 
   </section>
@@ -306,7 +231,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">list_sites(access_token)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L96" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L5" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -330,29 +255,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">list_stats(access_token, property, date_range, limit, page \\ nil)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L151" class="icon-action" rel="help" title="View Source">
-       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
-       <span class="sr-only">View Source</span>
-     </a>
-
-
-  </div>
-
-  <section class="docstring">
-
-
-  </section>
-</section>
-<section class="detail" id="list_views_for_user/1">
-
-  <div class="detail-header">
-    <a href="#list_views_for_user/1" class="detail-link" title="Link to this function">
-      <i class="ri-link-m" aria-hidden="true"></i>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature" translate="no">list_views_for_user(access_token)</h1>
-
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L133" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L42" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -374,7 +277,7 @@ Pages
     </a>
     <h1 class="signature" translate="no">refresh_auth_token(refresh_token)</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L193" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/google/http.ex#L84" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
