@@ -400,21 +400,9 @@ defmodule Plausible.Imported.CSVImporterTest do
   describe "export -> import" do
     setup [:create_user, :create_new_site]
 
-    setup do
-      tmp_dir =
-        Path.join(
-          System.tmp_dir!(),
-          "plausible-csv-importer-test-#{inspect(self())}-#{System.system_time(:millisecond)}"
-        )
+    @describetag :tmp_dir
 
-      File.mkdir!(tmp_dir)
-      on_exit(fn -> File.rmdir!(tmp_dir) end)
-      tmp_path = fn path -> Path.join(tmp_dir, path) end
-
-      {:ok, tmp_path: tmp_path}
-    end
-
-    test "it works", %{site: site, user: user, s3: s3, tmp_path: tmp_path, container: minio} do
+    test "it works", %{site: site, user: user, s3: s3, tmp_dir: tmp_dir, container: minio} do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
@@ -495,19 +483,17 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert %{success: 1} = Oban.drain_queue(queue: :s3_csv_export, with_safety: false)
 
       # download archive
-      on_exit(fn -> File.rm(tmp_path.("Plausible.zip")) end)
 
       s3.(
         ExAws.S3.download_file(
           "exports",
           "/#{site.id}/Plausible.zip",
-          tmp_path.("Plausible.zip")
+          Path.join(tmp_dir, "Plausible.zip")
         )
       )
 
       # unzip archive
-      {:ok, files} = :zip.unzip(to_charlist(tmp_path.("Plausible.zip")), cwd: tmp_path.("/"))
-      on_exit(fn -> Enum.each(files, &File.rm!/1) end)
+      {:ok, files} = :zip.unzip(to_charlist(Path.join(tmp_dir, "Plausible.zip")), cwd: tmp_dir)
 
       # upload csvs
       on_exit(fn ->

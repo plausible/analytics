@@ -61,23 +61,14 @@ defmodule Plausible.ExportsTest do
   end
 
   describe "stream_archive/3" do
+    @describetag :tmp_dir
+
     setup do
-      ch_config = Keyword.replace!(Plausible.ClickhouseRepo.config(), :pool_size, 1)
-
-      tmp_dir =
-        Path.join(
-          System.tmp_dir!(),
-          "plausible-exports-test-#{System.system_time(:millisecond)}-#{inspect(self())}"
-        )
-
-      File.mkdir!(tmp_dir)
-      on_exit(fn -> File.rmdir!(tmp_dir) end)
-      tmp_path = fn path -> Path.join(tmp_dir, path) end
-
-      {:ok, ch: start_supervised!({Ch, ch_config}), tmp_path: tmp_path}
+      config = Keyword.replace!(Plausible.ClickhouseRepo.config(), :pool_size, 1)
+      {:ok, ch: start_supervised!({Ch, config})}
     end
 
-    test "creates zip archive", %{ch: ch, tmp_path: tmp_path} do
+    test "creates zip archive", %{ch: ch, tmp_dir: tmp_dir} do
       queries = %{
         "1.csv" => from(n in "numbers", select: n.number, limit: 3),
         "2.csv" =>
@@ -87,17 +78,15 @@ defmodule Plausible.ExportsTest do
           )
       }
 
-      on_exit(fn -> File.rm(tmp_path.("numbers.zip")) end)
-
       DBConnection.run(ch, fn conn ->
         conn
         |> Plausible.Exports.stream_archive(queries, database: "system", format: "CSVWithNames")
-        |> Stream.into(File.stream!(tmp_path.("numbers.zip")))
+        |> Stream.into(File.stream!(Path.join(tmp_dir, "numbers.zip")))
         |> Stream.run()
       end)
 
-      assert {:ok, files} = :zip.unzip(to_charlist(tmp_path.("numbers.zip")), cwd: tmp_path.("/"))
-      on_exit(fn -> Enum.each(files, &File.rm!/1) end)
+      assert {:ok, files} =
+               :zip.unzip(to_charlist(Path.join(tmp_dir, "numbers.zip")), cwd: tmp_dir)
 
       assert Enum.map(files, &Path.basename/1) == ["1.csv", "2.csv"]
 
@@ -130,25 +119,23 @@ defmodule Plausible.ExportsTest do
                )
     end
 
-    test "stops on error", %{ch: ch, tmp_path: tmp_path} do
+    test "stops on error", %{ch: ch, tmp_dir: tmp_dir} do
       queries = %{
         "1.csv" => from(n in "numbers", select: n.number, limit: 1000),
         "2.csv" => from(n in "no_such_table", select: n.number)
       }
 
-      on_exit(fn -> File.rm(tmp_path.("failed.zip")) end)
-
       assert_raise Ch.Error, ~r/UNKNOWN_TABLE/, fn ->
         DBConnection.run(ch, fn conn ->
           conn
           |> Plausible.Exports.stream_archive(queries, database: "system", format: "CSVWithNames")
-          |> Stream.into(File.stream!(tmp_path.("failed.zip")))
+          |> Stream.into(File.stream!(Path.join(tmp_dir, "failed.zip")))
           |> Stream.run()
         end)
       end
 
       assert {:error, :einval} =
-               :zip.unzip(to_charlist(tmp_path.("failed.zip")), cwd: tmp_path.("/"))
+               :zip.unzip(to_charlist(Path.join(tmp_dir, "failed.zip")), cwd: tmp_dir)
     end
   end
 end
