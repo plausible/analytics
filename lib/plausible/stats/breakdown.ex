@@ -696,103 +696,6 @@ defmodule Plausible.Stats.Breakdown do
   defp fields_equal(field_name, condition),
     do: dynamic([a, b], field(a, ^field_name) == field(b, ^field_name) and ^condition)
 
-  # This function injects a conversion_rate metric into
-  # a breakdown query. It is calculated as X / Y, where:
-  #
-  #   * X is the number of conversions for a breakdown
-  #     result (conversion = number of visitors who
-  #     completed the filtered goal with the filtered
-  #     custom properties).
-  #
-  #  * Y is the number of all visitors for this breakdown
-  #    result without the `event:goal` and `event:props:*`
-  #    filters.
-<<<<<<< HEAD
-  defp add_cr(breakdown_results, site, query, property, metrics, pagination) do
-    property_atom = Plausible.Stats.Filters.without_prefix(property)
-
-    items =
-      Enum.map(breakdown_results, fn item -> Map.fetch!(item, property_atom) end)
-
-    query_without_goal =
-      query
-      |> Query.put_filter(property, {:member, items})
-      |> Query.remove_event_filters([:goal, :props])
-
-    # Here, we're always only interested in the first page of results
-    # - the :member filter makes sure that the results always match with
-    # the items in the given breakdown_results list
-    page = 1
-
-    # For browser/os versions we need to fetch a lot more entries than the
-    # pagination limit. This is because many entries can correspond to a
-    # single version number and we need to make sure that the results
-    # without goal filter will include all those combinations of browsers/os-s
-    # and their versions that were present in the `breakdown_results` array.
-    {pagination_limit, find_match_fn} =
-      case property_atom do
-        :browser_version ->
-          pagination_limit = min(elem(pagination, 0) * 10, 3_000)
-
-          find_match_fn = fn total, conversion ->
-            total[:browser_version] == conversion[:browser_version] &&
-              total[:browser] == conversion[:browser]
-          end
-
-          {pagination_limit, find_match_fn}
-
-        :os_version ->
-          pagination_limit = min(elem(pagination, 0) * 5, 3_000)
-
-          find_match_fn = fn total, conversion ->
-            total[:os_version] == conversion[:os_version] &&
-              total[:os] == conversion[:os]
-          end
-
-          {pagination_limit, find_match_fn}
-
-        _ ->
-          {elem(pagination, 0),
-           fn total, conversion ->
-             total[property_atom] == conversion[property_atom]
-           end}
-      end
-
-    pagination = {pagination_limit, page}
-
-    res_without_goal = breakdown(site, query_without_goal, property, [:visitors], pagination)
-
-    Enum.map(breakdown_results, fn item ->
-      without_goal = Enum.find(res_without_goal, &find_match_fn.(&1, item))
-
-      {conversion_rate, total_visitors} =
-        if without_goal do
-          {Util.calculate_cr(without_goal.visitors, item.visitors), without_goal.visitors}
-        else
-          Sentry.capture_message(
-            "Unable to find a conversion_rate divisor from a breakdown response",
-            extra: %{
-              domain: site.domain,
-              query: inspect(query),
-              property: property,
-              pagination: inspect(pagination),
-              item_not_found: inspect(item)
-            }
-          )
-
-          {"N/A", "N/A"}
-        end
-
-      if :total_visitors in metrics do
-        item
-        |> Map.put(:conversion_rate, conversion_rate)
-        |> Map.put(:total_visitors, total_visitors)
-      else
-        Map.put(item, :conversion_rate, conversion_rate)
-      end
-    end)
-  end
-
   defp sort_results(results, metrics) do
     Enum.sort_by(
       results,
@@ -806,8 +709,17 @@ defmodule Plausible.Stats.Breakdown do
     )
   end
 
-=======
->>>>>>> d7fcfaa43 (CR with order_by)
+  # This function injects a conversion_rate metric into
+  # a breakdown query. It is calculated as X / Y, where:
+  #
+  #   * X is the number of conversions for a breakdown
+  #     result (conversion = number of visitors who
+  #     completed the filtered goal with the filtered
+  #     custom properties).
+  #
+  #  * Y is the number of all visitors for this breakdown
+  #    result without the `event:goal` and `event:props:*`
+  #    filters.
   def maybe_add_group_conversion_rate(q, breakdown_fn, site, query, property, metrics) do
     if :conversion_rate in metrics do
       event_metrics =
