@@ -83,6 +83,24 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "param validation" do
+    test "time_on_page is not supported in breakdown queries other than by event:page", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "property" => "visit:source",
+          "filters" => "event:page==/A",
+          "metrics" => "time_on_page"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Metric `time_on_page` is not supported in breakdown queries (except `event:page` breakdown)"
+             }
+    end
+
     test "does not allow querying conversion_rate without a goal filter", %{
       conn: conn,
       site: site
@@ -2018,6 +2036,126 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
   end
 
   describe "metrics" do
+    test "returns time_on_page with imported data", %{conn: conn, site: site} do
+      site =
+        site
+        |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
+        |> Plausible.Repo.update!()
+
+      populate_stats(site, [
+        build(:imported_pages, page: "/A", time_on_page: 40, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/A", time_on_page: 110, date: ~D[2021-01-01]),
+        build(:imported_pages, page: "/B", time_on_page: 499, date: ~D[2021-01-01]),
+        build(:pageview, pathname: "/A", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 4, timestamp: ~N[2021-01-01 00:01:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:page",
+          "metrics" => "visitors,time_on_page",
+          "with_imported" => "true"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "page" => "/A",
+                   "visitors" => 3,
+                   "time_on_page" => 70.0
+                 },
+                 %{
+                   "page" => "/B",
+                   "visitors" => 2,
+                   "time_on_page" => 499
+                 }
+               ]
+             }
+    end
+
+    test "returns time_on_page in an event:page breakdown", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/A", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 4, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, pathname: "/C", user_id: 4, timestamp: ~N[2021-01-01 00:02:30])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:page",
+          "metrics" => "visitors,time_on_page"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "page" => "/A",
+                   "visitors" => 3,
+                   "time_on_page" => 60.0
+                 },
+                 %{
+                   "page" => "/B",
+                   "visitors" => 2,
+                   "time_on_page" => 90.0
+                 },
+                 %{
+                   "page" => "/C",
+                   "visitors" => 1,
+                   "time_on_page" => nil
+                 }
+               ]
+             }
+    end
+
+    test "returns time_on_page as the only metric in an event:page breakdown", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/A", user_id: 4, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 4, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, pathname: "/C", user_id: 4, timestamp: ~N[2021-01-01 00:02:30])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:page",
+          "metrics" => "time_on_page"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{
+                   "page" => "/B",
+                   "time_on_page" => 90.0
+                 },
+                 %{
+                   "page" => "/A",
+                   "time_on_page" => 60.0
+                 },
+                 %{
+                   "page" => "/C",
+                   "time_on_page" => nil
+                 }
+               ]
+             }
+    end
+
     test "returns conversion_rate in an event:goal breakdown", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event, name: "Signup", user_id: 1),

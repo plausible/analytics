@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Add `time_on_page` metric into the Stats API
 - County Block List in Site Settings
 - Query the `views_per_visit` metric based on imported data as well if possible
 - Group `operating_system_versions` by `operating_system` in Stats API breakdown

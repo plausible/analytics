@@ -12,6 +12,7 @@ defmodule Plausible.Stats.Compare do
   end
 
   def percent_change(nil, _new_count), do: nil
+  def percent_change(_old_count, nil), do: nil
 
   def percent_change(%Money{} = old_count, %Money{} = new_count) do
     old_count = old_count |> Money.to_decimal() |> Decimal.to_float()
