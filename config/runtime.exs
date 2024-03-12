@@ -740,6 +740,10 @@ unless s3_disabled? do
     %{
       name: "S3_ENDPOINT",
       example: "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+    },
+    %{
+      name: "S3_EXPORTS_BUCKET",
+      example: "my-csv-exports-bucket"
     }
   ]
 
@@ -774,4 +778,6 @@ unless s3_disabled? do
     scheme: s3_scheme <> "://",
     host: s3_host,
     port: s3_port
+
+  config :plausible, Plausible.S3, exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET")
 end
