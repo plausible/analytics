@@ -254,58 +254,6 @@ defmodule PlausibleWeb.Live.Components.Form do
     """
   end
 
-  attr :id, :string, required: true
-  attr(:name, :any)
-  attr(:class, :string, default: "")
-  attr(:value, :any, default: "")
-
-  attr(:field, Phoenix.HTML.FormField,
-    doc: "a form field struct retrieved from the form, for example: @form[:email]",
-    default: nil
-  )
-
-  attr(:rest, :global,
-    include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
-         multiple pattern placeholder readonly required rows size step)
-  )
-
-  def date_input(assigns) do
-    value =
-      if assigns.field do
-        assigns.field.value
-      else
-        assigns.value
-      end
-
-    display_value =
-      if value && value != "" do
-        value
-      else
-        "(not set)"
-      end
-
-    assigns = assign(assigns, :display_value, display_value)
-
-    ~H"""
-    <div id={"#{@id}-wrapper"} phx-update="ignore">
-      <label for={@id}>
-        <span id={"#{@id}-display"} class="text-sm"><%= @display_value %></span>
-        <span class="text-xs text-indigo-600">(change)</span>
-      </label>
-      <div class="relative sm:right-12 [&_.flatpickr-wrapper]:static">
-        <.input
-          type="hidden"
-          id={@id}
-          name={@name}
-          value={@value}
-          class="hidden"
-          phx-hook="DatePicker"
-        />
-      </div>
-    </div>
-    """
-  end
-
   @doc """
   Renders a label.
   """
