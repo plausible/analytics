@@ -547,15 +547,16 @@ base_queues = [
   clean_invitations: 1,
   analytics_imports: 1,
   domain_change_transition: 1,
-  check_accept_traffic_until: 1
+  check_accept_traffic_until: 1,
+  # NOTE: maybe move s3_csv_export to cloud_queues?
+  s3_csv_export: 1
 ]
 
 cloud_queues = [
   trial_notification_emails: 1,
   check_usage: 1,
   notify_annual_renewal: 1,
-  lock_sites: 1,
-  s3_csv_export: 1
+  lock_sites: 1
 ]
 
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
