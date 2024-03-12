@@ -19,7 +19,7 @@ defmodule Plausible.Shield.CountryRuleCache do
   def name(), do: @cache_name
 
   @impl true
-  def child_id(), do: :cachex_country_blocklist
+  def child_id(), do: :cache_country_blocklist
 
   @impl true
   def count_all() do
