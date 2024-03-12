@@ -4,6 +4,24 @@ defmodule Plausible.S3 do
   """
 
   @doc """
+  Returns the pre-configured S3 bucket for CSV exports.
+
+      config :plausible, Plausible.S3,
+        exports_bucket: System.fetch_env!("S3_EXPORTS_BUCKET")
+
+  Example:
+
+      iex> exports_bucket()
+      "test-exports"
+
+  """
+  @spec exports_bucket :: String.t()
+  def exports_bucket, do: config(:exports_bucket)
+
+  defp config, do: Application.fetch_env!(:plausible, __MODULE__)
+  defp config(key), do: Keyword.fetch!(config(), key)
+
+  @doc """
   Chunks and uploads Zip archive to the provided S3 destination.
 
   Returns a presigned URL to download the exported Zip archive from S3.
