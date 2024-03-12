@@ -715,6 +715,7 @@ defmodule PlausibleWeb.SiteController do
       Plausible.Workers.ExportCSV.new(%{
         "site_id" => site.id,
         "email_to" => user.email,
+        "s3_bucket" => Plausible.S3.exports_bucket(),
         "s3_path" => "Plausible-#{site.id}.zip"
       })
     )
