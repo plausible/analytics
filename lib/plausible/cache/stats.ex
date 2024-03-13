@@ -28,7 +28,7 @@ defmodule Plausible.Cache.Stats do
       :ets.new(__MODULE__, [
         :public,
         :named_table,
-        :ordered_set,
+        :set,
         read_concurrency: true,
         write_concurrency: true
       ])
