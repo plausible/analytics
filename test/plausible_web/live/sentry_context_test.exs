@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Live.SentryContextTest do
                    "REMOTE_PORT" => port,
                    "SEVER_NAME" => "www.example.com"
                  },
-                 host: :not_mounted_at_router
+                 url: :not_mounted_at_router
                },
                user: %{},
                tags: %{},

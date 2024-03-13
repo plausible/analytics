@@ -119,10 +119,10 @@ defmodule Plausible.Application do
 
   defp maybe_add_sentry_pool(pool_config) do
     case Sentry.Config.dsn() do
-      dsn when is_binary(dsn) ->
-        Map.put(pool_config, dsn, size: 50)
+      {"http" <> _rest = url, _, _} ->
+        Map.put(pool_config, url, size: 50)
 
-      _ ->
+      nil ->
         pool_config
     end
   end
