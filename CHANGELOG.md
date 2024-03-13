@@ -47,6 +47,7 @@ All notable changes to this project will be documented in this file.
 - Validate metric isn't queried multiple times
 
 ### Fixed
+- Creating many sites no longer leads to cookie overflow
 - Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
 - Fix `conversion_rate` metric in a `browser_versions` breakdown
 - Calculate `conversion_rate` percentage change in the same way like `bounce_rate` (subtraction instead of division)
