@@ -4,9 +4,7 @@ defmodule Plausible.Stats.Compare do
   end
 
   def calculate_change(:bounce_rate, old_count, new_count) do
-    if is_integer(old_count) && is_integer(new_count) && old_count > 0 do
-      new_count - old_count
-    end
+    if old_count > 0, do: new_count - old_count
   end
 
   def calculate_change(_metric, old_count, new_count) do

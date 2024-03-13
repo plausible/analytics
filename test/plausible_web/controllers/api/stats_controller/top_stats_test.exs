@@ -423,6 +423,23 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   describe "GET /api/stats/top-stats - with imported data" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
+    test "returns divisible metrics as 0 when no stats exist", %{
+      site: site,
+      conn: conn
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{"name" => "Bounce rate", "value" => 0} in res["top_stats"]
+      assert %{"name" => "Views per visit", "value" => 0.0} in res["top_stats"]
+      assert %{"name" => "Visit duration", "value" => 0} in res["top_stats"]
+    end
+
     test "merges imported data into all top stat metrics", %{
       conn: conn,
       site: site
