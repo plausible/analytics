@@ -44,18 +44,19 @@ defmodule Plausible.Google.UA.API do
   Returns a single Google Analytics view if the user has access to it.
   """
   def get_view(access_token, lookup_id) do
-    case list_views(access_token) do
-      {:ok, views} ->
-        view =
-          views
-          |> Enum.map(&elem(&1, 1))
-          |> List.flatten()
-          |> Enum.find(fn {_name, id} -> id == lookup_id end)
+    with {:ok, views} <- list_views(access_token) do
+      views =
+        views
+        |> Enum.map(&elem(&1, 1))
+        |> List.flatten()
 
-        {:ok, view}
+      case Enum.find(views, fn {_name, id} -> id == lookup_id end) do
+        {view_name, view_id} ->
+          {:ok, %{id: view_id, name: "#{view_name} (#{view_id})"}}
 
-      {:error, cause} ->
-        {:error, cause}
+        nil ->
+          {:error, :not_found}
+      end
     end
   end
 

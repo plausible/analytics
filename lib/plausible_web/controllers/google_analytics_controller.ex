@@ -138,7 +138,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
 
     end_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
 
-    {:ok, {property_or_view_name, property_or_view}} =
+    {:ok, %{name: property_or_view_name, id: property_or_view}} =
       Plausible.Google.API.get_property_or_view(access_token, property_or_view)
 
     conn

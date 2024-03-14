@@ -147,6 +147,30 @@ defmodule Plausible.Google.GA4.HTTP do
     end
   end
 
+  def get_property(access_token, property) do
+    url = "#{admin_api_url()}/v1beta/#{property}"
+
+    headers = [{"Authorization", "Bearer #{access_token}"}]
+
+    case HTTPClient.impl().get(url, headers) do
+      {:ok, %Finch.Response{body: body, status: 200}} ->
+        {:ok, body}
+
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
+        {:error, :authentication_failed}
+
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [404] ->
+        {:error, :not_found}
+
+      {:error, %HTTPClient.Non200Error{} = error} ->
+        Sentry.capture_message("Error retrieving Google property #{property}",
+          extra: %{error: error}
+        )
+
+        {:error, :unknown}
+    end
+  end
+
   @earliest_valid_date "2015-08-14"
   def get_analytics_start_date(access_token, property) do
     params = %{

@@ -25,9 +25,13 @@ defmodule Plausible.Google.GA4.API do
           accounts
           |> Enum.filter(& &1["propertySummaries"])
           |> Enum.map(fn account ->
-            {"#{account["displayName"]} (#{account["account"]})",
+            %{"account" => account_id, "displayName" => account_name} = account
+
+            {"#{account_name} (#{account_id})",
              Enum.map(account["propertySummaries"], fn property ->
-               {"#{property["displayName"]} (#{property["property"]})", property["property"]}
+               %{"displayName" => property_name, "property" => property_id} = property
+
+               {"#{property_name} (#{property_id})", property_id}
              end)}
           end)
 
@@ -39,15 +43,17 @@ defmodule Plausible.Google.GA4.API do
   end
 
   def get_property(access_token, lookup_property) do
-    case list_properties(access_token) do
-      {:ok, properties} ->
-        property =
-          properties
-          |> Enum.map(&elem(&1, 1))
-          |> List.flatten()
-          |> Enum.find(fn {_name, property} -> property == lookup_property end)
+    case GA4.HTTP.get_property(access_token, lookup_property) do
+      {:ok, property} ->
+        %{"displayName" => property_name, "name" => property_id, "account" => account_id} =
+          property
 
-        {:ok, property}
+        {:ok,
+         %{
+           id: property_id,
+           name: "#{property_name} (#{property_id})",
+           account_id: account_id
+         }}
 
       {:error, cause} ->
         {:error, cause}
