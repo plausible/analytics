@@ -20,7 +20,13 @@ defmodule Plausible.Imported.CSVImporter do
 
   @impl true
   def import_data(site_import, opts) do
-    %{id: import_id, site_id: site_id} = site_import
+    %{
+      id: import_id,
+      site_id: site_id,
+      start_date: start_date,
+      end_date: end_date
+    } = site_import
+
     uploads = Keyword.fetch!(opts, :uploads)
 
     %{access_key_id: s3_access_key_id, secret_access_key: s3_secret_access_key} =
@@ -31,52 +37,36 @@ defmodule Plausible.Imported.CSVImporter do
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    ranges =
-      Enum.map(uploads, fn upload ->
-        %{"filename" => filename, "s3_url" => s3_url} = upload
+    Enum.each(uploads, fn upload ->
+      %{"filename" => filename, "s3_url" => s3_url} = upload
 
-        ".csv" = Path.extname(filename)
-        table = Path.rootname(filename)
-        ensure_importable_table!(table)
+      {table, _, _} = parse_filename!(filename)
+      s3_structure = input_structure!(table)
 
-        s3_structure = input_structure!(table)
+      statement =
+        """
+        INSERT INTO {table:Identifier} \
+        SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
+        FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String}) \
+        WHERE date >= {start_date:Date} AND date <= {end_date:Date}\
+        """
 
-        statement =
-          """
-          INSERT INTO {table:Identifier} \
-          SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
-          FROM s3({s3_url:String},{s3_access_key_id:String},{s3_secret_access_key:String},{s3_format:String},{s3_structure:String})\
-          """
+      params =
+        %{
+          "table" => table,
+          "site_id" => site_id,
+          "import_id" => import_id,
+          "s3_url" => s3_url,
+          "s3_access_key_id" => s3_access_key_id,
+          "s3_secret_access_key" => s3_secret_access_key,
+          "s3_format" => "CSVWithNames",
+          "s3_structure" => s3_structure,
+          "start_date" => start_date,
+          "end_date" => end_date
+        }
 
-        params =
-          %{
-            "table" => table,
-            "site_id" => site_id,
-            "import_id" => import_id,
-            "s3_url" => s3_url,
-            "s3_access_key_id" => s3_access_key_id,
-            "s3_secret_access_key" => s3_secret_access_key,
-            "s3_format" => "CSVWithNames",
-            "s3_structure" => s3_structure
-          }
-
-        Ch.query!(ch, statement, params, timeout: :infinity)
-
-        %Ch.Result{rows: [[min_date, max_date]]} =
-          Ch.query!(
-            ch,
-            "SELECT min(date), max(date) FROM {table:Identifier} WHERE site_id = {site_id:UInt64} AND import_id = {import_id:UInt64}",
-            %{"table" => table, "site_id" => site_id, "import_id" => import_id}
-          )
-
-        Date.range(min_date, max_date)
-      end)
-
-    {:ok,
-     %{
-       start_date: Enum.min_by(ranges, & &1.first, Date).first,
-       end_date: Enum.max_by(ranges, & &1.last, Date).last
-     }}
+      Ch.query!(ch, statement, params, timeout: :infinity)
+    end)
   rescue
     # we are cancelling on any argument or ClickHouse errors
     e in [ArgumentError, Ch.Error] ->
@@ -103,12 +93,93 @@ defmodule Plausible.Imported.CSVImporter do
       "date Date, visitors UInt64, pageviews UInt64, bounces UInt64, visits UInt64, visit_duration UInt64"
   }
 
-  for {table, input_structure} <- input_structures do
-    defp input_structure!(unquote(table)), do: unquote(input_structure)
-    defp ensure_importable_table!(unquote(table)), do: :ok
+  @doc """
+  Extracts min/max date range from a list of uploads.
+
+  Examples:
+
+      iex> date_range([
+      ...>   %{"filename" => "imported_devices_20190101_20210101.csv"},
+      ...>   "imported_pages_20200101_20220101.csv"
+      ...> ])
+      Date.range(~D[2019-01-01], ~D[2022-01-01])
+
+      iex> date_range([])
+      ** (ArgumentError) empty uploads
+
+  """
+  @spec date_range([String.t() | %{String.t() => String.t()}, ...]) :: Date.Range.t()
+  def date_range([_ | _] = uploads), do: date_range(uploads, _start_date = nil, _end_date = nil)
+  def date_range([]), do: raise(ArgumentError, "empty uploads")
+
+  defp date_range([upload | uploads], prev_start_date, prev_end_date) do
+    filename =
+      case upload do
+        %{"filename" => filename} -> filename
+        filename when is_binary(filename) -> filename
+      end
+
+    {_table, start_date, end_date} = parse_filename!(filename)
+
+    start_date =
+      if prev_start_date do
+        min_date(start_date, prev_start_date)
+      else
+        start_date
+      end
+
+    end_date =
+      if prev_end_date do
+        max_date(end_date, prev_end_date)
+      else
+        end_date
+      end
+
+    date_range(uploads, start_date, end_date)
   end
 
-  defp ensure_importable_table!(table) do
-    raise ArgumentError, "table #{table} is not supported for data import"
+  defp date_range([], first, last), do: Date.range(first, last)
+
+  defp min_date(d1, d2) do
+    if Date.compare(d1, d2) == :lt, do: d1, else: d2
+  end
+
+  defp max_date(d1, d2) do
+    if Date.compare(d1, d2) == :gt, do: d1, else: d2
+  end
+
+  @spec parse_date!(String.t()) :: Date.t()
+  defp parse_date!(date) do
+    date |> Timex.parse!("{YYYY}{0M}{0D}") |> NaiveDateTime.to_date()
+  end
+
+  @doc """
+  Extracts table name and min/max dates from the filename.
+
+  Examples:
+
+      iex> parse_filename!("my_data.csv")
+      ** (ArgumentError) invalid filename
+
+      iex> parse_filename!("imported_devices_00010101_20250101.csv")
+      {"imported_devices", ~D[0001-01-01], ~D[2025-01-01]}
+
+  """
+  @spec parse_filename!(String.t()) ::
+          {table :: String.t(), start_date :: Date.t(), end_date :: Date.t()}
+  def parse_filename!(filename)
+
+  for {table, input_structure} <- input_structures do
+    defp input_structure!(unquote(table)), do: unquote(input_structure)
+
+    def parse_filename!(
+          <<unquote(table)::bytes, ?_, start_date::8-bytes, ?_, end_date::8-bytes, ".csv">>
+        ) do
+      {unquote(table), parse_date!(start_date), parse_date!(end_date)}
+    end
+  end
+
+  def parse_filename!(_filename) do
+    raise ArgumentError, "invalid filename"
   end
 end

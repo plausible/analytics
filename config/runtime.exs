@@ -736,6 +736,10 @@ unless s3_disabled? do
     %{
       name: "S3_EXPORTS_BUCKET",
       example: "my-csv-exports-bucket"
+    },
+    %{
+      name: "S3_IMPORTS_BUCKET",
+      example: "my-csv-imports-bucket"
     }
   ]
 
@@ -771,5 +775,7 @@ unless s3_disabled? do
     host: s3_host,
     port: s3_port
 
-  config :plausible, Plausible.S3, exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET")
+  config :plausible, Plausible.S3,
+    exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET"),
+    imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET")
 end

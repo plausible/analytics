@@ -25,13 +25,14 @@ defmodule Plausible.Workers.ExportCSV do
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
+    # NOTE: what if 1970-01-01?
     # NOTE: should we use site.timezone?
-    # %Ch.Result{rows: [[min_date, max_date]]} =
-    #   Ch.query!(
-    #     ch,
-    #     "SELECT toDate(min(timestamp)), toDate(max(timestamp)) FROM events_v2 WHERE site_id={site_id:UInt64}",
-    #     %{"site_id" => site_id}
-    #   )
+    %Ch.Result{rows: [[min_date, max_date]]} =
+      Ch.query!(
+        ch,
+        "SELECT toDate(min(timestamp)), toDate(max(timestamp)) FROM events_v2 WHERE site_id={site_id:UInt64}",
+        %{"site_id" => site_id}
+      )
 
     download_url =
       DBConnection.run(
@@ -39,8 +40,10 @@ defmodule Plausible.Workers.ExportCSV do
         fn conn ->
           conn
           |> Plausible.Exports.stream_archive(
-            # date_range: Date.range(min_date, max_date)
-            Plausible.Exports.export_queries(site_id, extname: ".csv"),
+            Plausible.Exports.export_queries(site_id,
+              date_range: Date.range(min_date, max_date),
+              extname: ".csv"
+            ),
             format: "CSVWithNames"
           )
           |> Plausible.S3.export_upload_multipart(s3_bucket, s3_path, s3_config_overrides(args))
