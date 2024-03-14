@@ -128,20 +128,28 @@ defmodule Plausible.Session.CacheStoreTest do
       )
 
     event3 =
-      build(:event,
-        name: "custom_event",
-        site_id: site_id,
+      build(:pageview,
         pathname: "/path/3",
+        site_id: site_id,
         user_id: 1
       )
 
-    flush([event1, event2, event3])
+    event4 =
+      build(:event,
+        name: "custom_event",
+        site_id: site_id,
+        pathname: "/path/4",
+        user_id: 1
+      )
+
+    flush([event1, event2, event3, event4])
 
     session = get_session(site_id)
 
-    assert session.exit_page == "/path/2"
-    assert session.events == 3
-    assert session.pageviews == 1
+    assert session.entry_page == "/path/2"
+    assert session.exit_page == "/path/3"
+    assert session.events == 4
+    assert session.pageviews == 2
   end
 
   test "calculates duration correctly for out-of-order events", %{buffer: buffer} do

@@ -47,6 +47,11 @@ defmodule Plausible.Session.CacheStore do
       session
       | user_id: event.user_id,
         timestamp: event.timestamp,
+        entry_page:
+          if(session.entry_page == "" and event.name == "pageview",
+            do: event.pathname,
+            else: session.entry_page
+          ),
         exit_page: if(event.name == "pageview", do: event.pathname, else: session.exit_page),
         is_bounce: false,
         duration: Timex.diff(event.timestamp, session.start, :second) |> abs,
