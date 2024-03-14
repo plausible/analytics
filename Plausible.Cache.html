@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-BCB24ECB.js"></script>
+    <script src="dist/sidebar_items-FD6B1610.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -147,8 +147,8 @@ Pages
 
 </span><span class="c1"># - Implement the callbacks required</span><span class="w">
 </span><span class="c1"># - Optionally override `unwrap_cache_keys/1`</span><span class="w">
-</span><span class="c1"># - Populate the cache with `Plausible.Cache.Warmer`</span></code></pre><p>Serves as a thin wrapper around Cachex, but the underlying
-implementation can be transparently swapped.</p><p>Even though the Cachex process is started, cache access is disabled
+</span><span class="c1"># - Populate the cache with `Plausible.Cache.Warmer`</span></code></pre><p>Serves as a wrapper around <a href="Plausible.Cache.Adapter.html"><code class="inline">Plausible.Cache.Adapter</code></a>, where the underlying
+implementation can be transparently swapped.</p><p>Even though normally the relevant Adapter processes are started, cache access is disabled
 during tests via the <code class="inline">:plausible, Elixir.Plausible.Cache, enabled: bool()</code> application env key.
 This can be overridden on case by case basis, using the child specs options.</p><p>The <code class="inline">base_db_query/0</code> callback is used to generate the base query that is 
 executed on every cache refresh. </p><p>There are two modes of refresh operation: <code class="inline">:all</code> and <code class="inline">:updated_recently</code>;
