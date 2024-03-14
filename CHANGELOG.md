@@ -38,7 +38,7 @@ All notable changes to this project will be documented in this file.
 - Deprecated `CLICKHOUSE_MAX_BUFFER_SIZE`
 
 ### Changed
-- A visits `exit_page` is only set and updated for pageviews, not custom events
+- A visits `entry_page` and `exit_page` is only set and updated for pageviews, not custom events
 - Limit the number of Goal Conversions shown on the dashboard and render a "Details" link when there are more entries to show
 - Show Outbound Links / File Downloads / 404 Pages / Cloaked Links instead of Goal Conversions when filtering by the corresponding goal
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
