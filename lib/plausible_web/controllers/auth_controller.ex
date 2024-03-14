@@ -750,16 +750,13 @@ defmodule PlausibleWeb.AuthController do
   def google_auth_callback(conn, %{"code" => code, "state" => state}) do
     res = Plausible.Google.API.fetch_access_token!(code)
 
-    [site_id, redirect_to, legacy, ga4] =
+    [site_id, redirect_to, legacy] =
       case Jason.decode!(state) do
         [site_id, redirect_to] ->
-          [site_id, redirect_to, true, false]
+          [site_id, redirect_to, true]
 
         [site_id, redirect_to, legacy] ->
-          [site_id, redirect_to, legacy, false]
-
-        [site_id, redirect_to, legacy, ga4] ->
-          [site_id, redirect_to, legacy, ga4]
+          [site_id, redirect_to, legacy]
       end
 
     site = Repo.get(Plausible.Site, site_id)
@@ -767,26 +764,15 @@ defmodule PlausibleWeb.AuthController do
 
     case redirect_to do
       "import" ->
-        if ga4 do
-          redirect(conn,
-            external:
-              Routes.google_analytics4_path(conn, :property_form, site.domain,
-                access_token: res["access_token"],
-                refresh_token: res["refresh_token"],
-                expires_at: NaiveDateTime.to_iso8601(expires_at)
-              )
-          )
-        else
-          redirect(conn,
-            external:
-              Routes.universal_analytics_path(conn, :view_id_form, site.domain,
-                access_token: res["access_token"],
-                refresh_token: res["refresh_token"],
-                expires_at: NaiveDateTime.to_iso8601(expires_at),
-                legacy: legacy
-              )
-          )
-        end
+        redirect(conn,
+          external:
+            Routes.google_analytics_path(conn, :property_or_view_form, site.domain,
+              access_token: res["access_token"],
+              refresh_token: res["refresh_token"],
+              expires_at: NaiveDateTime.to_iso8601(expires_at),
+              legacy: legacy
+            )
+        )
 
       _ ->
         id_token = res["id_token"]

@@ -23,14 +23,36 @@ defmodule Plausible.Google.API do
 
   def import_authorize_url(site_id, redirect_to, opts \\ []) do
     legacy = Keyword.get(opts, :legacy, true)
-    ga4 = Keyword.get(opts, :ga4, false)
 
     "https://accounts.google.com/o/oauth2/v2/auth?client_id=#{client_id()}&redirect_uri=#{redirect_uri()}&prompt=consent&response_type=code&access_type=offline&scope=#{@import_scope}&state=" <>
-      Jason.encode!([site_id, redirect_to, legacy, ga4])
+      Jason.encode!([site_id, redirect_to, legacy])
   end
 
   def fetch_access_token!(code) do
     HTTP.fetch_access_token!(code)
+  end
+
+  def list_properties_and_views(access_token) do
+    with {:ok, properties} <- Plausible.Google.GA4.API.list_properties(access_token),
+         {:ok, views} <- Plausible.Google.UA.API.list_views(access_token) do
+      {:ok, properties ++ views}
+    end
+  end
+
+  def get_property_or_view(access_token, property_or_view) do
+    if property?(property_or_view) do
+      Plausible.Google.GA4.API.get_property(access_token, property_or_view)
+    else
+      Plausible.Google.UA.API.get_view(access_token, property_or_view)
+    end
+  end
+
+  def get_analytics_start_date(access_token, property_or_view) do
+    if property?(property_or_view) do
+      Plausible.Google.GA4.API.get_analytics_start_date(access_token, property_or_view)
+    else
+      Plausible.Google.UA.API.get_analytics_start_date(access_token, property_or_view)
+    end
   end
 
   def fetch_verified_properties(auth) do
@@ -89,6 +111,8 @@ defmodule Plausible.Google.API do
       {:error, cause} -> {:error, cause}
     end
   end
+
+  defp property?(value), do: String.starts_with?(value, "properties/")
 
   defp do_refresh_token(refresh_token) do
     case HTTP.refresh_auth_token(refresh_token) do

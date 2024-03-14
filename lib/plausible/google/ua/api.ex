@@ -26,7 +26,11 @@ defmodule Plausible.Google.UA.API do
   def list_views(access_token) do
     case UA.HTTP.list_views_for_user(access_token) do
       {:ok, %{"items" => views}} ->
-        views = Enum.group_by(views, &view_hostname/1, &view_names/1)
+        views =
+          views
+          |> Enum.group_by(&view_hostname/1, &view_names/1)
+          |> Enum.sort_by(fn {key, _} -> key end)
+
         {:ok, views}
 
       error ->
@@ -44,7 +48,7 @@ defmodule Plausible.Google.UA.API do
       {:ok, views} ->
         view =
           views
-          |> Map.values()
+          |> Enum.map(&elem(&1, 1))
           |> List.flatten()
           |> Enum.find(fn {_name, id} -> id == lookup_id end)
 

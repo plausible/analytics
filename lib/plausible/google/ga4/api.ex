@@ -33,8 +33,8 @@ defmodule Plausible.Google.GA4.API do
 
         {:ok, accounts}
 
-      error ->
-        error
+      {:error, cause} ->
+        {:error, cause}
     end
   end
 
