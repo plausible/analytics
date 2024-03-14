@@ -721,7 +721,7 @@ defmodule PlausibleWeb.SiteController do
     )
 
     conn
-    |> put_flash(:info, "SCHEDULED. WAIT FOR MAIL")
+    |> put_flash(:success, "SCHEDULED. WAIT FOR MAIL")
     |> redirect(to: Routes.site_path(conn, :settings_imports_exports, site.domain))
   end
 
