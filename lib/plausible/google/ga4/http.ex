@@ -129,7 +129,7 @@ defmodule Plausible.Google.GA4.HTTP do
   end
 
   def list_accounts_for_user(access_token) do
-    url = "#{admin_api_url()}/v1beta/accountSummaries"
+    url = "#{admin_api_url()}/v1beta/accountSummaries?pageSize=200"
 
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
