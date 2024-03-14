@@ -1282,15 +1282,6 @@ defmodule PlausibleWeb.SiteControllerTest do
         Plausible.HTTPClient.Mock,
         :get,
         fn _url, _opts ->
-          body = "fixture/ga4_list_properties.json" |> File.read!() |> Jason.decode!()
-          {:ok, %Finch.Response{body: body, status: 200}}
-        end
-      )
-
-      expect(
-        Plausible.HTTPClient.Mock,
-        :get,
-        fn _url, _opts ->
           body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
           {:ok, %Finch.Response{body: body, status: 200}}
         end
@@ -1306,8 +1297,6 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
         |> html_response(200)
 
-      assert response =~ "account.one (accounts/28425178)"
-      assert response =~ "account.one - GA4 (properties/428685906)"
       assert response =~ "57238190 - one.test"
       assert response =~ "54460083 - two.test"
     end

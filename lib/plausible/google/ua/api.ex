@@ -52,7 +52,7 @@ defmodule Plausible.Google.UA.API do
 
       case Enum.find(views, fn {_name, id} -> id == lookup_id end) do
         {view_name, view_id} ->
-          {:ok, %{id: view_id, name: "#{view_name} (#{view_id})"}}
+          {:ok, %{id: view_id, name: "#{view_name}"}}
 
         nil ->
           {:error, :not_found}

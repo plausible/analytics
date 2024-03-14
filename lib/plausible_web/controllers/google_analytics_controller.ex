@@ -42,7 +42,14 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         Routes.site_path(conn, :settings_imports_exports, site.domain)
       end
 
-    case Plausible.Google.API.list_properties_and_views(access_token) do
+    result =
+      if legacy == "true" do
+        Plausible.Google.UA.API.list_views(access_token)
+      else
+        Plausible.Google.API.list_properties_and_views(access_token)
+      end
+
+    case result do
       {:ok, properties_and_views} ->
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -89,7 +96,12 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
 
     case start_date do
       {:ok, nil} ->
-        {:ok, properties_and_views} = Plausible.Google.API.list_properties_and_views(access_token)
+        {:ok, properties_and_views} =
+          if legacy == "true" do
+            Plausible.Google.UA.API.list_views(access_token)
+          else
+            Plausible.Google.API.list_properties_and_views(access_token)
+          end
 
         conn
         |> assign(:skip_plausible_tracking, true)
@@ -170,7 +182,12 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
     site = conn.assigns.site
     current_user = conn.assigns.current_user
 
-    redirect_route = Routes.site_path(conn, :settings_imports_exports, site.domain)
+    redirect_route =
+      if legacy == "true" do
+        Routes.site_path(conn, :settings_integrations, site.domain)
+      else
+        Routes.site_path(conn, :settings_imports_exports, site.domain)
+      end
 
     if property?(property_or_view) do
       {:ok, _} =
