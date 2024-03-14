@@ -229,7 +229,7 @@ ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", ge
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
-maxmind_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
+persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
 if System.get_env("DISABLE_AUTH") do
   Logger.warning("DISABLE_AUTH env var is no longer supported")
@@ -554,7 +554,8 @@ cloud_queues = [
   trial_notification_emails: 1,
   check_usage: 1,
   notify_annual_renewal: 1,
-  lock_sites: 1
+  lock_sites: 1,
+  s3_csv_export: 1
 ]
 
 queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
@@ -637,7 +638,7 @@ geo_opts =
       [
         license_key: maxmind_license_key,
         edition: maxmind_edition,
-        cache_dir: maxmind_cache_dir,
+        cache_dir: persistent_cache_dir,
         async: true
       ]
 
@@ -689,9 +690,7 @@ else
     traces_exporter: :none
 end
 
-config :tzdata,
-       :data_dir,
-       get_var_from_path_or_env(config_dir, "STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
+config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data")
 
 promex_disabled? =
   config_dir

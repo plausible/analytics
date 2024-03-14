@@ -230,7 +230,7 @@ defmodule Plausible.Stats.Aggregate do
 
   @metrics_to_round [:bounce_rate, :time_on_page, :visit_duration, :sample_percent]
 
-  defp maybe_round_value({metric, nil}), do: {metric, 0}
+  defp maybe_round_value({metric, nil}), do: {metric, nil}
 
   defp maybe_round_value({metric, value}) when metric in @metrics_to_round do
     {metric, round(value)}

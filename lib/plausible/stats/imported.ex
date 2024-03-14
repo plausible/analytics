@@ -488,7 +488,15 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([s, i], %{
       views_per_visit:
         fragment(
-          "round((? + ? * coalesce(?, 0)) / (coalesce(?, 0) + coalesce(?, 0)), 2)",
+          """
+          if(
+            coalesce(?, 0) + coalesce(?, 0) > 0,
+            round((? + ? * coalesce(?, 0)) / (coalesce(?, 0) + coalesce(?, 0)), 2),
+            0
+          )
+          """,
+          s.__internal_visits,
+          i.__internal_visits,
           i.pageviews,
           s.views_per_visit,
           s.__internal_visits,
@@ -504,7 +512,15 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([s, i], %{
       bounce_rate:
         fragment(
-          "round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0)))",
+          """
+          if(
+            coalesce(?, 0) + coalesce(?, 0) > 0,
+            round(100 * (coalesce(?, 0) + coalesce((? * ? / 100), 0)) / (coalesce(?, 0) + coalesce(?, 0))),
+            0
+          )
+          """,
+          s.__internal_visits,
+          i.__internal_visits,
           i.bounces,
           s.bounce_rate,
           s.__internal_visits,
@@ -520,7 +536,15 @@ defmodule Plausible.Stats.Imported do
     |> select_merge([s, i], %{
       visit_duration:
         fragment(
-          "round((? + ? * ?) / (? + ?), 1)",
+          """
+          if(
+            ? + ? > 0,
+            round((? + ? * ?) / (? + ?), 1),
+            0
+          )
+          """,
+          s.__internal_visits,
+          i.__internal_visits,
           i.visit_duration,
           s.visit_duration,
           s.__internal_visits,

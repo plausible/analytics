@@ -8,12 +8,13 @@ defmodule Plausible.Imported.Buffer do
   use GenServer
   require Logger
 
-  def start_link do
-    GenServer.start_link(__MODULE__, nil)
+  def start_link(opts \\ []) do
+    GenServer.start_link(__MODULE__, opts)
   end
 
-  def init(_opts) do
-    {:ok, %{buffers: %{}}}
+  def init(opts) do
+    flush_interval = Keyword.get(opts, :flush_interval_ms, 1000)
+    {:ok, %{flush_interval: flush_interval, buffers: %{}}}
   end
 
   @spec insert_many(pid(), term(), [map()]) :: :ok
@@ -68,14 +69,14 @@ defmodule Plausible.Imported.Buffer do
 
   def handle_call(:flush_all_buffers, _from, state) do
     Enum.each(state.buffers, fn {table_name, records} ->
-      flush_buffer(records, table_name)
+      flush_buffer(records, table_name, state.flush_interval)
     end)
 
     {:reply, :ok, put_in(state.buffers, %{})}
   end
 
   def handle_continue({:flush, table_name}, state) do
-    flush_buffer(state.buffers[table_name], table_name)
+    flush_buffer(state.buffers[table_name], table_name, state.flush_interval)
     {:noreply, put_in(state.buffers[table_name], [])}
   end
 
@@ -85,10 +86,10 @@ defmodule Plausible.Imported.Buffer do
     |> Keyword.fetch!(:max_buffer_size)
   end
 
-  defp flush_buffer(records, table_name) do
+  defp flush_buffer(records, table_name, flush_interval) do
     # Clickhouse does not recommend sending more than 1 INSERT operation per second, and this
     # sleep call slows down the flushing
-    Process.sleep(1000)
+    Process.sleep(flush_interval)
 
     Logger.info("Import: Flushing #{length(records)} from #{table_name} buffer")
     insert_all(table_name, records)

@@ -88,29 +88,23 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
   end
 
   @doc """
-  Add telemetry events for Cachex user agents and sessions
+  Fire telemetry events for various caches
   """
   def execute_cache_metrics do
-    {:ok, user_agents_stats} = Cachex.stats(:user_agents)
-    {:ok, sessions_stats} = Cachex.stats(:sessions)
+    {:ok, user_agents_stats} = Plausible.Cache.Stats.gather(:user_agents)
+    {:ok, sessions_stats} = Plausible.Cache.Stats.gather(:sessions)
 
-    user_agents_hit_rate = Map.get(user_agents_stats, :hit_rate, 0.0)
-    sessions_hit_rate = Map.get(sessions_stats, :hit_rate, 0.0)
-
-    {:ok, user_agents_count} = Cachex.size(:user_agents)
-    {:ok, sessions_count} = Cachex.size(:sessions)
-
-    :telemetry.execute([:prom_ex, :plugin, :cachex, :user_agents], %{
-      count: user_agents_count,
-      hit_rate: user_agents_hit_rate
+    :telemetry.execute([:prom_ex, :plugin, :cache, :user_agents], %{
+      count: user_agents_stats.count,
+      hit_rate: user_agents_stats.hit_rate
     })
 
-    :telemetry.execute([:prom_ex, :plugin, :cachex, :sessions], %{
-      count: sessions_count,
-      hit_rate: sessions_hit_rate
+    :telemetry.execute([:prom_ex, :plugin, :cache, :sessions], %{
+      count: sessions_stats.count,
+      hit_rate: sessions_stats.hit_rate
     })
 
-    :telemetry.execute([:prom_ex, :plugin, :cachex, :sites], %{
+    :telemetry.execute([:prom_ex, :plugin, :cache, :sites], %{
       count: Site.Cache.size(),
       hit_rate: Site.Cache.hit_rate()
     })
@@ -144,32 +138,32 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
       [
         last_value(
           metric_prefix ++ [:cache, :sessions, :size],
-          event_name: [:prom_ex, :plugin, :cachex, :sessions],
+          event_name: [:prom_ex, :plugin, :cache, :sessions],
           measurement: :count
         ),
         last_value(
           metric_prefix ++ [:cache, :user_agents, :size],
-          event_name: [:prom_ex, :plugin, :cachex, :user_agents],
+          event_name: [:prom_ex, :plugin, :cache, :user_agents],
           measurement: :count
         ),
         last_value(
           metric_prefix ++ [:cache, :user_agents, :hit_ratio],
-          event_name: [:prom_ex, :plugin, :cachex, :user_agents],
+          event_name: [:prom_ex, :plugin, :cache, :user_agents],
           measurement: :hit_rate
         ),
         last_value(
           metric_prefix ++ [:cache, :sessions, :hit_ratio],
-          event_name: [:prom_ex, :plugin, :cachex, :sessions],
+          event_name: [:prom_ex, :plugin, :cache, :sessions],
           measurement: :hit_rate
         ),
         last_value(
           metric_prefix ++ [:cache, :sites, :size],
-          event_name: [:prom_ex, :plugin, :cachex, :sites],
+          event_name: [:prom_ex, :plugin, :cache, :sites],
           measurement: :count
         ),
         last_value(
           metric_prefix ++ [:cache, :sites, :hit_ratio],
-          event_name: [:prom_ex, :plugin, :cachex, :sites],
+          event_name: [:prom_ex, :plugin, :cache, :sites],
           measurement: :hit_rate
         )
       ]

@@ -102,7 +102,7 @@ defmodule Plausible.Imported.UniversalAnalytics do
     end
 
     try do
-      Plausible.Google.Api.import_analytics(date_range, view_id, auth, persist_fn)
+      Plausible.Google.UA.API.import_analytics(date_range, view_id, auth, persist_fn)
     after
       Plausible.Imported.Buffer.flush(buffer)
       Plausible.Imported.Buffer.stop(buffer)

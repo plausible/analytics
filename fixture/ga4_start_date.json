@@ -1,0 +1,38 @@
+{
+  "kind": "analyticsData#batchRunReports",
+  "reports": [
+    {
+      "dimensionHeaders": [
+        {
+          "name": "date"
+        }
+      ],
+      "kind": "analyticsData#runReport",
+      "metadata": {
+        "currencyCode": "USD",
+        "timeZone": "Europe/Warsaw"
+      },
+      "metricHeaders": [
+        {
+          "name": "screenPageViews",
+          "type": "TYPE_INTEGER"
+        }
+      ],
+      "rowCount": 3,
+      "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "13"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
