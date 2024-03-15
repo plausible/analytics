@@ -8,18 +8,15 @@ defmodule Plausible.Timezones do
 
   @spec to_utc_datetime(NaiveDateTime.t(), String.t()) :: DateTime.t()
   def to_utc_datetime(naive_date_time, timezone) do
-    case DateTime.from_naive(naive_date_time, timezone) do
-      {:ok, date_time} ->
-        DateTime.shift_zone!(date_time, "Etc/UTC")
+    case Timex.to_datetime(naive_date_time, timezone) do
+      %DateTime{} = tz_dt ->
+        Timex.Timezone.convert(tz_dt, "UTC")
 
-      {:gap, _before_dt, after_dt} ->
-        DateTime.shift_zone!(after_dt, "Etc/UTC")
+      %Timex.AmbiguousDateTime{after: after_dt} ->
+        Timex.Timezone.convert(after_dt, "UTC")
 
-      {:ambiguous, _first_dt, second_dt} ->
-        DateTime.shift_zone!(second_dt, "Etc/UTC")
-
-      {:error, :time_zone_not_found} ->
-        DateTime.from_naive!(naive_date_time, "Etc/UTC")
+      {:error, {:could_not_resolve_timezone, _, _, _}} ->
+        Timex.Timezone.convert(naive_date_time, "UTC")
     end
   end
 
