@@ -1091,6 +1091,44 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   end
 
   describe "metrics" do
+    test "returns conversion rate when goal filter is applied", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-04 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-05 00:00:00])
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors,conversion_rate",
+          "filters" => "event:goal==Signup",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      assert [first, second | _] = json_response(conn, 200)["results"]
+
+      assert [first, second] == [
+               %{
+                 "date" => "2021-01-04",
+                 "visitors" => 2,
+                 "conversion_rate" => 66.7
+               },
+               %{
+                 "date" => "2021-01-05",
+                 "visitors" => 1,
+                 "conversion_rate" => 100.0
+               }
+             ]
+    end
+
     test "validates that conversion_rate cannot be queried without a goal filter", %{
       conn: conn,
       site: site
