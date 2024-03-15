@@ -37,7 +37,7 @@ defmodule PlausibleWeb.Endpoint do
     at: "/",
     from: :plausible,
     gzip: false,
-    only: ~w(css js images favicon.ico robots.txt)
+    only: PlausibleWeb.static_paths()
   )
 
   on_full_build do

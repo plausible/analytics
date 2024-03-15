@@ -10,6 +10,7 @@ defmodule PlausibleWeb do
       end
 
       alias PlausibleWeb.Router.Helpers, as: Routes
+      unquote(verified_routes())
       alias Phoenix.LiveView.JS
     end
   end
@@ -21,6 +22,7 @@ defmodule PlausibleWeb do
       import Plug.Conn
       import PlausibleWeb.ControllerHelpers
       alias PlausibleWeb.Router.Helpers, as: Routes
+      unquote(verified_routes())
     end
   end
 
@@ -41,6 +43,7 @@ defmodule PlausibleWeb do
       import PlausibleWeb.FormHelpers
       import PlausibleWeb.Components.Generic
       alias PlausibleWeb.Router.Helpers, as: Routes
+      unquote(verified_routes())
     end
   end
 
@@ -91,6 +94,17 @@ defmodule PlausibleWeb do
       require OpenApiSpex
       alias OpenApiSpex.Schema
       alias PlausibleWeb.Plugins.API.Schemas
+    end
+  end
+
+  def static_paths, do: ~w(css js images favicon.ico robots.txt)
+
+  def verified_routes do
+    quote do
+      use Phoenix.VerifiedRoutes,
+        endpoint: PlausibleWeb.Endpoint,
+        router: PlausibleWeb.Router,
+        statics: PlausibleWeb.static_paths()
     end
   end
 

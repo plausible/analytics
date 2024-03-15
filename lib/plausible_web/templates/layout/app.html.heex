@@ -20,7 +20,7 @@
       <%= assigns[:title] ||
         "Plausible · Simple, privacy-friendly alternative to Google Analytics" %>
     </title>
-    <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
+    <link rel="stylesheet" href={~p"/css/app.css"} />
     <PlausibleWeb.Components.Layout.theme_script {Map.take(assigns, [:current_user, :theme])} />
     <%= render("_tracking.html", assigns) %>
   </head>
@@ -44,15 +44,15 @@
 
     <%= if assigns[:embedded] do %>
       <div data-iframe-height></div>
-      <script type="text/javascript" src={Routes.static_path(@conn, "/js/embed.content.js")}>
+      <script type="text/javascript" src={~p"/js/embed.content.js"}>
       </script>
     <% else %>
       <%= render("_footer.html", assigns) %>
     <% end %>
-    <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
+    <script type="text/javascript" src={~p"/js/app.js"}>
     </script>
     <%= if assigns[:load_dashboard_js] do %>
-      <script type="text/javascript" src={Routes.static_path(@conn, "/js/dashboard.js")}>
+      <script type="text/javascript" src={~p"/js/dashboard.js"}>
       </script>
     <% end %>
   </body>

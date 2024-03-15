@@ -73,7 +73,7 @@ defmodule PlausibleWeb.Live.Sites do
           You don't have any sites yet.
         </p>
         <div class="mt-4 flex sm:ml-4 sm:mt-0">
-          <a href="/sites/new" class="button">
+          <a href={~p"/sites/new"} class="button">
             + Add Website
           </a>
         </div>
@@ -217,7 +217,7 @@ defmodule PlausibleWeb.Live.Sites do
       }
       phx-mounted={JS.show()}
     >
-      <.unstyled_link href={"/#{URI.encode_www_form(@site.domain)}"}>
+      <.unstyled_link href={~p"/#{URI.encode_www_form(@site.domain)}"}>
         <div class="col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow p-4 group-hover:shadow-lg cursor-pointer">
           <div class="w-full flex items-center justify-between space-x-4">
             <.favicon domain={@site.domain} />
@@ -249,7 +249,7 @@ defmodule PlausibleWeb.Live.Sites do
         <div class="py-1 text-sm" role="none">
           <.dropdown_link
             :if={List.first(@site.memberships).role != :viewer}
-            href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
+            href={~p"/#{URI.encode_www_form(@site.domain)}/settings/general"}
           >
             <Heroicons.cog_6_tooth class="mr-3 h-5 w-5" />
             <span>Settings</span>

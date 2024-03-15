@@ -15,7 +15,7 @@
     <% end %>
     <PlausibleWeb.Components.Layout.favicon conn={@conn} />
     <title><%= assigns[:title] || "Plausible · Web analytics" %></title>
-    <link rel="stylesheet" href={Routes.static_path(@conn, "/css/app.css")} />
+    <link rel="stylesheet" href={~p"/css/app.css"} />
     <%= render("_tracking.html", assigns) %>
   </head>
   <body class="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
@@ -53,7 +53,7 @@
 
     <PlausibleWeb.Components.Layout.theme_script current_user={assigns[:current_user]} />
 
-    <script type="text/javascript" src={Routes.static_path(@conn, "/js/app.js")}>
+    <script type="text/javascript" src={~p"/js/app.js"}>
     </script>
   </body>
 </html>
