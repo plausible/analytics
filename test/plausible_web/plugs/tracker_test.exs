@@ -16,6 +16,8 @@ defmodule PlausibleWeb.TrackerTest do
   use PlausibleWeb.ConnCase, async: true
   use Plug.Test
 
+  @moduletag :tracker
+
   test "returns legacy script p.js" do
     assert String.contains?(get_script("p.js"), "; samesite=strict; path=/")
   end

@@ -47,12 +47,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: marocchino/tool-versions-action@v1
         id: versions
       - uses: erlef/setup-beam@v1
         with:
           elixir-version: ${{ steps.versions.outputs.elixir }}
           otp-version: ${{ steps.versions.outputs.erlang }}
+
       - uses: actions/cache@v4
         with:
           path: |
@@ -65,10 +67,26 @@ jobs:
           restore-keys: |
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
-      - run: mix deps.get --only $MIX_ENV
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            tracker:
+              - 'tracker/**'
+      - run: |
+          if [ -z "$(ls -A priv/tracker/js/*.js)" ]; then
+            echo "HAS_TRACKER=false" >> $GITHUB_ENV
+          else
+            echo "HAS_TRACKER=true" >> $GITHUB_ENV
+          fi
       - run: npm install --prefix ./tracker
-      - run: mix compile --warnings-as-errors --all-warnings
+        if: steps.changes.outputs.tracker == 'true' || env.HAS_TRACKER == 'false'
       - run: npm run deploy --prefix ./tracker
+        if: steps.changes.outputs.tracker == 'true' || env.HAS_TRACKER == 'false'
+
+      - run: mix deps.get --only $MIX_ENV
+      - run: mix compile --warnings-as-errors --all-warnings
       - run: mix format --check-formatted
       - run: mix credo diff --from-git-merge-base origin/master
       - run: mix do ecto.create, ecto.migrate
@@ -120,16 +138,11 @@ jobs:
           path: |
             deps
             _build
-            priv/plts
-            tracker/node_modules
-            priv/tracker/js
           key: ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
       - run: mix deps.get --only $MIX_ENV
-      - run: npm install --prefix ./tracker
       - run: mix compile --warnings-as-errors --all-warnings
-      - run: npm run deploy --prefix ./tracker
       - run: mix do ecto.create, ecto.migrate
       - run: mix test --include slow --max-failures 1 --warnings-as-errors

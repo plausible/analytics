@@ -7,7 +7,7 @@ Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
 if Mix.env() == :small_test do
   IO.puts("Test mode: SMALL")
-  ExUnit.configure(exclude: [:slow, :minio, :full_build_only])
+  ExUnit.configure(exclude: [:slow, :minio, :full_build_only, :tracker])
 else
   IO.puts("Test mode: FULL")
   ExUnit.configure(exclude: [:slow, :minio, :small_build_only])
