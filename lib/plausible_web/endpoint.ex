@@ -36,7 +36,7 @@ defmodule PlausibleWeb.Endpoint do
   plug(Plug.Static,
     at: "/",
     from: :plausible,
-    gzip: false,
+    gzip: true,
     only: ~w(css js images favicon.ico robots.txt)
   )
 
