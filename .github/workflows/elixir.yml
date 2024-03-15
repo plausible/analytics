@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        postgres_version: [15, 16]
         mix_env: ['test', 'small_test']
+        postgres_image: ['postgres:15', 'postgres:16']
     env:
       MIX_ENV: ${{ matrix.mix_env }}
     services:
       postgres:
-        image: postgres:${{ matrix.postgres_version }}
+        image: ${{ matrix.postgres_image }}
         ports:
           - 5432:5432
         env:
