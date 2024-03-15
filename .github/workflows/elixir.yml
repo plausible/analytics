@@ -68,7 +68,8 @@ jobs:
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
             ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
 
-      - uses: dorny/paths-filter@v3
+      - name: Check if tracker/** have changed
+        uses: dorny/paths-filter@v3
         id: changes
         with:
           filters: |
