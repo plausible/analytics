@@ -23,7 +23,7 @@ defmodule Plausible.TimezonesTest do
     assert to_utc_datetime(~N[2022-09-11 00:00:00], "Etc/UTC") == ~U[2022-09-11 00:00:00Z]
 
     assert to_utc_datetime(~N[2022-09-11 00:00:00], "America/Santiago") ==
-             ~U[2022-09-11 04:00:00Z]
+             ~U[2022-09-11 03:00:00Z]
 
     assert to_utc_datetime(~N[2023-10-29 00:00:00], "Atlantic/Azores") == ~U[2023-10-29 01:00:00Z]
   end
