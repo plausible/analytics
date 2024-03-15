@@ -60,7 +60,6 @@ jobs:
           path: |
             deps
             _build
-            priv/plts
             tracker/node_modules
             priv/tracker/js
           key: ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
@@ -87,11 +86,8 @@ jobs:
 
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
-      - run: mix format --check-formatted
-      - run: mix credo diff --from-git-merge-base origin/master
       - run: mix do ecto.create, ecto.migrate
       - run: mix test --include slow --include minio --max-failures 1 --warnings-as-errors
-      - run: mix dialyzer
 
   small_build:
     name: Small build and small test
@@ -146,3 +142,38 @@ jobs:
       - run: mix compile --warnings-as-errors --all-warnings
       - run: mix do ecto.create, ecto.migrate
       - run: mix test --include slow --max-failures 1 --warnings-as-errors
+
+  static:
+    name: Static checks (format, credo, dialyzer)
+    env:
+      MIX_ENV: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: marocchino/tool-versions-action@v1
+        id: versions
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ steps.versions.outputs.elixir }}
+          otp-version: ${{ steps.versions.outputs.erlang }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+            priv/plts
+          key: static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
+            static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
+
+      - run: mix deps.get --only $MIX_ENV
+      - run: mix compile --warnings-as-errors --all-warnings
+      - run: mix format --check-formatted
+      - run: mix credo diff --from-git-merge-base origin/master
+      - run: mix dialyzer 
+     
