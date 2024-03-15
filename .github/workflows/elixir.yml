@@ -71,7 +71,7 @@ jobs:
       - run: mix format --check-formatted
       - run: mix credo diff --from-git-merge-base origin/master
       - run: mix do ecto.create, ecto.migrate
-      # - run: mix test --include slow --include minio --max-failures 1 --warnings-as-errors
+      - run: mix test --include slow --include minio --max-failures 1 --warnings-as-errors
       - run: mix dialyzer
 
   small_build:
