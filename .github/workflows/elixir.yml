@@ -75,15 +75,15 @@ jobs:
             tracker:
               - 'tracker/**'
       - run: |
-          if [ -z "$(ls -A priv/tracker/js/*.js)" ]; then
-            echo "HAS_TRACKER=false" >> $GITHUB_ENV
+          if [ -f priv/tracker/js/plausible.js ]; then
+            echo "HAS_BUILT_TRACKER=true" >> $GITHUB_ENV
           else
-            echo "HAS_TRACKER=true" >> $GITHUB_ENV
+            echo "HAS_BUILT_TRACKER=false" >> $GITHUB_ENV
           fi
       - run: npm install --prefix ./tracker
-        if: steps.changes.outputs.tracker == 'true' || env.HAS_TRACKER == 'false'
+        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
       - run: npm run deploy --prefix ./tracker
-        if: steps.changes.outputs.tracker == 'true' || env.HAS_TRACKER == 'false'
+        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
 
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
