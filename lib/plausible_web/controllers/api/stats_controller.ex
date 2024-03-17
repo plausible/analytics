@@ -299,10 +299,12 @@ defmodule PlausibleWeb.Api.StatsController do
       },
       %{
         name: "Unique conversions (last 30 min)",
+        graph_metric: :visitors,
         value: unique_conversions
       },
       %{
         name: "Total conversions (last 30 min)",
+        graph_metric: :events,
         value: total_conversions
       }
     ]
@@ -325,10 +327,12 @@ defmodule PlausibleWeb.Api.StatsController do
       },
       %{
         name: "Unique visitors (last 30 min)",
+        graph_metric: :visitors,
         value: visitors
       },
       %{
         name: "Pageviews (last 30 min)",
+        graph_metric: :pageviews,
         value: pageviews
       }
     ]
@@ -345,15 +349,21 @@ defmodule PlausibleWeb.Api.StatsController do
 
     [
       top_stats_entry(results, comparison, "Unique visitors", :total_visitors),
-      top_stats_entry(results, comparison, "Unique conversions", :visitors),
-      top_stats_entry(results, comparison, "Total conversions", :events),
+      top_stats_entry(results, comparison, "Unique conversions", :visitors, graphable?: true),
+      top_stats_entry(results, comparison, "Total conversions", :events, graphable?: true),
       on_full_build do
-        top_stats_entry(results, comparison, "Average revenue", :average_revenue, &format_money/1)
+        top_stats_entry(results, comparison, "Average revenue", :average_revenue,
+          formatter: &format_money/1,
+          graphable?: true
+        )
       end,
       on_full_build do
-        top_stats_entry(results, comparison, "Total revenue", :total_revenue, &format_money/1)
+        top_stats_entry(results, comparison, "Total revenue", :total_revenue,
+          formatter: &format_money/1,
+          graphable?: true
+        )
       end,
-      top_stats_entry(results, comparison, "Conversion rate", :conversion_rate)
+      top_stats_entry(results, comparison, "Conversion rate", :conversion_rate, graphable?: true)
     ]
     |> Enum.reject(&is_nil/1)
     |> then(&{&1, 100})
@@ -387,39 +397,63 @@ defmodule PlausibleWeb.Api.StatsController do
 
     stats =
       [
-        top_stats_entry(current_results, prev_results, "Unique visitors", :visitors),
-        top_stats_entry(current_results, prev_results, "Total visits", :visits),
-        top_stats_entry(current_results, prev_results, "Total pageviews", :pageviews),
-        top_stats_entry(current_results, prev_results, "Views per visit", :views_per_visit),
-        top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate),
-        top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration),
-        top_stats_entry(current_results, prev_results, "Time on page", :time_on_page, fn
-          nil -> 0
-          value -> value
-        end)
+        top_stats_entry(current_results, prev_results, "Unique visitors", :visitors,
+          graphable?: true
+        ),
+        top_stats_entry(current_results, prev_results, "Total visits", :visits, graphable?: true),
+        top_stats_entry(current_results, prev_results, "Total pageviews", :pageviews,
+          graphable?: true
+        ),
+        top_stats_entry(current_results, prev_results, "Views per visit", :views_per_visit,
+          graphable?: true
+        ),
+        top_stats_entry(current_results, prev_results, "Bounce rate", :bounce_rate,
+          graphable?: true
+        ),
+        top_stats_entry(current_results, prev_results, "Visit duration", :visit_duration,
+          graphable?: true
+        ),
+        top_stats_entry(current_results, prev_results, "Time on page", :time_on_page,
+          formatter: fn
+            nil -> 0
+            value -> value
+          end
+        )
       ]
       |> Enum.filter(& &1)
 
     {stats, current_results[:sample_percent][:value]}
   end
 
-  defp top_stats_entry(current_results, prev_results, name, key, formatter \\ & &1) do
+  defp top_stats_entry(current_results, prev_results, name, key, opts \\ []) do
     if current_results[key] do
+      formatter = Keyword.get(opts, :formatter, & &1)
       value = get_in(current_results, [key, :value])
 
-      if prev_results do
-        prev_value = get_in(prev_results, [key, :value])
-        change = Stats.Compare.calculate_change(key, prev_value, value)
+      %{name: name, value: formatter.(value)}
+      |> maybe_put_graph_metric(opts, key)
+      |> maybe_put_comparison(prev_results, key, value, formatter)
+    end
+  end
 
-        %{
-          name: name,
-          value: formatter.(value),
-          comparison_value: formatter.(prev_value),
-          change: change
-        }
-      else
-        %{name: name, value: formatter.(value)}
-      end
+  defp maybe_put_graph_metric(entry, opts, key) do
+    if Keyword.get(opts, :graphable?) do
+      entry |> Map.put(:graph_metric, key)
+    else
+      entry
+    end
+  end
+
+  defp maybe_put_comparison(entry, prev_results, key, value, formatter) do
+    if prev_results do
+      prev_value = get_in(prev_results, [key, :value])
+      change = Stats.Compare.calculate_change(key, prev_value, value)
+
+      entry
+      |> Map.put(:comparison_value, formatter.(prev_value))
+      |> Map.put(:change, change)
+    else
+      entry
     end
   end
 
