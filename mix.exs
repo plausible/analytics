@@ -19,8 +19,10 @@ defmodule Plausible.MixProject do
       releases: [
         plausible: [
           include_executables_for: [:unix],
-          applications: [plausible: :permanent],
-          steps: [:assemble, :tar]
+          config_providers: [
+            {Config.Reader,
+             path: {:system, "RELEASE_ROOT", "/import_extra_config.exs"}, imports: []}
+          ]
         ]
       ],
       dialyzer: [
