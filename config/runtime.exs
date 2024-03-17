@@ -231,10 +231,6 @@ maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY"
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
 persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
-if System.get_env("DISABLE_AUTH") do
-  Logger.warning("DISABLE_AUTH env var is no longer supported")
-end
-
 enable_email_verification =
   config_dir
   |> get_var_from_path_or_env("ENABLE_EMAIL_VERIFICATION", "false")
