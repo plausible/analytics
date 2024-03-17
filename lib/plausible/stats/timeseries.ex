@@ -55,6 +55,8 @@ defmodule Plausible.Stats.Timeseries do
   defp events_timeseries(_, _, []), do: []
 
   defp events_timeseries(site, query, metrics) do
+    metrics = Util.maybe_add_visitors_metric(metrics)
+
     from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
     |> select_bucket(site, query)
     |> maybe_add_timeseries_conversion_rate(site, query, metrics)

@@ -1107,7 +1107,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       conn =
         get(conn, "/api/v1/stats/timeseries", %{
           "site_id" => site.domain,
-          "metrics" => "visitors,conversion_rate",
+          "metrics" => "conversion_rate",
           "filters" => "event:goal==Signup",
           "period" => "7d",
           "date" => "2021-01-10"
@@ -1118,12 +1118,10 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
       assert [first, second] == [
                %{
                  "date" => "2021-01-04",
-                 "visitors" => 2,
                  "conversion_rate" => 66.7
                },
                %{
                  "date" => "2021-01-05",
-                 "visitors" => 1,
                  "conversion_rate" => 100.0
                }
              ]
