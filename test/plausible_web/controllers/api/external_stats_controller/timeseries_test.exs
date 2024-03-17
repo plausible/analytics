@@ -1091,6 +1091,26 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
   end
 
   describe "metrics" do
+    test "returns conversion rate as 0 when no stats exist", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      Enum.each(json_response(conn, 200)["results"], fn bucket ->
+        bucket["conversion_rate"] == 0.0
+      end)
+    end
+
     test "returns conversion rate when goal filter is applied", %{
       conn: conn,
       site: site
