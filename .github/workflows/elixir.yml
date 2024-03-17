@@ -130,5 +130,6 @@ jobs:
       - run: mix deps.get --only $MIX_ENV
       - run: mix compile --warnings-as-errors --all-warnings
       - run: mix format --check-formatted
+      - run: mix deps.unlock --check-unused
       - run: mix credo diff --from-git-merge-base origin/master
       - run: mix dialyzer 
