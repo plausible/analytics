@@ -33,11 +33,20 @@ defmodule PlausibleWeb.Endpoint do
   plug(PlausibleWeb.Tracker)
   plug(PlausibleWeb.Favicon)
 
+  static_paths = ~w(css js images favicon.ico)
+
+  static_paths =
+    on_full_build do
+      static_paths
+    else
+      static_paths ++ ["robots.txt"]
+    end
+
   plug(Plug.Static,
     at: "/",
     from: :plausible,
     gzip: false,
-    only: ~w(css js images favicon.ico robots.txt)
+    only: static_paths
   )
 
   on_full_build do
