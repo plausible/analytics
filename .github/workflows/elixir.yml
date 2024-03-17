@@ -127,7 +127,7 @@ jobs:
             static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
             static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
 
-      - run: mix deps.get --only $MIX_ENV
+      - run: mix deps.get
       - run: mix compile --warnings-as-errors --all-warnings
       - run: mix format --check-formatted
       - run: mix deps.unlock --check-unused
