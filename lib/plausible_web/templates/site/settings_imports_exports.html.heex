@@ -56,8 +56,12 @@
   </header>
 
   <div class="mt-4">
-    <PlausibleWeb.Components.Generic.button_link disabled href="">
+    <PlausibleWeb.Components.Generic.button
+      data-method="post"
+      data-to={"/#{URI.encode_www_form(@site.domain)}/settings/export"}
+      data-csrf={Plug.CSRFProtection.get_csrf_token()}
+    >
       Export to CSV
-    </PlausibleWeb.Components.Generic.button_link>
+    </PlausibleWeb.Components.Generic.button>
   </div>
 </div>
