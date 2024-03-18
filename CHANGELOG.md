@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Removed the `prop_names` returned in the Stats API `event:goal` breakdown response
 - Removed the `prop-breakdown.csv` file from CSV export
 - Deprecated `CLICKHOUSE_MAX_BUFFER_SIZE`
+- Removed `/app/init-admin.sh` that was deprecated in v2.0.0 plausible/analytics#3903
 
 ### Changed
 - Limit the number of Goal Conversions shown on the dashboard and render a "Details" link when there are more entries to show
