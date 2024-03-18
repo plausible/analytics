@@ -74,7 +74,7 @@
     payload.u = location.href
     {{/if}}
     payload.d = scriptEl.getAttribute('data-domain')
-    payload.r = document.referrer?.split("?")[0].split("#")[0] || null
+    payload.r = document.referrer.split("?")[0].split("#")[0] || null
     if (options && options.meta) {
       payload.m = JSON.stringify(options.meta)
     }
