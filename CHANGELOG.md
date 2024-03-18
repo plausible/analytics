@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Add `time_on_page` metric into the Stats API
 - County Block List in Site Settings
 - Query the `views_per_visit` metric based on imported data as well if possible
 - Group `operating_system_versions` by `operating_system` in Stats API breakdown
@@ -36,6 +37,7 @@ All notable changes to this project will be documented in this file.
 - Removed the `prop_names` returned in the Stats API `event:goal` breakdown response
 - Removed the `prop-breakdown.csv` file from CSV export
 - Deprecated `CLICKHOUSE_MAX_BUFFER_SIZE`
+- Removed `/app/init-admin.sh` that was deprecated in v2.0.0 plausible/analytics#3903
 
 ### Changed
 - A visits `entry_page` and `exit_page` is only set and updated for pageviews, not custom events
@@ -44,6 +46,7 @@ All notable changes to this project will be documented in this file.
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
 - GA/SC sections moved to new settings: Integrations
 - Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
+- Validate metric isn't queried multiple times
 
 ### Fixed
 - Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
@@ -64,6 +67,9 @@ All notable changes to this project will be documented in this file.
 - Allow custom event timeseries in stats API plausible/analytics#3505
 - Fixes for sites with UTF characters in domain plausible/analytics#3560
 - Fix crash when using special characters in filter plausible/analytics#3634
+- Fix automatic scrolling to the bottom on the dashboard if previously selected properties tab plausible/analytics#3872
+- Allow running the container with arbitrary UID plausible/analytics#2986
+- Fix `width=manual` in embedded dashboards plausible/analytics#3910
 
 ## v2.0.0 - 2023-07-12
 

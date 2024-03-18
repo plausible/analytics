@@ -1,0 +1,32 @@
+CREATE OR REPLACE DICTIONARY sessions_dict
+<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+(
+    site_id UInt64,
+    session_id UInt64,
+    referrer String,
+    referrer_source String,
+    utm_medium String,
+    utm_source String,
+    utm_campaign String,
+    utm_content String,
+    utm_term String,
+    country_code String,
+    subdivision1_code String,
+    subdivision2_code String,
+    city_geoname_id UInt32,
+    screen_size String,
+    operating_system String,
+    operating_system_version String,
+    browser String,
+    browser_version String
+)
+PRIMARY KEY site_id, session_id
+SOURCE(CLICKHOUSE(TABLE sessions_v2 <%= @dictionary_connection_params %>))
+LIFETIME(<%= @dictionary_config.lifetime %>)
+LAYOUT(
+    complex_key_cache(
+        size_in_cells <%= @dictionary_config.size_in_cells %>
+        max_threads_for_updates <%= @dictionary_config.max_threads_for_updates %>
+        allow_read_expired_keys 1
+    )
+)

@@ -10,6 +10,7 @@ defmodule Plausible.Application do
     on_full_build(do: Plausible.License.ensure_valid_license())
 
     children = [
+      Plausible.Cache.Stats,
       Plausible.Repo,
       Plausible.ClickhouseRepo,
       Plausible.IngestRepo,
@@ -23,13 +24,15 @@ defmodule Plausible.Application do
       Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
       Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
       ReferrerBlocklist,
-      Supervisor.child_spec({Cachex, name: :user_agents, limit: 10_000, stats: true},
-        id: :cachex_user_agents
+      Plausible.Cache.Adapter.child_spec(:user_agents, :cache_user_agents,
+        ttl_check_interval: :timer.seconds(5),
+        global_ttl: :timer.minutes(60)
       ),
-      Supervisor.child_spec({Cachex, name: :sessions, limit: nil, stats: true},
-        id: :cachex_sessions
+      Plausible.Cache.Adapter.child_spec(:sessions, :cache_sessions,
+        ttl_check_interval: :timer.seconds(1),
+        global_ttl: :timer.minutes(30)
       ),
-      {Plausible.Site.Cache, []},
+      {Plausible.Site.Cache, ttl_check_interval: false},
       {Plausible.Cache.Warmer,
        [
          child_name: Plausible.Site.Cache.All,
@@ -44,7 +47,7 @@ defmodule Plausible.Application do
          interval: :timer.seconds(30),
          warmer_fn: :refresh_updated_recently
        ]},
-      {Plausible.Shield.IPRuleCache, []},
+      {Plausible.Shield.IPRuleCache, ttl_check_interval: false},
       {Plausible.Cache.Warmer,
        [
          child_name: Plausible.Shield.IPRuleCache.All,
@@ -59,7 +62,7 @@ defmodule Plausible.Application do
          interval: :timer.seconds(35),
          warmer_fn: :refresh_updated_recently
        ]},
-      {Plausible.Shield.CountryRuleCache, []},
+      {Plausible.Shield.CountryRuleCache, ttl_check_interval: false},
       {Plausible.Cache.Warmer,
        [
          child_name: Plausible.Shield.CountryRuleCache.All,
@@ -166,16 +169,6 @@ defmodule Plausible.Application do
       &ObanErrorReporter.handle_event/4,
       %{}
     )
-  end
-
-  def report_cache_stats() do
-    case Cachex.stats(:user_agents) do
-      {:ok, stats} ->
-        Logger.info("User agent cache stats: #{inspect(stats)}")
-
-      e ->
-        IO.puts("Unable to show cache stats: #{inspect(e)}")
-    end
   end
 
   defp setup_opentelemetry() do

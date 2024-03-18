@@ -189,6 +189,71 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
                  "Session metric `views_per_visit` cannot be queried when using a filter on `event:name`."
              }
     end
+
+    test "validates a metric isn't asked multiple times", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "visitors,visitors"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Metrics cannot be queried multiple times."
+             }
+    end
+
+    test "validates that time_on_page cannot be queried without a page filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "time_on_page"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" =>
+                 "Metric `time_on_page` can only be queried in a page breakdown or with a page filter."
+             }
+    end
+
+    test "validates that time_on_page cannot be queried with a goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A;event:goal==Signup"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Metric `time_on_page` cannot be queried when filtering by `event:goal`"
+             }
+    end
+
+    test "validates that time_on_page cannot be queried with an event:name filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A;event:name==Signup"
+        })
+
+      assert json_response(conn, 400) == %{
+               "error" => "Metric `time_on_page` cannot be queried when filtering by `event:name`"
+             }
+    end
   end
 
   test "aggregates a single metric", %{conn: conn, site: site} do
@@ -353,6 +418,56 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
 
       assert json_response(conn, 200)["results"] == %{
                "conversion_rate" => %{"value" => 50.0, "change" => 16.7}
+             }
+    end
+
+    test "can compare time_on_page with previous period", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A", user_id: 111, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 111, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, pathname: "/A", user_id: 999, timestamp: ~N[2021-01-02 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 999, timestamp: ~N[2021-01-02 00:01:30])
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-02",
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A",
+          "compare" => "previous_period"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "time_on_page" => %{"value" => 90, "change" => 50.0}
+             }
+    end
+
+    test "time_on_page change is nil if previous period returns a number but current period is nil",
+         %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A", user_id: 123, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/B", user_id: 123, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-02 00:00:00])
+      ])
+
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-02",
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A",
+          "compare" => "previous_period"
+        })
+
+      assert json_response(conn, 200)["results"] == %{
+               "time_on_page" => %{"value" => nil, "change" => nil}
              }
     end
   end
@@ -1298,6 +1413,58 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
   end
 
   describe "metrics" do
+    test "time_on_page with a page filter", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          pathname: "/A",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/another",
+          user_id: 123,
+          timestamp: ~N[2021-01-01 00:01:00]
+        ),
+        build(:pageview,
+          pathname: "/A",
+          user_id: 321,
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          pathname: "/another",
+          user_id: 321,
+          timestamp: ~N[2021-01-01 00:01:20]
+        ),
+        build(:pageview, pathname: "/A", timestamp: ~N[2021-01-01 00:00:00])
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"time_on_page" => %{"value" => 70}}
+    end
+
+    test "time_on_page is returned as `nil` if it cannot be calculated", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A")
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "time_on_page",
+          "filters" => "event:page==/A"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"time_on_page" => %{"value" => nil}}
+    end
+
     test "conversion_rate when goal filter is applied", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event, name: "Signup"),

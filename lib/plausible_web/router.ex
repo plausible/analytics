@@ -374,19 +374,30 @@ defmodule PlausibleWeb.Router do
     delete "/:website/stats", SiteController, :reset_stats
 
     get "/:website/import/google-analytics/view-id",
-        SiteController,
-        :import_from_google_view_id_form
+        UniversalAnalyticsController,
+        :view_id_form
 
-    post "/:website/import/google-analytics/view-id", SiteController, :import_from_google_view_id
+    post "/:website/import/google-analytics/view-id", UniversalAnalyticsController, :view_id
 
     get "/:website/import/google-analytics/user-metric",
-        SiteController,
-        :import_from_google_user_metric_notice
+        UniversalAnalyticsController,
+        :user_metric_notice
 
-    get "/:website/import/google-analytics/confirm", SiteController, :import_from_google_confirm
-    post "/:website/settings/google-import", SiteController, :import_from_google
+    get "/:website/import/google-analytics/confirm", UniversalAnalyticsController, :confirm
+    post "/:website/settings/google-import", UniversalAnalyticsController, :import
+
+    get "/:website/import/google-analytics4/property",
+        GoogleAnalytics4Controller,
+        :property_form
+
+    post "/:website/import/google-analytics4/property", GoogleAnalytics4Controller, :property
+
+    get "/:website/import/google-analytics4/confirm", GoogleAnalytics4Controller, :confirm
+    post "/:website/settings/google4-import", GoogleAnalytics4Controller, :import
+
     delete "/:website/settings/forget-imported", SiteController, :forget_imported
     delete "/:website/settings/forget-import/:import_id", SiteController, :forget_import
+    post "/:website/settings/export", SiteController, :export
 
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats

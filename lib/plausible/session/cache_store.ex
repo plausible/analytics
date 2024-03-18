@@ -19,27 +19,22 @@ defmodule Plausible.Session.CacheStore do
   defp find_session(_domain, nil), do: nil
 
   defp find_session(event, user_id) do
-    from_cache = Cachex.get(:sessions, {event.site_id, user_id})
+    from_cache = Plausible.Cache.Adapter.get(:sessions, {event.site_id, user_id})
 
     case from_cache do
-      {:ok, nil} ->
+      nil ->
         nil
 
-      {:ok, session} ->
+      session ->
         if Timex.diff(event.timestamp, session.timestamp, :minutes) <= 30 do
           session
         end
-
-      {:error, e} ->
-        Sentry.capture_message("Cachex error", extra: %{error: e})
-        nil
     end
   end
 
   defp persist_session(session) do
     key = {session.site_id, session.user_id}
-    Cachex.put(:sessions, key, session, ttl: :timer.minutes(30))
-    session
+    Plausible.Cache.Adapter.put(:sessions, key, session)
   end
 
   defp update_session(session, event) do

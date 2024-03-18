@@ -159,10 +159,10 @@ export default function PlausibleCombobox(props) {
   }, [])
 
   useEffect(() => {
-    if (props.singleOption && props.values.length === 0) {
+    if (props.singleOption && props.values.length === 0 && props.autoFocus) {
       searchRef.current.focus()
     }
-  }, [props.values.length === 0])
+  }, [props.values.length === 0, props.singleOption, props.autoFocus])
 
   const searchBoxClass = 'border-none py-1 px-0 w-full inline-block rounded-md focus:outline-none focus:ring-0 text-sm'
 

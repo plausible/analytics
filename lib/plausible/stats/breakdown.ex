@@ -112,7 +112,7 @@ defmodule Plausible.Stats.Breakdown do
 
     breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select, pagination)
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
-    |> Enum.sort_by(& &1[sorting_key(metrics_to_select)], :desc)
+    |> sort_results(metrics_to_select)
     |> maybe_add_cr(site, query, nil, metrics)
     |> Util.keep_requested_metrics(metrics)
   end
@@ -194,7 +194,7 @@ defmodule Plausible.Stats.Breakdown do
       |> Map.merge(event_row)
       |> Map.merge(session_row)
     end)
-    |> Enum.sort_by(& &1[sorting_key(metrics)], :desc)
+    |> sort_results(metrics)
   end
 
   defp breakdown_sessions(_, _, _, [], _), do: []
@@ -775,6 +775,19 @@ defmodule Plausible.Stats.Breakdown do
     |> Enum.map(fn goal ->
       Map.put(goal, :conversion_rate, Util.calculate_cr(total_visitors, goal[:visitors]))
     end)
+  end
+
+  defp sort_results(results, metrics) do
+    Enum.sort_by(
+      results,
+      fn entry ->
+        case entry[sorting_key(metrics)] do
+          nil -> 0
+          n -> n
+        end
+      end,
+      :desc
+    )
   end
 
   defp sorting_key(metrics) do

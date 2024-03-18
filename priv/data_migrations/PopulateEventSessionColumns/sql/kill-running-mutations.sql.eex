@@ -1,0 +1,2 @@
+KILL MUTATION <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+WHERE command ILIKE '%sessions_dict%'
