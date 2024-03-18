@@ -67,6 +67,7 @@ All notable changes to this project will be documented in this file.
 - Fix crash when using special characters in filter plausible/analytics#3634
 - Fix automatic scrolling to the bottom on the dashboard if previously selected properties tab plausible/analytics#3872
 - Allow running the container with arbitrary UID plausible/analytics#2986
+- Fix `width=manual` in embedded dashboards plausible/analytics#3910
 
 ## v2.0.0 - 2023-07-12
 
