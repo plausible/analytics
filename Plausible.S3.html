@@ -260,7 +260,7 @@ The URL expires in 24 hours.</p><p>In the current implementation the bucket alwa
       </div>
 
 <p>Returns the pre-configured S3 bucket for CSV exports.</p><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:plausible</span><span class="p">,</span><span class="w"> </span><span class="nc">Plausible.S3</span><span class="p">,</span><span class="w">
-  </span><span class="ss">exports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="7018253277-1">(</span><span class="s">&quot;S3_EXPORTS_BUCKET&quot;</span><span class="p" data-group-id="7018253277-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">exports_bucket</span><span class="p" data-group-id="1206958253-1">(</span><span class="p" data-group-id="1206958253-1">)</span><span class="w">
+  </span><span class="ss">exports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="8155726714-1">(</span><span class="s">&quot;S3_EXPORTS_BUCKET&quot;</span><span class="p" data-group-id="8155726714-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">exports_bucket</span><span class="p" data-group-id="5933608593-1">(</span><span class="p" data-group-id="5933608593-1">)</span><span class="w">
 </span><span class="s">&quot;test-exports&quot;</span></code></pre>
   </section>
 </section>
