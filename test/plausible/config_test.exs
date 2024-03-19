@@ -272,6 +272,44 @@ defmodule Plausible.ConfigTest do
     end
   end
 
+  describe "extra config" do
+    test "no-op when no extra path is set" do
+      put_system_env_undo({"EXTRA_CONFIG_PATH", nil})
+
+      assert Config.Reader.read!("rel/overlays/import_extra_config.exs") == []
+    end
+
+    test "raises if path is invalid" do
+      put_system_env_undo({"EXTRA_CONFIG_PATH", "no-such-file"})
+
+      assert_raise File.Error, ~r/could not read file/, fn ->
+        Config.Reader.read!("rel/overlays/import_extra_config.exs")
+      end
+    end
+
+    @tag :tmp_dir
+    test "reads extra config", %{tmp_dir: tmp_dir} do
+      extra_config_path = Path.join(tmp_dir, "config.exs")
+
+      File.write!(extra_config_path, """
+      import Config
+
+      config :plausible, Plausible.Repo,
+        after_connect: {Postgrex, :query!, ["SET search_path TO global_prefix", []]}
+      """)
+
+      put_system_env_undo({"EXTRA_CONFIG_PATH", extra_config_path})
+
+      assert Config.Reader.read!("rel/overlays/import_extra_config.exs") == [
+               {:plausible,
+                [
+                  {Plausible.Repo,
+                   [after_connect: {Postgrex, :query!, ["SET search_path TO global_prefix", []]}]}
+                ]}
+             ]
+    end
+  end
+
   defp runtime_config(env) do
     put_system_env_undo(env)
     Config.Reader.read!("config/runtime.exs", env: :prod)
