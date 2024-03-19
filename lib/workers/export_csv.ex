@@ -25,8 +25,6 @@ defmodule Plausible.Workers.ExportCSV do
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    # NOTE: what if 1970-01-01?
-    # NOTE: should we use site.timezone?
     %Ch.Result{rows: [[min_date, max_date]]} =
       Ch.query!(
         ch,
@@ -34,37 +32,49 @@ defmodule Plausible.Workers.ExportCSV do
         %{"site_id" => site_id}
       )
 
-    download_url =
-      DBConnection.run(
-        ch,
-        fn conn ->
-          conn
-          |> Plausible.Exports.stream_archive(
-            Plausible.Exports.export_queries(site_id,
-              date_range: Date.range(min_date, max_date),
-              extname: ".csv"
-            ),
-            format: "CSVWithNames"
-          )
-          |> Plausible.S3.export_upload_multipart(s3_bucket, s3_path, s3_config_overrides(args))
-        end,
-        timeout: :infinity
+    if max_date == ~D[1970-01-01] do
+      # NOTE: replace with proper Plausible.Email template
+      Plausible.Mailer.deliver_now!(
+        Bamboo.Email.new_email(
+          from: "plausible@email.com",
+          to: email,
+          subject: "EXPORT FAILURE",
+          text_body: "there is nothing to export"
+        )
       )
+    else
+      download_url =
+        DBConnection.run(
+          ch,
+          fn conn ->
+            conn
+            |> Plausible.Exports.stream_archive(
+              Plausible.Exports.export_queries(site_id,
+                date_range: Date.range(min_date, max_date),
+                extname: ".csv"
+              ),
+              format: "CSVWithNames"
+            )
+            |> Plausible.S3.export_upload_multipart(s3_bucket, s3_path, s3_config_overrides(args))
+          end,
+          timeout: :infinity
+        )
 
-    # NOTE: replace with proper Plausible.Email template
-    Plausible.Mailer.deliver_now!(
-      Bamboo.Email.new_email(
-        from: "plausible@email.com",
-        to: email,
-        subject: "EXPORT SUCCESS",
-        text_body: """
-        download it from #{download_url}! hurry up! you have 24 hours!"
-        """,
-        html_body: """
-        download it from <a href="#{download_url}">here</a>! hurry up! you have 24 hours!
-        """
+      # NOTE: replace with proper Plausible.Email template
+      Plausible.Mailer.deliver_now!(
+        Bamboo.Email.new_email(
+          from: "plausible@email.com",
+          to: email,
+          subject: "EXPORT SUCCESS",
+          text_body: """
+          download it from #{download_url}! hurry up! you have 24 hours!"
+          """,
+          html_body: """
+          download it from <a href="#{download_url}">here</a>! hurry up! you have 24 hours!
+          """
+        )
       )
-    )
+    end
 
     :ok
   end
