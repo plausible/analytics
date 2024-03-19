@@ -708,7 +708,7 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
-  def export(conn, _params) do
+  def csv_export(conn, _params) do
     %{site: site, current_user: user} = conn.assigns
 
     Oban.insert!(
@@ -723,6 +723,16 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> put_flash(:success, "SCHEDULED. WAIT FOR MAIL")
     |> redirect(to: Routes.site_path(conn, :settings_imports_exports, site.domain))
+  end
+
+  # TODO can it be just a liveview? what to do about layout
+  def csv_import(conn, _params) do
+    conn
+    |> assign(:skip_plausible_tracking, true)
+    |> render("csv_import.html",
+      layout: {PlausibleWeb.LayoutView, "focus.html"},
+      connect_live_socket: true
+    )
   end
 
   def change_domain(conn, _params) do
