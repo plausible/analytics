@@ -686,7 +686,7 @@ defmodule Plausible.Stats.Breakdown do
     Enum.reduce(fields, nil, &fields_equal/2)
   end
 
-  def outer_order_by(fields) do
+  defp outer_order_by(fields) do
     Enum.map(fields, fn field_name -> {:asc, dynamic([q], field(q, ^field_name))} end)
   end
 
@@ -720,18 +720,15 @@ defmodule Plausible.Stats.Breakdown do
   #  * Y is the number of all visitors for this breakdown
   #    result without the `event:goal` and `event:props:*`
   #    filters.
-  def maybe_add_group_conversion_rate(q, breakdown_fn, site, query, property, metrics) do
+  defp maybe_add_group_conversion_rate(q, breakdown_fn, site, query, property, metrics) do
     if :conversion_rate in metrics do
-      event_metrics =
-        metrics
-        |> Util.maybe_add_visitors_metric()
-        |> Enum.filter(&(&1 in @event_metrics))
+      breakdown_total_visitors_query = query |> Query.remove_event_filters([:goal, :props])
 
-      groups_totals_query = query |> Query.remove_event_filters([:goal, :props])
-      groups_breakdown_q = breakdown_fn.(site, groups_totals_query, property, event_metrics)
+      breakdown_total_visitors_q =
+        breakdown_fn.(site, breakdown_total_visitors_query, property, [:visitors])
 
       from(e in subquery(q),
-        left_join: c in subquery(groups_breakdown_q),
+        left_join: c in subquery(breakdown_total_visitors_q),
         on: ^on_matches_group_by(group_by_field_names(property)),
         select_merge: %{
           total_visitors: c.visitors,
