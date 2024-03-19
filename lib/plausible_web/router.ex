@@ -390,7 +390,8 @@ defmodule PlausibleWeb.Router do
 
     delete "/:website/settings/forget-imported", SiteController, :forget_imported
     delete "/:website/settings/forget-import/:import_id", SiteController, :forget_import
-    post "/:website/settings/export", SiteController, :export
+    post "/:website/settings/export", SiteController, :csv_export
+    get "/:website/settings/import", SiteController, :csv_import
 
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats
