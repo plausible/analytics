@@ -140,14 +140,6 @@ defmodule Plausible.Imported.CSVImporter do
 
   defp date_range([], first, last), do: Date.range(first, last)
 
-  defp min_date(d1, d2) do
-    if Date.compare(d1, d2) == :lt, do: d1, else: d2
-  end
-
-  defp max_date(d1, d2) do
-    if Date.compare(d1, d2) == :gt, do: d1, else: d2
-  end
-
   @spec parse_date!(String.t()) :: Date.t()
   defp parse_date!(date) do
     date |> Timex.parse!("{YYYY}{0M}{0D}") |> NaiveDateTime.to_date()
