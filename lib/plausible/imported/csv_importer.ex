@@ -130,7 +130,7 @@ defmodule Plausible.Imported.CSVImporter do
 
     end_date =
       if prev_end_date do
-        max_date(end_date, prev_end_date)
+        Enum.max([end_date, prev_end_date], Date)
       else
         end_date
       end
