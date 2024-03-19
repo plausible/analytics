@@ -734,7 +734,7 @@ defmodule Plausible.Stats.Breakdown do
           total_visitors: c.visitors,
           conversion_rate:
             fragment(
-              "if(? > 0, round(? / ? * 100, 1), null)",
+              "if(? > 0, round(? / ? * 100, 1), 0)",
               c.visitors,
               e.visitors,
               c.visitors

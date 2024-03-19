@@ -660,7 +660,7 @@ defmodule Plausible.Stats.Base do
       |> select_merge([e], %{
         conversion_rate:
           fragment(
-            "if(? > 0, round(? / ? * 100, 1), null)",
+            "if(? > 0, round(? / ? * 100, 1), 0)",
             selected_as(:__total_visitors),
             e.visitors,
             selected_as(:__total_visitors)
