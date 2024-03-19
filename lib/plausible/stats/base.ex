@@ -614,7 +614,7 @@ defmodule Plausible.Stats.Base do
     |> select([e], total_visitors: fragment(@uniq_users_expression, e.user_id))
   end
 
-  def total_visitors_subquery(site, %Query{include_imported: true} = query) do
+  defp total_visitors_subquery(site, query, true) do
     dynamic(
       [e],
       selected_as(
@@ -625,14 +625,16 @@ defmodule Plausible.Stats.Base do
     )
   end
 
-  def total_visitors_subquery(site, query) do
+  defp total_visitors_subquery(site, query, false) do
     dynamic([e], selected_as(subquery(total_visitors(site, query)), :__total_visitors))
   end
 
   def add_percentage_metric(q, site, query, metrics) do
     if :percentage in metrics do
       q
-      |> select_merge(^%{__total_visitors: total_visitors_subquery(site, query)})
+      |> select_merge(
+        ^%{__total_visitors: total_visitors_subquery(site, query, query.include_imported)}
+      )
       |> select_merge(%{
         percentage:
           fragment(
@@ -650,13 +652,17 @@ defmodule Plausible.Stats.Base do
   # Adds conversion_rate metric to query, calculated as
   # X / Y where Y is the same breakdown value without goal or props
   # filters.
-  def maybe_add_conversion_rate(q, site, query, metrics) do
+  def maybe_add_conversion_rate(q, site, query, metrics, opts) do
     if :conversion_rate in metrics do
+      include_imported = Keyword.fetch!(opts, :include_imported)
+
       total_query = query |> Query.remove_event_filters([:goal, :props])
 
       # :TRICKY: Subquery is used due to event:goal breakdown above doing an UNION ALL
       subquery(q)
-      |> select_merge(^%{total_visitors: total_visitors_subquery(site, total_query)})
+      |> select_merge(
+        ^%{total_visitors: total_visitors_subquery(site, total_query, include_imported)}
+      )
       |> select_merge([e], %{
         conversion_rate:
           fragment(

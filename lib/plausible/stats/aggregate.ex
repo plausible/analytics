@@ -60,7 +60,7 @@ defmodule Plausible.Stats.Aggregate do
     from(e in base_event_query(site, query), select: %{})
     |> select_event_metrics(metrics)
     |> merge_imported(site, query, :aggregate, metrics)
-    |> maybe_add_conversion_rate(site, query, metrics)
+    |> maybe_add_conversion_rate(site, query, metrics, include_imported: query.include_imported)
     |> ClickhouseRepo.one()
   end
 
