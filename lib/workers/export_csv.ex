@@ -36,7 +36,7 @@ defmodule Plausible.Workers.ExportCSV do
       # NOTE: replace with proper Plausible.Email template
       Plausible.Mailer.deliver_now!(
         Bamboo.Email.new_email(
-          from: "plausible@email.com",
+          from: PlausibleWeb.Email.mailer_email_from(),
           to: email,
           subject: "EXPORT FAILURE",
           text_body: "there is nothing to export"
@@ -63,7 +63,7 @@ defmodule Plausible.Workers.ExportCSV do
       # NOTE: replace with proper Plausible.Email template
       Plausible.Mailer.deliver_now!(
         Bamboo.Email.new_email(
-          from: "plausible@email.com",
+          from: PlausibleWeb.Email.mailer_email_from(),
           to: email,
           subject: "EXPORT SUCCESS",
           text_body: """
