@@ -209,191 +209,152 @@ defmodule Plausible.Stats.Base do
 
   def apply_entry_prop_filter(sessions_q, _, _), do: sessions_q
 
-  def select_event_metrics(q, metrics), do: select_event_metrics(q, metrics, false)
+  def select_event_metrics(metrics) do
+    metrics
+    |> Enum.map(&select_event_metric/1)
+    |> Enum.reduce(%{}, &Map.merge/2)
+  end
 
-  def select_event_metrics(q, [], _), do: q
-
-  def select_event_metrics(q, [:pageviews | rest], revenue_nils) do
-    from(e in q,
-      select_merge: %{
-        pageviews:
+  defp select_event_metric(:pageviews) do
+    %{
+      pageviews:
+        dynamic(
+          [e],
           fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
-      }
-    )
-    |> select_event_metrics(rest, revenue_nils)
+        )
+    }
   end
 
-  def select_event_metrics(q, [:events | rest], revenue_nils) do
-    from(e in q,
-      select_merge: %{events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")}
-    )
-    |> select_event_metrics(rest, revenue_nils)
+  defp select_event_metric(:events) do
+    %{
+      events: dynamic([], fragment("toUInt64(round(count(*) * any(_sample_factor)))"))
+    }
   end
 
-  def select_event_metrics(q, [:visitors | rest], revenue_nils) do
-    from(e in q,
-      select_merge: %{
-        visitors: selected_as(fragment(@uniq_users_expression, e.user_id), :visitors)
-      }
-    )
-    |> select_event_metrics(rest, revenue_nils)
+  defp select_event_metric(:visitors) do
+    %{
+      visitors: dynamic([e], selected_as(fragment(@uniq_users_expression, e.user_id), :visitors))
+    }
   end
 
   on_full_build do
-    def select_event_metrics(q, [:total_revenue | rest], false) do
-      q
-      |> Plausible.Stats.Goal.Revenue.total_revenue_query()
-      |> select_event_metrics(rest, false)
+    defp select_event_metric(:total_revenue) do
+      %{total_revenue: Plausible.Stats.Goal.Revenue.total_revenue_query()}
     end
 
-    def select_event_metrics(q, [:average_revenue | rest], false) do
-      q
-      |> Plausible.Stats.Goal.Revenue.average_revenue_query()
-      |> select_event_metrics(rest, false)
-    end
-
-    def select_event_metrics(q, [:total_revenue | rest], true) do
-      from(e in q,
-        select_merge: %{
-          total_revenue: nil
-        }
-      )
-      |> select_event_metrics(rest, true)
-    end
-
-    def select_event_metrics(q, [:average_revenue | rest], true) do
-      from(e in q,
-        select_merge: %{
-          average_revenue: nil
-        }
-      )
-      |> select_event_metrics(rest, true)
+    defp select_event_metric(:average_revenue) do
+      %{average_revenue: Plausible.Stats.Goal.Revenue.average_revenue_query()}
     end
   end
 
-  def select_event_metrics(q, [:sample_percent | rest], revenue_nils) do
-    from(e in q,
-      select_merge: %{
-        sample_percent:
+  defp select_event_metric(:sample_percent) do
+    %{
+      sample_percent:
+        dynamic(
+          [],
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
-      }
-    )
-    |> select_event_metrics(rest, revenue_nils)
+        )
+    }
   end
 
-  def select_event_metrics(q, [:percentage | rest], revenue_nils) do
-    q |> select_event_metrics(rest, revenue_nils)
+  defp select_event_metric(:percentage), do: %{}
+  defp select_event_metric(:conversion_rate), do: %{}
+  defp select_event_metric(:total_visitors), do: %{}
+
+  defp select_event_metric(unknown), do: raise("Unknown metric: #{unknown}")
+
+  def select_session_metrics(metrics, query) do
+    metrics
+    |> Enum.map(&select_session_metric(&1, query))
+    |> Enum.reduce(%{}, &Map.merge/2)
   end
 
-  def select_event_metrics(q, [:conversion_rate | rest], revenue_nils) do
-    q |> select_event_metrics(rest, revenue_nils)
-  end
-
-  def select_event_metrics(q, [:total_visitors | rest], revenue_nils) do
-    q |> select_event_metrics(rest, revenue_nils)
-  end
-
-  def select_event_metrics(_, [unknown | _], _), do: raise("Unknown metric: #{unknown}")
-
-  def select_session_metrics(q, [], _query), do: q
-
-  def select_session_metrics(q, [:bounce_rate | rest], query) do
+  defp select_session_metric(:bounce_rate, query) do
     condition = dynamic_filter_condition(query, "event:page", :entry_page)
 
-    from(s in q,
-      select_merge:
-        ^%{
-          bounce_rate:
-            dynamic(
-              [],
-              fragment(
-                "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
-                ^condition,
-                ^condition
-              )
-            ),
-          __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
-        }
-    )
-    |> select_session_metrics(rest, query)
+    %{
+      bounce_rate:
+        dynamic(
+          [],
+          fragment(
+            "toUInt32(ifNotFinite(round(sumIf(is_bounce * sign, ?) / sumIf(sign, ?) * 100), 0))",
+            ^condition,
+            ^condition
+          )
+        ),
+      __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
+    }
   end
 
-  def select_session_metrics(q, [:visits | rest], query) do
-    from(s in q,
-      select_merge: %{
-        visits: fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign)
-      }
-    )
-    |> select_session_metrics(rest, query)
+  defp select_session_metric(:visits, _query) do
+    %{
+      visits: dynamic([s], fragment("toUInt64(round(sum(?) * any(_sample_factor)))", s.sign))
+    }
   end
 
-  def select_session_metrics(q, [:pageviews | rest], query) do
-    from(s in q,
-      select_merge: %{
-        pageviews:
+  defp select_session_metric(:pageviews, _query) do
+    %{
+      pageviews:
+        dynamic(
+          [s],
           fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.pageviews)
-      }
-    )
-    |> select_session_metrics(rest, query)
+        )
+    }
   end
 
-  def select_session_metrics(q, [:events | rest], query) do
-    from(s in q,
-      select_merge: %{
-        events: fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
-      }
-    )
-    |> select_session_metrics(rest, query)
+  defp select_session_metric(:events, _query) do
+    %{
+      events:
+        dynamic(
+          [s],
+          fragment("toUInt64(round(sum(? * ?) * any(_sample_factor)))", s.sign, s.events)
+        )
+    }
   end
 
-  def select_session_metrics(q, [:visitors | rest], query) do
-    from(s in q,
-      select_merge: %{
-        visitors:
+  defp select_session_metric(:visitors, _query) do
+    %{
+      visitors:
+        dynamic(
+          [s],
           selected_as(
             fragment("toUInt64(round(uniq(?) * any(_sample_factor)))", s.user_id),
             :visitors
           )
-      }
-    )
-    |> select_session_metrics(rest, query)
+        )
+    }
   end
 
-  def select_session_metrics(q, [:visit_duration | rest], query) do
-    from(s in q,
-      select_merge: %{
-        :visit_duration =>
-          fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))"),
-        __internal_visits: fragment("toUInt32(sum(sign))")
-      }
-    )
-    |> select_session_metrics(rest, query)
+  defp select_session_metric(:visit_duration, _query) do
+    %{
+      visit_duration:
+        dynamic([], fragment("toUInt32(ifNotFinite(round(sum(duration * sign) / sum(sign)), 0))")),
+      __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
+    }
   end
 
-  def select_session_metrics(q, [:views_per_visit | rest], query) do
-    from(s in q,
-      select_merge: %{
-        views_per_visit:
-          fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign),
-        __internal_visits: fragment("toUInt32(sum(sign))")
-      }
-    )
-    |> select_session_metrics(rest, query)
+  defp select_session_metric(:views_per_visit, _query) do
+    %{
+      views_per_visit:
+        dynamic(
+          [s],
+          fragment("ifNotFinite(round(sum(? * ?) / sum(?), 2), 0)", s.sign, s.pageviews, s.sign)
+        ),
+      __internal_visits: dynamic([], fragment("toUInt32(sum(sign))"))
+    }
   end
 
-  def select_session_metrics(q, [:sample_percent | rest], query) do
-    from(e in q,
-      select_merge: %{
-        sample_percent:
+  defp select_session_metric(:sample_percent, _query) do
+    %{
+      sample_percent:
+        dynamic(
+          [],
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
-      }
-    )
-    |> select_session_metrics(rest, query)
+        )
+    }
   end
 
-  def select_session_metrics(q, [:percentage | rest], query) do
-    q |> select_session_metrics(rest, query)
-  end
+  defp select_session_metric(:percentage, _query), do: %{}
 
   def dynamic_filter_condition(query, filter_key, db_field) do
     case query && query.filters && query.filters[filter_key] do

@@ -67,6 +67,8 @@ defmodule Plausible.Stats.Breakdown do
         page_exprs = Enum.map(pageview_goals, & &1.page_path)
         page_regexes = Enum.map(page_exprs, &page_regex/1)
 
+        select_columns = metrics_to_select |> select_event_metrics |> mark_revenue_as_nil
+
         from(e in base_event_query(site, query),
           order_by: [desc: fragment("uniq(?)", e.user_id)],
           where:
@@ -77,12 +79,13 @@ defmodule Plausible.Stats.Breakdown do
             ) and e.name == "pageview",
           array_join: index in fragment("indices"),
           group_by: index,
-          select: %{
-            name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
-          }
+          select: %{}
         )
-        # All revenue columns will be set as nils
-        |> select_event_metrics(metrics_to_select, true)
+        |> select_merge(^select_columns)
+        # :TRICKY: name is added last to make sure both queries add columns in the same order
+        |> select_merge([_, index], %{
+          name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
+        })
         |> apply_pagination(pagination)
       else
         nil
@@ -225,11 +228,10 @@ defmodule Plausible.Stats.Breakdown do
   defp breakdown_sessions(site, query, property, metrics) do
     from(s in query_sessions(site, query),
       order_by: [desc: fragment("uniq(?)", s.user_id)],
-      select: %{}
+      select: ^select_session_metrics(metrics, query)
     )
     |> filter_converted_sessions(site, query)
     |> do_group_by(property)
-    |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, property, metrics)
     |> add_percentage_metric(site, query, metrics)
   end
@@ -237,10 +239,9 @@ defmodule Plausible.Stats.Breakdown do
   defp breakdown_events(site, query, property, metrics) do
     from(e in base_event_query(site, query),
       order_by: [desc: fragment("uniq(?)", e.user_id)],
-      select: %{}
+      select: ^select_event_metrics(metrics)
     )
     |> do_group_by(property)
-    |> select_event_metrics(metrics)
     |> merge_imported(site, query, property, metrics)
     |> add_percentage_metric(site, query, metrics)
   end
@@ -746,6 +747,15 @@ defmodule Plausible.Stats.Breakdown do
     else
       q
     end
+  end
+
+  # When querying custom event goals and pageviewgoals together, UNION ALL is used
+  # so the same fields must be present on both sides of the union. This change to the
+  # query will ensure that we don't unnecessarily read revenue column for pageview goals
+  defp mark_revenue_as_nil(select_columns) do
+    select_columns
+    |> Map.replace(:total_revenue, nil)
+    |> Map.replace(:average_revenue, nil)
   end
 
   defp sorting_key(metrics) do
