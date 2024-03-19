@@ -123,7 +123,7 @@ defmodule Plausible.Imported.CSVImporter do
 
     start_date =
       if prev_start_date do
-        min_date(start_date, prev_start_date)
+        Enum.min([start_date, prev_start_date], Date)
       else
         start_date
       end
