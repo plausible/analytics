@@ -1,26 +1,31 @@
 name: Elixir CI
 
 on:
+  pull_request:
   push:
     branches: [master, stable]
-  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  CACHE_VERSION: v7
+  PERSISTENT_CACHE_DIR: cached
+
 jobs:
   build:
     name: Build and test
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
-        postgres_version: [15, 16]
-
+        mix_env: ['test', 'small_test']
+        postgres_image: ['postgres:15', 'postgres:16']
+    env:
+      MIX_ENV: ${{ matrix.mix_env }}
     services:
       postgres:
-        image: postgres:${{ matrix.postgres_version }}
+        image: ${{ matrix.postgres_image }}
         ports:
           - 5432:5432
         env:
@@ -30,7 +35,6 @@ jobs:
             --health-interval 10s
             --health-timeout 5s
             --health-retries 5
-
       clickhouse:
         image: clickhouse/clickhouse-server:23.3.7.5-alpine
         ports:
@@ -41,43 +45,91 @@ jobs:
             --health-interval 10s
             --health-timeout 5s
             --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Read .tool-versions
-        uses: marocchino/tool-versions-action@v1
+
+      - uses: marocchino/tool-versions-action@v1
         id: versions
-      - name: Set up Elixir
-        uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@v1
         with:
-          elixir-version: ${{steps.versions.outputs.elixir}}
-          otp-version: ${{ steps.versions.outputs.erlang}}
-      - name: Restore dependencies cache
-        uses: buildjet/cache@v4
+          elixir-version: ${{ steps.versions.outputs.elixir }}
+          otp-version: ${{ steps.versions.outputs.erlang }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+            tracker/node_modules
+            priv/tracker/js
+            ${{ env.PERSISTENT_CACHE_DIR }}
+          key: ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
+            ${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
+
+      - name: Check for changes in tracker/**
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            tracker:
+              - 'tracker/**'
+      - name: Check if priv/tracker/js/plausible.js exists
+        run: |
+          if [ -f priv/tracker/js/plausible.js ]; then
+            echo "HAS_BUILT_TRACKER=true" >> $GITHUB_ENV
+          else
+            echo "HAS_BUILT_TRACKER=false" >> $GITHUB_ENV
+          fi
+      - run: npm install --prefix ./tracker
+        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
+      - run: npm run deploy --prefix ./tracker
+        if: steps.changes.outputs.tracker == 'true' || env.HAS_BUILT_TRACKER == 'false'
+
+      - run: mix deps.get --only $MIX_ENV
+      - run: mix compile --warnings-as-errors --all-warnings
+      - run: mix do ecto.create, ecto.migrate
+      - run: mix run -e "Tzdata.ReleaseUpdater.poll_for_update"
+
+      - run: mix test --include slow --include minio --max-failures 1 --warnings-as-errors
+        if: env.MIX_ENV == 'test'
+      - run: mix test --include slow --max-failures 1 --warnings-as-errors
+        if: env.MIX_ENV == 'small_test'
+
+  static:
+    name: Static checks (format, credo, dialyzer)
+    env:
+      MIX_ENV: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: marocchino/tool-versions-action@v1
+        id: versions
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ steps.versions.outputs.elixir }}
+          otp-version: ${{ steps.versions.outputs.erlang }}
+
+      - uses: actions/cache@v4
         with:
           path: |
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-mix-v7-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-v7-
-      - name: Install dependencies
-        run: mix deps.get && npm install --prefix ./tracker
-      - name: Check Formatting
-        run: mix format --check-formatted
-      - name: Check Compile Warnings
-        run: mix compile --warnings-as-errors --all-warnings
-      - name: Generate tracker files
-        run: npm run deploy --prefix ./tracker
-      - name: Check Credo Warnings
-        run: mix credo diff --from-git-merge-base origin/master
-      - name: Run tests
-        run: mix test --include slow --include minio --max-failures 1 --warnings-as-errors
-      - name: Run tests (small build)
-        run: MIX_ENV=small_test mix test --include slow --max-failures 1 --warnings-as-errors
-      - name: Check Dialyzer
-        run: mix dialyzer
-env:
-  MIX_ENV: test
+          key: static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-${{ github.head_ref || github.ref }}-
+            static-${{ env.MIX_ENV }}-${{ env.CACHE_VERSION }}-refs/heads/master-
+
+      - run: mix deps.get
+      - run: mix compile --warnings-as-errors --all-warnings
+      - run: mix format --check-formatted
+      - run: mix deps.unlock --check-unused
+      - run: mix credo diff --from-git-merge-base origin/master
+      - run: mix dialyzer 

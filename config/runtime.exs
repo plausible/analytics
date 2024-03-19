@@ -231,10 +231,6 @@ maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY"
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
 persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
-if System.get_env("DISABLE_AUTH") do
-  Logger.warning("DISABLE_AUTH env var is no longer supported")
-end
-
 enable_email_verification =
   config_dir
   |> get_var_from_path_or_env("ENABLE_EMAIL_VERIFICATION", "false")
@@ -339,21 +335,16 @@ else
     database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
 end
 
-included_environments = if sentry_dsn, do: ["prod", "staging", "dev"], else: []
 sentry_app_version = runtime_metadata[:version] || app_version
 
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
-  included_environments: included_environments,
   release: sentry_app_version,
   tags: %{app_version: sentry_app_version},
-  enable_source_code_context: true,
-  root_source_code_path: [File.cwd!()],
   client: Plausible.Sentry.Client,
   send_max_attempts: 1,
-  filter: Plausible.SentryFilter,
-  before_send_event: {Plausible.SentryFilter, :before_send}
+  before_send: {Plausible.SentryFilter, :before_send}
 
 config :plausible, :paddle,
   vendor_auth_code: paddle_auth_code,
@@ -547,7 +538,9 @@ base_queues = [
   clean_invitations: 1,
   analytics_imports: 1,
   domain_change_transition: 1,
-  check_accept_traffic_until: 1
+  check_accept_traffic_until: 1,
+  # NOTE: maybe move s3_csv_export to cloud_queues?
+  s3_csv_export: 1
 ]
 
 cloud_queues = [
@@ -739,6 +732,10 @@ unless s3_disabled? do
     %{
       name: "S3_ENDPOINT",
       example: "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+    },
+    %{
+      name: "S3_EXPORTS_BUCKET",
+      example: "my-csv-exports-bucket"
     }
   ]
 
@@ -773,4 +770,6 @@ unless s3_disabled? do
     scheme: s3_scheme <> "://",
     host: s3_host,
     port: s3_port
+
+  config :plausible, Plausible.S3, exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET")
 end

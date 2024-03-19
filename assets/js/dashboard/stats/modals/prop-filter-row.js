@@ -46,7 +46,8 @@ function PropFilterRow({
         <Combobox
           className="mr-2"
           fetchOptions={fetchPropKeyOptions()}
-          singleOption={true}
+          singleOption
+          autoFocus
           values={propKey ? [propKey] : []}
           onSelect={(value) => onPropKeySelect(id, value)}
           placeholder={'Property'}

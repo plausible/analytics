@@ -1,0 +1,167 @@
+{
+  "kind": "analyticsData#batchRunReports",
+  "reports": [
+    {
+      "dimensionHeaders": [
+        {
+          "name": "date"
+        },
+        {
+          "name": "countryId"
+        },
+        {
+          "name": "region"
+        },
+        {
+          "name": "city"
+        }
+      ],
+      "kind": "analyticsData#runReport",
+      "metadata": {
+        "currencyCode": "USD",
+        "timeZone": "Europe/Warsaw"
+      },
+      "metricHeaders": [
+        {
+          "name": "totalUsers",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "sessions",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "bounces",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "userEngagementDuration",
+          "type": "TYPE_SECONDS"
+        }
+      ],
+      "rowCount": 4,
+      "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240226"
+            },
+            {
+              "value": "PL"
+            },
+            {
+              "value": "Masovian Voivodeship"
+            },
+            {
+              "value": "Warsaw"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240224"
+            },
+            {
+              "value": "US"
+            },
+            {
+              "value": "California"
+            },
+            {
+              "value": "(not set)"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "PL"
+            },
+            {
+              "value": "Pomeranian Voivodeship"
+            },
+            {
+              "value": "Gdansk"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "3"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "25"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "ES"
+            },
+            {
+              "value": "Catalonia"
+            },
+            {
+              "value": "Barcelona"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "4"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

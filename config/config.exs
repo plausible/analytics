@@ -45,7 +45,7 @@ config :ref_inspector,
 
 config :plausible,
   paddle_api: Plausible.Billing.PaddleApi,
-  google_api: Plausible.Google.Api
+  google_api: Plausible.Google.API
 
 config :plausible,
   # 30 minutes
@@ -72,5 +72,9 @@ config :plausible, Plausible.Ingestion.Counters, enabled: true
 config :ex_cldr,
   default_locale: "en",
   default_backend: Plausible.Cldr
+
+config :sentry,
+  enable_source_code_context: true,
+  root_source_code_path: [File.cwd!()]
 
 import_config "#{config_env()}.exs"
