@@ -37,6 +37,7 @@ defmodule PlausibleWeb.Endpoint do
 
   static_paths =
     on_full_build do
+      # NOTE: The Cloud uses custom robots.txt from https://github.com/plausible/website: https://plausible.io/robots.txt
       static_paths
     else
       static_paths ++ ["robots.txt"]
