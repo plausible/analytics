@@ -4,6 +4,8 @@ defmodule Plausible.Imported.CSVImporterTest do
   alias Testcontainers.MinioContainer
   require SiteImport
 
+  doctest CSVImporter, import: true
+
   @moduletag :minio
 
   setup_all do
@@ -55,9 +57,12 @@ defmodule Plausible.Imported.CSVImporterTest do
         "imported_visitors"
       ]
 
+      start_date = "20231001"
+      end_date = "20240102"
+
       uploads =
         Enum.map(tables, fn table ->
-          filename = "#{table}.csv"
+          filename = "#{table}_#{start_date}_#{end_date}.csv"
 
           %{
             "filename" => filename,
@@ -65,11 +70,12 @@ defmodule Plausible.Imported.CSVImporterTest do
           }
         end)
 
+      date_range = CSVImporter.date_range(uploads)
+
       assert {:ok, job} =
                CSVImporter.new_import(site, user,
-                 # to satisfy the non null constraints on the table I'm providing "0" dates (according to ClickHouse)
-                 start_date: ~D[1970-01-01],
-                 end_date: ~D[1970-01-01],
+                 start_date: date_range.first,
+                 end_date: date_range.last,
                  uploads: uploads
                )
 
@@ -80,8 +86,8 @@ defmodule Plausible.Imported.CSVImporterTest do
                %{
                  id: ^import_id,
                  source: :csv,
-                 start_date: ~D[1970-01-01],
-                 end_date: ~D[1970-01-01],
+                 start_date: ~D[2023-10-01],
+                 end_date: ~D[2024-01-02],
                  status: SiteImport.pending()
                }
              ] = Plausible.Imported.list_all_imports(site)
@@ -97,7 +103,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     test "imports tables from S3", %{site: site, user: user, s3: s3, container: minio} do
       csvs = [
         %{
-          name: "imported_browsers.csv",
+          name: "imported_browsers_20211230_20211231.csv",
           body: """
           "date","browser","visitors","visits","visit_duration","bounces"
           "2021-12-30","Amazon Silk",2,2,0,2
@@ -122,7 +128,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_devices.csv",
+          name: "imported_devices_20211230_20220102.csv",
           body: """
           "date","device","visitors","visits","visit_duration","bounces"
           "2021-12-30","Desktop",25,28,75,27
@@ -140,7 +146,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_entry_pages.csv",
+          name: "imported_entry_pages_20211230_20211231.csv",
           body: """
           "date","visitors","entrances","visit_duration","bounces","entry_page"
           "2021-12-30",6,6,0,6,"/14776416252794997127"
@@ -173,7 +179,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_exit_pages.csv",
+          name: "imported_exit_pages_20211230_20211231.csv",
           body: """
           "date","visitors","exits","exit_page"
           "2021-12-30",6,6,"/14776416252794997127"
@@ -198,7 +204,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_locations.csv",
+          name: "imported_locations_20211230_20211231.csv",
           body: """
           "date","country","region","city","visitors","visits","visit_duration","bounces"
           "2021-12-30","AU","",0,1,1,43,0
@@ -235,7 +241,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_operating_systems.csv",
+          name: "imported_operating_systems_20211230_20220101.csv",
           body: """
           "date","operating_system","visitors","visits","visit_duration","bounces"
           "2021-12-30","Android",25,26,254,24
@@ -255,7 +261,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_pages.csv",
+          name: "imported_pages_20211230_20220101.csv",
           body: """
           "date","visitors","pageviews","exits","time_on_page","hostname","page"
           "2021-12-30",1,1,0,43,"lucky.numbers.com","/14776416252794997127"
@@ -277,7 +283,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_sources.csv",
+          name: "imported_sources_20211230_20220106.csv",
           body: """
           "date","source","utm_medium","utm_campaign","utm_content","utm_term","visitors","visits","visit_duration","bounces"
           "2021-12-30","","","","","",25,26,254,24
@@ -307,7 +313,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_visitors.csv",
+          name: "imported_visitors_20111225_20111230.csv",
           body: """
           "date","visitors","pageviews","bounces","visits","visit_duration"
           "2011-12-25",5,50,2,7,8640
@@ -327,13 +333,12 @@ defmodule Plausible.Imported.CSVImporterTest do
           %{"filename" => name, "s3_url" => minio_url(minio, "imports", key)}
         end
 
+      date_range = CSVImporter.date_range(uploads)
+
       {:ok, job} =
-        CSVImporter.new_import(
-          site,
-          user,
-          # to satisfy the non null constraints on the table I'm providing "0" dates (according to ClickHouse)
-          start_date: ~D[1970-01-01],
-          end_date: ~D[1970-01-01],
+        CSVImporter.new_import(site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
           uploads: uploads
         )
 
@@ -341,7 +346,6 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       assert :ok = Plausible.Workers.ImportAnalytics.perform(job)
 
-      # on successfull import the start and end dates are updated
       assert %SiteImport{
                start_date: ~D[2011-12-25],
                end_date: ~D[2022-01-06],
@@ -355,7 +359,7 @@ defmodule Plausible.Imported.CSVImporterTest do
     test "fails on invalid CSV", %{site: site, user: user, s3: s3, container: minio} do
       csvs = [
         %{
-          name: "imported_browsers.csv",
+          name: "imported_browsers_20211230_20211231.csv",
           body: """
           "date","browser","visitors","visits","visit_duration","bounces"
           "2021-12-30","Amazon Silk",2,2,0,2
@@ -368,7 +372,7 @@ defmodule Plausible.Imported.CSVImporterTest do
           """
         },
         %{
-          name: "imported_devices.csv",
+          name: "imported_devices_20211230_20211231.csv",
           body: """
           "date","device","visitors","visit_duration","bounces"
           "2021-12-30","Desktop",28,ehhhh....
@@ -383,12 +387,12 @@ defmodule Plausible.Imported.CSVImporterTest do
           %{"filename" => name, "s3_url" => minio_url(minio, "imports", key)}
         end
 
+      date_range = CSVImporter.date_range(uploads)
+
       {:ok, job} =
-        CSVImporter.new_import(
-          site,
-          user,
-          start_date: ~D[1970-01-01],
-          end_date: ~D[1970-01-01],
+        CSVImporter.new_import(site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
           uploads: uploads
         )
 
@@ -508,12 +512,12 @@ defmodule Plausible.Imported.CSVImporterTest do
         end)
 
       # run importer
+      date_range = CSVImporter.date_range(uploads)
+
       {:ok, job} =
-        CSVImporter.new_import(
-          site,
-          user,
-          start_date: ~D[1970-01-01],
-          end_date: ~D[1970-01-01],
+        CSVImporter.new_import(site, user,
+          start_date: date_range.first,
+          end_date: date_range.last,
           uploads: uploads
         )
 
@@ -533,7 +537,13 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   defp minio_url(minio, bucket, key) do
-    port = minio |> MinioContainer.connection_opts() |> Keyword.fetch!(:port)
-    Path.join(["http://172.17.0.1:#{port}", bucket, key])
+    arch = to_string(:erlang.system_info(:system_architecture))
+
+    if String.contains?(arch, "darwin") do
+      Path.join(["http://#{minio.ip_address}:9000", bucket, key])
+    else
+      port = minio |> MinioContainer.connection_opts() |> Keyword.fetch!(:port)
+      Path.join(["http://172.17.0.1:#{port}", bucket, key])
+    end
   end
 end

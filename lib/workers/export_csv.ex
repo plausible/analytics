@@ -25,43 +25,56 @@ defmodule Plausible.Workers.ExportCSV do
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    # NOTE: should we use site.timezone?
-    # %Ch.Result{rows: [[min_date, max_date]]} =
-    #   Ch.query!(
-    #     ch,
-    #     "SELECT toDate(min(timestamp)), toDate(max(timestamp)) FROM events_v2 WHERE site_id={site_id:UInt64}",
-    #     %{"site_id" => site_id}
-    #   )
-
-    download_url =
-      DBConnection.run(
+    %Ch.Result{rows: [[%Date{} = min_date, %Date{} = max_date]]} =
+      Ch.query!(
         ch,
-        fn conn ->
-          conn
-          |> Plausible.Exports.stream_archive(
-            # date_range: Date.range(min_date, max_date)
-            Plausible.Exports.export_queries(site_id, extname: ".csv"),
-            format: "CSVWithNames"
-          )
-          |> Plausible.S3.export_upload_multipart(s3_bucket, s3_path, s3_config_overrides(args))
-        end,
-        timeout: :infinity
+        "SELECT toDate(min(timestamp)), toDate(max(timestamp)) FROM events_v2 WHERE site_id={site_id:UInt64}",
+        %{"site_id" => site_id}
       )
 
-    # NOTE: replace with proper Plausible.Email template
-    Plausible.Mailer.deliver_now!(
-      Bamboo.Email.new_email(
-        from: "plausible@email.com",
-        to: email,
-        subject: "EXPORT SUCCESS",
-        text_body: """
-        download it from #{download_url}! hurry up! you have 24 hours!"
-        """,
-        html_body: """
-        download it from <a href="#{download_url}">here</a>! hurry up! you have 24 hours!
-        """
+    if max_date == ~D[1970-01-01] do
+      # NOTE: replace with proper Plausible.Email template
+      Plausible.Mailer.deliver_now!(
+        Bamboo.Email.new_email(
+          from: PlausibleWeb.Email.mailer_email_from(),
+          to: email,
+          subject: "EXPORT FAILURE",
+          text_body: "there is nothing to export"
+        )
       )
-    )
+    else
+      download_url =
+        DBConnection.run(
+          ch,
+          fn conn ->
+            conn
+            |> Plausible.Exports.stream_archive(
+              Plausible.Exports.export_queries(site_id,
+                date_range: Date.range(min_date, max_date),
+                extname: ".csv"
+              ),
+              format: "CSVWithNames"
+            )
+            |> Plausible.S3.export_upload_multipart(s3_bucket, s3_path, s3_config_overrides(args))
+          end,
+          timeout: :infinity
+        )
+
+      # NOTE: replace with proper Plausible.Email template
+      Plausible.Mailer.deliver_now!(
+        Bamboo.Email.new_email(
+          from: PlausibleWeb.Email.mailer_email_from(),
+          to: email,
+          subject: "EXPORT SUCCESS",
+          text_body: """
+          download it from #{download_url}! hurry up! you have 24 hours!"
+          """,
+          html_body: """
+          download it from <a href="#{download_url}">here</a>! hurry up! you have 24 hours!
+          """
+        )
+      )
+    end
 
     :ok
   end
