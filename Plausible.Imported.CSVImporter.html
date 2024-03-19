@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-349D7491.js"></script>
+    <script src="dist/sidebar_items-B7DAF2A7.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -161,9 +161,29 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
+        <a href="#date_range/1" translate="no">date_range(uploads)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Extracts min/max date range from a list of uploads.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
         <a href="#new_import/3" translate="no">new_import(site, user, opts)</a>
 
       </div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#parse_filename!/1" translate="no">parse_filename!(filename)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Extracts table name and min/max dates from the filename.</p></div>
 
     </div>
 
@@ -180,6 +200,42 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
+<section class="detail" id="date_range/1">
+
+  <div class="detail-header">
+    <a href="#date_range/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">date_range(uploads)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L112" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> date_range([<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>() | %{required(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) =&gt; <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()}, ...]) ::
+  <a href="https://hexdocs.pm/elixir/Date.Range.html#t:t/0">Date.Range.t</a>()</pre>
+
+      </div>
+
+<p>Extracts min/max date range from a list of uploads.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="6137321635-1">(</span><span class="p" data-group-id="6137321635-2">[</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="p" data-group-id="6137321635-3">%{</span><span class="s">&quot;filename&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;imported_devices_20190101_20210101.csv&quot;</span><span class="p" data-group-id="6137321635-3">}</span><span class="p">,</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="s">&quot;imported_pages_20200101_20220101.csv&quot;</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="p" data-group-id="6137321635-2">]</span><span class="p" data-group-id="6137321635-1">)</span><span class="w">
+</span><span class="nc">Date</span><span class="o">.</span><span class="n">range</span><span class="p" data-group-id="6137321635-4">(</span><span class="ld">~D[2019-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2022-01-01]</span><span class="p" data-group-id="6137321635-4">)</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="6137321635-5">(</span><span class="p" data-group-id="6137321635-6">[</span><span class="p" data-group-id="6137321635-6">]</span><span class="p" data-group-id="6137321635-5">)</span><span class="w">
+</span><span class="gt">** (ArgumentError) empty uploads</span></code></pre>
+  </section>
+</section>
 <section class="detail" id="new_import/3">
 
   <div class="detail-header">
@@ -207,6 +263,39 @@ Pages
       </div>
 
 
+  </section>
+</section>
+<section class="detail" id="parse_filename!/1">
+
+  <div class="detail-header">
+    <a href="#parse_filename!/1" class="detail-link" title="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature" translate="no">parse_filename!(filename)</h1>
+
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/imported/csv_importer.ex#L162" class="icon-action" rel="help" title="View Source">
+       <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+       <span class="sr-only">View Source</span>
+     </a>
+
+
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> parse_filename!(<a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>()) ::
+  {table :: <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), start_date :: <a href="https://hexdocs.pm/elixir/Date.html#t:t/0">Date.t</a>(), end_date :: <a href="https://hexdocs.pm/elixir/Date.html#t:t/0">Date.t</a>()}</pre>
+
+      </div>
+
+<p>Extracts table name and min/max dates from the filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="5343544341-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="5343544341-1">)</span><span class="w">
+</span><span class="gt">** (ArgumentError) invalid filename</span><span class="w">
+
+</span><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="5343544341-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="5343544341-2">)</span><span class="w">
+</span><span class="p" data-group-id="5343544341-3">{</span><span class="s">&quot;imported_devices&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[0001-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2025-01-01]</span><span class="p" data-group-id="5343544341-3">}</span></code></pre>
   </section>
 </section>
 
