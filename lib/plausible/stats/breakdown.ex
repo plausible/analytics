@@ -81,8 +81,8 @@ defmodule Plausible.Stats.Breakdown do
             name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
           }
         )
-        # All revenue columns will be set as nils
-        |> select_event_metrics(metrics_to_select, true)
+        |> select_event_metrics(metrics_to_select)
+        |> revenue_is_nil(metrics_to_select)
         |> apply_pagination(pagination)
       else
         nil
@@ -778,6 +778,25 @@ defmodule Plausible.Stats.Breakdown do
     Tracer.set_attributes([
       {"plausible.query.breakdown_property", property}
     ])
+  end
+
+  # When querying custom event goals and pageviewgoals together, UNION ALL is used
+  # so the same fields must be present on both sides of the union. This change to the
+  # query will ensure that we don't unnecessarily read revenue column for pageview goals
+  defp revenue_is_nil(q, metrics) do
+    overwrite_fields = %{}
+
+    overwrite_fields =
+      if :total_revenue in metrics,
+        do: Map.merge(overwrite_fields, %{total_revenue: nil}),
+        else: overwrite_fields
+
+    overwrite_fields =
+      if :average_revenue in metrics,
+        do: Map.merge(overwrite_fields, %{average_revenue: nil}),
+        else: overwrite_fields
+
+    from(e in q, select_merge: ^overwrite_fields)
   end
 
   on_full_build do

@@ -209,91 +209,71 @@ defmodule Plausible.Stats.Base do
 
   def apply_entry_prop_filter(sessions_q, _, _), do: sessions_q
 
-  def select_event_metrics(q, metrics), do: select_event_metrics(q, metrics, false)
+  def select_event_metrics(q, []), do: q
 
-  def select_event_metrics(q, [], _), do: q
-
-  def select_event_metrics(q, [:pageviews | rest], revenue_nils) do
+  def select_event_metrics(q, [:pageviews | rest]) do
     from(e in q,
       select_merge: %{
         pageviews:
           fragment("toUInt64(round(countIf(? = 'pageview') * any(_sample_factor)))", e.name)
       }
     )
-    |> select_event_metrics(rest, revenue_nils)
+    |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, [:events | rest], revenue_nils) do
+  def select_event_metrics(q, [:events | rest]) do
     from(e in q,
       select_merge: %{events: fragment("toUInt64(round(count(*) * any(_sample_factor)))")}
     )
-    |> select_event_metrics(rest, revenue_nils)
+    |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, [:visitors | rest], revenue_nils) do
+  def select_event_metrics(q, [:visitors | rest]) do
     from(e in q,
       select_merge: %{
         visitors: selected_as(fragment(@uniq_users_expression, e.user_id), :visitors)
       }
     )
-    |> select_event_metrics(rest, revenue_nils)
+    |> select_event_metrics(rest)
   end
 
   on_full_build do
-    def select_event_metrics(q, [:total_revenue | rest], false) do
+    def select_event_metrics(q, [:total_revenue | rest]) do
       q
       |> Plausible.Stats.Goal.Revenue.total_revenue_query()
-      |> select_event_metrics(rest, false)
+      |> select_event_metrics(rest)
     end
 
-    def select_event_metrics(q, [:average_revenue | rest], false) do
+    def select_event_metrics(q, [:average_revenue | rest]) do
       q
       |> Plausible.Stats.Goal.Revenue.average_revenue_query()
-      |> select_event_metrics(rest, false)
-    end
-
-    def select_event_metrics(q, [:total_revenue | rest], true) do
-      from(e in q,
-        select_merge: %{
-          total_revenue: nil
-        }
-      )
-      |> select_event_metrics(rest, true)
-    end
-
-    def select_event_metrics(q, [:average_revenue | rest], true) do
-      from(e in q,
-        select_merge: %{
-          average_revenue: nil
-        }
-      )
-      |> select_event_metrics(rest, true)
+      |> select_event_metrics(rest)
     end
   end
 
-  def select_event_metrics(q, [:sample_percent | rest], revenue_nils) do
+  def select_event_metrics(q, [:sample_percent | rest]) do
     from(e in q,
       select_merge: %{
         sample_percent:
           fragment("if(any(_sample_factor) > 1, round(100 / any(_sample_factor)), 100)")
       }
     )
-    |> select_event_metrics(rest, revenue_nils)
+    |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, [:percentage | rest], revenue_nils) do
-    q |> select_event_metrics(rest, revenue_nils)
+  def select_event_metrics(q, [:percentage | rest]) do
+    q |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, [:conversion_rate | rest], revenue_nils) do
-    q |> select_event_metrics(rest, revenue_nils)
+  def select_event_metrics(q, [:conversion_rate | rest]) do
+    q |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(q, [:total_visitors | rest], revenue_nils) do
-    q |> select_event_metrics(rest, revenue_nils)
+  def select_event_metrics(q, [:total_visitors | rest]) do
+    q |> select_event_metrics(rest)
   end
 
-  def select_event_metrics(_, [unknown | _], _), do: raise("Unknown metric: #{unknown}")
+  def select_event_metrics(_, [unknown | _]), do: raise("Unknown metric: #{unknown}")
 
   def select_session_metrics(q, [], _query), do: q
 
