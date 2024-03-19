@@ -25,7 +25,7 @@ defmodule Plausible.Workers.ExportCSV do
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    %Ch.Result{rows: [[min_date, max_date]]} =
+    %Ch.Result{rows: [[%Date{} = min_date, %Date{} = max_date]]} =
       Ch.query!(
         ch,
         "SELECT toDate(min(timestamp)), toDate(max(timestamp)) FROM events_v2 WHERE site_id={site_id:UInt64}",
