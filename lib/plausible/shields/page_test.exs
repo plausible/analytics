@@ -20,6 +20,13 @@ defmodule Plausible.Shields.PageTest do
       refute changeset.valid?
     end
 
+    test "lengthy", %{site: site} do
+      long = "/" <> :binary.copy("a", 251)
+      assert {:error, changeset} = add_page_rule(site, %{"page_path" => long})
+      assert [page_path: {"should be at most %{count} character(s)", _}] = changeset.errors
+      refute changeset.valid?
+    end
+
     test "double insert", %{site: site} do
       assert {:ok, _} = add_page_rule(site, %{"page_path" => "/test"})
       assert {:error, changeset} = add_page_rule(site, %{"page_path" => "/test"})

@@ -39,6 +39,7 @@ defmodule Plausible.Shield.PageRule do
     rule
     |> cast(attrs, [:site_id, :page_path])
     |> validate_required([:site_id, :page_path])
+    |> validate_length(:page_path, max: 250)
     |> validate_change(:page_path, fn :page_path, p ->
       if not String.starts_with?(p, "/") do
         [page_path: "must start with /"]
