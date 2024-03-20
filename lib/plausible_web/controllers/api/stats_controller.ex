@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
-  plug(:validate_common_input)
+  plug(:date_validation_plug)
 
   @doc """
   Returns a time-series based on given parameters.
@@ -100,7 +100,9 @@ defmodule PlausibleWeb.Api.StatsController do
   def main_graph(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(site, params) do
+    with {:ok, dates} <- parse_date_params(params),
+         :ok <- validate_interval(params),
+         :ok <- validate_interval_granularity(site, params, dates) do
       query = Query.from(site, params)
 
       selected_metric =
@@ -207,35 +209,31 @@ defmodule PlausibleWeb.Api.StatsController do
   def top_stats(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(site, params) do
-      query = Query.from(site, params)
+    query = Query.from(site, params)
 
-      comparison_opts = parse_comparison_opts(params)
+    comparison_opts = parse_comparison_opts(params)
 
-      comparison_query =
-        case Stats.Comparisons.compare(site, query, params["comparison"], comparison_opts) do
-          {:ok, query} -> query
-          {:error, _cause} -> nil
-        end
+    comparison_query =
+      case Stats.Comparisons.compare(site, query, params["comparison"], comparison_opts) do
+        {:ok, query} -> query
+        {:error, _cause} -> nil
+      end
 
-      {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
+    {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
 
-      site_import = Plausible.Imported.get_earliest_import(site)
+    site_import = Plausible.Imported.get_earliest_import(site)
 
-      json(conn, %{
-        top_stats: top_stats,
-        interval: query.interval,
-        sample_percent: sample_percent,
-        with_imported: with_imported?(query, comparison_query),
-        imported_source: site_import && SiteImport.label(site_import),
-        comparing_from: comparison_query && comparison_query.date_range.first,
-        comparing_to: comparison_query && comparison_query.date_range.last,
-        from: query.date_range.first,
-        to: query.date_range.last
-      })
-    else
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
-    end
+    json(conn, %{
+      top_stats: top_stats,
+      interval: query.interval,
+      sample_percent: sample_percent,
+      with_imported: with_imported?(query, comparison_query),
+      imported_source: site_import && SiteImport.label(site_import),
+      comparing_from: comparison_query && comparison_query.date_range.first,
+      comparing_to: comparison_query && comparison_query.date_range.last,
+      from: query.date_range.first,
+      to: query.date_range.last
+    })
   end
 
   defp present_index_for(site, query, dates) do
@@ -464,7 +462,6 @@ defmodule PlausibleWeb.Api.StatsController do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
 
       with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.owner),
-           :ok <- validate_params(site, params),
            query <- Query.from(site, params),
            :ok <- validate_funnel_query(query),
            {funnel_id, ""} <- Integer.parse(funnel_id),
@@ -1251,20 +1248,14 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp validate_common_input(conn, _opts) do
-    case validate_params(conn.assigns[:site], conn.params) do
-      :ok -> conn
+  defp date_validation_plug(conn, _opts) do
+    case parse_date_params(conn.params) do
+      {:ok, _dates} -> conn
       {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
   end
 
-  defp validate_params(site, params) do
-    with {:ok, dates} <- validate_dates(params),
-         :ok <- validate_interval(params),
-         do: validate_interval_granularity(site, params, dates)
-  end
-
-  defp validate_dates(params) do
+  defp parse_date_params(params) do
     params
     |> Map.take(["from", "to", "date"])
     |> Enum.reduce_while({:ok, %{}}, fn {key, value}, {:ok, acc} ->
