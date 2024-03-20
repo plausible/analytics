@@ -2,21 +2,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
   use PlausibleWeb, :controller
   use Plausible.Repo
   use PlausibleWeb.Plugs.ErrorHandler
-  alias Plausible.Stats.{Query, Compare, Comparisons}
-
-  @metrics [
-    :visitors,
-    :visits,
-    :pageviews,
-    :views_per_visit,
-    :bounce_rate,
-    :visit_duration,
-    :events,
-    :conversion_rate,
-    :time_on_page
-  ]
-
-  @metric_mappings Enum.into(@metrics, %{}, fn metric -> {to_string(metric), metric} end)
+  alias Plausible.Stats.{Query, Compare, Comparisons, Metrics}
 
   def realtime_visitors(conn, _params) do
     site = conn.assigns.site
@@ -117,7 +103,7 @@ defmodule PlausibleWeb.Api.ExternalStatsController do
         {:error, reason}
 
       metrics ->
-        {:ok, Enum.map(metrics, &Map.fetch!(@metric_mappings, &1))}
+        {:ok, Enum.map(metrics, &Metrics.from_string!/1)}
     end
   end
 

@@ -102,16 +102,9 @@ defmodule PlausibleWeb.Api.StatsController do
 
     with {:ok, dates} <- parse_date_params(params),
          :ok <- validate_interval(params),
-         :ok <- validate_interval_granularity(site, params, dates) do
-      query = Query.from(site, params)
-
-      selected_metric =
-        if !params["metric"] || params["metric"] == "conversions" do
-          :visitors
-        else
-          String.to_existing_atom(params["metric"])
-        end
-
+         :ok <- validate_interval_granularity(site, params, dates),
+         query = Query.from(site, params),
+         {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
       timeseries_query =
         if query.period == "realtime" do
           %Query{query | period: "30m"}
@@ -119,14 +112,14 @@ defmodule PlausibleWeb.Api.StatsController do
           query
         end
 
-      timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
+      timeseries_result = Stats.timeseries(site, timeseries_query, [metric])
 
       comparison_opts = parse_comparison_opts(params)
 
       {comparison_query, comparison_result} =
         case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
           {:ok, comparison_query} ->
-            {comparison_query, Stats.timeseries(site, comparison_query, [selected_metric])}
+            {comparison_query, Stats.timeseries(site, comparison_query, [metric])}
 
           {:error, :not_supported} ->
             {nil, nil}
@@ -139,9 +132,9 @@ defmodule PlausibleWeb.Api.StatsController do
       site_import = Plausible.Imported.get_earliest_import(site)
 
       json(conn, %{
-        plot: plot_timeseries(timeseries_result, selected_metric),
+        plot: plot_timeseries(timeseries_result, metric),
         labels: labels,
-        comparison_plot: comparison_result && plot_timeseries(comparison_result, selected_metric),
+        comparison_plot: comparison_result && plot_timeseries(comparison_result, metric),
         comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
         present_index: present_index,
         interval: query.interval,
@@ -1309,6 +1302,21 @@ defmodule PlausibleWeb.Api.StatsController do
 
       _ ->
         :ok
+    end
+  end
+
+  def parse_and_validate_graph_metric(params, query) do
+    metric =
+      case params["metric"] do
+        nil -> :visitors
+        "conversions" -> :visitors
+        m -> Plausible.Stats.Metrics.from_string!(m)
+      end
+
+    if metric == :conversion_rate and !query.filters["event:goal"] do
+      {:error, "Metric `:conversion_rate` can only be queried with a goal filter"}
+    else
+      {:ok, metric}
     end
   end
 
