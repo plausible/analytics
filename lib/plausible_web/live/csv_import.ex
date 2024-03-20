@@ -55,7 +55,7 @@ defmodule PlausibleWeb.Live.CSVImport do
         <span class="ml-2 text-sm text-gray-600 dark:text-gray-500">
           (or drag-and-drop here)
         </span>
-        <.live_file_input upload={@upload} class="hidden" />
+        <.live_file_input upload={@upload} class="hidden" webkitdirectory />
       </div>
 
       <div id="imported-tables" class="mt-5 mb-1 space-y-1">
