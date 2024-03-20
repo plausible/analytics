@@ -1,4 +1,7 @@
 defmodule PlausibleWeb.Live.CSVImport do
+  @moduledoc """
+  LiveView allowing uploading CSVs for imported tables to S3
+  """
   use PlausibleWeb, :live_view
   alias Plausible.Imported.CSVImporter
 
@@ -13,7 +16,8 @@ defmodule PlausibleWeb.Live.CSVImport do
         accept: ~w[.csv],
         auto_upload: true,
         max_entries: length(Plausible.Imported.tables()),
-        max_file_size: _1GB = 1_000_000_000,
+        # 1GB
+        max_file_size: 1_000_000_000,
         external: &presign_upload/2,
         progress: &handle_progress/3
       )
