@@ -725,7 +725,6 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(to: Routes.site_path(conn, :settings_imports_exports, site.domain))
   end
 
-  # TODO can it be just a liveview? what to do about layout
   def csv_import(conn, _params) do
     conn
     |> assign(:skip_plausible_tracking, true)
