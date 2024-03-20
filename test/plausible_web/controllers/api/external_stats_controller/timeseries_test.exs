@@ -1147,6 +1147,128 @@ defmodule PlausibleWeb.Api.ExternalStatsController.TimeseriesTest do
              ]
     end
 
+    test "returns conversion rate with a goal + custom prop filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          "meta.key": ["author"],
+          "meta.value": ["Teet"],
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event,
+          name: "Signup",
+          "meta.key": ["author"],
+          "meta.value": ["Tiit"],
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview,
+          "meta.key": ["author"],
+          "meta.value": ["Teet"],
+          timestamp: ~N[2021-01-04 00:12:00]
+        )
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup;event:props:author==Teet",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      [first | _] = json_response(conn, 200)["results"]
+
+      assert first == %{
+               "date" => "2021-01-04",
+               "conversion_rate" => 25.0
+             }
+    end
+
+    test "returns conversion rate with a goal + page filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          pathname: "/yes",
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event,
+          name: "Signup",
+          pathname: "/no",
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview, pathname: "/yes", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview, pathname: "/yes", timestamp: ~N[2021-01-04 00:12:00])
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup;event:page==/yes",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      [first | _] = json_response(conn, 200)["results"]
+
+      assert first == %{
+               "date" => "2021-01-04",
+               "conversion_rate" => 33.3
+             }
+    end
+
+    test "returns conversion rate with a goal + session filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          screen_size: "Mobile",
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event,
+          name: "Signup",
+          screen_size: "Laptop",
+          timestamp: ~N[2021-01-04 00:12:00]
+        ),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview, screen_size: "Mobile", timestamp: ~N[2021-01-04 00:12:00]),
+        build(:pageview, screen_size: "Mobile", timestamp: ~N[2021-01-04 00:12:00])
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+
+      conn =
+        get(conn, "/api/v1/stats/timeseries", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup;visit:device==Mobile",
+          "period" => "7d",
+          "date" => "2021-01-10"
+        })
+
+      [first | _] = json_response(conn, 200)["results"]
+
+      assert first == %{
+               "date" => "2021-01-04",
+               "conversion_rate" => 33.3
+             }
+    end
+
     test "validates that conversion_rate cannot be queried without a goal filter", %{
       conn: conn,
       site: site

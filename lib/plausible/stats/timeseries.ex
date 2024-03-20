@@ -261,7 +261,9 @@ defmodule Plausible.Stats.Timeseries do
       totals_query = query |> Query.remove_event_filters([:goal, :props])
 
       totals_timeseries_q =
-        from(e in base_event_query(site, totals_query), select: ^select_event_metrics([:visitors]))
+        from(e in base_event_query(site, totals_query),
+          select: ^select_event_metrics([:visitors])
+        )
         |> select_bucket(site, query)
 
       from(e in subquery(q),
