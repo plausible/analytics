@@ -67,7 +67,8 @@ defmodule PlausibleWeb.LayoutView do
         icon: :shield_exclamation,
         value: [
           %{key: "IP Addresses", value: "shields/ip_addresses"},
-          %{key: "Countries", value: "shields/countries"}
+          %{key: "Countries", value: "shields/countries"},
+          %{key: "Pages", value: "shields/pages"}
         ]
       },
       %{key: "Email Reports", value: "email-reports", icon: :envelope},
