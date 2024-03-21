@@ -234,7 +234,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
 
     send_flash(
       :success,
-      "page rule removed successfully. Traffic will be resumed within a few minutes."
+      "Page rule removed successfully. Traffic will be resumed within a few minutes."
     )
 
     page_rules = Enum.reject(socket.assigns.page_rules, &(&1.id == rule_id))
