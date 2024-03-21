@@ -11,7 +11,9 @@ defmodule Plausible.Stats.Aggregate do
                    :visitors,
                    :pageviews,
                    :events,
-                   :sample_percent
+                   :sample_percent,
+                   :conversion_rate,
+                   :total_visitors
                  ] ++ @revenue_metrics
 
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
@@ -45,7 +47,6 @@ defmodule Plausible.Stats.Aggregate do
 
     Plausible.ClickhouseRepo.parallel_tasks([session_task, event_task, time_on_page_task])
     |> Enum.reduce(%{}, fn aggregate, task_result -> Map.merge(aggregate, task_result) end)
-    |> maybe_put_cr(site, query, metrics)
     |> Util.keep_requested_metrics(metrics)
     |> cast_revenue_metrics_to_money(currency)
     |> Enum.map(&maybe_round_value/1)
@@ -53,45 +54,20 @@ defmodule Plausible.Stats.Aggregate do
     |> Enum.into(%{})
   end
 
-  defp maybe_put_cr(aggregate_result, site, query, metrics) do
-    if :conversion_rate in metrics do
-      all =
-        query
-        |> Query.remove_event_filters([:goal, :props])
-        |> then(fn query -> aggregate_events(site, query, [:visitors]) end)
-        |> Map.fetch!(:visitors)
-
-      converted = aggregate_result.visitors
-
-      cr = Util.calculate_cr(all, converted)
-
-      aggregate_result = Map.put(aggregate_result, :conversion_rate, cr)
-
-      if :total_visitors in metrics do
-        Map.put(aggregate_result, :total_visitors, all)
-      else
-        aggregate_result
-      end
-    else
-      aggregate_result
-    end
-  end
-
   defp aggregate_events(_, _, []), do: %{}
 
   defp aggregate_events(site, query, metrics) do
-    from(e in base_event_query(site, query), select: %{})
-    |> select_event_metrics(metrics)
+    from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
     |> merge_imported(site, query, :aggregate, metrics)
+    |> maybe_add_conversion_rate(site, query, metrics, include_imported: query.include_imported)
     |> ClickhouseRepo.one()
   end
 
   defp aggregate_sessions(_, _, []), do: %{}
 
   defp aggregate_sessions(site, query, metrics) do
-    from(e in query_sessions(site, query), select: %{})
+    from(e in query_sessions(site, query), select: ^select_session_metrics(metrics, query))
     |> filter_converted_sessions(site, query)
-    |> select_session_metrics(metrics, query)
     |> merge_imported(site, query, :aggregate, metrics)
     |> ClickhouseRepo.one()
     |> Util.keep_requested_metrics(metrics)

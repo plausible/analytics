@@ -53,9 +53,8 @@ defmodule Plausible.Stats.Timeseries do
   defp events_timeseries(_, _, []), do: []
 
   defp events_timeseries(site, query, metrics) do
-    from(e in base_event_query(site, query), select: %{})
+    from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
     |> select_bucket(site, query)
-    |> select_event_metrics(metrics)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
   end
@@ -63,10 +62,9 @@ defmodule Plausible.Stats.Timeseries do
   defp sessions_timeseries(_, _, []), do: []
 
   defp sessions_timeseries(site, query, metrics) do
-    from(e in query_sessions(site, query), select: %{})
+    from(e in query_sessions(site, query), select: ^select_session_metrics(metrics, query))
     |> filter_converted_sessions(site, query)
     |> select_bucket(site, query)
-    |> select_session_metrics(metrics, query)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
     |> Util.keep_requested_metrics(metrics)
