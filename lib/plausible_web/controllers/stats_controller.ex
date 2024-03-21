@@ -181,8 +181,8 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp csv_graph_metrics(%Query{filters: %{"event:goal" => _}}) do
-    metrics = [:visitors]
-    column_headers = [:date, :unique_conversions]
+    metrics = [:visitors, :events, :conversion_rate]
+    column_headers = [:date, :unique_conversions, :total_conversions, :conversion_rate]
 
     {metrics, column_headers}
   end
