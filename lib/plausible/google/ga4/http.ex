@@ -49,9 +49,8 @@ defmodule Plausible.Google.GA4.HTTP do
       )
 
     with {:ok, %{body: body}} <- response,
-         # File.write!("fixture/ga4_report_#{report_request.dataset}.json", Jason.encode!(body)),
          {:ok, report} <- parse_report_from_response(body),
-         row_count <- Map.get(report, "rowCount"),
+         row_count <- Map.fetch!(report, "rowCount"),
          {:ok, report} <- convert_to_maps(report) do
       {:ok, {report, row_count}}
     else
@@ -130,7 +129,7 @@ defmodule Plausible.Google.GA4.HTTP do
   end
 
   def list_accounts_for_user(access_token) do
-    url = "#{admin_api_url()}/v1beta/accountSummaries"
+    url = "#{admin_api_url()}/v1beta/accountSummaries?pageSize=200"
 
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
@@ -143,6 +142,30 @@ defmodule Plausible.Google.GA4.HTTP do
 
       {:error, %HTTPClient.Non200Error{} = error} ->
         Sentry.capture_message("Error listing Google accounts for user", extra: %{error: error})
+        {:error, :unknown}
+    end
+  end
+
+  def get_property(access_token, property) do
+    url = "#{admin_api_url()}/v1beta/#{property}"
+
+    headers = [{"Authorization", "Bearer #{access_token}"}]
+
+    case HTTPClient.impl().get(url, headers) do
+      {:ok, %Finch.Response{body: body, status: 200}} ->
+        {:ok, body}
+
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
+        {:error, :authentication_failed}
+
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [404] ->
+        {:error, :not_found}
+
+      {:error, %HTTPClient.Non200Error{} = error} ->
+        Sentry.capture_message("Error retrieving Google property #{property}",
+          extra: %{error: error}
+        )
+
         {:error, :unknown}
     end
   end

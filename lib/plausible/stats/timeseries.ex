@@ -3,6 +3,7 @@ defmodule Plausible.Stats.Timeseries do
   use Plausible
   alias Plausible.Stats.{Query, Util}
   import Plausible.Stats.{Base}
+  import Ecto.Query
   use Plausible.Stats.Fragments
 
   @typep metric ::
@@ -18,7 +19,7 @@ defmodule Plausible.Stats.Timeseries do
 
   @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
-  @event_metrics [:visitors, :pageviews, :events] ++ @revenue_metrics
+  @event_metrics [:visitors, :pageviews, :events, :conversion_rate] ++ @revenue_metrics
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
@@ -48,13 +49,17 @@ defmodule Plausible.Stats.Timeseries do
       |> Map.update!(:date, &date_format/1)
       |> cast_revenue_metrics_to_money(currency)
     end)
+    |> Util.keep_requested_metrics(metrics)
   end
 
   defp events_timeseries(_, _, []), do: []
 
   defp events_timeseries(site, query, metrics) do
+    metrics = Util.maybe_add_visitors_metric(metrics)
+
     from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
     |> select_bucket(site, query)
+    |> maybe_add_timeseries_conversion_rate(site, query, metrics)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
   end
@@ -234,6 +239,7 @@ defmodule Plausible.Stats.Timeseries do
         :visitors -> Map.merge(row, %{visitors: 0})
         :visits -> Map.merge(row, %{visits: 0})
         :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
+        :conversion_rate -> Map.merge(row, %{conversion_rate: 0.0})
         :bounce_rate -> Map.merge(row, %{bounce_rate: nil})
         :visit_duration -> Map.merge(row, %{visit_duration: nil})
         :average_revenue -> Map.merge(row, %{average_revenue: nil})
@@ -248,5 +254,34 @@ defmodule Plausible.Stats.Timeseries do
     end
   else
     defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
+  end
+
+  defp maybe_add_timeseries_conversion_rate(q, site, query, metrics) do
+    if :conversion_rate in metrics do
+      totals_query = query |> Query.remove_event_filters([:goal, :props])
+
+      totals_timeseries_q =
+        from(e in base_event_query(site, totals_query),
+          select: ^select_event_metrics([:visitors])
+        )
+        |> select_bucket(site, query)
+
+      from(e in subquery(q),
+        left_join: c in subquery(totals_timeseries_q),
+        on: e.date == c.date,
+        select_merge: %{
+          total_visitors: c.visitors,
+          conversion_rate:
+            fragment(
+              "if(? > 0, round(? / ? * 100, 1), 0)",
+              c.visitors,
+              e.visitors,
+              c.visitors
+            )
+        }
+      )
+    else
+      q
+    end
   end
 end

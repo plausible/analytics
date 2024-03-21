@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Api.StatsController do
 
   @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
 
-  plug(:validate_common_input)
+  plug(:date_validation_plug)
 
   @doc """
   Returns a time-series based on given parameters.
@@ -100,16 +100,11 @@ defmodule PlausibleWeb.Api.StatsController do
   def main_graph(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(site, params) do
-      query = Query.from(site, params)
-
-      selected_metric =
-        if !params["metric"] || params["metric"] == "conversions" do
-          :visitors
-        else
-          String.to_existing_atom(params["metric"])
-        end
-
+    with {:ok, dates} <- parse_date_params(params),
+         :ok <- validate_interval(params),
+         :ok <- validate_interval_granularity(site, params, dates),
+         query = Query.from(site, params),
+         {:ok, metric} <- parse_and_validate_graph_metric(params, query) do
       timeseries_query =
         if query.period == "realtime" do
           %Query{query | period: "30m"}
@@ -117,14 +112,14 @@ defmodule PlausibleWeb.Api.StatsController do
           query
         end
 
-      timeseries_result = Stats.timeseries(site, timeseries_query, [selected_metric])
+      timeseries_result = Stats.timeseries(site, timeseries_query, [metric])
 
       comparison_opts = parse_comparison_opts(params)
 
       {comparison_query, comparison_result} =
         case Comparisons.compare(site, query, params["comparison"], comparison_opts) do
           {:ok, comparison_query} ->
-            {comparison_query, Stats.timeseries(site, comparison_query, [selected_metric])}
+            {comparison_query, Stats.timeseries(site, comparison_query, [metric])}
 
           {:error, :not_supported} ->
             {nil, nil}
@@ -137,9 +132,9 @@ defmodule PlausibleWeb.Api.StatsController do
       site_import = Plausible.Imported.get_earliest_import(site)
 
       json(conn, %{
-        plot: plot_timeseries(timeseries_result, selected_metric),
+        plot: plot_timeseries(timeseries_result, metric),
         labels: labels,
-        comparison_plot: comparison_result && plot_timeseries(comparison_result, selected_metric),
+        comparison_plot: comparison_result && plot_timeseries(comparison_result, metric),
         comparison_labels: comparison_result && label_timeseries(comparison_result, nil),
         present_index: present_index,
         interval: query.interval,
@@ -207,35 +202,31 @@ defmodule PlausibleWeb.Api.StatsController do
   def top_stats(conn, params) do
     site = conn.assigns[:site]
 
-    with :ok <- validate_params(site, params) do
-      query = Query.from(site, params)
+    query = Query.from(site, params)
 
-      comparison_opts = parse_comparison_opts(params)
+    comparison_opts = parse_comparison_opts(params)
 
-      comparison_query =
-        case Stats.Comparisons.compare(site, query, params["comparison"], comparison_opts) do
-          {:ok, query} -> query
-          {:error, _cause} -> nil
-        end
+    comparison_query =
+      case Stats.Comparisons.compare(site, query, params["comparison"], comparison_opts) do
+        {:ok, query} -> query
+        {:error, _cause} -> nil
+      end
 
-      {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
+    {top_stats, sample_percent} = fetch_top_stats(site, query, comparison_query)
 
-      site_import = Plausible.Imported.get_earliest_import(site)
+    site_import = Plausible.Imported.get_earliest_import(site)
 
-      json(conn, %{
-        top_stats: top_stats,
-        interval: query.interval,
-        sample_percent: sample_percent,
-        with_imported: with_imported?(query, comparison_query),
-        imported_source: site_import && SiteImport.label(site_import),
-        comparing_from: comparison_query && comparison_query.date_range.first,
-        comparing_to: comparison_query && comparison_query.date_range.last,
-        from: query.date_range.first,
-        to: query.date_range.last
-      })
-    else
-      {:error, message} when is_binary(message) -> bad_request(conn, message)
-    end
+    json(conn, %{
+      top_stats: top_stats,
+      interval: query.interval,
+      sample_percent: sample_percent,
+      with_imported: with_imported?(query, comparison_query),
+      imported_source: site_import && SiteImport.label(site_import),
+      comparing_from: comparison_query && comparison_query.date_range.first,
+      comparing_to: comparison_query && comparison_query.date_range.last,
+      from: query.date_range.first,
+      to: query.date_range.last
+    })
   end
 
   defp present_index_for(site, query, dates) do
@@ -464,7 +455,6 @@ defmodule PlausibleWeb.Api.StatsController do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
 
       with :ok <- Plausible.Billing.Feature.Funnels.check_availability(site.owner),
-           :ok <- validate_params(site, params),
            query <- Query.from(site, params),
            :ok <- validate_funnel_query(query),
            {funnel_id, ""} <- Integer.parse(funnel_id),
@@ -1251,20 +1241,14 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  defp validate_common_input(conn, _opts) do
-    case validate_params(conn.assigns[:site], conn.params) do
-      :ok -> conn
+  defp date_validation_plug(conn, _opts) do
+    case parse_date_params(conn.params) do
+      {:ok, _dates} -> conn
       {:error, message} when is_binary(message) -> bad_request(conn, message)
     end
   end
 
-  defp validate_params(site, params) do
-    with {:ok, dates} <- validate_dates(params),
-         :ok <- validate_interval(params),
-         do: validate_interval_granularity(site, params, dates)
-  end
-
-  defp validate_dates(params) do
+  defp parse_date_params(params) do
     params
     |> Map.take(["from", "to", "date"])
     |> Enum.reduce_while({:ok, %{}}, fn {key, value}, {:ok, acc} ->
@@ -1318,6 +1302,21 @@ defmodule PlausibleWeb.Api.StatsController do
 
       _ ->
         :ok
+    end
+  end
+
+  defp parse_and_validate_graph_metric(params, query) do
+    metric =
+      case params["metric"] do
+        nil -> :visitors
+        "conversions" -> :visitors
+        m -> Plausible.Stats.Metrics.from_string!(m)
+      end
+
+    if metric == :conversion_rate and !query.filters["event:goal"] do
+      {:error, "Metric `:conversion_rate` can only be queried with a goal filter"}
+    else
+      {:ok, metric}
     end
   end
 
