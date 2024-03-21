@@ -2,6 +2,7 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Add `conversion_rate` to Stats API Timeseries and on the main graph 
 - Add `time_on_page` metric into the Stats API
 - County Block List in Site Settings
 - Query the `views_per_visit` metric based on imported data as well if possible

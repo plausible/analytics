@@ -436,7 +436,7 @@ export default class VisitorGraph extends React.Component {
     const selectableMetrics = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
     const canSelectSavedMetric = selectableMetrics && selectableMetrics.includes(savedMetric)
 
-    if (query.filters.goal) {
+    if (query.filters.goal && savedMetric !== 'conversion_rate') {
       this.setState({ metric: 'conversions' })
     } else if (canSelectSavedMetric) {
       this.setState({ metric: savedMetric })
