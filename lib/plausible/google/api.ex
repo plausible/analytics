@@ -112,7 +112,7 @@ defmodule Plausible.Google.API do
     end
   end
 
-  defp property?(value), do: String.starts_with?(value, "properties/")
+  def property?(value), do: String.starts_with?(value, "properties/")
 
   defp do_refresh_token(refresh_token) do
     case HTTP.refresh_auth_token(refresh_token) do

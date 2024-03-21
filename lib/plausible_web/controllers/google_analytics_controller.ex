@@ -164,7 +164,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
       selected_property_or_view_name: property_or_view_name,
       start_date: start_date,
       end_date: end_date,
-      property?: property?(property_or_view),
+      property?: Plausible.Google.API.property?(property_or_view),
       legacy: legacy,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
@@ -189,7 +189,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         Routes.site_path(conn, :settings_imports_exports, site.domain)
       end
 
-    if property?(property_or_view) do
+    if Plausible.Google.API.property?(property_or_view) do
       {:ok, _} =
         Plausible.Imported.GoogleAnalytics4.new_import(
           site,
@@ -219,6 +219,4 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
     |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
     |> redirect(external: redirect_route)
   end
-
-  def property?(value) when is_binary(value), do: String.starts_with?(value, "properties/")
 end
