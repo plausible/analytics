@@ -219,7 +219,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
 
         send_flash(
           :success,
-          "page rule added successfully. Traffic will be rejected within a few minutes."
+          "Page rule added successfully. Traffic will be rejected within a few minutes."
         )
 
         {:noreply, socket}
