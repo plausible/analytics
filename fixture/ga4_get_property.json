@@ -1,0 +1,12 @@
+{
+  "account": "accounts/28425555",
+  "createTime": "2024-02-22T10:50:15.462Z",
+  "currencyCode": "USD",
+  "displayName": "account.one - GA4",
+  "name": "properties/428685444",
+  "parent": "accounts/28425555",
+  "propertyType": "PROPERTY_TYPE_ORDINARY",
+  "serviceLevel": "GOOGLE_ANALYTICS_STANDARD",
+  "timeZone": "Europe/Warsaw",
+  "updateTime": "2024-02-22T10:50:15.462Z"
+}

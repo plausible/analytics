@@ -136,7 +136,7 @@ defmodule Plausible.Google.UA.HTTP do
     url = "#{reporting_api_url()}/v4/reports:batchGet"
     headers = [{"Authorization", "Bearer #{access_token}"}]
 
-    case HTTPClient.post(url, headers, params) do
+    case HTTPClient.impl().post(url, headers, params) do
       {:ok, %Finch.Response{body: body, status: 200}} ->
         report = List.first(body["reports"])
 

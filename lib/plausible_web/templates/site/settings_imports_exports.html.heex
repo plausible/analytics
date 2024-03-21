@@ -16,21 +16,7 @@
       theme="bright"
       href={Plausible.Google.API.import_authorize_url(@site.id, "import", legacy: false)}
     >
-      <img src="/images/icon/universal_analytics_logo.svg" alt="New Universal Analytics import" />
-    </PlausibleWeb.Components.Generic.button_link>
-
-    <PlausibleWeb.Components.Generic.button_link
-      class="w-36 h-20"
-      theme="bright"
-      href={
-        Plausible.Google.API.import_authorize_url(@site.id, "import", legacy: false, ga4: true)
-      }
-    >
-      <img
-        src="/images/icon/google_analytics_4_logo.svg"
-        width="110"
-        alt="New Google Analytics 4 import"
-      />
+      <img src="/images/icon/google_analytics_logo.svg" alt="Google Analytics import" />
     </PlausibleWeb.Components.Generic.button_link>
 
     <PlausibleWeb.Components.Generic.button_link

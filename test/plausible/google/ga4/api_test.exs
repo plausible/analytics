@@ -31,14 +31,15 @@ defmodule Plausible.Google.GA4.APITest do
 
   describe "get_property/2" do
     test "returns tuple consisting of display name and value of a property" do
-      result = Jason.decode!(File.read!("fixture/ga4_list_properties.json"))
+      result = Jason.decode!(File.read!("fixture/ga4_get_property.json"))
 
       expect(Plausible.HTTPClient.Mock, :get, fn _url, _opts ->
         {:ok, %Finch.Response{status: 200, body: result}}
       end)
 
-      assert {:ok, {"GA4 - Flood-It! (properties/153293282)", "properties/153293282"}} =
-               GA4.API.get_property("some_access_token", "properties/153293282")
+      assert {:ok,
+              %{name: "account.one - GA4 (properties/428685444)", id: "properties/428685444"}} =
+               GA4.API.get_property("some_access_token", "properties/428685444")
     end
   end
 
