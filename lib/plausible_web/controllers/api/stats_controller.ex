@@ -1305,7 +1305,7 @@ defmodule PlausibleWeb.Api.StatsController do
     end
   end
 
-  def parse_and_validate_graph_metric(params, query) do
+  defp parse_and_validate_graph_metric(params, query) do
     metric =
       case params["metric"] do
         nil -> :visitors
