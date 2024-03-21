@@ -136,7 +136,7 @@ defmodule Plausible.Stats.Breakdown do
     breakdown_events(site, query, "event:props:" <> custom_prop, metrics_to_select)
     |> maybe_add_conversion_rate(site, query, metrics, include_imported: false)
     |> paginate_and_execute(metrics, pagination)
-    |> transform_keys(%{name: custom_prop})
+    |> transform_keys(%{breakdown_prop_value: custom_prop})
     |> Enum.map(&cast_revenue_metrics_to_money(&1, currency))
   end
 
@@ -446,18 +446,18 @@ defmodule Plausible.Stats.Breakdown do
     from(
       e in q,
       select_merge: %{
-        name:
+        breakdown_prop_value:
           selected_as(
             fragment(
               "if(not empty(?), ?, '(none)')",
               get_by_key(e, :meta, ^prop),
               get_by_key(e, :meta, ^prop)
             ),
-            :name
+            :breakdown_prop_value
           )
       },
-      group_by: selected_as(:name),
-      order_by: {:asc, selected_as(:name)}
+      group_by: selected_as(:breakdown_prop_value),
+      order_by: {:asc, selected_as(:breakdown_prop_value)}
     )
   end
 
