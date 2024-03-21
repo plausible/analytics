@@ -79,13 +79,11 @@ defmodule Plausible.Stats.Breakdown do
             ) and e.name == "pageview",
           array_join: index in fragment("indices"),
           group_by: index,
-          select: %{}
+          select: %{
+            name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
+          }
         )
         |> select_merge(^select_columns)
-        # :TRICKY: name is added last to make sure both queries add columns in the same order
-        |> select_merge([_, index], %{
-          name: fragment("concat('Visit ', ?[?])", ^page_exprs, index)
-        })
         |> apply_pagination(pagination)
       else
         nil
@@ -239,9 +237,10 @@ defmodule Plausible.Stats.Breakdown do
   defp breakdown_events(site, query, property, metrics) do
     from(e in base_event_query(site, query),
       order_by: [desc: fragment("uniq(?)", e.user_id)],
-      select: ^select_event_metrics(metrics)
+      select: %{}
     )
     |> do_group_by(property)
+    |> select_merge(^select_event_metrics(metrics))
     |> merge_imported(site, query, property, metrics)
     |> add_percentage_metric(site, query, metrics)
   end

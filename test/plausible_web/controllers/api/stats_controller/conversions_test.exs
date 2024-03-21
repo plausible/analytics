@@ -219,6 +219,52 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert resp == []
     end
 
+    test "filtering by session attribute and multiple goals", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          user_id: @user_id,
+          name: "Payment",
+          browser: "Firefox"
+        ),
+        build(:event,
+          user_id: @user_id,
+          name: "Payment",
+          browser: "Firefox"
+        ),
+        build(:event,
+          name: "Payment",
+          browser: "Chrome"
+        ),
+        build(:event, name: "Payment"),
+        build(:pageview, browser: "Firefox", pathname: "/"),
+        build(:pageview, browser: "Firefox", pathname: "/register")
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment"})
+      insert(:goal, %{site: site, page_path: "/register"})
+
+      filters = Jason.encode!(%{browser: "Firefox"})
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 1,
+                 "events" => 2,
+                 "conversion_rate" => 33.3
+               },
+               %{
+                 "name" => "Visit /register",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 33.3
+               }
+             ]
+    end
+
     @tag :full_build_only
     test "returns formatted average and total values for a conversion with revenue value", %{
       conn: conn,
