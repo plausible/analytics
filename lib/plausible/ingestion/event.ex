@@ -99,6 +99,10 @@ defmodule Plausible.Ingestion.Event do
     [:plausible, :ingest, :event, :dropped]
   end
 
+  def telemetry_pipeline_step_duration() do
+    [:plausible, :ingest, :pipeline, :step]
+  end
+
   @spec emit_telemetry_buffered(t()) :: :ok
   def emit_telemetry_buffered(event) do
     :telemetry.execute(telemetry_event_buffered(), %{}, %{
@@ -118,30 +122,36 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
-      &drop_datacenter_ip/1,
-      &drop_shield_rule_ip/1,
-      &put_geolocation/1,
-      &drop_shield_rule_country/1,
-      &put_user_agent/1,
-      &put_basic_info/1,
-      &put_referrer/1,
-      &put_utm_tags/1,
-      &put_props/1,
-      &put_revenue/1,
-      &put_salts/1,
-      &put_user_id/1,
-      &validate_clickhouse_event/1,
-      &register_session/1,
-      &write_to_buffer/1
+      drop_datacenter_ip: &drop_datacenter_ip/1,
+      drop_shield_rule_ip: &drop_shield_rule_ip/1,
+      put_geolocation: &put_geolocation/1,
+      drop_shield_rule_country: &drop_shield_rule_country/1,
+      put_user_agent: &put_user_agent/1,
+      put_basic_info: &put_basic_info/1,
+      put_referrer: &put_referrer/1,
+      put_utm_tags: &put_utm_tags/1,
+      put_props: &put_props/1,
+      put_revenue: &put_revenue/1,
+      put_salts: &put_salts/1,
+      put_user_id: &put_user_id/1,
+      validate_clickhouse_event: &validate_clickhouse_event/1,
+      register_session: &register_session/1,
+      write_to_buffer: &write_to_buffer/1
     ]
   end
 
   defp process_unless_dropped(%__MODULE__{} = initial_event, pipeline) do
-    Enum.reduce_while(pipeline, initial_event, fn pipeline_step, acc_event ->
-      case pipeline_step.(acc_event) do
-        %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
-        %__MODULE__{dropped?: false} = event -> {:cont, event}
-      end
+    Enum.reduce_while(pipeline, initial_event, fn {step_name, step_fn}, acc_event ->
+      Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
+        telemetry_pipeline_step_duration(),
+        fn ->
+          case step_fn.(acc_event) do
+            %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
+            %__MODULE__{dropped?: false} = event -> {:cont, event}
+          end
+        end,
+        %{step: "#{step_name}"}
+      )
     end)
   end
 
