@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-3459049A.js"></script>
+    <script src="dist/sidebar_items-1CD65F4F.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -161,7 +161,7 @@ Pages
 
     <div class="summary-row">
       <div class="summary-signature">
-        <a href="#export_upload_multipart/4" translate="no">export_upload_multipart(stream, s3_bucket, s3_path, config_overrides \\ [])</a>
+        <a href="#export_upload_multipart/5" translate="no">export_upload_multipart(stream, s3_bucket, s3_path, filename, config_overrides \\ [])</a>
 
       </div>
 
@@ -222,16 +222,16 @@ Pages
       <span class="text">Functions</span>
     </h1>
     <div class="functions-list">
-<section class="detail" id="export_upload_multipart/4">
+<section class="detail" id="export_upload_multipart/5">
 
-    <span id="export_upload_multipart/3"></span>
+    <span id="export_upload_multipart/4"></span>
 
   <div class="detail-header">
-    <a href="#export_upload_multipart/4" class="detail-link" title="Link to this function">
+    <a href="#export_upload_multipart/5" class="detail-link" title="Link to this function">
       <i class="ri-link-m" aria-hidden="true"></i>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature" translate="no">export_upload_multipart(stream, s3_bucket, s3_path, config_overrides \\ [])</h1>
+    <h1 class="signature" translate="no">export_upload_multipart(stream, s3_bucket, s3_path, filename, config_overrides \\ [])</h1>
 
       <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L89" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
@@ -245,7 +245,13 @@ Pages
 
       <div class="specs">
 
-          <pre translate="no"><span class="attribute">@spec</span> export_upload_multipart(<a href="https://hexdocs.pm/elixir/Enumerable.html#t:t/0">Enumerable.t</a>(), <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(), <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>(), <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">keyword</a>()) ::
+          <pre translate="no"><span class="attribute">@spec</span> export_upload_multipart(
+  <a href="https://hexdocs.pm/elixir/Enumerable.html#t:t/0">Enumerable.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/Path.html#t:t/0">Path.t</a>(),
+  <a href="https://hexdocs.pm/elixir/String.html#t:t/0">String.t</a>(),
+  <a href="https://hexdocs.pm/elixir/typespecs.html#built-in-types">keyword</a>()
+) ::
   <a href="https://www.erlang.org/doc/man/uri_string.html#type-uri_string">:uri_string.uri_string</a>()</pre>
 
       </div>
@@ -280,7 +286,7 @@ The URL expires in 24 hours.</p><p>In the current implementation the bucket alwa
       </div>
 
 <p>Returns the pre-configured S3 bucket for CSV exports.</p><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:plausible</span><span class="p">,</span><span class="w"> </span><span class="nc">Plausible.S3</span><span class="p">,</span><span class="w">
-  </span><span class="ss">exports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="7250581303-1">(</span><span class="s">&quot;S3_EXPORTS_BUCKET&quot;</span><span class="p" data-group-id="7250581303-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">exports_bucket</span><span class="p" data-group-id="4867694838-1">(</span><span class="p" data-group-id="4867694838-1">)</span><span class="w">
+  </span><span class="ss">exports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="1659736833-1">(</span><span class="s">&quot;S3_EXPORTS_BUCKET&quot;</span><span class="p" data-group-id="1659736833-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">exports_bucket</span><span class="p" data-group-id="7539257674-1">(</span><span class="p" data-group-id="7539257674-1">)</span><span class="w">
 </span><span class="s">&quot;test-exports&quot;</span></code></pre>
   </section>
 </section>
@@ -293,7 +299,7 @@ The URL expires in 24 hours.</p><p>In the current implementation the bucket alwa
     </a>
     <h1 class="signature" translate="no">import_clickhouse_credentials()</h1>
 
-      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L144" class="icon-action" rel="help" title="View Source">
+      <a href="https://github.com/plausible/analytics/blob/main/lib/plausible/s3.ex#L154" class="icon-action" rel="help" title="View Source">
        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
        <span class="sr-only">View Source</span>
      </a>
@@ -312,8 +318,8 @@ The URL expires in 24 hours.</p><p>In the current implementation the bucket alwa
 
       </div>
 
-<p>Returns <code class="inline">access_key_id</code> and <code class="inline">secret_access_key</code> to be used by ClickHouse during imports from S3.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">import_clickhouse_credentials</span><span class="p" data-group-id="6687429541-1">(</span><span class="p" data-group-id="6687429541-1">)</span><span class="w">
-</span><span class="p" data-group-id="6687429541-2">%{</span><span class="ss">access_key_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">secret_access_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p" data-group-id="6687429541-2">}</span></code></pre>
+<p>Returns <code class="inline">access_key_id</code> and <code class="inline">secret_access_key</code> to be used by ClickHouse during imports from S3.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">import_clickhouse_credentials</span><span class="p" data-group-id="1080168832-1">(</span><span class="p" data-group-id="1080168832-1">)</span><span class="w">
+</span><span class="p" data-group-id="1080168832-2">%{</span><span class="ss">access_key_id</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">secret_access_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;minioadmin&quot;</span><span class="p" data-group-id="1080168832-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="import_presign_upload/2">
@@ -335,10 +341,10 @@ The URL expires in 24 hours.</p><p>In the current implementation the bucket alwa
 
   <section class="docstring">
 
-<p>Presigns an upload for an imported file.</p><p>In the current implementation the bucket always goes into the path component.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="6203073772-1">%{</span><span class="w">
+<p>Presigns an upload for an imported file.</p><p>In the current implementation the bucket always goes into the path component.</p><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="6987416874-1">%{</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="ss">s3_url</span><span class="p">:</span><span class="w">  </span><span class="s">&quot;http://localhost:10000/test-imports/123/imported_browsers.csv&quot;</span><span class="p">,</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="ss">presigned_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;http://localhost:10000/test-imports/123/imported_browsers.csv?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=minioadmin&quot;</span><span class="w"> </span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="bp">_</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="p" data-group-id="6203073772-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">import_presign_upload</span><span class="p" data-group-id="6203073772-2">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="c">_filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;imported_browsers.csv&quot;</span><span class="p" data-group-id="6203073772-2">)</span></code></pre>
+</span><span class="gp unselectable">...&gt; </span><span class="p" data-group-id="6987416874-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">import_presign_upload</span><span class="p" data-group-id="6987416874-2">(</span><span class="c">_site_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">123</span><span class="p">,</span><span class="w"> </span><span class="c">_filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;imported_browsers.csv&quot;</span><span class="p" data-group-id="6987416874-2">)</span></code></pre>
   </section>
 </section>
 <section class="detail" id="imports_bucket/0">
@@ -367,7 +373,7 @@ The URL expires in 24 hours.</p><p>In the current implementation the bucket alwa
       </div>
 
 <p>Returns the pre-configured S3 bucket for CSV imports.</p><pre><code class="makeup elixir" translate="no"><span class="n">config</span><span class="w"> </span><span class="ss">:plausible</span><span class="p">,</span><span class="w"> </span><span class="nc">Plausible.S3</span><span class="p">,</span><span class="w">
-  </span><span class="ss">imports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="2600759439-1">(</span><span class="s">&quot;S3_IMPORTS_BUCKET&quot;</span><span class="p" data-group-id="2600759439-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">imports_bucket</span><span class="p" data-group-id="7684413582-1">(</span><span class="p" data-group-id="7684413582-1">)</span><span class="w">
+  </span><span class="ss">imports_bucket</span><span class="p">:</span><span class="w"> </span><span class="nc">System</span><span class="o">.</span><span class="n">fetch_env!</span><span class="p" data-group-id="0748388508-1">(</span><span class="s">&quot;S3_IMPORTS_BUCKET&quot;</span><span class="p" data-group-id="0748388508-1">)</span></code></pre><p>Example:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">imports_bucket</span><span class="p" data-group-id="9671729005-1">(</span><span class="p" data-group-id="9671729005-1">)</span><span class="w">
 </span><span class="s">&quot;test-imports&quot;</span></code></pre>
   </section>
 </section>
