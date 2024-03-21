@@ -84,15 +84,16 @@ defmodule Plausible.S3 do
 
   In the current implementation the bucket always goes into the path component.
   """
-  @spec export_upload_multipart(Enumerable.t(), String.t(), Path.t(), keyword) ::
+  @spec export_upload_multipart(Enumerable.t(), String.t(), Path.t(), String.t(), keyword) ::
           :uri_string.uri_string()
-  def export_upload_multipart(stream, s3_bucket, s3_path, config_overrides \\ []) do
+  def export_upload_multipart(stream, s3_bucket, s3_path, filename, config_overrides \\ []) do
     config = ExAws.Config.new(:s3)
+    filename = String.replace(filename, "\"", "\\\"")
 
     # 5 MiB is the smallest chunk size AWS S3 supports
     chunk_into_parts(stream, 5 * 1024 * 1024)
     |> ExAws.S3.upload(s3_bucket, s3_path,
-      content_disposition: ~s|attachment; filename="Plausible.zip"|,
+      content_disposition: ~s|attachment; filename="#{filename}"|,
       content_type: "application/zip"
     )
     |> ExAws.request!(config_overrides)

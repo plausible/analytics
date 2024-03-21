@@ -7,6 +7,22 @@ defmodule Plausible.Exports do
   import Ecto.Query
 
   @doc """
+  Renders filename for the Zip archive containing the exported CSV files.
+
+  Examples:
+
+      iex> archive_filename("plausible.io", ~D[2021-01-01], ~D[2024-12-31])
+      "plausible.io_20210101_20241231.zip"
+
+      iex> archive_filename("Bücher.example", ~D[2021-01-01], ~D[2024-12-31])
+      "B%C3%BCcher.example_20210101_20241231.zip"
+
+  """
+  def archive_filename(domain, min_date, max_date) do
+    "#{URI.encode_www_form(domain)}_#{Calendar.strftime(min_date, "%Y%m%d")}_#{Calendar.strftime(max_date, "%Y%m%d")}.zip"
+  end
+
+  @doc """
   Builds Ecto queries to export data from `events_v2` and `sessions_v2`
   tables  into the format of `imported_*` tables for a website.
   """
