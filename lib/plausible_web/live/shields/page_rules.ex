@@ -43,7 +43,7 @@ defmodule PlausibleWeb.Live.Shields.PageRules do
             Reject incoming traffic for specific pages
           </p>
 
-          <PlausibleWeb.Components.Generic.docs_info slug="top-pages" />
+          <PlausibleWeb.Components.Generic.docs_info slug="top-pages#block-traffic-from-specific-pages-or-sections" />
         </header>
         <div class="border-t border-gray-200 pt-4 grid">
           <div
