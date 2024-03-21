@@ -1,6 +1,8 @@
 defmodule Plausible.ExportsTest do
   use Plausible.DataCase, async: true
 
+  doctest Plausible.Exports, import: true
+
   # for e2e export->import tests please see Plausible.Imported.CSVImporterTest
 
   describe "export_queries/2" do

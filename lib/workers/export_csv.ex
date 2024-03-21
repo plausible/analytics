@@ -43,6 +43,10 @@ defmodule Plausible.Workers.ExportCSV do
         )
       )
     else
+      domain = Plausible.Sites.get_domain!(site_id)
+      export_archive_filename = Plausible.Exports.archive_filename(domain, min_date, max_date)
+      s3_config_overrides = s3_config_overrides(args)
+
       download_url =
         DBConnection.run(
           ch,
@@ -55,7 +59,12 @@ defmodule Plausible.Workers.ExportCSV do
               ),
               format: "CSVWithNames"
             )
-            |> Plausible.S3.export_upload_multipart(s3_bucket, s3_path, s3_config_overrides(args))
+            |> Plausible.S3.export_upload_multipart(
+              s3_bucket,
+              s3_path,
+              export_archive_filename,
+              s3_config_overrides
+            )
           end,
           timeout: :infinity
         )
