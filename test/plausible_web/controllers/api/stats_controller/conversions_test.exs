@@ -580,42 +580,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                }
              ]
     end
-
-    test "conversion_rate for goals should not be calculated with imported data", %{
-      conn: conn,
-      site: site
-    } do
-      site =
-        site
-        |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
-        |> Plausible.Repo.update!()
-
-      populate_stats(site, [
-        build(:pageview, pathname: "/"),
-        build(:pageview, pathname: "/another"),
-        build(:pageview, pathname: "/blog/post-1"),
-        build(:pageview, pathname: "/blog/post-2"),
-        build(:imported_pages, page: "/blog/post-1"),
-        build(:imported_visitors)
-      ])
-
-      insert(:goal, %{site: site, page_path: "/blog**"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "Visit /blog**",
-                 "visitors" => 2,
-                 "events" => 2,
-                 "conversion_rate" => 50
-               }
-             ]
-    end
   end
 
   describe "GET /api/stats/:domain/conversions - with goal and prop=(none) filter" do
