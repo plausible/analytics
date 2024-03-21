@@ -46,26 +46,26 @@ defmodule PlausibleWeb.Live.CSVImport do
     ~H"""
     <label
       phx-drop-target={@upload.ref}
-      class="block border-2 dark:border-gray-600 rounded p-4 hover:border-indigo-300 dark:hover:border-indigo-600 transition cursor-pointer"
+      class="block border-2 dark:border-gray-600 rounded p-4 group hover:border-indigo-500 dark:hover:border-indigo-600 transition cursor-pointer"
     >
       <div class="flex items-center">
-        <div class="bg-indigo-200 dark:bg-indigo-700 rounded p-1 hover:bg-indigo-300 dark:hover:bg-indigo-600 transition cursor-pointer">
-          <Heroicons.plus class="w-4 h-4" />
+        <div class="bg-gray-200 dark:bg-gray-600 rounded p-1 group-hover:bg-indigo-500 dark:group-hover:bg-indigo-600 transition">
+          <Heroicons.folder_plus class="w-5 h-5 group-hover:text-white transition" />
         </div>
         <span class="ml-2 text-sm text-gray-600 dark:text-gray-500">
-          (or drag-and-drop here)
+          (or drag-and-drop your folder here)
         </span>
         <.live_file_input upload={@upload} class="hidden" webkitdirectory />
       </div>
 
-      <div id="imported-tables" class="mt-5 mb-1 space-y-1">
+      <ul id="imported-tables" class="mt-3.5 mb-0.5 space-y-1.5">
         <.imported_table
           :for={{table, upload} <- @imported_tables}
           table={table}
           upload={upload}
           errors={if(upload, do: upload_errors(@upload, upload), else: [])}
         />
-      </div>
+      </ul>
     </label>
     """
   end
@@ -101,7 +101,7 @@ defmodule PlausibleWeb.Live.CSVImport do
     assigns = assign(assigns, status: status)
 
     ~H"""
-    <div id={@table} class="ml-1">
+    <li id={@table} class="ml-1.5">
       <div class="flex items-center space-x-2">
         <Heroicons.document_check :if={@status == :success} class="w-4 h-4 text-indigo-600" />
         <PlausibleWeb.Components.Generic.spinner
@@ -127,7 +127,7 @@ defmodule PlausibleWeb.Live.CSVImport do
       <p :for={error <- @errors} class="ml-6 text-sm text-red-600 dark:text-red-700">
         <%= error_to_string(error) %>
       </p>
-    </div>
+    </li>
     """
   end
 
