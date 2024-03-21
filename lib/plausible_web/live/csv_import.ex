@@ -153,10 +153,10 @@ defmodule PlausibleWeb.Live.CSVImport do
         uploads: uploads
       )
 
-    {:noreply,
-     redirect(socket,
-       to: Routes.site_path(socket, :settings_imports_exports, URI.encode_www_form(site.domain))
-     )}
+    redirect_to =
+      Routes.site_path(socket, :settings_imports_exports, URI.encode_www_form(site.domain))
+
+    {:noreply, redirect(socket, external: redirect_to)}
   end
 
   defp error_to_string(:too_large), do: "is too large (max size is 1 gigabyte)"
