@@ -45,14 +45,11 @@ defmodule Plausible.Shields do
     page_rules = Shield.PageRuleCache.get(domain)
 
     if page_rules do
-      found? =
-        page_rules
-        |> List.wrap()
-        |> Enum.find(fn rule ->
-          rule.action == :deny and Regex.match?(rule.page_path_pattern, pathname)
-        end)
-
-      !!found?
+      page_rules
+      |> List.wrap()
+      |> Enum.find_value(false, fn rule ->
+        rule.action == :deny and Regex.match?(rule.page_path_pattern, pathname)
+      end)
     else
       false
     end
