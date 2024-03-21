@@ -10,21 +10,17 @@ defmodule Plausible.Stats.Goal.Revenue do
     @revenue_metrics
   end
 
-  def total_revenue_query(query) do
-    from(e in query,
-      select_merge: %{
-        total_revenue:
-          fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-      }
+  def total_revenue_query() do
+    dynamic(
+      [e],
+      fragment("toDecimal64(sum(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
     )
   end
 
-  def average_revenue_query(query) do
-    from(e in query,
-      select_merge: %{
-        average_revenue:
-          fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
-      }
+  def average_revenue_query() do
+    dynamic(
+      [e],
+      fragment("toDecimal64(avg(?) * any(_sample_factor), 3)", e.revenue_reporting_amount)
     )
   end
 
