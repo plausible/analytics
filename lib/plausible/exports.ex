@@ -15,11 +15,11 @@ defmodule Plausible.Exports do
       "plausible.io_20210101_20241231.zip"
 
       iex> archive_filename("Bücher.example", ~D[2021-01-01], ~D[2024-12-31])
-      "B%C3%BCcher.example_20210101_20241231.zip"
+      "Bücher.example_20210101_20241231.zip"
 
   """
   def archive_filename(domain, min_date, max_date) do
-    "#{URI.encode_www_form(domain)}_#{Calendar.strftime(min_date, "%Y%m%d")}_#{Calendar.strftime(max_date, "%Y%m%d")}.zip"
+    "#{domain}_#{Calendar.strftime(min_date, "%Y%m%d")}_#{Calendar.strftime(max_date, "%Y%m%d")}.zip"
   end
 
   @doc """

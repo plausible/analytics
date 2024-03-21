@@ -43,7 +43,7 @@ defmodule Plausible.Workers.ExportCSV do
         )
       )
     else
-      domain = fetch_site_domain(site_id)
+      domain = Plausible.Sites.get_domain!(site_id)
       export_archive_filename = Plausible.Exports.archive_filename(domain, min_date, max_date)
       s3_config_overrides = s3_config_overrides(args)
 
@@ -86,16 +86,6 @@ defmodule Plausible.Workers.ExportCSV do
     end
 
     :ok
-  end
-
-  defp fetch_site_domain(site_id) do
-    import Ecto.Query, only: [from: 2]
-
-    Plausible.Repo.one!(
-      from s in Plausible.Site,
-        where: [id: ^site_id],
-        select: s.domain
-    )
   end
 
   # right now custom config is used in tests only (to access the minio container)
