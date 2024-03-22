@@ -19,7 +19,7 @@ export const METRIC_MAPPING = {
 export const METRIC_LABELS = {
   'visitors': 'Visitors',
   'pageviews': 'Pageviews',
-  'events': 'Total conversions',
+  'events': 'Total Conversions',
   'views_per_visit': 'Views per Visit',
   'visits': 'Visits',
   'bounce_rate': 'Bounce Rate',
