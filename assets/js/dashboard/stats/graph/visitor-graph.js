@@ -67,7 +67,7 @@ class LineGraph extends React.Component {
         maintainAspectRatio: false,
         onResize: this.updateWindowDimensions,
         elements: { line: { tension: 0 }, point: { radius: 0 } },
-        onClick: this.onClick.bind(this),
+        onClick: this.maybeHopToHoveredPeriod.bind(this),
         scale: {
           ticks: { precision: 0, maxTicksLimit: 8 }
         },
@@ -220,7 +220,7 @@ class LineGraph extends React.Component {
     chart.options.scales.x.ticks.maxTicksLimit = dimensions.width < 720 ? 5 : 8
   }
 
-  onClick(e) {
+  maybeHopToHoveredPeriod(e) {
     const element = this.chart.getElementsAtEventForMode(e, 'index', { intersect: false })[0]
     const date = this.props.graphData.labels[element.index] || this.props.graphData.comparison_labels[element.index]
 
