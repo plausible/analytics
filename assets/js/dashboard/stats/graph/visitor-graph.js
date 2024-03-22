@@ -12,6 +12,21 @@ import { parseNaiveDate, isBefore } from '../../util/date'
 import { isComparisonEnabled } from '../../comparison-input'
 import LineGraphWithRouter from './line-graph'
 
+function fetchTopStats(site, query) {
+  const q = { ...query }
+  
+  if (!isComparisonEnabled(q.comparison)) {
+    q.comparison = 'previous_period'
+  }
+
+  return api.get(url.apiPath(site, '/top-stats'), q)
+}
+
+function fetchMainGraph(site, query, metric, interval) {
+  const params = {metric, interval}
+  return api.get(url.apiPath(site, '/main-graph'), query, params)
+}
+
 export default class VisitorGraph extends React.Component {
   constructor(props) {
     super(props)
@@ -91,13 +106,10 @@ export default class VisitorGraph extends React.Component {
 
   fetchGraphData(interval) {
     const { site, query } = this.props
-    const url = `/api/stats/${encodeURIComponent(site.domain)}/main-graph`
-    const params = {
-      metric: this.state.metric,
-      interval: interval || getCurrentInterval(site, query)
-    }
+    const graphInterval = interval || getCurrentInterval(site, query)
+    const metric = this.state.metric
 
-    api.get(url, this.props.query, params)
+    fetchMainGraph(site, query, metric, graphInterval)
       .then((res) => {
         this.setState({ mainGraphLoadingState: LoadingState.loaded, graphData: res })
         return res
@@ -109,10 +121,9 @@ export default class VisitorGraph extends React.Component {
   }
 
   fetchTopStatData() {
-    const query = { ...this.props.query }
-    if (!isComparisonEnabled(query.comparison)) query.comparison = 'previous_period'
+    const { site, query } = this.props
 
-    api.get(`/api/stats/${encodeURIComponent(this.props.site.domain)}/top-stats`, query)
+    fetchTopStats(site, query)
       .then((res) => {
         this.setState({ topStatsLoadingState: LoadingState.loaded, topStatData: res }, () => {
           this.storeTopStatsContainerHeight()
