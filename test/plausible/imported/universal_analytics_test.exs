@@ -15,7 +15,8 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
 
       assert {:ok, job} =
                UniversalAnalytics.new_import(site, user,
-                 view_id: 123,
+                 view_id: "123",
+                 label: "123",
                  start_date: "2023-10-01",
                  end_date: "2024-01-02",
                  access_token: "access123",
@@ -28,7 +29,7 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
                args:
                  %{
                    "import_id" => import_id,
-                   "view_id" => 123,
+                   "view_id" => "123",
                    "start_date" => "2023-10-01",
                    "end_date" => "2024-01-02",
                    "access_token" => "access123",
@@ -40,6 +41,7 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
       assert [
                %{
                  id: ^import_id,
+                 label: "123",
                  source: :universal_analytics,
                  start_date: ~D[2023-10-01],
                  end_date: ~D[2024-01-02],
@@ -59,7 +61,7 @@ defmodule Plausible.Imported.UniversalAnalyticsTest do
 
       assert opts = [_ | _] = UniversalAnalytics.parse_args(args)
 
-      assert opts[:view_id] == 123
+      assert opts[:view_id] == "123"
       assert opts[:date_range] == Date.range(~D[2023-10-01], ~D[2024-01-02])
       assert opts[:auth] == {"access123", "refresh123", expires_at}
     end
