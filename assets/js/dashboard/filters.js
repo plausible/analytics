@@ -259,7 +259,7 @@ class Filters extends React.Component {
   }
 
   trackFilterMenu() {
-    window.plausible && window.plausible('Filter Menu: Open')
+    window.plausible && window.plausible('Filter Menu: Open', {u: `${window.location.protocol}//${window.location.hostname}/:dashboard`})
   }
 
   renderDropDown() {
