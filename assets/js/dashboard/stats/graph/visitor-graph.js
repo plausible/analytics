@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
-import { METRIC_MAPPING, LoadingState } from './graph-util'
+import { LoadingState } from './graph-util'
 import TopStats from './top-stats';
 import { IntervalPicker, getCurrentInterval } from './interval-picker';
 import FadeIn from '../../fade-in';
@@ -31,106 +31,90 @@ export default class VisitorGraph extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      topStatsLoadingState: LoadingState.loading,
-      mainGraphLoadingState: LoadingState.loading,
-      metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors',
+      loading: LoadingState.loading,
+      topStatData: null,
+      graphData: null,
       exported: false
     }
     this.onVisible = this.onVisible.bind(this)
-    this.updateMetric = this.updateMetric.bind(this)
-    this.fetchTopStatData = this.fetchTopStatData.bind(this)
+    this.fetchTopStatsAndGraphData = this.fetchTopStatsAndGraphData.bind(this)
     this.fetchGraphData = this.fetchGraphData.bind(this)
     this.onIntervalUpdate = this.onIntervalUpdate.bind(this)
+    this.onMetricUpdate = this.onMetricUpdate.bind(this)
     this.boundary = React.createRef()
   }
 
-  onIntervalUpdate(interval) {
-    this.setState({ mainGraphLoadingState: LoadingState.refreshing, graphData: null }, () => this.fetchGraphData(interval))
+  fetchTopStatsAndGraphData() {
+    const { site, query } = this.props
+    
+    this.setState({loading: LoadingState.loading, topStatData: null, graphData: null})
+
+    fetchTopStats(site, query)
+      .then((res) => {
+        this.setState({ topStatData: res, loading: LoadingState.updatingGraph }, () => {
+          this.storeTopStatsContainerHeight()
+        })
+        
+        let metric = this.getStoredMetric()
+        const availableMetrics = res.top_stats.filter(stat => !!stat.graph_metric).map(stat => stat.graph_metric)
+        
+        if (!availableMetrics.includes(metric)) {
+          metric = availableMetrics[0]
+          storage.setItem(`metric__${this.props.site.domain}`, metric)
+        }
+
+        const interval = getCurrentInterval(site, query)
+
+        return fetchMainGraph(site, query, metric, interval)
+      })
+      .then((res) => {
+        this.setState({ graphData: res, loading: LoadingState.loaded })
+      })
+  }
+
+  fetchGraphData(metric, interval) {
+    const { site, query } = this.props
+    
+    this.setState({loading: LoadingState.updatingGraph, graphData: null})
+
+    fetchMainGraph(site, query, metric, interval)
+      .then((res) => {
+        this.setState({graphData: res, loading: LoadingState.loaded})
+      })
+  }
+
+  getStoredMetric() {
+    return storage.getItem(`metric__${this.props.site.domain}`)
+  }
+
+  onIntervalUpdate(newInterval) {
+    this.fetchGraphData(this.getStoredMetric(), newInterval)
+  }
+
+  onMetricUpdate(newMetric) {
+    this.fetchGraphData(newMetric, getCurrentInterval(this.props.site, this.props.query))
   }
 
   onVisible() {
-    this.setState({ mainGraphLoadingState: LoadingState.loading }, this.fetchGraphData)
-    this.fetchTopStatData()
+    this.fetchTopStatsAndGraphData()
+
     if (this.props.query.period === 'realtime') {
-      document.addEventListener('tick', this.fetchGraphData)
-      document.addEventListener('tick', this.fetchTopStatData)
+      document.addEventListener('tick', this.fetchTopStatsAndGraphData)
     }
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { metric } = this.state;
-    const { query } = this.props
-
-    if (query !== prevProps.query) {
-      this.setState({ mainGraphLoadingState: LoadingState.loading, topStatsLoadingState: LoadingState.loading, graphData: null, topStatData: null }, this.fetchGraphData)
-      this.fetchTopStatData()
-    }
-
-    if (metric !== prevState.metric) {
-      this.setState({ mainGraphLoadingState: LoadingState.refreshing }, this.fetchGraphData)
-    }
-  }
-
-  resetMetric() {
-    const { topStatData } = this.state
-    const { query, site } = this.props
-
-    const savedMetric = storage.getItem(`metric__${site.domain}`)
-    const selectableMetrics = topStatData && topStatData.top_stats.map(({ name }) => METRIC_MAPPING[name]).filter(name => name)
-    const canSelectSavedMetric = selectableMetrics && selectableMetrics.includes(savedMetric)
-
-    if (query.filters.goal && !['conversion_rate', 'events'].includes(savedMetric)) {
-      this.setState({ metric: 'conversions' })
-    } else if (canSelectSavedMetric) {
-      this.setState({ metric: savedMetric })
-    } else {
-      this.setState({ metric: 'visitors' })
+    if (this.props.query !== prevProps.query) {
+      this.fetchTopStatsAndGraphData()
     }
   }
 
   componentWillUnmount() {
-    document.removeEventListener('tick', this.fetchGraphData)
-    document.removeEventListener('tick', this.fetchTopStatData)
+    document.removeEventListener('tick', this.fetchTopStatsAndGraphData)
   }
 
   storeTopStatsContainerHeight() {
     storage.setItem(`topStatsHeight__${this.props.site.domain}`, document.getElementById('top-stats-container').clientHeight)
-  }
-
-  updateMetric(clickedMetric) {
-    if (this.state.metric == clickedMetric) return
-
-    storage.setItem(`metric__${this.props.site.domain}`, clickedMetric)
-    this.setState({ metric: clickedMetric, graphData: null })
-  }
-
-  fetchGraphData(interval) {
-    const { site, query } = this.props
-    const graphInterval = interval || getCurrentInterval(site, query)
-    const metric = this.state.metric
-
-    fetchMainGraph(site, query, metric, graphInterval)
-      .then((res) => {
-        this.setState({ mainGraphLoadingState: LoadingState.loaded, graphData: res })
-        return res
-      })
-      .catch((err) => {
-        console.log(err)
-        this.setState({ mainGraphLoadingState: LoadingState.loaded, graphData: false })
-      })
-  }
-
-  fetchTopStatData() {
-    const { site, query } = this.props
-
-    fetchTopStats(site, query)
-      .then((res) => {
-        this.setState({ topStatsLoadingState: LoadingState.loaded, topStatData: res }, () => {
-          this.storeTopStatsContainerHeight()
-          this.resetMetric()
-        })
-        return res
-      })
   }
   
   pollExportReady() {
@@ -235,51 +219,31 @@ export default class VisitorGraph extends React.Component {
     }
   }
 
-  renderInner() {
+  render() {
     const { query, site } = this.props;
-    const { graphData, metric, topStatData, topStatsLoadingState, mainGraphLoadingState } = this.state;
+    const { graphData, topStatData, loading } = this.state;
 
     const isDarkTheme = document.querySelector('html').classList.contains('dark') || false
-
-    const mainGraphRefreshing = (mainGraphLoadingState === LoadingState.refreshing)
-    const topStatAndGraphLoaded = !!(topStatData && graphData)
-
-    const shouldShow =
-      topStatsLoadingState === LoadingState.loaded &&
-      LoadingState.isLoadedOrRefreshing(mainGraphLoadingState) &&
-      (topStatData && mainGraphRefreshing || topStatAndGraphLoaded)
-
-    return (
-      <FadeIn show={shouldShow}>
-        <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{ height: this.getTopStatsHeight() }}>
-          <TopStats site={site} query={query} metric={metric} updateMetric={this.updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
-        </div>
-        <div className="relative px-2">
-          {mainGraphRefreshing && renderLoader()}
-          <div className="absolute right-4 -top-8 py-1 flex items-center">
-            {this.downloadLink()}
-            {this.samplingNotice()}
-            {this.importedNotice()}
-            <IntervalPicker site={site} query={query} onIntervalUpdate={this.onIntervalUpdate} />
-          </div>
-          <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} metric={metric}/>
-        </div>
-      </FadeIn>
-    )
-  }
-
-  render() {
-    const { mainGraphLoadingState, topStatsLoadingState } = this.state
-
-    const showLoader =
-      [mainGraphLoadingState, topStatsLoadingState].includes(LoadingState.loading) &&
-      mainGraphLoadingState !== LoadingState.refreshing
 
     return (
       <LazyLoader onVisible={this.onVisible}>
         <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825"}>
-          {showLoader && renderLoader()}
-          {this.renderInner()}
+          {loading === LoadingState.loading && renderLoader()}
+          <FadeIn show={loading !== LoadingState.loading}>
+            <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{ height: this.getTopStatsHeight() }}>
+              <TopStats site={site} query={query} onMetricUpdate={this.onMetricUpdate} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+            </div>
+            <div className="relative px-2">
+              {loading === LoadingState.updatingGraph && renderLoader()}
+              <div className="absolute right-4 -top-8 py-1 flex items-center">
+                {this.downloadLink()}
+                {this.samplingNotice()}
+                {this.importedNotice()}
+                <IntervalPicker site={site} query={query} onIntervalUpdate={this.onIntervalUpdate} />
+              </div>
+              <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} />
+            </div>
+          </FadeIn>
         </div>
       </LazyLoader>
     )
