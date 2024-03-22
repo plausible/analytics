@@ -177,11 +177,12 @@ defmodule Plausible.Cache do
         cache_name = Keyword.get(opts, :cache_name, name())
 
         Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
-          telemetry_event_refresh(cache_name, mode), 
+          telemetry_event_refresh(cache_name, mode),
           fn ->
-          items = Plausible.Repo.all(query)
-          :ok = merge_items(items, opts)
-        end)
+            items = Plausible.Repo.all(query)
+            :ok = merge_items(items, opts)
+          end
+        )
 
         :ok
       end
