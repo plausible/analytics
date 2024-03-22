@@ -31,12 +31,8 @@ const calculateMaximumY = function(dataset) {
 class LineGraph extends React.Component {
   constructor(props) {
     super(props);
-    this.boundary = React.createRef()
     this.regenerateChart = this.regenerateChart.bind(this);
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
-    this.state = {
-      exported: false
-    };
   }
 
   regenerateChart() {
@@ -231,130 +227,16 @@ class LineGraph extends React.Component {
     }
   }
 
-  pollExportReady() {
-    if (document.cookie.includes('exporting')) {
-      setTimeout(this.pollExportReady.bind(this), 1000);
-    } else {
-      this.setState({ exported: false })
-    }
-  }
-
-  downloadSpinner() {
-    this.setState({ exported: true });
-    document.cookie = "exporting=";
-    setTimeout(this.pollExportReady.bind(this), 1000);
-  }
-
-  downloadLink() {
-    if (this.props.query.period !== 'realtime') {
-
-      if (this.state.exported) {
-        return (
-          <div className="w-4 h-4 mx-2">
-            <svg className="animate-spin h-4 w-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        )
-      } else {
-        const interval = this.props.graphData?.interval
-        const queryParams = api.serializeQuery(this.props.query, [{ interval }])
-        const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${queryParams}`
-
-        return (
-          <a className="w-4 h-4 mx-2" href={endpoint} download onClick={this.downloadSpinner.bind(this)}>
-            <svg className="absolute text-gray-700 feather dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          </a>
-        )
-      }
-    }
-  }
-
-  samplingNotice() {
-    const samplePercent = this.props.topStatData && this.props.topStatData.sample_percent
-
-    if (samplePercent < 100) {
-      return (
-        <div tooltip={`Stats based on a ${samplePercent}% sample of all visitors`} className="cursor-pointer w-4 h-4 mx-2">
-          <svg className="absolute w-4 h-4 dark:text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-      )
-    }
-  }
-
-  importedNotice() {
-    if (!this.props.topStatData?.imported_source) return
-
-    const isBeforeNativeStats = (date) => {
-      if (!date) return false
-
-      const nativeStatsBegin = parseNaiveDate(this.props.site.nativeStatsBegin)
-      const parsedDate = parseNaiveDate(date)
-
-      return isBefore(parsedDate, nativeStatsBegin, "day")
-    }
-
-    const isQueryingImportedPeriod = isBeforeNativeStats(this.props.topStatData.from)
-    const isComparingImportedPeriod = isBeforeNativeStats(this.props.topStatData.comparing_from)
-
-    if (isQueryingImportedPeriod || isComparingImportedPeriod) {
-      const source = this.props.topStatData.imported_source
-      const withImported = this.props.topStatData.with_imported;
-      const strike = withImported ? "" : " line-through"
-      const target = url.setQuery('with_imported', !withImported)
-      const tip = withImported ? "" : "do not ";
-
-      return (
-        <Link to={target} className="w-4 h-4 mx-2">
-          <div tooltip={`Stats ${tip}include data imported from ${source}.`} className="cursor-pointer w-4 h-4">
-            <svg className="absolute dark:text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>{source[0].toUpperCase()}</text>
-            </svg>
-          </div>
-        </Link>
-      )
-    }
-  }
-
-  // This function is used for maintaining the main-graph/top-stats container height in the
-  // loading process. The container height depends on how many top stat metrics are returned
-  // from the API, but in the loading state, we don't know that yet. We can use localStorage
-  // to keep track of the Top Stats container height.
-  getTopStatsHeight() {
-    if (this.props.topStatData) {
-      return 'auto'
-    } else {
-      return `${storage.getItem(`topStatsHeight__${this.props.site.domain}`) || 89}px`
-    }
-  }
-
   render() {
-    const { mainGraphRefreshing, updateMetric, updateInterval, metric, topStatData, query, site, graphData, lastLoadTimestamp } = this.props
+    const { graphData } = this.props
     const canvasClass = classNames('mt-4 select-none', { 'cursor-pointer': !['minute', 'hour'].includes(graphData?.interval) })
 
     return (
-      <div>
-        <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{ height: this.getTopStatsHeight() }}>
-          <TopStats site={site} query={query} metric={metric} updateMetric={updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={lastLoadTimestamp} />
+      <FadeIn show={graphData}>
+        <div className="relative h-96 print:h-auto print:pb-8 w-full z-0">
+          <canvas id="main-graph-canvas" className={canvasClass}></canvas>
         </div>
-        <div className="relative px-2">
-          {mainGraphRefreshing && renderLoader()}
-          <div className="absolute right-4 -top-8 py-1 flex items-center">
-            {this.downloadLink()}
-            {this.samplingNotice()}
-            {this.importedNotice()}
-            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={updateInterval} />
-          </div>
-          <FadeIn show={graphData}>
-            <div className="relative h-96 print:h-auto print:pb-8 w-full z-0">
-              <canvas id="main-graph-canvas" className={canvasClass}></canvas>
-            </div>
-          </FadeIn>
-        </div>
-      </div>
+      </FadeIn>
     )
   }
 }
@@ -367,13 +249,15 @@ export default class VisitorGraph extends React.Component {
     this.state = {
       topStatsLoadingState: LoadingState.loading,
       mainGraphLoadingState: LoadingState.loading,
-      metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors'
+      metric: storage.getItem(`metric__${this.props.site.domain}`) || 'visitors',
+      exported: false
     }
     this.onVisible = this.onVisible.bind(this)
     this.updateMetric = this.updateMetric.bind(this)
     this.fetchTopStatData = this.fetchTopStatData.bind(this)
     this.fetchGraphData = this.fetchGraphData.bind(this)
     this.updateInterval = this.updateInterval.bind(this)
+    this.boundary = React.createRef()
   }
 
   isIntervalValid(interval) {
@@ -491,12 +375,114 @@ export default class VisitorGraph extends React.Component {
         return res
       })
   }
+  
+  pollExportReady() {
+    if (document.cookie.includes('exporting')) {
+      setTimeout(this.pollExportReady.bind(this), 1000);
+    } else {
+      this.setState({ exported: false })
+    }
+  }
+
+  downloadSpinner() {
+    this.setState({ exported: true });
+    document.cookie = "exporting=";
+    setTimeout(this.pollExportReady.bind(this), 1000);
+  }
+
+  downloadLink() {
+    if (this.props.query.period !== 'realtime') {
+
+      if (this.state.exported) {
+        return (
+          <div className="w-4 h-4 mx-2">
+            <svg className="animate-spin h-4 w-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        )
+      } else {
+        const interval = this.state.graphData?.interval
+        const queryParams = api.serializeQuery(this.props.query, [{ interval }])
+        const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${queryParams}`
+
+        return (
+          <a className="w-4 h-4 mx-2" href={endpoint} download onClick={this.downloadSpinner.bind(this)}>
+            <svg className="absolute text-gray-700 feather dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </a>
+        )
+      }
+    }
+  }
+
+  samplingNotice() {
+    const samplePercent = this.state.topStatData?.sample_percent
+
+    if (samplePercent && samplePercent < 100) {
+      return (
+        <div tooltip={`Stats based on a ${samplePercent}% sample of all visitors`} className="cursor-pointer w-4 h-4 mx-2">
+          <svg className="absolute w-4 h-4 dark:text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+      )
+    }
+  }
+
+  importedNotice() {
+    const { topStatData } = this.state
+
+    if (!topStatData?.imported_source) return
+
+    const isBeforeNativeStats = (date) => {
+      if (!date) return false
+
+      const nativeStatsBegin = parseNaiveDate(this.props.site.nativeStatsBegin)
+      const parsedDate = parseNaiveDate(date)
+
+      return isBefore(parsedDate, nativeStatsBegin, "day")
+    }
+
+    const isQueryingImportedPeriod = isBeforeNativeStats(topStatData.from)
+    const isComparingImportedPeriod = isBeforeNativeStats(topStatData.comparing_from)
+
+    if (isQueryingImportedPeriod || isComparingImportedPeriod) {
+      const source = topStatData.imported_source
+      const withImported = topStatData.with_imported;
+      const strike = withImported ? "" : " line-through"
+      const target = url.setQuery('with_imported', !withImported)
+      const tip = withImported ? "" : "do not ";
+
+      return (
+        <Link to={target} className="w-4 h-4 mx-2">
+          <div tooltip={`Stats ${tip}include data imported from ${source}.`} className="cursor-pointer w-4 h-4">
+            <svg className="absolute dark:text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>{source[0].toUpperCase()}</text>
+            </svg>
+          </div>
+        </Link>
+      )
+    }
+  }
+
+  // This function is used for maintaining the main-graph/top-stats container height in the
+  // loading process. The container height depends on how many top stat metrics are returned
+  // from the API, but in the loading state, we don't know that yet. We can use localStorage
+  // to keep track of the Top Stats container height.
+  getTopStatsHeight() {
+    if (this.state.topStatData) {
+      return 'auto'
+    } else {
+      return `${storage.getItem(`topStatsHeight__${this.props.site.domain}`) || 89}px`
+    }
+  }
 
   renderInner() {
     const { query, site } = this.props;
     const { graphData, metric, topStatData, topStatsLoadingState, mainGraphLoadingState } = this.state;
 
-    const theme = document.querySelector('html').classList.contains('dark') || false
+    const isDarkTheme = document.querySelector('html').classList.contains('dark') || false
 
     const mainGraphRefreshing = (mainGraphLoadingState === LoadingState.refreshing)
     const topStatAndGraphLoaded = !!(topStatData && graphData)
@@ -508,7 +494,19 @@ export default class VisitorGraph extends React.Component {
 
     return (
       <FadeIn show={shouldShow}>
-        <LineGraphWithRouter mainGraphRefreshing={mainGraphRefreshing} graphData={graphData} topStatData={topStatData} site={site} query={query} darkTheme={theme} metric={metric} updateMetric={this.updateMetric} updateInterval={this.updateInterval} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+        <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{ height: this.getTopStatsHeight() }}>
+          <TopStats site={site} query={query} metric={metric} updateMetric={this.updateMetric} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+        </div>
+        <div className="relative px-2">
+          {mainGraphRefreshing && renderLoader()}
+          <div className="absolute right-4 -top-8 py-1 flex items-center">
+            {this.downloadLink()}
+            {this.samplingNotice()}
+            {this.importedNotice()}
+            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.updateInterval} />
+          </div>
+          <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} metric={metric}/>
+        </div>
       </FadeIn>
     )
   }
