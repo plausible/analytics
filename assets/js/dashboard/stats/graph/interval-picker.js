@@ -6,7 +6,7 @@ import * as storage from '../../util/storage'
 import { isKeyPressed } from '../../keybinding.js'
 import { monthsBetweenDates } from '../../util/date.js'
 
-export const INTERVAL_LABELS = {
+const INTERVAL_LABELS = {
   'minute': 'Minutes',
   'hour': 'Hours',
   'date': 'Days',
@@ -14,11 +14,19 @@ export const INTERVAL_LABELS = {
   'month': 'Months'
 }
 
-export const getStoredInterval = function(period, domain) {
+function validIntervals(site, query) {
+  if (query.period === "custom" && monthsBetweenDates(query.from, query.to) > 12) {
+    return ["week", "month"]
+  } else {
+    return site.validIntervalsByPeriod[query.period]
+  }
+}
+
+function getStoredInterval(period, domain) {
   return storage.getItem(`interval__${period}__${domain}`)
 }
 
-export const storeInterval = function(period, domain, interval) {
+function storeInterval(period, domain, interval) {
   storage.setItem(`interval__${period}__${domain}`, interval)
 }
 
@@ -33,37 +41,47 @@ function subscribeKeybinding(element) {
   }, [handleKeyPress])
 }
 
-function DropdownItem({ option, currentInterval, updateInterval }) {
-  return (
-    <Menu.Item onClick={() => updateInterval(option)} key={option} disabled={option == currentInterval}>
-      {({ active }) => (
-        <span className={classNames({
-          'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer': active,
-          'text-gray-700 dark:text-gray-200': !active,
-          'font-bold cursor-none select-none': option == currentInterval,
-        }, 'block px-4 py-2 text-sm')}>
-          {INTERVAL_LABELS[option]}
-        </span>
-      )}
-    </Menu.Item>
-  )
+export const getCurrentInterval = function(site, query) {
+  const options = validIntervals(site, query)
+
+  const storedInterval = getStoredInterval(query.period, site.domain)
+  const defaultInterval = [...options].pop()
+
+  if (storedInterval && options.includes(storedInterval)) {
+    return storedInterval
+  } else {
+    return defaultInterval
+  }
 }
 
-export function IntervalPicker({ graphData, query, site, updateInterval }) {
+export function IntervalPicker({ query, site, onIntervalUpdate }) {
   if (query.period == 'realtime') return null
-
+  
   const menuElement = React.useRef(null)
+  const options = validIntervals(site, query)
+  const currentInterval = getCurrentInterval(site, query)
+
   subscribeKeybinding(menuElement)
 
-  let currentInterval = graphData?.interval
-
-  let options = site.validIntervalsByPeriod[query.period]
-  if (query.period === "custom" && monthsBetweenDates(query.from, query.to) > 12) {
-    options = ["week", "month"]
+  function updateInterval(interval) {
+    storeInterval(query.period, site.domain, interval)
+    onIntervalUpdate(interval)
   }
 
-  if (!options.includes(currentInterval)) {
-    currentInterval = [...options].pop()
+  function renderDropdownItem(option) {
+    return (
+      <Menu.Item onClick={() => updateInterval(option)} key={option} disabled={option == currentInterval}>
+        {({ active }) => (
+          <span className={classNames({
+            'bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-200 cursor-pointer': active,
+            'text-gray-700 dark:text-gray-200': !active,
+            'font-bold cursor-none select-none': option == currentInterval,
+          }, 'block px-4 py-2 text-sm')}>
+            {INTERVAL_LABELS[option]}
+          </span>
+        )}
+      </Menu.Item>
+    )
   }
 
   return (
@@ -85,7 +103,7 @@ export function IntervalPicker({ graphData, query, site, updateInterval }) {
             leaveFrom="opacity-100 scale-100"
             leaveTo="opacity-0 scale-95">
             <Menu.Items className="py-1 text-left origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-10" static>
-              {options.map((option) => DropdownItem({ option, currentInterval, updateInterval }))}
+              {options.map(renderDropdownItem)}
             </Menu.Items>
           </Transition>
         </>
