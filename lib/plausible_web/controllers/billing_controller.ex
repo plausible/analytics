@@ -13,48 +13,18 @@ defmodule PlausibleWeb.BillingController do
     json(conn, %{is_subscribed: subscribed?})
   end
 
-  def upgrade(conn, _params) do
-    user = conn.assigns[:current_user]
-
-    cond do
-      Plausible.Auth.enterprise_configured?(user) ->
-        redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
-
-      FunWithFlags.enabled?(:business_tier, for: user) ->
-        redirect(conn, to: Routes.billing_path(conn, :choose_plan))
-
-      user.subscription && user.subscription.status == Subscription.Status.active() ->
-        redirect(conn, to: Routes.billing_path(conn, :change_plan_form))
-
-      true ->
-        render(conn, "upgrade.html",
-          skip_plausible_tracking: true,
-          usage: Plausible.Billing.Quota.monthly_pageview_usage(user),
-          user: user,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
-    end
-  end
-
   def choose_plan(conn, _params) do
     user = conn.assigns.current_user
 
-    if FunWithFlags.enabled?(:business_tier, for: user) do
-      if Plausible.Auth.enterprise_configured?(user) do
-        redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
-      else
-        render(conn, "choose_plan.html",
-          skip_plausible_tracking: true,
-          user: user,
-          layout: {PlausibleWeb.LayoutView, "focus.html"},
-          connect_live_socket: true
-        )
-      end
+    if Plausible.Auth.enterprise_configured?(user) do
+      redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
     else
-      # This will be needed in case we need to flip back the flag.
-      # With the :business_tier flag enabled we'll have sent emails
-      # linking to `/billing/choose-plan`.
-      redirect(conn, to: Routes.billing_path(conn, :upgrade))
+      render(conn, "choose_plan.html",
+        skip_plausible_tracking: true,
+        user: user,
+        layout: {PlausibleWeb.LayoutView, "focus.html"},
+        connect_live_socket: true
+      )
     end
   end
 
@@ -70,11 +40,10 @@ defmodule PlausibleWeb.BillingController do
         user.subscription.paddle_plan_id == latest_enterprise_plan.paddle_plan_id
 
     cond do
-      user.subscription &&
-          user.subscription.status in [
-            Subscription.Status.past_due(),
-            Subscription.Status.paused()
-          ] ->
+      Subscription.Status.in?(user.subscription, [
+        Subscription.Status.past_due(),
+        Subscription.Status.paused()
+      ]) ->
         redirect(conn, to: Routes.auth_path(conn, :user_settings))
 
       subscribed_to_latest? ->
@@ -96,61 +65,23 @@ defmodule PlausibleWeb.BillingController do
     end
   end
 
-  def upgrade_enterprise_plan(conn, _params) do
-    # DEPRECATED - For some time we need to ensure that the existing
-    # links sent out to customers will lead the user to the right place
-    redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
-  end
-
   def upgrade_success(conn, _params) do
     render(conn, "upgrade_success.html", layout: {PlausibleWeb.LayoutView, "focus.html"})
   end
 
-  def change_plan_form(conn, _params) do
-    user = conn.assigns[:current_user]
+  def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
+    user = conn.assigns.current_user
 
-    subscription = Billing.active_subscription_for(user.id)
-
-    cond do
-      FunWithFlags.enabled?(:business_tier, for: user) ->
-        render_error(conn, 404)
-
-      Plausible.Auth.enterprise_configured?(user) ->
-        redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
-
-      subscription ->
-        render(conn, "change_plan.html",
+    case preview_subscription(user, new_plan_id) do
+      {:ok, {subscription, preview_info}} ->
+        render(conn, "change_plan_preview.html",
+          back_link: Routes.billing_path(conn, :choose_plan),
           skip_plausible_tracking: true,
           subscription: subscription,
+          preview_info: preview_info,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
 
-      true ->
-        redirect(conn, to: Routes.billing_path(conn, :upgrade))
-    end
-  end
-
-  def change_enterprise_plan(conn, _params) do
-    # DEPRECATED - For some time we need to ensure that the existing
-    # links sent out to customers will lead the user to the right place
-    redirect(conn, to: Routes.billing_path(conn, :upgrade_to_enterprise_plan))
-  end
-
-  def change_plan_preview(conn, %{"plan_id" => new_plan_id}) do
-    user = conn.assigns.current_user
-    business_tier_enabled? = FunWithFlags.enabled?(:business_tier, for: user)
-
-    with {:ok, {subscription, preview_info}} <- preview_subscription(user, new_plan_id) do
-      back_action = if business_tier_enabled?, do: :choose_plan, else: :change_plan_form
-
-      render(conn, "change_plan_preview.html",
-        back_link: Routes.billing_path(conn, back_action),
-        skip_plausible_tracking: true,
-        subscription: subscription,
-        preview_info: preview_info,
-        layout: {PlausibleWeb.LayoutView, "focus.html"}
-      )
-    else
       _ ->
         msg =
           "Something went wrong with loading your plan change information. Please try again, or contact us at support@plausible.io if the issue persists."
@@ -165,7 +96,7 @@ defmodule PlausibleWeb.BillingController do
 
         conn
         |> put_flash(:error, msg)
-        |> redirect(to: Plausible.Billing.upgrade_route_for(user))
+        |> redirect(to: Routes.billing_path(conn, :choose_plan))
     end
   end
 
@@ -179,8 +110,8 @@ defmodule PlausibleWeb.BillingController do
       {:error, e} ->
         msg =
           case e do
-            %{exceeded_limits: exceeded_limits} ->
-              "Unable to subscribe to this plan because the following limits are exceeded: #{inspect(exceeded_limits)}"
+            {:over_plan_limits, exceeded_limits} ->
+              "Unable to subscribe to this plan because the following limits are exceeded: #{PlausibleWeb.TextHelpers.pretty_list(exceeded_limits)}"
 
             %{"code" => 147} ->
               # https://developer.paddle.com/api-reference/intro/api-error-codes
@@ -218,9 +149,5 @@ defmodule PlausibleWeb.BillingController do
     else
       {:error, :no_subscription}
     end
-  end
-
-  def preview_susbcription(_, _) do
-    {:error, :no_user_id}
   end
 end

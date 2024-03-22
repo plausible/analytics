@@ -1,6 +1,7 @@
 import React from 'react';
 
 import * as storage from '../../util/storage'
+import { isFilteringOnFixedValue } from '../../util/filters'
 import ListReport from '../reports/list'
 import * as api from '../../api'
 import * as url from '../../util/url'
@@ -12,7 +13,7 @@ function Browsers({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { browser: listItem['name']}
+    return { browser: listItem['name'] }
   }
 
   return (
@@ -35,7 +36,7 @@ function BrowserVersions({ query, site }) {
     if (query.filters.browser === '(not set)') {
       return {}
     }
-    return { browser_version: listItem['name']}
+    return { browser_version: listItem['name'] }
   }
 
   return (
@@ -56,7 +57,7 @@ function OperatingSystems({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { os: listItem['name']}
+    return { os: listItem['name'] }
   }
 
   return (
@@ -79,7 +80,7 @@ function OperatingSystemVersions({ query, site }) {
     if (query.filters.os === '(not set)') {
       return {}
     }
-    return { os_version: listItem['name']}
+    return { os_version: listItem['name'] }
   }
 
   return (
@@ -104,7 +105,7 @@ function ScreenSizes({ query, site }) {
   }
 
   function getFilterFor(listItem) {
-    return { screen: listItem['name']}
+    return { screen: listItem['name'] }
   }
 
   return (
@@ -161,12 +162,12 @@ export default class Devices extends React.Component {
   renderContent() {
     switch (this.state.mode) {
       case 'browser':
-        if (this.props.query.filters.browser) {
+        if (isFilteringOnFixedValue(this.props.query, 'browser')) {
           return <BrowserVersions site={this.props.site} query={this.props.query} />
         }
         return <Browsers site={this.props.site} query={this.props.query} />
       case 'os':
-        if (this.props.query.filters.os) {
+        if (isFilteringOnFixedValue(this.props.query, 'os')) {
           return <OperatingSystemVersions site={this.props.site} query={this.props.query} />
         }
         return <OperatingSystems site={this.props.site} query={this.props.query} />

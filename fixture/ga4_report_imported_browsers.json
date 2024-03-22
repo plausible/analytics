@@ -1,0 +1,161 @@
+{
+  "kind": "analyticsData#batchRunReports",
+  "reports": [
+    {
+      "dimensionHeaders": [
+        {
+          "name": "date"
+        },
+        {
+          "name": "browser"
+        }
+      ],
+      "kind": "analyticsData#runReport",
+      "metadata": {
+        "currencyCode": "USD",
+        "timeZone": "Europe/Warsaw"
+      },
+      "metricHeaders": [
+        {
+          "name": "totalUsers",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "sessions",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "bounces",
+          "type": "TYPE_INTEGER"
+        },
+        {
+          "name": "userEngagementDuration",
+          "type": "TYPE_SECONDS"
+        }
+      ],
+      "rowCount": 5,
+      "rows": [
+        {
+          "dimensionValues": [
+            {
+              "value": "20240226"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240224"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "Chrome"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "Firefox"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "2"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "21"
+            }
+          ]
+        },
+        {
+          "dimensionValues": [
+            {
+              "value": "20240222"
+            },
+            {
+              "value": "Safari"
+            }
+          ],
+          "metricValues": [
+            {
+              "value": "1"
+            },
+            {
+              "value": "1"
+            },
+            {
+              "value": "0"
+            },
+            {
+              "value": "4"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

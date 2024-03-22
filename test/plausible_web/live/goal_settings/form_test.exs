@@ -21,40 +21,53 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
       event_tab = lv |> element(~s/a#event-tab/) |> render_click()
       assert event_tab =~ "Event Name"
     end
-
-    test "escape closes the form", %{conn: conn, site: site} do
-      {parent, lv} = get_liveview(conn, site, with_parent?: true)
-      html = render(parent)
-      assert html =~ "Goal Trigger"
-      render_keydown(lv, "cancel-add-goal")
-      html = render(parent)
-      refute html =~ "Goal Trigger"
-    end
   end
 
   describe "Goal submission" do
     setup [:create_user, :log_in, :create_site]
 
-    test "renders form fields", %{conn: conn, site: site} do
+    @tag :full_build_only
+    test "renders form fields (with currency)", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
       html = render(lv)
 
-      [event_name, currency_display, currency_submit] = find(html, "input")
+      [event_name, currency_display, currency_submit] = find(html, "#goals-form input")
 
       assert name_of(event_name) == "goal[event_name]"
       assert name_of(currency_display) == "display-currency_input"
       assert name_of(currency_submit) == "goal[currency]"
 
-      html = lv |> element(~s/a#pageview-tab/) |> render_click()
+      lv |> element(~s/a#pageview-tab/) |> render_click()
 
-      [page_path_display, page_path] = find(html, "input")
+      html = render(lv)
+
+      [page_path_display, page_path] = find(html, "#goals-form input")
+      assert name_of(page_path_display) == "display-page_path_input"
+      assert name_of(page_path) == "goal[page_path]"
+    end
+
+    @tag :small_build_only
+    test "renders form fields (no currency)", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      html = render(lv)
+
+      [event_name] = find(html, "#goals-form input")
+
+      assert name_of(event_name) == "goal[event_name]"
+
+      lv |> element(~s/a#pageview-tab/) |> render_click()
+
+      html = render(lv)
+
+      [page_path_display, page_path] = find(html, "#goals-form input")
       assert name_of(page_path_display) == "display-page_path_input"
       assert name_of(page_path) == "goal[page_path]"
     end
 
     test "renders error on empty submission", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
-      html = lv |> element("form") |> render_submit()
+      lv |> element("#goals-form form") |> render_submit()
+      html = render(lv)
       assert html =~ "this field is required and cannot be blank"
 
       pageview_tab = lv |> element(~s/a#pageview-tab/) |> render_click()
@@ -62,40 +75,47 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     end
 
     test "creates a custom event", %{conn: conn, site: site} do
-      {parent, lv} = get_liveview(conn, site, with_parent?: true)
-      refute render(parent) =~ "SampleCustomEvent"
-      lv |> element("form") |> render_submit(%{goal: %{event_name: "SampleCustomEvent"}})
-      parent_html = render(parent)
-      assert parent_html =~ "SampleCustomEvent"
-      assert parent_html =~ "Custom Event"
-    end
-
-    test "creates a revenue goal", %{conn: conn, site: site} do
-      {parent, lv} = get_liveview(conn, site, with_parent?: true)
-      refute render(parent) =~ "SampleRevenueGoal"
+      lv = get_liveview(conn, site)
+      refute render(lv) =~ "SampleCustomEvent"
 
       lv
-      |> element("form")
+      |> element("#goals-form form")
+      |> render_submit(%{goal: %{event_name: "SampleCustomEvent"}})
+
+      html = render(lv)
+      assert html =~ "SampleCustomEvent"
+      assert html =~ "Custom Event"
+    end
+
+    @tag :full_build_only
+    test "creates a revenue goal", %{conn: conn, site: site} do
+      lv = get_liveview(conn, site)
+      refute render(lv) =~ "SampleRevenueGoal"
+
+      lv
+      |> element("#goals-form form")
       |> render_submit(%{goal: %{event_name: "SampleRevenueGoal", currency: "EUR"}})
 
-      parent_html = render(parent)
-      assert parent_html =~ "SampleRevenueGoal (EUR)"
-      assert parent_html =~ "Revenue Goal"
+      html = render(lv)
+
+      assert html =~ "SampleRevenueGoal (EUR)"
+      assert html =~ "Revenue Goal"
     end
 
     test "creates a pageview goal", %{conn: conn, site: site} do
-      {parent, lv} = get_liveview(conn, site, with_parent?: true)
-      refute render(parent) =~ "Visit /page/**"
-      lv |> element("form") |> render_submit(%{goal: %{page_path: "/page/**"}})
-      parent_html = render(parent)
-      assert parent_html =~ "Visit /page/**"
-      assert parent_html =~ "Pageview"
+      lv = get_liveview(conn, site)
+      refute render(lv) =~ "Visit /page/**"
+      lv |> element("#goals-form form") |> render_submit(%{goal: %{page_path: "/page/**"}})
+      html = render(lv)
+      assert html =~ "Visit /page/**"
+      assert html =~ "Pageview"
     end
   end
 
   describe "Combos integration" do
     setup [:create_user, :log_in, :create_site]
 
+    @tag :full_build_only
     test "currency combo works", %{conn: conn, site: site} do
       lv = get_liveview(conn, site)
 
@@ -160,16 +180,10 @@ defmodule PlausibleWeb.Live.GoalSettings.FormTest do
     {:ok, [g1, g2, g3]}
   end
 
-  defp get_liveview(conn, site, opts \\ []) do
+  defp get_liveview(conn, site) do
     conn = assign(conn, :live_module, PlausibleWeb.Live.GoalSettings)
     {:ok, lv, _html} = live(conn, "/#{site.domain}/settings/goals")
-    lv |> element(~s/button[phx-click="add-goal"]/) |> render_click()
-    assert form_view = find_live_child(lv, "goals-form")
 
-    if opts[:with_parent?] do
-      {lv, form_view}
-    else
-      form_view
-    end
+    lv
   end
 end

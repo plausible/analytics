@@ -1,5 +1,6 @@
 defmodule Plausible.Auth.TOTPTest do
   use Plausible.DataCase, async: true
+  use Bamboo.Test
 
   alias Plausible.Auth.TOTP
   alias Plausible.Auth.TOTP.RecoveryCode
@@ -8,11 +9,22 @@ defmodule Plausible.Auth.TOTPTest do
 
   describe "enabled?/1" do
     test "Returns user's TOTP state" do
-      assert TOTP.enabled?(insert(:user, totp_enabled: true, totp_secret: "secret"))
       refute TOTP.enabled?(insert(:user, totp_enabled: false, totp_secret: nil))
-      # these shouldn't happen under normal circumstances but we do check
-      # totp_secret presence just to be safe and avoid undefined behavior
       refute TOTP.enabled?(insert(:user, totp_enabled: false, totp_secret: "secret"))
+      assert TOTP.enabled?(insert(:user, totp_enabled: true, totp_secret: "secret"))
+      # this shouldn't happen under normal circumstances but we do check
+      # totp_secret presence just to be safe and avoid undefined behavior
+      refute TOTP.enabled?(insert(:user, totp_enabled: true, totp_secret: nil))
+    end
+  end
+
+  describe "initiated?/1" do
+    test "Returns true only when user's TOTP setup is initiated but not finalized" do
+      refute TOTP.initiated?(insert(:user, totp_enabled: false, totp_secret: nil))
+      refute TOTP.initiated?(insert(:user, totp_enabled: true, totp_secret: "secret"))
+      assert TOTP.initiated?(insert(:user, totp_enabled: false, totp_secret: "secret"))
+      # this shouldn't happen under normal circumstances but we do check
+      # totp_secret presence just to be safe and avoid undefined behavior
       refute TOTP.enabled?(insert(:user, totp_enabled: true, totp_secret: nil))
     end
   end
@@ -25,6 +37,7 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert updated_user.id == user.id
       refute updated_user.totp_enabled
+      assert is_nil(updated_user.totp_token)
       assert byte_size(updated_user.totp_secret) > 0
 
       assert Regex.match?(~r/[0-9A-Z]+/, params.secret)
@@ -41,6 +54,7 @@ defmodule Plausible.Auth.TOTPTest do
       assert new_params.secret != params.secret
 
       refute updated_user.totp_enabled
+      assert is_nil(updated_user.totp_token)
       assert byte_size(updated_user.totp_secret) > 0
       assert updated_user.totp_secret != user.totp_secret
     end
@@ -49,7 +63,7 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user)
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, _} = TOTP.enable(user, code)
 
       assert TOTP.initiate(user) == {:error, :already_setup}
     end
@@ -67,29 +81,65 @@ defmodule Plausible.Auth.TOTPTest do
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
 
-      assert {:ok, user} = TOTP.enable(user, code)
+      assert {:ok, user, %{recovery_codes: recovery_codes}} = TOTP.enable(user, code)
+
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Plausible Two-Factor Authentication enabled"
+      )
 
       assert user.totp_enabled
+      assert byte_size(user.totp_token) > 0
       assert byte_size(user.totp_secret) > 0
+
+      persisted_recovery_codes = Repo.all(RecoveryCode)
+
+      assert length(recovery_codes) == 10
+      assert length(persisted_recovery_codes) == 10
+
+      Enum.each(persisted_recovery_codes, fn recovery_code ->
+        assert recovery_code.user_id == user.id
+        assert byte_size(recovery_code.code_digest) > 0
+      end)
+
+      Enum.each(recovery_codes, fn code_string ->
+        assert byte_size(code_string) > 0
+        assert :ok = TOTP.use_recovery_code(user, code_string)
+      end)
     end
 
     test "succeeds for user who has TOTP enabled already" do
       user = insert(:user)
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret, time: System.os_time(:second) - 30)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, %{recovery_codes: [recovery_code | recovery_codes]}} = TOTP.enable(user, code)
+      :ok = TOTP.use_recovery_code(user, recovery_code)
 
-      assert {:ok, updated_user} = TOTP.enable(user, code, allow_reuse?: true)
+      assert {:ok, updated_user, %{recovery_codes: new_recovery_codes}} =
+               TOTP.enable(user, code, allow_reuse?: true)
 
       assert updated_user.id == user.id
       assert updated_user.totp_enabled
+      assert byte_size(updated_user.totp_token) > 0
+      assert updated_user.totp_token != user.totp_token
       assert updated_user.totp_secret == user.totp_secret
+
+      assert Enum.uniq(recovery_codes ++ new_recovery_codes) ==
+               recovery_codes ++ new_recovery_codes
+
+      assert length(new_recovery_codes) == 10
+
+      Enum.each(new_recovery_codes, fn code_string ->
+        assert byte_size(code_string) > 0
+        assert :ok = TOTP.use_recovery_code(user, code_string)
+      end)
     end
 
     test "fails when TOTP setup is not initiated" do
       user = insert(:user)
 
       assert {:error, :not_initiated} = TOTP.enable(user, "123456")
+      assert_no_emails_delivered()
     end
 
     test "fails when invalid code is provided" do
@@ -97,6 +147,7 @@ defmodule Plausible.Auth.TOTPTest do
       {:ok, user, _} = TOTP.initiate(user)
 
       assert {:error, :invalid_code} = TOTP.enable(user, "1234")
+      assert_no_emails_delivered()
     end
   end
 
@@ -105,12 +156,23 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user, password: "VeryStrongVerySecret")
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, _} = TOTP.enable(user, code)
+
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Plausible Two-Factor Authentication enabled"
+      )
 
       assert {:ok, updated_user} = TOTP.disable(user, "VeryStrongVerySecret")
 
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Plausible Two-Factor Authentication disabled"
+      )
+
       assert updated_user.id == user.id
       refute updated_user.totp_enabled
+      assert is_nil(updated_user.totp_token)
       assert is_nil(updated_user.totp_secret)
 
       assert Repo.all(RecoveryCode) == []
@@ -123,6 +185,7 @@ defmodule Plausible.Auth.TOTPTest do
 
       assert updated_user.id == user.id
       refute updated_user.totp_enabled
+      assert is_nil(updated_user.totp_token)
       assert is_nil(updated_user.totp_secret)
     end
 
@@ -130,73 +193,60 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user, password: "VeryStrongVerySecret")
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, _} = TOTP.enable(user, code)
+
+      assert_email_delivered_with(
+        to: [{user.name, user.email}],
+        subject: "Plausible Two-Factor Authentication enabled"
+      )
 
       assert {:error, :invalid_password} = TOTP.disable(user, "invalid")
+
+      assert_no_emails_delivered()
+    end
+  end
+
+  describe "reset_token/1" do
+    test "generates new token when TOTP enabled" do
+      user = insert(:user, password: "VeryStrongVerySecret")
+      {:ok, user, _} = TOTP.initiate(user)
+      code = NimbleTOTP.verification_code(user.totp_secret)
+      {:ok, user, _} = TOTP.enable(user, code)
+
+      assert %{totp_token: new_token} = TOTP.reset_token(user)
+
+      assert byte_size(new_token) > 0
+      assert new_token != user.totp_token
+    end
+
+    test "sets to nil when TOTP disabled" do
+      user = insert(:user)
+
+      assert %{totp_token: nil} = TOTP.reset_token(user)
+
+      user2 = insert(:user, password: "VeryStrongVerySecret")
+      {:ok, user2, _} = TOTP.initiate(user2)
+      code = NimbleTOTP.verification_code(user2.totp_secret)
+      {:ok, user2, _} = TOTP.enable(user2, code)
+      {:ok, user2} = TOTP.disable(user2, "VeryStrongVerySecret")
+
+      assert %{totp_token: nil} = TOTP.reset_token(user2)
+
+      user3 = insert(:user)
+      {:ok, user3, _} = TOTP.initiate(user3)
+
+      assert %{totp_token: nil} = TOTP.reset_token(user3)
     end
   end
 
   describe "generate_recovery_codes/1" do
     test "generates recovery codes for user with enabled TOTP" do
-      user = insert(:user)
-      {:ok, user, _} = TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
-
-      assert {:ok, codes} = TOTP.generate_recovery_codes(user)
-
-      persisted_codes = Repo.all(RecoveryCode)
-
-      assert length(codes) == 10
-      assert length(persisted_codes) == 10
-
-      Enum.each(persisted_codes, fn recovery_code ->
-        assert recovery_code.user_id == user.id
-        assert byte_size(recovery_code.code_digest) > 0
-      end)
-
-      Enum.each(codes, fn code ->
-        assert byte_size(code) > 0
-        assert :ok = TOTP.use_recovery_code(user, code)
-      end)
-    end
-
-    test "regenerates recovery codes when generated already" do
-      user = insert(:user)
-      {:ok, user, _} = TOTP.initiate(user)
-      code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
-
-      assert {:ok, [code | codes]} = TOTP.generate_recovery_codes(user)
-      assert :ok = TOTP.use_recovery_code(user, code)
-
-      assert {:ok, new_codes} = TOTP.generate_recovery_codes(user)
-
-      assert Enum.uniq(codes ++ new_codes) == codes ++ new_codes
-
-      assert length(new_codes) == 10
-
-      Enum.each(new_codes, fn code ->
-        assert byte_size(code) > 0
-        assert :ok = TOTP.use_recovery_code(user, code)
-      end)
-    end
-
-    test "fails when user has TOTP disabled" do
-      user = insert(:user)
-
-      assert {:error, :not_enabled} = TOTP.generate_recovery_codes(user)
-    end
-  end
-
-  describe "generate_recovery_codes_protected/1" do
-    test "generates recovery codes for user with enabled TOTP" do
       user = insert(:user, password: "VeryStrongVerySecret")
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, _} = TOTP.enable(user, code)
 
-      assert {:ok, codes} = TOTP.generate_recovery_codes_protected(user, "VeryStrongVerySecret")
+      assert {:ok, codes} = TOTP.generate_recovery_codes(user, "VeryStrongVerySecret")
 
       persisted_codes = Repo.all(RecoveryCode)
 
@@ -218,16 +268,16 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user, password: "VeryStrongVerySecret")
 
       assert {:error, :not_enabled} =
-               TOTP.generate_recovery_codes_protected(user, "VeryStrongVerySecret")
+               TOTP.generate_recovery_codes(user, "VeryStrongVerySecret")
     end
 
     test "fails when invalid password provided" do
       user = insert(:user, password: "VeryStrongVerySecret")
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, _} = TOTP.enable(user, code)
 
-      assert {:error, :invalid_password} = TOTP.generate_recovery_codes_protected(user, "invalid")
+      assert {:error, :invalid_password} = TOTP.generate_recovery_codes(user, "invalid")
     end
   end
 
@@ -236,7 +286,7 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user)
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret, time: System.os_time(:second) - 30)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, _} = TOTP.enable(user, code)
       new_code = NimbleTOTP.verification_code(user.totp_secret)
 
       # making sure that generated OTP codes are different
@@ -251,7 +301,7 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user)
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret, time: System.os_time(:second) - 30)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, _} = TOTP.enable(user, code)
 
       assert {:error, :invalid_code} = TOTP.validate_code(user, code)
     end
@@ -260,7 +310,7 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user)
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, _} = TOTP.enable(user, code)
 
       assert {:error, :invalid_code} = TOTP.validate_code(user, "1234")
     end
@@ -276,11 +326,11 @@ defmodule Plausible.Auth.TOTPTest do
 
   describe "use_recovery_code/2" do
     test "succeeds when valid recovery code provided but fails when trying to reuse it" do
-      user = insert(:user)
+      user = insert(:user, password: "VeryStrongVerySecret")
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
-      {:ok, [code | codes]} = TOTP.generate_recovery_codes(user)
+      {:ok, user, _} = TOTP.enable(user, code)
+      {:ok, [code | codes]} = TOTP.generate_recovery_codes(user, "VeryStrongVerySecret")
 
       assert :ok = TOTP.use_recovery_code(user, code)
       assert {:error, :invalid_code} = TOTP.use_recovery_code(user, code)
@@ -289,11 +339,11 @@ defmodule Plausible.Auth.TOTPTest do
     end
 
     test "fails when provided code is invalid" do
-      user = insert(:user)
+      user = insert(:user, password: "VeryStrongVerySecret")
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
-      {:ok, _} = TOTP.generate_recovery_codes(user)
+      {:ok, user, _} = TOTP.enable(user, code)
+      {:ok, _} = TOTP.generate_recovery_codes(user, "VeryStrongVerySecret")
 
       assert {:error, :invalid_code} = TOTP.use_recovery_code(user, "INVALID")
     end
@@ -302,7 +352,7 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user)
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
+      {:ok, user, _} = TOTP.enable(user, code)
 
       assert {:error, :invalid_code} = TOTP.use_recovery_code(user, "INVALID")
     end
@@ -311,11 +361,11 @@ defmodule Plausible.Auth.TOTPTest do
       user = insert(:user, password: "VeryStrongVerySecret")
       {:ok, user, _} = TOTP.initiate(user)
       code = NimbleTOTP.verification_code(user.totp_secret)
-      {:ok, user} = TOTP.enable(user, code)
-      {:ok, [code | _]} = TOTP.generate_recovery_codes(user)
+      {:ok, user, _} = TOTP.enable(user, code)
+      {:ok, [code | _]} = TOTP.generate_recovery_codes(user, "VeryStrongVerySecret")
       {:ok, user} = TOTP.disable(user, "VeryStrongVerySecret")
 
-      assert {:error, :not_enabled} = TOTP.user_recovery_code(user, code)
+      assert {:error, :not_enabled} = TOTP.use_recovery_code(user, code)
     end
   end
 end

@@ -15,7 +15,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
 
     clickhouse_stub =
       stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 5 end)
-      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+      |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)
 
@@ -33,7 +33,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
 
     clickhouse_stub =
       stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
-      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+      |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)
 
@@ -59,7 +59,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
 
     clickhouse_stub =
       stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
-      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+      |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)
 
@@ -72,7 +72,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
 
     clickhouse_stub =
       stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
-      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+      |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)
 
@@ -93,7 +93,7 @@ defmodule Plausible.Workers.SpikeNotifierTest do
 
     clickhouse_stub =
       stub(Plausible.Stats.Clickhouse, :current_visitors, fn _site, _query -> 10 end)
-      |> stub(:top_sources, fn _site, _query, _limit, _page, _show_noref -> [] end)
+      |> stub(:top_sources_for_spike, fn _site, _query, _limit, _page -> [] end)
 
     SpikeNotifier.perform(nil, clickhouse_stub)
 

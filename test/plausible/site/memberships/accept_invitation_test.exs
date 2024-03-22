@@ -1,41 +1,62 @@
 defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   use Plausible
+  require Plausible.Billing.Subscription.Status
   use Plausible.DataCase, async: true
   use Bamboo.Test
 
   alias Plausible.Site.Memberships.AcceptInvitation
 
   describe "transfer_ownership/3" do
-    for {label, opts} <- [{"cloud", []}, {"selfhosted", [selfhost?: true]}] do
-      test "transfers ownership on #{label} instance" do
-        site = insert(:site, memberships: [])
-        existing_owner = insert(:user)
+    test "transfers ownership successfully" do
+      site = insert(:site, memberships: [])
+      existing_owner = insert(:user)
 
-        existing_membership =
-          insert(:site_membership, user: existing_owner, site: site, role: :owner)
+      existing_membership =
+        insert(:site_membership, user: existing_owner, site: site, role: :owner)
 
-        new_owner = insert(:user)
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
 
-        assert {:ok, new_membership} =
-                 AcceptInvitation.transfer_ownership(site, new_owner, unquote(opts))
+      assert {:ok, new_membership} =
+               AcceptInvitation.transfer_ownership(site, new_owner)
 
-        assert new_membership.site_id == site.id
-        assert new_membership.user_id == new_owner.id
-        assert new_membership.role == :owner
+      assert new_membership.site_id == site.id
+      assert new_membership.user_id == new_owner.id
+      assert new_membership.role == :owner
 
-        existing_membership = Repo.reload!(existing_membership)
-        assert existing_membership.user_id == existing_owner.id
-        assert existing_membership.site_id == site.id
-        assert existing_membership.role == :admin
+      existing_membership = Repo.reload!(existing_membership)
+      assert existing_membership.user_id == existing_owner.id
+      assert existing_membership.site_id == site.id
+      assert existing_membership.role == :admin
 
-        assert_no_emails_delivered()
-      end
+      assert_no_emails_delivered()
+    end
+
+    @tag :full_build_only
+    test "unlocks the site if it was previously locked" do
+      site = insert(:site, locked: true, memberships: [])
+      existing_owner = insert(:user)
+
+      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
+
+      assert {:ok, new_membership} =
+               AcceptInvitation.transfer_ownership(site, new_owner)
+
+      assert new_membership.site_id == site.id
+      assert new_membership.user_id == new_owner.id
+      assert new_membership.role == :owner
+
+      refute Repo.reload!(site).locked
     end
 
     for role <- [:viewer, :admin] do
       test "upgrades existing #{role} membership into an owner" do
         existing_owner = insert(:user)
         new_owner = insert(:user)
+        insert(:growth_subscription, user: new_owner)
 
         site =
           insert(:site,
@@ -55,128 +76,113 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       end
     end
 
-    test "does not degrade or alter trial when accepting ownership transfer by self" do
+    test "trial transferring to themselves gets a transfer_to_self error" do
       owner = insert(:user, trial_expiry_date: nil)
       site = insert(:site, memberships: [build(:site_membership, user: owner, role: :owner)])
 
-      assert {:ok, %{id: membership_id}} = AcceptInvitation.transfer_ownership(site, owner)
+      assert {:error, :transfer_to_self} = AcceptInvitation.transfer_ownership(site, owner)
 
-      assert %{id: ^membership_id, role: :owner} =
-               Plausible.Repo.get_by(Plausible.Site.Membership, user_id: owner.id)
-
+      assert %{role: :owner} = Plausible.Repo.get_by(Plausible.Site.Membership, user_id: owner.id)
       assert Repo.reload!(owner).trial_expiry_date == nil
     end
 
-    on_full_build do
-      test "locks the site if the new owner has no active subscription or trial" do
-        existing_owner = insert(:user)
+    @tag :full_build_only
+    test "does not allow transferring to an account without an active subscription" do
+      current_owner = insert(:user)
+      site = insert(:site, members: [current_owner])
 
-        site =
-          insert(:site,
-            locked: false,
-            memberships: [build(:site_membership, user: existing_owner, role: :owner)]
-          )
+      trial_user = insert(:user)
+      invited_user = insert(:user, trial_expiry_date: nil)
 
-        new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
+      user_on_free_10k =
+        insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
 
-        assert {:ok, _membership} = AcceptInvitation.transfer_ownership(site, new_owner)
-
-        assert Repo.reload!(site).locked
-      end
-    end
-
-    test "does not lock the site or set trial expiry date if the instance is selfhosted" do
-      existing_owner = insert(:user)
-
-      site =
-        insert(:site,
-          locked: false,
-          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
+      user_on_expired_subscription =
+        insert(:user,
+          subscription:
+            build(:growth_subscription,
+              status: Plausible.Billing.Subscription.Status.deleted(),
+              next_bill_date: Timex.shift(Timex.today(), days: -1)
+            )
         )
 
-      new_owner = insert(:user, trial_expiry_date: nil)
-
-      assert {:ok, _membership} =
-               AcceptInvitation.transfer_ownership(site, new_owner, selfhost?: true)
-
-      assert Repo.reload!(new_owner).trial_expiry_date == nil
-      refute Repo.reload!(site).locked
-    end
-
-    on_full_build do
-      test "ends trial of the new owner immediately" do
-        existing_owner = insert(:user)
-
-        site =
-          insert(:site,
-            locked: false,
-            memberships: [build(:site_membership, user: existing_owner, role: :owner)]
-          )
-
-        new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), 7))
-
-        assert {:ok, _membership} = AcceptInvitation.transfer_ownership(site, new_owner)
-
-        assert Repo.reload!(new_owner).trial_expiry_date == Date.add(Date.utc_today(), -1)
-        assert Repo.reload!(site).locked
-      end
-    end
-
-    on_full_build do
-      test "sets user's trial expiry date to yesterday if they don't have one" do
-        existing_owner = insert(:user)
-
-        site =
-          insert(:site,
-            locked: false,
-            memberships: [build(:site_membership, user: existing_owner, role: :owner)]
-          )
-
-        new_owner = insert(:user, trial_expiry_date: nil)
-
-        assert {:ok, _membership} = AcceptInvitation.transfer_ownership(site, new_owner)
-
-        assert Repo.reload!(new_owner).trial_expiry_date == Date.add(Date.utc_today(), -1)
-        assert Repo.reload!(site).locked
-      end
-    end
-
-    on_full_build do
-      test "ends grace period and sends an email about it if new owner is past grace period" do
-        existing_owner = insert(:user)
-
-        site =
-          insert(:site,
-            locked: false,
-            memberships: [build(:site_membership, user: existing_owner, role: :owner)]
-          )
-
-        new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
-        insert(:subscription, user: new_owner, next_bill_date: Timex.today())
-
-        new_owner =
-          new_owner
-          |> Plausible.Auth.GracePeriod.start_changeset(100)
-          |> then(fn changeset ->
-            grace_period =
-              changeset
-              |> get_field(:grace_period)
-              |> Map.put(:end_date, Date.add(Date.utc_today(), -1))
-
-            change(changeset, grace_period: grace_period)
-          end)
-          |> Repo.update!()
-
-        assert {:ok, _membership} = AcceptInvitation.transfer_ownership(site, new_owner)
-
-        assert Repo.reload!(new_owner).grace_period.is_over
-        assert Repo.reload!(site).locked
-
-        assert_email_delivered_with(
-          to: [{"Jane Smith", new_owner.email}],
-          subject: "[Action required] Your Plausible dashboard is now locked"
+      user_on_paused_subscription =
+        insert(:user,
+          subscription:
+            build(:growth_subscription, status: Plausible.Billing.Subscription.Status.paused())
         )
-      end
+
+      assert {:error, :no_plan} = AcceptInvitation.transfer_ownership(site, trial_user)
+      assert {:error, :no_plan} = AcceptInvitation.transfer_ownership(site, invited_user)
+      assert {:error, :no_plan} = AcceptInvitation.transfer_ownership(site, user_on_free_10k)
+
+      assert {:error, :no_plan} =
+               AcceptInvitation.transfer_ownership(site, user_on_expired_subscription)
+
+      assert {:error, :no_plan} =
+               AcceptInvitation.transfer_ownership(site, user_on_paused_subscription)
+    end
+
+    test "does not allow transferring to self" do
+      current_owner = insert(:user)
+      site = insert(:site, members: [current_owner])
+
+      assert {:error, :transfer_to_self} =
+               AcceptInvitation.transfer_ownership(site, current_owner)
+    end
+
+    @tag :full_build_only
+    test "does not allow transferring to and account without suitable plan" do
+      current_owner = insert(:user)
+      site = insert(:site, members: [current_owner])
+
+      new_owner =
+        insert(:user, subscription: build(:growth_subscription))
+
+      # fill site quota
+      insert_list(10, :site, members: [new_owner])
+
+      assert {:error, {:over_plan_limits, [:site_limit]}} =
+               AcceptInvitation.transfer_ownership(site, new_owner)
+    end
+
+    @tag :small_build_only
+    test "allows transferring to an account without a subscription on self hosted" do
+      current_owner = insert(:user)
+      site = insert(:site, members: [current_owner])
+
+      trial_user = insert(:user)
+      invited_user = insert(:user, trial_expiry_date: nil)
+
+      user_on_free_10k =
+        insert(:user, subscription: build(:subscription, paddle_plan_id: "free_10k"))
+
+      user_on_expired_subscription =
+        insert(:user,
+          subscription:
+            build(:growth_subscription,
+              status: Plausible.Billing.Subscription.Status.deleted(),
+              next_bill_date: Timex.shift(Timex.today(), days: -1)
+            )
+        )
+
+      user_on_paused_subscription =
+        insert(:user,
+          subscription:
+            build(:growth_subscription, status: Plausible.Billing.Subscription.Status.paused())
+        )
+
+      assert {:ok, _} = AcceptInvitation.transfer_ownership(site, trial_user)
+      assert {:ok, _} = AcceptInvitation.transfer_ownership(site, invited_user)
+
+      assert {:ok, _} =
+               AcceptInvitation.transfer_ownership(site, user_on_free_10k)
+
+      assert {:ok, _} =
+               AcceptInvitation.transfer_ownership(site, user_on_expired_subscription)
+
+      assert {:ok, _} =
+               AcceptInvitation.transfer_ownership(site, user_on_paused_subscription)
     end
   end
 
@@ -268,53 +274,84 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
   end
 
   describe "accept_invitation/3 - ownership transfers" do
-    for {label, opts} <- [{"cloud", []}, {"selfhosted", [selfhost?: true]}] do
-      test "converts an ownership transfer into a membership on #{label} instance" do
-        site = insert(:site, memberships: [])
-        existing_owner = insert(:user)
+    test "converts an ownership transfer into a membership" do
+      site = insert(:site, memberships: [])
+      existing_owner = insert(:user)
 
-        existing_membership =
-          insert(:site_membership, user: existing_owner, site: site, role: :owner)
+      existing_membership =
+        insert(:site_membership, user: existing_owner, site: site, role: :owner)
 
-        new_owner = insert(:user)
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
 
-        invitation =
-          insert(:invitation,
-            site_id: site.id,
-            inviter: existing_owner,
-            email: new_owner.email,
-            role: :owner
-          )
-
-        assert {:ok, new_membership} =
-                 AcceptInvitation.accept_invitation(
-                   invitation.invitation_id,
-                   new_owner,
-                   unquote(opts)
-                 )
-
-        assert new_membership.site_id == site.id
-        assert new_membership.user_id == new_owner.id
-        assert new_membership.role == :owner
-        refute Repo.reload(invitation)
-
-        existing_membership = Repo.reload!(existing_membership)
-        assert existing_membership.user_id == existing_owner.id
-        assert existing_membership.site_id == site.id
-        assert existing_membership.role == :admin
-
-        assert_email_delivered_with(
-          to: [nil: existing_owner.email],
-          subject:
-            "[Plausible Analytics] #{new_owner.email} accepted the ownership transfer of #{site.domain}"
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: existing_owner,
+          email: new_owner.email,
+          role: :owner
         )
-      end
+
+      assert {:ok, new_membership} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
+
+      assert new_membership.site_id == site.id
+      assert new_membership.user_id == new_owner.id
+      assert new_membership.role == :owner
+      refute Repo.reload(invitation)
+
+      existing_membership = Repo.reload!(existing_membership)
+      assert existing_membership.user_id == existing_owner.id
+      assert existing_membership.site_id == site.id
+      assert existing_membership.role == :admin
+
+      assert_email_delivered_with(
+        to: [nil: existing_owner.email],
+        subject:
+          "[Plausible Analytics] #{new_owner.email} accepted the ownership transfer of #{site.domain}"
+      )
+    end
+
+    @tag :full_build_only
+    test "unlocks a previously locked site after transfer" do
+      site = insert(:site, locked: true, memberships: [])
+      existing_owner = insert(:user)
+
+      insert(:site_membership, user: existing_owner, site: site, role: :owner)
+
+      new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: existing_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:ok, new_membership} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
+
+      assert new_membership.site_id == site.id
+      assert new_membership.user_id == new_owner.id
+      assert new_membership.role == :owner
+      refute Repo.reload(invitation)
+
+      refute Repo.reload!(site).locked
     end
 
     for role <- [:viewer, :admin] do
       test "upgrades existing #{role} membership into an owner" do
         existing_owner = insert(:user)
         new_owner = insert(:user)
+        insert(:growth_subscription, user: new_owner)
 
         site =
           insert(:site,
@@ -347,6 +384,7 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
 
     test "does note degrade or alter trial when accepting ownership transfer by self" do
       owner = insert(:user, trial_expiry_date: nil)
+      insert(:growth_subscription, user: owner)
       site = insert(:site, memberships: [build(:site_membership, user: owner, role: :owner)])
 
       invitation =
@@ -367,154 +405,176 @@ defmodule Plausible.Site.Memberships.AcceptInvitationTest do
       refute Repo.reload(invitation)
     end
 
-    test "locks the site if the new owner has no active subscription or trial" do
-      existing_owner = insert(:user)
+    @tag :full_build_only
+    test "does not allow transferring ownership to a non-member user when at team members limit" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
 
       site =
         insert(:site,
-          locked: false,
-          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(3, :site_membership, role: :admin)
         )
-
-      new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
 
       invitation =
         insert(:invitation,
           site_id: site.id,
-          inviter: existing_owner,
+          inviter: old_owner,
           email: new_owner.email,
           role: :owner
         )
 
-      assert {:ok, _membership} =
-               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
-
-      assert Repo.reload!(site).locked
-    end
-
-    test "does not lock the site or set trial expiry date if the instance is selfhosted" do
-      existing_owner = insert(:user)
-
-      site =
-        insert(:site,
-          locked: false,
-          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
-        )
-
-      new_owner = insert(:user, trial_expiry_date: nil)
-
-      invitation =
-        insert(:invitation,
-          site_id: site.id,
-          inviter: existing_owner,
-          email: new_owner.email,
-          role: :owner
-        )
-
-      assert {:ok, _membership} =
-               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner,
-                 selfhost?: true
+      assert {:error, {:over_plan_limits, [:team_member_limit]}} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
                )
-
-      assert Repo.reload!(new_owner).trial_expiry_date == nil
-      refute Repo.reload!(site).locked
     end
 
-    test "ends trial of the new owner immediately" do
-      existing_owner = insert(:user)
+    @tag :full_build_only
+    test "allows transferring ownership to existing site member when at team members limit" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
 
       site =
         insert(:site,
-          locked: false,
-          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
+          memberships:
+            [
+              build(:site_membership, user: old_owner, role: :owner),
+              build(:site_membership, user: new_owner, role: :admin)
+            ] ++
+              build_list(2, :site_membership, role: :admin)
         )
-
-      new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), 7))
 
       invitation =
         insert(:invitation,
           site_id: site.id,
-          inviter: existing_owner,
+          inviter: old_owner,
           email: new_owner.email,
           role: :owner
         )
 
-      assert {:ok, _membership} =
-               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
-
-      assert Repo.reload!(new_owner).trial_expiry_date == Date.add(Date.utc_today(), -1)
-      assert Repo.reload!(site).locked
+      assert {:ok, _} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
     end
 
-    test "sets user's trial expiry date to yesterday if they don't have one" do
-      existing_owner = insert(:user)
+    @tag :full_build_only
+    test "does not allow transferring ownership when sites limit exceeded" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
 
-      site =
-        insert(:site,
-          locked: false,
-          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
-        )
+      insert_list(10, :site, members: [new_owner])
 
-      new_owner = insert(:user, trial_expiry_date: nil)
+      site = insert(:site, members: [old_owner])
 
       invitation =
         insert(:invitation,
           site_id: site.id,
-          inviter: existing_owner,
+          inviter: old_owner,
           email: new_owner.email,
           role: :owner
         )
 
-      assert {:ok, _membership} =
-               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
-
-      assert Repo.reload!(new_owner).trial_expiry_date == Date.add(Date.utc_today(), -1)
-      assert Repo.reload!(site).locked
+      assert {:error, {:over_plan_limits, [:site_limit]}} =
+               AcceptInvitation.accept_invitation(
+                 invitation.invitation_id,
+                 new_owner
+               )
     end
 
-    test "ends grace period and sends an email about it if new owner is past grace period" do
-      existing_owner = insert(:user)
+    @tag :full_build_only
+    test "does not allow transferring ownership when pageview limit exceeded" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
 
-      site =
-        insert(:site,
-          locked: false,
-          memberships: [build(:site_membership, user: existing_owner, role: :owner)]
+      new_owner_site = insert(:site, members: [new_owner])
+      old_owner_site = insert(:site, members: [old_owner])
+
+      somewhere_last_month = NaiveDateTime.utc_now() |> Timex.shift(days: -5)
+      somewhere_penultimate_month = NaiveDateTime.utc_now() |> Timex.shift(days: -35)
+
+      generate_usage_for(new_owner_site, 5_000, somewhere_last_month)
+      generate_usage_for(new_owner_site, 1_000, somewhere_penultimate_month)
+
+      generate_usage_for(old_owner_site, 6_000, somewhere_last_month)
+      generate_usage_for(old_owner_site, 10_000, somewhere_penultimate_month)
+
+      invitation =
+        insert(:invitation,
+          site_id: old_owner_site.id,
+          inviter: old_owner,
+          email: new_owner.email,
+          role: :owner
         )
 
-      new_owner = insert(:user, trial_expiry_date: Date.add(Date.utc_today(), -1))
-      insert(:subscription, user: new_owner, next_bill_date: Timex.today())
+      assert {:error, {:over_plan_limits, [:monthly_pageview_limit]}} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
+    end
+
+    @tag :full_build_only
+    test "allow_next_upgrade_override field has no effect when checking the pageview limit on ownership transfer" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
 
       new_owner =
-        new_owner
-        |> Plausible.Auth.GracePeriod.start_changeset(100)
-        |> then(fn changeset ->
-          grace_period =
-            changeset
-            |> get_field(:grace_period)
-            |> Map.put(:end_date, Date.add(Date.utc_today(), -1))
+        insert(:user,
+          subscription: build(:growth_subscription),
+          allow_next_upgrade_override: true
+        )
 
-          change(changeset, grace_period: grace_period)
-        end)
-        |> Repo.update!()
+      new_owner_site = insert(:site, members: [new_owner])
+      old_owner_site = insert(:site, members: [old_owner])
+
+      somewhere_last_month = NaiveDateTime.utc_now() |> Timex.shift(days: -5)
+      somewhere_penultimate_month = NaiveDateTime.utc_now() |> Timex.shift(days: -35)
+
+      generate_usage_for(new_owner_site, 5_000, somewhere_last_month)
+      generate_usage_for(new_owner_site, 1_000, somewhere_penultimate_month)
+
+      generate_usage_for(old_owner_site, 6_000, somewhere_last_month)
+      generate_usage_for(old_owner_site, 10_000, somewhere_penultimate_month)
 
       invitation =
         insert(:invitation,
-          site_id: site.id,
-          inviter: existing_owner,
+          site_id: old_owner_site.id,
+          inviter: old_owner,
           email: new_owner.email,
           role: :owner
         )
 
-      assert {:ok, _membership} =
+      assert {:error, {:over_plan_limits, [:monthly_pageview_limit]}} =
                AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
+    end
 
-      assert Repo.reload!(new_owner).grace_period.is_over
-      assert Repo.reload!(site).locked
+    @tag :full_build_only
+    test "does not allow transferring ownership when many limits exceeded at once" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
 
-      assert_email_delivered_with(
-        to: [{"Jane Smith", new_owner.email}],
-        subject: "[Action required] Your Plausible dashboard is now locked"
-      )
+      insert_list(10, :site, members: [new_owner])
+
+      site =
+        insert(:site,
+          props_enabled: true,
+          allowed_event_props: ["author"],
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(3, :site_membership, role: :admin)
+        )
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: old_owner,
+          email: new_owner.email,
+          role: :owner
+        )
+
+      assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit]}} =
+               AcceptInvitation.accept_invitation(invitation.invitation_id, new_owner)
     end
   end
 end

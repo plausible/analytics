@@ -8,7 +8,7 @@ defmodule Plausible.Workers.LockSitesTest do
     user =
       :user
       |> build()
-      |> Plausible.Auth.GracePeriod.start_manual_lock_changeset(100)
+      |> Plausible.Auth.GracePeriod.start_manual_lock_changeset()
       |> Plausible.Repo.insert!()
 
     site = insert(:site, members: [user])

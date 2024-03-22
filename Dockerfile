@@ -2,10 +2,12 @@
 # platform specific, it makes sense to build it in the docker
 
 #### Builder
-FROM hexpm/elixir:1.15.7-erlang-26.1.2-alpine-3.18.4 as buildcontainer
+FROM hexpm/elixir:1.16.0-erlang-26.2.1-alpine-3.18.4 as buildcontainer
+
+ARG MIX_ENV=small
 
 # preparation
-ENV MIX_ENV=prod
+ENV MIX_ENV=$MIX_ENV
 ENV NODE_ENV=production
 ENV NODE_OPTIONS=--openssl-legacy-provider
 
@@ -45,8 +47,7 @@ RUN npm run deploy --prefix ./tracker && \
   mix assets.deploy && \
   mix phx.digest priv/static && \
   mix download_country_database && \
-  # https://hexdocs.pm/sentry/Sentry.Sources.html#module-source-code-storage
-  mix sentry_recompile
+  mix sentry.package_source_code
 
 WORKDIR /app
 COPY rel rel
@@ -59,19 +60,18 @@ LABEL maintainer="plausible.io <hello@plausible.io>"
 ARG BUILD_METADATA={}
 ENV BUILD_METADATA=$BUILD_METADATA
 ENV LANG=C.UTF-8
+ARG MIX_ENV=small
+ENV MIX_ENV=$MIX_ENV
+
+RUN adduser -S -H -u 999 -G nogroup plausible -g 'Plausible Analytics'
 
 RUN apk upgrade --no-cache
-
 RUN apk add --no-cache openssl ncurses libstdc++ libgcc ca-certificates
 
-COPY ./rel/docker-entrypoint.sh /entrypoint.sh
+COPY --from=buildcontainer --chmod=a+rX /app/_build/${MIX_ENV}/rel/plausible /app
+COPY --chmod=755 ./rel/docker-entrypoint.sh /entrypoint.sh
 
-RUN chmod a+x /entrypoint.sh && \
-  adduser -h /app -u 1000 -s /bin/sh -D plausibleuser
-
-COPY --from=buildcontainer /app/_build/prod/rel/plausible /app
-RUN chown -R plausibleuser:plausibleuser /app
-USER plausibleuser
+USER 999
 WORKDIR /app
 ENV LISTEN_IP=0.0.0.0
 ENTRYPOINT ["/entrypoint.sh"]

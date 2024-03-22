@@ -15,6 +15,19 @@ defmodule Plausible.Stats.QueryTest do
     {:ok, site: site, user: user}
   end
 
+  @tag :slow
+  test "keeps current timestamp so that utc_boundaries don't depend on time passing by", %{
+    site: site
+  } do
+    q1 = %{now: %NaiveDateTime{}} = Query.from(site, %{"period" => "realtime"})
+    q2 = %{now: %NaiveDateTime{}} = Query.from(site, %{"period" => "30m"})
+    boundaries1 = Plausible.Stats.Base.utc_boundaries(q1, site)
+    boundaries2 = Plausible.Stats.Base.utc_boundaries(q2, site)
+    :timer.sleep(1500)
+    assert ^boundaries1 = Plausible.Stats.Base.utc_boundaries(q1, site)
+    assert ^boundaries2 = Plausible.Stats.Base.utc_boundaries(q2, site)
+  end
+
   test "parses day format", %{site: site} do
     q = Query.from(site, %{"period" => "day", "date" => "2019-01-01"})
 
@@ -107,7 +120,7 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time shows hourly if site is completely new", %{site: site} do
-    site = Map.put(site, :stats_start_date, Timex.now())
+    site = Map.put(site, :stats_start_date, Timex.now() |> Timex.to_date())
     q = Query.from(site, %{"period" => "all"})
 
     assert q.date_range.first == Timex.today()
@@ -117,7 +130,9 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time shows daily if site is more than a day old", %{site: site} do
-    site = Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(days: -1))
+    site =
+      Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(days: -1) |> Timex.to_date())
+
     q = Query.from(site, %{"period" => "all"})
 
     assert q.date_range.first == Timex.today() |> Timex.shift(days: -1)
@@ -127,7 +142,9 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time shows monthly if site is more than a month old", %{site: site} do
-    site = Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1))
+    site =
+      Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1) |> Timex.to_date())
+
     q = Query.from(site, %{"period" => "all"})
 
     assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)
@@ -137,7 +154,9 @@ defmodule Plausible.Stats.QueryTest do
   end
 
   test "all time uses passed interval different from the default interval", %{site: site} do
-    site = Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1))
+    site =
+      Map.put(site, :stats_start_date, Timex.now() |> Timex.shift(months: -1) |> Timex.to_date())
+
     q = Query.from(site, %{"period" => "all", "interval" => "week"})
 
     assert q.date_range.first == Timex.today() |> Timex.shift(months: -1)
@@ -158,11 +177,13 @@ defmodule Plausible.Stats.QueryTest do
     assert q.interval == "date"
   end
 
+  @tag :full_build_only
   test "adds sample_threshold :infinite to query struct", %{site: site} do
     q = Query.from(site, %{"period" => "30d", "sample_threshold" => "infinite"})
     assert q.sample_threshold == :infinite
   end
 
+  @tag :full_build_only
   test "casts sample_threshold to integer in query struct", %{site: site} do
     q = Query.from(site, %{"period" => "30d", "sample_threshold" => "30000000"})
     assert q.sample_threshold == 30_000_000
@@ -173,14 +194,14 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"goal" => "Signup"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters["goal"] == "Signup"
+      assert q.filters["event:goal"] == {:is, {:event, "Signup"}}
     end
 
     test "parses source filter", %{site: site} do
       filters = Jason.encode!(%{"source" => "Twitter"})
       q = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert q.filters["source"] == "Twitter"
+      assert q.filters["visit:source"] == {:is, "Twitter"}
     end
 
     test "allows prop filters when site owner is on a business plan", %{site: site, user: user} do
@@ -188,7 +209,7 @@ defmodule Plausible.Stats.QueryTest do
       filters = Jason.encode!(%{"props" => %{"author" => "!John Doe"}})
       query = Query.from(site, %{"period" => "6mo", "filters" => filters})
 
-      assert Map.has_key?(query.filters, "props")
+      assert Map.has_key?(query.filters, "event:props:author")
     end
 
     test "drops prop filter when site owner is on a growth plan", %{site: site, user: user} do

@@ -45,7 +45,7 @@ defmodule PlausibleWeb.StatsController do
   use Plausible.Repo
 
   alias Plausible.Sites
-  alias Plausible.Stats.{Query, Filters}
+  alias Plausible.Stats.Query
   alias PlausibleWeb.Api
 
   plug(PlausibleWeb.AuthorizeSiteAccess when action in [:stats, :csv_export])
@@ -96,9 +96,7 @@ defmodule PlausibleWeb.StatsController do
     defp list_funnels(site) do
       Plausible.Funnels.list(site)
     end
-  end
-
-  on_small_build do
+  else
     defp list_funnels(_site) do
       []
     end
@@ -112,30 +110,7 @@ defmodule PlausibleWeb.StatsController do
   def csv_export(conn, params) do
     if is_nil(params["interval"]) or Plausible.Stats.Interval.valid?(params["interval"]) do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
-      query = Query.from(site, params) |> Filters.add_prefix()
-
-      metrics =
-        if query.filters["event:goal"] do
-          [:visitors]
-        else
-          [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
-        end
-
-      graph = Plausible.Stats.timeseries(site, query, metrics)
-      columns = [:date | metrics]
-
-      column_headers =
-        if query.filters["event:goal"] do
-          [:date, :unique_conversions]
-        else
-          columns
-        end
-
-      visitors =
-        Enum.map(graph, fn row -> Enum.map(columns, &row[&1]) end)
-        |> (fn data -> [column_headers | data] end).()
-        |> CSV.encode()
-        |> Enum.join()
+      query = Query.from(site, params)
 
       filename =
         ~c"Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
@@ -144,6 +119,7 @@ defmodule PlausibleWeb.StatsController do
       limited_params = Map.merge(params, %{"limit" => "100"})
 
       csvs = %{
+        ~c"visitors.csv" => fn -> main_graph_csv(site, query) end,
         ~c"sources.csv" => fn -> Api.StatsController.sources(conn, params) end,
         ~c"utm_mediums.csv" => fn -> Api.StatsController.utm_mediums(conn, params) end,
         ~c"utm_sources.csv" => fn -> Api.StatsController.utm_sources(conn, params) end,
@@ -157,20 +133,16 @@ defmodule PlausibleWeb.StatsController do
         ~c"regions.csv" => fn -> Api.StatsController.regions(conn, params) end,
         ~c"cities.csv" => fn -> Api.StatsController.cities(conn, params) end,
         ~c"browsers.csv" => fn -> Api.StatsController.browsers(conn, params) end,
+        ~c"browser_versions.csv" => fn -> Api.StatsController.browser_versions(conn, params) end,
         ~c"operating_systems.csv" => fn -> Api.StatsController.operating_systems(conn, params) end,
+        ~c"operating_system_versions.csv" => fn ->
+          Api.StatsController.operating_system_versions(conn, params)
+        end,
         ~c"devices.csv" => fn -> Api.StatsController.screen_sizes(conn, params) end,
         ~c"conversions.csv" => fn -> Api.StatsController.conversions(conn, params) end,
-        ~c"referrers.csv" => fn -> Api.StatsController.referrers(conn, params) end
+        ~c"referrers.csv" => fn -> Api.StatsController.referrers(conn, params) end,
+        ~c"custom_props.csv" => fn -> Api.StatsController.all_custom_prop_values(conn, params) end
       }
-
-      csvs =
-        if Plausible.Billing.Feature.Props.enabled?(site) do
-          Map.put(csvs, ~c"custom_props.csv", fn ->
-            Api.StatsController.all_custom_prop_values(conn, params)
-          end)
-        else
-          csvs
-        end
 
       csv_values =
         Map.values(csvs)
@@ -179,8 +151,7 @@ defmodule PlausibleWeb.StatsController do
       csvs =
         Map.keys(csvs)
         |> Enum.zip(csv_values)
-
-      csvs = [{~c"visitors.csv", visitors} | csvs]
+        |> Enum.reject(fn {_k, v} -> is_nil(v) end)
 
       {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
 
@@ -194,6 +165,33 @@ defmodule PlausibleWeb.StatsController do
       |> send_resp(400, "")
       |> halt()
     end
+  end
+
+  defp main_graph_csv(site, query) do
+    {metrics, column_headers} = csv_graph_metrics(query)
+
+    map_bucket_to_row = fn bucket -> Enum.map([:date | metrics], &bucket[&1]) end
+    prepend_column_headers = fn data -> [column_headers | data] end
+
+    Plausible.Stats.timeseries(site, query, metrics)
+    |> Enum.map(map_bucket_to_row)
+    |> prepend_column_headers.()
+    |> CSV.encode()
+    |> Enum.join()
+  end
+
+  defp csv_graph_metrics(%Query{filters: %{"event:goal" => _}}) do
+    metrics = [:visitors, :events, :conversion_rate]
+    column_headers = [:date, :unique_conversions, :total_conversions, :conversion_rate]
+
+    {metrics, column_headers}
+  end
+
+  defp csv_graph_metrics(_) do
+    metrics = [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
+    column_headers = [:date | metrics]
+
+    {metrics, column_headers}
   end
 
   @doc """
@@ -316,6 +314,9 @@ defmodule PlausibleWeb.StatsController do
   defp render_shared_link(conn, shared_link) do
     cond do
       !shared_link.site.locked ->
+        shared_link = Plausible.Repo.preload(shared_link, site: :owner)
+        stats_start_date = Plausible.Sites.stats_start_date(shared_link.site)
+
         conn
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> delete_resp_header("x-frame-options")
@@ -324,7 +325,7 @@ defmodule PlausibleWeb.StatsController do
           has_goals: Sites.has_goals?(shared_link.site),
           funnels: list_funnels(shared_link.site),
           has_props: Plausible.Props.configured?(shared_link.site),
-          stats_start_date: shared_link.site.stats_start_date,
+          stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: title(conn, shared_link.site),
           offer_email_report: false,
@@ -365,14 +366,13 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp is_dbip() do
-    is_or_nil =
-      if Application.get_env(:plausible, :is_selfhost) do
-        if type = Plausible.Geo.database_type() do
-          String.starts_with?(type, "DBIP")
-        end
-      end
-
-    !!is_or_nil
+    on_full_build do
+      false
+    else
+      Plausible.Geo.database_type()
+      |> to_string()
+      |> String.starts_with?("DBIP")
+    end
   end
 
   defp title(%{path_info: ["plausible.io"]}, _) do

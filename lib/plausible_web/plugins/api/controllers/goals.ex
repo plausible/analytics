@@ -4,6 +4,50 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
   """
   use PlausibleWeb, :plugins_api_controller
 
+  operation(:create,
+    id: "Goal.GetOrCreate",
+    summary: "Get or create Goal",
+    request_body: {"Goal params", "application/json", Schemas.Goal.CreateRequest},
+    responses: %{
+      created: {"Goal", "application/json", Schemas.Goal.ListResponse},
+      unauthorized: {"Unauthorized", "application/json", Schemas.Unauthorized},
+      payment_required: {"Payment required", "application/json", Schemas.PaymentRequired},
+      unprocessable_entity:
+        {"Unprocessable entity", "application/json", Schemas.UnprocessableEntity}
+    }
+  )
+
+  def create(
+        %{private: %{open_api_spex: %{body_params: body_params}}} = conn,
+        _params
+      ) do
+    site = conn.assigns.authorized_site
+
+    goal_or_goals =
+      case body_params do
+        %{goals: goals} -> goals
+        %{goal: _} = single_goal -> single_goal
+      end
+
+    case API.Goals.create(site, goal_or_goals) do
+      {:ok, goals} ->
+        location_headers =
+          Enum.map(goals, &{"location", plugins_api_goals_url(conn, :get, &1.id)})
+
+        conn
+        |> prepend_resp_headers(location_headers)
+        |> put_view(Views.Goal)
+        |> put_status(:created)
+        |> render("index.json", goals: goals, authorized_site: site)
+
+      {:error, :upgrade_required} ->
+        payment_required(conn)
+
+      {:error, changeset} ->
+        Errors.error(conn, 422, changeset)
+    end
+  end
+
   operation(:index,
     summary: "Retrieve Goals",
     parameters: [
@@ -24,70 +68,6 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
       unauthorized: {"Unauthorized", "application/json", Schemas.Unauthorized}
     }
   )
-
-  operation(:create,
-    id: "Goal.GetOrCreate",
-    summary: "Get or create Goal",
-    request_body: {"Goal params", "application/json", Schemas.Goal.CreateRequest},
-    responses: %{
-      created:
-        {"Goal", "application/json",
-         %OpenApiSpex.Schema{
-           oneOf: [Schemas.Goal.ListResponse, Schemas.Goal]
-         }},
-      unauthorized: {"Unauthorized", "application/json", Schemas.Unauthorized},
-      payment_required: {"Payment required", "application/json", Schemas.PaymentRequired},
-      unprocessable_entity:
-        {"Unprocessable entity", "application/json", Schemas.UnprocessableEntity}
-    }
-  )
-
-  @spec create(Plug.Conn.t(), map()) :: Plug.Conn.t()
-  def create(
-        %{private: %{open_api_spex: %{body_params: %{goal: _} = goal}}} = conn,
-        _params
-      ) do
-    site = conn.assigns.authorized_site
-
-    case API.Goals.create(site, goal) do
-      {:ok, [goal]} ->
-        conn
-        |> put_view(Views.Goal)
-        |> put_status(:created)
-        |> put_resp_header("location", goals_url(base_uri(), :get, goal.id))
-        |> render("goal.json", goal: goal, authorized_site: site)
-
-      {:error, :upgrade_required} ->
-        payment_required(conn)
-
-      {:error, changeset} ->
-        Errors.error(conn, 422, changeset)
-    end
-  end
-
-  def create(
-        %{private: %{open_api_spex: %{body_params: %{goals: goals}}}} = conn,
-        _params
-      ) do
-    site = conn.assigns.authorized_site
-
-    case API.Goals.create(site, goals) do
-      {:ok, goals} ->
-        location_headers = Enum.map(goals, &{"location", goals_url(base_uri(), :get, &1.id)})
-
-        conn
-        |> prepend_resp_headers(location_headers)
-        |> put_view(Views.Goal)
-        |> put_status(:created)
-        |> render("index.json", goals: goals, authorized_site: site)
-
-      {:error, :upgrade_required} ->
-        payment_required(conn)
-
-      {:error, changeset} ->
-        Errors.error(conn, 422, changeset)
-    end
-  end
 
   @spec index(Plug.Conn.t(), %{}) :: Plug.Conn.t()
   def index(conn, _params) do
@@ -156,13 +136,27 @@ defmodule PlausibleWeb.Plugins.API.Controllers.Goals do
 
   @spec delete(Plug.Conn.t(), map()) :: Plug.Conn.t()
   def delete(%{private: %{open_api_spex: %{params: %{id: id}}}} = conn, _params) do
-    case Plausible.Goals.delete(id, conn.assigns.authorized_site) do
-      :ok ->
-        send_resp(conn, :no_content, "")
+    :ok = API.Goals.delete(conn.assigns.authorized_site, id)
+    send_resp(conn, :no_content, "")
+  end
 
-      {:error, :not_found} ->
-        send_resp(conn, :no_content, "")
-    end
+  operation(:delete_bulk,
+    id: "Goal.DeleteBulk",
+    summary: "Delete Goals in bulk",
+    request_body: {"Goal params", "application/json", Schemas.Goal.DeleteBulkRequest},
+    responses: %{
+      no_content: {"NoContent", nil, nil},
+      unauthorized: {"Unauthorized", "application/json", Schemas.Unauthorized}
+    }
+  )
+
+  @spec delete_bulk(Plug.Conn.t(), map()) :: Plug.Conn.t()
+  def delete_bulk(
+        %{private: %{open_api_spex: %{body_params: %{goal_ids: goal_ids}}}} = conn,
+        _params
+      ) do
+    :ok = API.Goals.delete(conn.assigns.authorized_site, goal_ids)
+    send_resp(conn, :no_content, "")
   end
 
   defp payment_required(conn) do

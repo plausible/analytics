@@ -23,6 +23,14 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
+  def get_domain!(site_id) do
+    Plausible.Repo.one!(
+      from s in Plausible.Site,
+        where: [id: ^site_id],
+        select: s.domain
+    )
+  end
+
   @spec toggle_pin(Auth.User.t(), Site.t()) ::
           {:ok, Site.UserPreference.t()} | {:error, :too_many_pins}
   def toggle_pin(user, site) do
@@ -87,7 +95,7 @@ defmodule Plausible.Sites do
             selected_as(
               fragment(
                 """
-                CASE 
+                CASE
                   WHEN ? IS NOT NULL THEN 'pinned_site'
                   ELSE 'site'
                 END
@@ -124,7 +132,7 @@ defmodule Plausible.Sites do
               selected_as(
                 fragment(
                   """
-                  CASE 
+                  CASE
                     WHEN ? IS NOT NULL THEN 'invitation'
                     WHEN ? IS NOT NULL THEN 'pinned_site'
                     ELSE 'site'
@@ -167,21 +175,15 @@ defmodule Plausible.Sites do
   defp maybe_filter_by_domain(query, _), do: query
 
   def create(user, params) do
-    site_changeset = Site.changeset(%Site{}, params)
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.run(:limit, fn _, _ ->
-      limit = Quota.site_limit(user)
-      usage = Quota.site_usage(user)
-
-      if Quota.below_limit?(usage, limit), do: {:ok, usage}, else: {:error, limit}
-    end)
-    |> Ecto.Multi.insert(:site, site_changeset)
-    |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
-      Site.Membership.new(site, user)
-    end)
-    |> maybe_start_trial(user)
-    |> Repo.transaction()
+    with :ok <- Quota.ensure_can_add_new_site(user) do
+      Ecto.Multi.new()
+      |> Ecto.Multi.insert(:site, Site.new(params))
+      |> Ecto.Multi.insert(:site_membership, fn %{site: site} ->
+        Site.Membership.new(site, user)
+      end)
+      |> maybe_start_trial(user)
+      |> Repo.transaction()
+    end
   end
 
   defp maybe_start_trial(multi, user) do
@@ -195,13 +197,50 @@ defmodule Plausible.Sites do
     end
   end
 
+  @spec clear_stats_start_date!(Site.t()) :: Site.t()
+  def clear_stats_start_date!(site) do
+    site
+    |> Ecto.Changeset.change(stats_start_date: nil)
+    |> Plausible.Repo.update!()
+  end
+
+  @doc """
+  Returns the date of the first recorded stat in the timezone configured by the user.
+  This function does 2 transformations:
+    UTC %NaiveDateTime{} -> Local %DateTime{} -> Local %Date
+
+  ## Examples
+
+    iex> Plausible.Site.local_start_date(%Plausible.Site{stats_start_date: nil})
+    nil
+
+    iex> utc_start = ~N[2022-09-28 00:00:00]
+    iex> tz = "Europe/Helsinki"
+    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
+    iex> Plausible.Site.local_start_date(site)
+    ~D[2022-09-28]
+
+    iex> utc_start = ~N[2022-09-28 00:00:00]
+    iex> tz = "America/Los_Angeles"
+    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
+    iex> Plausible.Site.local_start_date(site)
+    ~D[2022-09-27]
+  """
+  @spec local_start_date(Site.t()) :: Date.t() | nil
+  def local_start_date(site) do
+    if stats_start_date = stats_start_date(site) do
+      Plausible.Timezones.to_date_in_timezone(stats_start_date, site.timezone)
+    end
+  end
+
   @spec stats_start_date(Site.t()) :: Date.t() | nil
   @doc """
   Returns the date of the first event of the given site, or `nil` if the site
   does not have stats yet.
 
   If this is the first time the function is called for the site, it queries
-  Clickhouse and saves the date in the sites table.
+  imported stats and Clickhouse, choosing the earliest start date and saves
+  it in the sites table.
   """
   def stats_start_date(site)
 
@@ -210,7 +249,17 @@ defmodule Plausible.Sites do
   end
 
   def stats_start_date(%Site{} = site) do
-    if start_date = Plausible.Stats.Clickhouse.pageview_start_date_local(site) do
+    site = Plausible.Imported.load_import_data(site)
+
+    start_date =
+      [
+        site.earliest_import_start_date,
+        native_stats_start_date(site)
+      ]
+      |> Enum.reject(&is_nil/1)
+      |> Enum.min(Date, fn -> nil end)
+
+    if start_date do
       updated_site =
         site
         |> Site.set_stats_start_date(start_date)
@@ -218,6 +267,11 @@ defmodule Plausible.Sites do
 
       updated_site.stats_start_date
     end
+  end
+
+  @spec native_stats_start_date(Site.t()) :: Date.t() | nil
+  def native_stats_start_date(site) do
+    Plausible.Stats.Clickhouse.pageview_start_date_local(site)
   end
 
   def has_stats?(site) do

@@ -106,15 +106,15 @@ defmodule PlausibleWeb.Api.StatsController.FunnelsTest do
           build(:pageview,
             pathname: "/blog/announcement",
             user_id: @other_user_id,
-            utm_medium: "social",
-            timestamp: ~N[2021-01-01 12:00:00]
+            timestamp: ~N[2021-01-01 12:00:00],
+            utm_medium: "social"
           ),
           build(:event, name: "Signup", user_id: @user_id),
           build(:event,
             name: "Signup",
             user_id: @other_user_id,
-            utm_medium: "social",
-            timestamp: ~N[2021-01-01 12:01:00]
+            timestamp: ~N[2021-01-01 12:01:00],
+            utm_medium: "social"
           ),
           build(:pageview, pathname: "/cart/add/product", user_id: @user_id),
           build(:event, name: "Purchase", user_id: @user_id)

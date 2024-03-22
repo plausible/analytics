@@ -4,6 +4,17 @@ defmodule Plausible.Billing.Subscriptions do
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
+  def active?(%Subscription{status: Subscription.Status.active()}), do: true
+  def active?(%Subscription{status: Subscription.Status.past_due()}), do: true
+
+  def active?(%Subscription{status: Subscription.Status.deleted()} = subscription) do
+    not is_nil(subscription.next_bill_date) and
+      not Date.before?(subscription.next_bill_date, Date.utc_today())
+  end
+
+  def active?(%Subscription{}), do: false
+  def active?(nil), do: false
+
   @spec expired?(Subscription.t()) :: boolean()
   @doc """
   Returns whether the given subscription is expired. That means that the
@@ -14,29 +25,25 @@ defmodule Plausible.Billing.Subscriptions do
 
   def expired?(%Subscription{paddle_plan_id: "free_10k"}), do: false
 
-  def expired?(%Subscription{status: status, next_bill_date: next_bill_date}) do
-    cancelled? = status == Subscription.Status.deleted()
+  def expired?(%Subscription{next_bill_date: next_bill_date} = subscription) do
+    deleted? = Subscription.Status.deleted?(subscription)
     expired? = Timex.compare(next_bill_date, Timex.today()) < 0
 
-    cancelled? && expired?
+    deleted? && expired?
   end
 
-  def resumable?(nil), do: false
-
-  def resumable?(%Subscription{status: status}) do
-    status in [
+  def resumable?(subscription) do
+    Subscription.Status.in?(subscription, [
       Subscription.Status.active(),
       Subscription.Status.past_due(),
       Subscription.Status.paused()
-    ]
+    ])
   end
 
-  def halted?(nil), do: false
-
-  def halted?(%Subscription{status: status}) do
-    status in [
+  def halted?(subscription) do
+    Subscription.Status.in?(subscription, [
       Subscription.Status.past_due(),
       Subscription.Status.paused()
-    ]
+    ])
   end
 end

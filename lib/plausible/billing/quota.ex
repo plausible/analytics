@@ -5,11 +5,30 @@ defmodule Plausible.Billing.Quota do
 
   use Plausible
   import Ecto.Query
+  alias Plausible.Users
   alias Plausible.Auth.User
   alias Plausible.Site
-  alias Plausible.Billing
-  alias Plausible.Billing.{Plan, Plans, Subscription, EnterprisePlan, Feature}
+  alias Plausible.Billing.{Plan, Plans, Subscription, Subscriptions, EnterprisePlan, Feature}
   alias Plausible.Billing.Feature.{Goals, RevenueGoals, Funnels, Props, StatsAPI}
+
+  @type limit() :: :site_limit | :pageview_limit | :team_member_limit
+
+  @type over_limits_error() :: {:over_plan_limits, [limit()]}
+
+  @type monthly_pageview_usage() :: %{period() => usage_cycle()}
+
+  @type period :: :last_30_days | :current_cycle | :last_cycle | :penultimate_cycle
+
+  @type usage_cycle :: %{
+          date_range: Date.Range.t(),
+          pageviews: non_neg_integer(),
+          custom_events: non_neg_integer(),
+          total: non_neg_integer()
+        }
+
+  @pageview_allowance_margin 0.1
+
+  def pageview_allowance_margin(), do: @pageview_allowance_margin
 
   def usage(user, opts \\ []) do
     basic_usage = %{
@@ -26,44 +45,47 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @limit_sites_since ~D[2021-05-05]
-  @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
-  @doc """
-  Returns the limit of sites a user can have.
+  on_full_build do
+    @limit_sites_since ~D[2021-05-05]
+    @site_limit_for_trials 10
+    @team_member_limit_for_trials 3
 
-  For enterprise customers, returns :unlimited. The site limit is checked in a
-  background job so as to avoid service disruption.
-  """
-  def site_limit(user) do
-    cond do
-      Application.get_env(:plausible, :is_selfhost) -> :unlimited
-      Timex.before?(user.inserted_at, @limit_sites_since) -> :unlimited
-      true -> get_site_limit_from_plan(user)
-    end
-  end
-
-  @site_limit_for_trials 10
-  @site_limit_for_legacy_trials 50
-  @site_limit_for_free_10k 50
-  defp get_site_limit_from_plan(user) do
-    user = Plausible.Users.with_subscription(user)
-
-    case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{} ->
+    @spec site_limit(User.t()) :: non_neg_integer() | :unlimited
+    def site_limit(user) do
+      if Timex.before?(user.inserted_at, @limit_sites_since) do
         :unlimited
+      else
+        get_site_limit_from_plan(user)
+      end
+    end
 
-      %Plan{site_limit: site_limit} ->
-        site_limit
+    defp get_site_limit_from_plan(user) do
+      user = Users.with_subscription(user)
 
-      :free_10k ->
-        @site_limit_for_free_10k
+      case Plans.get_subscription_plan(user.subscription) do
+        %{site_limit: site_limit} -> site_limit
+        :free_10k -> 50
+        nil -> @site_limit_for_trials
+      end
+    end
 
-      nil ->
-        if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
-          @site_limit_for_legacy_trials
-        else
-          @site_limit_for_trials
-        end
+    @spec team_member_limit(User.t()) :: non_neg_integer()
+    def team_member_limit(user) do
+      user = Users.with_subscription(user)
+
+      case Plans.get_subscription_plan(user.subscription) do
+        %{team_member_limit: limit} -> limit
+        :free_10k -> :unlimited
+        nil -> @team_member_limit_for_trials
+      end
+    end
+  else
+    def site_limit(_) do
+      :unlimited
+    end
+
+    def team_member_limit(_) do
+      :unlimited
     end
   end
 
@@ -75,14 +97,36 @@ defmodule Plausible.Billing.Quota do
     Plausible.Sites.owned_sites_count(user)
   end
 
+  @doc """
+  Enterprise plans are always allowed to add more sites (even when
+  over limit) to avoid service disruption. Their usage is checked
+  in a background job instead (see `check_usage.ex`).
+  """
+  def ensure_can_add_new_site(user) do
+    user = Users.with_subscription(user)
+
+    case Plans.get_subscription_plan(user.subscription) do
+      %EnterprisePlan{} ->
+        :ok
+
+      _ ->
+        usage = site_usage(user)
+        limit = site_limit(user)
+
+        if below_limit?(usage, limit), do: :ok, else: {:error, {:over_limit, limit}}
+    end
+  end
+
   @monthly_pageview_limit_for_free_10k 10_000
   @monthly_pageview_limit_for_trials :unlimited
 
-  @spec monthly_pageview_limit(Subscription.t()) ::
+  @spec monthly_pageview_limit(User.t() | Subscription.t()) ::
           non_neg_integer() | :unlimited
-  @doc """
-  Returns the limit of pageviews for a subscription.
-  """
+  def monthly_pageview_limit(%User{} = user) do
+    user = Users.with_subscription(user)
+    monthly_pageview_limit(user.subscription)
+  end
+
   def monthly_pageview_limit(subscription) do
     case Plans.get_subscription_plan(subscription) do
       %EnterprisePlan{monthly_pageview_limit: limit} ->
@@ -105,57 +149,144 @@ defmodule Plausible.Billing.Quota do
     end
   end
 
-  @spec monthly_pageview_usage(User.t()) :: non_neg_integer()
   @doc """
-  Returns the amount of pageviews and custom events
-  sent by the sites the user owns in last 30 days.
+  Queries the ClickHouse database for the monthly pageview usage. If the given user's
+  subscription is `active`, `past_due`, or a `deleted` (but not yet expired), a map
+  with the following structure is returned:
+
+  ```elixir
+  %{
+    current_cycle: usage_cycle(),
+    last_cycle: usage_cycle(),
+    penultimate_cycle: usage_cycle()
+  }
+  ```
+
+  In all other cases of the subscription status (or a `free_10k` subscription which
+  does not have a `last_bill_date` defined) - the following structure is returned:
+
+  ```elixir
+  %{last_30_days: usage_cycle()}
+  ```
+
+  Given only a user as input, the usage is queried from across all the sites that the
+  user owns. Alternatively, given an optional argument of `site_ids`, the usage from
+  across all those sites is queried instead.
   """
-  def monthly_pageview_usage(user) do
-    user
-    |> Billing.usage_breakdown()
-    |> Tuple.sum()
+  @spec monthly_pageview_usage(User.t(), list() | nil) :: monthly_pageview_usage()
+  def monthly_pageview_usage(user, site_ids \\ nil)
+
+  def monthly_pageview_usage(user, nil) do
+    monthly_pageview_usage(user, Plausible.Sites.owned_site_ids(user))
   end
 
-  @team_member_limit_for_trials 3
-  @team_member_limit_for_legacy_trials :unlimited
-  @spec team_member_limit(User.t()) :: non_neg_integer()
-  @doc """
-  Returns the limit of team members a user can have in their sites.
-  """
-  def team_member_limit(user) do
-    user = Plausible.Users.with_subscription(user)
+  def monthly_pageview_usage(user, site_ids) do
+    active_subscription? = Subscriptions.active?(user.subscription)
 
-    case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{team_member_limit: limit} ->
-        limit
-
-      %Plan{team_member_limit: limit} ->
-        limit
-
-      :free_10k ->
-        :unlimited
-
-      nil ->
-        if Timex.before?(user.inserted_at, Plans.business_tier_launch()) do
-          @team_member_limit_for_legacy_trials
-        else
-          @team_member_limit_for_trials
-        end
+    if active_subscription? && user.subscription.last_bill_date do
+      [:current_cycle, :last_cycle, :penultimate_cycle]
+      |> Task.async_stream(fn cycle ->
+        %{cycle => usage_cycle(user, cycle, site_ids)}
+      end)
+      |> Enum.map(fn {:ok, cycle_usage} -> cycle_usage end)
+      |> Enum.reduce(%{}, &Map.merge/2)
+    else
+      %{last_30_days: usage_cycle(user, :last_30_days, site_ids)}
     end
+  end
+
+  @spec usage_cycle(User.t(), period(), list() | nil, Date.t()) :: usage_cycle()
+
+  def usage_cycle(user, cycle, owned_site_ids \\ nil, today \\ Timex.today())
+
+  def usage_cycle(user, cycle, nil, today) do
+    usage_cycle(user, cycle, Plausible.Sites.owned_site_ids(user), today)
+  end
+
+  def usage_cycle(_user, :last_30_days, owned_site_ids, today) do
+    date_range = Date.range(Timex.shift(today, days: -30), today)
+
+    {pageviews, custom_events} =
+      Plausible.Stats.Clickhouse.usage_breakdown(owned_site_ids, date_range)
+
+    %{
+      date_range: date_range,
+      pageviews: pageviews,
+      custom_events: custom_events,
+      total: pageviews + custom_events
+    }
+  end
+
+  def usage_cycle(user, cycle, owned_site_ids, today) do
+    user = Users.with_subscription(user)
+    last_bill_date = user.subscription.last_bill_date
+
+    normalized_last_bill_date =
+      Timex.shift(last_bill_date, months: Timex.diff(today, last_bill_date, :months))
+
+    date_range =
+      case cycle do
+        :current_cycle ->
+          Date.range(
+            normalized_last_bill_date,
+            Timex.shift(normalized_last_bill_date, months: 1, days: -1)
+          )
+
+        :last_cycle ->
+          Date.range(
+            Timex.shift(normalized_last_bill_date, months: -1),
+            Timex.shift(normalized_last_bill_date, days: -1)
+          )
+
+        :penultimate_cycle ->
+          Date.range(
+            Timex.shift(normalized_last_bill_date, months: -2),
+            Timex.shift(normalized_last_bill_date, days: -1, months: -1)
+          )
+      end
+
+    {pageviews, custom_events} =
+      Plausible.Stats.Clickhouse.usage_breakdown(owned_site_ids, date_range)
+
+    %{
+      date_range: date_range,
+      pageviews: pageviews,
+      custom_events: custom_events,
+      total: pageviews + custom_events
+    }
   end
 
   @spec team_member_usage(User.t()) :: integer()
   @doc """
-  Returns the total count of team members and pending invitations associated
-  with the user's sites.
+  Returns the total count of team members associated with the user's sites.
+
+  * The given user (i.e. the owner) is not counted as a team member.
+
+  * Pending invitations are counted as team members even before accepted.
+
+  * Users are counted uniquely - i.e. even if an account is associated with
+    many sites owned by the given user, they still count as one team member.
+
+  * Specific e-mails can be excluded from the count, so that where necessary,
+    we can ensure inviting the same person(s) to more than 1 sites is allowed
   """
-  def team_member_usage(user) do
-    Plausible.Repo.aggregate(team_member_usage_query(user), :count)
+  def team_member_usage(user, opts \\ []) do
+    {:ok, opts} = Keyword.validate(opts, site: nil, exclude_emails: [])
+
+    user
+    |> team_member_usage_query(opts)
+    |> Plausible.Repo.aggregate(:count)
   end
 
-  @doc false
-  def team_member_usage_query(user, site \\ nil) do
+  defp team_member_usage_query(user, opts) do
     owned_sites_query = owned_sites_query(user)
+
+    excluded_emails =
+      opts
+      |> Keyword.get(:exclude_emails, [])
+      |> List.wrap()
+
+    site = opts[:site]
 
     owned_sites_query =
       if site do
@@ -172,12 +303,27 @@ defmodule Plausible.Billing.Quota do
         where: sm.role != :owner,
         select: u.email
 
-    from i in Plausible.Auth.Invitation,
-      inner_join: os in subquery(owned_sites_query),
-      on: i.site_id == os.site_id,
-      where: i.role != :owner,
-      select: i.email,
-      union: ^team_members_query
+    team_members_query =
+      if excluded_emails != [] do
+        team_members_query |> where([..., u], u.email not in ^excluded_emails)
+      else
+        team_members_query
+      end
+
+    query =
+      from i in Plausible.Auth.Invitation,
+        inner_join: os in subquery(owned_sites_query),
+        on: i.site_id == os.site_id,
+        where: i.role != :owner,
+        select: i.email,
+        union: ^team_members_query
+
+    if excluded_emails != [] do
+      query
+      |> where([i], i.email not in ^excluded_emails)
+    else
+      query
+    end
   end
 
   @spec features_usage(User.t() | Site.t()) :: [atom()]
@@ -203,13 +349,7 @@ defmodule Plausible.Billing.Quota do
     stats_api_usage = from a in Plausible.Auth.ApiKey, where: a.user_id == ^user.id
 
     queries =
-      if Plausible.Release.selfhost?() do
-        [
-          {Props, props_usage_query},
-          {RevenueGoals, revenue_goals_usage},
-          {StatsAPI, stats_api_usage}
-        ]
-      else
+      on_full_build do
         funnels_usage_query =
           from f in "funnels",
             inner_join: os in subquery(owned_sites_query(user)),
@@ -218,6 +358,12 @@ defmodule Plausible.Billing.Quota do
         [
           {Props, props_usage_query},
           {Funnels, funnels_usage_query},
+          {RevenueGoals, revenue_goals_usage},
+          {StatsAPI, stats_api_usage}
+        ]
+      else
+        [
+          {Props, props_usage_query},
           {RevenueGoals, revenue_goals_usage},
           {StatsAPI, stats_api_usage}
         ]
@@ -231,14 +377,12 @@ defmodule Plausible.Billing.Quota do
   def features_usage(%Site{} = site) do
     props_exist = is_list(site.allowed_event_props) && site.allowed_event_props != []
 
-    on_full_build do
-      funnels_exist =
+    funnels_exist =
+      on_full_build do
         Plausible.Repo.exists?(from f in Plausible.Funnel, where: f.site_id == ^site.id)
-    end
-
-    on_small_build do
-      funnels_exist = false
-    end
+      else
+        false
+      end
 
     revenue_goals_exist =
       Plausible.Repo.exists?(
@@ -254,33 +398,65 @@ defmodule Plausible.Billing.Quota do
     for {f_mod, used?} <- used_features, used?, f_mod.enabled?(site), do: f_mod
   end
 
-  def ensure_can_subscribe_to_plan(user, %Plan{} = plan) do
-    case exceeded_limits(usage(user), plan) do
-      [] ->
-        :ok
+  @doc """
+  Ensures that the given user (or the usage map) is within the limits
+  of the given plan.
 
-      [:monthly_pageview_limit] ->
-        # This is a quick fix. Need to figure out how to handle this case. Only
-        # checking the last 30 days usage is not accurate enough. Needs to be
-        # in sync with the actual locking system.
-        :ok
+  An `opts` argument can be passed with `ignore_pageview_limit: true`
+  which bypasses the pageview limit check and returns `:ok` as long as
+  the other limits are not exceeded.
+  """
+  @spec ensure_within_plan_limits(User.t() | map(), struct() | atom() | nil, Keyword.t()) ::
+          :ok | {:error, over_limits_error()}
+  def ensure_within_plan_limits(user_or_usage, plan, opts \\ [])
 
-      exceeded_limits ->
-        {:error, %{exceeded_limits: exceeded_limits}}
+  def ensure_within_plan_limits(%User{} = user, %plan_mod{} = plan, opts)
+      when plan_mod in [Plan, EnterprisePlan] do
+    ensure_within_plan_limits(usage(user), plan, opts)
+  end
+
+  def ensure_within_plan_limits(usage, %plan_mod{} = plan, opts)
+      when plan_mod in [Plan, EnterprisePlan] do
+    case exceeded_limits(usage, plan, opts) do
+      [] -> :ok
+      exceeded_limits -> {:error, {:over_plan_limits, exceeded_limits}}
     end
   end
 
-  def ensure_can_subscribe_to_plan(_user, nil), do: :ok
+  def ensure_within_plan_limits(_, _, _), do: :ok
 
-  def exceeded_limits(usage, %Plan{} = plan) do
-    for {usage_field, limit_field} <- [
-          {:monthly_pageviews, :monthly_pageview_limit},
-          {:team_members, :team_member_limit},
-          {:sites, :site_limit}
+  defp exceeded_limits(usage, plan, opts) do
+    for {limit, exceeded?} <- [
+          {:team_member_limit, not within_limit?(usage.team_members, plan.team_member_limit)},
+          {:site_limit, not within_limit?(usage.sites, plan.site_limit)},
+          {:monthly_pageview_limit,
+           exceeds_monthly_pageview_limit?(usage.monthly_pageviews, plan, opts)}
         ],
-        !within_limit?(Map.get(usage, usage_field), Map.get(plan, limit_field)) do
-      limit_field
+        exceeded? do
+      limit
     end
+  end
+
+  defp exceeds_monthly_pageview_limit?(usage, plan, opts) do
+    if Keyword.get(opts, :ignore_pageview_limit) do
+      false
+    else
+      case usage do
+        %{last_30_days: %{total: total}} ->
+          !within_limit?(total, pageview_limit_with_margin(plan, opts))
+
+        billing_cycles_usage ->
+          Plausible.Workers.CheckUsage.exceeds_last_two_usage_cycles?(
+            billing_cycles_usage,
+            plan.monthly_pageview_limit
+          )
+      end
+    end
+  end
+
+  defp pageview_limit_with_margin(%{monthly_pageview_limit: limit}, opts) do
+    margin = Keyword.get(opts, :pageview_allowance_margin, @pageview_allowance_margin)
+    ceil(limit * (1 + margin))
   end
 
   @doc """
@@ -288,13 +464,24 @@ defmodule Plausible.Billing.Quota do
   ability to use all features during their trial.
   """
   def allowed_features_for(user) do
-    user = Plausible.Users.with_subscription(user)
+    user = Users.with_subscription(user)
 
     case Plans.get_subscription_plan(user.subscription) do
-      %EnterprisePlan{features: features} -> features
-      %Plan{features: features} -> features
-      :free_10k -> [Goals, Props, StatsAPI]
-      nil -> Feature.list()
+      %EnterprisePlan{features: features} ->
+        features
+
+      %Plan{features: features} ->
+        features
+
+      :free_10k ->
+        [Goals, Props, StatsAPI]
+
+      nil ->
+        if Users.on_trial?(user) do
+          Feature.list()
+        else
+          [Goals]
+        end
     end
   end
 

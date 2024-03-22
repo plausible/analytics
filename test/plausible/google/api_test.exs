@@ -1,8 +1,9 @@
-defmodule Plausible.Google.ApiTest do
+defmodule Plausible.Google.APITest do
   use Plausible.DataCase, async: true
   use Plausible.Test.Support.HTTPMocker
 
-  alias Plausible.Google.Api
+  alias Plausible.Google
+  alias Plausible.Imported.UniversalAnalytics
 
   import ExUnit.CaptureLog
   import Mox
@@ -36,7 +37,18 @@ defmodule Plausible.Google.ApiTest do
     future = DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.to_iso8601()
     auth = {"***", "refresh_token", future}
 
-    assert :ok == Plausible.Google.Api.import_analytics(site, date_range, view_id, auth)
+    {:ok, buffer} = Plausible.Imported.Buffer.start_link()
+
+    persist_fn = fn table, rows ->
+      records = UniversalAnalytics.from_report(rows, site.id, _import_id = 123, table)
+      Plausible.Imported.Buffer.insert_many(buffer, table, records)
+    end
+
+    assert :ok == Google.UA.API.import_analytics(date_range, view_id, auth, persist_fn)
+
+    Plausible.Imported.Buffer.flush(buffer)
+    Plausible.Imported.Buffer.stop(buffer)
+
     assert 1_495_150 == Plausible.Stats.Clickhouse.imported_pageview_count(site)
   end
 
@@ -67,21 +79,26 @@ defmodule Plausible.Google.ApiTest do
       end)
     end
 
-    assert :ok == Plausible.Google.Api.import_analytics(site, range, "123551", auth)
+    {:ok, buffer} = Plausible.Imported.Buffer.start_link()
+
+    persist_fn = fn table, rows ->
+      records = UniversalAnalytics.from_report(rows, site.id, _import_id = 123, table)
+      Plausible.Imported.Buffer.insert_many(buffer, table, records)
+    end
+
+    assert :ok == Google.UA.API.import_analytics(range, "123551", auth, persist_fn)
+
+    Plausible.Imported.Buffer.flush(buffer)
+    Plausible.Imported.Buffer.stop(buffer)
   end
 
   describe "fetch_and_persist/4" do
     @ok_response Jason.decode!(File.read!("fixture/ga_batch_report.json"))
     @no_report_response Jason.decode!(File.read!("fixture/ga_report_empty_rows.json"))
 
-    setup do
-      {:ok, pid} = Plausible.Google.Buffer.start_link()
-      {:ok, buffer: pid}
-    end
-
     @tag :slow
-    test "will fetch and persist import data from Google Analytics", %{site: site, buffer: buffer} do
-      request = %Plausible.Google.ReportRequest{
+    test "will fetch and persist import data from Google Analytics" do
+      request = %Plausible.Google.UA.ReportRequest{
         dataset: "imported_exit_pages",
         view_id: "123",
         date_range: Date.range(~D[2022-01-01], ~D[2022-02-01]),
@@ -110,7 +127,7 @@ defmodule Plausible.Google.ApiTest do
                 hideValueRanges: true,
                 metrics: [%{expression: "ga:users"}, %{expression: "ga:exits"}],
                 orderBys: [%{fieldName: "ga:date", sortOrder: "DESCENDING"}],
-                pageSize: 10000,
+                pageSize: 10_000,
                 pageToken: nil,
                 viewId: "123"
               }
@@ -121,24 +138,19 @@ defmodule Plausible.Google.ApiTest do
         end
       )
 
-      Api.fetch_and_persist(site, request,
-        sleep_time: 0,
-        buffer: buffer
-      )
+      assert :ok =
+               Google.UA.API.fetch_and_persist(request,
+                 sleep_time: 0,
+                 persist_fn: fn dataset, row ->
+                   assert dataset == "imported_exit_pages"
+                   assert length(row) == 1479
 
-      Plausible.Google.Buffer.flush(buffer)
-
-      assert 1479 ==
-               Plausible.ClickhouseRepo.aggregate(
-                 from(iex in "imported_exit_pages", where: iex.site_id == ^site.id),
-                 :count
+                   :ok
+                 end
                )
     end
 
-    test "retries HTTP request up to 5 times before raising the last error", %{
-      site: site,
-      buffer: buffer
-    } do
+    test "retries HTTP request up to 5 times before raising the last error" do
       expect(
         Plausible.HTTPClient.Mock,
         :post,
@@ -155,7 +167,7 @@ defmodule Plausible.Google.ApiTest do
         end
       )
 
-      request = %Plausible.Google.ReportRequest{
+      request = %Plausible.Google.UA.ReportRequest{
         view_id: "123",
         date_range: Date.range(~D[2022-01-01], ~D[2022-02-01]),
         dimensions: ["ga:date"],
@@ -166,13 +178,13 @@ defmodule Plausible.Google.ApiTest do
       }
 
       assert {:error, :request_failed} =
-               Api.fetch_and_persist(site, request,
+               Google.UA.API.fetch_and_persist(request,
                  sleep_time: 0,
-                 buffer: buffer
+                 persist_fn: fn _dataset, _rows -> :ok end
                )
     end
 
-    test "does not fail when report does not have rows key", %{site: site, buffer: buffer} do
+    test "does not fail when report does not have rows key" do
       expect(
         Plausible.HTTPClient.Mock,
         :post,
@@ -185,7 +197,7 @@ defmodule Plausible.Google.ApiTest do
         end
       )
 
-      request = %Plausible.Google.ReportRequest{
+      request = %Plausible.Google.UA.ReportRequest{
         dataset: "imported_exit_pages",
         view_id: "123",
         date_range: Date.range(~D[2022-01-01], ~D[2022-02-01]),
@@ -197,9 +209,14 @@ defmodule Plausible.Google.ApiTest do
       }
 
       assert :ok ==
-               Api.fetch_and_persist(site, request,
+               Google.UA.API.fetch_and_persist(request,
                  sleep_time: 0,
-                 buffer: buffer
+                 persist_fn: fn dataset, rows ->
+                   assert dataset == "imported_exit_pages"
+                   assert rows == []
+
+                   :ok
+                 end
                )
     end
   end
@@ -236,7 +253,7 @@ defmodule Plausible.Google.ApiTest do
 
       query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
 
-      assert {:error, "google_auth_error"} = Plausible.Google.Api.fetch_stats(site, query, 5)
+      assert {:error, "google_auth_error"} = Google.API.fetch_stats(site, query, 5)
     end
 
     test "returns whatever error code google returns on API client error", %{site: site} do
@@ -253,7 +270,7 @@ defmodule Plausible.Google.ApiTest do
 
       query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
 
-      assert {:error, "some_error"} = Plausible.Google.Api.fetch_stats(site, query, 5)
+      assert {:error, "some_error"} = Google.API.fetch_stats(site, query, 5)
     end
 
     test "returns generic HTTP error and logs it", %{site: site} do
@@ -273,7 +290,7 @@ defmodule Plausible.Google.ApiTest do
       log =
         capture_log(fn ->
           assert {:error, "failed_to_list_stats"} =
-                   Plausible.Google.Api.fetch_stats(site, query, 5)
+                   Google.API.fetch_stats(site, query, 5)
         end)
 
       assert log =~ "Google Analytics: failed to list stats: %Finch.Error{reason: :some_reason}"
@@ -297,7 +314,7 @@ defmodule Plausible.Google.ApiTest do
               [
                 %{name: ["keyword1", "keyword2"], visitors: 25},
                 %{name: ["keyword3", "keyword4"], visitors: 15}
-              ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
+              ]} = Google.API.fetch_stats(site, query, 5)
     end
 
     test "returns next page when page argument is set", %{user: user, site: site} do
@@ -319,7 +336,7 @@ defmodule Plausible.Google.ApiTest do
               [
                 %{name: ["keyword1", "keyword2"], visitors: 25},
                 %{name: ["keyword3", "keyword4"], visitors: 15}
-              ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
+              ]} = Google.API.fetch_stats(site, query, 5)
     end
 
     test "defaults first page when page argument is not set", %{user: user, site: site} do
@@ -338,7 +355,7 @@ defmodule Plausible.Google.ApiTest do
               [
                 %{name: ["keyword1", "keyword2"], visitors: 25},
                 %{name: ["keyword3", "keyword4"], visitors: 15}
-              ]} = Plausible.Google.Api.fetch_stats(site, query, 5)
+              ]} = Google.API.fetch_stats(site, query, 5)
     end
 
     test "returns error when token refresh fails", %{user: user, site: site} do
@@ -355,7 +372,7 @@ defmodule Plausible.Google.ApiTest do
 
       query = %Plausible.Stats.Query{date_range: Date.range(~D[2022-01-01], ~D[2022-01-05])}
 
-      assert {:error, "invalid_grant"} = Plausible.Google.Api.fetch_stats(site, query, 5)
+      assert {:error, "invalid_grant"} = Google.API.fetch_stats(site, query, 5)
     end
   end
 
@@ -373,10 +390,10 @@ defmodule Plausible.Google.ApiTest do
     )
 
     assert {:ok,
-            %{
-              "one.test" => [{"57238190 - one.test", "57238190"}],
-              "two.test" => [{"54460083 - two.test", "54460083"}]
-            }} == Plausible.Google.Api.list_views("access_token")
+            [
+              {"one.test", [{"57238190 - one.test", "57238190"}]},
+              {"two.test", [{"54460083 - two.test", "54460083"}]}
+            ]} == Google.UA.API.list_views("access_token")
   end
 
   test "list_views/1 returns authentication_failed when request fails with HTTP 403" do
@@ -388,7 +405,7 @@ defmodule Plausible.Google.ApiTest do
       end
     )
 
-    assert {:error, :authentication_failed} == Plausible.Google.Api.list_views("access_token")
+    assert {:error, :authentication_failed} == Google.UA.API.list_views("access_token")
   end
 
   test "list_views/1 returns authentication_failed when request fails with HTTP 401" do
@@ -400,7 +417,7 @@ defmodule Plausible.Google.ApiTest do
       end
     )
 
-    assert {:error, :authentication_failed} == Plausible.Google.Api.list_views("access_token")
+    assert {:error, :authentication_failed} == Google.UA.API.list_views("access_token")
   end
 
   test "list_views/1 returns error when request fails with HTTP 500" do
@@ -412,6 +429,6 @@ defmodule Plausible.Google.ApiTest do
       end
     )
 
-    assert {:error, :unknown} == Plausible.Google.Api.list_views("access_token")
+    assert {:error, :unknown} == Google.UA.API.list_views("access_token")
   end
 end

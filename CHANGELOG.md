@@ -1,9 +1,23 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## Unreleased
-
 ### Added
+- Add `total_conversions` and `conversion_rate` to `visitors.csv` in a goal-filtered CSV export
+- Ability to display total conversions (with a goal filter) on the main graph
+- Add `conversion_rate` to Stats API Timeseries and on the main graph
+- Add `time_on_page` metric into the Stats API
+- County Block List in Site Settings
+- Query the `views_per_visit` metric based on imported data as well if possible
+- Group `operating_system_versions` by `operating_system` in Stats API breakdown
+- Add `operating_system_versions.csv` into the CSV export
+- Display `Total visitors`, `Conversions`, and `CR` in the "Details" views of Countries, Regions and Cities (when filtering by a goal)
+- Add `conversion_rate` to Regions and Cities reports (when filtering by a goal)
+- Add the `conversion_rate` metric to Stats API Breakdown and Aggregate endpoints
+- IP Block List in Site Settings
+- Allow filtering with `contains`/`matches` operator for Sources, Browsers and Operating Systems.
+- Allow filtering by multiple custom properties
+- Wildcard and member filtering on the Stats API `event:goal` property
+- Allow filtering with `contains`/`matches` operator for custom properties
 - Add `referrers.csv` to CSV export
 - Add a new Properties section in the dashboard to break down by custom properties
 - Add `custom_props.csv` to CSV export (almost the same as the old `prop_breakdown.csv`, but has different column headers, and includes props for pageviews too, not only custom events)
@@ -16,18 +30,36 @@ All notable changes to this project will be documented in this file.
 - Add last 24h plots to /sites view
 - Add site pinning to /sites view
 - Add support for JSON logger, via LOG_FORMAT=json environment variable
+- Add support for 2FA authentication
+- Add 'browser_versions.csv' to CSV export
+- Add `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES` env var which defaults to `100000` (100KB)
+- Add alternative SMTP adapter plausible/analytics#3654
+- Add `EXTRA_CONFIG_PATH` env var to specify extra Elixir config plausible/analytics#3906
+- Add restrictive `robots.txt` for self-hosted plausible/analytics#3905
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
+- Removed the `prop_names` returned in the Stats API `event:goal` breakdown response
 - Removed the `prop-breakdown.csv` file from CSV export
+- Deprecated `CLICKHOUSE_MAX_BUFFER_SIZE`
+- Removed `/app/init-admin.sh` that was deprecated in v2.0.0 plausible/analytics#3903
+- Remove `DISABLE_AUTH` deprecation warning plausible/analytics#3904
 
 ### Changed
+- A visits `entry_page` and `exit_page` is only set and updated for pageviews, not custom events
 - Limit the number of Goal Conversions shown on the dashboard and render a "Details" link when there are more entries to show
 - Show Outbound Links / File Downloads / 404 Pages / Cloaked Links instead of Goal Conversions when filtering by the corresponding goal
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
 - GA/SC sections moved to new settings: Integrations
+- Replace `CLICKHOUSE_MAX_BUFFER_SIZE` with `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES`
+- Validate metric isn't queried multiple times
 
 ### Fixed
+- Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
+- Fix `conversion_rate` metric in a `browser_versions` breakdown
+- Calculate `conversion_rate` percentage change in the same way like `bounce_rate` (subtraction instead of division)
+- Calculate `bounce_rate` percentage change in the Stats API in the same way as it's done in the dashboard
+- Stop returning custom events in goal breakdown with a pageview goal filter and vice versa
 - Only return `(none)` values in custom property breakdown for the first page (pagination) of results
 - Fixed weekly/monthly e-mail report [rendering issues](https://github.com/plausible/analytics/issues/284)
 - Fix [broken interval selection](https://github.com/plausible/analytics/issues/2982) in the all time view plausible/analytics#3110
@@ -39,6 +71,12 @@ All notable changes to this project will be documented in this file.
 - Improved the Goal Settings page (search, autcompletion etc.)
 - Log mailer errors plausible/analytics#3336
 - Allow custom event timeseries in stats API plausible/analytics#3505
+- Fixes for sites with UTF characters in domain plausible/analytics#3560
+- Fix crash when using special characters in filter plausible/analytics#3634
+- Fix automatic scrolling to the bottom on the dashboard if previously selected properties tab plausible/analytics#3872
+- Allow running the container with arbitrary UID plausible/analytics#2986
+- Fix `width=manual` in embedded dashboards plausible/analytics#3910
+- Fix URL escaping when pipes are used in UTM tags plausible/analytics#3930
 - Fixed [Last 7 days with hourly resolution doesn't include today](https://github.com/plausible/analytics/issues/3342)
 
 ## v2.0.0 - 2023-07-12

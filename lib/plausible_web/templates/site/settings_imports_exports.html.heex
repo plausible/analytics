@@ -1,0 +1,53 @@
+<div class="shadow bg-white dark:bg-gray-800 sm:rounded-md sm:overflow-hidden py-6 px-4 sm:p-6">
+  <header class="relative border-b border-gray-200 pb-4">
+    <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+      Import Data
+    </h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
+      Import existing data from external sources. Pick one of the options below to start a new import.
+    </p>
+
+    <PlausibleWeb.Components.Generic.docs_info slug="google-analytics-import" />
+  </header>
+
+  <div class="mt-5 flex gap-x-4">
+    <PlausibleWeb.Components.Generic.button_link
+      class="w-36 h-20"
+      theme="bright"
+      href={Plausible.Google.API.import_authorize_url(@site.id, "import", legacy: false)}
+    >
+      <img src="/images/icon/google_analytics_logo.svg" alt="Google Analytics import" />
+    </PlausibleWeb.Components.Generic.button_link>
+
+    <PlausibleWeb.Components.Generic.button_link
+      class="w-36 h-20 opacity-40 cursor-not-allowed"
+      theme="bright"
+      href=""
+    >
+      <img class="h-16" src="/images/icon/csv_logo.svg" alt="New CSV import" />
+    </PlausibleWeb.Components.Generic.button_link>
+  </div>
+
+  <%= live_render(@conn, PlausibleWeb.Live.ImportsExportsSettings,
+    session: %{"domain" => @site.domain}
+  ) %>
+
+  <header class="relative border-b border-gray-200 pb-4">
+    <h2 class="mt-8 text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+      Export Data
+    </h2>
+    <p class="mt-1 text-sm leading-5 text-gray-500 dark:text-gray-200">
+      Export all your data into CSV format.
+    </p>
+  </header>
+
+  <div class="mt-4">
+    <PlausibleWeb.Components.Generic.button
+      data-method="post"
+      data-to={"/#{URI.encode_www_form(@site.domain)}/settings/export"}
+      data-csrf={Plug.CSRFProtection.get_csrf_token()}
+    >
+      Export to CSV
+    </PlausibleWeb.Components.Generic.button>
+  </div>
+</div>

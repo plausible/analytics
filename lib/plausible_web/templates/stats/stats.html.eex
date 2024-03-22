@@ -1,7 +1,7 @@
 <div class="<%= stats_container_class(@conn) %>" data-site-domain="<%= @site.domain %>">
   <%= if @offer_email_report do %>
     <div class="w-full px-4 text-sm font-bold text-center text-blue-900 bg-blue-200 rounded transition" style="top: 91px" role="alert">
-      <%= link("Click here to enable weekly email reports →", to: "/#{URI.encode_www_form(@site.domain)}/settings/email-reports", class: "py-2 block") %>
+      <%= link("Team members, email reports and GA import. Explore more →", to: "/#{URI.encode_www_form(@site.domain)}/settings/email-reports", class: "py-2 block") %>
     </div>
   <% end %>
 
@@ -18,9 +18,11 @@
     data-domain="<%= @site.domain %>"
     data-offset="<%= Plausible.Site.tz_offset(@site) %>"
     data-has-goals="<%= @has_goals %>"
-    data-conversions-enabled="<%= Plausible.Billing.Feature.Goals.enabled?(@site) %>"
-    data-funnels-enabled="<%= Plausible.Billing.Feature.Funnels.enabled?(@site) %>"
-    data-props-enabled="<%= Plausible.Billing.Feature.Props.enabled?(@site) %>"
+    data-conversions-opted-out="<%= Plausible.Billing.Feature.Goals.opted_out?(@site) %>"
+    data-funnels-opted-out="<%= Plausible.Billing.Feature.Funnels.opted_out?(@site) %>"
+    data-props-opted-out="<%= Plausible.Billing.Feature.Props.opted_out?(@site) %>"
+    data-funnels-available="<%= Plausible.Billing.Feature.Funnels.check_availability(@site.owner) == :ok %>"
+    data-props-available="<%= Plausible.Billing.Feature.Props.check_availability(@site.owner) == :ok %>"
     data-funnels="<%= Jason.encode!(@funnels) %>"
     data-has-props="<%= @has_props %>"
     data-logged-in="<%= !!@conn.assigns[:current_user] %>"

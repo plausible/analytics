@@ -18,19 +18,17 @@ defmodule Plausible.Auth.TOTP do
   After initiation, user is expected to confirm valid setup with `enable/2`,
   providing TOTP code from their authenticator app. After code validation 
   passes successfully, the `User.totp_enabled` flag is set to `true`.
-
   Finally, the user must be immediately presented with a list of recovery codes
-  generated with `generate_recovery_codes/1`. The codes should be presented
+  returned by the same call of `enable/2`. The codes should be presented
   in copy/paste friendly form, ideally also with a print-friendly view option.
-  The function can be run more than once, giving the user ability to regenerate
-  codes from the final stage of setup if needed.
 
   The `initiate/1` and `enable/1` functions can be safely called multiple
   times, allowing user to abort and restart setup up to these stages.
 
   ## Management
 
-  State of TOTP for a particular user can be chcecked by calling `enabled?/1`.
+  The state of TOTP for a particular user can be chcecked by calling
+  `enabled?/1` or `initiated?/1`.
 
   TOTP can be disabled with `disable/2`. User is expected to provide their
   current password for safety. Once disabled, all TOTP user settings are
@@ -38,9 +36,9 @@ defmodule Plausible.Auth.TOTP do
   can be safely run more than once.
 
   If the user needs to regenerate the recovery codes outside of setup procedure,
-  they must do it via `generate_recovery_codes_protected/2`, providing
-  their current password for safety. They must be warned that any existing
-  recovery codes will be invalidated.
+  they must do it via `generate_recovery_codes/2`, providing their current
+  password for safety. They must be warned that any existing recovery codes
+  will be invalidated.
 
   ## Validation
 
@@ -65,6 +63,18 @@ defmodule Plausible.Auth.TOTP do
   In case of recovery codes, each code is deleted immediately after use.
   They are strictly one-time use only.
 
+  ## TOTP Token
+
+  TOTP token is an alternate method of authenticating  user session.
+  It's main use case is "trust this device" functionality, where user
+  can decide to skip 2FA verification for a particular browser session 
+  for next N days. The token should then be stored in an encrypted,
+  signed cookie with a proper expiration timestamp.
+
+  The token should be reset each time it either fails to match
+  or when other credentials (like password) are reset. This should
+  effectively invalidate all trusted devices for a given user.
+
   """
 
   import Ecto.Changeset, only: [change: 2]
@@ -73,6 +83,7 @@ defmodule Plausible.Auth.TOTP do
   alias Plausible.Auth
   alias Plausible.Auth.TOTP
   alias Plausible.Repo
+  alias PlausibleWeb.Email
 
   @issuer_name "Plausible Analytics"
   @recovery_codes_count 10
@@ -80,6 +91,11 @@ defmodule Plausible.Auth.TOTP do
   @spec enabled?(Auth.User.t()) :: boolean()
   def enabled?(user) do
     user.totp_enabled and not is_nil(user.totp_secret)
+  end
+
+  @spec initiated?(Auth.User.t()) :: boolean()
+  def initiated?(user) do
+    not user.totp_enabled and not is_nil(user.totp_secret)
   end
 
   @spec initiate(Auth.User.t()) ::
@@ -100,74 +116,117 @@ defmodule Plausible.Auth.TOTP do
       user
       |> change(
         totp_enabled: false,
-        totp_secret: secret
+        totp_secret: secret,
+        totp_token: nil
       )
       |> Repo.update!()
 
     {:ok, user, %{totp_uri: totp_uri(user), secret: readable_secret(user)}}
   end
 
-  @spec enable(Auth.User.t(), String.t(), Keyword.t()) ::
-          {:ok, Auth.User.t()} | {:error, :invalid_code | :not_initiated}
+  @spec enable(Auth.User.t(), String.t() | :skip_verify, Keyword.t()) ::
+          {:ok, Auth.User.t(), %{recovery_codes: [String.t()]}}
+          | {:error, :invalid_code | :not_initiated}
   def enable(user, code, opts \\ [])
 
   def enable(%{totp_secret: nil}, _, _) do
     {:error, :not_initiated}
   end
 
+  def enable(user, :skip_verify, _opts) do
+    do_enable(user)
+  end
+
   def enable(user, code, opts) do
     with {:ok, user} <- do_validate_code(user, code, opts) do
-      user =
-        user
-        |> change(totp_enabled: true)
-        |> Repo.update!()
-
-      {:ok, user}
+      do_enable(user)
     end
+  end
+
+  defp do_enable(user) do
+    {:ok, {user, recovery_codes}} =
+      Repo.transaction(fn ->
+        user =
+          user
+          |> change(
+            totp_enabled: true,
+            totp_token: generate_token()
+          )
+          |> Repo.update!()
+
+        {:ok, recovery_codes} = do_generate_recovery_codes(user)
+
+        {user, recovery_codes}
+      end)
+
+    user
+    |> Email.two_factor_enabled_email()
+    |> Plausible.Mailer.send()
+
+    {:ok, user, %{recovery_codes: recovery_codes}}
   end
 
   @spec disable(Auth.User.t(), String.t()) :: {:ok, Auth.User.t()} | {:error, :invalid_password}
   def disable(user, password) do
     if Auth.Password.match?(password, user.password_hash) do
-      Repo.transaction(fn ->
-        {_, _} =
+      {:ok, user} =
+        Repo.transaction(fn ->
+          {_, _} =
+            user
+            |> recovery_codes_query()
+            |> Repo.delete_all()
+
           user
-          |> recovery_codes_query()
-          |> Repo.delete_all()
+          |> change(
+            totp_enabled: false,
+            totp_token: nil,
+            totp_secret: nil,
+            totp_last_used_at: nil
+          )
+          |> Repo.update!()
+        end)
 
-        user
-        |> change(
-          totp_enabled: false,
-          totp_secret: nil,
-          totp_last_used_at: nil
-        )
-        |> Repo.update!()
-      end)
+      user
+      |> Email.two_factor_disabled_email()
+      |> Plausible.Mailer.send()
+
+      {:ok, user}
     else
       {:error, :invalid_password}
     end
   end
 
-  @spec generate_recovery_codes_protected(Auth.User.t(), String.t()) ::
+  @spec reset_token(Auth.User.t()) :: Auth.User.t()
+  def reset_token(user) do
+    new_token =
+      if user.totp_enabled do
+        generate_token()
+      end
+
+    user
+    |> change(totp_token: new_token)
+    |> Repo.update!()
+  end
+
+  @spec generate_recovery_codes(Auth.User.t(), String.t()) ::
           {:ok, [String.t()]} | {:error, :invalid_password | :not_enabled}
-  def generate_recovery_codes_protected(%{totp_enabled: false}) do
-    {:error, :not_enabled}
-  end
-
-  def generate_recovery_codes_protected(user, password) do
-    if Auth.Password.match?(password, user.password_hash) do
-      generate_recovery_codes(user)
-    else
-      {:error, :invalid_password}
-    end
-  end
-
-  @spec generate_recovery_codes(Auth.User.t()) :: {:ok, [String.t()]} | {:error, :not_enabled}
   def generate_recovery_codes(%{totp_enabled: false}) do
     {:error, :not_enabled}
   end
 
-  def generate_recovery_codes(user) do
+  def generate_recovery_codes(user, password) do
+    if Auth.Password.match?(password, user.password_hash) do
+      do_generate_recovery_codes(user)
+    else
+      {:error, :invalid_password}
+    end
+  end
+
+  defp do_generate_recovery_codes(%{totp_enabled: false}) do
+    {:error, :not_enabled}
+  end
+
+  defp do_generate_recovery_codes(user) do
     Repo.transaction(fn ->
       {_, _} =
         user
@@ -194,8 +253,8 @@ defmodule Plausible.Auth.TOTP do
     end)
   end
 
-  @spec validate_code(Auth.User.t(), String.t()) ::
-          {:ok, Auth.User.t(), Keyword.t()} | {:error, :invalid_code | :not_enabled}
+  @spec validate_code(Auth.User.t(), String.t(), Keyword.t()) ::
+          {:ok, Auth.User.t()} | {:error, :invalid_code | :not_enabled}
   def validate_code(user, code, opts \\ [])
 
   def validate_code(%{totp_enabled: false}, _, _) do
@@ -208,7 +267,7 @@ defmodule Plausible.Auth.TOTP do
 
   @spec use_recovery_code(Auth.User.t(), String.t()) ::
           :ok | {:error, :invalid_code | :not_enabled}
-  def user_recovery_code(%{totp_enabled: false}, _) do
+  def use_recovery_code(%{totp_enabled: false}, _) do
     {:error, :not_enabled}
   end
 
@@ -278,5 +337,11 @@ defmodule Plausible.Auth.TOTP do
     user
     |> change(totp_last_used_at: now)
     |> Repo.update!()
+  end
+
+  defp generate_token() do
+    20
+    |> :crypto.strong_rand_bytes()
+    |> Base.encode64(padding: false)
   end
 end

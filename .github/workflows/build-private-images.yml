@@ -5,7 +5,6 @@ on:
     branches: [master, stable]
     tags: ['r*']
   pull_request:
-    branches: [master]
     types: [synchronize, labeled]
 
 concurrency:
@@ -20,7 +19,7 @@ jobs:
     steps:
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v5.0.0
         with:
           images: plausible/analytics-private
           tags: |
@@ -47,6 +46,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
+            MIX_ENV=prod
             BUILD_METADATA=${{ steps.meta.outputs.json }}
 
       - name: Image digest

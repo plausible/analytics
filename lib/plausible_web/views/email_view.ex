@@ -1,12 +1,9 @@
 defmodule PlausibleWeb.EmailView do
+  use Plausible
   use PlausibleWeb, :view
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()
-  end
-
-  def base_domain() do
-    PlausibleWeb.Endpoint.host()
   end
 
   def greet_recipient(%{user: %{name: name}}) when is_binary(name) do

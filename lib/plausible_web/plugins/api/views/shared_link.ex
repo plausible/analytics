@@ -13,7 +13,8 @@ defmodule PlausibleWeb.Plugins.API.Views.SharedLink do
     %{
       shared_links:
         render_many(shared_links, __MODULE__, "shared_link.json", authorized_site: site),
-      meta: render_metadata_links(metadata, :shared_links_url, :index, conn.query_params)
+      meta:
+        render_metadata_links(metadata, :plugins_api_shared_links_url, :index, conn.query_params)
     }
   end
 

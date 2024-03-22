@@ -1,5 +1,0 @@
-<%= if is_current_tab(@conn, @this_tab) do %>
-  <a href="/<%= URI.encode_www_form(@site.domain) %>/settings/<%= @this_tab %>" class="flex items-center px-3 py-2 text-sm leading-5 font-medium text-gray-900 dark:text-gray-100 rounded-md bg-gray-100 dark:bg-gray-900 hover:text-gray-900 hover:bg-gray-100 outline-none focus:outline-none focus:bg-gray-200 dark:focus:bg-gray-800 transition ease-in-out duration-150 cursor-default <%= if @this_tab != "general", do: "mt-1" %>"><%= @text %></a>
-<% else %>
-  <a href="/<%= URI.encode_www_form(@site.domain) %>/settings/<%= @this_tab %>" class="flex items-center px-3 py-2 text-sm leading-5 font-medium text-gray-600 dark:text-gray-400 rounded-md hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 outline-none focus:outline-none focus:text-gray-900 focus:bg-gray-50 dark:focus:text-gray-100 dark:focus:bg-gray-800 transition ease-in-out duration-150 <%= if @this_tab != "general", do: "mt-1" %>"><%= @text %></a>
-<% end %>

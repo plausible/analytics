@@ -72,7 +72,7 @@ defmodule Plausible.Stats.IntervalTest do
 
   describe "valid_for_period/3" do
     test "common" do
-      site = build(:site)
+      site = insert(:site)
       assert valid_for_period?("month", "date", site: site)
       refute valid_for_period?("30d", "month", site: site)
       refute valid_for_period?("realtime", "week", site: site)

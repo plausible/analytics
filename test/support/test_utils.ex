@@ -35,12 +35,7 @@ defmodule Plausible.TestUtils do
   end
 
   def create_user(_) do
-    {:ok,
-     user:
-       Factory.insert(:user,
-         inserted_at: ~U[2024-01-01T00:00:00Z],
-         trial_expiry_date: ~D[2024-02-01]
-       )}
+    {:ok, user: Factory.insert(:user)}
   end
 
   def create_site(%{user: user}) do
@@ -144,10 +139,25 @@ defmodule Plausible.TestUtils do
     |> Plug.Conn.fetch_session()
   end
 
-  def generate_usage_for(site, i) do
-    events = for _i <- 1..i, do: Factory.build(:pageview)
+  def generate_usage_for(site, i, timestamp \\ NaiveDateTime.utc_now()) do
+    events = for _i <- 1..i, do: Factory.build(:pageview, timestamp: timestamp)
     populate_stats(site, events)
     :ok
+  end
+
+  def populate_stats(site, import_id, events) do
+    Enum.map(events, fn event ->
+      event = Map.put(event, :site_id, site.id)
+
+      case event do
+        %Plausible.ClickhouseEventV2{} ->
+          event
+
+        imported_event ->
+          Map.put(imported_event, :import_id, import_id)
+      end
+    end)
+    |> populate_stats
   end
 
   def populate_stats(site, events) do
@@ -184,16 +194,13 @@ defmodule Plausible.TestUtils do
   end
 
   defp populate_native_stats(events) do
-    sessions =
-      Enum.reduce(events, %{}, fn event, sessions ->
-        session_id = Plausible.Session.CacheStore.on_event(event, nil)
-        Map.put(sessions, {event.site_id, event.user_id}, session_id)
-      end)
+    for event_params <- events do
+      session = Plausible.Session.CacheStore.on_event(event_params, event_params, nil)
 
-    Enum.each(events, fn event ->
-      event = Map.put(event, :session_id, sessions[{event.site_id, event.user_id}])
-      Plausible.Event.WriteBuffer.insert(event)
-    end)
+      event_params
+      |> Map.merge(session)
+      |> Plausible.Event.WriteBuffer.insert()
+    end
 
     Plausible.Session.WriteBuffer.flush()
     Plausible.Event.WriteBuffer.flush()
@@ -201,7 +208,7 @@ defmodule Plausible.TestUtils do
 
   defp populate_imported_stats(events) do
     Enum.group_by(events, &Map.fetch!(&1, :table), &Map.delete(&1, :table))
-    |> Enum.map(fn {table, events} -> Plausible.Google.Buffer.insert_all(table, events) end)
+    |> Enum.map(fn {table, events} -> Plausible.Imported.Buffer.insert_all(table, events) end)
   end
 
   def relative_time(shifts) do
@@ -216,6 +223,10 @@ defmodule Plausible.TestUtils do
 
   def to_naive_truncate(%NaiveDateTime{} = naive) do
     NaiveDateTime.truncate(naive, :second)
+  end
+
+  def to_naive_truncate(%Date{} = date) do
+    NaiveDateTime.new!(date, ~T[00:00:00])
   end
 
   def eventually(expectation, wait_time_ms \\ 50, retries \\ 10) do

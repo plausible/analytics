@@ -1,12 +1,7 @@
 defmodule PlausibleWeb.LayoutView do
   use PlausibleWeb, :view
   use Plausible
-
-  import PlausibleWeb.Components.Billing
-
-  def base_domain do
-    PlausibleWeb.Endpoint.host()
-  end
+  alias PlausibleWeb.Components.Billing.Notice
 
   def plausible_url do
     PlausibleWeb.Endpoint.url()
@@ -14,32 +9,6 @@ defmodule PlausibleWeb.LayoutView do
 
   def websocket_url() do
     PlausibleWeb.Endpoint.websocket_url()
-  end
-
-  def dogfood_script_url() do
-    if Application.get_env(:plausible, :environment) in ["prod", "staging"] do
-      "#{plausible_url()}/js/script.manual.pageview-props.tagged-events.js"
-    else
-      "#{plausible_url()}/js/script.local.manual.pageview-props.tagged-events.js"
-    end
-  end
-
-  def dogfood_domain(conn) do
-    if conn.assigns[:embedded] do
-      "embed." <> base_domain()
-    else
-      base_domain()
-    end
-  end
-
-  @doc """
-  Temporary override to do more testing of the new ingest.plausible.io endpoint for accepting events. In staging and locally
-  will fall back to staging.plausible.io/api/event and localhost:8000/api/event respectively.
-  """
-  def dogfood_api_destination() do
-    if Application.get_env(:plausible, :environment) == "prod" do
-      "https://ingest.plausible.io/api/event"
-    end
   end
 
   defmodule JWT do
@@ -71,29 +40,61 @@ defmodule PlausibleWeb.LayoutView do
     end
   end
 
+  def logo_path(filename) do
+    if full_build?() do
+      Path.join("/images/ee/", filename)
+    else
+      Path.join("/images/ce/", filename)
+    end
+  end
+
   def settings_tabs(conn) do
     [
-      [key: "General", value: "general"],
-      [key: "People", value: "people"],
-      [key: "Visibility", value: "visibility"],
-      [key: "Goals", value: "goals"],
+      %{key: "General", value: "general", icon: :rocket_launch},
+      %{key: "People", value: "people", icon: :users},
+      %{key: "Visibility", value: "visibility", icon: :eye},
+      %{key: "Goals", value: "goals", icon: :check_circle},
       on_full_build do
-        [key: "Funnels", value: "funnels"]
+        %{key: "Funnels", value: "funnels", icon: :funnel}
       end,
-      [key: "Custom Properties", value: "properties"],
-      [key: "Integrations", value: "integrations"],
-      [key: "Email Reports", value: "email-reports"],
-      if !is_selfhost() && conn.assigns[:site].custom_domain do
-        [key: "Custom domain", value: "custom-domain"]
+      %{key: "Custom Properties", value: "properties", icon: :document_text},
+      %{key: "Integrations", value: "integrations", icon: :arrow_path_rounded_square},
+      if FunWithFlags.enabled?(:imports_exports, for: conn.assigns.site) do
+        %{key: "Imports & Exports", value: "imports-exports", icon: :arrows_up_down}
       end,
+      %{
+        key: "Shields",
+        icon: :shield_exclamation,
+        value: [
+          %{key: "IP Addresses", value: "shields/ip_addresses"},
+          %{key: "Countries", value: "shields/countries"}
+        ]
+      },
+      %{key: "Email Reports", value: "email-reports", icon: :envelope},
       if conn.assigns[:current_user_role] == :owner do
-        [key: "Danger zone", value: "danger-zone"]
+        %{key: "Danger Zone", value: "danger-zone", icon: :exclamation_triangle}
       end
     ]
+    |> Enum.reject(&is_nil/1)
+  end
+
+  def flat_settings_options(conn) do
+    conn
+    |> settings_tabs()
+    |> Enum.map(fn
+      %{value: value, key: key} when is_binary(value) ->
+        {key, value}
+
+      %{value: submenu_items, key: parent_key} when is_list(submenu_items) ->
+        Enum.map(submenu_items, fn submenu_item ->
+          {"#{parent_key}: #{submenu_item.key}", submenu_item.value}
+        end)
+    end)
+    |> List.flatten()
   end
 
   def trial_notificaton(user) do
-    case Plausible.Billing.trial_days_left(user) do
+    case Plausible.Users.trial_days_left(user) do
       days when days > 1 ->
         "#{days} trial days left"
 
@@ -120,11 +121,11 @@ defmodule PlausibleWeb.LayoutView do
     render(layout, Map.put(assigns, :inner_layout, content))
   end
 
-  def is_current_tab(conn, tab) do
-    List.last(conn.path_info) == tab
+  def is_current_tab(_, nil) do
+    false
   end
 
-  defp is_selfhost() do
-    Application.get_env(:plausible, :is_selfhost)
+  def is_current_tab(conn, tab) do
+    String.ends_with?(Enum.join(conn.path_info, "/"), tab)
   end
 end

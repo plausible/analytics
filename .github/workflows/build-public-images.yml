@@ -17,7 +17,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: plausible/analytics
+          images: plausible/community-edition
           tags: |
             type=semver,pattern={{version}},prefix=v
             type=semver,pattern={{major}}.{{minor}},prefix=v
@@ -46,8 +46,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
+            MIX_ENV=small
             BUILD_METADATA=${{ steps.meta.outputs.json }}
-            ERL_FLAGS=+JPperf true
+            ERL_FLAGS=+JMsingle true
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

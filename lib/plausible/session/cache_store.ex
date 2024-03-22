@@ -2,47 +2,39 @@ defmodule Plausible.Session.CacheStore do
   require Logger
   alias Plausible.Session.WriteBuffer
 
-  def on_event(event, prev_user_id, buffer \\ WriteBuffer) do
+  def on_event(event, session_attributes, prev_user_id, buffer \\ WriteBuffer) do
     found_session = find_session(event, event.user_id) || find_session(event, prev_user_id)
 
-    session =
-      if found_session do
-        updated_session = update_session(found_session, event)
-        buffer.insert([%{updated_session | sign: 1}, %{found_session | sign: -1}])
-        persist_session(updated_session)
-      else
-        new_session = new_session_from_event(event)
-        buffer.insert([new_session])
-        persist_session(new_session)
-      end
-
-    session.session_id
+    if found_session do
+      updated_session = update_session(found_session, event)
+      buffer.insert([%{found_session | sign: -1}, %{updated_session | sign: 1}])
+      persist_session(updated_session)
+    else
+      new_session = new_session_from_event(event, session_attributes)
+      buffer.insert([new_session])
+      persist_session(new_session)
+    end
   end
 
   defp find_session(_domain, nil), do: nil
 
   defp find_session(event, user_id) do
-    from_cache = Cachex.get(:sessions, {event.site_id, user_id})
+    from_cache = Plausible.Cache.Adapter.get(:sessions, {event.site_id, user_id})
 
     case from_cache do
-      {:ok, nil} ->
+      nil ->
         nil
 
-      {:ok, session} ->
+      session ->
         if Timex.diff(event.timestamp, session.timestamp, :minutes) <= 30 do
           session
         end
-
-      {:error, e} ->
-        Sentry.capture_message("Cachex error", extra: %{error: e})
-        nil
     end
   end
 
   defp persist_session(session) do
     key = {session.site_id, session.user_id}
-    Cachex.put(:sessions, key, session, ttl: :timer.minutes(30))
-    session
+    Plausible.Cache.Adapter.put(:sessions, key, session)
   end
 
   defp update_session(session, event) do
@@ -50,54 +42,49 @@ defmodule Plausible.Session.CacheStore do
       session
       | user_id: event.user_id,
         timestamp: event.timestamp,
-        exit_page: event.pathname,
+        entry_page:
+          if(session.entry_page == "" and event.name == "pageview",
+            do: event.pathname,
+            else: session.entry_page
+          ),
+        exit_page: if(event.name == "pageview", do: event.pathname, else: session.exit_page),
         is_bounce: false,
         duration: Timex.diff(event.timestamp, session.start, :second) |> abs,
         pageviews:
           if(event.name == "pageview", do: session.pageviews + 1, else: session.pageviews),
-        country_code: session.country_code || event.country_code,
-        subdivision1_code: session.subdivision1_code || event.subdivision1_code,
-        subdivision2_code: session.subdivision2_code || event.subdivision2_code,
-        city_geoname_id: session.city_geoname_id || event.city_geoname_id,
-        operating_system: session.operating_system || event.operating_system,
-        operating_system_version:
-          session.operating_system_version || event.operating_system_version,
-        browser: session.browser || event.browser,
-        browser_version: session.browser_version || event.browser_version,
-        screen_size: session.screen_size || event.screen_size,
         events: session.events + 1
     }
   end
 
-  defp new_session_from_event(event) do
+  defp new_session_from_event(event, session_attributes) do
     %Plausible.ClickhouseSessionV2{
       sign: 1,
       session_id: Plausible.ClickhouseSessionV2.random_uint64(),
       hostname: event.hostname,
       site_id: event.site_id,
       user_id: event.user_id,
-      entry_page: event.pathname,
-      exit_page: event.pathname,
+      entry_page: if(event.name == "pageview", do: event.pathname, else: ""),
+      exit_page: if(event.name == "pageview", do: event.pathname, else: ""),
       is_bounce: true,
       duration: 0,
       pageviews: if(event.name == "pageview", do: 1, else: 0),
       events: 1,
-      referrer: event.referrer,
-      referrer_source: event.referrer_source,
-      utm_medium: event.utm_medium,
-      utm_source: event.utm_source,
-      utm_campaign: event.utm_campaign,
-      utm_content: event.utm_content,
-      utm_term: event.utm_term,
-      country_code: event.country_code,
-      subdivision1_code: event.subdivision1_code,
-      subdivision2_code: event.subdivision2_code,
-      city_geoname_id: event.city_geoname_id,
-      screen_size: event.screen_size,
-      operating_system: event.operating_system,
-      operating_system_version: event.operating_system_version,
-      browser: event.browser,
-      browser_version: event.browser_version,
+      referrer: Map.get(session_attributes, :referrer),
+      referrer_source: Map.get(session_attributes, :referrer_source),
+      utm_medium: Map.get(session_attributes, :utm_medium),
+      utm_source: Map.get(session_attributes, :utm_source),
+      utm_campaign: Map.get(session_attributes, :utm_campaign),
+      utm_content: Map.get(session_attributes, :utm_content),
+      utm_term: Map.get(session_attributes, :utm_term),
+      country_code: Map.get(session_attributes, :country_code),
+      subdivision1_code: Map.get(session_attributes, :subdivision1_code),
+      subdivision2_code: Map.get(session_attributes, :subdivision2_code),
+      city_geoname_id: Map.get(session_attributes, :city_geoname_id),
+      screen_size: Map.get(session_attributes, :screen_size),
+      operating_system: Map.get(session_attributes, :operating_system),
+      operating_system_version: Map.get(session_attributes, :operating_system_version),
+      browser: Map.get(session_attributes, :browser),
+      browser_version: Map.get(session_attributes, :browser_version),
       timestamp: event.timestamp,
       start: event.timestamp,
       "entry_meta.key": Map.get(event, :"meta.key"),

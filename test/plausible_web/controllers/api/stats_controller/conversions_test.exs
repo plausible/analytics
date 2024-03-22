@@ -219,6 +219,53 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert resp == []
     end
 
+    test "filtering by session attribute and multiple goals", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event,
+          user_id: @user_id,
+          name: "Payment",
+          browser: "Firefox"
+        ),
+        build(:event,
+          user_id: @user_id,
+          name: "Payment",
+          browser: "Firefox"
+        ),
+        build(:event,
+          name: "Payment",
+          browser: "Chrome"
+        ),
+        build(:event, name: "Payment"),
+        build(:pageview, browser: "Firefox", pathname: "/"),
+        build(:pageview, browser: "Firefox", pathname: "/register")
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment"})
+      insert(:goal, %{site: site, page_path: "/register"})
+
+      filters = Jason.encode!(%{browser: "Firefox"})
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 1,
+                 "events" => 2,
+                 "conversion_rate" => 33.3
+               },
+               %{
+                 "name" => "Visit /register",
+                 "visitors" => 1,
+                 "events" => 1,
+                 "conversion_rate" => 33.3
+               }
+             ]
+    end
+
+    @tag :full_build_only
     test "returns formatted average and total values for a conversion with revenue value", %{
       conn: conn,
       site: site
@@ -259,20 +306,66 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
+    @tag :full_build_only
+    test "returns revenue goals as custom events if the plan doesn't cover the feature", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      user
+      |> Plausible.Auth.User.end_trial()
+      |> Plausible.Repo.update!()
+
+      populate_stats(site, [
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("200100300.123"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("300100400.123"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event,
+          name: "Payment",
+          revenue_reporting_amount: Decimal.new("0"),
+          revenue_reporting_currency: "USD"
+        ),
+        build(:event, name: "Payment", revenue_reporting_amount: nil),
+        build(:event, name: "Payment", revenue_reporting_amount: nil)
+      ])
+
+      insert(:goal, %{site: site, event_name: "Payment", currency: :EUR})
+
+      conn = get(conn, "/api/stats/#{site.domain}/conversions?period=day")
+
+      assert json_response(conn, 200) == [
+               %{
+                 "name" => "Payment",
+                 "visitors" => 5,
+                 "events" => 5,
+                 "conversion_rate" => 100.0
+               }
+             ]
+    end
+
+    @tag :full_build_only
     test "returns revenue metrics as nil for non-revenue goals", %{
       conn: conn,
       site: site
     } do
-      populate_stats(site, [
-        build(:event, name: "Signup"),
-        build(:event, name: "Signup"),
+      [
         build(:event,
           name: "Payment",
           pathname: "/checkout",
           revenue_reporting_amount: Decimal.new("10.00"),
           revenue_reporting_currency: "EUR"
         )
-      ])
+      ]
+      |> Enum.concat(build_list(2, :event, name: "Signup"))
+      |> Enum.concat(build_list(3, :pageview, pathname: "/checkout"))
+      |> then(fn events -> populate_stats(site, events) end)
 
       insert(:goal, %{site: site, event_name: "Signup"})
       insert(:goal, %{site: site, page_path: "/checkout"})
@@ -284,7 +377,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       assert [
                %{
                  "average_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
-                 "conversion_rate" => 33.3,
+                 "conversion_rate" => 16.7,
                  "name" => "Payment",
                  "events" => 1,
                  "total_revenue" => %{"long" => "€10.00", "short" => "€10.0"},
@@ -292,7 +385,7 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                },
                %{
                  "average_revenue" => nil,
-                 "conversion_rate" => 66.7,
+                 "conversion_rate" => 33.3,
                  "name" => "Signup",
                  "events" => 2,
                  "total_revenue" => nil,
@@ -300,11 +393,11 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                },
                %{
                  "average_revenue" => nil,
-                 "conversion_rate" => 33.3,
+                 "conversion_rate" => 50.0,
                  "name" => "Visit /checkout",
-                 "events" => 1,
+                 "events" => 3,
                  "total_revenue" => nil,
-                 "visitors" => 1
+                 "visitors" => 3
                }
              ] == Enum.sort_by(response, & &1["name"])
     end
@@ -335,35 +428,94 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
   describe "GET /api/stats/:domain/conversions - with goal filter" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "returns only the conversion that is filtered for", %{conn: conn, site: site} do
+    test "does not consider custom event pathname as a pageview goal completion", %{
+      conn: conn,
+      site: site
+    } do
       populate_stats(site, [
         build(:pageview, pathname: "/"),
-        build(:pageview, pathname: "/"),
         build(:pageview, pathname: "/register"),
-        build(:pageview, pathname: "/register"),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["A"]),
-        build(:event, name: "Signup", "meta.key": ["variant"], "meta.value": ["B"])
+        build(:event, pathname: "/register", name: "Signup")
       ])
 
       insert(:goal, %{site: site, page_path: "/register"})
       insert(:goal, %{site: site, event_name: "Signup"})
 
-      filters = Jason.encode!(%{goal: "Signup"})
+      get_with_filter = fn filters ->
+        path = "/api/stats/#{site.domain}/conversions"
+        query = "?period=day&filters=#{Jason.encode!(filters)}"
 
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
-        )
+        get(conn, path <> query)
+        |> json_response(200)
+      end
 
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "Signup",
-                 "visitors" => 2,
-                 "events" => 2,
-                 "conversion_rate" => 33.3
-               }
-             ]
+      expected = [
+        %{
+          "name" => "Signup",
+          "visitors" => 1,
+          "events" => 1,
+          "conversion_rate" => 33.3
+        }
+      ]
+
+      # {:is, {:event, event}} filter type
+      assert get_with_filter.(%{goal: "Signup"}) == expected
+
+      # {:member, clauses} filter type
+      assert get_with_filter.(%{goal: "Signup|Whatever"}) == expected
+
+      # {:matches_member, clauses} filter type
+      assert get_with_filter.(%{goal: "Signup|Visit /whatever*"}) == expected
+    end
+
+    test "does not return custom events with the filtered pageview goal pathname", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/"),
+        build(:pageview, pathname: "/register"),
+        build(:event, pathname: "/register", name: "Signup")
+      ])
+
+      insert(:goal, %{site: site, page_path: "/register"})
+      insert(:goal, %{site: site, page_path: "/regi**"})
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      get_with_filter = fn filters ->
+        path = "/api/stats/#{site.domain}/conversions"
+        query = "?period=day&filters=#{Jason.encode!(filters)}"
+
+        get(conn, path <> query)
+        |> json_response(200)
+      end
+
+      expected = [
+        %{
+          "name" => "Visit /register",
+          "visitors" => 1,
+          "events" => 1,
+          "conversion_rate" => 33.3
+        },
+        %{
+          "name" => "Visit /regi**",
+          "visitors" => 1,
+          "events" => 1,
+          "conversion_rate" => 33.3
+        }
+      ]
+
+      # {:is, {:page, path}} filter type
+      assert get_with_filter.(%{goal: "Visit+/register"}) == expected
+
+      # {:matches, {:page, expr}} filter type
+      assert get_with_filter.(%{goal: "Visit+/regi**"}) == expected
+
+      # {:member, clauses} filter type
+      assert get_with_filter.(%{goal: "Visit+/register|Whatever"}) == expected
+
+      # {:matches_member, clauses} filter type
+      assert get_with_filter.(%{goal: "Visit+/register|Visit+/regi**"}) == expected
     end
 
     test "can filter by multiple mixed goals", %{conn: conn, site: site} do
@@ -393,45 +545,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "visitors" => 2,
                  "events" => 2,
                  "conversion_rate" => 33.3
-               },
-               %{
-                 "name" => "Visit /register",
-                 "visitors" => 1,
-                 "events" => 1,
-                 "conversion_rate" => 16.7
-               }
-             ]
-    end
-
-    test "can filter by multiple negated mixed goals", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, pathname: "/"),
-        build(:pageview, pathname: "/"),
-        build(:pageview, pathname: "/another"),
-        build(:pageview, pathname: "/register"),
-        build(:event, name: "CTA"),
-        build(:event, name: "Signup")
-      ])
-
-      insert(:goal, %{site: site, page_path: "/register"})
-      insert(:goal, %{site: site, page_path: "/another"})
-      insert(:goal, %{site: site, event_name: "CTA"})
-      insert(:goal, %{site: site, event_name: "Signup"})
-
-      filters = Jason.encode!(%{goal: "!Signup|Visit /another"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "CTA",
-                 "visitors" => 1,
-                 "events" => 1,
-                 "conversion_rate" => 16.7
                },
                %{
                  "name" => "Visit /register",
@@ -514,71 +627,38 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
              ]
     end
 
-    test "can filter by not_matches_member filter type on goals", %{conn: conn, site: site} do
+    test "conversion_rate for goals should not be calculated with imported data", %{
+      conn: conn,
+      site: site
+    } do
+      site =
+        site
+        |> Plausible.Site.start_import(~D[2005-01-01], Timex.today(), "Google Analytics", "ok")
+        |> Plausible.Repo.update!()
+
       populate_stats(site, [
-        build(:pageview, pathname: "/another"),
+        build(:pageview, pathname: "/"),
         build(:pageview, pathname: "/another"),
         build(:pageview, pathname: "/blog/post-1"),
         build(:pageview, pathname: "/blog/post-2"),
-        build(:event, name: "CTA"),
-        build(:event, name: "Signup")
+        build(:imported_pages, page: "/blog/post-1"),
+        build(:imported_visitors)
       ])
 
       insert(:goal, %{site: site, page_path: "/blog**"})
-      insert(:goal, %{site: site, page_path: "/ano**"})
-      insert(:goal, %{site: site, event_name: "CTA"})
-      insert(:goal, %{site: site, event_name: "Signup"})
-
-      filters = Jason.encode!(%{goal: "!Signup|Visit /blog**"})
 
       conn =
         get(
           conn,
-          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
+          "/api/stats/#{site.domain}/conversions?period=day"
         )
 
       assert json_response(conn, 200) == [
                %{
-                 "name" => "Visit /ano**",
+                 "name" => "Visit /blog**",
                  "visitors" => 2,
                  "events" => 2,
-                 "conversion_rate" => 33.3
-               },
-               %{
-                 "name" => "CTA",
-                 "visitors" => 1,
-                 "events" => 1,
-                 "conversion_rate" => 16.7
-               }
-             ]
-    end
-
-    test "can combine wildcard and no wildcard in not_matches_member", %{conn: conn, site: site} do
-      populate_stats(site, [
-        build(:pageview, pathname: "/blog/post-1"),
-        build(:pageview, pathname: "/blog/post-2"),
-        build(:pageview, pathname: "/billing/upgrade"),
-        build(:pageview, pathname: "/register")
-      ])
-
-      insert(:goal, %{site: site, page_path: "/blog/**"})
-      insert(:goal, %{site: site, page_path: "/billing/upgrade"})
-      insert(:goal, %{site: site, page_path: "/register"})
-
-      filters = Jason.encode!(%{goal: "!Visit /blog/**|Visit /billing/upgrade"})
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/conversions?period=day&filters=#{filters}"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "name" => "Visit /register",
-                 "visitors" => 1,
-                 "events" => 1,
-                 "conversion_rate" => 25
+                 "conversion_rate" => 50
                }
              ]
     end
@@ -623,13 +703,10 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
       insert(:goal, %{site: site, page_path: "/register"})
       insert(:goal, %{site: site, page_path: "/reg*"})
       insert(:goal, %{site: site, page_path: "/*/register"})
-      insert(:goal, %{site: site, page_path: "/billing**/success"})
       insert(:goal, %{site: site, page_path: "/billing*/success"})
       insert(:goal, %{site: site, page_path: "/signup"})
       insert(:goal, %{site: site, page_path: "/signup/*"})
-      insert(:goal, %{site: site, page_path: "/signup/**"})
       insert(:goal, %{site: site, page_path: "/*"})
-      insert(:goal, %{site: site, page_path: "/**"})
 
       populate_stats(site, [
         build(:pageview,
@@ -676,25 +753,19 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                %{
                  "conversion_rate" => 100.0,
                  "visitors" => 8,
-                 "name" => "Visit /**",
+                 "name" => "Visit /*",
                  "events" => 8
                },
                %{
                  "conversion_rate" => 37.5,
                  "visitors" => 3,
-                 "name" => "Visit /signup/**",
-                 "events" => 3
-               },
-               %{
-                 "conversion_rate" => 37.5,
-                 "visitors" => 3,
-                 "name" => "Visit /*",
+                 "name" => "Visit /signup/*",
                  "events" => 3
                },
                %{
                  "conversion_rate" => 25.0,
                  "visitors" => 2,
-                 "name" => "Visit /billing**/success",
+                 "name" => "Visit /billing*/success",
                  "events" => 2
                },
                %{
@@ -702,18 +773,6 @@ defmodule PlausibleWeb.Api.StatsController.ConversionsTest do
                  "visitors" => 2,
                  "name" => "Visit /reg*",
                  "events" => 2
-               },
-               %{
-                 "conversion_rate" => 12.5,
-                 "visitors" => 1,
-                 "name" => "Visit /signup/*",
-                 "events" => 1
-               },
-               %{
-                 "conversion_rate" => 12.5,
-                 "visitors" => 1,
-                 "name" => "Visit /billing*/success",
-                 "events" => 1
                },
                %{
                  "conversion_rate" => 12.5,

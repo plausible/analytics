@@ -6,6 +6,7 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
 
   alias Plausible.Auth.{User, Invitation}
   alias Plausible.{Site, Sites, Site.Membership}
+  alias Plausible.Site.Memberships.Invitations
   alias Plausible.Billing.Quota
   import Ecto.Query
 
@@ -13,9 +14,9 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
           Ecto.Changeset.t()
           | :already_a_member
           | :transfer_to_self
+          | :no_plan
           | {:over_limit, non_neg_integer()}
           | :forbidden
-          | :upgrade_required
 
   @spec create_invitation(Site.t(), User.t(), String.t(), atom()) ::
           {:ok, Invitation.t()} | {:error, invite_error()}
@@ -37,16 +38,21 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
   end
 
   @spec bulk_transfer_ownership_direct([Site.t()], User.t()) ::
-          {:ok, [Membership.t()]} | {:error, invite_error()}
+          {:ok, [Membership.t()]}
+          | {:error,
+             invite_error()
+             | Quota.over_limits_error()}
   def bulk_transfer_ownership_direct(sites, new_owner) do
     Plausible.Repo.transaction(fn ->
       for site <- sites do
-        with site <- Plausible.Repo.preload(site, :owner),
-             :ok <- ensure_transfer_valid(site, new_owner, :owner),
-             {:ok, membership} <- Site.Memberships.transfer_ownership(site, new_owner) do
-          membership
-        else
-          {:error, error} -> Plausible.Repo.rollback(error)
+        site = Plausible.Repo.preload(site, :owner)
+
+        case Site.Memberships.transfer_ownership(site, new_owner) do
+          {:ok, membership} ->
+            membership
+
+          {:error, error} ->
+            Plausible.Repo.rollback(error)
         end
       end
     end)
@@ -67,9 +73,9 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
 
     with site <- Plausible.Repo.preload(site, :owner),
          :ok <- check_invitation_permissions(site, inviter, role, opts),
-         :ok <- check_team_member_limit(site, role),
+         :ok <- check_team_member_limit(site, role, invitee_email),
          invitee <- Plausible.Auth.find_user_by(email: invitee_email),
-         :ok <- ensure_transfer_valid(site, invitee, role),
+         :ok <- Invitations.ensure_transfer_valid(site, invitee, role),
          :ok <- ensure_new_membership(site, invitee, role),
          %Ecto.Changeset{} = changeset <- Invitation.new(attrs),
          {:ok, invitation} <- Plausible.Repo.insert(changeset) do
@@ -110,43 +116,6 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     Plausible.Mailer.send(email)
   end
 
-  defp within_team_member_limit_after_transfer?(site, new_owner) do
-    limit = Quota.team_member_limit(new_owner)
-
-    current_usage = Quota.team_member_usage(new_owner)
-    site_usage = Plausible.Repo.aggregate(Quota.team_member_usage_query(site.owner, site), :count)
-    usage_after_transfer = current_usage + site_usage + 1
-
-    Quota.within_limit?(usage_after_transfer, limit)
-  end
-
-  defp within_site_limit_after_transfer?(new_owner) do
-    limit = Quota.site_limit(new_owner)
-    usage_after_transfer = Quota.site_usage(new_owner) + 1
-
-    Quota.within_limit?(usage_after_transfer, limit)
-  end
-
-  defp has_access_to_site_features?(site, new_owner) do
-    site
-    |> Plausible.Billing.Quota.features_usage()
-    |> Enum.all?(&(&1.check_availability(new_owner) == :ok))
-  end
-
-  defp ensure_transfer_valid(%Site{} = site, %User{} = new_owner, :owner) do
-    cond do
-      Sites.role(new_owner.id, site) == :owner -> {:error, :transfer_to_self}
-      not within_team_member_limit_after_transfer?(site, new_owner) -> {:error, :upgrade_required}
-      not within_site_limit_after_transfer?(new_owner) -> {:error, :upgrade_required}
-      not has_access_to_site_features?(site, new_owner) -> {:error, :upgrade_required}
-      true -> :ok
-    end
-  end
-
-  defp ensure_transfer_valid(_site, _invitee, _role) do
-    :ok
-  end
-
   defp ensure_new_membership(_site, _invitee, :owner) do
     :ok
   end
@@ -159,14 +128,14 @@ defmodule Plausible.Site.Memberships.CreateInvitation do
     end
   end
 
-  defp check_team_member_limit(_site, :owner) do
+  defp check_team_member_limit(_site, :owner, _invitee_email) do
     :ok
   end
 
-  defp check_team_member_limit(site, _role) do
+  defp check_team_member_limit(site, _role, invitee_email) do
     site = Plausible.Repo.preload(site, :owner)
     limit = Quota.team_member_limit(site.owner)
-    usage = Quota.team_member_usage(site.owner)
+    usage = Quota.team_member_usage(site.owner, exclude_emails: invitee_email)
 
     if Quota.below_limit?(usage, limit),
       do: :ok,

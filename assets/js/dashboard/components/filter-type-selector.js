@@ -1,6 +1,6 @@
 import React, { Fragment } from "react";
 
-import { FILTER_TYPES } from "../util/filters";
+import { FILTER_OPERATIONS } from "../util/filters";
 import { Menu, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
 import { isFreeChoiceFilter, supportsIsNot } from "../util/filters";
@@ -61,9 +61,9 @@ export default function FilterTypeSelector(props) {
                 className="z-10 origin-top-left absolute left-0 mt-2 w-full rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none"
               >
                 <div className="py-1">
-                  {renderTypeItem(FILTER_TYPES.is, true)}
-                  {renderTypeItem(FILTER_TYPES.isNot, supportsIsNot(filterName))}
-                  {renderTypeItem(FILTER_TYPES.contains, isFreeChoiceFilter(filterName))}
+                  {renderTypeItem(FILTER_OPERATIONS.is, true)}
+                  {renderTypeItem(FILTER_OPERATIONS.isNot, supportsIsNot(filterName))}
+                  {renderTypeItem(FILTER_OPERATIONS.contains, isFreeChoiceFilter(filterName))}
                 </div>
               </Menu.Items>
             </Transition>

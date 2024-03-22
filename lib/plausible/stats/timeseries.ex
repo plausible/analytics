@@ -1,11 +1,14 @@
 defmodule Plausible.Stats.Timeseries do
   use Plausible.ClickhouseRepo
-  alias Plausible.Stats.Query
-  import Plausible.Stats.{Base, Util}
+  use Plausible
+  alias Plausible.Stats.{Query, Util}
+  import Plausible.Stats.{Base}
+  import Ecto.Query
   use Plausible.Stats.Fragments
 
   @typep metric ::
            :pageviews
+           | :events
            | :visitors
            | :visits
            | :bounce_rate
@@ -15,7 +18,9 @@ defmodule Plausible.Stats.Timeseries do
   @typep value :: nil | integer() | float()
   @type results :: nonempty_list(%{required(:date) => Date.t(), required(metric()) => value()})
 
-  @event_metrics [:visitors, :pageviews, :events, :average_revenue, :total_revenue]
+  @revenue_metrics on_full_build(do: Plausible.Stats.Goal.Revenue.revenue_metrics(), else: [])
+
+  @event_metrics [:visitors, :pageviews, :events, :conversion_rate] ++ @revenue_metrics
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit]
   def timeseries(site, query, metrics) do
     steps = buckets(query)
@@ -23,7 +28,14 @@ defmodule Plausible.Stats.Timeseries do
     event_metrics = Enum.filter(metrics, &(&1 in @event_metrics))
     session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
 
-    {currency, event_metrics} = get_revenue_tracking_currency(site, query, event_metrics)
+    {currency, event_metrics} =
+      on_full_build do
+        Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, event_metrics)
+      else
+        {nil, event_metrics}
+      end
+
+    Query.trace(query, metrics)
 
     [event_result, session_result] =
       Plausible.ClickhouseRepo.parallel_tasks([
@@ -38,14 +50,17 @@ defmodule Plausible.Stats.Timeseries do
       |> Map.update!(:date, &date_format/1)
       |> cast_revenue_metrics_to_money(currency)
     end)
+    |> Util.keep_requested_metrics(metrics)
   end
 
   defp events_timeseries(_, _, []), do: []
 
   defp events_timeseries(site, query, metrics) do
-    from(e in base_event_query(site, query), select: %{})
+    metrics = Util.maybe_add_visitors_metric(metrics)
+
+    from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
     |> select_bucket(site, query)
-    |> select_event_metrics(metrics)
+    |> maybe_add_timeseries_conversion_rate(site, query, metrics)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
   end
@@ -53,13 +68,12 @@ defmodule Plausible.Stats.Timeseries do
   defp sessions_timeseries(_, _, []), do: []
 
   defp sessions_timeseries(site, query, metrics) do
-    from(e in query_sessions(site, query), select: %{})
+    from(e in query_sessions(site, query), select: ^select_session_metrics(metrics, query))
     |> filter_converted_sessions(site, query)
     |> select_bucket(site, query)
-    |> select_session_metrics(metrics, query)
     |> Plausible.Stats.Imported.merge_imported_timeseries(site, query, metrics)
     |> ClickhouseRepo.all()
-    |> remove_internal_visits_metric(metrics)
+    |> Util.keep_requested_metrics(metrics)
   end
 
   defp buckets(%Query{interval: "month"} = query) do
@@ -214,7 +228,6 @@ defmodule Plausible.Stats.Timeseries do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp empty_row(date, metrics) do
     Enum.reduce(metrics, %{date: date}, fn metric, row ->
       case metric do
@@ -223,11 +236,49 @@ defmodule Plausible.Stats.Timeseries do
         :visitors -> Map.merge(row, %{visitors: 0})
         :visits -> Map.merge(row, %{visits: 0})
         :views_per_visit -> Map.merge(row, %{views_per_visit: 0.0})
+        :conversion_rate -> Map.merge(row, %{conversion_rate: 0.0})
         :bounce_rate -> Map.merge(row, %{bounce_rate: nil})
         :visit_duration -> Map.merge(row, %{visit_duration: nil})
         :average_revenue -> Map.merge(row, %{average_revenue: nil})
         :total_revenue -> Map.merge(row, %{total_revenue: nil})
       end
     end)
+  end
+
+  on_full_build do
+    defp cast_revenue_metrics_to_money(results, revenue_goals) do
+      Plausible.Stats.Goal.Revenue.cast_revenue_metrics_to_money(results, revenue_goals)
+    end
+  else
+    defp cast_revenue_metrics_to_money(results, _revenue_goals), do: results
+  end
+
+  defp maybe_add_timeseries_conversion_rate(q, site, query, metrics) do
+    if :conversion_rate in metrics do
+      totals_query = query |> Query.remove_event_filters([:goal, :props])
+
+      totals_timeseries_q =
+        from(e in base_event_query(site, totals_query),
+          select: ^select_event_metrics([:visitors])
+        )
+        |> select_bucket(site, query)
+
+      from(e in subquery(q),
+        left_join: c in subquery(totals_timeseries_q),
+        on: e.date == c.date,
+        select_merge: %{
+          total_visitors: c.visitors,
+          conversion_rate:
+            fragment(
+              "if(? > 0, round(? / ? * 100, 1), 0)",
+              c.visitors,
+              e.visitors,
+              c.visitors
+            )
+        }
+      )
+    else
+      q
+    end
   end
 end

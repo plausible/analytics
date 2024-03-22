@@ -3,6 +3,26 @@ defmodule Plausible.SitesTest do
 
   alias Plausible.Sites
 
+  describe "create a site" do
+    test "creates a site" do
+      user = insert(:user)
+
+      params = %{"domain" => "example.com", "timezone" => "Europe/London"}
+
+      assert {:ok, %{site: %{domain: "example.com", timezone: "Europe/London"}}} =
+               Sites.create(user, params)
+    end
+
+    test "fails on invalid timezone" do
+      user = insert(:user)
+
+      params = %{"domain" => "example.com", "timezone" => "blah"}
+
+      assert {:error, :site, %{errors: [timezone: {"is invalid", []}]}, %{}} =
+               Sites.create(user, params)
+    end
+  end
+
   describe "is_member?" do
     test "is true if user is a member of the site" do
       user = insert(:user)
@@ -26,7 +46,7 @@ defmodule Plausible.SitesTest do
       assert Sites.stats_start_date(site) == nil
     end
 
-    test "is date if first pageview if site does have stats" do
+    test "is date if site does have stats" do
       site = insert(:site)
 
       populate_stats(site, [
@@ -50,6 +70,33 @@ defmodule Plausible.SitesTest do
     end
   end
 
+  describe "native_stats_start_date" do
+    test "is nil if site has no stats" do
+      site = insert(:site)
+
+      assert Sites.native_stats_start_date(site) == nil
+    end
+
+    test "is date if site does have stats" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview)
+      ])
+
+      assert Sites.native_stats_start_date(site) == Timex.today(site.timezone)
+    end
+
+    test "ignores imported stats" do
+      site = insert(:site)
+      insert(:site_import, site: site)
+      {:ok, opts} = add_imported_data(%{site: site})
+      site = Map.new(opts).site
+
+      assert Sites.native_stats_start_date(site) == nil
+    end
+  end
+
   describe "has_stats?" do
     test "is false if site has no stats" do
       site = insert(:site)
@@ -69,6 +116,7 @@ defmodule Plausible.SitesTest do
   end
 
   describe "get_for_user/2" do
+    @tag :full_build_only
     test "get site for super_admin" do
       user1 = insert(:user)
       user2 = insert(:user)

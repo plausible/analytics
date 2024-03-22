@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Components.Generic do
   @moduledoc """
   Generic reusable components
   """
-  use Phoenix.Component
+  use Phoenix.Component, global_prefixes: ~w(x-)
 
   @notice_themes %{
     yellow: %{
@@ -19,7 +19,18 @@ defmodule PlausibleWeb.Components.Generic do
     }
   }
 
+  @button_themes %{
+    "primary" => "bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:outline-indigo-600",
+    "bright" =>
+      "border border-gray-200 bg-gray-100 dark:bg-gray-300 text-gray-800 hover:bg-gray-200 focus-visible:outline-gray-100",
+    "danger" =>
+      "border border-gray-300 dark:border-gray-500 text-red-700 bg-white dark:bg-gray-800 hover:text-red-500 dark:hover:text-red-400 focus:border-blue-300 active:text-red-800"
+  }
+
+  @button_base_class "inline-flex items-center justify-center gap-x-2 rounded-md px-3.5 py-2.5 text-sm font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:bg-gray-400 dark:disabled:text-white dark:disabled:text-gray-400 dark:disabled:bg-gray-700"
+
   attr(:type, :string, default: "button")
+  attr(:theme, :string, default: "primary")
   attr(:class, :string, default: "")
   attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
@@ -27,12 +38,19 @@ defmodule PlausibleWeb.Components.Generic do
   slot(:inner_block)
 
   def button(assigns) do
+    assigns =
+      assign(assigns,
+        button_base_class: @button_base_class,
+        theme_class: @button_themes[assigns.theme]
+      )
+
     ~H"""
     <button
       type={@type}
       disabled={@disabled}
       class={[
-        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
+        @button_base_class,
+        @theme_class,
         @class
       ]}
       {@rest}
@@ -44,16 +62,32 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr(:href, :string, required: true)
   attr(:class, :string, default: "")
+  attr(:theme, :string, default: "primary")
+  attr(:disabled, :boolean, default: false)
   attr(:rest, :global)
 
   slot(:inner_block)
 
   def button_link(assigns) do
+    theme_class =
+      if assigns.disabled do
+        "bg-gray-400 text-white dark:text-white dark:text-gray-400 dark:bg-gray-700 pointer-events-none cursor-default"
+      else
+        @button_themes[assigns.theme]
+      end
+
+    assigns =
+      assign(assigns,
+        button_base_class: @button_base_class,
+        theme_class: theme_class
+      )
+
     ~H"""
     <.link
       href={@href}
       class={[
-        "inline-flex items-center justify-center gap-x-2 rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-gray-400",
+        @button_base_class,
+        @theme_class,
         @class
       ]}
       {@rest}
@@ -68,7 +102,7 @@ defmodule PlausibleWeb.Components.Generic do
   def docs_info(assigns) do
     ~H"""
     <a href={"https://plausible.io/docs/#{@slug}"} rel="noreferrer" target="_blank">
-      <Heroicons.information_circle class="text-gray-400 w-6 h-6 absolute top-0 right-0 text-gray-400" />
+      <Heroicons.information_circle class="text-gray-400 w-6 h-6 absolute top-0 right-0" />
     </a>
     """
   end
@@ -134,9 +168,10 @@ defmodule PlausibleWeb.Components.Generic do
   end
 
   attr :id, :any, default: nil
-  attr :href, :string, required: true
+  attr :href, :string, default: "#"
   attr :new_tab, :boolean, default: false
   attr :class, :string, default: ""
+  attr :rest, :global
   slot :inner_block
 
   def styled_link(assigns) do
@@ -144,7 +179,8 @@ defmodule PlausibleWeb.Components.Generic do
     <.unstyled_link
       new_tab={@new_tab}
       href={@href}
-      class="text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600"
+      class={"text-indigo-600 hover:text-indigo-700 dark:text-indigo-500 dark:hover:text-indigo-600 " <> @class}
+      {@rest}
     >
       <%= render_slot(@inner_block) %>
     </.unstyled_link>
@@ -161,36 +197,28 @@ defmodule PlausibleWeb.Components.Generic do
 
   def dropdown(assigns) do
     ~H"""
-    <div class="flex justify-center">
+    <div
+      x-data="dropdown"
+      x-on:keydown.escape.prevent.stop="close($refs.button)"
+      x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
+    >
+      <button x-ref="button" x-on:click="toggle()" type="button" class={List.first(@button).class}>
+        <%= render_slot(List.first(@button)) %>
+      </button>
       <div
-        x-data="dropdown"
-        x-on:keydown.escape.prevent.stop="close($refs.button)"
-        x-on:focusin.window="! $refs.panel.contains($event.target) && close()"
-        x-id="['dropdown-button']"
-        class="relative"
+        x-ref="panel"
+        x-show="open"
+        x-transition:enter="transition ease-out duration-100"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-75"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95"
+        x-on:click.outside="close($refs.button)"
+        style="display: none;"
+        class={List.first(@panel).class}
       >
-        <button
-          x-ref="button"
-          x-on:click="toggle()"
-          x-bind:aria-expanded="open"
-          x-bind:aria-controls="$id('dropdown-button')"
-          type="button"
-          class={List.first(@button).class}
-        >
-          <%= render_slot(List.first(@button)) %>
-        </button>
-        <div
-          x-ref="panel"
-          x-show="open"
-          x-transition.origin.top.left
-          x-on:click.outside="close($refs.button)"
-          x-on:click="onPanelClick"
-          x-bind:id="$id('dropdown-button')"
-          style="display: none;"
-          class={List.first(@panel).class}
-        >
-          <%= render_slot(List.first(@panel)) %>
-        </div>
+        <%= render_slot(List.first(@panel)) %>
       </div>
     </div>
     """
@@ -198,15 +226,24 @@ defmodule PlausibleWeb.Components.Generic do
 
   attr :href, :string, required: true
   attr :new_tab, :boolean, default: false
+  attr :rest, :global
   slot :inner_block, required: true
 
   def dropdown_link(assigns) do
+    class =
+      "w-full inline-flex text-gray-700 dark:text-gray-300 px-3.5 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
+
+    class =
+      if assigns.new_tab do
+        "#{class} justify-between"
+      else
+        class
+      end
+
+    assigns = assign(assigns, :class, class)
+
     ~H"""
-    <.unstyled_link
-      new_tab={@new_tab}
-      href={@href}
-      class="w-full justify-between text-gray-700 dark:text-gray-300 block px-3.5 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-    >
+    <.unstyled_link new_tab={@new_tab} href={@href} x-on:click="close()" class={@class} {@rest}>
       <%= render_slot(@inner_block) %>
     </.unstyled_link>
     """
@@ -241,11 +278,45 @@ defmodule PlausibleWeb.Components.Generic do
       """
     else
       ~H"""
-      <.link class={@class} href={@href}>
+      <.link class={@class} href={@href} {@rest}>
         <%= render_slot(@inner_block) %>
       </.link>
       """
     end
+  end
+
+  attr :class, :any, default: ""
+  attr :rest, :global
+
+  def spinner(assigns) do
+    ~H"""
+    <svg
+      class={["animate-spin h-4 w-4 text-indigo-500", @class]}
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      {@rest}
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4">
+      </circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      >
+      </path>
+    </svg>
+    """
+  end
+
+  attr :rest, :global, include: ~w(fill stroke stroke-width)
+  attr :name, :atom, required: true
+  attr :outline, :boolean, default: true
+  attr :solid, :boolean, default: false
+  attr :mini, :boolean, default: false
+
+  def dynamic_icon(assigns) do
+    apply(Heroicons, assigns.name, [assigns])
   end
 
   defp icon_class(link_assigns) do

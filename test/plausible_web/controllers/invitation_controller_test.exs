@@ -22,7 +22,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
                "You now have access to #{site.domain}"
 
-      assert redirected_to(conn) == "/#{site.domain}"
+      assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}"
 
       refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
 
@@ -42,7 +42,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         )
 
       c1 = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
-      assert redirected_to(c1) == "/#{site.domain}"
+      assert redirected_to(c1) == "/#{URI.encode_www_form(site.domain)}"
 
       assert Phoenix.Flash.get(c1.assigns.flash, :success) ==
                "You now have access to #{site.domain}"
@@ -60,10 +60,17 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
       old_owner = insert(:user)
       site = insert(:site, members: [old_owner])
 
+      insert(:growth_subscription, user: user)
+
       invitation =
         insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
 
-      post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+      conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :success) =~
+               "You now have access to"
 
       refute Repo.exists?(from(i in Plausible.Auth.Invitation, where: i.email == ^user.email))
 
@@ -76,6 +83,43 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
         Repo.get_by(Plausible.Site.Membership, user_id: user.id, site_id: site.id)
 
       assert new_owner_membership.role == :owner
+    end
+
+    @tag :full_build_only
+    test "fails when new owner has no plan", %{conn: conn, user: user} do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner])
+
+      invitation =
+        insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
+
+      conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "No existing subscription"
+    end
+
+    @tag :full_build_only
+    test "fails when new owner's plan is unsuitable", %{conn: conn, user: user} do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner])
+
+      insert(:growth_subscription, user: user)
+
+      # fill site limit quota
+      insert_list(10, :site, members: [user])
+
+      invitation =
+        insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
+
+      conn = post(conn, "/sites/invitations/#{invitation.invitation_id}/accept")
+
+      assert redirected_to(conn, 302) == Routes.site_path(conn, :index)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+               "Plan limits exceeded: site limit."
     end
   end
 
@@ -126,7 +170,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
           Routes.invitation_path(conn, :remove_invitation, site.domain, invitation.invitation_id)
         )
 
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/people"
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/people"
 
       refute Repo.reload(invitation)
     end
@@ -192,7 +236,7 @@ defmodule PlausibleWeb.Site.InvitationControllerTest do
 
       conn = delete(conn, remove_invitation_path)
 
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/people"
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/people"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                "Invitation missing or already removed"

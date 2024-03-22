@@ -6,7 +6,7 @@ if config_env() in [:dev, :test] do
   Envy.load(["config/.env.#{config_env()}"])
 end
 
-if config_env() == :small do
+if config_env() == :small_dev do
   Envy.load(["config/.env.dev"])
 end
 
@@ -21,7 +21,7 @@ log_format =
 
 log_level =
   config_dir
-  |> get_var_from_path_or_env("LOG_LEVEL", "warn")
+  |> get_var_from_path_or_env("LOG_LEVEL", "warning")
   |> String.to_existing_atom()
 
 config :logger,
@@ -140,9 +140,15 @@ ch_db_url =
   |> get_var_from_path_or_env("CLICKHOUSE_FLUSH_INTERVAL_MS", "5000")
   |> Integer.parse()
 
+if get_var_from_path_or_env(config_dir, "CLICKHOUSE_MAX_BUFFER_SIZE") do
+  Logger.warning(
+    "CLICKHOUSE_MAX_BUFFER_SIZE is deprecated, please use CLICKHOUSE_MAX_BUFFER_SIZE_BYTES instead"
+  )
+end
+
 {ch_max_buffer_size, ""} =
   config_dir
-  |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE", "10000")
+  |> get_var_from_path_or_env("CLICKHOUSE_MAX_BUFFER_SIZE_BYTES", "100000")
   |> Integer.parse()
 
 # Can be generated  with `Base.encode64(:crypto.strong_rand_bytes(32))` from
@@ -223,11 +229,7 @@ ip_geolocation_db = get_var_from_path_or_env(config_dir, "IP_GEOLOCATION_DB", ge
 geonames_source_file = get_var_from_path_or_env(config_dir, "GEONAMES_SOURCE_FILE")
 maxmind_license_key = get_var_from_path_or_env(config_dir, "MAXMIND_LICENSE_KEY")
 maxmind_edition = get_var_from_path_or_env(config_dir, "MAXMIND_EDITION", "GeoLite2-City")
-maxmind_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
-
-if System.get_env("DISABLE_AUTH") do
-  Logger.warning("DISABLE_AUTH env var is no longer supported")
-end
+persistent_cache_dir = get_var_from_path_or_env(config_dir, "PERSISTENT_CACHE_DIR")
 
 enable_email_verification =
   config_dir
@@ -285,13 +287,16 @@ secure_cookie =
   |> get_var_from_path_or_env("SECURE_COOKIE", if(is_selfhost, do: "false", else: "true"))
   |> String.to_existing_atom()
 
+license_key = get_var_from_path_or_env(config_dir, "LICENSE_KEY", "")
+
 config :plausible,
   environment: env,
   mailer_email: mailer_email,
   super_admin_user_ids: super_admin_user_ids,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
-  log_failed_login_attempts: log_failed_login_attempts
+  log_failed_login_attempts: log_failed_login_attempts,
+  license_key: license_key
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -330,21 +335,16 @@ else
     database: get_var_from_path_or_env(config_dir, "DATABASE_NAME", "plausible")
 end
 
-included_environments = if sentry_dsn, do: ["prod", "staging", "dev"], else: []
 sentry_app_version = runtime_metadata[:version] || app_version
 
 config :sentry,
   dsn: sentry_dsn,
   environment_name: env,
-  included_environments: included_environments,
   release: sentry_app_version,
   tags: %{app_version: sentry_app_version},
-  enable_source_code_context: true,
-  root_source_code_path: [File.cwd!()],
   client: Plausible.Sentry.Client,
   send_max_attempts: 1,
-  filter: Plausible.SentryFilter,
-  before_send_event: {Plausible.SentryFilter, :before_send}
+  before_send: {Plausible.SentryFilter, :before_send}
 
 config :plausible, :paddle,
   vendor_auth_code: paddle_auth_code,
@@ -354,8 +354,10 @@ config :plausible, :google,
   client_id: google_cid,
   client_secret: google_secret,
   api_url: "https://www.googleapis.com",
-  reporting_api_url: "https://analyticsreporting.googleapis.com",
-  max_buffer_size: get_int_from_path_or_env(config_dir, "GOOGLE_MAX_BUFFER_SIZE", 10_000)
+  reporting_api_url: "https://analyticsreporting.googleapis.com"
+
+config :plausible, :imported,
+  max_buffer_size: get_int_from_path_or_env(config_dir, "IMPORTED_MAX_BUFFER_SIZE", 10_000)
 
 maybe_ch_ipv6 =
   get_var_from_path_or_env(config_dir, "ECTO_CH_IPV6", "false")
@@ -382,7 +384,8 @@ config :plausible, Plausible.ClickhouseRepo,
   url: ch_db_url,
   transport_opts: ch_transport_opts,
   settings: [
-    readonly: 1
+    readonly: 1,
+    join_algorithm: "direct,parallel_hash"
   ]
 
 config :plausible, Plausible.IngestRepo,
@@ -392,7 +395,10 @@ config :plausible, Plausible.IngestRepo,
   transport_opts: ch_transport_opts,
   flush_interval_ms: ch_flush_interval_ms,
   max_buffer_size: ch_max_buffer_size,
-  pool_size: ingest_pool_size
+  pool_size: ingest_pool_size,
+  settings: [
+    materialized_views_ignore_errors: 1
+  ]
 
 config :plausible, Plausible.AsyncInsertRepo,
   queue_target: 500,
@@ -402,7 +408,8 @@ config :plausible, Plausible.AsyncInsertRepo,
   pool_size: 1,
   settings: [
     async_insert: 1,
-    wait_for_async_insert: 0
+    wait_for_async_insert: 0,
+    materialized_views_ignore_errors: 1
   ]
 
 config :plausible, Plausible.ImportDeletionRepo,
@@ -460,6 +467,20 @@ case mailer_adapter do
       retries: get_var_from_path_or_env(config_dir, "SMTP_RETRIES") || 2,
       no_mx_lookups: get_var_from_path_or_env(config_dir, "SMTP_MX_LOOKUPS_ENABLED") || true
 
+  "Bamboo.Mua" ->
+    config :plausible, Plausible.Mailer, adapter: Bamboo.Mua
+
+    if relay = get_var_from_path_or_env(config_dir, "SMTP_HOST_ADDR") do
+      port = get_int_from_path_or_env(config_dir, "SMTP_HOST_PORT", 25)
+      username = get_var_from_path_or_env(config_dir, "SMTP_USER_NAME")
+      password = get_var_from_path_or_env(config_dir, "SMTP_USER_PWD")
+
+      config :plausible, Plausible.Mailer,
+        auth: [username: username, password: password],
+        relay: relay,
+        port: port
+    end
+
   "Bamboo.LocalAdapter" ->
     config :plausible, Plausible.Mailer, adapter: Bamboo.LocalAdapter
 
@@ -500,7 +521,9 @@ cloud_cron = [
   # Daily at 15
   {"0 15 * * *", Plausible.Workers.NotifyAnnualRenewal},
   # Every midnight
-  {"0 0 * * *", Plausible.Workers.LockSites}
+  {"0 0 * * *", Plausible.Workers.LockSites},
+  # Daily at 8
+  {"0 8 * * *", Plausible.Workers.AcceptTrafficUntil}
 ]
 
 crontab = if(is_selfhost, do: base_cron, else: base_cron ++ cloud_cron)
@@ -513,8 +536,11 @@ base_queues = [
   check_stats_emails: 1,
   site_setup_emails: 1,
   clean_invitations: 1,
-  google_analytics_imports: 1,
-  domain_change_transition: 1
+  analytics_imports: 1,
+  domain_change_transition: 1,
+  check_accept_traffic_until: 1,
+  # NOTE: maybe move s3_csv_export to cloud_queues?
+  s3_csv_export: 1
 ]
 
 cloud_queues = [
@@ -538,8 +564,7 @@ cond do
         {Oban.Plugins.Pruner, max_age: thirty_days_in_seconds},
         {Oban.Plugins.Cron, crontab: if(cron_enabled, do: crontab, else: [])},
         # Rescue orphaned jobs after 2 hours
-        {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)},
-        {Oban.Plugins.Stager, interval: :timer.seconds(5)}
+        {Oban.Plugins.Lifeline, rescue_after: :timer.minutes(120)}
       ],
       queues: if(cron_enabled, do: queues, else: []),
       peer: if(cron_enabled, do: Oban.Peers.Postgres, else: false)
@@ -569,9 +594,6 @@ config :ref_inspector,
 
 config :ua_inspector,
   init: {Plausible.Release, :configure_ua_inspector}
-
-config :hammer,
-  backend: {Hammer.Backend.ETS, [expiry_ms: 60_000 * 60 * 4, cleanup_interval_ms: 60_000 * 10]}
 
 if config_env() in [:dev, :staging, :prod] do
   config :kaffy,
@@ -608,7 +630,7 @@ geo_opts =
       [
         license_key: maxmind_license_key,
         edition: maxmind_edition,
-        cache_dir: maxmind_cache_dir,
+        cache_dir: persistent_cache_dir,
         async: true
       ]
 
@@ -660,9 +682,7 @@ else
     traces_exporter: :none
 end
 
-config :tzdata,
-       :data_dir,
-       get_var_from_path_or_env(config_dir, "STORAGE_DIR", Application.app_dir(:tzdata, "priv"))
+config :tzdata, :data_dir, Path.join(persistent_cache_dir || System.tmp_dir!(), "tzdata_data")
 
 promex_disabled? =
   config_dir
@@ -688,4 +708,74 @@ if not is_selfhost do
     end
 
   config :plausible, Plausible.Site, default_ingest_threshold: site_default_ingest_threshold
+end
+
+s3_disabled? =
+  config_dir
+  |> get_var_from_path_or_env("S3_DISABLED", "true")
+  |> String.to_existing_atom()
+
+unless s3_disabled? do
+  s3_env = [
+    %{
+      name: "S3_ACCESS_KEY_ID",
+      example: "AKIAIOSFODNN7EXAMPLE"
+    },
+    %{
+      name: "S3_SECRET_ACCESS_KEY",
+      example: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    },
+    %{
+      name: "S3_REGION",
+      example: "us-east-1"
+    },
+    %{
+      name: "S3_ENDPOINT",
+      example: "https://<ACCOUNT_ID>.r2.cloudflarestorage.com"
+    },
+    %{
+      name: "S3_EXPORTS_BUCKET",
+      example: "my-csv-exports-bucket"
+    },
+    %{
+      name: "S3_IMPORTS_BUCKET",
+      example: "my-csv-imports-bucket"
+    }
+  ]
+
+  s3_env =
+    Enum.map(s3_env, fn var ->
+      Map.put(var, :value, get_var_from_path_or_env(config_dir, var.name))
+    end)
+
+  s3_missing_env = Enum.filter(s3_env, &is_nil(&1.value))
+
+  unless s3_missing_env == [] do
+    raise ArgumentError, """
+    Missing S3 configuration. Please set #{s3_missing_env |> Enum.map(& &1.name) |> Enum.join(", ")} environment variable(s):
+
+    #{s3_missing_env |> Enum.map(fn %{name: name, example: example} -> "\t#{name}=#{example}" end) |> Enum.join("\n")}
+    """
+  end
+
+  s3_env_value = fn name ->
+    s3_env |> Enum.find(&(&1.name == name)) |> Map.fetch!(:value)
+  end
+
+  config :ex_aws,
+    http_client: Plausible.S3.Client,
+    access_key_id: s3_env_value.("S3_ACCESS_KEY_ID"),
+    secret_access_key: s3_env_value.("S3_SECRET_ACCESS_KEY"),
+    region: s3_env_value.("S3_REGION")
+
+  %URI{scheme: s3_scheme, host: s3_host, port: s3_port} = URI.parse(s3_env_value.("S3_ENDPOINT"))
+
+  config :ex_aws, :s3,
+    scheme: s3_scheme <> "://",
+    host: s3_host,
+    port: s3_port
+
+  config :plausible, Plausible.S3,
+    exports_bucket: s3_env_value.("S3_EXPORTS_BUCKET"),
+    imports_bucket: s3_env_value.("S3_IMPORTS_BUCKET")
 end

@@ -8,13 +8,12 @@ defmodule Plausible.Goal do
   schema "goals" do
     field :event_name, :string
     field :page_path, :string
-    field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
 
     on_full_build do
+      field :currency, Ecto.Enum, values: Money.Currency.known_current_currencies()
       many_to_many :funnels, Plausible.Funnel, join_through: Plausible.Funnel.Step
-    end
-
-    on_small_build do
+    else
+      field :currency, :string, virtual: true, default: nil
       field :funnels, {:array, :map}, virtual: true, default: []
     end
 
@@ -23,26 +22,11 @@ defmodule Plausible.Goal do
     timestamps()
   end
 
-  def revenue?(%__MODULE__{currency: currency}) do
-    !!currency
-  end
-
-  def valid_currencies do
-    Ecto.Enum.dump_values(__MODULE__, :currency)
-  end
-
-  def currency_options do
-    options =
-      for code <- valid_currencies() do
-        {code, "#{code} - #{Cldr.Currency.display_name!(code)}"}
-      end
-
-    options
-  end
+  @fields [:id, :site_id, :event_name, :page_path] ++ on_full_build(do: [:currency], else: [])
 
   def changeset(goal, attrs \\ %{}) do
     goal
-    |> cast(attrs, [:id, :site_id, :event_name, :page_path, :currency])
+    |> cast(attrs, @fields)
     |> validate_required([:site_id])
     |> cast_assoc(:site)
     |> update_leading_slash()
@@ -93,7 +77,7 @@ defmodule Plausible.Goal do
   end
 
   defp maybe_drop_currency(changeset) do
-    if get_field(changeset, :page_path) do
+    if full_build?() and get_field(changeset, :page_path) do
       delete_change(changeset, :currency)
     else
       changeset

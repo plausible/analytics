@@ -10,6 +10,8 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
+FunWithFlags.enable(:imports_exports)
+
 user = Plausible.Factory.insert(:user, email: "user@plausible.test", password: "plausible")
 
 native_stats_range =
@@ -18,9 +20,15 @@ native_stats_range =
     Date.utc_today()
   )
 
-imported_stats_range =
+legacy_imported_stats_range =
   Date.range(
     Date.add(native_stats_range.first, -360),
+    Date.add(native_stats_range.first, -180)
+  )
+
+imported_stats_range =
+  Date.range(
+    Date.add(native_stats_range.first, -180),
     Date.add(native_stats_range.first, -1)
   )
 
@@ -39,15 +47,19 @@ site =
   Plausible.Factory.insert(:site,
     domain: "dummy.site",
     native_stats_start_at: NaiveDateTime.new!(native_stats_range.first, ~T[00:00:00]),
-    stats_start_date: NaiveDateTime.new!(imported_stats_range.first, ~T[00:00:00]),
+    stats_start_date: NaiveDateTime.new!(legacy_imported_stats_range.first, ~T[00:00:00]),
     memberships: [
       Plausible.Factory.build(:site_membership, user: user, role: :owner),
       Plausible.Factory.build(:site_membership,
-        user: Plausible.Factory.build(:user, name: "Arnold Wallaby"),
+        user: Plausible.Factory.build(:user, name: "Arnold Wallaby", password: "plausible"),
         role: :viewer
       )
     ]
   )
+
+Plausible.Factory.insert_list(29, :ip_rule, site: site)
+Plausible.Factory.insert(:country_rule, site: site, country_code: "PL")
+Plausible.Factory.insert(:country_rule, site: site, country_code: "EE")
 
 Plausible.Factory.insert(:google_auth,
   user: user,
@@ -80,7 +92,13 @@ put_random_time = fn
   date, 0 ->
     current_hour = Time.utc_now().hour
     current_minute = Time.utc_now().minute
-    random_time = Time.new!(:rand.uniform(current_hour), :rand.uniform(current_minute - 1), 0)
+
+    random_time =
+      Time.new!(
+        Enum.random(0..current_hour),
+        Enum.random(0..current_minute),
+        0
+      )
 
     date
     |> NaiveDateTime.new!(random_time)
@@ -240,13 +258,13 @@ end)
 site =
   site
   |> Plausible.Site.start_import(
-    imported_stats_range.first,
-    imported_stats_range.last,
+    legacy_imported_stats_range.first,
+    legacy_imported_stats_range.last,
     "Google Analytics"
   )
   |> Plausible.Repo.update!()
 
-imported_stats_range
+legacy_imported_stats_range
 |> Enum.flat_map(fn date ->
   Enum.flat_map(0..Enum.random(1..500), fn _ ->
     [
@@ -280,4 +298,51 @@ end)
 
 site
 |> Plausible.Site.import_success()
+|> Plausible.Repo.update!()
+
+site_import =
+  site
+  |> Plausible.Imported.SiteImport.create_changeset(user, %{
+    source: :universal_analytics,
+    start_date: imported_stats_range.first,
+    end_date: imported_stats_range.last,
+    legacy: false
+  })
+  |> Plausible.Imported.SiteImport.start_changeset()
+  |> Plausible.Repo.insert!()
+
+imported_stats_range
+|> Enum.flat_map(fn date ->
+  Enum.flat_map(0..Enum.random(1..500), fn _ ->
+    [
+      Plausible.Factory.build(:imported_visitors,
+        date: date,
+        pageviews: Enum.random(1..20),
+        visitors: Enum.random(1..20),
+        bounces: Enum.random(1..20),
+        visits: Enum.random(1..200),
+        visit_duration: Enum.random(1000..10000)
+      ),
+      Plausible.Factory.build(:imported_sources,
+        date: date,
+        source: Enum.random(["", "Facebook", "Twitter", "DuckDuckGo", "Google"]),
+        visitors: Enum.random(1..20),
+        visits: Enum.random(1..200),
+        bounces: Enum.random(1..20),
+        visit_duration: Enum.random(1000..10000)
+      ),
+      Plausible.Factory.build(:imported_pages,
+        date: date,
+        visitors: Enum.random(1..20),
+        pageviews: Enum.random(1..20),
+        exits: Enum.random(1..20),
+        time_on_page: Enum.random(1000..10000)
+      )
+    ]
+  end)
+end)
+|> then(&Plausible.TestUtils.populate_stats(site, site_import.id, &1))
+
+site_import
+|> Plausible.Imported.SiteImport.complete_changeset()
 |> Plausible.Repo.update!()

@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState } from "react"
 import ListReport from "../reports/list";
 import Combobox from '../../components/combobox'
 import * as api from '../../api'
@@ -12,12 +12,8 @@ export default function Properties(props) {
   const { site, query } = props
   const propKeyStorageName = `prop_key__${site.domain}`
   const propKeyStorageNameForGoal = `${query.filters.goal}__prop_key__${site.domain}`
-  
-  const [propKey, setPropKey] = useState(choosePropKey())
 
-  useEffect(() => {
-    setPropKey(choosePropKey())
-  }, [query.filters.goal, query.filters.props])
+  const [propKey, setPropKey] = useState(choosePropKey())
 
   function singleGoalFilterApplied() {
     const goalFilter = query.filters.goal
@@ -42,7 +38,7 @@ export default function Properties(props) {
       const storedForGoal = storage.getItem(propKeyStorageNameForGoal)
       if (storedForGoal) { return storedForGoal }
     }
-    
+
     return storage.getItem(propKeyStorageName)
   }
 
@@ -69,6 +65,7 @@ export default function Properties(props) {
     }
   }
 
+  /*global BUILD_EXTRA*/
   function renderBreakdown() {
     return (
       <ListReport
@@ -76,11 +73,11 @@ export default function Properties(props) {
         getFilterFor={getFilterFor}
         keyLabel={propKey}
         metrics={[
-          {name: 'visitors', label: 'Visitors', plot: true},
-          {name: 'events', label: 'Events', hiddenOnMobile: true},
+          { name: 'visitors', label: 'Visitors', plot: true },
+          { name: 'events', label: 'Events', hiddenOnMobile: true },
           query.filters.goal ? CR_METRIC : PERCENTAGE_METRIC,
-          {name: 'total_revenue', label: 'Revenue', hiddenOnMobile: true},
-          {name: 'average_revenue', label: 'Average', hiddenOnMobile: true}
+          BUILD_EXTRA && { name: 'total_revenue', label: 'Revenue', hiddenOnMobile: true },
+          BUILD_EXTRA && { name: 'average_revenue', label: 'Average', hiddenOnMobile: true }
         ]}
         detailsLink={url.sitePath(site, `/custom-prop-values/${propKey}`)}
         maybeHideDetails={true}
@@ -91,16 +88,18 @@ export default function Properties(props) {
     )
   }
 
-  const getFilterFor = (listItem) => { return {'props': JSON.stringify({[propKey]: escapeFilterValue(listItem.name)})} }
-  const comboboxValues = propKey ? [{value: propKey, label: propKey}] : []
+  const getFilterFor = (listItem) => ({
+    props: JSON.stringify({ ...query.filters.props, [propKey]: escapeFilterValue(listItem.name) })
+  })
+  const comboboxValues = propKey ? [{ value: propKey, label: propKey }] : []
   const boxClass = 'pl-2 pr-8 py-1 bg-transparent dark:text-gray-300 rounded-md shadow-sm border border-gray-300 dark:border-gray-500'
 
   return (
     <div className="w-full mt-4">
-        <div>
-          <Combobox isDisabled={!!query.filters.props} boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
-        </div>
-      { propKey && renderBreakdown() }
+      <div>
+        <Combobox boxClass={boxClass} fetchOptions={fetchPropKeyOptions()} singleOption={true} values={comboboxValues} onSelect={onPropKeySelect()} placeholder={'Select a property'} />
+      </div>
+      {propKey && renderBreakdown()}
     </div>
   )
 }

@@ -10,7 +10,7 @@ defmodule PlausibleWeb.Router do
     plug :fetch_live_flash
     plug :put_secure_browser_headers
     plug PlausibleWeb.Plugs.NoRobots
-    plug PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"
+    on_full_build(do: nil, else: plug(PlausibleWeb.FirstLaunchPlug, redirect_to: "/register"))
     plug PlausibleWeb.SessionTimeoutPlug, timeout_after_seconds: @two_weeks_in_seconds
     plug PlausibleWeb.AuthPlug
     plug PlausibleWeb.LastSeenPlug
@@ -73,14 +73,57 @@ defmodule PlausibleWeb.Router do
   end
 
   on_full_build do
+    scope "/crm", PlausibleWeb do
+      pipe_through :flags
+      get "/auth/user/:user_id/usage", AdminController, :usage
+    end
+  end
+
+  on_full_build do
     scope path: "/flags" do
       pipe_through :flags
       forward "/", FunWithFlags.UI.Router, namespace: "flags"
     end
   end
 
-  scope path: "/api/plugins" do
-    forward "/", PlausibleWeb.Plugins.API.Router
+  scope path: "/api/plugins", as: :plugins_api do
+    pipeline :plugins_api_auth do
+      plug(PlausibleWeb.Plugs.AuthorizePluginsAPI)
+    end
+
+    pipeline :plugins_api do
+      plug(:accepts, ["json"])
+      plug(OpenApiSpex.Plug.PutApiSpec, module: PlausibleWeb.Plugins.API.Spec)
+    end
+
+    scope "/spec" do
+      pipe_through(:plugins_api)
+      get("/openapi", OpenApiSpex.Plug.RenderSpec, [])
+      get("/swagger-ui", OpenApiSpex.Plug.SwaggerUI, path: "/api/plugins/spec/openapi")
+    end
+
+    scope "/v1/capabilities", PlausibleWeb.Plugins.API.Controllers, assigns: %{plugins_api: true} do
+      pipe_through([:plugins_api])
+      get("/", Capabilities, :index)
+    end
+
+    scope "/v1", PlausibleWeb.Plugins.API.Controllers, assigns: %{plugins_api: true} do
+      pipe_through([:plugins_api, :plugins_api_auth])
+
+      get("/shared_links", SharedLinks, :index)
+      get("/shared_links/:id", SharedLinks, :get)
+      put("/shared_links", SharedLinks, :create)
+
+      get("/goals", Goals, :index)
+      get("/goals/:id", Goals, :get)
+      put("/goals", Goals, :create)
+
+      delete("/goals/:id", Goals, :delete)
+      delete("/goals", Goals, :delete_bulk)
+
+      put("/custom_props", CustomProps, :enable)
+      delete("/custom_props", CustomProps, :disable)
+    end
   end
 
   scope "/api/stats", PlausibleWeb.Api do
@@ -125,16 +168,18 @@ defmodule PlausibleWeb.Router do
     get "/timeseries", ExternalStatsController, :timeseries
   end
 
-  scope "/api/v1/sites", PlausibleWeb.Api do
-    pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
+  on_full_build do
+    scope "/api/v1/sites", PlausibleWeb.Api do
+      pipe_through [:public_api, PlausibleWeb.AuthorizeSitesApiPlug]
 
-    post "/", ExternalSitesController, :create_site
-    put "/shared-links", ExternalSitesController, :find_or_create_shared_link
-    put "/goals", ExternalSitesController, :find_or_create_goal
-    delete "/goals/:goal_id", ExternalSitesController, :delete_goal
-    get "/:site_id", ExternalSitesController, :get_site
-    put "/:site_id", ExternalSitesController, :update_site
-    delete "/:site_id", ExternalSitesController, :delete_site
+      post "/", ExternalSitesController, :create_site
+      put "/shared-links", ExternalSitesController, :find_or_create_shared_link
+      put "/goals", ExternalSitesController, :find_or_create_goal
+      delete "/goals/:goal_id", ExternalSitesController, :delete_goal
+      get "/:site_id", ExternalSitesController, :get_site
+      put "/:site_id", ExternalSitesController, :update_site
+      delete "/:site_id", ExternalSitesController, :delete_site
+    end
   end
 
   scope "/api", PlausibleWeb do
@@ -185,6 +230,15 @@ defmodule PlausibleWeb.Router do
     post "/login", AuthController, :login
     get "/password/request-reset", AuthController, :password_reset_request_form
     post "/password/request-reset", AuthController, :password_reset_request
+    post "/2fa/setup/initiate", AuthController, :initiate_2fa_setup
+    get "/2fa/setup/verify", AuthController, :verify_2fa_setup_form
+    post "/2fa/setup/verify", AuthController, :verify_2fa_setup
+    post "/2fa/disable", AuthController, :disable_2fa
+    post "/2fa/recovery_codes", AuthController, :generate_2fa_recovery_codes
+    get "/2fa/verify", AuthController, :verify_2fa_form
+    post "/2fa/verify", AuthController, :verify_2fa
+    get "/2fa/use_recovery_code", AuthController, :verify_2fa_recovery_code_form
+    post "/2fa/use_recovery_code", AuthController, :verify_2fa_recovery_code
     get "/password/reset", AuthController, :password_reset_form
     post "/password/reset", AuthController, :password_reset
     get "/avatar/:hash", AvatarController, :avatar
@@ -215,14 +269,10 @@ defmodule PlausibleWeb.Router do
 
     get "/", PageController, :index
 
-    get "/billing/change-plan", BillingController, :change_plan_form
     get "/billing/change-plan/preview/:plan_id", BillingController, :change_plan_preview
     post "/billing/change-plan/:new_plan_id", BillingController, :change_plan
-    get "/billing/upgrade", BillingController, :upgrade
     get "/billing/choose-plan", BillingController, :choose_plan
     get "/billing/upgrade-to-enterprise-plan", BillingController, :upgrade_to_enterprise_plan
-    get "/billing/upgrade/enterprise/:plan_id", BillingController, :upgrade_enterprise_plan
-    get "/billing/change-plan/enterprise/:plan_id", BillingController, :change_enterprise_plan
     get "/billing/upgrade-success", BillingController, :upgrade_success
     get "/billing/subscription/ping", BillingController, :ping_subscription
 
@@ -276,8 +326,6 @@ defmodule PlausibleWeb.Router do
     put "/sites/:website/shared-links/:slug", SiteController, :update_shared_link
     delete "/sites/:website/shared-links/:slug", SiteController, :delete_shared_link
 
-    delete "/sites/:website/custom-domains/:id", SiteController, :delete_custom_domain
-
     get "/sites/:website/memberships/invite", Site.MembershipController, :invite_member_form
     post "/sites/:website/memberships/invite", Site.MembershipController, :invite_member
 
@@ -309,9 +357,10 @@ defmodule PlausibleWeb.Router do
     end
 
     get "/:website/settings/email-reports", SiteController, :settings_email_reports
-    get "/:website/settings/custom-domain", SiteController, :settings_custom_domain
     get "/:website/settings/danger-zone", SiteController, :settings_danger_zone
     get "/:website/settings/integrations", SiteController, :settings_integrations
+    get "/:website/settings/shields/:shield", SiteController, :settings_shields
+    get "/:website/settings/imports-exports", SiteController, :settings_imports_exports
 
     put "/:website/settings/features/visibility/:setting",
         SiteController,
@@ -324,19 +373,24 @@ defmodule PlausibleWeb.Router do
     delete "/:website", SiteController, :delete_site
     delete "/:website/stats", SiteController, :reset_stats
 
-    get "/:website/import/google-analytics/view-id",
-        SiteController,
-        :import_from_google_view_id_form
+    get "/:website/import/google-analytics/property-or-view",
+        GoogleAnalyticsController,
+        :property_or_view_form
 
-    post "/:website/import/google-analytics/view-id", SiteController, :import_from_google_view_id
+    post "/:website/import/google-analytics/property-or-view",
+         GoogleAnalyticsController,
+         :property_or_view
 
     get "/:website/import/google-analytics/user-metric",
-        SiteController,
-        :import_from_google_user_metric_notice
+        GoogleAnalyticsController,
+        :user_metric_notice
 
-    get "/:website/import/google-analytics/confirm", SiteController, :import_from_google_confirm
-    post "/:website/settings/google-import", SiteController, :import_from_google
+    get "/:website/import/google-analytics/confirm", GoogleAnalyticsController, :confirm
+    post "/:website/settings/google-import", GoogleAnalyticsController, :import
+
     delete "/:website/settings/forget-imported", SiteController, :forget_imported
+    delete "/:website/settings/forget-import/:import_id", SiteController, :forget_import
+    post "/:website/settings/export", SiteController, :export
 
     get "/:domain/export", StatsController, :csv_export
     get "/:domain/*path", StatsController, :stats

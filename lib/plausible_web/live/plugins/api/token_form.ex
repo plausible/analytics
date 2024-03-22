@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
   @moduledoc """
   Live view for the goal creation form
   """
-  use Phoenix.LiveView
+  use PlausibleWeb, live_view: :no_sentry_context
   import PlausibleWeb.Live.Components.Form
 
   alias Plausible.Repo
@@ -81,7 +81,7 @@ defmodule PlausibleWeb.Live.Plugins.API.TokenForm do
           <p class="text-sm mt-2 text-gray-500 dark:text-gray-200">
             Once created, we will not be able to show the Token again.
             Please copy the Token now and store it in a secure place.
-            <span :if={@token_description == "Wordpress"}>
+            <span :if={@token_description == "WordPress"}>
               You'll need to paste it in the settings area of the Plausible WordPress plugin.
             </span>
           </p>

@@ -20,7 +20,6 @@ defmodule Plausible.DataMigration.NumericIDs do
 
   @table_settings "SETTINGS index_granularity = 8192"
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def run(opts \\ []) do
     interactive? = Keyword.get(opts, :interactive?, true)
 

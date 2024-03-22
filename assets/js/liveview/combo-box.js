@@ -5,6 +5,7 @@ export default (id) => ({
   isOpen: false,
   id: id,
   focus: null,
+  selectionInProgress: false,
   setFocus(f) {
     this.focus = f;
   },
@@ -13,9 +14,14 @@ export default (id) => ({
       this.setFocus(this.leastFocusableIndex())
     }
   },
+  trackSubmitValueChange() {
+    this.selectionInProgress = false;
+  },
   open() {
-    this.initFocus()
-    this.isOpen = true
+    if (!this.isOpen) {
+      this.initFocus()
+      this.isOpen = true
+    }
   },
   suggestionsCount() {
     return this.$refs.suggestions?.querySelectorAll('li').length
@@ -61,7 +67,7 @@ export default (id) => ({
   focusNext() {
     const nextIndex = this.nextFocusableIndex()
 
-    if (!this.isOpen) this.open()
+    this.open()
 
     this.setFocus(nextIndex)
     this.scrollTo(nextIndex)
@@ -69,7 +75,7 @@ export default (id) => ({
   focusPrev() {
     const prevIndex = this.prevFocusableIndex()
 
-    if (!this.isOpen) this.open()
+    this.open()
 
     this.setFocus(prevIndex)
     this.scrollTo(prevIndex)

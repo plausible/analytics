@@ -40,19 +40,32 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              } in res["top_stats"]
     end
 
-    test "counts total visits", %{conn: conn, site: site} do
+    test "experimental session count", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, user_id: 3421, timestamp: ~N[2020-12-31 23:30:00]),
+        build(:pageview, user_id: @user_id, timestamp: ~N[2020-12-31 23:59:00]),
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:01:00]),
-        build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 10:00:00]),
-        build(:pageview, timestamp: ~N[2021-01-01 15:00:00])
+        build(:pageview, user_id: 2, timestamp: ~N[2020-12-31 23:59:00]),
+        build(:pageview, user_id: 2, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, user_id: 617_235, timestamp: ~N[2021-01-03 00:00:00])
       ])
 
-      conn = get(conn, "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01")
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&experimental_session_count=true"
+        )
 
       res = json_response(conn, 200)
 
-      assert %{"name" => "Total visits", "value" => 3} in res["top_stats"]
+      assert res["top_stats"] == [
+               %{"name" => "Unique visitors", "value" => 2},
+               %{"name" => "Total visits", "value" => 2},
+               %{"name" => "Total pageviews", "value" => 2},
+               %{"name" => "Views per visit", "value" => 2.0},
+               %{"name" => "Bounce rate", "value" => 0},
+               %{"name" => "Visit duration", "value" => 120}
+             ]
     end
 
     test "counts pages per visit", %{conn: conn, site: site} do
@@ -314,6 +327,42 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                |> Enum.find(&(&1["name"] == "Time on page"))
     end
 
+    test "bounce_rate is 0 when the page in filter was never a landing page", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, pathname: "/A", user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, pathname: "/", user_id: @user_id, timestamp: ~N[2021-01-01 00:10:00])
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+      path = "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&filters=#{filters}"
+
+      assert %{"name" => "Bounce rate", "value" => 0} ==
+               conn
+               |> get(path)
+               |> json_response(200)
+               |> Map.fetch!("top_stats")
+               |> Enum.find(&(&1["name"] == "Bounce rate"))
+    end
+
+    test "time_on_page is 0 when it can't be calculated", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview, pathname: "/")
+      ])
+
+      filters = Jason.encode!(%{page: "/"})
+      path = "/api/stats/#{site.domain}/top-stats?&filters=#{filters}"
+
+      assert %{"name" => "Time on page", "value" => 0} ==
+               conn
+               |> get(path)
+               |> json_response(200)
+               |> Map.fetch!("top_stats")
+               |> Enum.find(&(&1["name"] == "Time on page"))
+    end
+
     test "ignores page refresh when calculating time on page", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, user_id: @user_id, timestamp: ~N[2021-01-01 00:00:00], pathname: "/"),
@@ -374,7 +423,24 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
   describe "GET /api/stats/top-stats - with imported data" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
-    test "merges imported data into all top stat metrics except views_per_visit", %{
+    test "returns divisible metrics as 0 when no stats exist", %{
+      site: site,
+      conn: conn
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/top-stats?period=day&date=2021-01-01&with_imported=true"
+        )
+
+      res = json_response(conn, 200)
+
+      assert %{"name" => "Bounce rate", "value" => 0} in res["top_stats"]
+      assert %{"name" => "Views per visit", "value" => 0.0} in res["top_stats"]
+      assert %{"name" => "Visit duration", "value" => 0} in res["top_stats"]
+    end
+
+    test "merges imported data into all top stat metrics", %{
       conn: conn,
       site: site
     } do
@@ -405,7 +471,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
                %{"name" => "Unique visitors", "value" => 3},
                %{"name" => "Total visits", "value" => 3},
                %{"name" => "Total pageviews", "value" => 4},
-               %{"name" => "Views per visit", "value" => 1.5},
+               %{"name" => "Views per visit", "value" => 1.33},
                %{"name" => "Bounce rate", "value" => 33},
                %{"name" => "Visit duration", "value" => 303}
              ]
@@ -764,6 +830,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       assert %{"name" => "Conversion rate", "value" => 33.3} in res["top_stats"]
     end
 
+    @tag :full_build_only
     test "returns average and total when filtering by a revenue goal", %{conn: conn, site: site} do
       insert(:goal, site: site, event_name: "Payment", currency: "USD")
       insert(:goal, site: site, event_name: "AddToCart", currency: "EUR")
@@ -806,6 +873,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
              } in top_stats
     end
 
+    @tag :full_build_only
     test "returns average and total when filtering by many revenue goals with same currency", %{
       conn: conn,
       site: site
@@ -1079,7 +1147,7 @@ defmodule PlausibleWeb.Api.StatsController.TopStatsTest do
       res = json_response(conn, 200)
 
       assert %{
-               "change" => -50,
+               "change" => -33.4,
                "comparison_value" => 66.7,
                "name" => "Conversion rate",
                "value" => 33.3

@@ -1,0 +1,60 @@
+<%= form_for @conn, Routes.google_analytics_path(@conn, :import, @site.domain), [class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+  <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
+
+  <%= hidden_input(f, :access_token, value: @access_token) %>
+  <%= hidden_input(f, :refresh_token, value: @refresh_token) %>
+  <%= hidden_input(f, :expires_at, value: @expires_at) %>
+  <%= hidden_input(f, :legacy, value: @legacy) %>
+
+  <%= case @start_date do %>
+    <% {:ok, start_date} -> %>
+      <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
+        Stats from this
+        <%= if @property? do %>
+          property
+        <% else %>
+          view
+        <% end %>
+        and time period will be imported from your Google Analytics account to your Plausible dashboard
+      </div>
+
+      <div class="mt-6">
+        <%= styled_label(
+          f,
+          :property_or_view,
+          "Google Analytics #{if @property?, do: "property", else: "view"}"
+        ) %>
+        <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
+          <%= @selected_property_or_view_name %>
+        </span>
+        <%= hidden_input(f, :property_or_view,
+          readonly: "true",
+          value: @selected_property_or_view
+        ) %>
+      </div>
+      <div class="flex justify-between mt-3">
+        <div class="w-36">
+          <%= styled_label(f, :start_date, "From") %>
+          <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
+            <%= PlausibleWeb.EmailView.date_format(start_date) %>
+          </span>
+          <%= hidden_input(f, :start_date, value: start_date, readonly: "true") %>
+        </div>
+        <div class="align-middle pt-4 dark:text-gray-100">&rarr;</div>
+        <div class="w-36">
+          <%= styled_label(f, :end_date, "To") %>
+          <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
+            <%= PlausibleWeb.EmailView.date_format(@end_date) %>
+          </span>
+          <%= hidden_input(f, :end_date, value: @end_date, readonly: "true") %>
+        </div>
+      </div>
+    <% {:error, error} -> %>
+      <p class="text-gray-700 dark:text-gray-300 mt-6">
+        The following error occurred when fetching your Google Analytics data.
+      </p>
+      <p class="text-red-700 font-medium mt-3"><%= error %></p>
+  <% end %>
+
+  <%= submit("Confirm import", class: "button mt-6") %>
+<% end %>

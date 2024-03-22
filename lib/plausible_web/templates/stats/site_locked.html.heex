@@ -1,0 +1,80 @@
+<div class="w-full max-w-lg mx-auto mt-8">
+  <div class="bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-8 sm:py-6">
+      <div class="mx-auto flex items-center justify-center rounded-full bg-green-100 h-12 w-12">
+        <svg
+          class="w-6 h-6 text-green-600"
+          fill="currentColor"
+          viewBox="0 0 20 20"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+            clip-rule="evenodd"
+          >
+          </path>
+        </svg>
+      </div>
+      <h3 class="mt-6 text-center text-2xl leading-6 font-medium text-gray-900 dark:text-gray-200">
+        Dashboard locked
+      </h3>
+
+      <%= case @conn.assigns[:current_user_role] do %>
+        <% :owner -> %>
+          <div class="mt-3 text-gray-600 dark:text-gray-300 text-center">
+            <p>
+              This dashboard is locked because you don't have a valid subscription.
+              Please subscribe to the appropriate tier with the link below to access the stats again.
+            </p>
+            <p class="mt-6 text-sm text-gray-500">
+              You can check the
+              <.styled_link href={Routes.site_path(@conn, :settings_general, @site.domain)}>
+                site settings
+              </.styled_link>
+              and we're still counting the stats but your access to the dashboard is restricted.
+            </p>
+          </div>
+          <div class="mt-6 w-full text-center">
+            <.button_link href={Routes.auth_path(@conn, :user_settings)}>
+              Manage my subscription
+            </.button_link>
+          </div>
+        <% role when role in [:admin, :viewer] -> %>
+          <div class="mt-3 text-gray-600 dark:text-gray-300 text-center">
+            <p>
+              This dashboard is currently locked and cannot be accessed. The site owner
+              <b><%= @site.owner.email %></b>
+              must upgrade their subscription plan in order to
+              unlock the stats.
+            </p>
+            <div class="mt-6 text-sm text-gray-500">
+              <p>Want to pay for this site with the account you're logged in with?</p>
+              <p class="mt-1">
+                Contact <%= @site.owner.email %> and ask them to
+                <.styled_link href="https://plausible.io/docs/transfer-ownership" new_tab={true}>
+                  transfer the ownership
+                </.styled_link>
+                of the site over to you.
+              </p>
+            </div>
+          </div>
+          <div class="mt-6 w-full text-center">
+            <.button_link href={Routes.site_path(@conn, :index)}>Back to my sites</.button_link>
+          </div>
+        <% _ -> %>
+          <div class="mt-3 text-gray-600 dark:text-gray-300 text-center">
+            <p>
+              This dashboard is currently locked and cannot be accessed.
+              You can check back later or contact the site owner to unlock the stats.
+            </p>
+          </div>
+          <%= if @conn.assigns[:current_user] do %>
+            <div class="mt-6 w-full text-center">
+              <.button_link href={Routes.site_path(@conn, :index)}>Back to my sites</.button_link>
+            </div>
+          <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

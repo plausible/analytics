@@ -11,12 +11,16 @@ defimpl FunWithFlags.Actor, for: Plausible.Auth.User do
 end
 
 defmodule Plausible.Auth.User do
+  use Plausible
   use Ecto.Schema
   import Ecto.Changeset
 
   @type t() :: %__MODULE__{}
 
   @required [:email, :name, :password]
+
+  @trial_accept_traffic_until_offset_days 14
+  @susbscription_accept_traffic_until_offset_days 30
 
   schema "users" do
     field :email, :string
@@ -29,10 +33,16 @@ defmodule Plausible.Auth.User do
     field :theme, Ecto.Enum, values: [:system, :light, :dark]
     field :email_verified, :boolean
     field :previous_email, :string
+    field :accept_traffic_until, :date
+
+    # A field only used as a manual override - allow subscribing
+    # to any plan, even when exceeding its pageview limit
+    field :allow_next_upgrade_override, :boolean
 
     # Fields for TOTP authentication. See `Plausible.Auth.TOTP`.
     field :totp_enabled, :boolean, default: false
     field :totp_secret, Plausible.Auth.TOTP.EncryptedBinary
+    field :totp_token, :string
     field :totp_last_used_at, :naive_datetime
 
     embeds_one :grace_period, Plausible.Auth.GracePeriod, on_replace: :update
@@ -56,8 +66,8 @@ defmodule Plausible.Auth.User do
     |> validate_confirmation(:password, required: true)
     |> validate_password_strength()
     |> hash_password()
-    |> start_trial
-    |> set_email_verified
+    |> start_trial()
+    |> set_email_verification_status()
     |> unique_constraint(:email)
   end
 
@@ -75,7 +85,7 @@ defmodule Plausible.Auth.User do
     |> validate_email_changed()
     |> check_password()
     |> unique_constraint(:email)
-    |> set_email_verified()
+    |> set_email_verification_status()
     |> put_change(:previous_email, user.email)
   end
 
@@ -95,9 +105,32 @@ defmodule Plausible.Auth.User do
 
   def changeset(user, attrs \\ %{}) do
     user
-    |> cast(attrs, [:email, :name, :email_verified, :theme, :trial_expiry_date])
+    |> cast(attrs, [
+      :email,
+      :name,
+      :email_verified,
+      :theme,
+      :trial_expiry_date,
+      :allow_next_upgrade_override,
+      :accept_traffic_until
+    ])
     |> validate_required([:email, :name, :email_verified])
+    |> maybe_bump_accept_traffic_until()
     |> unique_constraint(:email)
+  end
+
+  defp maybe_bump_accept_traffic_until(changeset) do
+    expiry_change = get_change(changeset, :trial_expiry_date)
+
+    if expiry_change do
+      put_change(
+        changeset,
+        :accept_traffic_until,
+        Date.add(expiry_change, @trial_accept_traffic_until_offset_days)
+      )
+    else
+      changeset
+    end
   end
 
   def set_password(user, password) do
@@ -122,7 +155,12 @@ defmodule Plausible.Auth.User do
   end
 
   def start_trial(user) do
-    change(user, trial_expiry_date: trial_expiry())
+    trial_expiry = trial_expiry()
+
+    change(user,
+      trial_expiry_date: trial_expiry,
+      accept_traffic_until: Date.add(trial_expiry, @trial_accept_traffic_until_offset_days)
+    )
   end
 
   def end_trial(user) do
@@ -170,6 +208,11 @@ defmodule Plausible.Auth.User do
     Path.join(PlausibleWeb.Endpoint.url(), ["avatar/", hash])
   end
 
+  def trial_accept_traffic_until_offset_days(), do: @trial_accept_traffic_until_offset_days
+
+  def subscription_accept_traffic_until_offset_days(),
+    do: @susbscription_accept_traffic_until_offset_days
+
   defp validate_email_changed(changeset) do
     if !get_change(changeset, :email) && !changeset.errors[:email] do
       add_error(changeset, :email, "can't be the same", validation: :different_email)
@@ -209,18 +252,20 @@ defmodule Plausible.Auth.User do
   end
 
   defp trial_expiry() do
-    if Application.get_env(:plausible, :is_selfhost) do
-      Timex.today() |> Timex.shift(years: 100)
-    else
+    on_full_build do
       Timex.today() |> Timex.shift(days: 30)
+    else
+      Timex.today() |> Timex.shift(years: 100)
     end
   end
 
-  defp set_email_verified(user) do
-    if Keyword.fetch!(Application.get_env(:plausible, :selfhost), :enable_email_verification) do
+  defp set_email_verification_status(user) do
+    on_full_build do
       change(user, email_verified: false)
     else
-      change(user, email_verified: true)
+      selfhosted_config = Application.get_env(:plausible, :selfhost)
+      must_verify? = Keyword.fetch!(selfhosted_config, :enable_email_verification)
+      change(user, email_verified: not must_verify?)
     end
   end
 end

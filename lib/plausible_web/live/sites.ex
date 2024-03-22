@@ -3,10 +3,7 @@ defmodule PlausibleWeb.Live.Sites do
   LiveView for sites index.
   """
 
-  use Phoenix.LiveView
-  use PlausibleWeb.Live.Flash
-
-  alias Phoenix.LiveView.JS
+  use PlausibleWeb, :live_view
   use Phoenix.HTML
 
   import PlausibleWeb.Components.Generic
@@ -16,6 +13,7 @@ defmodule PlausibleWeb.Live.Sites do
   alias Plausible.Repo
   alias Plausible.Site
   alias Plausible.Sites
+  alias Plausible.Site.Memberships.Invitations
 
   def mount(params, %{"current_user_id" => user_id}, socket) do
     uri =
@@ -53,17 +51,10 @@ defmodule PlausibleWeb.Live.Sites do
   end
 
   def render(assigns) do
-    invitations =
-      assigns.sites.entries
-      |> Enum.filter(&(&1.entry_type == "invitation"))
-      |> Enum.flat_map(& &1.invitations)
-
-    assigns = assign(assigns, :invitations, invitations)
-
     ~H"""
     <.flash_messages flash={@flash} />
     <div
-      x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
+      x-data={"{selectedInvitation: null, invitationOpen: false, invitations: #{Enum.map(@invitations, &({&1.invitation.invitation_id, &1})) |> Enum.into(%{}) |> Jason.encode!}}"}
       x-on:keydown.escape.window="invitationOpen = false"
       class="container pt-6"
     >
@@ -250,54 +241,23 @@ defmodule PlausibleWeb.Live.Sites do
 
   def ellipsis_menu(assigns) do
     ~H"""
-    <div x-data="dropdown">
-      <a
-        x-on:click="toggle()"
-        x-ref="button"
-        x-bind:aria-expanded="open"
-        x-bind:aria-controls="$id('dropdown-button')"
-        class="absolute top-0 right-0 h-10 w-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400"
-      >
-        <Heroicons.ellipsis_vertical
-          class="absolute top-3 right-3 w-4 h-4"
-          aria-expanded="false"
-          aria-haspopup="true"
-        />
-      </a>
-
-      <div
-        x-ref="panel"
-        x-show="open"
-        x-bind:id="$id('dropdown-button')"
-        x-on:click.outside="close($refs.button)"
-        x-on:click="onPanelClick"
-        x-transition.origin.top.right
-        x-transition.duration.100ms
-        class="absolute top-7 right-3 z-10 mt-2 w-40 origin-top-right rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-        style="display: none;"
-        role="menu"
-        aria-orientation="vertical"
-        aria-label={"#{@site.domain} menu button"}
-        tabindex="-1"
-      >
+    <.dropdown>
+      <:button class="absolute top-0 right-0 h-10 w-10 rounded-md hover:cursor-pointer text-gray-400 dark:text-gray-600 hover:text-black dark:hover:text-indigo-400">
+        <Heroicons.ellipsis_vertical class="absolute top-3 right-3 w-4 h-4" />
+      </:button>
+      <:panel class="absolute top-7 right-3 z-10 mt-2 w-40 rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
         <div class="py-1 text-sm" role="none">
-          <.unstyled_link
+          <.dropdown_link
             :if={List.first(@site.memberships).role != :viewer}
-            href={"/#{URI.encode_www_form(@site.domain)}/settings"}
-            class="text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
-            role="menuitem"
-            tabindex="-1"
+            href={"/#{URI.encode_www_form(@site.domain)}/settings/general"}
           >
             <Heroicons.cog_6_tooth class="mr-3 h-5 w-5" />
             <span>Settings</span>
-          </.unstyled_link>
+          </.dropdown_link>
 
-          <button
-            type="button"
-            class="w-full text-gray-500 flex px-4 py-2 hover:bg-gray-100 hover:text-gray-800 dark:text-gray-500 dark:hover:text-gray-100 dark:hover:bg-indigo-900 cursor-pointer"
-            role="menuitem"
-            tabindex="-1"
-            x-on:click="close($refs.button)"
+          <.dropdown_link
+            href="#"
+            x-on:click.prevent
             phx-click={
               JS.hide(
                 transition: {"duration-500", "opacity-100", "opacity-0"},
@@ -316,10 +276,10 @@ defmodule PlausibleWeb.Live.Sites do
 
             <.icon_pin :if={!@site.pinned_at} class="pt-1 mr-3 h-5 w-5" />
             <span :if={!@site.pinned_at}>Pin Site</span>
-          </button>
+          </.dropdown_link>
         </div>
-      </div>
-    </div>
+      </:panel>
+    </.dropdown>
     """
   end
 
@@ -426,7 +386,7 @@ defmodule PlausibleWeb.Live.Sites do
           x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           class="inline-block align-bottom bg-white dark:bg-gray-900 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
         >
-          <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="bg-white dark:bg-gray-850 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div class="hidden sm:block absolute top-0 right-0 pt-4 pr-4">
               <button
                 x-on:click="invitationOpen = false"
@@ -446,54 +406,97 @@ defmodule PlausibleWeb.Live.Sites do
                   id="modal-title"
                 >
                   Invitation for
-                  <span x-text="selectedInvitation && selectedInvitation.site.domain"></span>
+                  <span x-text="selectedInvitation && selectedInvitation.invitation.site.domain">
+                  </span>
                 </h3>
                 <div class="mt-2">
                   <p class="text-sm text-gray-500 dark:text-gray-200">
                     You've been invited to the
-                    <span x-text="selectedInvitation && selectedInvitation.site.domain"></span>
+                    <span x-text="selectedInvitation && selectedInvitation.invitation.site.domain">
+                    </span>
                     analytics dashboard as <b
                       class="capitalize"
-                      x-text="selectedInvitation && selectedInvitation.role"
+                      x-text="selectedInvitation && selectedInvitation.invitation.role"
                     >Admin</b>.
                   </p>
                   <div
-                    x-show="selectedInvitation && selectedInvitation.role === 'owner'"
+                    x-show="selectedInvitation && !(selectedInvitation.exceeded_limits || selectedInvitation.no_plan) && selectedInvitation.invitation.role === 'owner'"
                     class="mt-2 text-sm text-gray-500 dark:text-gray-200"
                   >
                     If you accept the ownership transfer, you will be responsible for billing going forward.
-                    <div
-                      :if={is_nil(@user.trial_expiry_date) and is_nil(@user.subscription)}
-                      class="mt-4"
-                    >
-                      You will have to enter your card details immediately with no 30-day trial.
-                    </div>
-                    <div :if={Plausible.Billing.on_trial?(@user)} class="mt-4">
-                      <Heroicons.exclamation_triangle class="w-4 h-4 inline-block text-red-500" />
-                      Your 30-day free trial will end immediately and
-                      <strong>you will have to enter your card details</strong>
-                      to keep using Plausible.
-                    </div>
                   </div>
                 </div>
               </div>
             </div>
+            <.notice
+              x-show="selectedInvitation && selectedInvitation.missing_features"
+              title="Missing features"
+              class="mt-4 shadow-sm dark:shadow-none"
+            >
+              <p>
+                The site uses <span x-text="selectedInvitation && selectedInvitation.missing_features"></span>,
+                which your current subscription does not support. After accepting ownership of this site,
+                you will not be able to access them unless you
+                <.styled_link
+                  class="inline-block"
+                  href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+                >
+                  upgrade to a suitable plan
+                </.styled_link>.
+              </p>
+            </.notice>
+            <.notice
+              x-show="selectedInvitation && selectedInvitation.exceeded_limits"
+              title="Exceeded limits"
+              class="mt-4 shadow-sm dark:shadow-none"
+            >
+              <p>
+                You are unable to accept the ownership of this site because doing so would exceed the
+                <span x-text="selectedInvitation && selectedInvitation.exceeded_limits"></span>
+                of your subscription.
+                You can review your usage in the
+                <.styled_link
+                  class="inline-block"
+                  href={Routes.auth_path(PlausibleWeb.Endpoint, :user_settings)}
+                >
+                  account settings
+                </.styled_link>.
+              </p>
+              <p class="mt-3">
+                To become the owner of this site, you should either reduce your usage, or upgrade your subscription.
+              </p>
+            </.notice>
+            <.notice
+              x-show="selectedInvitation && selectedInvitation.no_plan"
+              title="No subscription"
+              class="mt-4 shadow-sm dark:shadow-none"
+            >
+              You are unable to accept the ownership of this site because your account does not have a subscription. To become the owner of this site, you should upgrade to a suitable plan.
+            </.notice>
           </div>
           <div class="bg-gray-50 dark:bg-gray-850 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700 sm:ml-3 sm:w-auto sm:text-sm"
+            <.button
+              x-show="selectedInvitation && !(selectedInvitation.exceeded_limits || selectedInvitation.no_plan)"
+              class="sm:ml-3 w-full sm:w-auto sm:text-sm"
               data-method="post"
               data-csrf={Plug.CSRFProtection.get_csrf_token()}
-              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation_id + '/accept')"
+              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/accept')"
             >
               Accept &amp; Continue
-            </button>
+            </.button>
+            <.button_link
+              x-show="selectedInvitation && (selectedInvitation.exceeded_limits || selectedInvitation.no_plan)"
+              href={Routes.billing_path(PlausibleWeb.Endpoint, :choose_plan)}
+              class="sm:ml-3 w-full sm:w-auto sm:text-sm"
+            >
+              Upgrade
+            </.button_link>
             <button
               type="button"
               class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-500 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-850 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
               data-method="post"
               data-csrf={Plug.CSRFProtection.get_csrf_token()}
-              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation_id + '/reject')"
+              x-bind:data-to="selectedInvitation && ('/sites/invitations/' + selectedInvitation.invitation.invitation_id + '/reject')"
             >
               Reject
             </button>
@@ -555,28 +558,6 @@ defmodule PlausibleWeb.Live.Sites do
 
     ~H"""
     <img src={@src} class="w-4 h-4 flex-shrink-0 mt-px" />
-    """
-  end
-
-  attr :class, :any, default: ""
-
-  def spinner(assigns) do
-    ~H"""
-    <svg
-      class={["animate-spin h-4 w-4 text-indigo-500", @class]}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4">
-      </circle>
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      >
-      </path>
-    </svg>
     """
   end
 
@@ -667,11 +648,52 @@ defmodule PlausibleWeb.Live.Sites do
         end)
       end
 
+    invitations = extract_invitations(sites.entries, assigns.user)
+
     assign(
       socket,
       sites: sites,
+      invitations: invitations,
       hourly_stats: hourly_stats
     )
+  end
+
+  defp extract_invitations(sites, user) do
+    sites
+    |> Enum.filter(&(&1.entry_type == "invitation"))
+    |> Enum.flat_map(& &1.invitations)
+    |> Enum.map(&check_limits(&1, user))
+  end
+
+  defp check_limits(%{role: :owner, site: site} = invitation, user) do
+    case Invitations.ensure_can_take_ownership(site, user) do
+      :ok ->
+        check_features(invitation, user)
+
+      {:error, :no_plan} ->
+        %{invitation: invitation, no_plan: true}
+
+      {:error, {:over_plan_limits, limits}} ->
+        limits = PlausibleWeb.TextHelpers.pretty_list(limits)
+        %{invitation: invitation, exceeded_limits: limits}
+    end
+  end
+
+  defp check_limits(invitation, _), do: %{invitation: invitation}
+
+  defp check_features(%{role: :owner, site: site} = invitation, user) do
+    case Invitations.check_feature_access(site, user, small_build?()) do
+      :ok ->
+        %{invitation: invitation}
+
+      {:error, {:missing_features, features}} ->
+        feature_names =
+          features
+          |> Enum.map(& &1.display_name())
+          |> PlausibleWeb.TextHelpers.pretty_list()
+
+        %{invitation: invitation, missing_features: feature_names}
+    end
   end
 
   defp set_filter_text(socket, filter_text) do

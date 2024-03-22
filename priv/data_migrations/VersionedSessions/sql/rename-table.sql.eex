@@ -1,0 +1,1 @@
+RENAME TABLE <%= @from %> TO <%= @to %> <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>

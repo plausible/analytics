@@ -17,6 +17,7 @@
   - "SIR"
   - "RRS"
   - "WER"
+  - "PIC"
   - ""
 - "AmigaOS":
   - "AMG"
@@ -106,6 +107,10 @@
   - "ROU"
   - "ZOR"
   - "RED"
+  - "KAL"
+  - "ORA"
+  - "VID"
+  - "TIV"
   - ""
 - "Mac":
   - "MAC"
@@ -126,6 +131,7 @@
   - "TIZ"
   - "SMG"
   - "MAE"
+  - "LUN"
 - "Symbian":
   - "SYM"
   - "SYS"

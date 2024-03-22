@@ -74,7 +74,7 @@ defmodule Plausible.Billing.FeatureTest do
   end
 
   test "Plausible.Billing.Feature.StatsAPI.check_availability/2 returns error when user trial hasn't started and was created after the business tier launch" do
-    user = insert(:user, inserted_at: ~N[2024-01-01T00:00:00], trial_expiry_date: nil)
+    user = insert(:user, trial_expiry_date: nil)
 
     assert {:error, :upgrade_required} ==
              Plausible.Billing.Feature.StatsAPI.check_availability(user)
@@ -112,10 +112,12 @@ defmodule Plausible.Billing.FeatureTest do
       {:ok, site} = unquote(mod).toggle(site)
       assert Map.get(site, unquote(property))
       assert unquote(mod).enabled?(site)
+      refute unquote(mod).opted_out?(site)
 
       {:ok, site} = unquote(mod).toggle(site)
       refute Map.get(site, unquote(property))
       refute unquote(mod).enabled?(site)
+      assert unquote(mod).opted_out?(site)
     end
 
     test "#{mod}.toggle/2 accepts an override option" do
@@ -126,11 +128,18 @@ defmodule Plausible.Billing.FeatureTest do
       refute unquote(mod).enabled?(site)
     end
 
-    test "#{mod}.toggle/2 errors when site owner does not have access to the feature" do
+    test "#{mod}.toggle/2 errors when enabling a feature the site owner does not have access to the feature" do
       user = insert(:user, subscription: build(:growth_subscription))
       site = insert(:site, [{:members, [user]}, {unquote(property), false}])
       {:error, :upgrade_required} = unquote(mod).toggle(site)
       refute unquote(mod).enabled?(site)
+    end
+
+    test "#{mod}.toggle/2 does not error when disabling a feature the site owner does not have access to" do
+      user = insert(:user, subscription: build(:growth_subscription))
+      site = insert(:site, [{:members, [user]}, {unquote(property), true}])
+      {:ok, site} = unquote(mod).toggle(site)
+      assert unquote(mod).opted_out?(site)
     end
   end
 
@@ -140,10 +149,12 @@ defmodule Plausible.Billing.FeatureTest do
     {:ok, site} = Plausible.Billing.Feature.Goals.toggle(site)
     assert Map.get(site, :conversions_enabled)
     assert Plausible.Billing.Feature.Goals.enabled?(site)
+    refute Plausible.Billing.Feature.Goals.opted_out?(site)
 
     {:ok, site} = Plausible.Billing.Feature.Goals.toggle(site)
     refute Map.get(site, :conversions_enabled)
     refute Plausible.Billing.Feature.Goals.enabled?(site)
+    assert Plausible.Billing.Feature.Goals.opted_out?(site)
   end
 
   for mod <- [Plausible.Billing.Feature.Funnels, Plausible.Billing.Feature.Props] do
@@ -151,6 +162,12 @@ defmodule Plausible.Billing.FeatureTest do
       user = insert(:user, subscription: build(:growth_subscription))
       site = insert(:site, [{:members, [user]}, {unquote(mod).toggle_field(), true}])
       refute unquote(mod).enabled?(site)
+    end
+
+    test "#{mod}.opted_out?/1 returns false when feature toggle is enabled even when user does not have access to the feature" do
+      user = insert(:user, subscription: build(:growth_subscription))
+      site = insert(:site, [{:members, [user]}, {unquote(mod).toggle_field(), true}])
+      refute unquote(mod).opted_out?(site)
     end
   end
 end

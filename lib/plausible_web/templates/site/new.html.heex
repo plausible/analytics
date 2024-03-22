@@ -2,11 +2,11 @@
   <%= form_for @changeset, "/sites", [class: "max-w-lg w-full mx-auto bg-white dark:bg-gray-800 shadow-lg rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
     <h2 class="text-xl font-black dark:text-gray-100 mb-4">Your website details</h2>
 
-    <PlausibleWeb.Components.Billing.limit_exceeded_notice
-      :if={Map.get(assigns, :is_at_limit, false)}
+    <PlausibleWeb.Components.Billing.Notice.limit_exceeded
+      :if={@site_limit_exceeded?}
       current_user={@current_user}
       billable_user={@current_user}
-      limit={Map.get(assigns, :site_limit, 0)}
+      limit={@site_limit}
       resource="sites"
     />
 
@@ -52,7 +52,7 @@
           class:
             "focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 flex-1 block w-full px-3 py-2 rounded-none rounded-r-md sm:text-sm border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300",
           placeholder: "example.com",
-          disabled: Map.get(assigns, :is_at_limit, false)
+          disabled: @site_limit_exceeded?
         ) %>
       </div>
       <%= error_tag(f, :domain) %>
@@ -71,7 +71,7 @@
           selected: "Etc/Greenwich",
           class:
             "mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-500 dark:bg-gray-900 dark:text-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md",
-          disabled: Map.get(assigns, :is_at_limit, false)
+          disabled: @site_limit_exceeded?
         ) %>
       </div>
     </div>
@@ -93,11 +93,11 @@
 
     <%= submit("Add snippet →",
       class: "button mt-4 w-full disabled:cursor-not-allowed",
-      disabled: Map.get(assigns, :is_at_limit, false)
+      disabled: @site_limit_exceeded?
     ) %>
   <% end %>
 
-  <%= if @is_first_site do %>
+  <%= if @first_site? do %>
     <div class="pt-12 pl-8 hidden md:block">
       <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 2) %>
     </div>

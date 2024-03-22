@@ -15,6 +15,15 @@ defmodule Plausible.ClickhouseEventV2 do
     field :session_id, Ch, type: "UInt64"
     field :timestamp, :naive_datetime
 
+    field :"meta.key", {:array, :string}
+    field :"meta.value", {:array, :string}
+
+    field :revenue_source_amount, Ch, type: "Nullable(Decimal64(3))"
+    field :revenue_source_currency, Ch, type: "FixedString(3)"
+    field :revenue_reporting_amount, Ch, type: "Nullable(Decimal64(3))"
+    field :revenue_reporting_currency, Ch, type: "FixedString(3)"
+
+    # Session attributes
     field :referrer, :string
     field :referrer_source, :string
     field :utm_medium, :string
@@ -33,16 +42,6 @@ defmodule Plausible.ClickhouseEventV2 do
     field :operating_system_version, Ch, type: "LowCardinality(String)"
     field :browser, Ch, type: "LowCardinality(String)"
     field :browser_version, Ch, type: "LowCardinality(String)"
-
-    field :"meta.key", {:array, :string}
-    field :"meta.value", {:array, :string}
-
-    field :revenue_source_amount, Ch, type: "Nullable(Decimal64(3))"
-    field :revenue_source_currency, Ch, type: "FixedString(3)"
-    field :revenue_reporting_amount, Ch, type: "Nullable(Decimal64(3))"
-    field :revenue_reporting_currency, Ch, type: "FixedString(3)"
-
-    field :transferred_from, :string
   end
 
   def new(attrs) do
@@ -56,30 +55,13 @@ defmodule Plausible.ClickhouseEventV2 do
         :pathname,
         :user_id,
         :timestamp,
-        :operating_system,
-        :operating_system_version,
-        :browser,
-        :browser_version,
-        :referrer,
-        :referrer_source,
-        :utm_medium,
-        :utm_source,
-        :utm_campaign,
-        :utm_content,
-        :utm_term,
-        :country_code,
-        :subdivision1_code,
-        :subdivision2_code,
-        :city_geoname_id,
-        :screen_size,
         :"meta.key",
         :"meta.value",
         :revenue_source_amount,
         :revenue_source_currency,
         :revenue_reporting_amount,
         :revenue_reporting_currency
-      ],
-      empty_values: [nil, ""]
+      ]
     )
     |> validate_required([:name, :site_id, :hostname, :pathname, :user_id, :timestamp])
   end

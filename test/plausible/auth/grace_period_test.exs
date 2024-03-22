@@ -14,7 +14,6 @@ defmodule Plausible.Auth.GracePeriodTest do
 
     grace_period = %Plausible.Auth.GracePeriod{
       end_date: yesterday,
-      allowance_required: 100,
       is_over: false
     }
 
@@ -28,7 +27,6 @@ defmodule Plausible.Auth.GracePeriodTest do
 
     grace_period = %Plausible.Auth.GracePeriod{
       end_date: tomorrow,
-      allowance_required: 100,
       is_over: false
     }
 
@@ -50,7 +48,6 @@ defmodule Plausible.Auth.GracePeriodTest do
 
     grace_period = %Plausible.Auth.GracePeriod{
       end_date: yesterday,
-      allowance_required: 100,
       is_over: true
     }
 
@@ -64,7 +61,6 @@ defmodule Plausible.Auth.GracePeriodTest do
 
     grace_period = %Plausible.Auth.GracePeriod{
       end_date: tomorrow,
-      allowance_required: 100,
       is_over: false
     }
 
@@ -75,7 +71,7 @@ defmodule Plausible.Auth.GracePeriodTest do
 
   test "start_manual_lock_changeset/1 creates an active grace period" do
     user = build(:user)
-    changeset = Plausible.Auth.GracePeriod.start_manual_lock_changeset(user, 1)
+    changeset = Plausible.Auth.GracePeriod.start_manual_lock_changeset(user)
     user = Ecto.Changeset.apply_changes(changeset)
 
     assert Plausible.Auth.GracePeriod.active?(user)
@@ -84,7 +80,7 @@ defmodule Plausible.Auth.GracePeriodTest do
 
   test "start_changeset/1 creates an active grace period" do
     user = build(:user)
-    changeset = Plausible.Auth.GracePeriod.start_changeset(user, 1)
+    changeset = Plausible.Auth.GracePeriod.start_changeset(user)
     user = Ecto.Changeset.apply_changes(changeset)
 
     assert Plausible.Auth.GracePeriod.active?(user)
@@ -93,7 +89,7 @@ defmodule Plausible.Auth.GracePeriodTest do
 
   test "remove_changeset/1 removes the active grace period" do
     user = build(:user)
-    start_changeset = Plausible.Auth.GracePeriod.start_changeset(user, 1)
+    start_changeset = Plausible.Auth.GracePeriod.start_changeset(user)
     user = Ecto.Changeset.apply_changes(start_changeset)
 
     remove_changeset = Plausible.Auth.GracePeriod.remove_changeset(user)

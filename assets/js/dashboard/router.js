@@ -52,7 +52,7 @@ export default function Router({ site, loggedIn, currentUserRole }) {
             <ExitPagesModal site={site} />
           </Route>
           <Route path="/:domain/countries">
-            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filter={{ country: 'code', country_labels: 'name' }} keyLabel="Country" renderIcon={renderCountryIcon} />
+            <ModalTable title="Top countries" site={site} endpoint={url.apiPath(site, '/countries')} filter={{ country: 'code', country_labels: 'name' }} keyLabel="Country" renderIcon={renderCountryIcon} showPercentage={true}/>
           </Route>
           <Route path="/:domain/regions">
             <ModalTable title="Top regions" site={site} endpoint={url.apiPath(site, '/regions')} filter={{ region: 'code', region_labels: 'name' }} keyLabel="Region" renderIcon={renderRegionIcon} />

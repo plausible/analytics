@@ -1,10 +1,12 @@
 defmodule Plausible.Goals do
   use Plausible
   use Plausible.Repo
+  use Plausible.Funnel.Const
+
+  import Ecto.Query
+
   alias Plausible.Goal
   alias Ecto.Multi
-
-  use Plausible.Funnel.Const
 
   @spec create(Plausible.Site.t(), map(), Keyword.t()) ::
           {:ok, Goal.t()} | {:error, Ecto.Changeset.t()} | {:error, :upgrade_required}
@@ -15,15 +17,17 @@ defmodule Plausible.Goals do
   refreshed by the sites cache, as revenue goals are used during ingestion.
   """
   def create(site, params, opts \\ []) do
-    now = Keyword.get(opts, :now, DateTime.utc_now())
     upsert? = Keyword.get(opts, :upsert?, false)
 
     Repo.transaction(fn ->
       case insert_goal(site, params, upsert?) do
         {:ok, :insert, goal} ->
-          # credo:disable-for-next-line Credo.Check.Refactor.Nesting
-          if Goal.revenue?(goal) do
-            Plausible.Site.Cache.touch_site!(site, now)
+          on_full_build do
+            now = Keyword.get(opts, :now, DateTime.utc_now())
+            # credo:disable-for-next-line Credo.Check.Refactor.Nesting
+            if Plausible.Goal.Revenue.revenue?(goal) do
+              Plausible.Site.Cache.touch_site!(site, now)
+            end
           end
 
           Repo.preload(goal, :site)
@@ -118,22 +122,13 @@ defmodule Plausible.Goals do
   end
 
   def delete(id, site_id) do
-    on_full_build do
-      goal_query =
-        from(g in Goal,
-          where: g.id == ^id,
-          where: g.site_id == ^site_id,
-          preload: [funnels: :steps]
-        )
-    end
+    goal_query =
+      from(g in Goal,
+        where: g.id == ^id,
+        where: g.site_id == ^site_id
+      )
 
-    on_small_build do
-      goal_query =
-        from(g in Goal,
-          where: g.id == ^id,
-          where: g.site_id == ^site_id
-        )
-    end
+    goal_query = on_full_build(do: preload(goal_query, funnels: :steps), else: goal_query)
 
     result =
       Multi.new()

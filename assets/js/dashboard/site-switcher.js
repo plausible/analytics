@@ -164,7 +164,9 @@ export default class SiteSwitcher extends React.Component {
         <React.Fragment>
           <div className="py-1">
             <a
-              href={`/${encodeURIComponent(this.props.site.domain)}/settings`}
+              href={`/${encodeURIComponent(
+                this.props.site.domain
+              )}/settings/general`}
               className="group flex items-center px-4 py-2 md:text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-100 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-900 dark:focus:text-gray-100"
               role="menuitem"
             >

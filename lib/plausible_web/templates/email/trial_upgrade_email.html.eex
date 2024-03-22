@@ -6,7 +6,7 @@ This is more than our standard plans, so please reply back to this email to get 
 <% else %>
 Based on that we recommend you select a <%= @suggested_plan.volume %>/mo plan.
 <br /><br />
-<%= link("Upgrade now", to: plausible_url() <> Plausible.Billing.upgrade_route_for(@user)) %>
+<%= link("Upgrade now", to: PlausibleWeb.Router.Helpers.billing_url(PlausibleWeb.Endpoint, :choose_plan)) %>
 <br /><br />
 Have a question, feedback or need some guidance? Just reply to this email to get in touch!
 <% end %>

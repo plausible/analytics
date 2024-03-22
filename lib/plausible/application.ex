@@ -2,32 +2,81 @@ defmodule Plausible.Application do
   @moduledoc false
 
   use Application
+  use Plausible
 
   require Logger
 
   def start(_type, _args) do
+    on_full_build(do: Plausible.License.ensure_valid_license())
+
     children = [
+      Plausible.Cache.Stats,
       Plausible.Repo,
       Plausible.ClickhouseRepo,
       Plausible.IngestRepo,
       Plausible.AsyncInsertRepo,
       Plausible.ImportDeletionRepo,
+      {Plausible.RateLimit, clean_period: :timer.minutes(10)},
       Plausible.Ingestion.Counters,
       {Finch, name: Plausible.Finch, pools: finch_pool_config()},
       {Phoenix.PubSub, name: Plausible.PubSub},
       Plausible.Session.Salts,
-      Plausible.Event.WriteBuffer,
-      Plausible.Session.WriteBuffer,
+      Supervisor.child_spec(Plausible.Event.WriteBuffer, id: Plausible.Event.WriteBuffer),
+      Supervisor.child_spec(Plausible.Session.WriteBuffer, id: Plausible.Session.WriteBuffer),
       ReferrerBlocklist,
-      Supervisor.child_spec({Cachex, name: :user_agents, limit: 10_000, stats: true},
-        id: :cachex_user_agents
+      Plausible.Cache.Adapter.child_spec(:user_agents, :cache_user_agents,
+        ttl_check_interval: :timer.seconds(5),
+        global_ttl: :timer.minutes(60)
       ),
-      Supervisor.child_spec({Cachex, name: :sessions, limit: nil, stats: true},
-        id: :cachex_sessions
+      Plausible.Cache.Adapter.child_spec(:sessions, :cache_sessions,
+        ttl_check_interval: :timer.seconds(1),
+        global_ttl: :timer.minutes(30)
       ),
-      {Plausible.Site.Cache, []},
-      {Plausible.Site.Cache.Warmer.All, []},
-      {Plausible.Site.Cache.Warmer.RecentlyUpdated, []},
+      {Plausible.Site.Cache, ttl_check_interval: false},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Site.Cache.All,
+         cache_impl: Plausible.Site.Cache,
+         interval: :timer.minutes(15) + Enum.random(1..:timer.seconds(10)),
+         warmer_fn: :refresh_all
+       ]},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Site.Cache.RecentlyUpdated,
+         cache_impl: Plausible.Site.Cache,
+         interval: :timer.seconds(30),
+         warmer_fn: :refresh_updated_recently
+       ]},
+      {Plausible.Shield.IPRuleCache, ttl_check_interval: false},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Shield.IPRuleCache.All,
+         cache_impl: Plausible.Shield.IPRuleCache,
+         interval: :timer.minutes(3) + Enum.random(1..:timer.seconds(10)),
+         warmer_fn: :refresh_all
+       ]},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Shield.IPRuleCache.RecentlyUpdated,
+         cache_impl: Plausible.Shield.IPRuleCache,
+         interval: :timer.seconds(35),
+         warmer_fn: :refresh_updated_recently
+       ]},
+      {Plausible.Shield.CountryRuleCache, ttl_check_interval: false},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Shield.CountryRuleCache.All,
+         cache_impl: Plausible.Shield.CountryRuleCache,
+         interval: :timer.minutes(3) + Enum.random(1..:timer.seconds(10)),
+         warmer_fn: :refresh_all
+       ]},
+      {Plausible.Cache.Warmer,
+       [
+         child_name: Plausible.Shield.CountryRuleCache.RecentlyUpdated,
+         cache_impl: Plausible.Shield.CountryRuleCache,
+         interval: :timer.seconds(35),
+         warmer_fn: :refresh_updated_recently
+       ]},
       {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
       PlausibleWeb.Endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
@@ -73,10 +122,10 @@ defmodule Plausible.Application do
 
   defp maybe_add_sentry_pool(pool_config) do
     case Sentry.Config.dsn() do
-      dsn when is_binary(dsn) ->
-        Map.put(pool_config, dsn, size: 50)
+      {"http" <> _rest = url, _, _} ->
+        Map.put(pool_config, url, size: 50)
 
-      _ ->
+      nil ->
         pool_config
     end
   end
@@ -120,16 +169,6 @@ defmodule Plausible.Application do
       &ObanErrorReporter.handle_event/4,
       %{}
     )
-  end
-
-  def report_cache_stats() do
-    case Cachex.stats(:user_agents) do
-      {:ok, stats} ->
-        Logger.info("User agent cache stats: #{inspect(stats)}")
-
-      e ->
-        IO.puts("Unable to show cache stats: #{inspect(e)}")
-    end
   end
 
   defp setup_opentelemetry() do

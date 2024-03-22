@@ -2,9 +2,9 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
   @moduledoc """
   LiveView allowing listing, creating and revoking Plugins API tokens.
   """
-  use Phoenix.LiveView
+
+  use PlausibleWeb, :live_view
   use Phoenix.HTML
-  use PlausibleWeb.Live.Flash
 
   alias Plausible.Sites
   alias Plausible.Plugins.API.Tokens
@@ -27,7 +27,7 @@ defmodule PlausibleWeb.Live.Plugins.API.Settings do
      assign(socket,
        domain: domain,
        add_token?: not is_nil(session["new_token"]),
-       token_description: String.capitalize(session["new_token"] || ""),
+       token_description: session["new_token"] || "",
        current_user_id: user_id
      )}
   end

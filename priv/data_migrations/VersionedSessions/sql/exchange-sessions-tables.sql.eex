@@ -1,0 +1,1 @@
+EXCHANGE TABLES sessions_v2_tmp_versioned AND sessions_v2 <%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>

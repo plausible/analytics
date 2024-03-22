@@ -30,4 +30,18 @@ defmodule PlausibleWeb.TextHelpers do
 
     "#{rest_string} and #{last_string}"
   end
+
+  def pretty_list(list) do
+    list
+    |> Enum.map(&String.replace("#{&1}", "_", " "))
+    |> pretty_join()
+  end
+
+  def format_date_range(date_range) do
+    "#{format_date(date_range.first)} - #{format_date(date_range.last)}"
+  end
+
+  def format_date(date) do
+    Timex.format!(date, "{Mshort} {D}, {YYYY}")
+  end
 end

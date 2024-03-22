@@ -38,22 +38,6 @@ defmodule Plausible.Billing.PlansTest do
       |> assert_generation(4)
     end
 
-    test "growth_plans_for/1 returns v3 plans for pre business tier trials only if their trial is active or expired less than 10 days ago" do
-      trial_start = ~D[2023-10-27]
-      trial_expiry = Timex.shift(trial_start, days: 30)
-      expiry_datetime = Timex.to_datetime(trial_expiry)
-
-      user = insert(:user, trial_expiry_date: trial_expiry)
-
-      now1 = Timex.shift(expiry_datetime, days: -1)
-      now2 = Timex.shift(expiry_datetime, days: 10)
-      now3 = Timex.shift(expiry_datetime, days: 11)
-
-      Plans.growth_plans_for(user, now1) |> assert_generation(3)
-      Plans.growth_plans_for(user, now2) |> assert_generation(3)
-      Plans.growth_plans_for(user, now3) |> assert_generation(4)
-    end
-
     test "growth_plans_for/1 returns v4 plans for expired legacy subscriptions" do
       subscription =
         build(:subscription,
@@ -68,7 +52,7 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "growth_plans_for/1 shows v4 plans for everyone else" do
-      insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])
+      insert(:user)
       |> Plans.growth_plans_for()
       |> assert_generation(4)
     end
@@ -114,22 +98,6 @@ defmodule Plausible.Billing.PlansTest do
       |> assert_generation(4)
     end
 
-    test "business_plans_for/1 returns v3 plans for pre business tier trials only if their trial is active or expired less than 10 days ago" do
-      trial_start = ~D[2023-10-27]
-      trial_expiry = Timex.shift(trial_start, days: 30)
-      expiry_datetime = Timex.to_datetime(trial_expiry)
-
-      user = insert(:user, trial_expiry_date: trial_expiry)
-
-      now1 = Timex.shift(expiry_datetime, days: -1)
-      now2 = Timex.shift(expiry_datetime, days: 10)
-      now3 = Timex.shift(expiry_datetime, days: 11)
-
-      Plans.business_plans_for(user, now1) |> assert_generation(3)
-      Plans.business_plans_for(user, now2) |> assert_generation(3)
-      Plans.business_plans_for(user, now3) |> assert_generation(4)
-    end
-
     test "business_plans_for/1 returns v4 plans for expired legacy subscriptions" do
       subscription =
         build(:subscription,
@@ -144,7 +112,7 @@ defmodule Plausible.Billing.PlansTest do
     end
 
     test "business_plans_for/1 returns v4 business plans for everyone else" do
-      user = insert(:user, inserted_at: ~U[2024-01-01T00:00:00Z])
+      user = insert(:user)
       business_plans = Plans.business_plans_for(user)
 
       assert Enum.all?(business_plans, &(&1.kind == :business))
@@ -318,14 +286,14 @@ defmodule Plausible.Billing.PlansTest do
 
   describe "suggest_tier/1" do
     test "suggests Business when user has used a premium feature" do
-      user = insert(:user, inserted_at: ~N[2024-01-01 10:00:00])
+      user = insert(:user)
       insert(:api_key, user: user)
 
       assert Plans.suggest_tier(user) == :business
     end
 
     test "suggests Growth when no premium features used" do
-      user = insert(:user, inserted_at: ~N[2024-01-01 10:00:00])
+      user = insert(:user)
       site = insert(:site, members: [user])
       insert(:goal, site: site, event_name: "goals_is_not_premium")
 
@@ -339,6 +307,7 @@ defmodule Plausible.Billing.PlansTest do
       assert Plans.suggest_tier(user) == :growth
     end
 
+    @tag :full_build_only
     test "suggests Business tier for a user who used the Revenue Goals, even when they signed up before Business tier release" do
       user = insert(:user, inserted_at: ~N[2023-10-25 10:00:00])
       site = insert(:site, members: [user])

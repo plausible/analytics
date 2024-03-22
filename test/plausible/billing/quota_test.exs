@@ -2,10 +2,11 @@ defmodule Plausible.Billing.QuotaTest do
   use Plausible.DataCase, async: true
   use Plausible
   alias Plausible.Billing.{Quota, Plans}
-  alias Plausible.Billing.Feature.{Goals, RevenueGoals, Props, StatsAPI}
+  alias Plausible.Billing.Feature.{Goals, Props, StatsAPI}
 
   on_full_build do
     alias Plausible.Billing.Feature.Funnels
+    alias Plausible.Billing.Feature.RevenueGoals
   end
 
   @legacy_plan_id "558746"
@@ -13,8 +14,11 @@ defmodule Plausible.Billing.QuotaTest do
   @v2_plan_id "654177"
   @v3_plan_id "749342"
   @v3_business_plan_id "857481"
+  @v4_1m_plan_id "857101"
 
   describe "site_limit/1" do
+    @describetag :full_build_only
+
     test "returns 50 when user is on an old plan" do
       user_on_v1 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
       user_on_v2 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
@@ -30,40 +34,22 @@ defmodule Plausible.Billing.QuotaTest do
       assert 50 == Quota.site_limit(user)
     end
 
-    test "returns unlimited when user is on an enterprise plan" do
+    test "returns the configured site limit for enterprise plan" do
       user = insert(:user)
 
-      enterprise_plan =
-        insert(:enterprise_plan,
-          user_id: user.id,
-          monthly_pageview_limit: 100_000,
-          site_limit: 500
-        )
+      enterprise_plan = insert(:enterprise_plan, user_id: user.id, site_limit: 500)
+      insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
 
-      _subscription =
-        insert(:subscription, user_id: user.id, paddle_plan_id: enterprise_plan.paddle_plan_id)
-
-      assert :unlimited == Quota.site_limit(user)
+      assert enterprise_plan.site_limit == Quota.site_limit(user)
     end
 
     test "returns 10 when user in on trial" do
       user =
         insert(:user,
-          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
-          inserted_at: ~U[2024-01-01T00:00:00Z]
+          trial_expiry_date: Timex.shift(Timex.now(), days: 7)
         )
 
       assert 10 == Quota.site_limit(user)
-    end
-
-    test "returns 50 when user in on trial but registered before the business tier was live" do
-      user =
-        insert(:user,
-          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
-          inserted_at: ~U[2023-10-01T00:00:00Z]
-        )
-
-      assert 50 == Quota.site_limit(user)
     end
 
     test "returns the subscription limit for enterprise users who have not paid yet" do
@@ -80,32 +66,10 @@ defmodule Plausible.Billing.QuotaTest do
       user =
         insert(:user,
           enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
-          subscription: nil,
-          inserted_at: ~U[2024-01-01T00:00:00Z]
+          subscription: nil
         )
 
       assert 10 == Quota.site_limit(user)
-    end
-
-    test "is unlimited for enterprise customers" do
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: "123321"),
-          subscription: build(:subscription, paddle_plan_id: "123321")
-        )
-
-      assert :unlimited == Quota.site_limit(user)
-    end
-
-    test "is unlimited for enterprise customers who are due to change a plan" do
-      user =
-        insert(:user,
-          enterprise_plan: build(:enterprise_plan, paddle_plan_id: "old-paddle-plan-id"),
-          subscription: build(:subscription, paddle_plan_id: "old-paddle-plan-id")
-        )
-
-      insert(:enterprise_plan, user_id: user.id, paddle_plan_id: "new-paddle-plan-id")
-      assert :unlimited == Quota.site_limit(user)
     end
   end
 
@@ -136,29 +100,108 @@ defmodule Plausible.Billing.QuotaTest do
     end
   end
 
-  describe "exceeded_limits/2" do
-    test "returns limits that are exceeded" do
+  describe "ensure_within_plan_limits/2" do
+    test "returns :ok when site and team member limits are reached but not exceeded" do
       usage = %{
-        monthly_pageviews: 10_001,
-        team_members: 2,
-        sites: 51
+        monthly_pageviews: %{last_30_days: %{total: 1}},
+        team_members: 3,
+        sites: 10
       }
 
-      plan = Plans.find(@v3_plan_id)
+      plan = Plans.find(@v4_1m_plan_id)
 
-      assert Quota.exceeded_limits(usage, plan) == [:monthly_pageview_limit, :site_limit]
+      assert Quota.ensure_within_plan_limits(usage, plan) == :ok
     end
 
-    test "if limits are reached, they're not exceeded" do
+    test "returns all exceeded limits" do
       usage = %{
-        monthly_pageviews: 10_000,
+        monthly_pageviews: %{last_30_days: %{total: 1_150_001}},
+        team_members: 4,
+        sites: 11
+      }
+
+      plan = Plans.find(@v4_1m_plan_id)
+
+      {:error, {:over_plan_limits, exceeded_limits}} =
+        Quota.ensure_within_plan_limits(usage, plan)
+
+      assert :monthly_pageview_limit in exceeded_limits
+      assert :team_member_limit in exceeded_limits
+      assert :site_limit in exceeded_limits
+    end
+
+    test "can skip checking the pageview limit" do
+      usage = %{
+        monthly_pageviews: %{last_30_days: %{total: 1_150_001}},
         team_members: 2,
-        sites: 50
+        sites: 8
+      }
+
+      plan = Plans.find(@v4_1m_plan_id)
+
+      assert :ok = Quota.ensure_within_plan_limits(usage, plan, ignore_pageview_limit: true)
+    end
+
+    test "by the last 30 days usage, pageview limit is exceeded when more than 10% over the limit" do
+      usage_within_pageview_limit = %{
+        monthly_pageviews: %{last_30_days: %{total: 1_100_000}},
+        team_members: 1,
+        sites: 1
+      }
+
+      usage_over_pageview_limit = %{
+        monthly_pageviews: %{last_30_days: %{total: 1_100_001}},
+        team_members: 1,
+        sites: 1
+      }
+
+      plan = Plans.find(@v4_1m_plan_id)
+
+      assert Quota.ensure_within_plan_limits(usage_within_pageview_limit, plan) == :ok
+
+      assert Quota.ensure_within_plan_limits(usage_over_pageview_limit, plan) ==
+               {:error, {:over_plan_limits, [:monthly_pageview_limit]}}
+    end
+
+    test "by billing cycles usage, pageview limit is exceeded when last two billing cycles exceed by 10%" do
+      usage_within_pageview_limit = %{
+        monthly_pageviews: %{penultimate_cycle: %{total: 11_000}, last_cycle: %{total: 10_999}},
+        team_members: 1,
+        sites: 1
+      }
+
+      usage_over_pageview_limit = %{
+        monthly_pageviews: %{penultimate_cycle: %{total: 11_000}, last_cycle: %{total: 11_000}},
+        team_members: 1,
+        sites: 1
       }
 
       plan = Plans.find(@v3_plan_id)
 
-      assert Quota.exceeded_limits(usage, plan) == []
+      assert Quota.ensure_within_plan_limits(usage_within_pageview_limit, plan) == :ok
+
+      assert Quota.ensure_within_plan_limits(usage_over_pageview_limit, plan) ==
+               {:error, {:over_plan_limits, [:monthly_pageview_limit]}}
+    end
+
+    test "returns error with exceeded limits for enterprise plans" do
+      user = insert(:user)
+
+      usage = %{
+        monthly_pageviews: %{penultimate_cycle: %{total: 1}, last_cycle: %{total: 1}},
+        team_members: 1,
+        sites: 2
+      }
+
+      enterprise_plan =
+        insert(:enterprise_plan,
+          user: user,
+          paddle_plan_id: "whatever",
+          site_limit: 1
+        )
+
+      assert Quota.ensure_within_plan_limits(usage, enterprise_plan) ==
+               {:error, {:over_plan_limits, [:site_limit]}}
     end
   end
 
@@ -198,52 +241,6 @@ defmodule Plausible.Billing.QuotaTest do
       subscription = insert(:subscription, user_id: user.id, paddle_plan_id: "pending-enterprise")
 
       assert Quota.monthly_pageview_limit(subscription) == :unlimited
-    end
-  end
-
-  describe "monthly_pageview_usage/1" do
-    test "is 0 with no events" do
-      user = insert(:user)
-
-      assert Quota.monthly_pageview_usage(user) == 0
-    end
-
-    test "counts the total number of events from all sites the user owns" do
-      user = insert(:user)
-      site1 = insert(:site, members: [user])
-      site2 = insert(:site, members: [user])
-
-      populate_stats(site1, [
-        build(:pageview),
-        build(:pageview)
-      ])
-
-      populate_stats(site2, [
-        build(:pageview),
-        build(:event, name: "custom events")
-      ])
-
-      assert Quota.monthly_pageview_usage(user) == 4
-    end
-
-    test "only counts usage from sites where the user is the owner" do
-      user = insert(:user)
-
-      insert(:site,
-        domain: "site-with-no-views.com",
-        memberships: [
-          build(:site_membership, user: user, role: :owner)
-        ]
-      )
-
-      insert(:site,
-        domain: "test-site.com",
-        memberships: [
-          build(:site_membership, user: user, role: :admin)
-        ]
-      )
-
-      assert Quota.monthly_pageview_usage(user) == 0
     end
   end
 
@@ -363,9 +360,33 @@ defmodule Plausible.Billing.QuotaTest do
 
       assert Quota.team_member_usage(me) == 0
     end
+
+    test "excludes specific emails from limit calculation" do
+      me = insert(:user)
+      member = insert(:user)
+
+      site_i_own =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: me, role: :owner),
+            build(:site_membership, user: member, role: :admin)
+          ]
+        )
+
+      insert(:invitation, site: site_i_own, inviter: me)
+      insert(:invitation, site: site_i_own, inviter: member)
+      invitation = insert(:invitation, site: site_i_own, inviter: me, email: "foo@example.com")
+
+      assert Quota.team_member_usage(me) == 4
+      assert Quota.team_member_usage(me, exclude_emails: "arbitrary@example.com") == 4
+      assert Quota.team_member_usage(me, exclude_emails: member.email) == 3
+      assert Quota.team_member_usage(me, exclude_emails: invitation.email) == 3
+      assert Quota.team_member_usage(me, exclude_emails: [member.email, invitation.email]) == 2
+    end
   end
 
   describe "team_member_limit/1" do
+    @describetag :full_build_only
     test "returns unlimited when user is on an old plan" do
       user_on_v1 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
       user_on_v2 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
@@ -384,21 +405,10 @@ defmodule Plausible.Billing.QuotaTest do
     test "returns 5 when user in on trial" do
       user =
         insert(:user,
-          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
-          inserted_at: ~U[2024-01-01T00:00:00Z]
+          trial_expiry_date: Timex.shift(Timex.now(), days: 7)
         )
 
       assert 3 == Quota.team_member_limit(user)
-    end
-
-    test "returns unlimited when user in on trial but registered before the business tier was live" do
-      user =
-        insert(:user,
-          trial_expiry_date: Timex.shift(Timex.now(), days: 7),
-          inserted_at: ~U[2023-10-01T00:00:00Z]
-        )
-
-      assert :unlimited == Quota.team_member_limit(user)
     end
 
     test "returns the enterprise plan limit" do
@@ -460,15 +470,15 @@ defmodule Plausible.Billing.QuotaTest do
         assert [Funnels] == Quota.features_usage(site)
         assert [Funnels] == Quota.features_usage(user)
       end
-    end
 
-    test "returns [RevenueGoals] when user/site uses revenue goals" do
-      user = insert(:user)
-      site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
-      insert(:goal, currency: :USD, site: site, event_name: "Purchase")
+      test "returns [RevenueGoals] when user/site uses revenue goals" do
+        user = insert(:user)
+        site = insert(:site, memberships: [build(:site_membership, user: user, role: :owner)])
+        insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
-      assert [RevenueGoals] == Quota.features_usage(site)
-      assert [RevenueGoals] == Quota.features_usage(user)
+        assert [RevenueGoals] == Quota.features_usage(site)
+        assert [RevenueGoals] == Quota.features_usage(user)
+      end
     end
 
     test "returns [StatsAPI] when user has a stats api key" do
@@ -512,6 +522,13 @@ defmodule Plausible.Billing.QuotaTest do
   end
 
   describe "allowed_features_for/1" do
+    on_full_build do
+      test "users with expired trials have no access to subscription features" do
+        user = insert(:user, trial_expiry_date: ~D[2023-01-01])
+        assert [Goals] == Quota.allowed_features_for(user)
+      end
+    end
+
     test "returns all grandfathered features when user is on an old plan" do
       user_on_v1 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v1_plan_id))
       user_on_v2 = insert(:user, subscription: build(:subscription, paddle_plan_id: @v2_plan_id))
@@ -586,6 +603,263 @@ defmodule Plausible.Billing.QuotaTest do
 
       insert(:enterprise_plan, user_id: user.id, paddle_plan_id: "new-paddle-plan-id")
       assert [Plausible.Billing.Feature.StatsAPI] == Quota.allowed_features_for(user)
+    end
+  end
+
+  describe "monthly_pageview_usage/2" do
+    test "returns empty usage for user without subscription and without any sites" do
+      user =
+        insert(:user)
+        |> Plausible.Users.with_subscription()
+
+      assert %{
+               last_30_days: %{
+                 total: 0,
+                 custom_events: 0,
+                 pageviews: 0,
+                 date_range: date_range
+               }
+             } = Quota.monthly_pageview_usage(user)
+
+      assert date_range.last == Date.utc_today()
+      assert Date.compare(date_range.first, date_range.last) == :lt
+    end
+
+    test "returns usage for user without subscription with a site" do
+      user =
+        insert(:user)
+        |> Plausible.Users.with_subscription()
+
+      site = insert(:site, members: [user])
+
+      now = NaiveDateTime.utc_now()
+
+      populate_stats(site, [
+        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
+        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
+        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+      ])
+
+      assert %{
+               last_30_days: %{
+                 total: 5,
+                 custom_events: 2,
+                 pageviews: 3,
+                 date_range: %{}
+               }
+             } = Quota.monthly_pageview_usage(user)
+    end
+
+    test "returns usage for user with subscription and a site" do
+      today = Date.utc_today()
+
+      user =
+        insert(:user,
+          subscription: build(:subscription, last_bill_date: Timex.shift(today, days: -8))
+        )
+
+      site = insert(:site, members: [user])
+
+      now = NaiveDateTime.utc_now()
+
+      populate_stats(site, [
+        build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
+        build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
+        build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
+        build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+      ])
+
+      assert %{
+               current_cycle: %{
+                 total: 3,
+                 custom_events: 1,
+                 pageviews: 2,
+                 date_range: %{}
+               },
+               last_cycle: %{
+                 total: 2,
+                 custom_events: 1,
+                 pageviews: 1,
+                 date_range: %{}
+               },
+               penultimate_cycle: %{
+                 total: 1,
+                 custom_events: 1,
+                 pageviews: 0,
+                 date_range: %{}
+               }
+             } = Quota.monthly_pageview_usage(user)
+    end
+
+    test "returns usage for only a subset of site IDs" do
+      today = Date.utc_today()
+
+      user =
+        insert(:user,
+          subscription: build(:subscription, last_bill_date: Timex.shift(today, days: -8))
+        )
+
+      site1 = insert(:site, members: [user])
+      site2 = insert(:site, members: [user])
+      site3 = insert(:site, members: [user])
+
+      now = NaiveDateTime.utc_now()
+
+      for site <- [site1, site2, site3] do
+        populate_stats(site, [
+          build(:event, timestamp: Timex.shift(now, days: -40), name: "custom"),
+          build(:event, timestamp: Timex.shift(now, days: -10), name: "custom"),
+          build(:event, timestamp: Timex.shift(now, days: -9), name: "pageview"),
+          build(:event, timestamp: Timex.shift(now, days: -8), name: "pageview"),
+          build(:event, timestamp: Timex.shift(now, days: -7), name: "pageview"),
+          build(:event, timestamp: Timex.shift(now, days: -6), name: "custom")
+        ])
+      end
+
+      assert %{
+               current_cycle: %{
+                 total: 6,
+                 custom_events: 2,
+                 pageviews: 4,
+                 date_range: %{}
+               },
+               last_cycle: %{
+                 total: 4,
+                 custom_events: 2,
+                 pageviews: 2,
+                 date_range: %{}
+               },
+               penultimate_cycle: %{
+                 total: 2,
+                 custom_events: 2,
+                 pageviews: 0,
+                 date_range: %{}
+               }
+             } = Quota.monthly_pageview_usage(user, [site1.id, site3.id])
+    end
+  end
+
+  describe "usage_cycle/1" do
+    setup do
+      user = insert(:user)
+      site = insert(:site, members: [user])
+
+      populate_stats(site, [
+        build(:event, timestamp: ~N[2023-04-01 00:00:00], name: "custom"),
+        build(:event, timestamp: ~N[2023-04-02 00:00:00], name: "custom"),
+        build(:event, timestamp: ~N[2023-04-03 00:00:00], name: "custom"),
+        build(:event, timestamp: ~N[2023-04-04 00:00:00], name: "custom"),
+        build(:event, timestamp: ~N[2023-04-05 00:00:00], name: "custom"),
+        build(:event, timestamp: ~N[2023-05-01 00:00:00], name: "pageview"),
+        build(:event, timestamp: ~N[2023-05-02 00:00:00], name: "pageview"),
+        build(:event, timestamp: ~N[2023-05-03 00:00:00], name: "pageview"),
+        build(:event, timestamp: ~N[2023-05-04 00:00:00], name: "pageview"),
+        build(:event, timestamp: ~N[2023-05-05 00:00:00], name: "pageview"),
+        build(:event, timestamp: ~N[2023-06-01 00:00:00], name: "custom"),
+        build(:event, timestamp: ~N[2023-06-02 00:00:00], name: "custom"),
+        build(:event, timestamp: ~N[2023-06-03 00:00:00], name: "custom"),
+        build(:event, timestamp: ~N[2023-06-04 00:00:00], name: "custom"),
+        build(:event, timestamp: ~N[2023-06-05 00:00:00], name: "custom")
+      ])
+
+      {:ok, %{user: user}}
+    end
+
+    test "returns usage and date_range for the given billing month", %{user: user} do
+      last_bill_date = ~D[2023-06-03]
+      today = ~D[2023-06-05]
+
+      insert(:subscription, user_id: user.id, last_bill_date: last_bill_date)
+
+      assert %{date_range: penultimate_cycle, pageviews: 2, custom_events: 3, total: 5} =
+               Quota.usage_cycle(user, :penultimate_cycle, nil, today)
+
+      assert %{date_range: last_cycle, pageviews: 3, custom_events: 2, total: 5} =
+               Quota.usage_cycle(user, :last_cycle, nil, today)
+
+      assert %{date_range: current_cycle, pageviews: 0, custom_events: 3, total: 3} =
+               Quota.usage_cycle(user, :current_cycle, nil, today)
+
+      assert penultimate_cycle == Date.range(~D[2023-04-03], ~D[2023-05-02])
+      assert last_cycle == Date.range(~D[2023-05-03], ~D[2023-06-02])
+      assert current_cycle == Date.range(~D[2023-06-03], ~D[2023-07-02])
+    end
+
+    test "returns usage and date_range for the last 30 days", %{user: user} do
+      today = ~D[2023-06-01]
+
+      assert %{date_range: last_30_days, pageviews: 4, custom_events: 1, total: 5} =
+               Quota.usage_cycle(user, :last_30_days, nil, today)
+
+      assert last_30_days == Date.range(~D[2023-05-02], ~D[2023-06-01])
+    end
+
+    test "only considers sites that the user owns", %{user: user} do
+      different_site =
+        insert(:site,
+          memberships: [
+            build(:site_membership, user: user, role: :admin)
+          ]
+        )
+
+      populate_stats(different_site, [
+        build(:event, timestamp: ~N[2023-05-05 00:00:00], name: "custom")
+      ])
+
+      last_bill_date = ~D[2023-06-03]
+      today = ~D[2023-06-05]
+
+      insert(:subscription, user_id: user.id, last_bill_date: last_bill_date)
+
+      assert %{date_range: last_cycle, pageviews: 3, custom_events: 2, total: 5} =
+               Quota.usage_cycle(user, :last_cycle, nil, today)
+
+      assert last_cycle == Date.range(~D[2023-05-03], ~D[2023-06-02])
+    end
+
+    test "in case of yearly billing, cycles are normalized as if they were paying monthly" do
+      last_bill_date = ~D[2020-09-01]
+      today = ~D[2021-02-02]
+
+      user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
+
+      assert %{date_range: penultimate_cycle} =
+               Quota.usage_cycle(user, :penultimate_cycle, nil, today)
+
+      assert %{date_range: last_cycle} =
+               Quota.usage_cycle(user, :last_cycle, nil, today)
+
+      assert %{date_range: current_cycle} =
+               Quota.usage_cycle(user, :current_cycle, nil, today)
+
+      assert penultimate_cycle == Date.range(~D[2020-12-01], ~D[2020-12-31])
+      assert last_cycle == Date.range(~D[2021-01-01], ~D[2021-01-31])
+      assert current_cycle == Date.range(~D[2021-02-01], ~D[2021-02-28])
+    end
+
+    test "returns correct billing months when last_bill_date is the first day of the year" do
+      last_bill_date = ~D[2021-01-01]
+      today = ~D[2021-01-02]
+
+      user = insert(:user, subscription: build(:subscription, last_bill_date: last_bill_date))
+
+      assert %{date_range: penultimate_cycle, total: 0} =
+               Quota.usage_cycle(user, :penultimate_cycle, nil, today)
+
+      assert %{date_range: last_cycle, total: 0} =
+               Quota.usage_cycle(user, :last_cycle, nil, today)
+
+      assert %{date_range: current_cycle, total: 0} =
+               Quota.usage_cycle(user, :current_cycle, nil, today)
+
+      assert penultimate_cycle == Date.range(~D[2020-11-01], ~D[2020-11-30])
+      assert last_cycle == Date.range(~D[2020-12-01], ~D[2020-12-31])
+      assert current_cycle == Date.range(~D[2021-01-01], ~D[2021-01-31])
     end
   end
 end

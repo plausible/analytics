@@ -80,5 +80,3 @@
 <div class="text-center mt-8 dark:text-gray-100">
   Questions? <%= link("Contact us", to: "https://plausible.io/contact", class: "text-indigo-500") %>
 </div>
-
-<%= render("_paddle_script.html") %>

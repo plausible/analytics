@@ -3,15 +3,12 @@ defmodule PlausibleWeb.Live.RegisterForm do
   LiveView for registration form.
   """
 
-  use Phoenix.LiveView
+  use PlausibleWeb, :live_view
   use Phoenix.HTML
-
   import PlausibleWeb.Live.Components.Form
 
   alias Plausible.Auth
   alias Plausible.Repo
-
-  alias PlausibleWeb.Router.Helpers, as: Routes
 
   def mount(params, _session, socket) do
     socket =
@@ -37,7 +34,6 @@ defmodule PlausibleWeb.Live.RegisterForm do
          form: to_form(changeset),
          captcha_error: nil,
          password_strength: Auth.User.password_strength(changeset),
-         is_selfhost: Plausible.Release.selfhost?(),
          trigger_submit: false
        )}
     end
@@ -68,7 +64,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
     ~H"""
     <div class="mx-auto mt-6 text-center dark:text-gray-300">
       <h1 class="text-3xl font-black">
-        <%= if @is_selfhost or @live_action == :register_from_invitation_form do %>
+        <%= if small_build?() or @live_action == :register_from_invitation_form do %>
           Register your Plausible Analytics account
         <% else %>
           Register your 30-day free trial
@@ -162,7 +158,7 @@ defmodule PlausibleWeb.Live.RegisterForm do
         <% end %>
 
         <% submit_text =
-          if @is_selfhost or @invitation do
+          if small_build?() or @invitation do
             "Create my account →"
           else
             "Start my free trial →"

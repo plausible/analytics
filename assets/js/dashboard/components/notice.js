@@ -2,7 +2,7 @@ import React from "react"
 import { sectionTitles } from "../stats/behaviours"
 import * as api from '../api'
 
-export function FeatureSetupNotice({ site, feature, shortFeatureName, title, info, settingsLink, onHideAction }) {
+export function FeatureSetupNotice({ site, feature, title, info, callToAction, onHideAction }) {
   const sectionTitle = sectionTitles[feature]
 
   const requestHideSection = () => {
@@ -14,10 +14,10 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
     }
   }
 
-  function setupButton() {
+  function renderCallToAction() {
     return (
-      <a href={settingsLink} className="ml-2 sm:ml-4 button px-2 sm:px-4">
-        <p className="flex flex-col justify-center text-xs sm:text-sm">Set up {shortFeatureName}</p>
+      <a href={callToAction.link} className="ml-2 sm:ml-4 button px-2 sm:px-4">
+        <p className="flex flex-col justify-center text-xs sm:text-sm">{callToAction.action}</p>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="ml-2 w-5 h-5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75" />
         </svg>
@@ -25,7 +25,7 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
     )
   }
 
-  function hideButton() {
+  function renderHideButton() {
     return (
       <button
         onClick={requestHideSection}
@@ -47,8 +47,8 @@ export function FeatureSetupNotice({ site, feature, shortFeatureName, title, inf
         </div>
 
         <div className="text-xs sm:text-sm flex my-6 justify-center">
-          {hideButton()}
-          {setupButton()}
+          {renderHideButton()}
+          {renderCallToAction()}
         </div>
       </div>
     </div>

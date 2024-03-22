@@ -5,75 +5,109 @@
 # @license http://www.gnu.org/licenses/lgpl.html LGPL v3 or later
 ###############
 
-# got (https://github.com/sindresorhus/got)
-- regex: '^got '
-  name: 'got'
-  version: ''
+- regex: 'Fuzz Faster U Fool v(\d+[\.\d]+)'
+  name: 'FFUF'
+  version: '$1'
+  url: 'https://github.com/ffuf/ffuf'
 
-# Typhoeus (https://github.com/typhoeus/typhoeus)
+- regex: 'Slim Framework'
+  name: 'Slim Framework'
+  version: ''
+  url: 'https://www.slimframework.com/'
+
+- regex: 'msray-plus'
+  name: 'Msray-Plus'
+  version: ''
+  url: 'https://github.com/super-l/msray'
+
+- regex: 'HTMLParser(?:/(\d+[\.\d]+))?'
+  name: 'HTML Parser'
+  version: '$1'
+  url: 'https://htmlparser.sourceforge.net/'
+
+# got - a nodejs library
+- regex: '^got(?:/(\d+\.[.\d]+))? \('
+  name: 'got'
+  version: '$1'
+  url: 'https://github.com/sindresorhus/got'
+
+# Typhoeus
 - regex: 'Typhoeus'
   name: 'Typhoeus'
   version: ''
+  url: 'https://github.com/typhoeus/typhoeus'
 
-# req (https://github.com/imroc/req)
+# req
 - regex: 'req/v([\.\d]+)'
   name: 'req'
   version: '$1'
+  url: 'https://github.com/imroc/req'
 
-# quic-go (https://github.com/lucas-clemente/quic-go)
+# quic-go
 - regex: 'quic-go-HTTP/3'
   name: 'quic-go'
   version: ''
+  url: 'https://github.com/lucas-clemente/quic-go'
 
-# Azure Data Factory (https://azure.microsoft.com/en-us/products/data-factory/)
+# Azure Data Factory
 - regex: 'azure-data-factory(?:/(\d+[\.\d]+))?'
   name: 'Azure Data Factory'
   version: '$1'
+  url: 'https://azure.microsoft.com/en-us/products/data-factory/'
 
-# Dart (https://dart.dev/)
+# Dart
 - regex: 'Dart(?:/(\d+[\.\d]+))?'
   name: 'Dart'
   version: '$1'
+  url: 'https://dart.dev/'
 
-# r-curl (https://github.com/jeroen/curl)
+# r-curl
 - regex: 'r-curl(?:/(\d+[\.\d]+))?'
   name: 'r-curl'
   version: '$1'
+  url: 'https://github.com/jeroen/curl'
 
-# HTTPX (https://www.python-httpx.org/)
+# HTTPX
 - regex: 'python-httpx(?:/(\d+[\.\d]+))?'
   name: 'HTTPX'
   version: '$1'
+  url: 'https://www.python-httpx.org/'
 
-# fasthttp (https://github.com/valyala/fasthttp)
+# fasthttp
 - regex: 'fasthttp(?:/(\d+[\.\d]+))?'
   name: 'fasthttp'
   version: '$1'
+  url: 'https://github.com/valyala/fasthttp'
 
-# GeoIP Update (https://github.com/maxmind/geoipupdate)
+# GeoIP Update
 - regex: 'geoipupdate(?:/(\d+[\.\d]+))?'
   name: 'GeoIP Update'
   version: '$1'
+  url: 'https://github.com/maxmind/geoipupdate'
 
-# PHP cURL Class (https://github.com/php-curl-class/php-curl-class)
+# PHP cURL Class
 - regex: 'PHP-Curl-Class(?:/(\d+[\.\d]+))?'
   name: 'PHP cURL Class'
   version: '$1'
+  url: 'https://github.com/php-curl-class/php-curl-class'
 
-# cPanel HTTP Client (https://www.cpanel.net/)
+# cPanel HTTP Client
 - regex: 'Cpanel-HTTP-Client(?:/(\d+[\.\d]+))?'
   name: 'cPanel HTTP Client'
   version: '$1'
+  url: 'https://www.cpanel.net/'
 
-# AnyEvent HTTP (http://software.schmorp.de/pkg/AnyEvent)
+# AnyEvent HTTP
 - regex: 'AnyEvent-HTTP(?:/(\d+[\.\d]+))?'
   name: 'AnyEvent HTTP'
   version: '$1'
+  url: 'http://software.schmorp.de/pkg/AnyEvent'
 
-# SlimerJS (https://www.slimerjs.org/)
+# SlimerJS
 - regex: 'SlimerJS/(\d+[\.\d]+)'
   name: 'SlimerJS'
   version: '$1'
+  url: 'https://www.slimerjs.org/'
 
 - regex: 'Wget(?:/(\d+[\.\d]+))?'
   name: 'Wget'
@@ -81,6 +115,11 @@
 
 - regex: 'Guzzle(?:Http)?(?:/(\d+[\.\d]+))?'
   name: 'Guzzle (PHP HTTP Client)'
+  version: '$1'
+
+# symphony php http client
+- regex: '^Symfony HttpClient/'
+  name: 'Symfony'
   version: '$1'
 
 - regex: '(?:lib)?curl(?:/(\d+[\.\d]+))?'
@@ -96,7 +135,7 @@
   version: '$1'
   url: 'https://pypi.org/project/httplib2/'
 
-- regex: 'Python-urllib(?:/?(\d+[\.\d]+))?'
+- regex: 'Python-urllib3?(?:/?(\d+[\.\d]+))?'
   name: 'Python urllib'
   version: '$1'
 
@@ -121,9 +160,11 @@
   version: '$1'
   url: 'https://github.com/grpc/grpc-java'
 
+# java library
 - regex: '(?:okhttp|network-okhttp3)/([\d\.]+)'
   name: 'OkHttp'
   version: '$1'
+
 - regex: 'okhttp3-([\d\.]+)'
   name: 'OkHttp'
   version: '$1'
@@ -135,12 +176,12 @@
 - regex: 'HTTP_Request2(?:/(\d+[\.\d]+))?'
   name: 'HTTP_Request2'
   version: '$1'
-  url: 'http://pear.php.net/package/http_request2'
+  url: 'https://pear.php.net/package/http_request2'
 
 - regex: 'Mechanize(?:/(\d+[\.\d]+))?'
   name: 'Mechanize'
   version: '$1'
-  url: 'http://github.com/sparklemotion/mechanize/'
+  url: 'https://github.com/sparklemotion/mechanize'
 
 - regex: 'aiohttp(?:/(\d+[\.\d]+))?'
   name: 'aiohttp'
@@ -181,7 +222,7 @@
 - regex: 'RestSharp/(\d+[\.\d]+)'
   name: 'RestSharp'
   version: '$1'
-  url: 'http://restsharp.org/'
+  url: 'https://github.com/restsharp/RestSharp'
 
 - regex: 'scalaj-http/(\d+[\.\d]+)'
   name: 'ScalaJ HTTP'
@@ -193,7 +234,7 @@
   version: '$1'
   url: 'https://metacpan.org/pod/REST::Client'
 
-- regex: 'node-fetch/(\d+[\.\d]+)'
+- regex: 'node-fetch/?(\d+[\.\d]+)?'
   name: 'Node Fetch'
   version: '$1'
   url: 'https://github.com/node-fetch/node-fetch'
@@ -249,7 +290,7 @@
   name: 'Aria2'
   version: '$1'
 
-- regex: 'BTWebClient/'
+- regex: '(?:BTWebClient/|^uTorrent/)'
   name: 'uTorrent'
   version: ''
 
@@ -281,7 +322,7 @@
   name: 'jsdom'
   version: '$1'
 
-# hackney (https://github.com/benoitc/hackney)
+# hackney (https://github.com/benoitc/hackney) (elixir)
 - regex: 'hackney/([\.\d]+)'
   name: 'hackney'
   version: '$1'
@@ -372,3 +413,110 @@
 - regex: 'axios(?:/?(\d+[\.\d]+))?'
   name: Axios
   version: '$1'
+
+# Classier solution for file uploads for Rails, Sinatra and other Ruby web frameworks
+- regex: '^CarrierWave/(\d+\.[.\d]+)'
+  name: 'CarrierWave'
+  version: '$1'
+
+- regex: '^Deno/(\d+\.[.\d]+)'
+  name: 'Deno'
+  version: '$1'
+
+# Streaming downloads using net/http, http.rb, HTTPX or wget (ruby)
+- regex: '^Down/(\d+\.[.\d]+)'
+  name: 'Down'
+  version: '$1'
+
+# various programs can use this, like vlc, but the underlying lib is ffmpeg
+- regex: '^Lavf/'
+  name: 'ffmpeg'
+  version: '$1'
+
+- regex: '^FileDownloader/(\d+\.[.\d]+)'
+  name: 'FileDownloader'
+  version: '$1'
+
+# Allows managing large files with git, without storing the file contents in git
+- regex: '^git-annex/(\d+\.[.\d]+)'
+  name: 'git-annex'
+  version: '$1'
+
+- regex: '^GStreamer(?: souphttpsrc)[ /](\d+\.[.\d]+)?'
+  name: 'GStreamer'
+  version: '$1'
+
+# A small, simple, correct HTTP/1.1 client (Perl)
+- regex: '^HTTP-Tiny/(\d+\.[.\d]+)'
+  name: 'HTTP:Tiny'
+  version: '$1'
+
+- regex: 'KaiOS Downloader'
+  name: 'KaiOS Downloader'
+  version: ''
+
+# HTTP client/server library for GNOME
+- regex: '^libsoup/(\d+\.[.\d]+)'
+  name: 'libsoup'
+  version: '$1'
+
+- regex: '^Android\.LVLDM$'
+  name: 'Android License Verification Library'
+  version: '$1'
+
+# A file downloader library for Android with pause and resume support
+- regex: '^PRDownloader$'
+  name: 'PRDownloader'
+  version: ''
+
+# a rust http library
+- regex: '^reqwest/(\d+\.[.\d]+)'
+  name: 'reqwest'
+  version: '$1'
+
+# lua http library
+- regex: '^resty-requests'
+  name: 'resty-requests'
+  version: ''
+
+# ruby core lib http download
+- regex: '^Ruby'
+  name: 'ruby'
+  version: ''
+
+# SFSafariViewController, some safari service
+- regex: '^SafariViewService/(\d+\.[.\d]+)'
+  name: 'Safari View Service'
+  version: '$1'
+
+# a nodejs lib
+- regex: '^undici$'
+  name: 'undici'
+  version: ''
+
+# URL, an emacs plugin
+- regex: '^URL/Emacs Emacs/(\d+\.[.\d]+)'
+  name: 'Emacs'
+  version: '$1'
+
+- regex: '^FDM[ /]([\d\.]+)'
+  name: 'Free Download Manager'
+  version: '$1'
+
+# 'https://github.com/lingochamp/okdownload'
+- regex: 'OkDownload/([\d\.]+)'
+  name: 'OKDownload Library'
+  version: '$1'
+
+# podcast host https://libsyn.com (probably an importer)
+- regex: '^Libsyn4-?(?:peek|download)$'
+  name: 'Libsyn'
+  version: ''
+
+# any ios application that uses apple core media but doesn't set its user
+# agent will default to this, always with 1.0.0 version.
+# there was a time when (not even that long ago) apple didn't let you set
+# a user agent so a ton of random applications still identify themselves this way.
+- regex: 'AppleCoreMedia/1\.0\.0'
+  name: 'iOS Application'
+  version: ''

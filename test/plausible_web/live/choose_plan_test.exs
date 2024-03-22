@@ -1,5 +1,7 @@
 defmodule PlausibleWeb.Live.ChoosePlanTest do
   use PlausibleWeb.ConnCase, async: true
+  @moduletag :full_build_only
+
   import Phoenix.LiveViewTest
   import Plausible.Test.Support.HTML
   require Plausible.Billing.Subscription.Status
@@ -32,39 +34,8 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
 
   @slider_volumes ["10k", "100k", "200k", "500k", "1M", "2M", "5M", "10M", "10M+"]
 
-  describe "for a legacy trial (user registered before business tiers release)" do
-    setup %{conn: conn} do
-      user = insert(:user, trial_expiry_date: ~D[2023-11-24])
-      {:ok, conn: conn} = log_in(%{conn: conn, user: user})
-      {:ok, conn: conn, user: user}
-    end
-
-    test "renders v3 plan benefits, but no grandfathering notice", %{conn: conn} do
-      {:ok, _lv, doc} = get_liveview(conn)
-
-      growth_box = text_of_element(doc, @growth_plan_box)
-      business_box = text_of_element(doc, @business_plan_box)
-
-      assert growth_box =~ "Unlimited team members"
-      assert growth_box =~ "Up to 50 sites"
-      assert growth_box =~ "Intuitive, fast and privacy-friendly dashboard"
-      assert growth_box =~ "Email/Slack reports"
-      assert growth_box =~ "Google Analytics import"
-      assert growth_box =~ "Goals and custom events"
-      assert growth_box =~ "Stats API (600 requests per hour)"
-      assert growth_box =~ "Custom Properties"
-
-      assert business_box =~ "Everything in Growth"
-      assert business_box =~ "Funnels"
-      assert business_box =~ "Ecommerce revenue attribution"
-      assert business_box =~ "Priority support"
-
-      refute growth_box =~ "Your subscription has been grandfathered"
-    end
-  end
-
   describe "for a user with no subscription" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -237,8 +208,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                @v4_business_5m_monthly_plan_id
     end
 
-    test "warns about losing access to a feature", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+    test "warns about losing access to a feature", %{conn: conn, site: site} do
       Plausible.Props.allow(site, ["author"])
 
       {:ok, _lv, doc} = get_liveview(conn)
@@ -254,11 +224,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute text_of_element(doc, @business_plan_box) =~ "Recommended"
     end
 
-    test "recommends Business tier when Revenue Goals were used during trial", %{
-      conn: conn,
-      user: user
-    } do
-      site = insert(:site, members: [user])
+    test "recommends Business when Revenue Goals used during trial", %{conn: conn, site: site} do
       insert(:goal, site: site, currency: :USD, event_name: "Purchase")
 
       {:ok, _lv, doc} = get_liveview(conn)
@@ -266,10 +232,79 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert text_of_element(doc, @business_plan_box) =~ "Recommended"
       refute text_of_element(doc, @growth_plan_box) =~ "Recommended"
     end
+
+    @tag :slow
+    test "allows upgrade to a 100k plan with a pageview allowance margin of 0.15 when trial is active",
+         %{conn: conn, site: site} do
+      generate_usage_for(site, 115_000)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "100k")
+
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+
+      generate_usage_for(site, 1)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "100k")
+
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "allows upgrade to a 10k plan with a pageview allowance margin of 0.3 when trial ended 10 days ago",
+         %{conn: conn, site: site, user: user} do
+      user
+      |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -10)})
+      |> Repo.update!()
+
+      generate_usage_for(site, 13_000)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "10k")
+
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+
+      generate_usage_for(site, 1)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "10k")
+
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "pageview allowance margin on upgrade is 0.1 when trial ended more than 10 days ago", %{
+      conn: conn,
+      site: site,
+      user: user
+    } do
+      user
+      |> Plausible.Auth.User.changeset(%{trial_expiry_date: Timex.shift(Timex.today(), days: -11)})
+      |> Repo.update!()
+
+      generate_usage_for(site, 11_000)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "10k")
+
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+
+      generate_usage_for(site, 1)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "10k")
+
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
   end
 
   describe "for a user with a v4 growth subscription plan" do
-    setup [:create_user, :log_in, :subscribe_v4_growth]
+    setup [:create_user, :create_site, :log_in, :subscribe_v4_growth]
 
     test "displays basic page content", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -292,6 +327,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert growth_box =~ "Email/Slack reports"
       assert growth_box =~ "Google Analytics import"
       assert growth_box =~ "Goals and custom events"
+      assert growth_box =~ "3 years of data retention"
 
       assert business_box =~ "Everything in Growth"
       assert business_box =~ "Up to 10 team members"
@@ -301,6 +337,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert business_box =~ "Funnels"
       assert business_box =~ "Ecommerce revenue attribution"
       assert business_box =~ "Priority support"
+      assert business_box =~ "5 years of data retention"
 
       refute business_box =~ "Goals and custom events"
 
@@ -310,14 +347,13 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert enterprise_box =~ "600+ Stats API requests per hour"
       assert enterprise_box =~ "Sites API access for"
       assert enterprise_box =~ "Technical onboarding"
+      assert enterprise_box =~ "5+ years of data retention"
 
       assert text_of_attr(find(doc, "#{@enterprise_plan_box} p a"), "href") =~
                "https://plausible.io/white-label-web-analytics"
     end
 
-    test "displays usage", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
-
+    test "displays usage", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview),
         build(:pageview)
@@ -403,7 +439,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a v4 business subscription plan" do
-    setup [:create_user, :log_in, :subscribe_v4_business]
+    setup [:create_user, :create_site, :log_in, :subscribe_v4_business]
 
     test "gets default pageview limit from current subscription plan", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -475,9 +511,28 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
     end
 
-    test "warns about losing access to a feature", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+    test "checkout is not disabled when pageview usage exceeded but next upgrade allowed by override",
+         %{
+           conn: conn,
+           user: user,
+           site: site
+         } do
+      now = NaiveDateTime.utc_now()
 
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
+
+      Plausible.Users.allow_next_upgrade_override(user)
+
+      {:ok, lv, _doc} = get_liveview(conn)
+
+      doc = set_slider(lv, "10k")
+
+      refute text_of_element(doc, @growth_plan_box) =~ "Your usage exceeds this plan"
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+    end
+
+    test "warns about losing access to a feature", %{conn: conn, user: user, site: site} do
       Plausible.Props.allow(site, ["author"])
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
       insert(:api_key, user: user)
@@ -490,7 +545,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a v3 business (unlimited team members) subscription plan" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     setup %{user: user} = context do
       create_subscription_for(user, paddle_plan_id: @v3_business_10k_monthly_plan_id)
@@ -536,7 +591,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a past_due subscription" do
-    setup [:create_user, :log_in, :create_past_due_subscription]
+    setup [:create_user, :create_site, :log_in, :create_past_due_subscription]
 
     test "renders failed payment notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -566,7 +621,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a paused subscription" do
-    setup [:create_user, :log_in, :create_paused_subscription]
+    setup [:create_user, :create_site, :log_in, :create_paused_subscription]
 
     test "renders subscription paused notice and link to update billing details", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -596,7 +651,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a user with a cancelled subscription" do
-    setup [:create_user, :log_in, :create_cancelled_subscription]
+    setup [:create_user, :create_site, :log_in, :create_cancelled_subscription]
 
     test "checkout buttons are paddle buttons", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -629,7 +684,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
   end
 
   describe "for a grandfathered user" do
-    setup [:create_user, :log_in]
+    setup [:create_user, :create_site, :log_in]
 
     setup %{user: user} = context do
       create_subscription_for(user, paddle_plan_id: @v1_10k_yearly_plan_id)
@@ -699,10 +754,25 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute enterprise_box =~ "10+ team members"
       refute enterprise_box =~ "Unlimited team members"
     end
+
+    test "allows to upgrade without a trial_expiry_date when the user owns a site", %{
+      conn: conn,
+      user: user
+    } do
+      user
+      |> Plausible.Auth.User.changeset(%{trial_expiry_date: nil})
+      |> Repo.update!()
+
+      {:ok, lv, _doc} = get_liveview(conn)
+      doc = set_slider(lv, "100k")
+
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
   end
 
   describe "for a free_10k subscription" do
-    setup [:create_user, :log_in, :subscribe_free_10k]
+    setup [:create_user, :create_site, :log_in, :subscribe_free_10k]
 
     test "recommends growth tier when no premium features used", %{conn: conn} do
       {:ok, _lv, doc} = get_liveview(conn)
@@ -710,8 +780,7 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
       refute element_exists?(doc, @business_highlight_pill)
     end
 
-    test "recommends Business tier when premium features used", %{conn: conn, user: user} do
-      site = insert(:site, members: [user])
+    test "recommends Business tier when premium features used", %{conn: conn, site: site} do
       insert(:goal, currency: :USD, site: site, event_name: "Purchase")
 
       {:ok, _lv, doc} = get_liveview(conn)
@@ -734,6 +803,35 @@ defmodule PlausibleWeb.Live.ChoosePlanTest do
                "success" => Routes.billing_path(PlausibleWeb.Endpoint, :upgrade_success),
                "theme" => "none"
              } == get_paddle_checkout_params(find(doc, @growth_checkout_button))
+    end
+  end
+
+  describe "for a user with no sites" do
+    setup [:create_user, :log_in]
+
+    test "does not allow to subscribe and renders notice", %{conn: conn} do
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      assert text_of_element(doc, "#upgrade-eligible-notice") =~ "You cannot start a subscription"
+      assert class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      assert class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+    end
+  end
+
+  describe "for a user with no sites but pending ownership transfer" do
+    setup [:create_user, :log_in]
+
+    test "allows to subscribe and does not render a notice", %{conn: conn, user: user} do
+      old_owner = insert(:user)
+      site = insert(:site, members: [old_owner])
+      insert(:invitation, site_id: site.id, inviter: old_owner, email: user.email, role: :owner)
+
+      {:ok, _lv, doc} = get_liveview(conn)
+
+      refute text_of_element(doc, "#upgrade-eligible-notice") =~ "You cannot start a subscription"
+      refute class_of_element(doc, @growth_checkout_button) =~ "pointer-events-none"
+      refute class_of_element(doc, @business_checkout_button) =~ "pointer-events-none"
+      assert text_of_element(doc, @growth_plan_box) =~ "Recommended"
     end
   end
 

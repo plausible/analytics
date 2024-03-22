@@ -127,3 +127,7 @@
 - regex: 'NaverMailApp/(\d+\.[\.\d]+)'
   name: 'NAVER Mail'
   version: '$1'
+
+- regex: '^Mail/([\d\.]+)'
+  name: 'Apple Mail'
+  version: '$1'

@@ -7,6 +7,8 @@ want be up to date on security patches, make sure your Plausible image is up to 
 
 ## Reporting a Vulnerability
 
+Our software is updated several times per week and we also have a way for you to [report any security vulnerabilities](https://plausible.io/vulnerability-disclosure-program). A more detailed overview about our security practices can be found on [plausible.io/security](https://plausible.io/security).
+
 If you've found a security vulnerability with the Plausible codebase, you can disclose it responsibly by sending a summary to security@plausible.io.
 We will review the potential threat and fix it as fast as we can.
 

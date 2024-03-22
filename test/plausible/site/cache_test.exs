@@ -4,29 +4,8 @@ defmodule Plausible.Site.CacheTest do
   alias Plausible.{Site, Goal}
   alias Plausible.Site.Cache
 
-  import ExUnit.CaptureLog
-
   describe "public cache interface" do
-    test "cache process is started, but falls back to the database if cache is disabled" do
-      insert(:site, domain: "example.test")
-      refute Cache.enabled?()
-      assert Process.alive?(Process.whereis(Cache.name()))
-      refute Process.whereis(Cache.Warmer)
-      assert %Site{domain: "example.test", from_cache?: false} = Cache.get("example.test")
-      assert Cache.size() == 0
-      refute Cache.get("other.test")
-    end
-
-    test "critical cache errors are logged and nil is returned" do
-      log =
-        capture_log(fn ->
-          assert Cache.get("key", force?: true, cache_name: NonExistingCache) == nil
-        end)
-
-      assert log =~ "Error retrieving domain from 'NonExistingCache': :no_cache"
-    end
-
-    test "cache caches", %{test: test} do
+    test "cache caches sites", %{test: test} do
       {:ok, _} =
         Supervisor.start_link([{Cache, [cache_name: test, child_id: :test_cache_caches_id]}],
           strategy: :one_for_one,
@@ -34,7 +13,25 @@ defmodule Plausible.Site.CacheTest do
         )
 
       %{id: first_id} = site1 = insert(:site, domain: "site1.example.com")
-      _ = insert(:site, domain: "site2.example.com")
+
+      _ =
+        insert(:site,
+          domain: "site2.example.com",
+          memberships: [
+            build(:site_membership,
+              user: build(:user, accept_traffic_until: ~D[2022-01-01]),
+              role: :viewer
+            ),
+            build(:site_membership,
+              user: build(:user, accept_traffic_until: ~D[2021-01-01]),
+              role: :owner
+            ),
+            build(:site_membership,
+              user: build(:user, accept_traffic_until: ~D[2020-01-01]),
+              role: :admin
+            )
+          ]
+        )
 
       :ok = Cache.refresh_all(cache_name: test)
 
@@ -48,11 +45,13 @@ defmodule Plausible.Site.CacheTest do
       assert %Site{from_cache?: true} =
                Cache.get("site2.example.com", force?: true, cache_name: test)
 
-      assert %Site{from_cache?: false} = Cache.get("site2.example.com", cache_name: test)
+      assert %Site{from_cache?: false, owner: %{accept_traffic_until: ~D[2021-01-01]}} =
+               Cache.get("site2.example.com", cache_name: test)
 
       refute Cache.get("site3.example.com", cache_name: test, force?: true)
     end
 
+    @tag :full_build_only
     test "cache caches revenue goals", %{test: test} do
       {:ok, _} =
         Supervisor.start_link(
@@ -84,6 +83,7 @@ defmodule Plausible.Site.CacheTest do
              ] = Enum.sort_by(cached_goals, & &1.event_name)
     end
 
+    @tag :full_build_only
     test "cache caches revenue goals with event refresh", %{test: test} do
       {:ok, _} =
         Supervisor.start_link(
@@ -261,40 +261,89 @@ defmodule Plausible.Site.CacheTest do
     end
   end
 
-  describe "warming the cache" do
-    test "cache warmer process warms up the cache", %{test: test} do
-      test_pid = self()
-      opts = [force_start?: true, warmer_fn: report_back(test_pid), cache_name: test]
+  describe "merging the cache" do
+    test "merging adds new items", %{test: test} do
+      {:ok, _} = start_test_cache(test)
 
-      {:ok, _} = Supervisor.start_link([{Cache.Warmer, opts}], strategy: :one_for_one, name: test)
-      assert Process.whereis(Cache.Warmer)
-
-      assert_receive {:cache_warmed, %{opts: got_opts}}
-      assert got_opts[:cache_name] == test
+      :ok = Cache.merge_items([{"item1", nil, :item1}], cache_name: test)
+      assert :item1 == Cache.get("item1", cache_name: test, force?: true)
     end
 
-    test "cache warmer warms periodically with an interval", %{test: test} do
-      test_pid = self()
+    test "merging no new items leaves the old cache intact", %{test: test} do
+      {:ok, _} = start_test_cache(test)
 
-      opts = [
-        force_start?: true,
-        warmer_fn: report_back(test_pid),
-        cache_name: test,
-        interval: 30
-      ]
+      :ok = Cache.merge_items([{"item1", nil, :item1}], cache_name: test)
+      :ok = Cache.merge_items([], cache_name: test)
+      assert :item1 == Cache.get("item1", cache_name: test, force?: true)
+    end
 
-      {:ok, _} = start_test_warmer(opts)
+    test "merging removes stale items", %{test: test} do
+      {:ok, _} = start_test_cache(test)
 
-      assert_receive {:cache_warmed, %{at: at1}}, 100
-      assert_receive {:cache_warmed, %{at: at2}}, 100
-      assert_receive {:cache_warmed, %{at: at3}}, 100
+      :ok = Cache.merge_items([{"item1", nil, :item1}], cache_name: test)
+      :ok = Cache.merge_items([{"item2", nil, :item2}], cache_name: test)
 
-      assert is_integer(at1)
-      assert is_integer(at2)
-      assert is_integer(at3)
+      refute Cache.get("item1", cache_name: test, force?: true)
+      assert Cache.get("item2", cache_name: test, force?: true)
+    end
 
-      assert at1 < at2
-      assert at3 > at2
+    test "merging optionally leaves stale items intact", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge_items([{"item1", nil, :item1}], cache_name: test)
+
+      :ok =
+        Cache.merge_items([{"item2", nil, :item2}], cache_name: test, delete_stale_items?: false)
+
+      assert Cache.get("item1", cache_name: test, force?: true)
+      assert Cache.get("item2", cache_name: test, force?: true)
+    end
+
+    test "merging updates changed items", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge_items([{"item1", nil, :item1}, {"item2", nil, :item2}], cache_name: test)
+
+      :ok =
+        Cache.merge_items([{"item1", nil, :changed}, {"item2", nil, :item2}], cache_name: test)
+
+      assert :changed == Cache.get("item1", cache_name: test, force?: true)
+      assert :item2 == Cache.get("item2", cache_name: test, force?: true)
+    end
+
+    test "merging keeps secondary keys", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      :ok = Cache.merge_items([{"item1", nil, :item1}], cache_name: test)
+      :ok = Cache.merge_items([{"item2", "item1", :updated}], cache_name: test)
+      assert :updated == Cache.get("item1", cache_name: test, force?: true)
+      assert :updated == Cache.get("item2", cache_name: test, force?: true)
+    end
+
+    @items1 for i <- 1..200_000, do: {i, nil, :batch1}
+    @items2 for _ <- 1..200_000, do: {Enum.random(1..400_000), nil, :batch2}
+    @max_seconds 2
+    test "merging large sets is expected to be under #{@max_seconds} seconds", %{test: test} do
+      {:ok, _} = start_test_cache(test)
+
+      {t1, :ok} =
+        :timer.tc(fn ->
+          :ok = Cache.merge_items(@items1, cache_name: test)
+        end)
+
+      {t2, :ok} =
+        :timer.tc(fn ->
+          :ok = Cache.merge_items(@items1, cache_name: test)
+        end)
+
+      {t3, :ok} =
+        :timer.tc(fn ->
+          :ok = Cache.merge_items(@items2, cache_name: test)
+        end)
+
+      assert t1 / 1_000_000 <= @max_seconds
+      assert t2 / 1_000_000 <= @max_seconds
+      assert t3 / 1_000_000 <= @max_seconds
     end
 
     test "deleted sites don't stay in cache on another refresh", %{test: test} do
@@ -325,104 +374,8 @@ defmodule Plausible.Site.CacheTest do
     end
   end
 
-  describe "merging the cache" do
-    test "merging adds new items", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
-      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
-      assert :item1 == Cache.get("item1", cache_name: test, force?: true)
-    end
-
-    test "merging no new items leaves the old cache intact", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
-      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
-      :ok = Cache.merge([], cache_name: test)
-      assert :item1 == Cache.get("item1", cache_name: test, force?: true)
-    end
-
-    test "merging removes stale items", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
-      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
-      :ok = Cache.merge([{"item2", nil, :item2}], cache_name: test)
-
-      refute Cache.get("item1", cache_name: test, force?: true)
-      assert Cache.get("item2", cache_name: test, force?: true)
-    end
-
-    test "merging optionally leaves stale items intact", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
-      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
-      :ok = Cache.merge([{"item2", nil, :item2}], cache_name: test, delete_stale_items?: false)
-
-      assert Cache.get("item1", cache_name: test, force?: true)
-      assert Cache.get("item2", cache_name: test, force?: true)
-    end
-
-    test "merging updates changed items", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
-      :ok = Cache.merge([{"item1", nil, :item1}, {"item2", nil, :item2}], cache_name: test)
-      :ok = Cache.merge([{"item1", nil, :changed}, {"item2", nil, :item2}], cache_name: test)
-
-      assert :changed == Cache.get("item1", cache_name: test, force?: true)
-      assert :item2 == Cache.get("item2", cache_name: test, force?: true)
-    end
-
-    test "merging keeps secondary keys", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
-      :ok = Cache.merge([{"item1", nil, :item1}], cache_name: test)
-      :ok = Cache.merge([{"item2", "item1", :updated}], cache_name: test)
-      assert :updated == Cache.get("item1", cache_name: test, force?: true)
-      assert :updated == Cache.get("item2", cache_name: test, force?: true)
-    end
-
-    @items1 for i <- 1..200_000, do: {i, nil, :batch1}
-    @items2 for _ <- 1..200_000, do: {Enum.random(1..400_000), nil, :batch2}
-    @max_seconds 2
-    @tag :slow
-    test "merging large sets is expected to be under #{@max_seconds} seconds", %{test: test} do
-      {:ok, _} = start_test_cache(test)
-
-      {t1, :ok} =
-        :timer.tc(fn ->
-          :ok = Cache.merge(@items1, cache_name: test)
-        end)
-
-      {t2, :ok} =
-        :timer.tc(fn ->
-          :ok = Cache.merge(@items1, cache_name: test)
-        end)
-
-      {t3, :ok} =
-        :timer.tc(fn ->
-          :ok = Cache.merge(@items2, cache_name: test)
-        end)
-
-      assert t1 / 1_000_000 <= @max_seconds
-      assert t2 / 1_000_000 <= @max_seconds
-      assert t3 / 1_000_000 <= @max_seconds
-    end
-  end
-
-  defp report_back(test_pid) do
-    fn opts ->
-      send(test_pid, {:cache_warmed, %{at: System.monotonic_time(), opts: opts}})
-      :ok
-    end
-  end
-
   defp start_test_cache(cache_name) do
     %{start: {m, f, a}} = Cache.child_spec(cache_name: cache_name)
-    apply(m, f, a)
-  end
-
-  defp start_test_warmer(opts) do
-    child_name_opt = {:child_name, Keyword.fetch!(opts, :cache_name)}
-    %{start: {m, f, a}} = Cache.Warmer.child_spec([child_name_opt | opts])
     apply(m, f, a)
   end
 

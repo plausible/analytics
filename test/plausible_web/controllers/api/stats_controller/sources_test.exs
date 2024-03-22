@@ -251,7 +251,10 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       populate_stats(site, [
         build(:pageview, referrer_source: "Google", referrer: "google.com"),
         build(:pageview, referrer_source: "Google", referrer: "google.com"),
-        build(:pageview, referrer_source: "DuckDuckGo", referrer: "duckduckgo.com")
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com"
+        )
       ])
 
       populate_stats(site, [
@@ -472,8 +475,16 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       populate_stats(site, [
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
         build(:pageview, pathname: "/page1", referrer_source: "Google"),
-        build(:pageview, user_id: 1, pathname: "/page2", referrer_source: "DuckDuckGo"),
-        build(:pageview, user_id: 1, pathname: "/page1", referrer_source: "DuckDuckGo")
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page2",
+          referrer_source: "DuckDuckGo"
+        ),
+        build(:pageview,
+          user_id: 1,
+          pathname: "/page1",
+          referrer_source: "DuckDuckGo"
+        )
       ])
 
       filters = Jason.encode!(%{"page" => "/page1"})
@@ -1450,12 +1461,44 @@ defmodule PlausibleWeb.Api.StatsController.SourcesTest do
       ])
 
       conn = get(conn, "/api/stats/#{site.domain}/referrers/Google?period=day")
-      {:ok, terms} = Plausible.Google.Api.Mock.fetch_stats(nil, nil, nil)
+      {:ok, terms} = Plausible.Google.API.Mock.fetch_stats(nil, nil, nil)
 
       assert json_response(conn, 200) == %{
                "total_visitors" => 2,
                "search_terms" => terms
              }
+    end
+
+    test "works when filter expression is provided for source", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          referrer_source: "DuckDuckGo",
+          referrer: "duckduckgo.com"
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com"
+        ),
+        build(:pageview,
+          referrer_source: "Google",
+          referrer: "google.com"
+        )
+      ])
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/!Google?period=day")
+
+      assert json_response(conn, 200) == [
+               %{"name" => "duckduckgo.com", "visitors" => 1}
+             ]
+
+      conn = get(conn, "/api/stats/#{site.domain}/referrers/Google|DuckDuckGo?period=day")
+
+      assert [entry1, entry2] = json_response(conn, 200)
+      assert %{"name" => "google.com", "visitors" => 2} in [entry1, entry2]
+      assert %{"name" => "duckduckgo.com", "visitors" => 1} in [entry1, entry2]
     end
 
     test "returns top referring urls for a custom goal", %{conn: conn, site: site} do

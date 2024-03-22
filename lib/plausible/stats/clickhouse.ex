@@ -1,4 +1,5 @@
 defmodule Plausible.Stats.Clickhouse do
+  use Plausible
   use Plausible.Repo
   use Plausible.ClickhouseRepo
   use Plausible.Stats.Fragments
@@ -6,8 +7,7 @@ defmodule Plausible.Stats.Clickhouse do
   import Ecto.Query, only: [from: 2]
 
   alias Plausible.Stats.Query
-
-  @no_ref "Direct / None"
+  alias Plausible.Timezones
 
   @spec pageview_start_date_local(Plausible.Site.t()) :: Date.t() | nil
   def pageview_start_date_local(site) do
@@ -26,9 +26,7 @@ defmodule Plausible.Stats.Clickhouse do
         nil
 
       _ ->
-        Timex.Timezone.convert(datetime, "UTC")
-        |> Timex.Timezone.convert(site.timezone)
-        |> DateTime.to_date()
+        Timezones.to_date_in_timezone(datetime, site.timezone)
     end
   end
 
@@ -41,14 +39,15 @@ defmodule Plausible.Stats.Clickhouse do
     )
   end
 
-  def usage_breakdown(domains_or_site_ids) do
-    range =
-      Date.range(
-        Timex.shift(Timex.today(), days: -30),
-        Timex.today()
-      )
-
-    usage_breakdown(domains_or_site_ids, range)
+  @spec imported_pageview_counts(Plausible.Site.t()) :: %{non_neg_integer() => non_neg_integer()}
+  def imported_pageview_counts(site) do
+    from(i in "imported_visitors",
+      where: i.site_id == ^site.id,
+      group_by: i.import_id,
+      select: {i.import_id, sum(i.pageviews)}
+    )
+    |> Plausible.ClickhouseRepo.all()
+    |> Map.new()
   end
 
   def usage_breakdown([d | _] = domains, date_range) when is_binary(d) do
@@ -93,89 +92,32 @@ defmodule Plausible.Stats.Clickhouse do
 
   def usage_breakdown([], _date_range), do: {0, 0}
 
-  def top_sources(site, query, limit, page, show_noref \\ false, include_details) do
+  def top_sources_for_spike(site, query, limit, page) do
     offset = (page - 1) * limit
 
+    {first_datetime, last_datetime} = utc_boundaries(query, site)
+
     referrers =
-      from(s in base_session_query(site, query),
+      from(s in "sessions_v2",
+        select: %{
+          name: s.referrer_source,
+          count: uniq(s.user_id)
+        },
+        where: s.site_id == ^site.id,
+        # Note: This query intentionally uses session end timestamp to get currently active users
+        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime,
+        where: s.referrer_source != "",
         group_by: s.referrer_source,
-        order_by: [desc: uniq(s.user_id), asc: fragment("min(start)")],
+        order_by: [desc: uniq(s.user_id), asc: s.referrer_source],
         limit: ^limit,
         offset: ^offset
       )
-      |> filter_converted_sessions(site, query)
 
-    referrers =
-      if show_noref do
-        referrers
-      else
-        from(s in referrers, where: s.referrer_source != "")
-      end
-
-    referrers = apply_page_as_entry_page(referrers, site, query)
-
-    referrers =
-      if include_details do
-        from(
-          s in referrers,
-          select: %{
-            name:
-              fragment(
-                "if(empty(?), ?, ?) as name",
-                s.referrer_source,
-                @no_ref,
-                s.referrer_source
-              ),
-            url: fragment("any(?)", s.referrer),
-            count: uniq(s.user_id),
-            bounce_rate: bounce_rate(),
-            visit_duration: visit_duration()
-          }
-        )
-      else
-        from(
-          s in referrers,
-          select: %{
-            name:
-              fragment(
-                "if(empty(?), ?, ?) as name",
-                s.referrer_source,
-                @no_ref,
-                s.referrer_source
-              ),
-            url: fragment("any(?)", s.referrer),
-            count: uniq(s.user_id)
-          }
-        )
-      end
+    on_full_build do
+      referrers = Plausible.Stats.Sampling.add_query_hint(referrers, 10_000_000)
+    end
 
     ClickhouseRepo.all(referrers)
-    |> Enum.map(fn ref ->
-      Map.update(ref, :url, nil, fn url -> url && URI.parse("http://" <> url).host end)
-    end)
-  end
-
-  defp filter_converted_sessions(db_query, site, query) do
-    goal = query.filters["goal"]
-    page = query.filters[:page]
-
-    if is_binary(goal) || is_binary(page) do
-      converted_sessions =
-        from(e in base_query(site, query),
-          select: %{session_id: fragment("DISTINCT ?", e.session_id)}
-        )
-
-      from(s in db_query,
-        join: cs in subquery(converted_sessions),
-        on: s.session_id == cs.session_id
-      )
-    else
-      db_query
-    end
-  end
-
-  defp apply_page_as_entry_page(db_query, _site, query) do
-    include_path_filter_entry(db_query, query.filters[:page])
   end
 
   def current_visitors(site, query) do
@@ -236,7 +178,6 @@ defmodule Plausible.Stats.Clickhouse do
     current_q =
       from(
         e in "events_v2",
-        hints: [sample: 20_000_000],
         join: total_q in subquery(total_q),
         on: e.site_id == total_q.site_id,
         where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
@@ -251,6 +192,10 @@ defmodule Plausible.Stats.Clickhouse do
         group_by: [e.site_id, fragment("toStartOfHour(timestamp)")],
         order_by: [e.site_id, fragment("toStartOfHour(timestamp)")]
       )
+
+    on_full_build do
+      current_q = Plausible.Stats.Sampling.add_query_hint(current_q)
+    end
 
     result =
       current_q
@@ -275,17 +220,22 @@ defmodule Plausible.Stats.Clickhouse do
   end
 
   defp visitors_24h_total(now, offset1, offset2, site_id_to_domain_mapping) do
-    from(e in "events_v2",
-      hints: [sample: 20_000_000],
-      where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
-      where: e.timestamp >= ^NaiveDateTime.add(now, offset1, :hour),
-      where: e.timestamp <= ^NaiveDateTime.add(now, offset2, :hour),
-      select: %{
-        site_id: e.site_id,
-        total_visitors: fragment("toUInt64(round(uniq(user_id) * any(_sample_factor)))")
-      },
-      group_by: [e.site_id]
-    )
+    query =
+      from e in "events_v2",
+        where: e.site_id in ^Map.keys(site_id_to_domain_mapping),
+        where: e.timestamp >= ^NaiveDateTime.add(now, offset1, :hour),
+        where: e.timestamp <= ^NaiveDateTime.add(now, offset2, :hour),
+        select: %{
+          site_id: e.site_id,
+          total_visitors: fragment("toUInt64(round(uniq(user_id) * any(_sample_factor)))")
+        },
+        group_by: [e.site_id]
+
+    on_full_build do
+      query = Plausible.Stats.Sampling.add_query_hint(query)
+    end
+
+    query
   end
 
   defp empty_24h_intervals(now) do
@@ -301,136 +251,18 @@ defmodule Plausible.Stats.Clickhouse do
     end
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
-  defp base_session_query(site, query) do
-    {first_datetime, last_datetime} = utc_boundaries(query, site)
-
-    q =
-      from(s in "sessions_v2",
-        hints: ["SAMPLE 10000000"],
-        where: s.site_id == ^site.id,
-        where: s.timestamp >= ^first_datetime and s.start < ^last_datetime
-      )
-
-    q =
-      if query.filters["source"] do
-        source = query.filters["source"]
-        source = if source == @no_ref, do: "", else: source
-        from(s in q, where: s.referrer_source == ^source)
-      else
-        q
-      end
-
-    q =
-      if query.filters["screen"] do
-        size = query.filters["screen"]
-        from(s in q, where: s.screen_size == ^size)
-      else
-        q
-      end
-
-    q =
-      if query.filters["browser"] do
-        browser = query.filters["browser"]
-        from(s in q, where: s.browser == ^browser)
-      else
-        q
-      end
-
-    q =
-      if query.filters["browser_version"] do
-        version = query.filters["browser_version"]
-        from(s in q, where: s.browser_version == ^version)
-      else
-        q
-      end
-
-    q =
-      if query.filters["os"] do
-        os = query.filters["os"]
-        from(s in q, where: s.operating_system == ^os)
-      else
-        q
-      end
-
-    q =
-      if query.filters["os_version"] do
-        version = query.filters["os_version"]
-        from(s in q, where: s.operating_system_version == ^version)
-      else
-        q
-      end
-
-    q =
-      if query.filters["country"] do
-        country = query.filters["country"]
-        from(s in q, where: s.country_code == ^country)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_medium"] do
-        utm_medium = query.filters["utm_medium"]
-        from(s in q, where: s.utm_medium == ^utm_medium)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_source"] do
-        utm_source = query.filters["utm_source"]
-        from(s in q, where: s.utm_source == ^utm_source)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_campaign"] do
-        utm_campaign = query.filters["utm_campaign"]
-        from(s in q, where: s.utm_campaign == ^utm_campaign)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_content"] do
-        utm_content = query.filters["utm_content"]
-        from(s in q, where: s.utm_content == ^utm_content)
-      else
-        q
-      end
-
-    q =
-      if query.filters["utm_term"] do
-        utm_term = query.filters["utm_term"]
-        from(s in q, where: s.utm_term == ^utm_term)
-      else
-        q
-      end
-
-    q = include_path_filter_entry(q, query.filters["entry_page"])
-
-    q = include_path_filter_exit(q, query.filters["exit_page"])
-
-    if query.filters["referrer"] do
-      ref = query.filters["referrer"]
-      from(s in q, where: s.referrer == ^ref)
-    else
-      q
-    end
-  end
-
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   defp base_query_bare(site, query) do
     {first_datetime, last_datetime} = utc_boundaries(query, site)
 
     q =
       from(e in "events_v2",
-        hints: ["SAMPLE 10000000"],
         where: e.site_id == ^site.id,
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
+
+    on_full_build do
+      q = Plausible.Stats.Sampling.add_query_hint(q, 10_000_000)
+    end
 
     q =
       if query.filters["screen"] do
@@ -536,13 +368,12 @@ defmodule Plausible.Stats.Clickhouse do
       if val == "(none)" do
         from(
           e in q,
-          where: fragment("not has(meta.key, ?)", ^key)
+          where: not has_key(e, :meta, ^key)
         )
       else
         from(
           e in q,
-          array_join: meta in fragment("meta"),
-          where: meta.key == ^key and meta.value == ^val
+          where: has_key(e, :meta, ^key) and get_by_key(e, :meta, ^key) == ^val
         )
       end
     else
@@ -554,8 +385,8 @@ defmodule Plausible.Stats.Clickhouse do
     base_query_bare(site, query) |> include_goal_conversions(query)
   end
 
-  defp utc_boundaries(%Query{period: "30m"}, site) do
-    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+  defp utc_boundaries(%Query{now: now, period: "30m"}, site) do
+    last_datetime = now |> NaiveDateTime.truncate(:second)
 
     first_datetime =
       last_datetime
@@ -566,8 +397,8 @@ defmodule Plausible.Stats.Clickhouse do
     {first_datetime, last_datetime}
   end
 
-  defp utc_boundaries(%Query{period: "realtime"}, site) do
-    last_datetime = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+  defp utc_boundaries(%Query{now: now, period: "realtime"}, site) do
+    last_datetime = now |> NaiveDateTime.truncate(:second)
 
     first_datetime =
       last_datetime
@@ -582,15 +413,14 @@ defmodule Plausible.Stats.Clickhouse do
     {:ok, first} = NaiveDateTime.new(date_range.first, ~T[00:00:00])
 
     first_datetime =
-      Timex.to_datetime(first, site.timezone)
-      |> Timex.Timezone.convert("UTC")
+      first
+      |> Timezones.to_utc_datetime(site.timezone)
       |> beginning_of_time(site.native_stats_start_at)
 
     {:ok, last} = NaiveDateTime.new(date_range.last |> Timex.shift(days: 1), ~T[00:00:00])
 
     last_datetime =
-      Timex.to_datetime(last, site.timezone)
-      |> Timex.Timezone.convert("UTC")
+      Timezones.to_utc_datetime(last, site.timezone)
 
     {first_datetime, last_datetime}
   end
@@ -665,52 +495,6 @@ defmodule Plausible.Stats.Clickhouse do
           from(e in db_query, where: e.pathname != ^path)
         else
           from(e in db_query, where: e.pathname == ^path)
-        end
-      end
-    else
-      db_query
-    end
-  end
-
-  defp include_path_filter_entry(db_query, path) do
-    if path do
-      {negated, path} = check_negated_filter(path)
-      {contains_regex, path_regex} = convert_path_regex(path)
-
-      if contains_regex do
-        if negated do
-          from(e in db_query, where: fragment("not(match(?, ?))", e.entry_page, ^path_regex))
-        else
-          from(e in db_query, where: fragment("match(?, ?)", e.entry_page, ^path_regex))
-        end
-      else
-        if negated do
-          from(e in db_query, where: e.entry_page != ^path)
-        else
-          from(e in db_query, where: e.entry_page == ^path)
-        end
-      end
-    else
-      db_query
-    end
-  end
-
-  defp include_path_filter_exit(db_query, path) do
-    if path do
-      {negated, path} = check_negated_filter(path)
-      {contains_regex, path_regex} = convert_path_regex(path)
-
-      if contains_regex do
-        if negated do
-          from(e in db_query, where: fragment("not(match(?, ?))", e.exit_page, ^path_regex))
-        else
-          from(e in db_query, where: fragment("match(?, ?)", e.exit_page, ^path_regex))
-        end
-      else
-        if negated do
-          from(e in db_query, where: e.exit_page != ^path)
-        else
-          from(e in db_query, where: e.exit_page == ^path)
         end
       end
     else

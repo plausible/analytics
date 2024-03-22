@@ -2,9 +2,8 @@ defmodule PlausibleWeb.Live.FunnelSettings do
   @moduledoc """
   LiveView allowing listing, creating and deleting funnels.
   """
-  use Phoenix.LiveView
+  use PlausibleWeb, :live_view
   use Phoenix.HTML
-  use PlausibleWeb.Live.Flash
 
   use Plausible.Funnel
 

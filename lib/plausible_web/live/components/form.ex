@@ -86,11 +86,15 @@ defmodule PlausibleWeb.Live.Components.Form do
   def input_with_clipboard(assigns) do
     ~H"""
     <div class="my-4">
+      <div>
+        <.label for={@id}>
+          <%= @label %>
+        </.label>
+      </div>
       <div class="relative mt-1">
         <.input
           id={@id}
           name={@name}
-          label={@label}
           value={@value}
           type="text"
           readonly="readonly"
@@ -100,10 +104,12 @@ defmodule PlausibleWeb.Live.Components.Form do
         <a
           onclick={"var input = document.getElementById('#{@id}'); input.focus(); input.select(); document.execCommand('copy'); event.stopPropagation();"}
           href="javascript:void(0)"
-          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline"
-          style="top: 42px; right: 12px;"
+          class="absolute flex items-center text-xs font-medium text-indigo-600 no-underline hover:underline top-2 right-4"
         >
-          <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />COPY
+          <Heroicons.document_duplicate class="pr-1 text-indigo-600 dark:text-indigo-500 w-5 h-5" />
+          <span>
+            COPY
+          </span>
         </a>
       </div>
     </div>

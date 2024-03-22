@@ -1,0 +1,111 @@
+<div class="w-full max-w-3xl mt-4 mx-auto flex">
+  <%= if @has_email_code? do %>
+    <%= form_for @conn, "/activate", [class: "w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8"], fn f -> %>
+      <h2 class="text-xl font-black dark:text-gray-100">
+        <%= if @has_any_memberships? do %>
+          Verify your email address
+        <% else %>
+          Activate your account
+        <% end %>
+      </h2>
+
+      <div class="mt-2 text-sm text-gray-500 dark:text-gray-200 leading-tight">
+        Please enter the 4-digit code we sent to <b><%= @conn.assigns[:current_user].email %></b>
+      </div>
+
+      <div class="mt-12 flex items-stretch flex-grow">
+        <div>
+          <%= text_input(f, :code,
+            class:
+              "tracking-widest font-medium shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-36 px-8 border-gray-300 dark:border-gray-500 rounded-l-md dark:text-gray-200 dark:bg-gray-900",
+            oninput:
+              "this.value=this.value.replace(/[^0-9]/g, ''); if (this.value.length >= 4) document.getElementById('submit').focus()",
+            onclick: "this.select();",
+            maxlength: "4",
+            placeholder: "••••",
+            style: "letter-spacing: 10px;",
+            required: "required"
+          ) %>
+        </div>
+        <PlausibleWeb.Components.Generic.button id="submit" type="submit" class="rounded-l-none">
+          Activate &rarr;
+        </PlausibleWeb.Components.Generic.button>
+      </div>
+      <%= error_tag(assigns, :error) %>
+
+      <div class="mt-16 text-sm dark:text-gray-100">
+        Didn't receive an email?
+      </div>
+      <ol class="list-disc text-xs text-gray-500 leading-tight space-y-1 mt-1">
+        <li>Check your spam folder</li>
+        <li>
+          <%= link("Send a new code",
+            class: "underline text-indigo-600",
+            to: "/activate/request-code",
+            method: :post
+          ) %> to <%= @conn.assigns[:current_user].email %>
+        </li>
+        <%= if full_build?() do %>
+          <li>
+            <a class="underline text-indigo-600" href="https://plausible.io/contact">
+              Contact us
+            </a>
+            if the problem persists
+          </li>
+        <% else %>
+          <li>
+            Ask on our <%= link("community-supported forum",
+              to: "https://github.com/plausible/analytics/discussions",
+              class: "text-indigo-600 underline"
+            ) %>
+          </li>
+        <% end %>
+      </ol>
+      <div class="mt-4 text-sm dark:text-gray-100">
+        Entered the wrong email address?
+      </div>
+      <ul class="list-disc text-xs text-gray-500 leading-tight mt-1">
+        <%= if @has_any_memberships? do %>
+          <li>
+            <%= link("Change email back to",
+              class: "underline text-indigo-600",
+              to: "/settings/email/cancel",
+              method: "post"
+            ) %> to <%= @conn.assigns[:current_user].previous_email %>
+          </li>
+        <% else %>
+          <li>
+            <%= link("Delete this account",
+              class: "underline text-indigo-600",
+              to: "/me?redirect=/register",
+              method: "delete",
+              data: [confirm: "Deleting your account cannot be reversed. Are you sure?"]
+            ) %> and start over
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+  <% else %>
+    <div class="w-full max-w-lg mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 py-6 mb-4 mt-8">
+      <h2 class="text-xl font-black dark:text-gray-100">Activate your account</h2>
+
+      <div class="mt-2 text-sm text-gray-500 dark:text-gray-200 leading-tight">
+        A 4-digit activation code will be sent to <b><%= @conn.assigns[:current_user].email %></b>
+      </div>
+
+      <%= error_tag(assigns, :error) %>
+
+      <%= button("Request activation code",
+        to: "/activate/request-code",
+        method: :post,
+        class: "button mt-12"
+      ) %>
+    </div>
+  <% end %>
+
+  <%= if !@has_any_invitations? and !@has_any_memberships? do %>
+    <div class="pt-12 pl-8 hidden md:block">
+      <%= render(PlausibleWeb.AuthView, "_onboarding_steps.html", current_step: 1) %>
+    </div>
+  <% end %>
+</div>

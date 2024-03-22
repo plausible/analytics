@@ -14,7 +14,11 @@ defmodule Plausible.SiteAdmin do
   end
 
   def custom_index_query(_conn, _schema, query) do
-    from(r in query, preload: [memberships: :user])
+    from(r in query,
+      inner_join: o in assoc(r, :owner),
+      inner_join: m in assoc(r, :memberships),
+      preload: [owner: o, memberships: {m, :user}]
+    )
   end
 
   def form_fields(_) do
@@ -39,15 +43,26 @@ defmodule Plausible.SiteAdmin do
       inserted_at: %{name: "Created at", value: &format_date(&1.inserted_at)},
       timezone: nil,
       public: nil,
-      owner: %{value: &get_owner_email/1},
+      owner: %{value: &get_owner/1},
       other_members: %{value: &get_other_members/1},
       limits: %{
         value: fn site ->
-          case site.ingest_rate_limit_threshold do
-            nil -> ""
-            0 -> "🛑 BLOCKED"
-            n -> "⏱ #{n}/#{site.ingest_rate_limit_scale_seconds}s (per server)"
-          end
+          rate_limiting_status =
+            case site.ingest_rate_limit_threshold do
+              nil -> ""
+              0 -> "🛑 BLOCKED"
+              n -> "⏱ #{n}/#{site.ingest_rate_limit_scale_seconds}s (per server)"
+            end
+
+          owner = site.owner
+
+          owner_limits =
+            if owner.accept_traffic_until &&
+                 Date.after?(Date.utc_today(), owner.accept_traffic_until) do
+              "💸 Rejecting traffic"
+            end
+
+          {:safe, Enum.join([rate_limiting_status, owner_limits], "<br/><br/>")}
         end
       }
     ]
@@ -81,7 +96,7 @@ defmodule Plausible.SiteAdmin do
     inviter = conn.assigns[:current_user]
 
     if new_owner do
-      {:ok, _} =
+      result =
         Plausible.Site.Memberships.bulk_create_invitation(
           sites,
           inviter,
@@ -90,7 +105,13 @@ defmodule Plausible.SiteAdmin do
           check_permissions: false
         )
 
-      :ok
+      case result do
+        {:ok, _} ->
+          :ok
+
+        {:error, :transfer_to_self} ->
+          {:error, "User is already an owner of one of the sites"}
+      end
     else
       {:error, "User could not be found"}
     end
@@ -105,8 +126,17 @@ defmodule Plausible.SiteAdmin do
 
     if new_owner do
       case Plausible.Site.Memberships.bulk_transfer_ownership_direct(sites, new_owner) do
-        {:ok, _} -> :ok
-        {:error, :transfer_to_self} -> {:error, "User is already an owner of one of the sites"}
+        {:ok, _} ->
+          :ok
+
+        {:error, :transfer_to_self} ->
+          {:error, "User is already an owner of one of the sites"}
+
+        {:error, :no_plan} ->
+          {:error, "The new owner does not have a subscription"}
+
+        {:error, {:over_plan_limits, limits}} ->
+          {:error, "Plan limits exceeded for one of the sites: #{Enum.join(limits, ", ")}"}
       end
     else
       {:error, "User could not be found"}
@@ -117,11 +147,16 @@ defmodule Plausible.SiteAdmin do
     Timex.format!(date, "{Mshort} {D}, {YYYY}")
   end
 
-  defp get_owner_email(site) do
-    owner = Enum.find(site.memberships, fn m -> m.role == :owner end)
+  defp get_owner(site) do
+    owner = site.owner
 
     if owner do
-      owner.user.email
+      {:safe,
+       """
+        <a href="/crm/auth/user/#{owner.id}">#{owner.name}</a>
+        <br/><br/>
+        #{owner.email}
+       """}
     end
   end
 

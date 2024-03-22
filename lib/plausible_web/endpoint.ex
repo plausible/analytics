@@ -17,7 +17,12 @@ defmodule PlausibleWeb.Endpoint do
   socket("/live", Phoenix.LiveView.Socket,
     websocket: [
       check_origin: true,
-      connect_info: [session: {__MODULE__, :runtime_session_opts, []}]
+      connect_info: [
+        :peer_data,
+        :uri,
+        :user_agent,
+        session: {__MODULE__, :runtime_session_opts, []}
+      ]
     ]
   )
 
@@ -28,11 +33,21 @@ defmodule PlausibleWeb.Endpoint do
   plug(PlausibleWeb.Tracker)
   plug(PlausibleWeb.Favicon)
 
+  static_paths = ~w(css js images favicon.ico)
+
+  static_paths =
+    on_full_build do
+      # NOTE: The Cloud uses custom robots.txt from https://github.com/plausible/website: https://plausible.io/robots.txt
+      static_paths
+    else
+      static_paths ++ ["robots.txt"]
+    end
+
   plug(Plug.Static,
     at: "/",
     from: :plausible,
     gzip: false,
-    only: ~w(css js images favicon.ico robots.txt)
+    only: static_paths
   )
 
   on_full_build do

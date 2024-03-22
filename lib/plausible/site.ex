@@ -39,7 +39,6 @@ defmodule Plausible.Site do
     has_one :google_auth, GoogleAuth
     has_one :weekly_report, Plausible.Site.WeeklyReport
     has_one :monthly_report, Plausible.Site.MonthlyReport
-    has_one :custom_domain, Plausible.Site.CustomDomain
     has_one :spike_notification, Plausible.Site.SpikeNotification
     has_one :ownership, Plausible.Site.Membership, where: [role: :owner]
     has_one :owner, through: [:ownership, :user]
@@ -49,14 +48,24 @@ defmodule Plausible.Site do
     # strictly necessary.
     field :from_cache?, :boolean, virtual: true, default: false
 
-    # Used in the context of paginated sites list to order in relation to 
+    # Used in the context of paginated sites list to order in relation to
     # user's membership state. Currently it can be either "invitation",
     # "pinned_site" or "site", where invitations are first.
     field :entry_type, :string, virtual: true
     field :pinned_at, :naive_datetime, virtual: true
 
+    # Used for caching imports data for the duration of the whole request
+    # to avoid multiple identical fetches. Populated by plugs putting
+    # `site` in `assigns`.
+    field :import_data_loaded, :boolean, default: false, virtual: true
+    field :earliest_import_start_date, :date, virtual: true
+    field :earliest_import_end_date, :date, virtual: true
+    field :complete_import_ids, {:array, :integer}, default: [], virtual: true
+
     timestamps()
   end
+
+  def new(params), do: changeset(%__MODULE__{}, params)
 
   @domain_unique_error """
   This domain cannot be registered. Perhaps one of your colleagues registered it? If that's not the case, please contact support@plausible.io
@@ -67,6 +76,7 @@ defmodule Plausible.Site do
     |> cast(attrs, [:domain, :timezone])
     |> clean_domain()
     |> validate_required([:domain, :timezone])
+    |> validate_timezone()
     |> validate_domain_format()
     |> validate_domain_reserved_characters()
     |> unique_constraint(:domain,
@@ -156,7 +166,6 @@ defmodule Plausible.Site do
 
   def import_success(site) do
     change(site,
-      stats_start_date: site.imported_data.start_date,
       imported_data: %{status: "ok"}
     )
   end
@@ -165,50 +174,8 @@ defmodule Plausible.Site do
     change(site, imported_data: %{status: "error"})
   end
 
-  def set_imported_source(site, imported_source) do
-    change(site,
-      imported_data: %Plausible.Site.ImportedData{
-        end_date: Timex.today(),
-        source: imported_source
-      }
-    )
-  end
-
   def remove_imported_data(site) do
     change(site, imported_data: nil)
-  end
-
-  @doc """
-  Returns the date of the first recorded stat in the timezone configured by the user.
-  This function does 2 transformations:
-    UTC %NaiveDateTime{} -> Local %DateTime{} -> Local %Date
-
-  ## Examples
-
-    iex> Plausible.Site.local_start_date(%Plausible.Site{stats_start_date: nil})
-    nil
-
-    iex> utc_start = ~N[2022-09-28 00:00:00]
-    iex> tz = "Europe/Helsinki"
-    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-    iex> Plausible.Site.local_start_date(site)
-    ~D[2022-09-28]
-
-    iex> utc_start = ~N[2022-09-28 00:00:00]
-    iex> tz = "America/Los_Angeles"
-    iex> site = %Plausible.Site{stats_start_date: utc_start, timezone: tz}
-    iex> Plausible.Site.local_start_date(site)
-    ~D[2022-09-27]
-  """
-  def local_start_date(%__MODULE__{stats_start_date: nil}) do
-    nil
-  end
-
-  def local_start_date(site) do
-    site.stats_start_date
-    |> Timex.Timezone.convert("UTC")
-    |> Timex.Timezone.convert(site.timezone)
-    |> Timex.to_date()
   end
 
   defp clean_domain(changeset) do
@@ -263,5 +230,21 @@ defmodule Plausible.Site do
     else
       changeset
     end
+  end
+
+  defp validate_timezone(changeset) do
+    tz = get_field(changeset, :timezone)
+
+    if Timex.is_valid_timezone?(tz) do
+      changeset
+    else
+      add_error(changeset, :timezone, "is invalid")
+    end
+  end
+end
+
+defimpl FunWithFlags.Actor, for: Plausible.Site do
+  def id(%{domain: domain}) do
+    "site:#{domain}"
   end
 end

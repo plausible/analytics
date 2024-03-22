@@ -1,6 +1,7 @@
 defmodule Plausible.Stats.FilterSuggestions do
   use Plausible.Repo
   use Plausible.ClickhouseRepo
+  use Plausible.Stats.Fragments
   import Plausible.Stats.Base
   alias Plausible.Stats.Query
 
@@ -133,7 +134,7 @@ defmodule Plausible.Stats.FilterSuggestions do
   def filter_suggestions(site, query, "prop_key", filter_search) do
     filter_query = if filter_search == nil, do: "%", else: "%#{filter_search}%"
 
-    from(e in base_event_query(site, Query.remove_event_filters(query, [:props])),
+    from(e in base_event_query(site, query),
       array_join: meta in "meta",
       as: :meta,
       select: meta.key,
@@ -142,7 +143,7 @@ defmodule Plausible.Stats.FilterSuggestions do
       order_by: [desc: fragment("count(*)")],
       limit: 25
     )
-    |> Plausible.Stats.CustomProps.maybe_allowed_props_only(site.allowed_event_props)
+    |> Plausible.Stats.CustomProps.maybe_allowed_props_only(site)
     |> ClickhouseRepo.all()
     |> wrap_suggestions()
   end
@@ -154,20 +155,22 @@ defmodule Plausible.Stats.FilterSuggestions do
 
     none_q =
       from(e in base_event_query(site, Query.remove_event_filters(query, [:props])),
-        left_array_join: meta in "meta",
-        as: :meta,
         select: "(none)",
-        where: fragment("not has(?, ?)", field(e, :"meta.key"), ^key),
+        where: not has_key(e, :meta, ^key),
         limit: 1
       )
 
     search_q =
       from(e in base_event_query(site, query),
-        array_join: meta in "meta",
-        as: :meta,
-        select: meta.value,
-        where: meta.key == ^key and fragment("? ilike ?", meta.value, ^filter_query),
-        group_by: meta.value,
+        select: get_by_key(e, :meta, ^key),
+        where:
+          has_key(e, :meta, ^key) and
+            fragment(
+              "? ilike ?",
+              get_by_key(e, :meta, ^key),
+              ^filter_query
+            ),
+        group_by: get_by_key(e, :meta, ^key),
         order_by: [desc: fragment("count(*)")],
         limit: 25
       )
@@ -177,7 +180,6 @@ defmodule Plausible.Stats.FilterSuggestions do
     |> wrap_suggestions()
   end
 
-  # credo:disable-for-next-line Credo.Check.Refactor.CyclomaticComplexity
   def filter_suggestions(site, query, filter_name, filter_search) do
     filter_search = if filter_search == nil, do: "", else: filter_search
 

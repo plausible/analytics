@@ -2,7 +2,7 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
   @moduledoc """
   Live view for the custom props creation form
   """
-  use Phoenix.LiveView
+  use PlausibleWeb, :live_view
   import PlausibleWeb.Live.Components.Form
   alias PlausibleWeb.Live.Components.ComboBox
 
@@ -111,10 +111,6 @@ defmodule PlausibleWeb.Live.PropsSettings.Form do
 
   def handle_info({:update_prop_key_options_count, count}, socket) do
     {:noreply, assign(socket, prop_key_options_count: count)}
-  end
-
-  def handle_info({:selection_made, %{submit_value: _prop}}, socket) do
-    {:noreply, socket}
   end
 
   def handle_event("allow-prop", %{"prop" => prop}, socket) do

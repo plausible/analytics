@@ -7,19 +7,6 @@ defmodule PlausibleWeb.BillingControllerTest do
   @v4_growth_plan "857097"
   @v4_business_plan "857105"
 
-  describe "GET /upgrade" do
-    setup [:create_user, :log_in]
-
-    test "redirects user to enteprise plan page if they are configured with one", %{
-      conn: conn,
-      user: user
-    } do
-      insert(:enterprise_plan, user: user)
-      conn = get(conn, Routes.billing_path(conn, :upgrade))
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
-    end
-  end
-
   describe "GET /choose-plan" do
     setup [:create_user, :log_in]
 
@@ -31,28 +18,10 @@ defmodule PlausibleWeb.BillingControllerTest do
     end
   end
 
-  describe "GET /upgrade/enterprise/:plan_id (deprecated)" do
-    setup [:create_user, :log_in]
-
-    test "redirects to the new :upgrade_to_enterprise_plan action", %{conn: conn} do
-      conn = get(conn, Routes.billing_path(conn, :upgrade_enterprise_plan, "123"))
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
-    end
-  end
-
-  describe "GET /change-plan/enterprise/:plan_id (deprecated)" do
-    setup [:create_user, :log_in]
-
-    test "redirects to the new :upgrade_to_enterprise_plan action", %{conn: conn} do
-      conn = get(conn, Routes.billing_path(conn, :change_enterprise_plan, "123"))
-      assert redirected_to(conn) == Routes.billing_path(conn, :upgrade_to_enterprise_plan)
-    end
-  end
-
   describe "POST /change-plan" do
     setup [:create_user, :log_in]
 
-    test "errors if usage exceeds some limit on the new plan", %{conn: conn, user: user} do
+    test "errors if usage exceeds team member limit on the new plan", %{conn: conn, user: user} do
       insert(:subscription, user: user, paddle_plan_id: "123123")
 
       insert(:site,
@@ -68,7 +37,55 @@ defmodule PlausibleWeb.BillingControllerTest do
       conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
-               "Unable to subscribe to this plan because the following limits are exceeded: [:team_member_limit]"
+               "Unable to subscribe to this plan because the following limits are exceeded: team member limit"
+    end
+
+    test "errors if usage exceeds site limit even when user.next_upgrade_override is true", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:subscription, user: user, paddle_plan_id: "123123")
+
+      for _ <- 1..11, do: insert(:site, members: [user])
+
+      Plausible.Users.allow_next_upgrade_override(user)
+
+      conn = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) =~ "are exceeded: site limit"
+      assert subscription.paddle_plan_id == "123123"
+    end
+
+    test "can override allowing to upgrade when pageview limit is exceeded", %{
+      conn: conn,
+      user: user
+    } do
+      insert(:subscription, user: user, paddle_plan_id: "123123")
+      site = insert(:site, members: [user])
+      now = NaiveDateTime.utc_now()
+
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -5))
+      generate_usage_for(site, 11_000, Timex.shift(now, days: -35))
+
+      conn1 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+
+      subscription = Plausible.Repo.get_by(Plausible.Billing.Subscription, user_id: user.id)
+
+      assert Phoenix.Flash.get(conn1.assigns.flash, :error) =~
+               "are exceeded: monthly pageview limit"
+
+      assert subscription.paddle_plan_id == "123123"
+
+      Plausible.Users.allow_next_upgrade_override(user)
+
+      conn2 = post(conn, Routes.billing_path(conn, :change_plan, @v4_growth_plan))
+
+      subscription = Plausible.Repo.reload!(subscription)
+
+      assert Phoenix.Flash.get(conn2.assigns.flash, :success) =~ "Plan changed successfully"
+      assert subscription.paddle_plan_id == @v4_growth_plan
     end
 
     test "calls Paddle API to update subscription", %{conn: conn, user: user} do
@@ -237,7 +254,7 @@ defmodule PlausibleWeb.BillingControllerTest do
 
       assert doc =~ "Looking to adjust your plan?"
       assert doc =~ "You're currently on a custom plan."
-      assert doc =~ "please contact us at hello@plausible.io"
+      assert Floki.text(doc) =~ "please contact us at hello@plausible.io"
     end
   end
 

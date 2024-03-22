@@ -2,6 +2,8 @@ defmodule PlausibleWeb.AuthController.LogsTest do
   use PlausibleWeb.ConnCase
   import ExUnit.CaptureLog
 
+  setup {PlausibleWeb.FirstLaunchPlug.Test, :skip}
+
   describe "POST /login" do
     setup do
       patch_env(:log_failed_login_attempts, true)

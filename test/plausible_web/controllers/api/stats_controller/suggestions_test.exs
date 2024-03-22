@@ -59,7 +59,10 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       populate_stats(site, [
         build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
         build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "Bing"),
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], referrer_source: "10words")
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:00],
+          referrer_source: "10words"
+        )
       ])
 
       conn =
@@ -73,7 +76,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for countries", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:01], pathname: "/", country_code: "US")
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:01],
+          pathname: "/",
+          country_code: "US"
+        )
       ])
 
       conn =
@@ -106,8 +113,16 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
       {:ok, [site: site]} = create_new_site(%{user: user})
 
       populate_stats(site, [
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-37", city_geoname_id: 588_409),
-        build(:pageview, country_code: "EE", subdivision1_code: "EE-39", city_geoname_id: 591_632)
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-37",
+          city_geoname_id: 588_409
+        ),
+        build(:pageview,
+          country_code: "EE",
+          subdivision1_code: "EE-39",
+          city_geoname_id: 591_632
+        )
       ])
 
       conn =
@@ -146,7 +161,11 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
 
     test "returns suggestions for browsers", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, timestamp: ~N[2019-01-01 23:00:00], pathname: "/", browser: "Chrome")
+        build(:pageview,
+          timestamp: ~N[2019-01-01 23:00:00],
+          pathname: "/",
+          browser: "Chrome"
+        )
       ])
 
       conn =
@@ -279,6 +298,63 @@ defmodule PlausibleWeb.Api.StatsController.SuggestionsTest do
                %{"label" => "author", "value" => "author"},
                %{"label" => "logged_in", "value" => "logged_in"},
                %{"label" => "dark_mode", "value" => "dark_mode"}
+             ]
+    end
+
+    test "returns suggestions found in time frame", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author", "logged_in"],
+          "meta.value": ["Uku Taht", "false"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["dark_mode"],
+          "meta.value": ["true"],
+          timestamp: ~N[2022-01-02 00:00:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01")
+
+      assert json_response(conn, 200) == [
+               %{"label" => "author", "value" => "author"},
+               %{"label" => "logged_in", "value" => "logged_in"}
+             ]
+    end
+
+    test "returns only prop keys which exist under filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["author", "bank"],
+          "meta.value": ["Uku", "a"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["author", "serial_number"],
+          "meta.value": ["Marko", "b"],
+          timestamp: ~N[2022-01-01 00:00:00]
+        )
+      ])
+
+      filters = Jason.encode!(%{props: %{author: "Uku"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/suggestions/prop_key?period=day&date=2022-01-01&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{"label" => "author", "value" => "author"},
+               %{"label" => "bank", "value" => "bank"}
              ]
     end
 

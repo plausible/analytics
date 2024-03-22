@@ -23,6 +23,7 @@ defmodule Plausible.Ingestion.Request do
   """
 
   use Ecto.Schema
+  use Plausible
   alias Ecto.Changeset
 
   @max_url_size 2_000
@@ -40,7 +41,11 @@ defmodule Plausible.Ingestion.Request do
     field :hash_mode, :integer
     field :pathname, :string
     field :props, :map
-    field :revenue_source, :map
+
+    on_full_build do
+      field :revenue_source, :map
+    end
+
     field :query_params, :map
 
     field :timestamp, :naive_datetime
@@ -90,8 +95,16 @@ defmodule Plausible.Ingestion.Request do
     end
   end
 
+  on_full_build do
+    defp put_revenue_source(changeset, request_body) do
+      Plausible.Ingestion.Request.Revenue.put_revenue_source(changeset, request_body)
+    end
+  else
+    defp put_revenue_source(changeset, _request_body), do: changeset
+  end
+
   defp put_remote_ip(changeset, conn) do
-    Changeset.put_change(changeset, :remote_ip, PlausibleWeb.RemoteIp.get(conn))
+    Changeset.put_change(changeset, :remote_ip, PlausibleWeb.RemoteIP.get(conn))
   end
 
   defp parse_body(conn) do
@@ -192,14 +205,22 @@ defmodule Plausible.Ingestion.Request do
   defp put_props(changeset, %{} = request_body) do
     props =
       (request_body["m"] || request_body["meta"] || request_body["p"] || request_body["props"])
-      |> decode_json_or_fallback()
-      |> Enum.reject(fn {_k, v} -> is_nil(v) || is_list(v) || is_map(v) || v == "" end)
+      |> Plausible.Helpers.JSON.decode_or_fallback()
+      |> Enum.reduce([], &filter_bad_props/2)
       |> Enum.take(@max_props)
       |> Map.new()
 
     changeset
     |> Changeset.put_change(:props, props)
     |> validate_props()
+  end
+
+  defp filter_bad_props({k, v}, acc) do
+    cond do
+      Enum.any?([k, v], &(is_list(&1) or is_map(&1))) -> acc
+      Enum.any?([k, v], &(String.trim_leading(to_string(&1)) == "")) -> acc
+      true -> [{to_string(k), to_string(v)} | acc]
+    end
   end
 
   @max_prop_key_length Plausible.Props.max_prop_key_length()
@@ -221,46 +242,6 @@ defmodule Plausible.Ingestion.Request do
           _, changeset ->
             {:cont, changeset}
         end)
-    end
-  end
-
-  defp put_revenue_source(%Ecto.Changeset{} = changeset, %{} = request_body) do
-    with revenue_source <- request_body["revenue"] || request_body["$"],
-         %{"amount" => _, "currency" => _} = revenue_source <-
-           decode_json_or_fallback(revenue_source) do
-      parse_revenue_source(changeset, revenue_source)
-    else
-      _any -> changeset
-    end
-  end
-
-  @valid_currencies Plausible.Goal.valid_currencies()
-  defp parse_revenue_source(changeset, %{"amount" => amount, "currency" => currency}) do
-    with true <- currency in @valid_currencies,
-         {%Decimal{} = amount, _rest} <- parse_decimal(amount),
-         %Money{} = amount <- Money.new(currency, amount) do
-      Changeset.put_change(changeset, :revenue_source, amount)
-    else
-      _any -> changeset
-    end
-  end
-
-  defp decode_json_or_fallback(raw) do
-    with raw when is_binary(raw) <- raw,
-         {:ok, %{} = decoded} <- Jason.decode(raw) do
-      decoded
-    else
-      already_a_map when is_map(already_a_map) -> already_a_map
-      _any -> %{}
-    end
-  end
-
-  defp parse_decimal(value) do
-    case value do
-      value when is_binary(value) -> Decimal.parse(value)
-      value when is_float(value) -> {Decimal.from_float(value), nil}
-      value when is_integer(value) -> {Decimal.new(value), nil}
-      _any -> :error
     end
   end
 

@@ -1,0 +1,29 @@
+SELECT
+    total,
+    length(parts_to_do_names),
+    running_for_seconds,
+    formatReadableSize(total_bytes),
+    formatReadableSize(todo_bytes),
+    round(100 - todo_bytes / total_bytes * 100, 2),
+    latest_fail_reason,
+    sum(part.bytes_on_disk) as total_bytes,
+    sumIf(part.bytes_on_disk, has(parts_to_do_names, part.name)) AS todo_bytes
+FROM (
+    SELECT count() AS total,
+        groupArrayArray(parts_to_do_names) AS parts_to_do_names,
+        now() - min(create_time) AS running_for_seconds,
+        anyIf(latest_fail_reason, latest_fail_reason != '') AS latest_fail_reason
+    FROM system.mutations
+    WHERE not is_done
+    AND table = 'events_v2'
+    AND command ILIKE '%sessions_dict%'
+) AS mut
+CROSS JOIN (
+    SELECT name, bytes_on_disk
+    FROM system.parts
+    WHERE table = 'events_v2'
+    AND active
+    AND partition >= '<%= @min_partition %>'
+    AND partition <= '<%= @max_partition %>'
+) AS part
+GROUP BY mut.total, mut.parts_to_do_names, mut.running_for_seconds, mut.latest_fail_reason

@@ -15,6 +15,81 @@ defmodule PlausibleWeb.Live.SitesTest do
       assert text(html) =~ "You don't have any sites yet"
     end
 
+    @tag :full_build_only
+    test "renders ownership transfer invitation for a case with no plan", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site)
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: user.email,
+          role: :owner
+        )
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      invitation_data = get_invitation_data(html)
+
+      assert get_in(invitation_data, ["invitations", invitation.invitation_id, "no_plan"])
+    end
+
+    @tag :full_build_only
+    test "renders ownership transfer invitation for a case with exceeded limits", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site)
+
+      insert(:growth_subscription, user: user)
+
+      # fill site quota
+      insert_list(10, :site, members: [user])
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: user.email,
+          role: :owner
+        )
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      invitation_data = get_invitation_data(html)
+
+      assert get_in(invitation_data, ["invitations", invitation.invitation_id, "exceeded_limits"]) ==
+               "site limit"
+    end
+
+    @tag :full_build_only
+    test "renders ownership transfer invitation for a case with missing features", %{
+      conn: conn,
+      user: user
+    } do
+      site = insert(:site, allowed_event_props: ["dummy"])
+
+      insert(:growth_subscription, user: user)
+
+      invitation =
+        insert(:invitation,
+          site_id: site.id,
+          inviter: build(:user),
+          email: user.email,
+          role: :owner
+        )
+
+      {:ok, _lv, html} = live(conn, "/sites")
+
+      invitation_data = get_invitation_data(html)
+
+      assert get_in(invitation_data, ["invitations", invitation.invitation_id, "missing_features"]) ==
+               "Custom Properties"
+    end
+
     test "renders 24h visitors correctly", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
 
@@ -74,7 +149,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       assert text_of_element(
                html,
-               ~s/li[data-domain="#{site.domain}"] button/
+               ~s/li[data-domain="#{site.domain}"] a[phx-value-domain]/
              ) == "Pin Site"
     end
 
@@ -83,7 +158,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      button_selector = ~s/li[data-domain="#{site.domain}"] button/
+      button_selector = ~s/li[data-domain="#{site.domain}"] a[phx-value-domain]/
 
       html =
         lv
@@ -114,7 +189,7 @@ defmodule PlausibleWeb.Live.SitesTest do
 
       {:ok, lv, _html} = live(conn, "/sites")
 
-      button_selector = ~s/li[data-domain="#{site.domain}"] button/
+      button_selector = ~s/li[data-domain="#{site.domain}"] a[phx-value-domain]/
 
       html =
         lv
@@ -139,5 +214,15 @@ defmodule PlausibleWeb.Live.SitesTest do
     lv
     |> element("form")
     |> render_change(%{id => text})
+  end
+
+  defp get_invitation_data(html) do
+    html
+    |> text_of_attr("div[x-data]", "x-data")
+    |> String.trim("dropdown")
+    |> String.replace("selectedInvitation:", "\"selectedInvitation\":")
+    |> String.replace("invitationOpen:", "\"invitationOpen\":")
+    |> String.replace("invitations:", "\"invitations\":")
+    |> Jason.decode!()
   end
 end

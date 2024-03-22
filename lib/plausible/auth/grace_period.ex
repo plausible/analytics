@@ -8,7 +8,7 @@ defmodule Plausible.Auth.GracePeriod do
   background with `Plausible.Workers.LockSites`.
 
   The grace period can also be manual, without an end date, being controlled
-  manually from the CRM, and not by the background site locker job. This is 
+  manually from the CRM, and not by the background site locker job. This is
   useful for enterprise subscriptions.
   """
 
@@ -17,26 +17,23 @@ defmodule Plausible.Auth.GracePeriod do
 
   @type t() :: %__MODULE__{
           end_date: Date.t() | nil,
-          allowance_required: non_neg_integer(),
           is_over: boolean(),
           manual_lock: boolean()
         }
 
   embedded_schema do
     field :end_date, :date
-    field :allowance_required, :integer
     field :is_over, :boolean
     field :manual_lock, :boolean
   end
 
-  @spec start_changeset(User.t(), non_neg_integer()) :: Ecto.Changeset.t()
+  @spec start_changeset(User.t()) :: Ecto.Changeset.t()
   @doc """
   Starts a account locking grace period of 7 days by changing the User struct.
   """
-  def start_changeset(%User{} = user, allowance_required) do
+  def start_changeset(%User{} = user) do
     grace_period = %__MODULE__{
       end_date: Timex.shift(Timex.today(), days: 7),
-      allowance_required: allowance_required,
       is_over: false,
       manual_lock: false
     }
@@ -44,16 +41,15 @@ defmodule Plausible.Auth.GracePeriod do
     Ecto.Changeset.change(user, grace_period: grace_period)
   end
 
-  @spec start_manual_lock_changeset(User.t(), non_neg_integer()) :: Ecto.Changeset.t()
+  @spec start_manual_lock_changeset(User.t()) :: Ecto.Changeset.t()
   @doc """
-  Starts a manual account locking grace period by changing the User struct. 
+  Starts a manual account locking grace period by changing the User struct.
   Manual locking means the grace period can only be removed manually from the
   CRM.
   """
-  def start_manual_lock_changeset(%User{} = user, allowance_required) do
+  def start_manual_lock_changeset(%User{} = user) do
     grace_period = %__MODULE__{
       end_date: nil,
-      allowance_required: allowance_required,
       is_over: false,
       manual_lock: true
     }

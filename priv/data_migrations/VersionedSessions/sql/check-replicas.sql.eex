@@ -1,0 +1,1 @@
+SELECT 1 FROM system.replicas WHERE table = 'sessions_v2'

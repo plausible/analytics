@@ -66,8 +66,9 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
       )
     end
 
+    @tag :full_build_only
     test "returns error when owner is over their team member limit" do
-      [owner, inviter, invitee] = insert_list(3, :user, inserted_at: ~N[2024-01-01T00:00:00Z])
+      [owner, inviter, invitee] = insert_list(3, :user)
 
       memberships =
         [
@@ -81,7 +82,59 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.create_invitation(site, inviter, invitee.email, :viewer)
     end
 
-    test "sends ownership transfer email when inviter role is owner" do
+    @tag :full_build_only
+    test "allows inviting users who were already invited to other sites, within the limit" do
+      owner = insert(:user)
+
+      memberships =
+        [
+          build(:site_membership, user: owner, role: :owner)
+        ]
+
+      site = insert(:site, memberships: memberships)
+
+      invite = fn site, email ->
+        CreateInvitation.create_invitation(site, owner, email, :viewer)
+      end
+
+      assert {:ok, _} = invite.(site, "i1@example.com")
+      assert {:ok, _} = invite.(site, "i2@example.com")
+      assert {:ok, _} = invite.(site, "i3@example.com")
+      assert {:error, {:over_limit, 3}} = invite.(site, "i4@example.com")
+
+      site2 = insert(:site, memberships: memberships)
+
+      assert {:ok, _} = invite.(site2, "i3@example.com")
+    end
+
+    @tag :full_build_only
+    test "allows inviting users who are already members of other sites, within the limit" do
+      [u1, u2, u3, u4] = insert_list(4, :user)
+
+      memberships =
+        [
+          build(:site_membership, user: u1, role: :owner),
+          build(:site_membership, user: u2, role: :viewer),
+          build(:site_membership, user: u3, role: :viewer)
+        ]
+
+      site =
+        insert(:site,
+          memberships: memberships ++ [build(:site_membership, user: u4, role: :viewer)]
+        )
+
+      site2 = insert(:site, memberships: memberships)
+
+      invite = fn site, email ->
+        CreateInvitation.create_invitation(site, u1, email, :viewer)
+      end
+
+      assert {:error, {:over_limit, 3}} = invite.(site, "another@example.com")
+      assert {:error, :already_a_member} = invite.(site, u4.email)
+      assert {:ok, _} = invite.(site2, u4.email)
+    end
+
+    test "sends ownership transfer email when invitation role is owner" do
       inviter = insert(:user)
       site = insert(:site, memberships: [build(:site_membership, user: inviter, role: :owner)])
 
@@ -139,11 +192,11 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :owner)
     end
 
-    test "does not check for limits when transferring ownership" do
+    test "allows creating an ownership transfer even when at team member limit" do
       inviter = insert(:user)
 
       memberships =
-        [build(:site_membership, user: inviter, role: :owner)] ++ build_list(5, :site_membership)
+        [build(:site_membership, user: inviter, role: :owner)] ++ build_list(3, :site_membership)
 
       site = insert(:site, memberships: memberships)
 
@@ -184,93 +237,6 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
 
       assert {:ok, %Plausible.Auth.Invitation{}} =
                CreateInvitation.create_invitation(site, inviter, "vini@plausible.test", :admin)
-    end
-
-    test "does not allow transferring ownership when site does not fit the new owner subscription" do
-      old_owner = insert(:user, subscription: build(:business_subscription))
-      new_owner = insert(:user, subscription: build(:growth_subscription))
-
-      site_with_too_many_team_members =
-        insert(:site,
-          memberships:
-            [build(:site_membership, user: old_owner, role: :owner)] ++
-              build_list(6, :site_membership, role: :admin)
-        )
-
-      site_using_premium_features =
-        insert(:site,
-          memberships: [build(:site_membership, user: old_owner, role: :owner)],
-          props_enabled: true,
-          allowed_event_props: ["author"]
-        )
-
-      assert {:error, :upgrade_required} =
-               CreateInvitation.create_invitation(
-                 site_with_too_many_team_members,
-                 old_owner,
-                 new_owner.email,
-                 :owner
-               )
-
-      assert {:error, :upgrade_required} =
-               CreateInvitation.create_invitation(
-                 site_using_premium_features,
-                 old_owner,
-                 new_owner.email,
-                 :owner
-               )
-    end
-
-    test "allows transferring ownership to growth plan when premium feature enabled but not used" do
-      old_owner = insert(:user)
-      site = insert(:site, members: [old_owner], props_enabled: true)
-
-      new_owner = insert(:user, subscription: build(:growth_subscription))
-
-      assert {:ok, _invitation} =
-               CreateInvitation.create_invitation(
-                 site,
-                 old_owner,
-                 new_owner.email,
-                 :owner
-               )
-    end
-
-    test "allows transferring ownership when invitee reaches (but does not exceed) site limit" do
-      old_owner = insert(:user)
-      site = insert(:site, members: [old_owner])
-
-      new_owner = insert(:user, subscription: build(:growth_subscription))
-      for _ <- 1..9, do: insert(:site, members: [new_owner])
-
-      assert {:ok, _invitation} =
-               CreateInvitation.create_invitation(
-                 site,
-                 old_owner,
-                 new_owner.email,
-                 :owner
-               )
-    end
-
-    test "allows transferring ownership when invitee reaches (but does not exceed) team member limit" do
-      old_owner = insert(:user)
-
-      site =
-        insert(:site,
-          memberships:
-            [build(:site_membership, user: old_owner, role: :owner)] ++
-              build_list(2, :site_membership, role: :admin)
-        )
-
-      new_owner = insert(:user, subscription: build(:growth_subscription))
-
-      assert {:ok, _invitation} =
-               CreateInvitation.create_invitation(
-                 site,
-                 old_owner,
-                 new_owner.email,
-                 :owner
-               )
     end
   end
 
@@ -358,6 +324,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     test "transfers ownership for multiple sites in one action" do
       current_owner = insert(:user)
       new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
 
       site1 =
         insert(:site, memberships: [build(:site_membership, user: current_owner, role: :owner)])
@@ -395,6 +362,7 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
     test "returns error when user is already an owner for one of the sites" do
       current_owner = insert(:user)
       new_owner = insert(:user)
+      insert(:growth_subscription, user: new_owner)
 
       site1 =
         insert(:site, memberships: [build(:site_membership, user: current_owner, role: :owner)])
@@ -415,6 +383,74 @@ defmodule Plausible.Site.Memberships.CreateInvitationTest do
                user_id: new_owner.id,
                role: :owner
              )
+    end
+
+    @tag :full_build_only
+    test "does not allow transferring ownership to a non-member user when at team members limit" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      site =
+        insert(:site,
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(3, :site_membership, role: :admin)
+        )
+
+      assert {:error, {:over_plan_limits, [:team_member_limit]}} =
+               CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
+    end
+
+    @tag :full_build_only
+    test "allows transferring ownership to existing site member when at team members limit" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      site =
+        insert(:site,
+          memberships:
+            [
+              build(:site_membership, user: old_owner, role: :owner),
+              build(:site_membership, user: new_owner, role: :admin)
+            ] ++
+              build_list(2, :site_membership, role: :admin)
+        )
+
+      assert {:ok, _} =
+               CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
+    end
+
+    @tag :full_build_only
+    test "does not allow transferring ownership when sites limit exceeded" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      insert_list(10, :site, members: [new_owner])
+
+      site = insert(:site, members: [old_owner])
+
+      assert {:error, {:over_plan_limits, [:site_limit]}} =
+               CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
+    end
+
+    @tag :full_build_only
+    test "exceeding limits error takes precedence over missing features" do
+      old_owner = insert(:user, subscription: build(:business_subscription))
+      new_owner = insert(:user, subscription: build(:growth_subscription))
+
+      insert_list(10, :site, members: [new_owner])
+
+      site =
+        insert(:site,
+          props_enabled: true,
+          allowed_event_props: ["author"],
+          memberships:
+            [build(:site_membership, user: old_owner, role: :owner)] ++
+              build_list(3, :site_membership, role: :admin)
+        )
+
+      assert {:error, {:over_plan_limits, [:team_member_limit, :site_limit]}} =
+               CreateInvitation.bulk_transfer_ownership_direct([site], new_owner)
     end
   end
 

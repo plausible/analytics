@@ -3,7 +3,7 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
   LiveView for password reset form.
   """
 
-  use Phoenix.LiveView
+  use PlausibleWeb, :live_view
   use Phoenix.HTML
 
   import PlausibleWeb.Live.Components.Form
@@ -82,9 +82,20 @@ defmodule PlausibleWeb.Live.ResetPasswordForm do
   end
 
   def handle_event("set", %{"user" => %{"password" => password}}, socket) do
-    user = Auth.User.set_password(socket.assigns.user, password)
+    result =
+      Repo.transaction(fn ->
+        changeset = Auth.User.set_password(socket.assigns.user, password)
 
-    case Repo.update(user) do
+        case Repo.update(changeset) do
+          {:ok, user} ->
+            Auth.TOTP.reset_token(user)
+
+          {:error, changeset} ->
+            Repo.rollback(changeset)
+        end
+      end)
+
+    case result do
       {:ok, _user} ->
         {:noreply, assign(socket, trigger_submit: true)}
 

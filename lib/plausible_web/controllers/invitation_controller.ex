@@ -10,11 +10,24 @@ defmodule PlausibleWeb.InvitationController do
       {:ok, membership} ->
         conn
         |> put_flash(:success, "You now have access to #{membership.site.domain}")
-        |> redirect(to: "/#{URI.encode_www_form(membership.site.domain)}")
+        |> redirect(external: "/#{URI.encode_www_form(membership.site.domain)}")
 
       {:error, :invitation_not_found} ->
         conn
         |> put_flash(:error, "Invitation missing or already accepted")
+        |> redirect(to: "/sites")
+
+      {:error, :no_plan} ->
+        conn
+        |> put_flash(:error, "No existing subscription")
+        |> redirect(to: "/sites")
+
+      {:error, {:over_plan_limits, limits}} ->
+        conn
+        |> put_flash(
+          :error,
+          "Plan limits exceeded: #{PlausibleWeb.TextHelpers.pretty_list(limits)}."
+        )
         |> redirect(to: "/sites")
 
       {:error, _} ->
@@ -43,12 +56,12 @@ defmodule PlausibleWeb.InvitationController do
       {:ok, invitation} ->
         conn
         |> put_flash(:success, "You have removed the invitation for #{invitation.email}")
-        |> redirect(to: Routes.site_path(conn, :settings_people, invitation.site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, invitation.site.domain))
 
       {:error, :invitation_not_found} ->
         conn
         |> put_flash(:error, "Invitation missing or already removed")
-        |> redirect(to: Routes.site_path(conn, :settings_people, conn.assigns.site.domain))
+        |> redirect(external: Routes.site_path(conn, :settings_people, conn.assigns.site.domain))
     end
   end
 end

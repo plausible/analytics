@@ -1,4 +1,19 @@
 defmodule PlausibleWeb do
+  def live_view(opts \\ []) do
+    quote do
+      use Plausible
+      use Phoenix.LiveView, global_prefixes: ~w(x-)
+      use PlausibleWeb.Live.Flash
+
+      unless :no_sentry_context in unquote(opts) do
+        use PlausibleWeb.Live.SentryContext
+      end
+
+      alias PlausibleWeb.Router.Helpers, as: Routes
+      alias Phoenix.LiveView.JS
+    end
+  end
+
   def controller do
     quote do
       use Phoenix.Controller, namespace: PlausibleWeb
@@ -47,8 +62,7 @@ defmodule PlausibleWeb do
     quote do
       use Phoenix.Controller, namespace: PlausibleWeb.Plugins.API
       import Plug.Conn
-      import PlausibleWeb.Plugins.API.Router.Helpers
-      import PlausibleWeb.Plugins.API, only: [base_uri: 0]
+      import PlausibleWeb.Router.Helpers
 
       alias PlausibleWeb.Plugins.API.Schemas
       alias PlausibleWeb.Plugins.API.Views
@@ -67,7 +81,7 @@ defmodule PlausibleWeb do
         namespace: PlausibleWeb.Plugins.API,
         root: ""
 
-      alias PlausibleWeb.Plugins.API.Router.Helpers
+      alias PlausibleWeb.Router.Helpers
       import PlausibleWeb.Plugins.API.Views.Pagination, only: [render_metadata_links: 4]
     end
   end
@@ -85,5 +99,9 @@ defmodule PlausibleWeb do
   """
   defmacro __using__(which) when is_atom(which) do
     apply(__MODULE__, which, [])
+  end
+
+  defmacro __using__([{which, opts}]) when is_atom(which) do
+    apply(__MODULE__, which, [List.wrap(opts)])
   end
 end

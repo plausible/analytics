@@ -1,5 +1,6 @@
 defmodule Plausible.Auth.UserAdmin do
   use Plausible.Repo
+  use Plausible
   require Plausible.Billing.Subscription.Status
   alias Plausible.Billing.Subscription
 
@@ -13,7 +14,13 @@ defmodule Plausible.Auth.UserAdmin do
       name: nil,
       email: nil,
       previous_email: nil,
-      trial_expiry_date: nil
+      trial_expiry_date: %{
+        help_text: "Change will also update Accept Traffic Until date"
+      },
+      allow_next_upgrade_override: nil,
+      accept_traffic_until: %{
+        help_text: "Change will take up to 15 minutes to propagate"
+      }
     ]
   end
 
@@ -29,7 +36,12 @@ defmodule Plausible.Auth.UserAdmin do
       trial_expiry_date: %{name: "Trial expiry", value: &format_date(&1.trial_expiry_date)},
       subscription_plan: %{value: &subscription_plan/1},
       subscription_status: %{value: &subscription_status/1},
-      grace_period: %{value: &grace_period_status/1}
+      usage: %{value: &usage_link/1},
+      grace_period: %{value: &grace_period_status/1},
+      accept_traffic_until: %{
+        name: "Accept traffic until",
+        value: &format_date(&1.accept_traffic_until)
+      }
     ]
   end
 
@@ -86,8 +98,7 @@ defmodule Plausible.Auth.UserAdmin do
   end
 
   defp subscription_plan(user) do
-    if user.subscription && user.subscription.status == Subscription.Status.active() &&
-         user.subscription.paddle_subscription_id do
+    if Subscription.Status.active?(user.subscription) && user.subscription.paddle_subscription_id do
       quota = PlausibleWeb.AuthView.subscription_quota(user.subscription)
       interval = PlausibleWeb.AuthView.subscription_interval(user.subscription)
 
@@ -107,12 +118,21 @@ defmodule Plausible.Auth.UserAdmin do
       user.subscription ->
         PlausibleWeb.AuthView.present_subscription_status(user.subscription.status)
 
-      Plausible.Billing.on_trial?(user) ->
+      Plausible.Users.on_trial?(user) ->
         "On trial"
 
       true ->
         "Trial expired"
     end
+  end
+
+  on_full_build do
+    defp usage_link(user) do
+      path = PlausibleWeb.Router.Helpers.admin_path(PlausibleWeb.Endpoint, :usage, user.id)
+      {:safe, ~s(<a href="#{path}">Usage</a>)}
+    end
+  else
+    defp usage_link(_), do: nil
   end
 
   defp format_date(nil), do: "--"

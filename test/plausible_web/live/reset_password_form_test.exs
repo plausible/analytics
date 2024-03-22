@@ -6,6 +6,7 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
 
   alias Plausible.Auth.User
   alias Plausible.Auth.Token
+  alias Plausible.Auth.TOTP
   alias Plausible.Repo
 
   describe "/password/reset" do
@@ -23,6 +24,24 @@ defmodule PlausibleWeb.Live.ResetPasswordFormTest do
       assert text_of_attr(password_input, "value") == "very-secret-and-very-long-123"
       assert %{password_hash: new_hash} = Repo.one(User)
       assert new_hash != user.password_hash
+    end
+
+    test "reset's user's TOTP token when present", %{conn: conn} do
+      user = insert(:user)
+      {:ok, user, _} = TOTP.initiate(user)
+      {:ok, user, _} = TOTP.enable(user, :skip_verify)
+
+      token = Token.sign_password_reset(user.email)
+
+      lv = get_liveview(conn, "/password/reset?token=#{token}")
+
+      type_into_passowrd(lv, "very-secret-and-very-long-123")
+      lv |> element("form") |> render_submit()
+
+      updated_user = Repo.reload!(user)
+
+      assert byte_size(updated_user.totp_token) > 0
+      assert updated_user.totp_token != user.totp_token
     end
 
     test "renders error when new password fails validation", %{conn: conn} do

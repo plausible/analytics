@@ -1,4 +1,8 @@
-defmodule Plausible.Google.Api.Mock do
+defmodule Plausible.Google.API.Mock do
+  @moduledoc """
+  Mock of API to Google services.
+  """
+
   def fetch_stats(_auth, _query, _limit) do
     {:ok,
      [

@@ -71,13 +71,8 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "does not lock user who has an active subscription and is on grace period" do
-      user =
-        insert(:user,
-          grace_period: %Plausible.Auth.GracePeriod{
-            end_date: Timex.shift(Timex.today(), days: 1),
-            allowance_required: 10_000
-          }
-        )
+      grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: 1)}
+      user = insert(:user, grace_period: grace_period)
 
       insert(:subscription, status: Subscription.Status.active(), user: user)
 
@@ -115,13 +110,8 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "locks all sites if user has active subscription but grace period has ended" do
-      user =
-        insert(:user,
-          grace_period: %Plausible.Auth.GracePeriod{
-            end_date: Timex.shift(Timex.today(), days: -1),
-            allowance_required: 10_000
-          }
-        )
+      grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      user = insert(:user, grace_period: grace_period)
 
       insert(:subscription, status: Subscription.Status.active(), user: user)
 
@@ -138,13 +128,8 @@ defmodule Plausible.Billing.SiteLockerTest do
     end
 
     test "sends email if grace period has ended" do
-      user =
-        insert(:user,
-          grace_period: %Plausible.Auth.GracePeriod{
-            end_date: Timex.shift(Timex.today(), days: -1),
-            allowance_required: 10_000
-          }
-        )
+      grace_period = %Plausible.Auth.GracePeriod{end_date: Timex.shift(Timex.today(), days: -1)}
+      user = insert(:user, grace_period: grace_period)
 
       insert(:subscription, status: Subscription.Status.active(), user: user)
 
@@ -167,7 +152,6 @@ defmodule Plausible.Billing.SiteLockerTest do
         insert(:user,
           grace_period: %Plausible.Auth.GracePeriod{
             end_date: Timex.shift(Timex.today(), days: -1),
-            allowance_required: 10_000,
             is_over: false
           }
         )

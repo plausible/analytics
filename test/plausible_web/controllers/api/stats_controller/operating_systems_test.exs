@@ -199,10 +199,22 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
 
     test "returns top OS versions by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
-        build(:pageview, operating_system: "Mac", operating_system_version: "10.15"),
-        build(:pageview, operating_system: "Mac", operating_system_version: "10.16"),
-        build(:pageview, operating_system: "Mac", operating_system_version: "10.16"),
-        build(:pageview, operating_system: "Android", operating_system_version: "4")
+        build(:pageview,
+          operating_system: "Mac",
+          operating_system_version: "10.15"
+        ),
+        build(:pageview,
+          operating_system: "Mac",
+          operating_system_version: "10.16"
+        ),
+        build(:pageview,
+          operating_system: "Mac",
+          operating_system_version: "10.16"
+        ),
+        build(:pageview,
+          operating_system: "Android",
+          operating_system_version: "4"
+        )
       ])
 
       filters = Jason.encode!(%{os: "Mac"})
@@ -214,8 +226,8 @@ defmodule PlausibleWeb.Api.StatsController.OperatingSystemsTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "10.16", "visitors" => 2, "percentage" => 66.7},
-               %{"name" => "10.15", "visitors" => 1, "percentage" => 33.3}
+               %{"name" => "10.16", "visitors" => 2, "percentage" => 66.7, "os" => "Mac"},
+               %{"name" => "10.15", "visitors" => 1, "percentage" => 33.3, "os" => "Mac"}
              ]
     end
   end

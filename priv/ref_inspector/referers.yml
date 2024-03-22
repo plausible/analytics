@@ -86,6 +86,7 @@ email:
   AOL Mail:
     domains:
       - mail.aol.com
+      - com.aol.mobile.aolapp # AOL for Android app
 
   Beeline:
     domains:
@@ -115,6 +116,10 @@ email:
     domains:
       - mail.e1.ru
 
+  earthlink:
+    domains:
+      - com.earthlink.myearthlink # myEarthLink for Android app
+
   Freenet:
     domains:
       - webmail.freenet.de
@@ -122,6 +127,7 @@ email:
   Gmail:
     domains:
       - mail.google.com
+      - com.google.android.gm # Gmail for Android app
       - inbox.google.com
 
   iiNet:
@@ -141,6 +147,10 @@ email:
     domains:
       - e.mail.ru
       - touch.mail.ru
+
+  Mailchimp:
+    domains:
+      - com.mailchimp.mailchimp # Mailchimp app for Android
 
   Mastermail:
     domains:
@@ -172,6 +182,7 @@ email:
     domains:
       - mail.live.com
       - outlook.live.com
+      - com.microsoft.office.outlook # Outlook for Android app
 
   QIP:
     domains:
@@ -224,6 +235,7 @@ email:
       - mail.yahoo.com
       - mail.yahoo.co.uk
       - mail.yahoo.co.jp
+      - com.yahoo.mobile.client.android.mail # Yahoo Mail for Android app
 
   Zoho:
     domains:
@@ -242,6 +254,7 @@ social:
       - m.facebook.com
       - l.facebook.com
       - lm.facebook.com
+      - com.facebook.katana # Facebook for Android app
 
   Qzone:
     domains:
@@ -255,11 +268,19 @@ social:
     domains:
       - twitter.com
       - t.co
+      - com.twitter.android # Twitter for Android app
 
   Instagram:
     domains:
       - instagram.com
       - l.instagram.com
+      - com.instagram.android # Instagram for Android app
+
+  Threads:
+    domains:
+      - threads.net
+      - l.threads.net
+      - com.instagram.barcelona # Threads for Android app
 
   Youtube:
     domains:
@@ -280,6 +301,7 @@ social:
 
   LinkedIn:
     domains:
+      - com.linkedin.android # LinkedIn for Android app
       - linkedin.com
       - lnkd.in
 
@@ -430,7 +452,28 @@ social:
 
   Pinterest:
     domains:
+      - pinterest.ca
+      - pinterest.cl
+      - pinterest.co.kr
       - pinterest.com
+      - pinterest.com.au
+      - pinterest.co.uk
+      - pinterest.de
+      - pinterest.dk
+      - pinterest.es
+      - pinterest.fr
+      - pinterest.jp
+      - pinterest.nz
+      - pinterest.pt
+      - pinterest.se
+      - pinterest.at
+      - pinterest.ch
+      - pinterest.com.mx
+      - pinterest.ie
+      - pinterest.it
+      - pinterest.ph
+      - pinterest.ru
+      - com.pinterest
 
   Plaxo:
     domains:
@@ -451,6 +494,10 @@ social:
   Taringa!:
     domains:
       - taringa.net
+
+  TikTok:
+    domains:
+      - tiktok.com
 
   Tumblr:
     domains:
@@ -504,10 +551,19 @@ social:
   Reddit:
     domains:
       - reddit.com
+      - io.syncapps.lemmy_sync
+      - com.laurencedawson.reddit_sync
+      - com.laurencedawson.reddit_sync.pro
+
+  Tildes:
+    domains:
+      - tildes.net
+      - com.talklittle.android.tildes # Three Cheers for Tildes for Android app
 
   Hacker News:
     domains:
       - news.ycombinator.com
+      - io.github.hidroh.materialistic # Materialistic for Android app
 
   Identi.ca:
     domains:
@@ -572,9 +628,29 @@ social:
     domains:
       - web.skype.com
 
+  Slack:
+    domains:
+      - app.slack.com
+      - com.slack # Slack for Android app
+
+  Snapchat:
+    domains:
+      - com.snapchat.android # Snapchat for Android app
+      - snapchat.com
+
+  Telegram:
+    domains:
+      - web.telegram.org
+      - org.telegram.messenger # Telegram for Android app
+      - org.telegram.messenger.web # Telegram for Android app (direct APK)
+      - org.aka.messenger # aka for Android app
+      - org.telegram.biftogram # BGram for Android app
+      - org.telegram.plus # Plus Messenger for Android app
+
   WhatsApp:
     domains:
       - web.whatsapp.com
+      - com.whatsapp
 
   Whirlpool:
     domains:
@@ -916,6 +992,12 @@ search:
       - question
     domains:
       - pesquisa.clix.pt
+
+  Coccoc:
+    parameters:
+      - q
+    domains:
+      - coccoc.com
 
   Conduit:
     parameters:
@@ -1656,6 +1738,7 @@ search:
       - encrypted.google.com
       # Syndicated search
       - googlesyndicatedsearch.com
+      - com.google.android.googlequicksearchbox # Google for Android app
 
   Google Blogsearch:
     parameters:
@@ -2927,6 +3010,15 @@ search:
     domains:
       - inbox.com/search/
 
+  Indeed:
+    domains:
+      - de.indeed.com
+      - at.indeed.com
+      - fr.indeed.com
+      - it.indeed.com
+      - ch.indeed.com
+      - au.indeed.com
+
   InfoSpace:
     parameters:
       - q
@@ -3039,6 +3131,12 @@ search:
       - www.toile.com
       - web.toile.com
 
+  Lilo:
+    parameters:
+      - q
+    domains:
+      - search.lilo.org
+
   Liveinternet:
     parameters:
       - q
@@ -3137,6 +3235,21 @@ search:
     domains:
       - www.mister-wong.com
       - www.mister-wong.de
+
+  Monster:
+    parameters:
+      - q
+    domains:
+      - www.monster.be
+      - www.monster.cz
+      - www.monster.de
+      - www.monster.fi
+      - www.monster.fr
+      - www.monster.ie
+      - www.monster.it
+      - www.monster.lu
+      - www.monster.ch
+      - www.monster.co.uk
 
   Monstercrawler:
     parameters:
@@ -3453,6 +3566,16 @@ search:
       - q
     domains:
       - www.startsiden.no
+
+  StepStone:
+    domains:
+      - www.stepstone.de
+      - www.stepstone.at
+      - www.stepstone.be
+      - www.stepstone.fr
+      - www.stepstone.nl
+      - www.stepstone.dk
+      - www.stepstone.se
 
   suche.info:
     parameters:

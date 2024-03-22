@@ -1,4 +1,5 @@
 defmodule Plausible.Release do
+  use Plausible
   use Plausible.Repo
   require Logger
 
@@ -10,13 +11,12 @@ defmodule Plausible.Release do
     :ecto
   ]
 
-  @spec selfhost? :: boolean
-  def selfhost? do
-    Application.fetch_env!(@app, :is_selfhost)
-  end
-
   def should_be_first_launch? do
-    selfhost?() and not (_has_users? = Repo.exists?(Plausible.Auth.User))
+    on_full_build do
+      false
+    else
+      not (_has_users? = Repo.exists?(Plausible.Auth.User))
+    end
   end
 
   def migrate do

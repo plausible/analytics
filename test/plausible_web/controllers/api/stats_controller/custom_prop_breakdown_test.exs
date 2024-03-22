@@ -98,38 +98,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
-    test "(none) value is added as +1 to pagination limit", %{conn: conn, site: site} do
-      prop_key = "parim_s6ber"
-
-      populate_stats(site, [
-        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
-        build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
-        build(:pageview)
-      ])
-
-      conn =
-        get(
-          conn,
-          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=1"
-        )
-
-      assert json_response(conn, 200) == [
-               %{
-                 "visitors" => 2,
-                 "name" => "K2sna Kalle",
-                 "events" => 2,
-                 "percentage" => 66.7
-               },
-               %{
-                 "visitors" => 1,
-                 "name" => "(none)",
-                 "events" => 1,
-                 "percentage" => 33.3
-               }
-             ]
-    end
-
-    test "(none) value is only included on the first page of results", %{conn: conn, site: site} do
+    test "(none) value is included in pagination", %{conn: conn, site: site} do
       prop_key = "kaksik"
 
       populate_stats(site, [
@@ -144,13 +113,13 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
       conn1 =
         get(
           conn,
-          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=1&page=1"
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=2&page=1"
         )
 
       conn2 =
         get(
           conn,
-          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=1&page=2"
+          "/api/stats/#{site.domain}/custom-prop-values/#{prop_key}?period=day&limit=2&page=2"
         )
 
       assert json_response(conn1, 200) == [
@@ -161,32 +130,21 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "percentage" => 50.0
                },
                %{
-                 "visitors" => 1,
-                 "name" => "(none)",
-                 "events" => 1,
-                 "percentage" => 16.7
-               }
-             ]
-
-      assert json_response(conn2, 200) == [
-               %{
                  "visitors" => 2,
                  "name" => "Teet",
                  "events" => 2,
                  "percentage" => 33.3
                }
              ]
-    end
 
-    test "errors when site owner is on a growth plan", %{conn: conn, site: site, user: user} do
-      insert(:growth_subscription, user: user)
-
-      conn = get(conn, "/api/stats/#{site.domain}/custom-prop-values/prop?period=day")
-
-      assert json_response(conn, 402) == %{
-               "error" =>
-                 "Custom Properties is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
-             }
+      assert json_response(conn2, 200) == [
+               %{
+                 "visitors" => 1,
+                 "name" => "(none)",
+                 "events" => 1,
+                 "percentage" => 16.7
+               }
+             ]
     end
   end
 
@@ -787,6 +745,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
+    @tag :full_build_only
     test "returns revenue metrics when filtering by a revenue goal", %{conn: conn, site: site} do
       prop_key = "logged_in"
 
@@ -844,6 +803,7 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
              ]
     end
 
+    @tag :full_build_only
     test "returns revenue metrics when filtering by many revenue goals with same currency", %{
       conn: conn,
       site: site
@@ -971,7 +931,11 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
 
       populate_stats(site, [
         build(:pageview, "meta.key": [prop_key], "meta.value": ["K2sna Kalle"]),
-        build(:pageview, browser: "Chrome", "meta.key": [prop_key], "meta.value": ["Sipsik"])
+        build(:pageview,
+          browser: "Chrome",
+          "meta.key": [prop_key],
+          "meta.value": ["Sipsik"]
+        )
       ])
 
       filters = Jason.encode!(%{browser: "Chrome"})
@@ -1054,6 +1018,118 @@ defmodule PlausibleWeb.Api.StatsController.CustomPropBreakdownTest do
                  "percentage" => 33.3
                }
              ]
+    end
+
+    test "returns prop-breakdown with a prop_value matching filter", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["key"], "meta.value": ["foo"]),
+        build(:pageview, "meta.key": ["key"], "meta.value": ["bar"]),
+        build(:pageview, "meta.key": ["key"], "meta.value": ["bar"]),
+        build(:pageview, "meta.key": ["key"], "meta.value": ["foobar"]),
+        build(:pageview)
+      ])
+
+      filters = Jason.encode!(%{props: %{key: "~bar"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/key?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 2,
+                 "name" => "bar",
+                 "events" => 2,
+                 "percentage" => 66.7
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "foobar",
+                 "events" => 1,
+                 "percentage" => 33.3
+               }
+             ]
+    end
+
+    test "returns prop-breakdown with multiple matching custom property filters", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:pageview, "meta.key": ["key", "other"], "meta.value": ["foo", "1"]),
+        build(:pageview, "meta.key": ["key", "other"], "meta.value": ["bar", "1"]),
+        build(:pageview, "meta.key": ["key", "other"], "meta.value": ["bar", "2"]),
+        build(:pageview, "meta.key": ["key"], "meta.value": ["bar"]),
+        build(:pageview, "meta.key": ["key", "other"], "meta.value": ["foobar", "1"]),
+        build(:pageview, "meta.key": ["key", "other"], "meta.value": ["foobar", "3"]),
+        build(:pageview)
+      ])
+
+      filters = Jason.encode!(%{props: %{key: "~bar", other: "1"}})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/custom-prop-values/key?period=day&filters=#{filters}"
+        )
+
+      assert json_response(conn, 200) == [
+               %{
+                 "visitors" => 1,
+                 "name" => "bar",
+                 "events" => 1,
+                 "percentage" => 50.0
+               },
+               %{
+                 "visitors" => 1,
+                 "name" => "foobar",
+                 "events" => 1,
+                 "percentage" => 50.0
+               }
+             ]
+    end
+  end
+
+  describe "GET /api/stats/:domain/custom-prop-values/:prop_key - for a Growth subscription" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    setup %{user: user, site: site} do
+      insert(:growth_subscription, user: user)
+
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["url", "path", "author"],
+          "meta.value": ["one", "two", "three"]
+        )
+      ])
+
+      :ok
+    end
+
+    test "returns breakdown for internally used prop keys", %{conn: conn, site: site} do
+      [%{"visitors" => 1, "name" => "one"}] =
+        conn
+        |> get("/api/stats/#{site.domain}/custom-prop-values/url?period=day")
+        |> json_response(200)
+
+      [%{"visitors" => 1, "name" => "two"}] =
+        conn
+        |> get("/api/stats/#{site.domain}/custom-prop-values/path?period=day")
+        |> json_response(200)
+    end
+
+    test "returns 402 'upgrade required' for any other prop key", %{conn: conn, site: site} do
+      conn = get(conn, "/api/stats/#{site.domain}/custom-prop-values/prop?period=day")
+
+      assert json_response(conn, 402) == %{
+               "error" =>
+                 "Custom Properties is part of the Plausible Business plan. To get access to this feature, please upgrade your account."
+             }
     end
   end
 end

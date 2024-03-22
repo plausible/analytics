@@ -2,11 +2,11 @@ defmodule PlausibleWeb.Live.GoalSettings do
   @moduledoc """
   LiveView allowing listing, creating and deleting goals.
   """
-  use Phoenix.LiveView
+  use PlausibleWeb, :live_view
   use Phoenix.HTML
-  use PlausibleWeb.Live.Flash
 
   alias Plausible.{Sites, Goals}
+  alias PlausibleWeb.Live.Components.Modal
 
   def mount(
         _params,
@@ -21,14 +21,15 @@ defmodule PlausibleWeb.Live.GoalSettings do
       |> assign_new(:all_goals, fn %{site: site} ->
         Goals.for_site(site, preload_funnels?: true)
       end)
+      |> assign_new(:current_user, fn ->
+        Plausible.Repo.get(Plausible.Auth.User, user_id)
+      end)
 
     {:ok,
      assign(socket,
        site_id: site_id,
        domain: domain,
        displayed_goals: socket.assigns.all_goals,
-       add_goal?: false,
-       current_user_id: user_id,
        filter_text: ""
      )}
   end
@@ -39,25 +40,28 @@ defmodule PlausibleWeb.Live.GoalSettings do
     ~H"""
     <div id="goal-settings-main">
       <.flash_messages flash={@flash} />
-      <%= if @add_goal? do %>
-        <%= live_render(
-          @socket,
-          PlausibleWeb.Live.GoalSettings.Form,
-          id: "goals-form",
-          session: %{
-            "current_user_id" => @current_user_id,
-            "domain" => @domain,
-            "site_id" => @site_id,
-            "rendered_by" => self()
+      <.live_component module={Modal} id="goals-form-modal">
+        <.live_component
+          module={PlausibleWeb.Live.GoalSettings.Form}
+          id="goals-form"
+          domain={@domain}
+          site={@site}
+          current_user={@current_user}
+          on_save_goal={
+            fn goal, socket ->
+              send(self(), {:goal_added, goal})
+              Modal.close(socket, "goals-form-modal")
+            end
           }
-        ) %>
-      <% end %>
+        />
+      </.live_component>
       <.live_component
         module={PlausibleWeb.Live.GoalSettings.List}
         id="goals-list"
         goals={@displayed_goals}
         domain={@domain}
         filter_text={@filter_text}
+        site={@site}
       />
     </div>
     """
@@ -75,10 +79,6 @@ defmodule PlausibleWeb.Live.GoalSettings do
       )
 
     {:noreply, assign(socket, displayed_goals: new_list, filter_text: filter_text)}
-  end
-
-  def handle_event("add-goal", _value, socket) do
-    {:noreply, assign(socket, add_goal?: true)}
   end
 
   def handle_event("delete-goal", %{"goal-id" => goal_id}, socket) do
@@ -101,15 +101,10 @@ defmodule PlausibleWeb.Live.GoalSettings do
     end
   end
 
-  def handle_info(:cancel_add_goal, socket) do
-    {:noreply, assign(socket, add_goal?: false)}
-  end
-
   def handle_info({:goal_added, goal}, socket) do
     socket =
       socket
       |> assign(
-        add_goal?: false,
         filter_text: "",
         all_goals: [goal | socket.assigns.all_goals],
         displayed_goals: [goal | socket.assigns.all_goals]

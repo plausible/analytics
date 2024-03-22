@@ -140,6 +140,31 @@ defmodule Plausible.ConfigTest do
              ]
     end
 
+    test "Bamboo.Mua (no config)" do
+      env = [{"MAILER_ADAPTER", "Bamboo.Mua"}]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua}
+             ]
+    end
+
+    test "Bamboo.Mua (relay config)" do
+      env = [
+        {"MAILER_ADAPTER", "Bamboo.Mua"},
+        {"SMTP_HOST_ADDR", "localhost"},
+        {"SMTP_HOST_PORT", "2525"},
+        {"SMTP_USER_NAME", "neo"},
+        {"SMTP_USER_PWD", "one"}
+      ]
+
+      assert get_in(runtime_config(env), [:plausible, Plausible.Mailer]) == [
+               {:adapter, Bamboo.Mua},
+               {:auth, [username: "neo", password: "one"]},
+               {:relay, "localhost"},
+               {:port, 2525}
+             ]
+    end
+
     test "unknown adapter raises" do
       env = {"MAILER_ADAPTER", "Bamboo.FakeAdapter"}
 
@@ -163,6 +188,131 @@ defmodule Plausible.ConfigTest do
     test "is false by default" do
       env = {"LOG_FAILED_LOGIN_ATTEMPTS", nil}
       assert get_in(runtime_config(env), [:plausible, :log_failed_login_attempts]) == false
+    end
+  end
+
+  describe "s3" do
+    test "has required env vars" do
+      env = [
+        {"S3_ACCESS_KEY_ID", nil},
+        {"S3_SECRET_ACCESS_KEY", nil},
+        {"S3_REGION", nil},
+        {"S3_ENDPOINT", nil},
+        {"S3_EXPORTS_BUCKET", nil},
+        {"S3_IMPORTS_BUCKET", nil}
+      ]
+
+      result =
+        try do
+          runtime_config(env)
+        rescue
+          e -> e
+        end
+
+      assert %ArgumentError{} = result
+
+      assert Exception.message(result) == """
+             Missing S3 configuration. Please set S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION, S3_ENDPOINT, S3_EXPORTS_BUCKET, S3_IMPORTS_BUCKET environment variable(s):
+
+             \tS3_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+             \tS3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+             \tS3_REGION=us-east-1
+             \tS3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+             \tS3_EXPORTS_BUCKET=my-csv-exports-bucket
+             \tS3_IMPORTS_BUCKET=my-csv-imports-bucket
+             """
+    end
+
+    test "renders only missing env vars" do
+      env = [
+        {"S3_ACCESS_KEY_ID", "AKIAIOSFODNN7EXAMPLE"},
+        {"S3_SECRET_ACCESS_KEY", nil},
+        {"S3_REGION", "eu-north-1"},
+        {"S3_ENDPOINT", nil},
+        {"S3_EXPORTS_BUCKET", "my-exports"},
+        {"S3_IMPORTS_BUCKET", nil}
+      ]
+
+      result =
+        try do
+          runtime_config(env)
+        rescue
+          e -> e
+        end
+
+      assert %ArgumentError{} = result
+
+      assert Exception.message(result) == """
+             Missing S3 configuration. Please set S3_SECRET_ACCESS_KEY, S3_ENDPOINT, S3_IMPORTS_BUCKET environment variable(s):
+
+             \tS3_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+             \tS3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+             \tS3_IMPORTS_BUCKET=my-csv-imports-bucket
+             """
+    end
+
+    test "works when everything is set" do
+      env = [
+        {"S3_ACCESS_KEY_ID", "minioadmin"},
+        {"S3_SECRET_ACCESS_KEY", "minioadmin"},
+        {"S3_REGION", "us-east-1"},
+        {"S3_ENDPOINT", "http://localhost:6000"},
+        {"S3_EXPORTS_BUCKET", "my-exports"},
+        {"S3_IMPORTS_BUCKET", "my-imports"}
+      ]
+
+      config = runtime_config(env)
+
+      assert config[:ex_aws] == [
+               http_client: Plausible.S3.Client,
+               access_key_id: "minioadmin",
+               secret_access_key: "minioadmin",
+               region: "us-east-1",
+               s3: [scheme: "http://", host: "localhost", port: 6000]
+             ]
+
+      assert get_in(config, [:plausible, Plausible.S3]) == [
+               exports_bucket: "my-exports",
+               imports_bucket: "my-imports"
+             ]
+    end
+  end
+
+  describe "extra config" do
+    test "no-op when no extra path is set" do
+      put_system_env_undo({"EXTRA_CONFIG_PATH", nil})
+
+      assert Config.Reader.read!("rel/overlays/import_extra_config.exs") == []
+    end
+
+    test "raises if path is invalid" do
+      put_system_env_undo({"EXTRA_CONFIG_PATH", "no-such-file"})
+
+      assert_raise File.Error, ~r/could not read file/, fn ->
+        Config.Reader.read!("rel/overlays/import_extra_config.exs")
+      end
+    end
+
+    @tag :tmp_dir
+    test "reads extra config", %{tmp_dir: tmp_dir} do
+      extra_config_path = Path.join(tmp_dir, "config.exs")
+
+      File.write!(extra_config_path, """
+      import Config
+
+      config :plausible, Plausible.Repo,
+        after_connect: {Postgrex, :query!, ["SET search_path TO global_prefix", []]}
+      """)
+
+      put_system_env_undo({"EXTRA_CONFIG_PATH", extra_config_path})
+
+      assert Config.Reader.read!("rel/overlays/import_extra_config.exs") == [
+               {:plausible,
+                [
+                  {Plausible.Repo,
+                   [after_connect: {Postgrex, :query!, ["SET search_path TO global_prefix", []]}]}
+                ]}
+             ]
     end
   end
 

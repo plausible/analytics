@@ -15,13 +15,12 @@ defmodule PlausibleWeb.PluginsAPICase do
       use Plausible.TestUtils
       import Plug.Conn
       import Phoenix.ConnTest
-      import PlausibleWeb.Plugins.API, only: [base_uri: 0]
       import PlausibleWeb.Plugins.API.Spec, only: [spec: 0]
       import Plausible.Factory
 
       import OpenApiSpex.TestAssertions
 
-      alias PlausibleWeb.Plugins.API.Router.Helpers, as: Routes
+      alias PlausibleWeb.Router.Helpers, as: Routes
       alias PlausibleWeb.Plugins.API.Schemas
 
       def authenticate(conn, domain, raw_token) do

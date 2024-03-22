@@ -78,7 +78,7 @@ defmodule Plausible.Stats.Interval do
           @valid_by_period
       end
 
-    with %Date{} = stats_start <- site.stats_start_date,
+    with %Date{} = stats_start <- Plausible.Sites.stats_start_date(site),
          true <- abs(Timex.diff(Date.utc_today(), stats_start, :months)) > 12 do
       Map.replace(table, "all", ["week", "month"])
     else

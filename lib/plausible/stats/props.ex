@@ -1,5 +1,5 @@
 defmodule Plausible.Stats.Props do
-  @event_props ["event:page", "event:page_match", "event:name", "event:goal"]
+  @event_props ["event:page", "event:name", "event:goal"]
   @session_props [
     "visit:source",
     "visit:country",

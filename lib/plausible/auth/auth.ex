@@ -1,4 +1,5 @@
 defmodule Plausible.Auth do
+  use Plausible
   use Plausible.Repo
   alias Plausible.Auth
 
@@ -56,11 +57,15 @@ defmodule Plausible.Auth do
     )
   end
 
-  def is_super_admin?(nil), do: false
-  def is_super_admin?(%Plausible.Auth.User{id: id}), do: is_super_admin?(id)
+  on_full_build do
+    def is_super_admin?(nil), do: false
+    def is_super_admin?(%Plausible.Auth.User{id: id}), do: is_super_admin?(id)
 
-  def is_super_admin?(user_id) when is_integer(user_id) do
-    user_id in Application.get_env(:plausible, :super_admin_user_ids)
+    def is_super_admin?(user_id) when is_integer(user_id) do
+      user_id in Application.get_env(:plausible, :super_admin_user_ids)
+    end
+  else
+    def is_super_admin?(_), do: false
   end
 
   def enterprise_configured?(nil), do: false

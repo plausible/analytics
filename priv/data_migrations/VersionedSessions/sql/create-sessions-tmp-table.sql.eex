@@ -1,0 +1,13 @@
+CREATE TABLE sessions_v2_tmp_versioned
+<%= if @cluster? do %>ON CLUSTER '{cluster}'<% end %>
+AS sessions_v2
+<%= if @cluster? do %>
+ENGINE = ReplicatedVersionedCollapsingMergeTree('/clickhouse/{cluster}/tables/{shard}/plausible_prod/sessions_v2_<%= @unique_suffix %>', '{replica}', sign, events)
+<% else %>
+ENGINE = VersionedCollapsingMergeTree(sign, events)
+<% end %>
+PARTITION BY toYYYYMM(start)
+PRIMARY KEY (site_id, toDate(start), user_id, session_id)
+ORDER BY (site_id, toDate(start), user_id, session_id)
+SAMPLE BY user_id
+<%= @table_settings %>

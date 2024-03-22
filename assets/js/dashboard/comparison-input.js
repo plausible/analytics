@@ -66,8 +66,9 @@ function ComparisonModeOption({ label, value, isCurrentlySelected, updateMode, s
   }
 
   const render = ({ active }) => {
-    const buttonClass = classNames("px-4 py-2 w-full text-left font-medium text-sm dark:text-white cursor-pointer", {
+    const buttonClass = classNames("px-4 py-2 w-full text-left text-sm dark:text-white", {
       "bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100": active,
+      "font-medium": !isCurrentlySelected,
       "font-bold": isCurrentlySelected,
     })
 
@@ -90,8 +91,9 @@ function MatchDayOfWeekInput({ history, query, site }) {
   }
 
   const buttonClass = (hover, selected) =>
-    classNames("px-4 py-2 w-full text-left font-medium text-sm dark:text-white cursor-pointer", {
+    classNames("px-4 py-2 w-full text-left text-sm dark:text-white cursor-pointer", {
       "bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100": hover,
+      "font-medium": !selected,
       "font-bold": selected,
     })
 
@@ -181,7 +183,7 @@ const ComparisonInput = function({ site, query, history }) {
             </Transition>
 
             { uiMode == "datepicker" &&
-            <div className="h-0 absolute">
+            <div className="h-0 md:absolute">
               <Flatpickr ref={calendar} options={flatpickrOptions} className="invisible" />
             </div> }
           </Menu>

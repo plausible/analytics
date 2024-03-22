@@ -171,6 +171,50 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
   describe "GET /api/stats/:domain/browser-versions" do
     setup [:create_user, :log_in, :create_new_site]
 
+    test "returns correct conversion_rate when browser_version clashes across browsers", %{
+      conn: conn,
+      site: site
+    } do
+      populate_stats(site, [
+        build(:event, browser: "Chrome", browser_version: "110", name: "Signup"),
+        build(:event, browser: "Chrome", browser_version: "110", name: "Signup"),
+        build(:pageview, browser: "Chrome", browser_version: "110"),
+        build(:pageview, browser: "Chrome", browser_version: "121"),
+        build(:pageview, browser: "Chrome", browser_version: "121"),
+        build(:event, browser: "Firefox", browser_version: "121", name: "Signup"),
+        build(:pageview, browser: "Firefox", browser_version: "110"),
+        build(:pageview, browser: "Firefox", browser_version: "110"),
+        build(:pageview, browser: "Firefox", browser_version: "110"),
+        build(:pageview, browser: "Firefox", browser_version: "110")
+      ])
+
+      insert(:goal, site: site, event_name: "Signup")
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      json_response =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/browser-versions?period=day&filters=#{filters}"
+        )
+        |> json_response(200)
+
+      assert %{
+               "browser" => "Chrome",
+               "conversion_rate" => 66.7,
+               "name" => "110",
+               "total_visitors" => 3,
+               "visitors" => 2
+             } == List.first(json_response)
+
+      assert %{
+               "browser" => "Firefox",
+               "conversion_rate" => 100.0,
+               "name" => "121",
+               "total_visitors" => 1,
+               "visitors" => 1
+             } == List.last(json_response)
+    end
+
     test "returns top browser versions by unique visitors", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:pageview, browser: "Chrome", browser_version: "78.0"),
@@ -188,8 +232,8 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "78.0", "visitors" => 2, "percentage" => 66.7},
-               %{"name" => "77.0", "visitors" => 1, "percentage" => 33.3}
+               %{"name" => "78.0", "visitors" => 2, "percentage" => 66.7, "browser" => "Chrome"},
+               %{"name" => "77.0", "visitors" => 1, "percentage" => 33.3, "browser" => "Chrome"}
              ]
     end
 
@@ -207,7 +251,12 @@ defmodule PlausibleWeb.Api.StatsController.BrowsersTest do
         )
 
       assert json_response(conn, 200) == [
-               %{"name" => "(not set)", "visitors" => 1, "percentage" => 100}
+               %{
+                 "name" => "(not set)",
+                 "visitors" => 1,
+                 "percentage" => 100,
+                 "browser" => "(not set)"
+               }
              ]
     end
   end

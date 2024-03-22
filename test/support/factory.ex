@@ -24,7 +24,8 @@ defmodule Plausible.Factory do
   end
 
   def site_factory(attrs) do
-    domain = sequence(:domain, &"example-#{&1}.com")
+    # The é exercises unicode support in domain names
+    domain = sequence(:domain, &"é-#{&1}.example.com")
 
     defined_memberships? =
       Map.has_key?(attrs, :memberships) ||
@@ -49,6 +50,20 @@ defmodule Plausible.Factory do
     }
   end
 
+  def site_import_factory do
+    today = Date.utc_today()
+
+    %Plausible.Imported.SiteImport{
+      site: build(:site),
+      imported_by: build(:user),
+      start_date: Date.add(today, -200),
+      end_date: today,
+      source: :universal_analytics,
+      status: :completed,
+      legacy: false
+    }
+  end
+
   def ch_session_factory do
     hostname = sequence(:domain, &"example-#{&1}.com")
 
@@ -68,12 +83,7 @@ defmodule Plausible.Factory do
   end
 
   def pageview_factory do
-    struct!(
-      event_factory(),
-      %{
-        name: "pageview"
-      }
-    )
+    Map.put(event_factory(), :name, "pageview")
   end
 
   def event_factory do
@@ -132,12 +142,6 @@ defmodule Plausible.Factory do
       refresh_token: "123",
       access_token: "123",
       expires: Timex.now() |> Timex.shift(days: 1)
-    }
-  end
-
-  def custom_domain_factory do
-    %Plausible.Site.CustomDomain{
-      domain: sequence(:custom_domain, &"domain-#{&1}.com")
     }
   end
 
@@ -280,6 +284,20 @@ defmodule Plausible.Factory do
       visits: 1,
       bounces: 0,
       visit_duration: 10
+    }
+  end
+
+  def ip_rule_factory do
+    %Plausible.Shield.IPRule{
+      inet: Plausible.TestUtils.random_ip(),
+      description: "Test IP Rule",
+      added_by: "Mr Seed <user@plausible.test>"
+    }
+  end
+
+  def country_rule_factory do
+    %Plausible.Shield.CountryRule{
+      added_by: "Mr Seed <user@plausible.test>"
     }
   end
 

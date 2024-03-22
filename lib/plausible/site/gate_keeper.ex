@@ -1,11 +1,11 @@
 defmodule Plausible.Site.GateKeeper do
-  @type policy() :: :allow | :not_found | :block | :throttle
+  @type policy() :: :allow | :not_found | :block | :throttle | :payment_required
   @policy_for_non_existing_sites :not_found
 
   @type t() :: {:allow, Plausible.Site.t()} | {:deny, policy()}
 
   @moduledoc """
-  Thin wrapper around Hammer for gate keeping domain-specific events
+  Thin wrapper around `Plausible.RateLimit` for gate keeping domain-specific events
   during the ingestion phase. When the site is allowed, gate keeping
   check returns `:allow`, otherwise a `:deny` tagged tuple is returned
   with one of the following policy markers:
@@ -20,11 +20,11 @@ defmodule Plausible.Site.GateKeeper do
   a Site by domain using `Plausible.Cache` interface.
 
   The module defines two policies outside the regular bucket inspection:
-    * when the the site is not found in cache: #{@policy_for_non_existing_sites}
+    * when the site is not found in cache: #{@policy_for_non_existing_sites}
     * when the underlying rate limiting mechanism returns
       an internal error: :allow
   """
-  alias Plausible.Site
+  alias Plausible.{Site, RateLimit}
   alias Plausible.Site.Cache
 
   require Logger
@@ -43,16 +43,18 @@ defmodule Plausible.Site.GateKeeper do
   end
 
   defp policy(domain, opts) when is_binary(domain) do
-    result =
-      case Cache.get(domain, Keyword.get(opts, :cache_opts, [])) do
-        nil ->
-          @policy_for_non_existing_sites
-
-        %Site{} = site ->
-          check_rate_limit(site, opts)
+    with from_cache <- Cache.get(domain, Keyword.get(opts, :cache_opts, [])),
+         site = %Site{owner: %{accept_traffic_until: accept_traffic_until}} <- from_cache do
+      if not is_nil(accept_traffic_until) and
+           Date.after?(Date.utc_today(), accept_traffic_until) do
+        :payment_required
+      else
+        check_rate_limit(site, opts)
       end
-
-    result
+    else
+      _ ->
+        @policy_for_non_existing_sites
+    end
   end
 
   defp check_rate_limit(%Site{ingest_rate_limit_threshold: nil} = site, _opts) do
@@ -68,19 +70,9 @@ defmodule Plausible.Site.GateKeeper do
     key = Keyword.get(opts, :key, key(site.domain))
     scale_ms = site.ingest_rate_limit_scale_seconds * 1_000
 
-    case Hammer.check_rate(key, scale_ms, threshold) do
-      {:deny, _} ->
-        :throttle
-
-      {:allow, _} ->
-        {:allow, site}
-
-      {:error, reason} ->
-        Logger.error(
-          "Error checking rate limit for '#{key}': #{inspect(reason)}. Falling back to: :allow"
-        )
-
-        {:allow, site}
+    case RateLimit.check_rate(key, scale_ms, threshold) do
+      {:deny, _} -> :throttle
+      {:allow, _} -> {:allow, site}
     end
   end
 end

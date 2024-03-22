@@ -1,25 +1,29 @@
-<%= if !Application.get_env(:plausible, :is_selfhost) && !@conn.assigns[:skip_plausible_tracking] do %>
-  <script
-    defer
-    data-api={dogfood_api_destination()}
-    data-domain={dogfood_domain(@conn)}
-    src={dogfood_script_url()}
-  >
-  </script>
-  <script>
-    window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }
+<%= on_full_build do %>
+  <%= if !@conn.assigns[:skip_plausible_tracking] do %>
+    <script
+      defer
+      data-api={PlausibleWeb.Dogfood.api_destination()}
+      data-domain={PlausibleWeb.Dogfood.domain(@conn)}
+      src={PlausibleWeb.Dogfood.script_url()}
+    >
+    </script>
+    <script>
+      window.plausible = window.plausible || function() { (window.plausible.q = window.plausible.q || []).push(arguments) }
 
-    <%= if @conn.assigns[:dogfood_page_path] do %>
-      const pageUrl = '<%= Path.join(plausible_url(), @conn.assigns[:dogfood_page_path]) %>'
-    <% else %>
-      const pageUrl = window.location.href
-    <% end %>
+      <%= if @conn.assigns[:dogfood_page_path] do %>
+        const pageUrl = '<%= Path.join(plausible_url(), @conn.assigns[:dogfood_page_path]) %>'
+      <% else %>
+        const pageUrl = window.location.href
+      <% end %>
 
-    plausible('pageview', {
-      u: pageUrl,
-      props: {
-        logged_in: <%= !!@conn.assigns[:current_user] %>
-      }
-    })
-  </script>
+      plausible('pageview', {
+        u: pageUrl,
+        props: {
+          logged_in: <%= is_map(@conn.assigns[:current_user]) %>,
+          theme: '<%= if @conn.assigns[:current_user], do: @conn.assigns[:current_user].theme, else: "system" %>',
+          browser_language: navigator.language || navigator.userLanguage
+        }
+      })
+    </script>
+  <% end %>
 <% end %>

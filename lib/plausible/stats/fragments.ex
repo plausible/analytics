@@ -92,10 +92,56 @@ defmodule Plausible.Stats.Fragments do
     quote do
       weekstart_not_before(
         to_timezone(unquote(date), unquote(timezone)),
-        unquote(not_before)
+        to_timezone(unquote(not_before), unquote(timezone))
       )
     end
   end
+
+  @doc """
+  Returns whether a key (usually property) exists under `meta.key` array or similar.
+
+  This macro is used for operating on custom properties.
+
+  ## Examples
+
+  `has_key(e, :meta, "some_property_name")` expands to SQL `has(meta.key, "some_property_name")`
+  """
+  defmacro has_key(table, meta_column, key) do
+    quote do
+      fragment(
+        "has(?, ?)",
+        field(unquote(table), unquote(meta_key_column(meta_column))),
+        unquote(key)
+      )
+    end
+  end
+
+  @doc """
+  Returns value of a key (usually property) under `meta.value` array or similar.
+
+  This macro is used for operating on custom properties.
+  Callsites should also check whether key exists first in SQL via `has_key` macro.
+
+  ## Examples
+
+  `get_by_key(e, :meta, "some_property_name")` expands to SQL `meta.value[indexOf(meta.key, "some_property")]`
+  """
+  defmacro get_by_key(table, meta_column, key) do
+    quote do
+      fragment(
+        "?[indexOf(?, ?)]",
+        field(unquote(table), unquote(meta_value_column(meta_column))),
+        field(unquote(table), unquote(meta_key_column(meta_column))),
+        unquote(key)
+      )
+    end
+  end
+
+  defp meta_key_column(:meta), do: :"meta.key"
+  defp meta_key_column(:entry_meta), do: :"entry_meta.key"
+
+  defp meta_value_column(:meta), do: :"meta.value"
+  defp meta_value_column(:entry_meta), do: :"entry_meta.value"
 
   defmacro __using__(_) do
     quote do

@@ -8,6 +8,12 @@ defmodule PlausibleWeb.SiteControllerTest do
   import Mox
   import Plausible.Test.Support.HTML
 
+  alias Plausible.Imported.SiteImport
+
+  require Plausible.Imported.SiteImport
+
+  @v4_business_plan_id "857105"
+
   setup :verify_on_exit!
 
   describe "GET /sites/new" do
@@ -233,14 +239,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn =
         post(conn, "/sites", %{
           "site" => %{
-            "domain" => "example.com",
+            "domain" => "éxample.com",
             "timezone" => "Europe/London"
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet"
-      assert site = Repo.get_by(Plausible.Site, domain: "example.com")
-      assert site.domain == "example.com"
+      assert redirected_to(conn) == "/#{URI.encode_www_form("éxample.com")}/snippet"
+      assert site = Repo.get_by(Plausible.Site, domain: "éxample.com")
       assert site.timezone == "Europe/London"
       assert site.ingest_rate_limit_scale_seconds == 60
       assert site.ingest_rate_limit_threshold == 1_000_000
@@ -298,11 +303,12 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert_no_emails_delivered()
     end
 
+    @tag :full_build_only
     test "does not allow site creation when the user is at their site limit", %{
       conn: conn,
       user: user
     } do
-      insert_list(50, :site, members: [user])
+      insert_list(10, :site, members: [user])
 
       conn =
         post(conn, "/sites", %{
@@ -317,18 +323,15 @@ defmodule PlausibleWeb.SiteControllerTest do
       refute Repo.get_by(Plausible.Site, domain: "over-limit.example.com")
     end
 
-    test "allows accounts registered before 2021-05-05 to go over the limit", %{
+    test "does not limit accounts registered before 2021-05-05", %{
       conn: conn,
       user: user
     } do
-      Repo.update_all(from(u in "users", where: u.id == ^user.id),
-        set: [inserted_at: ~N[2020-01-01 00:00:00]]
-      )
+      insert(:subscription, paddle_plan_id: @v4_business_plan_id, user: user)
+      insert_list(51, :site, members: [user])
 
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
+      Ecto.Changeset.change(user, %{inserted_at: ~N[2021-05-04 00:00:00]})
+      |> Repo.update()
 
       conn =
         post(conn, "/sites", %{
@@ -342,16 +345,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
-    test "allows enterprise accounts to create unlimited sites", %{
+    test "does not limit enterprise accounts", %{
       conn: conn,
       user: user
     } do
-      ep = insert(:enterprise_plan, user: user)
+      ep = insert(:enterprise_plan, user: user, site_limit: 1)
       insert(:subscription, user: user, paddle_plan_id: ep.paddle_plan_id)
-
-      insert(:site, members: [user])
-      insert(:site, members: [user])
-      insert(:site, members: [user])
+      insert_list(2, :site, members: [user])
 
       conn =
         post(conn, "/sites", %{
@@ -362,7 +362,7 @@ defmodule PlausibleWeb.SiteControllerTest do
         })
 
       assert redirected_to(conn) == "/example.com/snippet"
-      assert Repo.get_by(Plausible.Site, domain: "example.com")
+      assert Plausible.Billing.Quota.site_usage(user) == 3
     end
 
     for url <- ["https://Example.com/", "HTTPS://EXAMPLE.COM/", "/Example.com/", "//Example.com/"] do
@@ -498,7 +498,7 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       updated = Repo.get(Plausible.Site, site.id)
       assert updated.timezone == "Europe/London"
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/general"
+      assert redirected_to(conn, 302) == "/#{URI.encode_www_form(site.domain)}/settings/general"
     end
   end
 
@@ -510,7 +510,9 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       updated = Repo.get(Plausible.Site, site.id)
       assert updated.public
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/visibility"
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/visibility"
     end
 
     test "fails to make site public with insufficient permissions", %{conn: conn, user: user} do
@@ -542,7 +544,9 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       updated = Repo.get(Plausible.Site, site.id)
       refute updated.public
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/visibility"
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/visibility"
     end
   end
 
@@ -552,7 +556,6 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "deletes the site", %{conn: conn, user: user} do
       site = insert(:site, members: [user])
       insert(:google_auth, user: user, site: site)
-      insert(:custom_domain, site: site)
       insert(:spike_notification, site: site)
 
       delete(conn, "/#{site.domain}")
@@ -563,7 +566,6 @@ defmodule PlausibleWeb.SiteControllerTest do
     test "fails to delete a site with insufficient permissions", %{conn: conn, user: user} do
       site = insert(:site, memberships: [build(:site_membership, user: user, role: :viewer)])
       insert(:google_auth, user: user, site: site)
-      insert(:custom_domain, site: site)
       insert(:spike_notification, site: site)
 
       conn = delete(conn, "/#{site.domain}")
@@ -581,7 +583,6 @@ defmodule PlausibleWeb.SiteControllerTest do
         insert(:site, memberships: [build(:site_membership, user: other_user, role: "owner")])
 
       insert(:google_auth, user: other_user, site: other_site)
-      insert(:custom_domain, site: other_site)
       insert(:spike_notification, site: other_site)
 
       my_conn = delete(my_conn, "/#{other_site.domain}")
@@ -603,7 +604,9 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       updated_auth = Repo.one(Plausible.Site.GoogleAuth)
       assert updated_auth.property == "some-new-property.com"
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/integrations"
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/integrations"
     end
   end
 
@@ -615,7 +618,9 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/#{site.domain}/settings/google-search")
 
       refute Repo.exists?(Plausible.Site.GoogleAuth)
-      assert redirected_to(conn, 302) == "/#{site.domain}/settings/integrations"
+
+      assert redirected_to(conn, 302) ==
+               "/#{URI.encode_www_form(site.domain)}/settings/integrations"
     end
 
     test "fails to delete associated google auth from the outside", %{
@@ -624,10 +629,54 @@ defmodule PlausibleWeb.SiteControllerTest do
     } do
       other_site = insert(:site)
       insert(:google_auth, user: user, site: other_site)
-      conn = delete(conn, "/#{other_site.domain}/settings/google-search")
+      conn = delete(conn, "/#{URI.encode_www_form(other_site.domain)}/settings/google-search")
 
       assert conn.status == 404
       assert Repo.exists?(Plausible.Site.GoogleAuth)
+    end
+  end
+
+  describe "GET /:website/settings/imports-exports" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "renders empty imports list", %{conn: conn, site: site} do
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      resp = html_response(conn, 200)
+
+      assert text_of_attr(resp, ~s|a[href]|, "href") =~
+               "https://accounts.google.com/o/oauth2/"
+
+      assert resp =~ "Import Data"
+      assert resp =~ "Existing Imports"
+      assert resp =~ "There are no imports yet"
+      assert resp =~ "Export Data"
+    end
+
+    test "renders imports in import list", %{conn: conn, site: site} do
+      {:ok, opts} = add_imported_data(%{site: site})
+      site = Map.new(opts).site
+
+      _site_import1 = insert(:site_import, site: site, status: SiteImport.pending())
+      _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
+
+      site_import3 =
+        insert(:site_import, label: "123456", site: site, status: SiteImport.completed())
+
+      _site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
+
+      populate_stats(site, site_import3.id, [
+        build(:imported_visitors, pageviews: 77),
+        build(:imported_visitors, pageviews: 21)
+      ])
+
+      conn = get(conn, "/#{site.domain}/settings/imports-exports")
+      resp = html_response(conn, 200)
+
+      buttons = find(resp, ~s|button[data-method="delete"]|)
+      assert length(buttons) == 5
+
+      assert resp =~ "Google Analytics (123456)"
+      assert resp =~ "(98 page views)"
     end
   end
 
@@ -1213,7 +1262,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
 
       refute Repo.one(Plausible.Site.SharedLink)
-      assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
+      assert redirected_to(conn, 302) =~ "/#{URI.encode_www_form(site.domain)}/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :success) == "Shared Link deleted"
     end
 
@@ -1224,115 +1273,86 @@ defmodule PlausibleWeb.SiteControllerTest do
       conn = delete(conn, "/sites/#{site.domain}/shared-links/#{link.slug}")
 
       assert Repo.one(Plausible.Site.SharedLink)
-      assert redirected_to(conn, 302) =~ "/#{site.domain}/settings"
+      assert redirected_to(conn, 302) =~ "/#{URI.encode_www_form(site.domain)}/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find Shared Link"
     end
   end
 
-  describe "DELETE sites/:website/custom-domains/:id" do
-    setup [:create_user, :log_in, :create_site]
+  describe "DELETE /:website/settings/:forget_import/:import_id" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
-    test "deletes custom domain", %{conn: conn, site: site} do
-      domain = insert(:custom_domain, site: site)
+    test "removes site import, associated data and cancels oban job for a particular import", %{
+      conn: conn,
+      user: user,
+      site: site
+    } do
+      {:ok, job} =
+        Plausible.Imported.NoopImporter.new_import(
+          site,
+          user,
+          start_date: ~D[2022-01-01],
+          end_date: Timex.today()
+        )
 
-      conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{domain.id}")
+      %{args: %{import_id: import_id}} = job
 
-      assert Phoenix.Flash.get(conn.assigns.flash, :success) ==
-               "Custom domain deleted successfully"
+      # legacy stats
+      populate_stats(site, [
+        build(:imported_visitors, pageviews: 12)
+      ])
 
-      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 0
+      populate_stats(site, import_id, [
+        build(:imported_visitors, pageviews: 10)
+      ])
+
+      assert [%{id: ^import_id}, %{id: 0}] = Plausible.Imported.list_all_imports(site)
+
+      assert eventually(fn ->
+               count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+               {count == 22, count}
+             end)
+
+      delete(conn, "/#{site.domain}/settings/forget-import/#{import_id}")
+
+      assert eventually(fn ->
+               count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+               {count == 12, count}
+             end)
+
+      assert Repo.reload(job).state == "cancelled"
     end
 
-    test "fails to delete custom domain not owning it", %{conn: conn, site: site} do
-      _og_domain = insert(:custom_domain, site: site)
+    test "removes legacy site import along with associated data when instructed", %{
+      conn: conn,
+      site: site
+    } do
+      other_site_import = insert(:site_import, site: site)
 
-      foreign_site = insert(:site)
-      foreign_domain = insert(:custom_domain, site: foreign_site)
+      # legacy stats
+      populate_stats(site, [
+        build(:imported_visitors, pageviews: 12)
+      ])
 
-      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
+      populate_stats(site, other_site_import.id, [
+        build(:imported_visitors, pageviews: 10)
+      ])
 
-      conn = delete(conn, "/sites/#{site.domain}/custom-domains/#{foreign_domain.id}")
-      assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Failed to delete custom domain"
+      assert eventually(fn ->
+               count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+               {count == 22, count}
+             end)
 
-      assert Repo.aggregate(Plausible.Site.CustomDomain, :count, :id) == 2
-    end
-  end
+      delete(conn, "/#{site.domain}/settings/forget-import/0")
 
-  describe "GET /:website/import/google-analytics/view-id" do
-    setup [:create_user, :log_in, :create_new_site]
-
-    test "lists Google Analytics views", %{conn: conn, site: site} do
-      expect(
-        Plausible.HTTPClient.Mock,
-        :get,
-        fn _url, _body ->
-          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
-          {:ok, %Finch.Response{body: body, status: 200}}
-        end
-      )
-
-      response =
-        conn
-        |> get("/#{site.domain}/import/google-analytics/view-id", %{
-          "access_token" => "token",
-          "refresh_token" => "foo",
-          "expires_at" => "2022-09-22T20:01:37.112777"
-        })
-        |> html_response(200)
-
-      assert response =~ "57238190 - one.test"
-      assert response =~ "54460083 - two.test"
-    end
-  end
-
-  describe "POST /:website/settings/google-import" do
-    setup [:create_user, :log_in, :create_new_site]
-
-    test "adds in-progress imported tag to site", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/settings/google-import", %{
-        "view_id" => "123",
-        "start_date" => "2018-03-01",
-        "end_date" => "2022-03-01",
-        "access_token" => "token",
-        "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777"
-      })
-
-      imported_data = Repo.reload(site).imported_data
-
-      assert imported_data
-      assert imported_data.source == "Google Analytics"
-      assert imported_data.end_date == ~D[2022-03-01]
-      assert imported_data.status == "importing"
-    end
-
-    test "schedules an import job in Oban", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/settings/google-import", %{
-        "view_id" => "123",
-        "start_date" => "2018-03-01",
-        "end_date" => "2022-03-01",
-        "access_token" => "token",
-        "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777"
-      })
-
-      assert_enqueued(
-        worker: Plausible.Workers.ImportGoogleAnalytics,
-        args: %{
-          "site_id" => site.id,
-          "view_id" => "123",
-          "start_date" => "2018-03-01",
-          "end_date" => "2022-03-01",
-          "access_token" => "token",
-          "refresh_token" => "foo",
-          "token_expires_at" => "2022-09-22T20:01:37.112777"
-        }
-      )
+      assert eventually(fn ->
+               count = Plausible.Stats.Clickhouse.imported_pageview_count(site)
+               {count == 10, count}
+             end)
     end
   end
 
-  describe "DELETE /:website/settings/:forget_imported" do
-    setup [:create_user, :log_in, :create_new_site]
+  describe "DELETE /:website/settings/forget_imported" do
+    setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
     test "removes imported_data field from site", %{conn: conn, site: site} do
       delete(conn, "/#{site.domain}/settings/forget-imported")
@@ -1340,9 +1360,13 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.reload(site).imported_data == nil
     end
 
-    test "removes actual imported data from Clickhouse", %{conn: conn, site: site} do
-      Plausible.Site.start_import(site, ~D[2022-01-01], Timex.today(), "Google Analytics")
-      |> Repo.update!()
+    test "removes actual imported data from Clickhouse", %{conn: conn, user: user, site: site} do
+      Plausible.Imported.NoopImporter.new_import(
+        site,
+        user,
+        start_date: ~D[2022-01-01],
+        end_date: Timex.today()
+      )
 
       populate_stats(site, [
         build(:imported_visitors, pageviews: 10)
@@ -1356,19 +1380,14 @@ defmodule PlausibleWeb.SiteControllerTest do
              end)
     end
 
-    test "cancels Oban job if it exists", %{conn: conn, site: site} do
+    test "cancels Oban job if it exists", %{conn: conn, user: user, site: site} do
       {:ok, job} =
-        Plausible.Workers.ImportGoogleAnalytics.new(%{
-          "site_id" => site.id,
-          "view_id" => "123",
-          "start_date" => "2022-01-01",
-          "end_date" => "2023-01-01",
-          "access_token" => "token"
-        })
-        |> Oban.insert()
-
-      Plausible.Site.start_import(site, ~D[2022-01-01], Timex.today(), "Google Analytics")
-      |> Repo.update!()
+        Plausible.Imported.NoopImporter.new_import(
+          site,
+          user,
+          start_date: ~D[2022-01-01],
+          end_date: Timex.today()
+        )
 
       populate_stats(site, [
         build(:imported_visitors, pageviews: 10)
@@ -1451,17 +1470,18 @@ defmodule PlausibleWeb.SiteControllerTest do
       site: site
     } do
       original_domain = site.domain
+      new_domain = "â-example.com"
 
       conn =
         put(conn, Routes.site_path(conn, :change_domain_submit, site.domain), %{
-          "site" => %{"domain" => "foo.example.com"}
+          "site" => %{"domain" => new_domain}
         })
 
       assert redirected_to(conn) ==
-               Routes.site_path(conn, :add_snippet_after_domain_change, "foo.example.com")
+               Routes.site_path(conn, :add_snippet_after_domain_change, new_domain)
 
       site = Repo.reload!(site)
-      assert site.domain == "foo.example.com"
+      assert site.domain == new_domain
       assert site.domain_changed_from == original_domain
     end
 
@@ -1482,6 +1502,19 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       assert resp =~
                "Your domain has been changed. You must update the JavaScript snippet on your site within 72 hours"
+    end
+  end
+
+  describe "reset stats" do
+    setup [:create_user, :log_in, :create_site]
+
+    test "resets native_stats_start_date", %{conn: conn, site: site} do
+      Plausible.Site.set_stats_start_date(site, ~D[2023-01-01])
+      |> Repo.update!()
+
+      delete(conn, Routes.site_path(conn, :reset_stats, site.domain))
+
+      assert Repo.reload(site).stats_start_date == nil
     end
   end
 end

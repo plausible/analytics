@@ -100,6 +100,87 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :throttle
   end
 
+  test "event pipeline drops a request when header x-plausible-ip-type is dc_ip" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    conn = Plug.Conn.put_req_header(conn, "x-plausible-ip-type", "dc_ip")
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :dc_ip
+  end
+
+  test "event pipeline drops a request when ip is on blocklist" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    conn = %{conn | remote_ip: {127, 7, 7, 7}}
+
+    {:ok, _} = Plausible.Shields.add_ip_rule(site, %{"inet" => "127.7.7.7"})
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :site_ip_blocklist
+  end
+
+  test "event pipeline drops a request when country is on blocklist" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    conn = %{conn | remote_ip: {216, 160, 83, 56}}
+
+    %{country_code: cc} = Plausible.Ingestion.Geolocation.lookup("216.160.83.56")
+    {:ok, _} = Plausible.Shields.add_country_rule(site, %{"country_code" => cc})
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :site_country_blocklist
+  end
+
+  test "event pipeline drops events for site with accept_trafic_until in the past" do
+    yesterday = Date.add(Date.utc_today(), -1)
+
+    site =
+      insert(:site,
+        ingest_rate_limit_threshold: 1,
+        members: [build(:user, accept_traffic_until: yesterday)]
+      )
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site",
+      d: "#{site.domain}"
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :payment_required
+  end
+
+  @tag :full_build_only
   test "saves revenue amount" do
     site = insert(:site)
     _goal = insert(:goal, event_name: "checkout", currency: "USD", site: site)
@@ -145,7 +226,7 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, request} = Request.build(conn)
 
     assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
-    assert event.clickhouse_event_attrs.hostname == "192.168.0.1"
+    assert event.clickhouse_event.hostname == "192.168.0.1"
   end
 
   test "Hostname is stored with public suffix processing" do
@@ -160,6 +241,6 @@ defmodule Plausible.Ingestion.EventTest do
     assert {:ok, request} = Request.build(conn)
 
     assert {:ok, %{buffered: [event]}} = Event.build_and_buffer(request)
-    assert event.clickhouse_event_attrs.hostname == "foo.netlify.app"
+    assert event.clickhouse_event.hostname == "foo.netlify.app"
   end
 end

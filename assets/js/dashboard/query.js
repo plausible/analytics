@@ -1,8 +1,8 @@
 import React from 'react'
 import { Link, withRouter } from 'react-router-dom'
-import {nowForSite} from './util/date'
+import { nowForSite } from './util/date'
 import * as storage from './util/storage'
-import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled,getStoredMatchDayOfWeek } from './comparison-input'
+import { COMPARISON_DISABLED_PERIODS, getStoredComparisonMode, isComparisonEnabled, getStoredMatchDayOfWeek } from './comparison-input'
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -39,6 +39,7 @@ export function parseQuery(querystring, site) {
     to: q.get('to') ? dayjs.utc(q.get('to')) : undefined,
     match_day_of_week: matchDayOfWeek == 'true',
     with_imported: q.get('with_imported') ? q.get('with_imported') === 'true' : true,
+    experimental_session_count: q.get('experimental_session_count'),
     filters: {
       'goal': q.get('goal'),
       'props': JSON.parse(q.get('props')),
@@ -65,9 +66,13 @@ export function parseQuery(querystring, site) {
 }
 
 export function appliedFilters(query) {
-  return Object.keys(query.filters)
-    .map((key) => [key, query.filters[key]])
-    .filter(([_key, value]) => !!value);
+  const propKeys = Object.entries(query.filters.props || {})
+    .map(([key, value]) => ({ key, value, filterType: 'props' }))
+
+  return Object.entries(query.filters)
+    .map(([key, value]) => ({ key, value, filterType: key }))
+    .filter(({ key, value }) => key !== 'props' && !!value)
+    .concat(propKeys)
 }
 
 function generateQueryString(data) {
@@ -122,7 +127,7 @@ class QueryLink extends React.Component {
 const QueryLinkWithRouter = withRouter(QueryLink)
 export { QueryLinkWithRouter as QueryLink };
 
-function QueryButton({history, query, to, disabled, className, children, onClick}) {
+function QueryButton({ history, query, to, disabled, className, children, onClick }) {
   return (
     <button
       className={className}

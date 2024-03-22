@@ -2,26 +2,18 @@ defmodule Plausible.Workers.SendEmailReport do
   use Plausible.Repo
   use Oban.Worker, queue: :send_email_reports, max_attempts: 1
   alias Plausible.Stats.Query
-  alias Plausible.Stats
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"interval" => "weekly", "site_id" => site_id}}) do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:weekly_report)
 
     if site do
-      today = Timex.now(site.timezone) |> DateTime.to_date()
-      date = Timex.shift(today, weeks: -1) |> Timex.end_of_week() |> Date.to_iso8601()
-      query = Query.from(site, %{"period" => "7d", "date" => date})
-
-      for email <- site.weekly_report.recipients do
-        unsubscribe_link =
-          PlausibleWeb.Endpoint.url() <>
-            "/sites/#{URI.encode_www_form(site.domain)}/weekly-report/unsubscribe?email=#{email}"
-
-        send_report(email, site, "Weekly", unsubscribe_link, query)
-      end
-
-      :ok
+      %{site: site}
+      |> Map.put(:type, :weekly)
+      |> Map.put(:name, "Weekly")
+      |> put_last_week_query()
+      |> put_stats()
+      |> send_report_for_all(site.weekly_report.recipients)
     else
       :discard
     end
@@ -32,62 +24,63 @@ defmodule Plausible.Workers.SendEmailReport do
     site = Repo.get(Plausible.Site, site_id) |> Repo.preload(:monthly_report)
 
     if site do
-      last_month =
-        Timex.now(site.timezone)
-        |> Timex.shift(months: -1)
-        |> Timex.beginning_of_month()
-
-      query =
-        Query.from(site, %{
-          "period" => "month",
-          "date" => Timex.format!(last_month, "{ISOdate}")
-        })
-
-      for email <- site.monthly_report.recipients do
-        unsubscribe_link =
-          PlausibleWeb.Endpoint.url() <>
-            "/sites/#{URI.encode_www_form(site.domain)}/monthly-report/unsubscribe?email=#{email}"
-
-        send_report(email, site, Timex.format!(last_month, "{Mfull}"), unsubscribe_link, query)
-      end
-
-      :ok
+      %{site: site}
+      |> Map.put(:type, :monthly)
+      |> put_last_month_query()
+      |> put_monthly_report_name()
+      |> put_stats()
+      |> send_report_for_all(site.monthly_report.recipients)
     else
       :discard
     end
   end
 
-  defp send_report(email, site, name, unsubscribe_link, query) do
-    {:ok, prev_query} = Stats.Comparisons.compare(site, query, "previous_period")
-    curr_period = Stats.aggregate(site, query, [:pageviews, :visitors, :bounce_rate])
-    prev_period = Stats.aggregate(site, prev_query, [:pageviews, :visitors, :bounce_rate])
+  defp send_report_for_all(_assigns, [] = _recipients), do: :ok
 
-    change_pageviews = Stats.Compare.calculate_change(:pageviews, prev_period, curr_period)
-    change_visitors = Stats.Compare.calculate_change(:visitors, prev_period, curr_period)
-    change_bounce_rate = Stats.Compare.calculate_change(:bounce_rate, prev_period, curr_period)
+  defp send_report_for_all(assigns, [email | rest]) do
+    unsubscribe_link =
+      PlausibleWeb.Endpoint.url() <>
+        "/sites/#{URI.encode_www_form(assigns.site.domain)}/#{assigns.type}-report/unsubscribe?email=#{email}"
 
-    source_query = Query.put_filter(query, "visit:source", {:is_not, "Direct / None"})
-    sources = Stats.breakdown(site, source_query, "visit:source", [:visitors], {5, 1})
-    pages = Stats.breakdown(site, query, "event:page", [:visitors], {5, 1})
     user = Plausible.Auth.find_user_by(email: email)
-    login_link = user && Plausible.Sites.is_member?(user.id, site)
+    login_link = user && Plausible.Sites.is_member?(user.id, assigns.site)
 
-    template =
-      PlausibleWeb.Email.weekly_report(email, site,
-        unique_visitors: curr_period[:visitors][:value],
-        change_visitors: change_visitors,
-        pageviews: curr_period[:pageviews][:value],
-        change_pageviews: change_pageviews,
-        bounce_rate: curr_period[:bounce_rate][:value],
-        change_bounce_rate: change_bounce_rate,
-        sources: sources,
-        unsubscribe_link: unsubscribe_link,
-        login_link: login_link,
-        pages: pages,
-        query: query,
-        name: name
-      )
+    template_assigns =
+      assigns
+      |> Map.put(:unsubscribe_link, unsubscribe_link)
+      |> Map.put(:login_link, login_link)
 
-    Plausible.Mailer.send(template)
+    PlausibleWeb.Email.stats_report(email, template_assigns)
+    |> Plausible.Mailer.send()
+
+    send_report_for_all(assigns, rest)
+  end
+
+  defp put_last_month_query(%{site: site} = assigns) do
+    last_month =
+      Timex.now(site.timezone)
+      |> Timex.shift(months: -1)
+      |> Timex.beginning_of_month()
+      |> Timex.format!("{ISOdate}")
+
+    query = Query.from(site, %{"period" => "month", "date" => last_month})
+
+    Map.put(assigns, :query, query)
+  end
+
+  defp put_last_week_query(%{site: site} = assigns) do
+    today = Timex.now(site.timezone) |> DateTime.to_date()
+    date = Timex.shift(today, weeks: -1) |> Timex.end_of_week() |> Date.to_iso8601()
+    query = Query.from(site, %{"period" => "7d", "date" => date})
+
+    Map.put(assigns, :query, query)
+  end
+
+  defp put_monthly_report_name(%{query: query} = assigns) do
+    Map.put(assigns, :name, Timex.format!(query.date_range.first, "{Mfull}"))
+  end
+
+  defp put_stats(%{site: site, query: query} = assigns) do
+    Map.put(assigns, :stats, Plausible.Stats.EmailReport.get(site, query))
   end
 end

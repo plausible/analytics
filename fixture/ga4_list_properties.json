@@ -1,0 +1,41 @@
+{
+  "accountSummaries": [
+    {
+      "account": "accounts/28425178",
+      "displayName": "account.one",
+      "name": "accountSummaries/28425178",
+      "propertySummaries": [
+        {
+          "displayName": "account.one - GA4",
+          "parent": "accounts/28425178",
+          "property": "properties/428685906",
+          "propertyType": "PROPERTY_TYPE_ORDINARY"
+        }
+      ]
+    },
+    {
+      "account": "accounts/45336102",
+      "displayName": "account.two",
+      "name": "accountSummaries/45336102"
+    },
+    {
+      "account": "accounts/54516992",
+      "displayName": "Demo Account",
+      "name": "accountSummaries/54516992",
+      "propertySummaries": [
+        {
+          "displayName": "GA4 - Flood-It!",
+          "parent": "accounts/54516992",
+          "property": "properties/153293282",
+          "propertyType": "PROPERTY_TYPE_ORDINARY"
+        },
+        {
+          "displayName": "GA4 - Google Merch Shop",
+          "parent": "accounts/54516992",
+          "property": "properties/213025502",
+          "propertyType": "PROPERTY_TYPE_ORDINARY"
+        }
+      ]
+    }
+  ]
+}
