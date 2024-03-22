@@ -5,10 +5,10 @@ import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
 import { METRIC_MAPPING, LoadingState } from './graph-util'
 import TopStats from './top-stats';
-import { IntervalPicker, getStoredInterval, storeInterval } from './interval-picker';
+import { IntervalPicker, getCurrentInterval } from './interval-picker';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
-import { monthsBetweenDates, parseNaiveDate, isBefore } from '../../util/date'
+import { parseNaiveDate, isBefore } from '../../util/date'
 import { isComparisonEnabled } from '../../comparison-input'
 import LineGraphWithRouter from './line-graph'
 
@@ -25,37 +25,12 @@ export default class VisitorGraph extends React.Component {
     this.updateMetric = this.updateMetric.bind(this)
     this.fetchTopStatData = this.fetchTopStatData.bind(this)
     this.fetchGraphData = this.fetchGraphData.bind(this)
-    this.updateInterval = this.updateInterval.bind(this)
+    this.onIntervalUpdate = this.onIntervalUpdate.bind(this)
     this.boundary = React.createRef()
   }
 
-  isIntervalValid(interval) {
-    const { query, site } = this.props
-    const validIntervals = site.validIntervalsByPeriod[query.period] || []
-
-    return validIntervals.includes(interval)
-  }
-
-  getIntervalFromStorage() {
-    const { query, site } = this.props
-    let interval = getStoredInterval(query.period, site.domain)
-
-    if (interval !== "week" && interval !== "month" && query.period === "custom" && monthsBetweenDates(query.from, query.to) > 12) {
-      interval = "month"
-    }
-
-    if (this.isIntervalValid(interval)) {
-      return interval
-    } else {
-      return null
-    }
-  }
-
-  updateInterval(interval) {
-    if (this.isIntervalValid(interval)) {
-      storeInterval(this.props.query.period, this.props.site.domain, interval)
-      this.setState({ mainGraphLoadingState: LoadingState.refreshing, graphData: null }, this.fetchGraphData)
-    }
+  onIntervalUpdate(interval) {
+    this.setState({ mainGraphLoadingState: LoadingState.refreshing, graphData: null }, () => this.fetchGraphData(interval))
   }
 
   onVisible() {
@@ -114,11 +89,13 @@ export default class VisitorGraph extends React.Component {
     this.setState({ metric: clickedMetric, graphData: null })
   }
 
-  fetchGraphData() {
-    const url = `/api/stats/${encodeURIComponent(this.props.site.domain)}/main-graph`
-    let params = { metric: this.state.metric }
-    const interval = this.getIntervalFromStorage()
-    if (interval) { params.interval = interval }
+  fetchGraphData(interval) {
+    const { site, query } = this.props
+    const url = `/api/stats/${encodeURIComponent(site.domain)}/main-graph`
+    const params = {
+      metric: this.state.metric,
+      interval: interval || getCurrentInterval(site, query)
+    }
 
     api.get(url, this.props.query, params)
       .then((res) => {
@@ -272,7 +249,7 @@ export default class VisitorGraph extends React.Component {
             {this.downloadLink()}
             {this.samplingNotice()}
             {this.importedNotice()}
-            <IntervalPicker site={site} query={query} graphData={graphData} metric={metric} updateInterval={this.updateInterval} />
+            <IntervalPicker site={site} query={query} onIntervalUpdate={this.onIntervalUpdate} />
           </div>
           <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} metric={metric}/>
         </div>
