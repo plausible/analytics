@@ -76,7 +76,7 @@ All notable changes to this project will be documented in this file.
 - Fix automatic scrolling to the bottom on the dashboard if previously selected properties tab plausible/analytics#3872
 - Allow running the container with arbitrary UID plausible/analytics#2986
 - Fix `width=manual` in embedded dashboards plausible/analytics#3910
-- Fix URL escpaing when pipes are used in UTM tags plausible/analytics#3930
+- Fix URL escaping when pipes are used in UTM tags plausible/analytics#3930
 
 ## v2.0.0 - 2023-07-12
 
