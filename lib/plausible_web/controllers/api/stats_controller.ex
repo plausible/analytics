@@ -129,6 +129,7 @@ defmodule PlausibleWeb.Api.StatsController do
       full_intervals = build_full_intervals(query, labels)
 
       json(conn, %{
+        metric: metric,
         plot: plot_timeseries(timeseries_result, metric),
         labels: labels,
         comparison_plot: comparison_result && plot_timeseries(comparison_result, metric),

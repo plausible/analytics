@@ -3,7 +3,7 @@ import { Tooltip } from '../../util/tooltip'
 import { SecondsSinceLastLoad } from '../../util/seconds-since-last-load'
 import classNames from "classnames";
 import numberFormatter, { durationFormatter } from '../../util/number-formatter'
-import { METRIC_MAPPING } from './graph-util'
+import * as storage from '../../util/storage'
 import { formatDateRange } from '../../util/date.js'
 
 function Maybe({condition, children}) {
@@ -86,15 +86,13 @@ export default class TopStats extends React.Component {
   }
 
   canMetricBeGraphed(stat) {
-    const isTotalUniqueVisitors = this.props.query.filters.goal && stat.name === 'Unique visitors'
-    const isKnownMetric = Object.keys(METRIC_MAPPING).includes(stat.name)
-
-    return isKnownMetric && !isTotalUniqueVisitors
+    return !!stat.graph_metric
   }
 
   maybeUpdateMetric(stat) {
     if (this.canMetricBeGraphed(stat)) {
-      this.props.updateMetric(METRIC_MAPPING[stat.name])
+      storage.setItem(`metric__${this.props.site.domain}`, stat.graph_metric)
+      this.props.onMetricUpdate(stat.graph_metric)
     }
   }
 
@@ -104,9 +102,12 @@ export default class TopStats extends React.Component {
     )
   }
 
+  getStoredMetric() {
+    return storage.getItem(`metric__${this.props.site.domain}`)
+  }
+
   renderStatName(stat) {
-    const { metric } = this.props
-    const isSelected = metric === METRIC_MAPPING[stat.name]
+    const isSelected = stat.graph_metric === this.getStoredMetric()
 
     const [statDisplayName, statExtraName] = stat.name.split(/(\(.+\))/g)
 
@@ -140,7 +141,7 @@ export default class TopStats extends React.Component {
             <div className="my-1 space-y-2">
               <div>
                 <span className="flex items-center justify-between whitespace-nowrap">
-                  <p className="font-bold text-xl dark:text-gray-100" id={METRIC_MAPPING[stat.name]}>{this.topStatNumberShort(stat.name, stat.value)}</p>
+                  <p className="font-bold text-xl dark:text-gray-100" id={stat.graph_metric}>{this.topStatNumberShort(stat.name, stat.value)}</p>
                   <Maybe condition={!query.comparison}>
                     { this.renderPercentageComparison(stat.name, stat.change) }
                   </Maybe>

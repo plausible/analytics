@@ -1,21 +1,5 @@
 import numberFormatter, {durationFormatter} from '../../util/number-formatter'
 
-export const METRIC_MAPPING = {
-  'Unique visitors (last 30 min)': 'visitors',
-  'Pageviews (last 30 min)': 'pageviews',
-  'Unique visitors': 'visitors',
-  'Visit duration': 'visit_duration',
-  'Total pageviews': 'pageviews',
-  'Views per visit': 'views_per_visit',
-  'Total visits': 'visits',
-  'Bounce rate': 'bounce_rate',
-  'Unique conversions': 'conversions',
-  'Total conversions': 'events',
-  'Conversion rate': 'conversion_rate',
-  'Average revenue': 'average_revenue',
-  'Total revenue': 'total_revenue',
-}
-
 export const METRIC_LABELS = {
   'visitors': 'Visitors',
   'pageviews': 'Pageviews',
@@ -45,11 +29,9 @@ export const METRIC_FORMATTER = {
 }
 
 export const LoadingState = {
-  loading: 'loading',
-  refreshing: 'refreshing',
-  loaded: 'loaded',
-  isLoadingOrRefreshing: function (state) { return [this.loading, this.refreshing].includes(state) },
-  isLoadedOrRefreshing: function (state) { return [this.loaded, this.refreshing].includes(state) }
+  loading: 0,
+  updatingGraph: 1,
+  loaded: 2
 }
 
 const buildComparisonDataset = function(comparisonPlot) {

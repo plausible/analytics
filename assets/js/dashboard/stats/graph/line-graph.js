@@ -28,7 +28,8 @@ class LineGraph extends React.Component {
   }
 
   regenerateChart() {
-    const { graphData, metric, query } = this.props
+    const { graphData, query } = this.props
+    const metric = graphData.metric
     const graphEl = document.getElementById("main-graph-canvas")
     this.ctx = graphEl.getContext('2d');
     const dataSet = buildDataSet(graphData.plot, graphData.comparison_plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])
