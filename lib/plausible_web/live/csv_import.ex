@@ -53,7 +53,7 @@ defmodule PlausibleWeb.Live.CSVImport do
           <Heroicons.document_plus class="w-5 h-5 group-hover:text-white transition" />
         </div>
         <span class="ml-2 text-sm text-gray-600 dark:text-gray-500">
-          (or drag-and-drop your CSVs here)
+          (or drag-and-drop your unzipped CSVs here)
         </span>
         <.live_file_input upload={@upload} class="hidden" />
       </div>
