@@ -27,9 +27,19 @@ class LineGraph extends React.Component {
     this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
   }
 
+  getGraphMetric() {
+    let metric = this.props.graphData.metric
+
+    if (metric == 'visitors' && this.props.query.filters.goal) {
+      return 'conversions'
+    } else {
+      return metric
+    }
+  }
+
   regenerateChart() {
     const { graphData, query } = this.props
-    const metric = graphData.metric
+    const metric = this.getGraphMetric()
     const graphEl = document.getElementById("main-graph-canvas")
     this.ctx = graphEl.getContext('2d');
     const dataSet = buildDataSet(graphData.plot, graphData.comparison_plot, graphData.present_index, this.ctx, METRIC_LABELS[metric])
