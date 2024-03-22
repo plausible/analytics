@@ -8,6 +8,7 @@ defmodule Plausible.Stats.Timeseries do
 
   @typep metric ::
            :pageviews
+           | :events
            | :visitors
            | :visits
            | :bounce_rate
