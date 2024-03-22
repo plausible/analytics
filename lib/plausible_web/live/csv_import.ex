@@ -13,7 +13,7 @@ defmodule PlausibleWeb.Live.CSVImport do
       socket
       |> assign(site_id: site_id, user_id: user_id)
       |> allow_upload(:import,
-        accept: ~w[.csv],
+        accept: [".csv", "text/csv"],
         auto_upload: true,
         max_entries: length(Plausible.Imported.tables()),
         # 1GB
@@ -50,12 +50,12 @@ defmodule PlausibleWeb.Live.CSVImport do
     >
       <div class="flex items-center">
         <div class="bg-gray-200 dark:bg-gray-600 rounded p-1 group-hover:bg-indigo-500 dark:group-hover:bg-indigo-600 transition">
-          <Heroicons.folder_plus class="w-5 h-5 group-hover:text-white transition" />
+          <Heroicons.document_plus class="w-5 h-5 group-hover:text-white transition" />
         </div>
         <span class="ml-2 text-sm text-gray-600 dark:text-gray-500">
-          (or drag-and-drop your folder here)
+          (or drag-and-drop your CSVs here)
         </span>
-        <.live_file_input upload={@upload} class="hidden" webkitdirectory />
+        <.live_file_input upload={@upload} class="hidden" />
       </div>
 
       <ul id="imported-tables" class="mt-3.5 mb-0.5 space-y-1.5">
