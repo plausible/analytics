@@ -39,14 +39,21 @@ export default function VisitorGraph(props) {
   const [graphData, setGraphData] = useState(null)
 
   const onIntervalUpdate = useCallback((newInterval) => {
+    setGraphData(null)
+    setLoading(LoadingState.updatingGraph)
     fetchGraphData(getStoredMetric(), newInterval)
   }, [query])
 
   const onMetricUpdate = useCallback((newMetric) => {
+    setGraphData(null)
+    setLoading(LoadingState.updatingGraph)
     fetchGraphData(newMetric, getCurrentInterval(site, query))
   }, [query])
 
   useEffect(() => {
+    setTopStatData(null)
+    setGraphData(null)
+    setLoading(LoadingState.loading)
     fetchTopStatsAndGraphData()
 
     if (isRealtime) {
@@ -63,10 +70,6 @@ export default function VisitorGraph(props) {
   }, [topStatData])
 
   function fetchTopStatsAndGraphData() {
-    setLoading(LoadingState.loading)
-    setTopStatData(null)
-    setGraphData(null)
-
     fetchTopStats(site, query)
       .then((res) => {
         setTopStatData(res)
@@ -81,18 +84,11 @@ export default function VisitorGraph(props) {
 
         const interval = getCurrentInterval(site, query)
 
-        return fetchMainGraph(site, query, metric, interval)
-      })
-      .then((res) => {
-        setGraphData(res)
-        setLoading(LoadingState.loaded)
+        fetchGraphData(metric, interval)
       })
   }
 
   function fetchGraphData(metric, interval) {
-    setLoading(LoadingState.updatingGraph)
-    setGraphData(null)
-
     fetchMainGraph(site, query, metric, interval)
       .then((res) => {
         setGraphData(res)
