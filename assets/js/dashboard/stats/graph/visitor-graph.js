@@ -7,6 +7,7 @@ import { LoadingState } from './graph-util'
 import TopStats from './top-stats';
 import { IntervalPicker, getCurrentInterval } from './interval-picker'
 import StatsExport from './stats-export'
+import SamplingNotice from './sampling-notice';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import { parseNaiveDate, isBefore } from '../../util/date'
@@ -117,20 +118,6 @@ export default class VisitorGraph extends React.Component {
     storage.setItem(`topStatsHeight__${this.props.site.domain}`, document.getElementById('top-stats-container').clientHeight)
   }
 
-  samplingNotice() {
-    const samplePercent = this.state.topStatData?.sample_percent
-
-    if (samplePercent && samplePercent < 100) {
-      return (
-        <div tooltip={`Stats based on a ${samplePercent}% sample of all visitors`} className="cursor-pointer w-4 h-4 mx-2">
-          <svg className="absolute w-4 h-4 dark:text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-      )
-    }
-  }
-
   importedNotice() {
     const { topStatData } = this.state
 
@@ -198,7 +185,7 @@ export default class VisitorGraph extends React.Component {
               {loading === LoadingState.updatingGraph && renderLoader()}
               <div className="absolute right-4 -top-8 py-1 flex items-center">
                 {!isRealtime && <StatsExport site={site} query={query} />}
-                {this.samplingNotice()}
+                <SamplingNotice samplePercent={topStatData}/>
                 {this.importedNotice()}
                 <IntervalPicker site={site} query={query} onIntervalUpdate={this.onIntervalUpdate} />
               </div>
