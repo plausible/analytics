@@ -5,7 +5,8 @@ import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
 import { LoadingState } from './graph-util'
 import TopStats from './top-stats';
-import { IntervalPicker, getCurrentInterval } from './interval-picker';
+import { IntervalPicker, getCurrentInterval } from './interval-picker'
+import StatsExport from './stats-export'
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
 import { parseNaiveDate, isBefore } from '../../util/date'
@@ -34,7 +35,6 @@ export default class VisitorGraph extends React.Component {
       loading: LoadingState.loading,
       topStatData: null,
       graphData: null,
-      exported: false
     }
     this.onVisible = this.onVisible.bind(this)
     this.fetchTopStatsAndGraphData = this.fetchTopStatsAndGraphData.bind(this)
@@ -116,46 +116,6 @@ export default class VisitorGraph extends React.Component {
   storeTopStatsContainerHeight() {
     storage.setItem(`topStatsHeight__${this.props.site.domain}`, document.getElementById('top-stats-container').clientHeight)
   }
-  
-  pollExportReady() {
-    if (document.cookie.includes('exporting')) {
-      setTimeout(this.pollExportReady.bind(this), 1000);
-    } else {
-      this.setState({ exported: false })
-    }
-  }
-
-  downloadSpinner() {
-    this.setState({ exported: true });
-    document.cookie = "exporting=";
-    setTimeout(this.pollExportReady.bind(this), 1000);
-  }
-
-  downloadLink() {
-    if (this.props.query.period !== 'realtime') {
-
-      if (this.state.exported) {
-        return (
-          <div className="w-4 h-4 mx-2">
-            <svg className="animate-spin h-4 w-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-          </div>
-        )
-      } else {
-        const interval = this.state.graphData?.interval
-        const queryParams = api.serializeQuery(this.props.query, [{ interval }])
-        const endpoint = `/${encodeURIComponent(this.props.site.domain)}/export${queryParams}`
-
-        return (
-          <a className="w-4 h-4 mx-2" href={endpoint} download onClick={this.downloadSpinner.bind(this)}>
-            <svg className="absolute text-gray-700 feather dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          </a>
-        )
-      }
-    }
-  }
 
   samplingNotice() {
     const samplePercent = this.state.topStatData?.sample_percent
@@ -224,6 +184,7 @@ export default class VisitorGraph extends React.Component {
     const { graphData, topStatData, loading } = this.state;
 
     const isDarkTheme = document.querySelector('html').classList.contains('dark') || false
+    const isRealtime = query.period === 'realtime'
 
     return (
       <LazyLoader onVisible={this.onVisible}>
@@ -236,7 +197,7 @@ export default class VisitorGraph extends React.Component {
             <div className="relative px-2">
               {loading === LoadingState.updatingGraph && renderLoader()}
               <div className="absolute right-4 -top-8 py-1 flex items-center">
-                {this.downloadLink()}
+                {!isRealtime && <StatsExport site={site} query={query} />}
                 {this.samplingNotice()}
                 {this.importedNotice()}
                 <IntervalPicker site={site} query={query} onIntervalUpdate={this.onIntervalUpdate} />
