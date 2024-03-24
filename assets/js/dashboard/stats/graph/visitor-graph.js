@@ -70,7 +70,6 @@ export default function VisitorGraph(props) {
     fetchTopStats(site, query)
       .then((res) => {
         setTopStatData(res)
-        setLoading(LoadingState.updatingGraph)
         
         let metric = getStoredMetric()
         const availableMetrics = res.top_stats.filter(stat => !!stat.graph_metric).map(stat => stat.graph_metric)
