@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom'
 import * as api from '../../api'
 import * as storage from '../../util/storage'
 import LazyLoader from '../../components/lazy-loader'
@@ -7,10 +6,10 @@ import { LoadingState } from './graph-util'
 import TopStats from './top-stats';
 import { IntervalPicker, getCurrentInterval } from './interval-picker'
 import StatsExport from './stats-export'
+import WithImportedSwitch from './with-imported-switch';
 import SamplingNotice from './sampling-notice';
 import FadeIn from '../../fade-in';
 import * as url from '../../util/url'
-import { parseNaiveDate, isBefore } from '../../util/date'
 import { isComparisonEnabled } from '../../comparison-input'
 import LineGraphWithRouter from './line-graph'
 
@@ -118,42 +117,6 @@ export default class VisitorGraph extends React.Component {
     storage.setItem(`topStatsHeight__${this.props.site.domain}`, document.getElementById('top-stats-container').clientHeight)
   }
 
-  importedNotice() {
-    const { topStatData } = this.state
-
-    if (!topStatData?.imported_source) return
-
-    const isBeforeNativeStats = (date) => {
-      if (!date) return false
-
-      const nativeStatsBegin = parseNaiveDate(this.props.site.nativeStatsBegin)
-      const parsedDate = parseNaiveDate(date)
-
-      return isBefore(parsedDate, nativeStatsBegin, "day")
-    }
-
-    const isQueryingImportedPeriod = isBeforeNativeStats(topStatData.from)
-    const isComparingImportedPeriod = isBeforeNativeStats(topStatData.comparing_from)
-
-    if (isQueryingImportedPeriod || isComparingImportedPeriod) {
-      const source = topStatData.imported_source
-      const withImported = topStatData.with_imported;
-      const strike = withImported ? "" : " line-through"
-      const target = url.setQuery('with_imported', !withImported)
-      const tip = withImported ? "" : "do not ";
-
-      return (
-        <Link to={target} className="w-4 h-4 mx-2">
-          <div tooltip={`Stats ${tip}include data imported from ${source}.`} className="cursor-pointer w-4 h-4">
-            <svg className="absolute dark:text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>{source[0].toUpperCase()}</text>
-            </svg>
-          </div>
-        </Link>
-      )
-    }
-  }
-
   // This function is used for maintaining the main-graph/top-stats container height in the
   // loading process. The container height depends on how many top stat metrics are returned
   // from the API, but in the loading state, we don't know that yet. We can use localStorage
@@ -186,7 +149,7 @@ export default class VisitorGraph extends React.Component {
               <div className="absolute right-4 -top-8 py-1 flex items-center">
                 {!isRealtime && <StatsExport site={site} query={query} />}
                 <SamplingNotice samplePercent={topStatData}/>
-                {this.importedNotice()}
+                <WithImportedSwitch site={site} topStatData={topStatData} />
                 <IntervalPicker site={site} query={query} onIntervalUpdate={this.onIntervalUpdate} />
               </div>
               <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} />
