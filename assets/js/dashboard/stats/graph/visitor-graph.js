@@ -1,7 +1,6 @@
 import React from 'react';
 import * as api from '../../api'
 import * as storage from '../../util/storage'
-import LazyLoader from '../../components/lazy-loader'
 import { LoadingState } from './graph-util'
 import TopStats from './top-stats';
 import { IntervalPicker, getCurrentInterval } from './interval-picker'
@@ -36,7 +35,6 @@ export default class VisitorGraph extends React.Component {
       topStatData: null,
       graphData: null,
     }
-    this.onVisible = this.onVisible.bind(this)
     this.fetchTopStatsAndGraphData = this.fetchTopStatsAndGraphData.bind(this)
     this.fetchGraphData = this.fetchGraphData.bind(this)
     this.onIntervalUpdate = this.onIntervalUpdate.bind(this)
@@ -95,7 +93,7 @@ export default class VisitorGraph extends React.Component {
     this.fetchGraphData(newMetric, getCurrentInterval(this.props.site, this.props.query))
   }
 
-  onVisible() {
+  componentDidMount() {
     this.fetchTopStatsAndGraphData()
 
     if (this.props.query.period === 'realtime') {
@@ -137,26 +135,24 @@ export default class VisitorGraph extends React.Component {
     const isRealtime = query.period === 'realtime'
 
     return (
-      <LazyLoader onVisible={this.onVisible}>
-        <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825"}>
-          {loading === LoadingState.loading && renderLoader()}
-          <FadeIn show={loading !== LoadingState.loading}>
-            <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{ height: this.getTopStatsHeight() }}>
-              <TopStats site={site} query={query} onMetricUpdate={this.onMetricUpdate} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+      <div className={"relative w-full mt-2 bg-white rounded shadow-xl dark:bg-gray-825"}>
+        {loading === LoadingState.loading && renderLoader()}
+        <FadeIn show={loading !== LoadingState.loading}>
+          <div id="top-stats-container" className="flex flex-wrap" ref={this.boundary} style={{ height: this.getTopStatsHeight() }}>
+            <TopStats site={site} query={query} onMetricUpdate={this.onMetricUpdate} topStatData={topStatData} tooltipBoundary={this.boundary.current} lastLoadTimestamp={this.props.lastLoadTimestamp} />
+          </div>
+          <div className="relative px-2">
+            {loading === LoadingState.updatingGraph && renderLoader()}
+            <div className="absolute right-4 -top-8 py-1 flex items-center">
+              {!isRealtime && <StatsExport site={site} query={query} />}
+              <SamplingNotice samplePercent={topStatData}/>
+              <WithImportedSwitch site={site} topStatData={topStatData} />
+              <IntervalPicker site={site} query={query} onIntervalUpdate={this.onIntervalUpdate} />
             </div>
-            <div className="relative px-2">
-              {loading === LoadingState.updatingGraph && renderLoader()}
-              <div className="absolute right-4 -top-8 py-1 flex items-center">
-                {!isRealtime && <StatsExport site={site} query={query} />}
-                <SamplingNotice samplePercent={topStatData}/>
-                <WithImportedSwitch site={site} topStatData={topStatData} />
-                <IntervalPicker site={site} query={query} onIntervalUpdate={this.onIntervalUpdate} />
-              </div>
-              <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} />
-            </div>
-          </FadeIn>
-        </div>
-      </LazyLoader>
+            <LineGraphWithRouter graphData={graphData} darkTheme={isDarkTheme} query={query} />
+          </div>
+        </FadeIn>
+      </div>
     )
   }
 }
