@@ -158,6 +158,25 @@ defmodule Plausible.Ingestion.EventTest do
     assert dropped.drop_reason == :site_country_blocklist
   end
 
+  test "event pipeline drops a request when page is on blocklist" do
+    site = insert(:site)
+
+    payload = %{
+      name: "pageview",
+      url: "http://dummy.site/blocked/page",
+      domain: site.domain
+    }
+
+    conn = build_conn(:post, "/api/events", payload)
+
+    {:ok, _} = Plausible.Shields.add_page_rule(site, %{"page_path" => "/blocked/**"})
+
+    assert {:ok, request} = Request.build(conn)
+
+    assert {:ok, %{buffered: [], dropped: [dropped]}} = Event.build_and_buffer(request)
+    assert dropped.drop_reason == :site_page_blocklist
+  end
+
   test "event pipeline drops events for site with accept_trafic_until in the past" do
     yesterday = Date.add(Date.utc_today(), -1)
 
