@@ -112,29 +112,6 @@ defmodule PlausibleWeb.StatsController do
       site = Plausible.Repo.preload(conn.assigns.site, :owner)
       query = Query.from(site, params)
 
-      metrics =
-        if query.filters["event:goal"] do
-          [:visitors]
-        else
-          [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
-        end
-
-      graph = Plausible.Stats.timeseries(site, query, metrics)
-      columns = [:date | metrics]
-
-      column_headers =
-        if query.filters["event:goal"] do
-          [:date, :unique_conversions]
-        else
-          columns
-        end
-
-      visitors =
-        Enum.map(graph, fn row -> Enum.map(columns, &row[&1]) end)
-        |> (fn data -> [column_headers | data] end).()
-        |> CSV.encode()
-        |> Enum.join()
-
       filename =
         ~c"Plausible export #{params["domain"]} #{Timex.format!(query.date_range.first, "{ISOdate} ")} to #{Timex.format!(query.date_range.last, "{ISOdate} ")}.zip"
 
@@ -142,6 +119,7 @@ defmodule PlausibleWeb.StatsController do
       limited_params = Map.merge(params, %{"limit" => "100"})
 
       csvs = %{
+        ~c"visitors.csv" => fn -> main_graph_csv(site, query) end,
         ~c"sources.csv" => fn -> Api.StatsController.sources(conn, params) end,
         ~c"utm_mediums.csv" => fn -> Api.StatsController.utm_mediums(conn, params) end,
         ~c"utm_sources.csv" => fn -> Api.StatsController.utm_sources(conn, params) end,
@@ -175,8 +153,6 @@ defmodule PlausibleWeb.StatsController do
         |> Enum.zip(csv_values)
         |> Enum.reject(fn {_k, v} -> is_nil(v) end)
 
-      csvs = [{~c"visitors.csv", visitors} | csvs]
-
       {:ok, {_, zip_content}} = :zip.create(filename, csvs, [:memory])
 
       conn
@@ -189,6 +165,33 @@ defmodule PlausibleWeb.StatsController do
       |> send_resp(400, "")
       |> halt()
     end
+  end
+
+  defp main_graph_csv(site, query) do
+    {metrics, column_headers} = csv_graph_metrics(query)
+
+    map_bucket_to_row = fn bucket -> Enum.map([:date | metrics], &bucket[&1]) end
+    prepend_column_headers = fn data -> [column_headers | data] end
+
+    Plausible.Stats.timeseries(site, query, metrics)
+    |> Enum.map(map_bucket_to_row)
+    |> prepend_column_headers.()
+    |> CSV.encode()
+    |> Enum.join()
+  end
+
+  defp csv_graph_metrics(%Query{filters: %{"event:goal" => _}}) do
+    metrics = [:visitors, :events, :conversion_rate]
+    column_headers = [:date, :unique_conversions, :total_conversions, :conversion_rate]
+
+    {metrics, column_headers}
+  end
+
+  defp csv_graph_metrics(_) do
+    metrics = [:visitors, :pageviews, :visits, :views_per_visit, :bounce_rate, :visit_duration]
+    column_headers = [:date | metrics]
+
+    {metrics, column_headers}
   end
 
   @doc """

@@ -658,7 +658,10 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       _site_import1 = insert(:site_import, site: site, status: SiteImport.pending())
       _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
-      site_import3 = insert(:site_import, site: site, status: SiteImport.completed())
+
+      site_import3 =
+        insert(:site_import, label: "123456", site: site, status: SiteImport.completed())
+
       _site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
 
       populate_stats(site, site_import3.id, [
@@ -672,6 +675,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       buttons = find(resp, ~s|button[data-method="delete"]|)
       assert length(buttons) == 5
 
+      assert resp =~ "Google Analytics (123456)"
       assert resp =~ "(98 page views)"
     end
   end

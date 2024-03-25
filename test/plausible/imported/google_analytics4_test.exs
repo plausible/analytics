@@ -34,6 +34,7 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
         Plausible.Imported.GoogleAnalytics4.new_import(
           site,
           user,
+          label: "properties/123456",
           property: "properties/123456",
           start_date: ~D[2024-02-20],
           end_date: Date.utc_today(),
@@ -43,6 +44,8 @@ defmodule Plausible.Imported.GoogleAnalytics4Test do
         )
 
       site_import = Plausible.Imported.get_import(job.args.import_id)
+
+      assert site_import.label == "properties/123456"
 
       opts = job |> Repo.reload!() |> Map.get(:args) |> GoogleAnalytics4.parse_args()
 

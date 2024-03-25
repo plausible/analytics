@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Pages Block List in Site Settings
+- Add `conversion_rate` to Stats API Timeseries and on the main graph 
+- Add `total_conversions` and `conversion_rate` to `visitors.csv` in a goal-filtered CSV export
+- Ability to display total conversions (with a goal filter) on the main graph
+- Add `conversion_rate` to Stats API Timeseries and on the main graph
 - Add `time_on_page` metric into the Stats API
 - County Block List in Site Settings
 - Query the `views_per_visit` metric based on imported data as well if possible
@@ -73,6 +78,7 @@ All notable changes to this project will be documented in this file.
 - Fix automatic scrolling to the bottom on the dashboard if previously selected properties tab plausible/analytics#3872
 - Allow running the container with arbitrary UID plausible/analytics#2986
 - Fix `width=manual` in embedded dashboards plausible/analytics#3910
+- Fix URL escaping when pipes are used in UTM tags plausible/analytics#3930
 
 ## v2.0.0 - 2023-07-12
 

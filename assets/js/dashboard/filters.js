@@ -258,6 +258,10 @@ class Filters extends React.Component {
     )
   }
 
+  trackFilterMenu() {
+    window.plausible && window.plausible('Filter Menu: Open', {u: `${window.location.protocol}//${window.location.hostname}/:dashboard`})
+  }
+
   renderDropDown() {
     const { history, query, site } = this.props;
 
@@ -266,7 +270,7 @@ class Filters extends React.Component {
         {({ open }) => (
           <>
             <div>
-              <Menu.Button className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
+              <Menu.Button onClick={this.trackFilterMenu} className="flex items-center text-xs md:text-sm font-medium leading-tight px-3 py-2 cursor-pointer ml-auto text-gray-500 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-900 rounded">
                 {this.renderDropdownButton()}
               </Menu.Button>
             </div>
