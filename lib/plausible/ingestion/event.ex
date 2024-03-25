@@ -29,7 +29,6 @@ defmodule Plausible.Ingestion.Event do
           | :dc_ip
           | :site_ip_blocklist
           | :site_country_blocklist
-          | :site_page_blocklist
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -121,7 +120,6 @@ defmodule Plausible.Ingestion.Event do
     [
       &drop_datacenter_ip/1,
       &drop_shield_rule_ip/1,
-      &drop_shield_rule_page/1,
       &put_geolocation/1,
       &drop_shield_rule_country/1,
       &put_user_agent/1,
@@ -184,18 +182,15 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp drop_shield_rule_ip(%__MODULE__{} = event) do
-    if Plausible.Shields.ip_blocked?(event.domain, event.request.remote_ip) do
-      drop(event, :site_ip_blocklist)
-    else
-      event
-    end
-  end
+    domain = event.domain
+    address = event.request.remote_ip
 
-  defp drop_shield_rule_page(%__MODULE__{} = event) do
-    if Plausible.Shields.page_blocked?(event.domain, event.request.pathname) do
-      drop(event, :site_page_blocklist)
-    else
-      event
+    case Plausible.Shield.IPRuleCache.get({domain, address}) do
+      %Plausible.Shield.IPRule{action: :deny} ->
+        drop(event, :site_ip_blocklist)
+
+      _ ->
+        event
     end
   end
 
@@ -268,10 +263,12 @@ defmodule Plausible.Ingestion.Event do
          %__MODULE__{domain: domain, clickhouse_session_attrs: %{country_code: cc}} = event
        )
        when is_binary(domain) and is_binary(cc) do
-    if Plausible.Shields.country_blocked?(domain, cc) do
-      drop(event, :site_country_blocklist)
-    else
-      event
+    case Plausible.Shield.CountryRuleCache.get({domain, String.upcase(cc)}) do
+      %Plausible.Shield.CountryRule{action: :deny} ->
+        drop(event, :site_country_blocklist)
+
+      _ ->
+        event
     end
   end
 
