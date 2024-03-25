@@ -384,9 +384,7 @@ defmodule Plausible.Ingestion.Event do
     uri = URI.parse(ref.referer)
 
     if PlausibleWeb.RefInspector.right_uri?(uri) do
-      host = String.replace_prefix(uri.host, "www.", "")
-      path = uri.path || ""
-      host <> String.trim_trailing(path, "/")
+      PlausibleWeb.RefInspector.format_referrer(uri)
     end
   end
 

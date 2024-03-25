@@ -1313,8 +1313,10 @@ defmodule PlausibleWeb.Api.StatsController do
         m -> Plausible.Stats.Metrics.from_string!(m)
       end
 
-    if metric == :conversion_rate and !query.filters["event:goal"] do
-      {:error, "Metric `:conversion_rate` can only be queried with a goal filter"}
+    requires_goal_filter? = metric in [:conversion_rate, :events]
+
+    if requires_goal_filter? and !query.filters["event:goal"] do
+      {:error, "Metric `#{metric}` can only be queried with a goal filter"}
     else
       {:ok, metric}
     end
