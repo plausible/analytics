@@ -69,7 +69,7 @@ defmodule PlausibleWeb.LayoutView do
           [
             %{key: "IP Addresses", value: "shields/ip_addresses"},
             %{key: "Countries", value: "shields/countries"},
-            if FunWithFlags.enabled?(:shield_pages) do
+            if FunWithFlags.enabled?(:shield_pages, for: conn.assigns[:site]) do
               %{key: "Pages", value: "shields/pages"}
             end
           ]
