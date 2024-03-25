@@ -14,7 +14,7 @@
 
     <script src="dist/handlebars.runtime-NWIB6V2M.js"></script>
     <script src="dist/handlebars.templates-43PMFBC7.js"></script>
-    <script src="dist/sidebar_items-232134E0.js"></script>
+    <script src="dist/sidebar_items-8EE25B5D.js"></script>
 
       <script src="docs_config.js"></script>
 
@@ -226,13 +226,13 @@ Pages
 
       </div>
 
-<p>Extracts min/max date range from a list of uploads.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="6394952262-1">(</span><span class="p" data-group-id="6394952262-2">[</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="p" data-group-id="6394952262-3">%{</span><span class="s">&quot;filename&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;imported_devices_20190101_20210101.csv&quot;</span><span class="p" data-group-id="6394952262-3">}</span><span class="p">,</span><span class="w">
+<p>Extracts min/max date range from a list of uploads.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="8979502538-1">(</span><span class="p" data-group-id="8979502538-2">[</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="p" data-group-id="8979502538-3">%{</span><span class="s">&quot;filename&quot;</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="s">&quot;imported_devices_20190101_20210101.csv&quot;</span><span class="p" data-group-id="8979502538-3">}</span><span class="p">,</span><span class="w">
 </span><span class="gp unselectable">...&gt; </span><span class="w">  </span><span class="s">&quot;imported_pages_20200101_20220101.csv&quot;</span><span class="w">
-</span><span class="gp unselectable">...&gt; </span><span class="p" data-group-id="6394952262-2">]</span><span class="p" data-group-id="6394952262-1">)</span><span class="w">
-</span><span class="nc">Date</span><span class="o">.</span><span class="n">range</span><span class="p" data-group-id="6394952262-4">(</span><span class="ld">~D[2019-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2022-01-01]</span><span class="p" data-group-id="6394952262-4">)</span><span class="w">
+</span><span class="gp unselectable">...&gt; </span><span class="p" data-group-id="8979502538-2">]</span><span class="p" data-group-id="8979502538-1">)</span><span class="w">
+</span><span class="nc">Date</span><span class="o">.</span><span class="n">range</span><span class="p" data-group-id="8979502538-4">(</span><span class="ld">~D[2019-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2022-01-01]</span><span class="p" data-group-id="8979502538-4">)</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="6394952262-5">(</span><span class="p" data-group-id="6394952262-6">[</span><span class="p" data-group-id="6394952262-6">]</span><span class="p" data-group-id="6394952262-5">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">date_range</span><span class="p" data-group-id="8979502538-5">(</span><span class="p" data-group-id="8979502538-6">[</span><span class="p" data-group-id="8979502538-6">]</span><span class="p" data-group-id="8979502538-5">)</span><span class="w">
 </span><span class="gt">** (ArgumentError) empty uploads</span></code></pre>
   </section>
 </section>
@@ -291,11 +291,11 @@ Pages
 
       </div>
 
-<p>Extracts table name and min/max dates from the filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="8668835406-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="8668835406-1">)</span><span class="w">
+<p>Extracts table name and min/max dates from the filename.</p><p>Examples:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="0132778764-1">(</span><span class="s">&quot;my_data.csv&quot;</span><span class="p" data-group-id="0132778764-1">)</span><span class="w">
 </span><span class="gt">** (ArgumentError) invalid filename</span><span class="w">
 
-</span><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="8668835406-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="8668835406-2">)</span><span class="w">
-</span><span class="p" data-group-id="8668835406-3">{</span><span class="s">&quot;imported_devices&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[0001-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2025-01-01]</span><span class="p" data-group-id="8668835406-3">}</span></code></pre>
+</span><span class="gp unselectable">iex&gt; </span><span class="n">parse_filename!</span><span class="p" data-group-id="0132778764-2">(</span><span class="s">&quot;imported_devices_00010101_20250101.csv&quot;</span><span class="p" data-group-id="0132778764-2">)</span><span class="w">
+</span><span class="p" data-group-id="0132778764-3">{</span><span class="s">&quot;imported_devices&quot;</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[0001-01-01]</span><span class="p">,</span><span class="w"> </span><span class="ld">~D[2025-01-01]</span><span class="p" data-group-id="0132778764-3">}</span></code></pre>
   </section>
 </section>
 
