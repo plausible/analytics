@@ -1,0 +1,28 @@
+name: Validate migrations
+
+on:
+  pull_request:
+    paths:
+      - 'priv/repo/migrations/**'
+      - 'priv/ingest_repo/migrations/**'
+
+jobs:
+  validate:
+    name: App code does not change at the same time
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: dorny/paths-filter@v3
+      id: changes
+      with:
+        list-files: json
+        filters: |
+          lib:
+            - 'lib/**'
+            - 'extra/**'
+            - 'config/**'
+
+    - if: steps.changes.outputs.lib == 'true'
+      run: |
+        echo "::error file=${{ fromJSON(steps.changes.outputs.lib_files)[0] }}::Code and migrations shouldn't be changed at the same time"
+        exit 1
