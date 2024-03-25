@@ -23,14 +23,6 @@ defmodule Plausible.Sites do
     Repo.get_by!(Site, domain: domain)
   end
 
-  def get_domain!(site_id) do
-    Plausible.Repo.one!(
-      from s in Plausible.Site,
-        where: [id: ^site_id],
-        select: s.domain
-    )
-  end
-
   @spec toggle_pin(Auth.User.t(), Site.t()) ::
           {:ok, Site.UserPreference.t()} | {:error, :too_many_pins}
   def toggle_pin(user, site) do

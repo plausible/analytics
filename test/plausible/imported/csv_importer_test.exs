@@ -1,45 +1,11 @@
 defmodule Plausible.Imported.CSVImporterTest do
-  use Plausible.DataCase, async: true
+  use Plausible.DataCase
   alias Plausible.Imported.{CSVImporter, SiteImport}
-  alias Testcontainers.MinioContainer
   require SiteImport
 
   doctest CSVImporter, import: true
 
   @moduletag :minio
-
-  setup_all do
-    Testcontainers.start_link()
-
-    {:ok, minio} = Testcontainers.start_container(MinioContainer.new())
-    on_exit(fn -> :ok = Testcontainers.stop_container(minio.container_id) end)
-    connection_opts = MinioContainer.connection_opts(minio)
-
-    s3 = fn op -> ExAws.request!(op, connection_opts) end
-    s3.(ExAws.S3.put_bucket("imports", "us-east-1"))
-    s3.(ExAws.S3.put_bucket("exports", "us-east-1"))
-
-    {:ok, container: minio, s3: s3}
-  end
-
-  setup %{container: minio, s3: s3} do
-    connection_opts = MinioContainer.connection_opts(minio)
-
-    clean_bucket = fn bucket ->
-      ExAws.S3.list_objects_v2(bucket)
-      |> ExAws.stream!(connection_opts)
-      |> Stream.each(fn objects ->
-        keys = objects |> List.wrap() |> Enum.map(& &1.key)
-        s3.(ExAws.S3.delete_all_objects(bucket, keys))
-      end)
-      |> Stream.run()
-    end
-
-    clean_bucket.("imports")
-    clean_bucket.("exports")
-
-    :ok
-  end
 
   describe "new_import/3 and parse_args/1" do
     setup [:create_user, :create_new_site]
@@ -76,7 +42,8 @@ defmodule Plausible.Imported.CSVImporterTest do
                CSVImporter.new_import(site, user,
                  start_date: date_range.first,
                  end_date: date_range.last,
-                 uploads: uploads
+                 uploads: uploads,
+                 storage: "s3"
                )
 
       assert %Oban.Job{args: %{"import_id" => import_id, "uploads" => ^uploads} = args} =
@@ -93,14 +60,14 @@ defmodule Plausible.Imported.CSVImporterTest do
              ] = Plausible.Imported.list_all_imports(site)
 
       assert %{imported_data: nil} = Repo.reload!(site)
-      assert CSVImporter.parse_args(args) == [uploads: uploads]
+      assert CSVImporter.parse_args(args) == [uploads: uploads, storage: "s3"]
     end
   end
 
   describe "import_data/2" do
-    setup [:create_user, :create_new_site]
+    setup [:create_user, :create_new_site, :clean_buckets]
 
-    test "imports tables from S3", %{site: site, user: user, s3: s3, container: minio} do
+    test "imports tables from S3", %{site: site, user: user} do
       csvs = [
         %{
           name: "imported_browsers_20211230_20211231.csv",
@@ -328,9 +295,10 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       uploads =
         for %{name: name, body: body} <- csvs do
-          key = "#{site.id}/#{name}"
-          s3.(ExAws.S3.put_object("imports", key, body))
-          %{"filename" => name, "s3_url" => minio_url(minio, "imports", key)}
+          %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
+          [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+          ExAws.request!(ExAws.S3.put_object(bucket, key, body))
+          %{"filename" => name, "s3_url" => s3_url}
         end
 
       date_range = CSVImporter.date_range(uploads)
@@ -339,7 +307,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         CSVImporter.new_import(site, user,
           start_date: date_range.first,
           end_date: date_range.last,
-          uploads: uploads
+          uploads: uploads,
+          storage: "s3"
         )
 
       job = Repo.reload!(job)
@@ -356,7 +325,7 @@ defmodule Plausible.Imported.CSVImporterTest do
       assert Plausible.Stats.Clickhouse.imported_pageview_count(site) == 99
     end
 
-    test "fails on invalid CSV", %{site: site, user: user, s3: s3, container: minio} do
+    test "fails on invalid CSV", %{site: site, user: user} do
       csvs = [
         %{
           name: "imported_browsers_20211230_20211231.csv",
@@ -382,9 +351,10 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       uploads =
         for %{name: name, body: body} <- csvs do
-          key = "#{site.id}/#{name}"
-          s3.(ExAws.S3.put_object("imports", key, body))
-          %{"filename" => name, "s3_url" => minio_url(minio, "imports", key)}
+          %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, name)
+          [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+          ExAws.request!(ExAws.S3.put_object(bucket, key, body))
+          %{"filename" => name, "s3_url" => s3_url}
         end
 
       date_range = CSVImporter.date_range(uploads)
@@ -393,7 +363,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         CSVImporter.new_import(site, user,
           start_date: date_range.first,
           end_date: date_range.last,
-          uploads: uploads
+          uploads: uploads,
+          storage: "s3"
         )
 
       job = Repo.reload!(job)
@@ -411,11 +382,11 @@ defmodule Plausible.Imported.CSVImporterTest do
   end
 
   describe "export -> import" do
-    setup [:create_user, :create_new_site]
+    setup [:create_user, :create_new_site, :clean_buckets]
 
     @describetag :tmp_dir
 
-    test "it works", %{site: site, user: user, s3: s3, tmp_dir: tmp_dir, container: minio} do
+    test "it works", %{site: site, user: user, tmp_dir: tmp_dir} do
       populate_stats(site, [
         build(:pageview,
           user_id: 123,
@@ -480,35 +451,37 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # export archive to s3
       Oban.insert!(
-        Plausible.Workers.ExportCSV.new(%{
+        Plausible.Workers.ExportAnalytics.new(%{
+          "storage" => "s3",
           "site_id" => site.id,
           "email_to" => user.email,
-          "s3_bucket" => "exports",
-          "s3_path" => "#{site.id}/Plausible.zip",
-          "s3_config_overrides" => Map.new(MinioContainer.connection_opts(minio))
+          "s3_bucket" => Plausible.S3.exports_bucket(),
+          "s3_path" => to_string(site.id)
         })
       )
 
-      assert %{success: 1} = Oban.drain_queue(queue: :s3_csv_export, with_safety: false)
+      assert %{success: 1} = Oban.drain_queue(queue: :analytics_exports, with_safety: false)
 
       # download archive
-      s3.(
+      ExAws.request!(
         ExAws.S3.download_file(
-          "exports",
-          "/#{site.id}/Plausible.zip",
-          Path.join(tmp_dir, "Plausible.zip")
+          Plausible.S3.exports_bucket(),
+          to_string(site.id),
+          Path.join(tmp_dir, "plausible-export.zip")
         )
       )
 
       # unzip archive
-      {:ok, files} = :zip.unzip(to_charlist(Path.join(tmp_dir, "Plausible.zip")), cwd: tmp_dir)
+      {:ok, files} =
+        :zip.unzip(to_charlist(Path.join(tmp_dir, "plausible-export.zip")), cwd: tmp_dir)
 
       # upload csvs
       uploads =
         Enum.map(files, fn file ->
-          key = "#{site.id}/#{Path.basename(file)}"
-          s3.(ExAws.S3.put_object("imports", key, File.read!(file)))
-          %{"filename" => Path.basename(file), "s3_url" => minio_url(minio, "imports", key)}
+          %{s3_url: s3_url} = Plausible.S3.import_presign_upload(site.id, file)
+          [bucket, key] = String.split(URI.parse(s3_url).path, "/", parts: 2)
+          ExAws.request!(ExAws.S3.put_object(bucket, key, File.read!(file)))
+          %{"filename" => Path.basename(file), "s3_url" => s3_url}
         end)
 
       # run importer
@@ -518,7 +491,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         CSVImporter.new_import(site, user,
           start_date: date_range.first,
           end_date: date_range.last,
-          uploads: uploads
+          uploads: uploads,
+          storage: "s3"
         )
 
       job = Repo.reload!(job)
@@ -536,14 +510,23 @@ defmodule Plausible.Imported.CSVImporterTest do
     end
   end
 
-  defp minio_url(minio, bucket, key) do
-    arch = to_string(:erlang.system_info(:system_architecture))
-
-    if String.contains?(arch, "darwin") do
-      Path.join(["http://#{minio.ip_address}:9000", bucket, key])
-    else
-      port = minio |> MinioContainer.connection_opts() |> Keyword.fetch!(:port)
-      Path.join(["http://172.17.0.1:#{port}", bucket, key])
+  defp clean_buckets(_context) do
+    clean_bucket = fn bucket ->
+      ExAws.S3.list_objects_v2(bucket)
+      |> ExAws.stream!()
+      |> Stream.each(fn objects ->
+        keys = objects |> List.wrap() |> Enum.map(& &1.key)
+        ExAws.request!(ExAws.S3.delete_all_objects(bucket, keys))
+      end)
+      |> Stream.run()
     end
+
+    clean_bucket.(Plausible.S3.imports_bucket())
+    clean_bucket.(Plausible.S3.exports_bucket())
+
+    on_exit(fn ->
+      clean_bucket.(Plausible.S3.imports_bucket())
+      clean_bucket.(Plausible.S3.exports_bucket())
+    end)
   end
 end

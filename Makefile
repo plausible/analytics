@@ -42,6 +42,8 @@ minio: ## Start a transient container with a recent version of minio (s3)
 	while ! docker exec plausible_minio mc alias set local http://localhost:10000 minioadmin minioadmin; do sleep 1; done
 	docker exec plausible_minio mc mb local/dev-exports
 	docker exec plausible_minio mc mb local/dev-imports
+	docker exec plausible_minio mc mb local/test-exports
+	docker exec plausible_minio mc mb local/test-imports
 
 minio-stop: ## Stop and remove the minio container
 	docker stop plausible_minio
