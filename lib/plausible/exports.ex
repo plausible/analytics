@@ -12,14 +12,24 @@ defmodule Plausible.Exports do
   Examples:
 
       iex> archive_filename("plausible.io", ~D[2021-01-01], ~D[2024-12-31])
-      "plausible.io_20210101_20241231.zip"
+      "plausible_io_20210101_20241231.zip"
 
       iex> archive_filename("Bücher.example", ~D[2021-01-01], ~D[2024-12-31])
-      "Bücher.example_20210101_20241231.zip"
+      "Bücher_example_20210101_20241231.zip"
 
   """
   def archive_filename(domain, min_date, max_date) do
-    "#{domain}_#{Calendar.strftime(min_date, "%Y%m%d")}_#{Calendar.strftime(max_date, "%Y%m%d")}.zip"
+    name =
+      Enum.join(
+        [
+          String.replace(domain, ".", "_"),
+          Calendar.strftime(min_date, "%Y%m%d"),
+          Calendar.strftime(max_date, "%Y%m%d")
+        ],
+        "_"
+      )
+
+    name <> ".zip"
   end
 
   @doc """
