@@ -51,7 +51,7 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           metric_prefix ++ [:ingest, :events, :pipeline, :steps],
           event_name: Ingestion.Event.telemetry_pipeline_step_duration(),
           reporter_options: [
-            buckets: [10, 50, 100, 250, 300, 500, 1000, 5000, 10_000]
+            buckets: [10, 50, 100, 250, 350, 500, 1000, 5000, 10_000, 100_000, 500_000]
           ],
           unit: {:native, :microsecond},
           measurement: :duration,
