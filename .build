@@ -1,5 +1,4 @@
 404.html
-CompiledRegex.html
 Mix.Tasks.CancelSubscription.html
 Mix.Tasks.CleanClickhouse.html
 Mix.Tasks.CreateFreeSubscription.html
@@ -140,8 +139,6 @@ Plausible.Shield.CountryRule.html
 Plausible.Shield.CountryRuleCache.html
 Plausible.Shield.IPRule.html
 Plausible.Shield.IPRuleCache.html
-Plausible.Shield.PageRule.html
-Plausible.Shield.PageRuleCache.html
 Plausible.Shields.html
 Plausible.Site.Cache.html
 Plausible.Site.Domain.html
@@ -281,8 +278,6 @@ PlausibleWeb.Live.Shields.Countries.html
 PlausibleWeb.Live.Shields.CountryRules.html
 PlausibleWeb.Live.Shields.IPAddresses.html
 PlausibleWeb.Live.Shields.IPRules.html
-PlausibleWeb.Live.Shields.PageRules.html
-PlausibleWeb.Live.Shields.Pages.html
 PlausibleWeb.Live.Sites.html
 PlausibleWeb.MJML.StatsReport.html
 PlausibleWeb.PageController.html
@@ -377,8 +372,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-7A03AA52.js
-dist/sidebar_items-8EE25B5D.js
+dist/search_data-884FD7D6.js
+dist/sidebar_items-232134E0.js
 index.html
 readme.html
 search.html
