@@ -65,10 +65,15 @@ defmodule PlausibleWeb.LayoutView do
       %{
         key: "Shields",
         icon: :shield_exclamation,
-        value: [
-          %{key: "IP Addresses", value: "shields/ip_addresses"},
-          %{key: "Countries", value: "shields/countries"}
-        ]
+        value:
+          [
+            %{key: "IP Addresses", value: "shields/ip_addresses"},
+            %{key: "Countries", value: "shields/countries"},
+            if FunWithFlags.enabled?(:shield_pages) do
+              %{key: "Pages", value: "shields/pages"}
+            end
+          ]
+          |> Enum.reject(&is_nil/1)
       },
       %{key: "Email Reports", value: "email-reports", icon: :envelope},
       if conn.assigns[:current_user_role] == :owner do

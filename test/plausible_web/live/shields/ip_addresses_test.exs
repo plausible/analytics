@@ -95,7 +95,7 @@ defmodule PlausibleWeb.Live.Shields.IPAddressesTest do
       assert element_exists?(html, ~s/a[phx-click="prefill-own-ip-rule"]/)
     end
 
-    test "form modal does not contains link to add own IP if already added", %{
+    test "form modal does not contain link to add own IP if already added", %{
       site: site,
       conn: conn
     } do
