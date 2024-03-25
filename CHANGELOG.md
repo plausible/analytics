@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Pages Block List in Site Settings
+- Add `conversion_rate` to Stats API Timeseries and on the main graph 
 - Add `total_conversions` and `conversion_rate` to `visitors.csv` in a goal-filtered CSV export
 - Ability to display total conversions (with a goal filter) on the main graph
 - Add `conversion_rate` to Stats API Timeseries and on the main graph
