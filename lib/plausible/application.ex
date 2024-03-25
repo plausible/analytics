@@ -77,21 +77,6 @@ defmodule Plausible.Application do
          interval: :timer.seconds(35),
          warmer_fn: :refresh_updated_recently
        ]},
-      {Plausible.Shield.PageRuleCache, ttl_check_interval: false, ets_options: [:bag]},
-      {Plausible.Cache.Warmer,
-       [
-         child_name: Plausible.Shield.PageRuleCache.All,
-         cache_impl: Plausible.Shield.PageRuleCache,
-         interval: :timer.minutes(3) + Enum.random(1..:timer.seconds(10)),
-         warmer_fn: :refresh_all
-       ]},
-      {Plausible.Cache.Warmer,
-       [
-         child_name: Plausible.Shield.PageRuleCache.RecentlyUpdated,
-         cache_impl: Plausible.Shield.PageRuleCache,
-         interval: :timer.seconds(35),
-         warmer_fn: :refresh_updated_recently
-       ]},
       {Plausible.Auth.TOTP.Vault, key: totp_vault_key()},
       PlausibleWeb.Endpoint,
       {Oban, Application.get_env(:plausible, Oban)},
