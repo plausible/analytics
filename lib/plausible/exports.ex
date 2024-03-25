@@ -32,6 +32,32 @@ defmodule Plausible.Exports do
     name <> ".zip"
   end
 
+  @doc ~S"""
+  Safely renders content disposition for an arbitrary filename.
+
+  Examples:
+
+      iex> content_disposition("Plausible.zip")
+      "attachment; filename=\"Plausible.zip\""
+
+      iex> content_disposition(archive_filename("plausible.io", ~D[2021-01-01], ~D[2024-12-31]))
+      "attachment; filename=\"plausible_io_20210101_20241231.zip\""
+
+      iex> content_disposition("ウェブサイトのエクスポート_それから現在まで.zip")
+      "attachment; filename=\"%E3%82%A6%E3%82%A7%E3%83%96%E3%82%B5%E3%82%A4%E3%83%88%E3%81%AE%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88_%E3%81%9D%E3%82%8C%E3%81%8B%E3%82%89%E7%8F%BE%E5%9C%A8%E3%81%BE%E3%81%A7.zip\"; filename*=utf-8''%E3%82%A6%E3%82%A7%E3%83%96%E3%82%B5%E3%82%A4%E3%83%88%E3%81%AE%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88_%E3%81%9D%E3%82%8C%E3%81%8B%E3%82%89%E7%8F%BE%E5%9C%A8%E3%81%BE%E3%81%A7.zip"
+
+  """
+  def content_disposition(filename) do
+    encoded_filename = URI.encode(filename)
+    disposition = ~s[attachment; filename="#{encoded_filename}"]
+
+    if encoded_filename != filename do
+      disposition <> "; filename*=utf-8''#{encoded_filename}"
+    else
+      disposition
+    end
+  end
+
   @doc """
   Builds Ecto queries to export data from `events_v2` and `sessions_v2`
   tables  into the format of `imported_*` tables for a website.
