@@ -1,6 +1,11 @@
 defmodule PlausibleWeb.GoogleAnalyticsController do
   use PlausibleWeb, :controller
 
+  alias Plausible.Google
+  alias Plausible.Imported
+
+  require Plausible.Imported.SiteImport
+
   plug(PlausibleWeb.RequireAccountPlug)
 
   plug(PlausibleWeb.AuthorizeSiteAccess, [:owner, :admin, :super_admin])
@@ -10,6 +15,8 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         "access_token" => access_token,
         "refresh_token" => refresh_token,
         "expires_at" => expires_at,
+        "start_date" => start_date,
+        "end_date" => end_date,
         "legacy" => legacy
       }) do
     site = conn.assigns.site
@@ -22,17 +29,22 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
       access_token: access_token,
       refresh_token: refresh_token,
       expires_at: expires_at,
+      start_date: start_date,
+      end_date: end_date,
       legacy: legacy,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
   end
 
-  def property_or_view_form(conn, %{
-        "access_token" => access_token,
-        "refresh_token" => refresh_token,
-        "expires_at" => expires_at,
-        "legacy" => legacy
-      }) do
+  def property_or_view_form(
+        conn,
+        %{
+          "access_token" => access_token,
+          "refresh_token" => refresh_token,
+          "expires_at" => expires_at,
+          "legacy" => legacy
+        } = params
+      ) do
     site = conn.assigns.site
 
     redirect_route =
@@ -44,9 +56,21 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
 
     result =
       if legacy == "true" do
-        Plausible.Google.UA.API.list_views(access_token)
+        Google.UA.API.list_views(access_token)
       else
-        Plausible.Google.API.list_properties_and_views(access_token)
+        Google.API.list_properties_and_views(access_token)
+      end
+
+    error =
+      case params["error"] do
+        "no_data" ->
+          "No data found. Nothing to import."
+
+        "no_time_window" ->
+          "Imported data time range is completely overlapping with existing data. Nothing to import."
+
+        _ ->
+          nil
       end
 
     case result do
@@ -59,6 +83,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           expires_at: expires_at,
           site: conn.assigns.site,
           properties_and_views: properties_and_views,
+          selected_property_or_view_error: error,
           legacy: legacy,
           layout: {PlausibleWeb.LayoutView, "focus.html"}
         )
@@ -82,58 +107,51 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
   end
 
   # see https://stackoverflow.com/a/57416769
-  @google_analytics_new_user_metric_date ~D[2016-08-24]
+  @universal_analytics_new_user_metric_date ~D[2016-08-24]
 
-  def property_or_view(conn, %{
-        "property_or_view" => property_or_view,
-        "access_token" => access_token,
-        "refresh_token" => refresh_token,
-        "expires_at" => expires_at,
-        "legacy" => legacy
-      }) do
+  def property_or_view(
+        conn,
+        %{
+          "property_or_view" => property_or_view,
+          "access_token" => access_token,
+          "refresh_token" => refresh_token,
+          "expires_at" => expires_at,
+          "legacy" => legacy
+        } = params
+      ) do
     site = conn.assigns.site
-    start_date = Plausible.Google.API.get_analytics_start_date(access_token, property_or_view)
 
-    case start_date do
-      {:ok, nil} ->
-        {:ok, properties_and_views} =
-          if legacy == "true" do
-            Plausible.Google.UA.API.list_views(access_token)
-          else
-            Plausible.Google.API.list_properties_and_views(access_token)
-          end
+    with {:ok, api_start_date} <-
+           Google.API.get_analytics_start_date(access_token, property_or_view),
+         {:ok, api_end_date} <- Google.API.get_analytics_end_date(access_token, property_or_view),
+         {:ok, start_date, end_date} <- Imported.check_dates(site, api_start_date, api_end_date) do
+      action =
+        if Timex.before?(api_start_date, @universal_analytics_new_user_metric_date) do
+          :user_metric_notice
+        else
+          :confirm
+        end
 
-        conn
-        |> assign(:skip_plausible_tracking, true)
-        |> render("property_or_view_form.html",
-          access_token: access_token,
-          refresh_token: refresh_token,
-          expires_at: expires_at,
-          site: site,
-          properties_and_views: properties_and_views,
-          selected_property_or_view_error: "No data found. Nothing to import",
-          legacy: legacy,
-          layout: {PlausibleWeb.LayoutView, "focus.html"}
-        )
+      redirect(conn,
+        external:
+          Routes.google_analytics_path(conn, action, site.domain,
+            property_or_view: property_or_view,
+            access_token: access_token,
+            refresh_token: refresh_token,
+            expires_at: expires_at,
+            start_date: Date.to_iso8601(start_date),
+            end_date: Date.to_iso8601(end_date),
+            legacy: legacy
+          )
+      )
+    else
+      {:error, error} when error in [:no_data, :no_time_window] ->
+        params =
+          params
+          |> Map.take(["access_token", "refresh_token", "expires_at", "legacy"])
+          |> Map.put("error", Atom.to_string(error))
 
-      {:ok, date} ->
-        action =
-          if Timex.before?(date, @google_analytics_new_user_metric_date) do
-            :user_metric_notice
-          else
-            :confirm
-          end
-
-        redirect(conn,
-          to:
-            Routes.google_analytics_path(conn, action, site.domain,
-              property_or_view: property_or_view,
-              access_token: access_token,
-              refresh_token: refresh_token,
-              expires_at: expires_at,
-              legacy: legacy
-            )
-        )
+        property_or_view_form(conn, params)
     end
   end
 
@@ -142,16 +160,17 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         "access_token" => access_token,
         "refresh_token" => refresh_token,
         "expires_at" => expires_at,
+        "start_date" => start_date,
+        "end_date" => end_date,
         "legacy" => legacy
       }) do
     site = conn.assigns.site
 
-    start_date = Plausible.Google.API.get_analytics_start_date(access_token, property_or_view)
-
-    end_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
+    start_date = Date.from_iso8601!(start_date)
+    end_date = Date.from_iso8601!(end_date)
 
     {:ok, %{name: property_or_view_name, id: property_or_view}} =
-      Plausible.Google.API.get_property_or_view(access_token, property_or_view)
+      Google.API.get_property_or_view(access_token, property_or_view)
 
     conn
     |> assign(:skip_plausible_tracking, true)
@@ -164,7 +183,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
       selected_property_or_view_name: property_or_view_name,
       start_date: start_date,
       end_date: end_date,
-      property?: Plausible.Google.API.property?(property_or_view),
+      property?: Google.API.property?(property_or_view),
       legacy: legacy,
       layout: {PlausibleWeb.LayoutView, "focus.html"}
     )
@@ -182,6 +201,9 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
     site = conn.assigns.site
     current_user = conn.assigns.current_user
 
+    start_date = Date.from_iso8601!(start_date)
+    end_date = Date.from_iso8601!(end_date)
+
     redirect_route =
       if legacy == "true" do
         Routes.site_path(conn, :settings_integrations, site.domain)
@@ -189,36 +211,48 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         Routes.site_path(conn, :settings_imports_exports, site.domain)
       end
 
-    if Plausible.Google.API.property?(property_or_view) do
-      {:ok, _} =
-        Plausible.Imported.GoogleAnalytics4.new_import(
-          site,
-          current_user,
-          property: property_or_view,
-          label: property_or_view,
-          start_date: start_date,
-          end_date: end_date,
-          access_token: access_token,
-          refresh_token: refresh_token,
-          token_expires_at: expires_at
-        )
-    else
-      Plausible.Imported.UniversalAnalytics.new_import(
-        site,
-        current_user,
-        view_id: property_or_view,
-        label: property_or_view,
-        start_date: start_date,
-        end_date: end_date,
-        access_token: access_token,
-        refresh_token: refresh_token,
-        token_expires_at: expires_at,
-        legacy: legacy == "true"
-      )
-    end
+    case Imported.check_dates(site, start_date, end_date) do
+      {:ok, start_date, end_date} ->
+        if Google.API.property?(property_or_view) do
+          {:ok, _} =
+            Imported.GoogleAnalytics4.new_import(
+              site,
+              current_user,
+              property: property_or_view,
+              label: property_or_view,
+              start_date: start_date,
+              end_date: end_date,
+              access_token: access_token,
+              refresh_token: refresh_token,
+              token_expires_at: expires_at
+            )
+        else
+          {:ok, _} =
+            Imported.UniversalAnalytics.new_import(
+              site,
+              current_user,
+              view_id: property_or_view,
+              label: property_or_view,
+              start_date: start_date,
+              end_date: end_date,
+              access_token: access_token,
+              refresh_token: refresh_token,
+              token_expires_at: expires_at,
+              legacy: legacy == "true"
+            )
+        end
 
-    conn
-    |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
-    |> redirect(external: redirect_route)
+        conn
+        |> put_flash(:success, "Import scheduled. An email will be sent when it completes.")
+        |> redirect(external: redirect_route)
+
+      {:error, :no_time_window} ->
+        conn
+        |> put_flash(
+          :error,
+          "Import failed. No data can be imported because time range overlaps with existing data."
+        )
+        |> redirect(external: redirect_route)
+    end
   end
 end

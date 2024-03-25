@@ -161,6 +161,52 @@ defmodule Plausible.Google.UA.HTTP do
     end
   end
 
+  def get_analytics_end_date(access_token, view_id) do
+    params = %{
+      reportRequests: [
+        %{
+          viewId: view_id,
+          dateRanges: [
+            %{startDate: @earliest_valid_date, endDate: Date.to_iso8601(Timex.today())}
+          ],
+          dimensions: [%{name: "ga:date", histogramBuckets: []}],
+          metrics: [%{expression: "ga:pageviews"}],
+          hideTotals: true,
+          hideValueRanges: true,
+          orderBys: [%{fieldName: "ga:date", sortOrder: "DESCENDING"}],
+          pageSize: 1
+        }
+      ]
+    }
+
+    url = "#{reporting_api_url()}/v4/reports:batchGet"
+    headers = [{"Authorization", "Bearer #{access_token}"}]
+
+    case HTTPClient.impl().post(url, headers, params) do
+      {:ok, %Finch.Response{body: body, status: 200}} ->
+        report = List.first(body["reports"])
+
+        date =
+          case report["data"]["rows"] do
+            [%{"dimensions" => [date_str]}] ->
+              Timex.parse!(date_str, "%Y%m%d", :strftime) |> NaiveDateTime.to_date()
+
+            _ ->
+              nil
+          end
+
+        {:ok, date}
+
+      {:error, %{reason: %Finch.Response{body: body}}} ->
+        Sentry.capture_message("Error fetching UA start date", extra: %{body: inspect(body)})
+        {:error, body}
+
+      {:error, %{reason: reason} = e} ->
+        Sentry.capture_message("Error fetching UA start date", extra: %{error: inspect(e)})
+        {:error, reason}
+    end
+  end
+
   defp config, do: Application.get_env(:plausible, :google)
   defp reporting_api_url, do: Keyword.fetch!(config(), :reporting_api_url)
   defp api_url, do: Keyword.fetch!(config(), :api_url)

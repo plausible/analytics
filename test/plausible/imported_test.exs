@@ -59,4 +59,78 @@ defmodule Plausible.ImportedTest do
              ] = Imported.list_all_imports(site)
     end
   end
+
+  describe "check_dates/3" do
+    test "crops dates from both ends when overlapping with existing import and native stats" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2023-10-25 15:58:00])
+      ])
+
+      start_date = ~D[2016-04-03]
+      end_date = ~D[2021-05-12]
+
+      _existing_import =
+        insert(:site_import,
+          site: site,
+          start_date: start_date,
+          end_date: end_date,
+          status: :completed
+        )
+
+      assert {:ok, ~D[2021-05-12], ~D[2023-10-25]} =
+               Imported.check_dates(site, ~D[2021-04-11], ~D[2024-01-12])
+    end
+
+    test "picks longest conitnuous range when containing existing import" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2023-10-25 15:58:00])
+      ])
+
+      start_date = ~D[2019-04-03]
+      end_date = ~D[2021-05-12]
+
+      _existing_import =
+        insert(:site_import,
+          site: site,
+          start_date: start_date,
+          end_date: end_date,
+          status: :completed
+        )
+
+      assert {:ok, ~D[2021-05-12], ~D[2023-10-25]} =
+               Imported.check_dates(site, ~D[2019-03-21], ~D[2024-01-12])
+    end
+
+    test "returns no data error when start date missing" do
+      site = insert(:site)
+
+      assert {:error, :no_data} = Imported.check_dates(site, nil, nil)
+    end
+
+    test "returns no time window error when date range overlaps with existing import and stats completely" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2023-10-25 15:58:00])
+      ])
+
+      start_date = ~D[2016-04-03]
+      end_date = ~D[2023-10-25]
+
+      _existing_import =
+        insert(:site_import,
+          site: site,
+          start_date: start_date,
+          end_date: end_date,
+          status: :completed
+        )
+
+      assert {:error, :no_time_window} =
+               Imported.check_dates(site, ~D[2021-04-11], ~D[2024-01-12])
+    end
+  end
 end

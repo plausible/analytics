@@ -66,10 +66,11 @@ defmodule Plausible.Imported do
 
   defdelegate listen(), to: Imported.Importer
 
-  @spec list_all_imports(Site.t()) :: [SiteImport.t()]
-  def list_all_imports(site) do
+  @spec list_all_imports(Site.t(), atom()) :: [SiteImport.t()]
+  def list_all_imports(site, status \\ nil) do
     imports =
       from(i in SiteImport, where: i.site_id == ^site.id, order_by: [desc: i.inserted_at])
+      |> maybe_filter_by_status(status)
       |> Repo.all()
 
     if site.imported_data && not Enum.any?(imports, & &1.legacy) do
@@ -77,6 +78,12 @@ defmodule Plausible.Imported do
     else
       imports
     end
+  end
+
+  defp maybe_filter_by_status(query, nil), do: query
+
+  defp maybe_filter_by_status(query, status) do
+    where(query, [i], i.status == ^status)
   end
 
   @spec list_complete_import_ids(Site.t()) :: [non_neg_integer()]
@@ -123,4 +130,69 @@ defmodule Plausible.Imported do
 
     :ok
   end
+
+  @spec check_dates(Site.t(), Date.t() | nil, Date.t() | nil) ::
+          {:ok, Date.t(), Date.t()} | {:error, :no_data | :no_time_window}
+  def check_dates(_site, nil, _end_date), do: {:error, :no_data}
+
+  def check_dates(site, start_date, end_date) do
+    cutoff_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
+    end_date = Enum.min([end_date, cutoff_date], Date)
+    import_range = Date.range(start_date, end_date)
+
+    existing_ranges =
+      site
+      |> Imported.list_all_imports(Imported.SiteImport.completed())
+      |> Enum.map(&build_open_range(&1.start_date, &1.end_date))
+      |> Enum.reject(&is_nil/1)
+
+    cropped_ranges = crop_date_range(import_range, existing_ranges)
+
+    if cropped_ranges == [] do
+      {:error, :no_time_window}
+    else
+      longest = Enum.max_by(cropped_ranges, &Date.diff(&1.last, &1.first))
+
+      {:ok, longest.first, longest.last}
+    end
+  end
+
+  defp build_open_range(start_date, end_date) do
+    if Date.diff(end_date, start_date) <= 2 do
+      nil
+    else
+      Date.range(Date.add(start_date, 1), Date.add(end_date, -1))
+    end
+  end
+
+  defp crop_date_range(range, cropping_ranges) do
+    cropping_ranges
+    |> Enum.map(&Enum.to_list/1)
+    |> Enum.reduce(Enum.to_list(range), fn existing, dates ->
+      dates -- existing
+    end)
+    |> Enum.reduce([], fn
+      date, [] ->
+        [date]
+
+      date, [%Date{} = prev_date | rest] ->
+        if Date.diff(date, prev_date) == 1 do
+          [Date.range(prev_date, date) | rest]
+        else
+          [date, Date.range(prev_date, prev_date) | rest]
+        end
+
+      date, [%Date.Range{} = range | rest] ->
+        if Date.diff(date, range.last) == 1 do
+          [Date.range(range.first, date) | rest]
+        else
+          [date, range | rest]
+        end
+    end)
+    |> finalize_crop()
+    |> Enum.reject(&(Date.diff(&1.last, &1.first) < 1))
+  end
+
+  defp finalize_crop([%Date{} = date | rest]), do: [Date.range(date, date) | rest]
+  defp finalize_crop(other), do: other
 end

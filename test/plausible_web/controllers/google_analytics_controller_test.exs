@@ -22,6 +22,8 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "access_token" => "token",
           "refresh_token" => "foo",
           "expires_at" => "2022-09-22T20:01:37.112777",
+          "start_date" => "2020-02-22",
+          "end_date" => "2022-09-22",
           "legacy" => "true"
         })
         |> html_response(200)
@@ -32,6 +34,8 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
                  access_token: "token",
                  refresh_token: "foo",
                  expires_at: "2022-09-22T20:01:37.112777",
+                 start_date: "2020-02-22",
+                 end_date: "2022-09-22",
                  legacy: "true"
                )
                |> String.replace("&", "&amp;")
@@ -102,19 +106,115 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
     end
   end
 
-  describe "GET /:website/import/google-analytics/confirm" do
+  describe "POST /:website/import/google-analytics/property-or-view" do
     setup [:create_user, :log_in, :create_new_site]
 
-    test "renders confirmation form for Universal Analytics import", %{conn: conn, site: site} do
+    for legacy <- ["true", "false"] do
+      test "redirects to user metrics notice (UA legacy: #{legacy})", %{conn: conn, site: site} do
+        expect(
+          Plausible.HTTPClient.Mock,
+          :post,
+          fn _url, _opts, _params ->
+            body = "fixture/ga_start_date.json" |> File.read!() |> Jason.decode!()
+            {:ok, %Finch.Response{body: body, status: 200}}
+          end
+        )
+
+        expect(
+          Plausible.HTTPClient.Mock,
+          :post,
+          fn _url, _opts, _params ->
+            body = "fixture/ga_end_date.json" |> File.read!() |> Jason.decode!()
+            {:ok, %Finch.Response{body: body, status: 200}}
+          end
+        )
+
+        conn =
+          conn
+          |> post("/#{site.domain}/import/google-analytics/property-or-view", %{
+            "property_or_view" => "57238190",
+            "access_token" => "token",
+            "refresh_token" => "foo",
+            "expires_at" => "2022-09-22T20:01:37.112777",
+            "legacy" => unquote(legacy)
+          })
+
+        assert redirected_to(conn, 302) =~
+                 "/#{URI.encode_www_form(site.domain)}/import/google-analytics/user-metric"
+      end
+
+      test "redirects to confirmation (UA legacy: #{legacy})", %{conn: conn, site: site} do
+        expect(
+          Plausible.HTTPClient.Mock,
+          :post,
+          fn _url, _opts, _params ->
+            body = "fixture/ga_start_date_later.json" |> File.read!() |> Jason.decode!()
+            {:ok, %Finch.Response{body: body, status: 200}}
+          end
+        )
+
+        expect(
+          Plausible.HTTPClient.Mock,
+          :post,
+          fn _url, _opts, _params ->
+            body = "fixture/ga_end_date.json" |> File.read!() |> Jason.decode!()
+            {:ok, %Finch.Response{body: body, status: 200}}
+          end
+        )
+
+        conn =
+          conn
+          |> post("/#{site.domain}/import/google-analytics/property-or-view", %{
+            "property_or_view" => "57238190",
+            "access_token" => "token",
+            "refresh_token" => "foo",
+            "expires_at" => "2022-09-22T20:01:37.112777",
+            "legacy" => unquote(legacy)
+          })
+
+        assert redirected_to(conn, 302) =~
+                 "/#{URI.encode_www_form(site.domain)}/import/google-analytics/confirm"
+      end
+    end
+
+    test "redirects to confirmation (GA4)", %{conn: conn, site: site} do
       expect(
         Plausible.HTTPClient.Mock,
         :post,
-        fn _url, _headers, _params ->
-          body = "fixture/ga_start_date.json" |> File.read!() |> Jason.decode!()
+        fn _url, _opts, _params ->
+          body = "fixture/ga4_start_date.json" |> File.read!() |> Jason.decode!()
           {:ok, %Finch.Response{body: body, status: 200}}
         end
       )
 
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn _url, _opts, _params ->
+          body = "fixture/ga4_end_date.json" |> File.read!() |> Jason.decode!()
+          {:ok, %Finch.Response{body: body, status: 200}}
+        end
+      )
+
+      conn =
+        conn
+        |> post("/#{site.domain}/import/google-analytics/property-or-view", %{
+          "property_or_view" => "properties/428685906",
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777",
+          "legacy" => "false"
+        })
+
+      assert redirected_to(conn, 302) =~
+               "/#{URI.encode_www_form(site.domain)}/import/google-analytics/confirm"
+    end
+  end
+
+  describe "GET /:website/import/google-analytics/confirm" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "renders confirmation form for Universal Analytics import", %{conn: conn, site: site} do
       expect(
         Plausible.HTTPClient.Mock,
         :get,
@@ -131,6 +231,8 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "access_token" => "token",
           "refresh_token" => "foo",
           "expires_at" => "2022-09-22T20:01:37.112777",
+          "start_date" => "2012-01-18",
+          "end_date" => "2022-09-22",
           "legacy" => "true"
         })
         |> html_response(200)
@@ -151,20 +253,10 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
 
       assert text_of_attr(response, ~s|input[name=start_date]|, "value") == "2012-01-18"
 
-      assert text_of_attr(response, ~s|input[name=end_date]|, "value") ==
-               Date.to_iso8601(Date.utc_today())
+      assert text_of_attr(response, ~s|input[name=end_date]|, "value") == "2022-09-22"
     end
 
     test "renders confirmation form for Google Analytics 4 import", %{conn: conn, site: site} do
-      expect(
-        Plausible.HTTPClient.Mock,
-        :post,
-        fn _url, _headers, _params ->
-          body = "fixture/ga4_start_date.json" |> File.read!() |> Jason.decode!()
-          {:ok, %Finch.Response{body: body, status: 200}}
-        end
-      )
-
       expect(
         Plausible.HTTPClient.Mock,
         :get,
@@ -181,6 +273,8 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "access_token" => "token",
           "refresh_token" => "foo",
           "expires_at" => "2022-09-22T20:01:37.112777",
+          "start_date" => "2024-02-22",
+          "end_date" => "2024-02-26",
           "legacy" => "true"
         })
         |> html_response(200)
@@ -202,8 +296,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
 
       assert text_of_attr(response, ~s|input[name=start_date]|, "value") == "2024-02-22"
 
-      assert text_of_attr(response, ~s|input[name=end_date]|, "value") ==
-               Date.to_iso8601(Date.utc_today())
+      assert text_of_attr(response, ~s|input[name=end_date]|, "value") == "2024-02-26"
     end
   end
 
