@@ -123,7 +123,6 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
-
       drop_datacenter_ip: &drop_datacenter_ip/1,
       drop_shield_rule_page: &drop_shield_rule_page/1,
       drop_shield_rule_ip: &drop_shield_rule_ip/1,
