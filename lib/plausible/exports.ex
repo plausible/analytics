@@ -32,6 +32,143 @@ defmodule Plausible.Exports do
     name <> ".zip"
   end
 
+  @doc ~S"""
+  Safely renders content disposition for an arbitrary filename.
+
+  Examples:
+
+      iex> content_disposition("Plausible.zip")
+      "attachment; filename=\"Plausible.zip\""
+
+      iex> content_disposition(archive_filename("plausible.io", ~D[2021-01-01], ~D[2024-12-31]))
+      "attachment; filename=\"plausible_io_20210101_20241231.zip\""
+
+      iex> content_disposition("ウェブサイトのエクスポート_それから現在まで.zip")
+      "attachment; filename=\"%E3%82%A6%E3%82%A7%E3%83%96%E3%82%B5%E3%82%A4%E3%83%88%E3%81%AE%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88_%E3%81%9D%E3%82%8C%E3%81%8B%E3%82%89%E7%8F%BE%E5%9C%A8%E3%81%BE%E3%81%A7.zip\"; filename*=utf-8''%E3%82%A6%E3%82%A7%E3%83%96%E3%82%B5%E3%82%A4%E3%83%88%E3%81%AE%E3%82%A8%E3%82%AF%E3%82%B9%E3%83%9D%E3%83%BC%E3%83%88_%E3%81%9D%E3%82%8C%E3%81%8B%E3%82%89%E7%8F%BE%E5%9C%A8%E3%81%BE%E3%81%A7.zip"
+
+  """
+  def content_disposition(filename) do
+    encoded_filename = URI.encode(filename)
+    disposition = ~s[attachment; filename="#{encoded_filename}"]
+
+    if encoded_filename != filename do
+      disposition <> "; filename*=utf-8''#{encoded_filename}"
+    else
+      disposition
+    end
+  end
+
+  @doc ~S"""
+  Returns local directory for CSV exports storage.
+
+  Builds upon `$PERSISTENT_CACHE_DIR` (if set) and falls back to /tmp
+
+  Examples:
+
+      iex> local_dir = local_dir(_site_id = 37)
+      iex> String.ends_with?(local_dir, "/plausible-exports/37")
+      true
+
+  """
+  def local_dir(site_id) do
+    persistent_cache_dir = Application.get_env(:plausible, :persistent_cache_dir)
+
+    Path.join([
+      persistent_cache_dir || System.tmp_dir!(),
+      "plausible-exports",
+      i(site_id)
+    ])
+  end
+
+  @doc """
+  Generates a random path for the export. The random part is nested in `local_dir/1`.
+
+  Example:
+
+      random_file(_site_id = 37)
+      /tmp/plausible-exports/37/1711500789-932639561109-1
+
+  """
+  def random_file(site_id) do
+    sec = :os.system_time(:second)
+    rand = :rand.uniform(999_999_999_999)
+    scheduler_id = :erlang.system_info(:scheduler_id)
+    Path.join(local_dir(site_id), i(sec) <> "-" <> i(rand) <> "-" <> i(scheduler_id))
+  end
+
+  @compile {:inline, i: 1}
+  defp i(integer), do: Integer.to_string(integer)
+
+  defmodule LocalExport do
+    @moduledoc false
+    defstruct [:state, :path, :job_id, :size, :last_error]
+
+    @type t :: %__MODULE__{
+            state: String.t(),
+            path: Path.t(),
+            job_id: non_neg_integer() | nil,
+            size: non_neg_integer() | nil,
+            last_error: String.t() | nil
+          }
+  end
+
+  @doc "Lists both in progress and completed exports"
+  @spec list_local_exports(pos_integer) :: [LocalExport.t()]
+  def list_local_exports(site_id) do
+    import Ecto.Query, only: [from: 2]
+
+    local_dir = local_dir(site_id)
+
+    completed =
+      if File.exists?(local_dir) do
+        local_dir
+        |> File.ls!()
+        |> Enum.map(fn file ->
+          path = Path.join(local_dir, file)
+          %LocalExport{state: "completed", path: path, size: File.stat!(path).size}
+        end)
+      else
+        []
+      end
+
+    completed_paths = MapSet.new(completed, & &1.path)
+
+    jobs_q =
+      from j in Oban.Job,
+        where: [worker: "Plausible.Workers.ExportCSVLocal"],
+        where: j.args["site_id"] == ^site_id,
+        where: j.state not in ["completed", "cancelled"],
+        order_by: [asc: :id]
+
+    in_progress =
+      jobs_q
+      |> Plausible.Repo.all()
+      |> Enum.map(fn job ->
+        %Oban.Job{
+          id: job_id,
+          state: state,
+          errors: errors,
+          args: %{"local_path" => path}
+        } = job
+
+        last_error =
+          if last_error = List.last(errors) do
+            Map.fetch!(last_error, "error")
+          end
+
+        %LocalExport{state: state, path: path, job_id: job_id, last_error: last_error}
+      end)
+      |> Enum.reject(&MapSet.member?(completed_paths, &1.path))
+
+    Enum.sort_by(completed ++ in_progress, & &1.path)
+  end
+
+  @oban_channel __MODULE__
+  @doc false
+  def oban_notify, do: Oban.Notifier.notify(Oban, @oban_channel, %{})
+  @doc "Subscribes for export job updates"
+  def oban_listen, do: Oban.Notifier.listen([@oban_channel])
+
   @doc """
   Builds Ecto queries to export data from `events_v2` and `sessions_v2`
   tables  into the format of `imported_*` tables for a website.

@@ -1,6 +1,8 @@
 defmodule PlausibleWeb.SiteController do
   use PlausibleWeb, :controller
   use Plausible.Repo
+  use Plausible
+
   alias Plausible.Sites
   alias Plausible.Billing.Quota
 
@@ -708,17 +710,57 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
+  on_full_build do
+    defp schedule_csv_export(site, user) do
+      Oban.insert!(
+        Plausible.Workers.ExportCSV.new(%{
+          "site_id" => site.id,
+          "email_to" => user.email,
+          "s3_bucket" => Plausible.S3.exports_bucket(),
+          "s3_path" => "Plausible-#{site.id}.zip"
+        })
+      )
+    end
+  else
+    defp schedule_csv_export(site, user) do
+      Oban.insert!(
+        Plausible.Workers.ExportCSVLocal.new(%{
+          "site_id" => site.id,
+          "email_to" => user.email,
+          "local_path" => Plausible.Exports.random_file(site.id)
+        })
+      )
+    end
+
+    def download_local_export(conn, %{"file" => file}) do
+      alias Plausible.Exports
+
+      site = conn.assigns.site
+      exports_dir = Exports.local_dir(site.id)
+      export_path = Path.join(exports_dir, file)
+
+      if File.exists?(export_path) do
+        export_content_disposition =
+          Exports.content_disposition(
+            String.replace(site.domain, ".", "_") <> "-" <> file <> ".zip"
+          )
+
+        conn
+        |> put_resp_content_type("application/zip")
+        |> put_resp_header("content-disposition", export_content_disposition)
+        |> send_file(200, export_path)
+      else
+        conn
+        |> put_flash(:error, "Export not found")
+        |> redirect(to: Routes.site_path(conn, :settings_imports_exports, site.domain))
+      end
+    end
+  end
+
   def csv_export(conn, _params) do
     %{site: site, current_user: user} = conn.assigns
 
-    Oban.insert!(
-      Plausible.Workers.ExportCSV.new(%{
-        "site_id" => site.id,
-        "email_to" => user.email,
-        "s3_bucket" => Plausible.S3.exports_bucket(),
-        "s3_path" => "Plausible-#{site.id}.zip"
-      })
-    )
+    schedule_csv_export(site, user)
 
     conn
     |> put_flash(:success, "SCHEDULED. WAIT FOR MAIL")

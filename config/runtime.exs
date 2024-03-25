@@ -296,7 +296,8 @@ config :plausible,
   is_selfhost: is_selfhost,
   custom_script_name: custom_script_name,
   log_failed_login_attempts: log_failed_login_attempts,
-  license_key: license_key
+  license_key: license_key,
+  persistent_cache_dir: persistent_cache_dir
 
 config :plausible, :selfhost,
   enable_email_verification: enable_email_verification,
@@ -543,6 +544,10 @@ base_queues = [
   s3_csv_export: 1
 ]
 
+selfhost_queues = [
+  local_csv_export: 1
+]
+
 cloud_queues = [
   trial_notification_emails: 1,
   check_usage: 1,
@@ -550,7 +555,13 @@ cloud_queues = [
   lock_sites: 1
 ]
 
-queues = if(is_selfhost, do: base_queues, else: base_queues ++ cloud_queues)
+queues =
+  if is_selfhost do
+    base_queues ++ selfhost_queues
+  else
+    base_queues ++ cloud_queues
+  end
+
 cron_enabled = !disable_cron
 
 thirty_days_in_seconds = 60 * 60 * 24 * 30

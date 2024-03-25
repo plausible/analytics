@@ -1,6 +1,6 @@
 defmodule Plausible.Workers.ExportCSV do
   @moduledoc """
-  Worker for running CSV export jobs.
+  Worker for running S3 CSV export jobs.
   """
 
   use Oban.Worker,
