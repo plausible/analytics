@@ -708,7 +708,7 @@ defmodule PlausibleWeb.SiteController do
     |> redirect(external: Routes.site_path(conn, :settings_integrations, site.domain))
   end
 
-  def csv_export(conn, _params) do
+  def csv_export_s3(conn, _params) do
     %{site: site, current_user: user} = conn.assigns
 
     Oban.insert!(
@@ -723,6 +723,65 @@ defmodule PlausibleWeb.SiteController do
     conn
     |> put_flash(:success, "SCHEDULED. WAIT FOR MAIL")
     |> redirect(to: Routes.site_path(conn, :settings_imports_exports, site.domain))
+  end
+
+  def csv_export_direct(conn, _params) do
+    alias Plausible.Exports
+
+    site = conn.assigns.site
+
+    {:ok, ch} =
+      Plausible.ClickhouseRepo.config()
+      |> Keyword.replace!(:pool_size, 1)
+      |> Ch.start_link()
+
+    %Ch.Result{rows: [[%Date{} = min_date, %Date{} = max_date]]} =
+      Ch.query!(
+        ch,
+        "SELECT toDate(min(timestamp)), toDate(max(timestamp)) FROM events_v2 WHERE site_id={site_id:UInt64}",
+        %{"site_id" => site.id}
+      )
+
+    if max_date == ~D[1970-01-01] do
+      conn
+      |> put_flash(:error, "There is no data to export")
+      |> redirect(external: Routes.site_path(conn, :settings_imports_exports, site.domain))
+    else
+      export_archive_filename = Exports.archive_filename(site.domain, min_date, max_date)
+      export_content_disposition = Exports.content_disposition(export_archive_filename)
+
+      export_queries =
+        Exports.export_queries(site.id,
+          date_range: Date.range(min_date, max_date),
+          extname: ".csv"
+        )
+
+      tmp_file = Plug.Upload.random_file!("csv-export-#{site.id}")
+
+      DBConnection.run(
+        ch,
+        fn ch ->
+          Exports.stream_archive(ch, export_queries, format: "CSVWithNames")
+          |> Stream.into(File.stream!(tmp_file))
+          |> Stream.run()
+        end,
+        timeout: :infinity
+      )
+
+      conn
+      |> put_resp_content_type("application/zip")
+      |> put_resp_header("content-disposition", export_content_disposition)
+      |> send_file(200, tmp_file)
+    end
+  catch
+    class, reason ->
+      site = conn.assigns.site
+
+      conn
+      |> put_flash(:error, "Export failed: " <> Exception.format_banner(class, reason))
+      |> redirect(external: Routes.site_path(conn, :settings_imports_exports, site.domain))
+
+      :erlang.raise(class, reason, __STACKTRACE__)
   end
 
   def csv_import(conn, _params) do

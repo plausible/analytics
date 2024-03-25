@@ -42,12 +42,18 @@
   </header>
 
   <div class="mt-4">
-    <PlausibleWeb.Components.Generic.button
-      data-method="post"
-      data-to={"/#{URI.encode_www_form(@site.domain)}/settings/export"}
-      data-csrf={Plug.CSRFProtection.get_csrf_token()}
-    >
-      Export to CSV
-    </PlausibleWeb.Components.Generic.button>
+    <%= on_full_build do %>
+      <PlausibleWeb.Components.Generic.button
+        data-method="post"
+        data-to={"/#{URI.encode_www_form(@site.domain)}/settings/export"}
+        data-csrf={Plug.CSRFProtection.get_csrf_token()}
+      >
+        Export to CSV
+      </PlausibleWeb.Components.Generic.button>
+    <% else %>
+      <PlausibleWeb.Components.Generic.button_link href={"/#{URI.encode_www_form(@site.domain)}/settings/export"}>
+        Export to CSV
+      </PlausibleWeb.Components.Generic.button_link>
+    <% end %>
   </div>
 </div>
