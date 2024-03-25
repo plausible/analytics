@@ -14,12 +14,12 @@
           ) %>
         </h4>
         <p class="mt-4 text-base text-gray-400 leading-6">
-          <%= if full_build?() do %>
+          <%= if ee?() do %>
             Made and hosted in the EU <span class="text-lg">🇪🇺</span> <br />
             Solely funded by our subscribers.
           <% end %>
 
-          <%= if small_build?() do %>
+          <%= if ce_build?() do %>
             This dashboard is running on self-managed infrastructure, not tested by Plausible Analytics. We cannot vouch for its performance or reliability. For official managed hosting, check out
             <.styled_link href="https://plausible.io">
               plausible.io

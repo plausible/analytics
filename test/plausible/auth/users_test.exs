@@ -20,7 +20,7 @@ defmodule Plausible.UsersTest do
   end
 
   describe "on_trial?" do
-    @describetag :full_build_only
+    @describetag :ee_only
     test "is true with >= 0 trial days left" do
       user = insert(:user)
 
@@ -41,7 +41,7 @@ defmodule Plausible.UsersTest do
   end
 
   describe "update_accept_traffic_until" do
-    @describetag :full_build_only
+    @describetag :ee_only
     test "update" do
       user = insert(:user) |> User.start_trial() |> Repo.update!()
       # 30 for trial + 14

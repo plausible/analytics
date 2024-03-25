@@ -4,7 +4,7 @@
     <p class="mt-2 text-sm leading-5 text-gray-500 dark:text-gray-200">
       Define actions that you want your users to take, like visiting a certain page, submitting a form, etc.
     </p>
-    <p :if={full_build?()} class="text-sm leading-5 text-gray-500 dark:text-gray-200">
+    <p :if={ee?()} class="text-sm leading-5 text-gray-500 dark:text-gray-200">
       You can also <a
         href={Routes.site_path(@conn, :settings_funnels, @site.domain)}
         class="text-indigo-500 underline"

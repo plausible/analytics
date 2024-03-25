@@ -59,7 +59,7 @@ defmodule Plausible.S3 do
 
   # to make ClickHouse see MinIO in dev and test envs we replace
   # the host in the S3 URL with whatever's set in S3_CLICKHOUSE_HOST env var
-  if Mix.env() in [:dev, :test, :small_dev, :small_test] do
+  if Mix.env() in [:dev, :test, :ce_dev, :ce_test] do
     defp extract_s3_url(presigned_url) do
       [s3_url, _] = String.split(presigned_url, "?")
 

@@ -92,7 +92,7 @@ defmodule PlausibleWeb.StatsController do
     end
   end
 
-  on_full_build do
+  on_ee do
     defp list_funnels(site) do
       Plausible.Funnels.list(site)
     end
@@ -366,7 +366,7 @@ defmodule PlausibleWeb.StatsController do
   end
 
   defp is_dbip() do
-    on_full_build do
+    on_ee do
       false
     else
       Plausible.Geo.database_type()

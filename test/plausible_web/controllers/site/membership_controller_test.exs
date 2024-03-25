@@ -21,7 +21,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       refute element_exists?(html, ~s/button[type=submit][disabled]/)
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "display a notice when is over limit", %{conn: conn, user: user} do
       memberships = [
         build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)
@@ -54,7 +54,7 @@ defmodule PlausibleWeb.Site.MembershipControllerTest do
       assert redirected_to(conn) == "/#{URI.encode_www_form(site.domain)}/settings/people"
     end
 
-    @tag :full_build_only
+    @tag :ee_only
     test "fails to create invitation when is over limit", %{conn: conn, user: user} do
       memberships = [
         build(:site_membership, user: user, role: :owner) | build_list(5, :site_membership)

@@ -252,7 +252,7 @@ defmodule Plausible.Auth.User do
   end
 
   defp trial_expiry() do
-    on_full_build do
+    on_ee do
       Timex.today() |> Timex.shift(days: 30)
     else
       Timex.today() |> Timex.shift(years: 100)
@@ -260,7 +260,7 @@ defmodule Plausible.Auth.User do
   end
 
   defp set_email_verification_status(user) do
-    on_full_build do
+    on_ee do
       change(user, email_verified: false)
     else
       selfhosted_config = Application.get_env(:plausible, :selfhost)

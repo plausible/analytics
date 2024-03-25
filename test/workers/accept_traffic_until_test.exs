@@ -4,7 +4,7 @@ defmodule Plausible.Workers.AcceptTrafficUntilTest do
 
   alias Plausible.Workers.AcceptTrafficUntil
 
-  @moduletag :full_build_only
+  @moduletag :ee_only
 
   test "does not send any notifications when sites have no stats" do
     today = Date.utc_today()

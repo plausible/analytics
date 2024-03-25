@@ -113,7 +113,7 @@ defmodule Plausible.Stats.Clickhouse do
         offset: ^offset
       )
 
-    on_full_build do
+    on_ee do
       referrers = Plausible.Stats.Sampling.add_query_hint(referrers, 10_000_000)
     end
 
@@ -193,7 +193,7 @@ defmodule Plausible.Stats.Clickhouse do
         order_by: [e.site_id, fragment("toStartOfHour(timestamp)")]
       )
 
-    on_full_build do
+    on_ee do
       current_q = Plausible.Stats.Sampling.add_query_hint(current_q)
     end
 
@@ -231,7 +231,7 @@ defmodule Plausible.Stats.Clickhouse do
         },
         group_by: [e.site_id]
 
-    on_full_build do
+    on_ee do
       query = Plausible.Stats.Sampling.add_query_hint(query)
     end
 
@@ -260,7 +260,7 @@ defmodule Plausible.Stats.Clickhouse do
         where: e.timestamp >= ^first_datetime and e.timestamp < ^last_datetime
       )
 
-    on_full_build do
+    on_ee do
       q = Plausible.Stats.Sampling.add_query_hint(q, 10_000_000)
     end
 

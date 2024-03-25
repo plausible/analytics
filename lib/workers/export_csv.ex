@@ -91,7 +91,7 @@ defmodule Plausible.Workers.ExportCSV do
   # right now custom config is used in tests only (to access the minio container)
   # ideally it would be passed via the s3 url
   # but ExAws.S3.upload is hard to make work with s3 urls
-  if Mix.env() in [:test, :small_test] do
+  if Mix.env() in [:test, :ce_test] do
     defp s3_config_overrides(args) do
       if config_overrides = args["s3_config_overrides"] do
         Enum.map(config_overrides, fn {k, v} -> {String.to_existing_atom(k), v} end)
