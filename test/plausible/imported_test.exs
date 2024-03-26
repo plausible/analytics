@@ -105,6 +105,77 @@ defmodule Plausible.ImportedTest do
                Imported.check_dates(site, ~D[2019-03-21], ~D[2024-01-12])
     end
 
+    test "does not alter the dates when there are no imports and no native stats" do
+      site = insert(:site)
+
+      assert {:ok, ~D[2021-05-12], ~D[2024-01-12]} =
+               Imported.check_dates(site, ~D[2021-05-12], ~D[2024-01-12])
+    end
+
+    test "ignores input date range difference smaller than 2 days" do
+      site = insert(:site)
+
+      assert {:error, :no_time_window} =
+               Imported.check_dates(site, ~D[2024-01-12], ~D[2024-01-12])
+
+      assert {:error, :no_time_window} =
+               Imported.check_dates(site, ~D[2024-01-12], ~D[2024-01-13])
+
+      assert {:ok, ~D[2024-01-12], ~D[2024-01-14]} =
+               Imported.check_dates(site, ~D[2024-01-12], ~D[2024-01-14])
+    end
+
+    test "ignores imports with date range difference smaller than 2 days" do
+      site = insert(:site)
+
+      start_date = ~D[2024-01-12]
+      end_date = ~D[2024-01-13]
+
+      _existing_import =
+        insert(:site_import,
+          site: site,
+          start_date: start_date,
+          end_date: end_date,
+          status: :completed
+        )
+
+      assert {:ok, ~D[2021-04-22], ~D[2024-03-14]} =
+               Imported.check_dates(site, ~D[2021-04-22], ~D[2024-03-14])
+    end
+
+    test "returns no time window when input range starts after native stats start date" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2023-10-25 15:58:00])
+      ])
+
+      assert {:error, :no_time_window} =
+               Imported.check_dates(site, ~D[2023-10-28], ~D[2024-01-13])
+    end
+
+    test "returns no time window when input range starts less than 2 days before native stats start date" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2023-10-25 15:58:00])
+      ])
+
+      assert {:error, :no_time_window} =
+               Imported.check_dates(site, ~D[2023-10-24], ~D[2024-01-13])
+    end
+
+    test "crops time range at native stats start date when effective range is 2 days or longer" do
+      site = insert(:site)
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2023-10-25 15:58:00])
+      ])
+
+      assert {:ok, ~D[2023-10-23], ~D[2023-10-25]} =
+               Imported.check_dates(site, ~D[2023-10-23], ~D[2024-01-13])
+    end
+
     test "returns no data error when start date missing" do
       site = insert(:site)
 

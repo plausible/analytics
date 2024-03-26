@@ -138,27 +138,32 @@ defmodule Plausible.Imported do
   def check_dates(site, start_date, end_date) do
     cutoff_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
     end_date = Enum.min([end_date, cutoff_date], Date)
-    import_range = Date.range(start_date, end_date)
 
-    existing_ranges =
-      site
-      |> Imported.list_all_imports(Imported.SiteImport.completed())
-      |> Enum.map(&build_open_range(&1.start_date, &1.end_date))
-      |> Enum.reject(&is_nil/1)
+    if Date.diff(end_date, start_date) >= 2 do
+      import_range = Date.range(start_date, end_date)
 
-    cropped_ranges = crop_date_range(import_range, existing_ranges)
+      existing_ranges =
+        site
+        |> Imported.list_all_imports(Imported.SiteImport.completed())
+        |> Enum.map(&build_open_range(&1.start_date, &1.end_date))
+        |> Enum.reject(&is_nil/1)
 
-    if cropped_ranges == [] do
-      {:error, :no_time_window}
+      cropped_ranges = crop_date_range(import_range, existing_ranges)
+
+      if cropped_ranges == [] do
+        {:error, :no_time_window}
+      else
+        longest = Enum.max_by(cropped_ranges, &Date.diff(&1.last, &1.first))
+
+        {:ok, longest.first, longest.last}
+      end
     else
-      longest = Enum.max_by(cropped_ranges, &Date.diff(&1.last, &1.first))
-
-      {:ok, longest.first, longest.last}
+      {:error, :no_time_window}
     end
   end
 
   defp build_open_range(start_date, end_date) do
-    if Date.diff(end_date, start_date) <= 2 do
+    if Date.diff(end_date, start_date) < 2 do
       nil
     else
       Date.range(Date.add(start_date, 1), Date.add(end_date, -1))
@@ -190,7 +195,7 @@ defmodule Plausible.Imported do
         end
     end)
     |> finalize_crop()
-    |> Enum.reject(&(Date.diff(&1.last, &1.first) < 1))
+    |> Enum.reject(&(Date.diff(&1.last, &1.first) < 2))
   end
 
   defp finalize_crop([%Date{} = date | rest]), do: [Date.range(date, date) | rest]
