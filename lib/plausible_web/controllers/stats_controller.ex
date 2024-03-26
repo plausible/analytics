@@ -354,12 +354,11 @@ defmodule PlausibleWeb.StatsController do
 
   defp is_dbip() do
     on_full_build do
-      "false"
+      false
     else
       Plausible.Geo.database_type()
       |> to_string()
       |> String.starts_with?("DBIP")
-      |> to_string()
     end
   end
 

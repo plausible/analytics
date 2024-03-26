@@ -17,23 +17,25 @@
     style="overflow-anchor: none;"
     data-domain={@site.domain}
     data-offset={Plausible.Site.tz_offset(@site)}
-    data-has-goals={@has_goals}
-    data-conversions-opted-out={Plausible.Billing.Feature.Goals.opted_out?(@site)}
-    data-funnels-opted-out={Plausible.Billing.Feature.Funnels.opted_out?(@site)}
-    data-props-opted-out={Plausible.Billing.Feature.Props.opted_out?(@site)}
+    data-has-goals={to_string(@has_goals)}
+    data-conversions-opted-out={to_string(Plausible.Billing.Feature.Goals.opted_out?(@site))}
+    data-funnels-opted-out={to_string(Plausible.Billing.Feature.Funnels.opted_out?(@site))}
+    data-props-opted-out={to_string(Plausible.Billing.Feature.Props.opted_out?(@site))}
     data-funnels-available={
-      Plausible.Billing.Feature.Funnels.check_availability(@site.owner) == :ok
+      to_string(Plausible.Billing.Feature.Funnels.check_availability(@site.owner) == :ok)
     }
-    data-props-available={Plausible.Billing.Feature.Props.check_availability(@site.owner) == :ok}
+    data-props-available={
+      to_string(Plausible.Billing.Feature.Props.check_availability(@site.owner) == :ok)
+    }
     data-funnels={Jason.encode!(@funnels)}
-    data-has-props={@has_props}
-    data-logged-in={!!@conn.assigns[:current_user]}
+    data-has-props={to_string(@has_props)}
+    data-logged-in={to_string(!!@conn.assigns[:current_user])}
     data-stats-begin={@stats_start_date}
     data-native-stats-begin={@native_stats_start_date}
     data-shared-link-auth={assigns[:shared_link_auth]}
-    data-embedded={@conn.assigns[:embedded]}
+    data-embedded={to_string(@conn.assigns[:embedded])}
     data-background={@conn.assigns[:background]}
-    data-is-dbip={@is_dbip}
+    data-is-dbip={to_string(@is_dbip)}
     data-current-user-role={@conn.assigns[:current_user_role]}
     data-flags={Jason.encode!(@flags)}
     data-valid-intervals-by-period={
