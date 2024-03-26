@@ -1324,6 +1324,24 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                }
              ]
     end
+
+    test "ignores entry pages from sessions with only custom events", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:15:00],
+          pathname: "/"
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/entry-pages?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == []
+    end
   end
 
   describe "GET /api/stats/:domain/exit-pages" do
@@ -1556,6 +1574,24 @@ defmodule PlausibleWeb.Api.StatsController.PagesTest do
                %{"name" => "/exit1", "visitors" => 1, "visits" => 1},
                %{"name" => "/exit2", "visitors" => 1, "visits" => 1}
              ]
+    end
+
+    test "ignores exit pages from sessions with only custom events", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:event,
+          name: "Signup",
+          timestamp: ~N[2021-01-01 00:15:00],
+          pathname: "/"
+        )
+      ])
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/exit-pages?period=day&date=2021-01-01"
+        )
+
+      assert json_response(conn, 200) == []
     end
   end
 end

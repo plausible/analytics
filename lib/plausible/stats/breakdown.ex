@@ -529,6 +529,8 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:entry_page") do
     from(
       s in q,
+      # Sessions without pageviews don't get entry_page assigned, hence they should get ignored
+      where: s.entry_page != "",
       group_by: s.entry_page,
       select_merge: %{entry_page: s.entry_page},
       order_by: {:asc, s.entry_page}
@@ -538,6 +540,8 @@ defmodule Plausible.Stats.Breakdown do
   defp do_group_by(q, "visit:exit_page") do
     from(
       s in q,
+      # Sessions without pageviews don't get entry_page assigned, hence they should get ignored
+      where: s.entry_page != "",
       group_by: s.exit_page,
       select_merge: %{exit_page: s.exit_page},
       order_by: {:asc, s.exit_page}
