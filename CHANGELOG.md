@@ -57,6 +57,7 @@ All notable changes to this project will be documented in this file.
 - Validate metric isn't queried multiple times
 
 ### Fixed
+- Creating many sites no longer leads to cookie overflow
 - Ignore sessions without pageviews for `entry_page` and `exit_page` breakdowns
 - Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
 - Fix `conversion_rate` metric in a `browser_versions` breakdown

@@ -34,9 +34,9 @@ defmodule PlausibleWeb.SiteController do
           |> Plausible.Mailer.send()
         end
 
-        conn
-        |> put_session(site.domain <> "_offer_email_report", true)
-        |> redirect(external: Routes.site_path(conn, :add_snippet, site.domain))
+        redirect(conn,
+          external: Routes.site_path(conn, :add_snippet, site.domain, site_created: true)
+        )
 
       {:error, {:over_limit, limit}} ->
         render(conn, "new.html",

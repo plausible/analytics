@@ -244,7 +244,9 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/#{URI.encode_www_form("éxample.com")}/snippet"
+      assert redirected_to(conn) ==
+               "/#{URI.encode_www_form("éxample.com")}/snippet?site_created=true"
+
       assert site = Repo.get_by(Plausible.Site, domain: "éxample.com")
       assert site.timezone == "Europe/London"
       assert site.ingest_rate_limit_scale_seconds == 60
@@ -341,7 +343,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet"
+      assert redirected_to(conn) == "/example.com/snippet?site_created=true"
       assert Repo.get_by(Plausible.Site, domain: "example.com")
     end
 
@@ -361,7 +363,7 @@ defmodule PlausibleWeb.SiteControllerTest do
           }
         })
 
-      assert redirected_to(conn) == "/example.com/snippet"
+      assert redirected_to(conn) == "/example.com/snippet?site_created=true"
       assert Plausible.Billing.Quota.site_usage(user) == 3
     end
 
@@ -375,7 +377,7 @@ defmodule PlausibleWeb.SiteControllerTest do
             }
           })
 
-        assert redirected_to(conn) == "/example.com/snippet"
+        assert redirected_to(conn) == "/example.com/snippet?site_created=true"
         assert Repo.get_by(Plausible.Site, domain: "example.com")
       end
     end
