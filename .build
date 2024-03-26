@@ -255,6 +255,7 @@ PlausibleWeb.InvitationController.html
 PlausibleWeb.LastSeenPlug.html
 PlausibleWeb.LayoutView.JWT.html
 PlausibleWeb.LayoutView.html
+PlausibleWeb.Live.CSVImport.html
 PlausibleWeb.Live.ChoosePlan.html
 PlausibleWeb.Live.Components.ComboBox.StaticSearch.html
 PlausibleWeb.Live.Components.ComboBox.html
@@ -378,8 +379,8 @@ dist/merriweather-latin-ext-300-normal-K6L27CZ5.woff2
 dist/merriweather-vietnamese-300-italic-EHHNZPUO.woff2
 dist/merriweather-vietnamese-300-normal-U376L4Z4.woff2
 dist/remixicon-NKANDIL5.woff2
-dist/search_data-83B2EE45.js
-dist/sidebar_items-41A22BED.js
+dist/search_data-64228749.js
+dist/sidebar_items-4F1F3320.js
 index.html
 readme.html
 search.html
