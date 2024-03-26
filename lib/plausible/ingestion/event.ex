@@ -146,15 +146,17 @@ defmodule Plausible.Ingestion.Event do
     Enum.reduce_while(pipeline, initial_event, fn {step_name, step_fn}, acc_event ->
       Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
         telemetry_pipeline_step_duration(),
-        fn ->
-          case step_fn.(acc_event) do
-            %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
-            %__MODULE__{dropped?: false} = event -> {:cont, event}
-          end
-        end,
+        fn -> execute_step(step_fn, acc_event) end,
         %{step: "#{step_name}"}
       )
     end)
+  end
+
+  defp execute_step(step_fn, acc_event) do
+    case step_fn.(acc_event) do
+      %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
+      %__MODULE__{dropped?: false} = event -> {:cont, event}
+    end
   end
 
   defp new(domain, request) do
