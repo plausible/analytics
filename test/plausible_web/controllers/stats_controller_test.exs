@@ -285,7 +285,7 @@ defmodule PlausibleWeb.StatsControllerTest do
                ["2021-09-27", "0", "0", "0", "0.0", "", ""],
                ["2021-10-04", "0", "0", "0", "0.0", "", ""],
                ["2021-10-11", "0", "0", "0", "0.0", "", ""],
-               ["2021-10-18", "3", "3", "3", "1.0", "67", "20"],
+               ["2021-10-18", "3", "4", "3", "1.33", "33", "40"],
                [""]
              ]
     end
@@ -469,7 +469,17 @@ defmodule PlausibleWeb.StatsControllerTest do
         browser: "FirefoxNoVersion",
         operating_system: "MacNoVersion"
       ),
+      build(:pageview,
+        user_id: 456,
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1, minutes: -1)
+          |> NaiveDateTime.truncate(:second),
+        pathname: "/signup",
+        "meta.key": ["variant"],
+        "meta.value": ["A"]
+      ),
       build(:event,
+        user_id: 456,
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         name: "Signup",
