@@ -5,6 +5,7 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
   import Mox
   import Plausible.Test.Support.HTML
 
+  alias Plausible.HTTPClient
   alias Plausible.Imported.SiteImport
 
   require Plausible.Imported.SiteImport
@@ -103,6 +104,74 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
       assert response =~ "account.one - GA4 (properties/428685906)"
       assert response =~ "GA4 - Flood-It! (properties/153293282)"
       assert response =~ "GA4 - Google Merch Shop (properties/213025502)"
+    end
+
+    for {legacy, view} <- [{"true", :settings_integrations}, {"false", :settings_imports_exports}] do
+      test "redirects to #{view} on auth error with flash error (legacy: #{legacy})", %{
+        conn: conn,
+        site: site
+      } do
+        expect(
+          Plausible.HTTPClient.Mock,
+          :get,
+          fn _url, _opts ->
+            {:error, %HTTPClient.Non200Error{reason: %{status: 403, body: %{}}}}
+          end
+        )
+
+        conn =
+          conn
+          |> get("/#{site.domain}/import/google-analytics/property-or-view", %{
+            "access_token" => "token",
+            "refresh_token" => "foo",
+            "expires_at" => "2022-09-22T20:01:37.112777",
+            "legacy" => unquote(legacy)
+          })
+
+        assert redirected_to(conn, 302) ==
+                 PlausibleWeb.Router.Helpers.site_path(
+                   conn,
+                   unquote(view),
+                   site.domain
+                 )
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+                 "We were unable to authenticate your Google Analytics account"
+      end
+
+      test "redirects to #{view} on list retrival failure with flash error (legacy: #{legacy})",
+           %{
+             conn: conn,
+             site: site
+           } do
+        expect(
+          Plausible.HTTPClient.Mock,
+          :get,
+          fn _url, _opts ->
+            {:error,
+             %HTTPClient.Non200Error{reason: %{status: 500, body: "Internal server error"}}}
+          end
+        )
+
+        conn =
+          conn
+          |> get("/#{site.domain}/import/google-analytics/property-or-view", %{
+            "access_token" => "token",
+            "refresh_token" => "foo",
+            "expires_at" => "2022-09-22T20:01:37.112777",
+            "legacy" => unquote(legacy)
+          })
+
+        assert redirected_to(conn, 302) ==
+                 PlausibleWeb.Router.Helpers.site_path(
+                   conn,
+                   unquote(view),
+                   site.domain
+                 )
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+                 "We were unable to list your Google Analytics properties and views"
+      end
     end
   end
 
@@ -209,6 +278,189 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
       assert redirected_to(conn, 302) =~
                "/#{URI.encode_www_form(site.domain)}/import/google-analytics/confirm"
     end
+
+    test "renders error when no time window to import available", %{conn: conn, site: site} do
+      start_date = ~D[2022-01-12]
+      end_date = ~D[2024-03-13]
+
+      _existing_import =
+        insert(:site_import,
+          site: site,
+          start_date: start_date,
+          end_date: end_date,
+          status: :completed
+        )
+
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn _url, _opts, _params ->
+          body = "fixture/ga4_start_date.json" |> File.read!() |> Jason.decode!()
+          {:ok, %Finch.Response{body: body, status: 200}}
+        end
+      )
+
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn _url, _opts, _params ->
+          body = "fixture/ga4_end_date.json" |> File.read!() |> Jason.decode!()
+          {:ok, %Finch.Response{body: body, status: 200}}
+        end
+      )
+
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _opts ->
+          body = "fixture/ga4_list_properties.json" |> File.read!() |> Jason.decode!()
+          {:ok, %Finch.Response{body: body, status: 200}}
+        end
+      )
+
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _opts ->
+          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
+          {:ok, %Finch.Response{body: body, status: 200}}
+        end
+      )
+
+      response =
+        conn
+        |> post("/#{site.domain}/import/google-analytics/property-or-view", %{
+          "property_or_view" => "properties/428685906",
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777",
+          "legacy" => "false"
+        })
+        |> html_response(200)
+
+      assert response =~
+               "Imported data time range is completely overlapping with existing data. Nothing to import."
+    end
+
+    test "renders error when there's no data to import", %{conn: conn, site: site} do
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn _url, _opts, _params ->
+          {:ok, %Finch.Response{body: %{"reports" => []}, status: 200}}
+        end
+      )
+
+      expect(
+        Plausible.HTTPClient.Mock,
+        :post,
+        fn _url, _opts, _params ->
+          {:ok, %Finch.Response{body: %{"reports" => []}, status: 200}}
+        end
+      )
+
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _opts ->
+          body = "fixture/ga4_list_properties.json" |> File.read!() |> Jason.decode!()
+          {:ok, %Finch.Response{body: body, status: 200}}
+        end
+      )
+
+      expect(
+        Plausible.HTTPClient.Mock,
+        :get,
+        fn _url, _opts ->
+          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
+          {:ok, %Finch.Response{body: body, status: 200}}
+        end
+      )
+
+      response =
+        conn
+        |> post("/#{site.domain}/import/google-analytics/property-or-view", %{
+          "property_or_view" => "properties/428685906",
+          "access_token" => "token",
+          "refresh_token" => "foo",
+          "expires_at" => "2022-09-22T20:01:37.112777",
+          "legacy" => "false"
+        })
+        |> html_response(200)
+
+      assert response =~ "No data found. Nothing to import."
+    end
+
+    for {legacy, view} <- [{"true", :settings_integrations}, {"false", :settings_imports_exports}] do
+      test "redirects to #{view} on failed property/view choice with flash error (legacy: #{legacy})",
+           %{
+             conn: conn,
+             site: site
+           } do
+        expect(
+          Plausible.HTTPClient.Mock,
+          :post,
+          fn _url, _opts, _params ->
+            {:error,
+             %HTTPClient.Non200Error{reason: %{status: 500, body: "Internal server error"}}}
+          end
+        )
+
+        conn =
+          conn
+          |> post("/#{site.domain}/import/google-analytics/property-or-view", %{
+            "property_or_view" => "properties/428685906",
+            "access_token" => "token",
+            "refresh_token" => "foo",
+            "expires_at" => "2022-09-22T20:01:37.112777",
+            "legacy" => unquote(legacy)
+          })
+
+        assert redirected_to(conn, 302) ==
+                 PlausibleWeb.Router.Helpers.site_path(
+                   conn,
+                   unquote(view),
+                   site.domain
+                 )
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+                 "We were unable to retrieve information from Google Analytics"
+      end
+
+      test "redirects to #{view} on expired authentication with flash error (legacy: #{legacy})",
+           %{
+             conn: conn,
+             site: site
+           } do
+        expect(
+          Plausible.HTTPClient.Mock,
+          :post,
+          fn _url, _opts, _params ->
+            {:error, %HTTPClient.Non200Error{reason: %{status: 403, body: "Access denied"}}}
+          end
+        )
+
+        conn =
+          conn
+          |> post("/#{site.domain}/import/google-analytics/property-or-view", %{
+            "property_or_view" => "properties/428685906",
+            "access_token" => "token",
+            "refresh_token" => "foo",
+            "expires_at" => "2022-09-22T20:01:37.112777",
+            "legacy" => unquote(legacy)
+          })
+
+        assert redirected_to(conn, 302) ==
+                 PlausibleWeb.Router.Helpers.site_path(
+                   conn,
+                   unquote(view),
+                   site.domain
+                 )
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+                 "Google Analytics authentication seems to have expired."
+      end
+    end
   end
 
   describe "GET /:website/import/google-analytics/confirm" do
@@ -297,6 +549,81 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
       assert text_of_attr(response, ~s|input[name=start_date]|, "value") == "2024-02-22"
 
       assert text_of_attr(response, ~s|input[name=end_date]|, "value") == "2024-02-26"
+    end
+
+    for {legacy, view} <- [{"true", :settings_integrations}, {"false", :settings_imports_exports}] do
+      test "redirects to #{view} on failed property/view retrieval with flash error (legacy: #{legacy})",
+           %{
+             conn: conn,
+             site: site
+           } do
+        expect(
+          Plausible.HTTPClient.Mock,
+          :get,
+          fn _url, _params ->
+            {:error,
+             %HTTPClient.Non200Error{reason: %{status: 500, body: "Internal server error"}}}
+          end
+        )
+
+        conn =
+          conn
+          |> get("/#{site.domain}/import/google-analytics/confirm", %{
+            "property_or_view" => "properties/428685906",
+            "access_token" => "token",
+            "refresh_token" => "foo",
+            "expires_at" => "2022-09-22T20:01:37.112777",
+            "start_date" => "2024-02-22",
+            "end_date" => "2024-02-26",
+            "legacy" => unquote(legacy)
+          })
+
+        assert redirected_to(conn, 302) ==
+                 PlausibleWeb.Router.Helpers.site_path(
+                   conn,
+                   unquote(view),
+                   site.domain
+                 )
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+                 "We were unable to retrieve information from Google Analytics"
+      end
+
+      test "redirects to #{view} on expired authentication with flash error (legacy: #{legacy})",
+           %{
+             conn: conn,
+             site: site
+           } do
+        expect(
+          Plausible.HTTPClient.Mock,
+          :get,
+          fn _url, _params ->
+            {:error, %HTTPClient.Non200Error{reason: %{status: 403, body: "Access denied"}}}
+          end
+        )
+
+        conn =
+          conn
+          |> get("/#{site.domain}/import/google-analytics/confirm", %{
+            "property_or_view" => "properties/428685906",
+            "access_token" => "token",
+            "refresh_token" => "foo",
+            "expires_at" => "2022-09-22T20:01:37.112777",
+            "start_date" => "2024-02-22",
+            "end_date" => "2024-02-26",
+            "legacy" => unquote(legacy)
+          })
+
+        assert redirected_to(conn, 302) ==
+                 PlausibleWeb.Router.Helpers.site_path(
+                   conn,
+                   unquote(view),
+                   site.domain
+                 )
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+                 "Google Analytics authentication seems to have expired."
+      end
     end
   end
 
@@ -424,6 +751,45 @@ defmodule PlausibleWeb.GoogleAnalyticsControllerTest do
           "token_expires_at" => "2022-09-22T20:01:37.112777"
         }
       )
+    end
+
+    for {legacy, view} <- [{"true", :settings_integrations}, {"false", :settings_imports_exports}] do
+      test "redirects to #{view} with no time window error flash error (legacy: #{legacy})", %{
+        conn: conn,
+        site: site
+      } do
+        start_date = ~D[2022-01-12]
+        end_date = ~D[2024-03-13]
+
+        _existing_import =
+          insert(:site_import,
+            site: site,
+            start_date: start_date,
+            end_date: end_date,
+            status: :completed
+          )
+
+        conn =
+          post(conn, "/#{site.domain}/settings/google-import", %{
+            "property_or_view" => "123456",
+            "start_date" => "2023-03-01",
+            "end_date" => "2022-03-01",
+            "access_token" => "token",
+            "refresh_token" => "foo",
+            "expires_at" => "2022-09-22T20:01:37.112777",
+            "legacy" => unquote(legacy)
+          })
+
+        assert redirected_to(conn, 302) ==
+                 PlausibleWeb.Router.Helpers.site_path(
+                   conn,
+                   unquote(view),
+                   site.domain
+                 )
+
+        assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
+                 "Import failed. No data could be imported because date range overlaps with existing data."
+      end
     end
   end
 end

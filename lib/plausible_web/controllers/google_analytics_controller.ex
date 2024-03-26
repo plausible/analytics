@@ -100,7 +100,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         conn
         |> put_flash(
           :error,
-          "We were unable to list your Google Analytics properties. If the problem persists, please contact support for assistance."
+          "We were unable to list your Google Analytics properties and views. If the problem persists, please contact support for assistance."
         )
         |> redirect(external: redirect_route)
     end
@@ -120,6 +120,13 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         } = params
       ) do
     site = conn.assigns.site
+
+    redirect_route =
+      if legacy == "true" do
+        Routes.site_path(conn, :settings_integrations, site.domain)
+      else
+        Routes.site_path(conn, :settings_imports_exports, site.domain)
+      end
 
     with {:ok, api_start_date} <-
            Google.API.get_analytics_start_date(access_token, property_or_view),
@@ -152,6 +159,22 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
           |> Map.put("error", Atom.to_string(error))
 
         property_or_view_form(conn, params)
+
+      {:error, :authentication_failed} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics authentication seems to have expired. Please try again."
+        )
+        |> redirect(external: redirect_route)
+
+      {:error, _any} ->
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to retrieve information from Google Analytics. If the problem persists, please contact support for assistance."
+        )
+        |> redirect(external: redirect_route)
     end
   end
 
@@ -169,24 +192,55 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
     start_date = Date.from_iso8601!(start_date)
     end_date = Date.from_iso8601!(end_date)
 
-    {:ok, %{name: property_or_view_name, id: property_or_view}} =
-      Google.API.get_property_or_view(access_token, property_or_view)
+    redirect_route =
+      if legacy == "true" do
+        Routes.site_path(conn, :settings_integrations, site.domain)
+      else
+        Routes.site_path(conn, :settings_imports_exports, site.domain)
+      end
 
-    conn
-    |> assign(:skip_plausible_tracking, true)
-    |> render("confirm.html",
-      access_token: access_token,
-      refresh_token: refresh_token,
-      expires_at: expires_at,
-      site: site,
-      selected_property_or_view: property_or_view,
-      selected_property_or_view_name: property_or_view_name,
-      start_date: start_date,
-      end_date: end_date,
-      property?: Google.API.property?(property_or_view),
-      legacy: legacy,
-      layout: {PlausibleWeb.LayoutView, "focus.html"}
-    )
+    case Google.API.get_property_or_view(access_token, property_or_view) do
+      {:ok, %{name: property_or_view_name, id: property_or_view}} ->
+        conn
+        |> assign(:skip_plausible_tracking, true)
+        |> render("confirm.html",
+          access_token: access_token,
+          refresh_token: refresh_token,
+          expires_at: expires_at,
+          site: site,
+          selected_property_or_view: property_or_view,
+          selected_property_or_view_name: property_or_view_name,
+          start_date: start_date,
+          end_date: end_date,
+          property?: Google.API.property?(property_or_view),
+          legacy: legacy,
+          layout: {PlausibleWeb.LayoutView, "focus.html"}
+        )
+
+      {:error, :authentication_failed} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics authentication seems to have expired. Please try again."
+        )
+        |> redirect(external: redirect_route)
+
+      {:error, :not_found} ->
+        conn
+        |> put_flash(
+          :error,
+          "Google Analytics property not found. Please try again."
+        )
+        |> redirect(external: redirect_route)
+
+      {:error, _any} ->
+        conn
+        |> put_flash(
+          :error,
+          "We were unable to retrieve information from Google Analytics. If the problem persists, please contact support for assistance."
+        )
+        |> redirect(external: redirect_route)
+    end
   end
 
   def import(conn, %{
@@ -250,7 +304,7 @@ defmodule PlausibleWeb.GoogleAnalyticsController do
         conn
         |> put_flash(
           :error,
-          "Import failed. No data can be imported because time range overlaps with existing data."
+          "Import failed. No data could be imported because date range overlaps with existing data."
         )
         |> redirect(external: redirect_route)
     end

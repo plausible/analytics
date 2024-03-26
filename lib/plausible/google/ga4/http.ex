@@ -141,7 +141,7 @@ defmodule Plausible.Google.GA4.HTTP do
         {:error, :authentication_failed}
 
       {:error, %HTTPClient.Non200Error{} = error} ->
-        Sentry.capture_message("Error listing Google accounts for user", extra: %{error: error})
+        Sentry.capture_message("Error listing GA4 accounts for user", extra: %{error: error})
         {:error, :unknown}
     end
   end
@@ -162,7 +162,7 @@ defmodule Plausible.Google.GA4.HTTP do
         {:error, :not_found}
 
       {:error, %HTTPClient.Non200Error{} = error} ->
-        Sentry.capture_message("Error retrieving Google property #{property}",
+        Sentry.capture_message("Error retrieving GA4 property #{property}",
           extra: %{error: error}
         )
 
@@ -218,13 +218,15 @@ defmodule Plausible.Google.GA4.HTTP do
 
         {:ok, date}
 
-      {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching GA4 start date", extra: %{body: inspect(body)})
-        {:error, body}
+      {:error, %HTTPClient.Non200Error{} = error} when error.reason.status in [401, 403] ->
+        {:error, :authentication_failed}
 
-      {:error, %{reason: reason} = e} ->
-        Sentry.capture_message("Error fetching GA4 start date", extra: %{error: inspect(e)})
-        {:error, reason}
+      {:error, %HTTPClient.Non200Error{} = error} ->
+        Sentry.capture_message("Error retrieving GA4 #{edge} date",
+          extra: %{error: error}
+        )
+
+        {:error, :unknown}
     end
   end
 
