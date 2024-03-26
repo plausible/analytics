@@ -75,7 +75,7 @@ defmodule Plausible.MixProject do
       {:combination, "~> 0.0.3"},
       {:cors_plug, "~> 3.0"},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
-      {:csv, "~> 2.3"},
+      {:csv, "~> 3.2"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:double, "~> 0.8.0", only: [:test, :small_test]},
       {:ecto, "~> 3.11.0"},
