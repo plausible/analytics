@@ -171,53 +171,18 @@ defmodule Plausible.Google.GA4.HTTP do
   end
 
   @earliest_valid_date "2015-08-14"
+
   def get_analytics_start_date(access_token, property) do
-    params = %{
-      requests: [
-        %{
-          property: "#{property}",
-          dateRanges: [
-            %{startDate: @earliest_valid_date, endDate: Date.to_iso8601(Timex.today())}
-          ],
-          dimensions: [%{name: "date"}],
-          metrics: [%{name: "screenPageViews"}],
-          orderBys: [
-            %{dimension: %{dimensionName: "date", orderType: "ALPHANUMERIC"}, desc: false}
-          ],
-          limit: 1
-        }
-      ]
-    }
-
-    url = "#{reporting_api_url()}/v1beta/#{property}:batchRunReports"
-    headers = [{"Authorization", "Bearer #{access_token}"}]
-
-    case HTTPClient.impl().post(url, headers, params) do
-      {:ok, %Finch.Response{body: body, status: 200}} ->
-        report = List.first(body["reports"])
-
-        date =
-          case report["rows"] do
-            [%{"dimensionValues" => [%{"value" => date_str}]}] ->
-              Timex.parse!(date_str, "%Y%m%d", :strftime) |> NaiveDateTime.to_date()
-
-            _ ->
-              nil
-          end
-
-        {:ok, date}
-
-      {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching GA4 start date", extra: %{body: inspect(body)})
-        {:error, body}
-
-      {:error, %{reason: reason} = e} ->
-        Sentry.capture_message("Error fetching GA4 start date", extra: %{error: inspect(e)})
-        {:error, reason}
-    end
+    get_analytics_boundary_date(access_token, property, :start)
   end
 
   def get_analytics_end_date(access_token, property) do
+    get_analytics_boundary_date(access_token, property, :end)
+  end
+
+  defp get_analytics_boundary_date(access_token, property, edge) do
+    descending? = edge == :end
+
     params = %{
       requests: [
         %{
@@ -228,7 +193,7 @@ defmodule Plausible.Google.GA4.HTTP do
           dimensions: [%{name: "date"}],
           metrics: [%{name: "screenPageViews"}],
           orderBys: [
-            %{dimension: %{dimensionName: "date", orderType: "ALPHANUMERIC"}, desc: true}
+            %{dimension: %{dimensionName: "date", orderType: "ALPHANUMERIC"}, desc: descending?}
           ],
           limit: 1
         }

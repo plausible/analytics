@@ -55,4 +55,17 @@ defmodule Plausible.Google.GA4.APITest do
                GA4.API.get_analytics_start_date("some_access_token", "properties/153293282")
     end
   end
+
+  describe "get_analytics_end_date/2" do
+    test "returns stats end date for a given property" do
+      result = Jason.decode!(File.read!("fixture/ga4_end_date.json"))
+
+      expect(Plausible.HTTPClient.Mock, :post, fn _url, _headers, _body ->
+        {:ok, %Finch.Response{status: 200, body: result}}
+      end)
+
+      assert {:ok, ~D[2024-03-02]} =
+               GA4.API.get_analytics_end_date("some_access_token", "properties/153293282")
+    end
+  end
 end

@@ -115,53 +115,23 @@ defmodule Plausible.Google.UA.HTTP do
   end
 
   @earliest_valid_date "2005-01-01"
+
   def get_analytics_start_date(access_token, view_id) do
-    params = %{
-      reportRequests: [
-        %{
-          viewId: view_id,
-          dateRanges: [
-            %{startDate: @earliest_valid_date, endDate: Date.to_iso8601(Timex.today())}
-          ],
-          dimensions: [%{name: "ga:date", histogramBuckets: []}],
-          metrics: [%{expression: "ga:pageviews"}],
-          hideTotals: true,
-          hideValueRanges: true,
-          orderBys: [%{fieldName: "ga:date", sortOrder: "ASCENDING"}],
-          pageSize: 1
-        }
-      ]
-    }
-
-    url = "#{reporting_api_url()}/v4/reports:batchGet"
-    headers = [{"Authorization", "Bearer #{access_token}"}]
-
-    case HTTPClient.impl().post(url, headers, params) do
-      {:ok, %Finch.Response{body: body, status: 200}} ->
-        report = List.first(body["reports"])
-
-        date =
-          case report["data"]["rows"] do
-            [%{"dimensions" => [date_str]}] ->
-              Timex.parse!(date_str, "%Y%m%d", :strftime) |> NaiveDateTime.to_date()
-
-            _ ->
-              nil
-          end
-
-        {:ok, date}
-
-      {:error, %{reason: %Finch.Response{body: body}}} ->
-        Sentry.capture_message("Error fetching UA start date", extra: %{body: inspect(body)})
-        {:error, body}
-
-      {:error, %{reason: reason} = e} ->
-        Sentry.capture_message("Error fetching UA start date", extra: %{error: inspect(e)})
-        {:error, reason}
-    end
+    get_analytics_boundary_date(access_token, view_id, :start)
   end
 
   def get_analytics_end_date(access_token, view_id) do
+    get_analytics_boundary_date(access_token, view_id, :end)
+  end
+
+  defp get_analytics_boundary_date(access_token, view_id, edge) do
+    sort_order =
+      if edge == :start do
+        "ASCENDING"
+      else
+        "DESCENDING"
+      end
+
     params = %{
       reportRequests: [
         %{
@@ -173,7 +143,7 @@ defmodule Plausible.Google.UA.HTTP do
           metrics: [%{expression: "ga:pageviews"}],
           hideTotals: true,
           hideValueRanges: true,
-          orderBys: [%{fieldName: "ga:date", sortOrder: "DESCENDING"}],
+          orderBys: [%{fieldName: "ga:date", sortOrder: sort_order}],
           pageSize: 1
         }
       ]
