@@ -38,8 +38,8 @@ defmodule Plausible.Stats do
     end
   end
 
-  def filter_suggestions(site, query, filter_name, filter_search) do
+  def filter_suggestions(site, query, filter_name, filter_search, exclude \\ %{}) do
     include_sentry_replay_info()
-    FilterSuggestions.filter_suggestions(site, query, filter_name, filter_search)
+    FilterSuggestions.filter_suggestions(site, query, filter_name, filter_search, exclude)
   end
 end

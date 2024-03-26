@@ -23,7 +23,8 @@ function PropFilterRow({
 }) {
   function fetchPropKeyOptions() {
     return (input) => {
-      return api.get(apiPath(site, "/suggestions/prop_key"), query, { q: input.trim() })
+      const exclude = selectedPropKeys.map((key) => key.value)
+      return api.get(apiPath(site, "/suggestions/prop_key"), query, { q: input.trim(), exclude: JSON.stringify(exclude) })
     }
   }
 
@@ -51,7 +52,6 @@ function PropFilterRow({
           values={propKey ? [propKey] : []}
           onSelect={(value) => onPropKeySelect(id, value)}
           placeholder={'Property'}
-          disabledOptions={selectedPropKeys}
         />
       </div>
       <div className="col-span-3 mx-2">
