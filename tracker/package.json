@@ -7,7 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "@playwright/test": "^1.41.1",
-    "express": "^4.18.1",
+    "express": "^4.19.2",
     "generatorics": "^1.1.0",
     "handlebars": "^4.7.8",
     "uglify-js": "^3.9.4"
