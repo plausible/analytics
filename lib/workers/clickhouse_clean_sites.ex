@@ -37,7 +37,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
         IngestRepo.query(
           "ALTER TABLE #{table} DELETE WHERE site_id IN (#{site_ids_expr})",
           [],
-          if(Mix.env() == :test, do: [mutations_sync: 1], else: [])
+          if(Mix.env() == :test, do: [mutations_sync: 2], else: [])
         )
       end
     end
