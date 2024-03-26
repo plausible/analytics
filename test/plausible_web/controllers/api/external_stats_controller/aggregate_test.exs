@@ -1569,5 +1569,21 @@ defmodule PlausibleWeb.Api.ExternalStatsController.AggregateTest do
              } =
                json_response(conn, 200)["results"]
     end
+
+    test "conversion_rate for the filtered goal is 0 when no stats exist", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, %{site: site, event_name: "Signup"})
+
+      conn =
+        get(conn, "/api/v1/stats/aggregate", %{
+          "site_id" => site.domain,
+          "metrics" => "conversion_rate",
+          "filters" => "event:goal==Signup"
+        })
+
+      assert json_response(conn, 200)["results"] == %{"conversion_rate" => %{"value" => 0}}
+    end
   end
 end

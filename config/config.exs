@@ -73,4 +73,8 @@ config :ex_cldr,
   default_locale: "en",
   default_backend: Plausible.Cldr
 
+config :sentry,
+  enable_source_code_context: true,
+  root_source_code_path: [File.cwd!()]
+
 import_config "#{config_env()}.exs"

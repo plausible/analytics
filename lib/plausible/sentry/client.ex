@@ -5,17 +5,6 @@ defmodule Plausible.Sentry.Client do
 
   require Logger
 
-  @doc """
-  The Sentry.HTTPClient behaviour requires a child spec to be supplied.
-  In this case we don't want Sentry to manage our Finch instances, hence it's fed
-  with a dummy module for the sake of the contract.
-
-  XXX: Submit a Sentry PR making the child spec callback optional.
-  """
-  def child_spec do
-    Task.child_spec(fn -> :noop end)
-  end
-
   def post(url, headers, body) do
     req_opts = Application.get_env(:plausible, __MODULE__)[:finch_request_opts] || []
 

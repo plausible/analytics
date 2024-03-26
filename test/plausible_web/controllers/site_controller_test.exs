@@ -660,7 +660,10 @@ defmodule PlausibleWeb.SiteControllerTest do
 
       _site_import1 = insert(:site_import, site: site, status: SiteImport.pending())
       _site_import2 = insert(:site_import, site: site, status: SiteImport.importing())
-      site_import3 = insert(:site_import, site: site, status: SiteImport.completed())
+
+      site_import3 =
+        insert(:site_import, label: "123456", site: site, status: SiteImport.completed())
+
       _site_import4 = insert(:site_import, site: site, status: SiteImport.failed())
 
       populate_stats(site, site_import3.id, [
@@ -674,6 +677,7 @@ defmodule PlausibleWeb.SiteControllerTest do
       buttons = find(resp, ~s|button[data-method="delete"]|)
       assert length(buttons) == 5
 
+      assert resp =~ "Google Analytics (123456)"
       assert resp =~ "(98 page views)"
     end
   end
@@ -1273,83 +1277,6 @@ defmodule PlausibleWeb.SiteControllerTest do
       assert Repo.one(Plausible.Site.SharedLink)
       assert redirected_to(conn, 302) =~ "/#{URI.encode_www_form(site.domain)}/settings"
       assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Could not find Shared Link"
-    end
-  end
-
-  describe "GET /:website/import/google-analytics/view-id" do
-    setup [:create_user, :log_in, :create_new_site]
-
-    test "lists Google Analytics views", %{conn: conn, site: site} do
-      expect(
-        Plausible.HTTPClient.Mock,
-        :get,
-        fn _url, _body ->
-          body = "fixture/ga_list_views.json" |> File.read!() |> Jason.decode!()
-          {:ok, %Finch.Response{body: body, status: 200}}
-        end
-      )
-
-      response =
-        conn
-        |> get("/#{site.domain}/import/google-analytics/view-id", %{
-          "access_token" => "token",
-          "refresh_token" => "foo",
-          "expires_at" => "2022-09-22T20:01:37.112777",
-          "legacy" => "true"
-        })
-        |> html_response(200)
-
-      assert response =~ "57238190 - one.test"
-      assert response =~ "54460083 - two.test"
-    end
-  end
-
-  describe "POST /:website/settings/google-import" do
-    setup [:create_user, :log_in, :create_new_site]
-
-    test "creates site import instance", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/settings/google-import", %{
-        "view_id" => "123",
-        "start_date" => "2018-03-01",
-        "end_date" => "2022-03-01",
-        "access_token" => "token",
-        "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777",
-        "legacy" => "true"
-      })
-
-      [site_import] = Plausible.Imported.list_all_imports(site)
-
-      assert site_import.source == :universal_analytics
-      assert site_import.end_date == ~D[2022-03-01]
-      assert site_import.status == SiteImport.pending()
-    end
-
-    test "schedules an import job in Oban", %{conn: conn, site: site} do
-      post(conn, "/#{site.domain}/settings/google-import", %{
-        "view_id" => "123",
-        "start_date" => "2018-03-01",
-        "end_date" => "2022-03-01",
-        "access_token" => "token",
-        "refresh_token" => "foo",
-        "expires_at" => "2022-09-22T20:01:37.112777",
-        "legacy" => "true"
-      })
-
-      assert [%{id: import_id, legacy: true}] = Plausible.Imported.list_all_imports(site)
-
-      assert_enqueued(
-        worker: Plausible.Workers.ImportAnalytics,
-        args: %{
-          "import_id" => import_id,
-          "view_id" => "123",
-          "start_date" => "2018-03-01",
-          "end_date" => "2022-03-01",
-          "access_token" => "token",
-          "refresh_token" => "foo",
-          "token_expires_at" => "2022-09-22T20:01:37.112777"
-        }
-      )
     end
   end
 

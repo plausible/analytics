@@ -34,8 +34,8 @@
 
   <%= link("Continue ->",
     to:
-      Routes.universal_analytics_path(@conn, :confirm, @site.domain,
-        view_id: @view_id,
+      Routes.google_analytics_path(@conn, :confirm, @site.domain,
+        property_or_view: @property_or_view,
         access_token: @access_token,
         refresh_token: @refresh_token,
         expires_at: @expires_at,

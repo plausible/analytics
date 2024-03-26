@@ -1058,6 +1058,42 @@ defmodule PlausibleWeb.Api.ExternalStatsController.BreakdownTest do
              }
     end
 
+    test "breakdown by custom event property, with pageviews metric", %{conn: conn, site: site} do
+      populate_stats(site, [
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["personal"],
+          timestamp: ~N[2021-01-01 00:00:00]
+        ),
+        build(:pageview,
+          "meta.key": ["package"],
+          "meta.value": ["business"],
+          timestamp: ~N[2021-01-01 00:25:00]
+        )
+      ])
+
+      conn =
+        get(conn, "/api/v1/stats/breakdown", %{
+          "site_id" => site.domain,
+          "period" => "day",
+          "date" => "2021-01-01",
+          "property" => "event:props:package",
+          "metrics" => "pageviews"
+        })
+
+      assert json_response(conn, 200) == %{
+               "results" => [
+                 %{"package" => "business", "pageviews" => 2},
+                 %{"package" => "personal", "pageviews" => 1}
+               ]
+             }
+    end
+
     test "breakdown by custom event property, with (none)", %{conn: conn, site: site} do
       populate_stats(site, [
         build(:event,

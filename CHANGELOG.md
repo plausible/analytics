@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Pages Block List in Site Settings
+- Add `conversion_rate` to Stats API Timeseries and on the main graph 
+- Add `total_conversions` and `conversion_rate` to `visitors.csv` in a goal-filtered CSV export
+- Ability to display total conversions (with a goal filter) on the main graph
+- Add `conversion_rate` to Stats API Timeseries and on the main graph
 - Add `time_on_page` metric into the Stats API
 - County Block List in Site Settings
 - Query the `views_per_visit` metric based on imported data as well if possible
@@ -31,14 +36,19 @@ All notable changes to this project will be documented in this file.
 - Add 'browser_versions.csv' to CSV export
 - Add `CLICKHOUSE_MAX_BUFFER_SIZE_BYTES` env var which defaults to `100000` (100KB)
 - Add alternative SMTP adapter plausible/analytics#3654
+- Add `EXTRA_CONFIG_PATH` env var to specify extra Elixir config plausible/analytics#3906
+- Add restrictive `robots.txt` for self-hosted plausible/analytics#3905
 
 ### Removed
 - Removed the nested custom event property breakdown UI when filtering by a goal in Goal Conversions
 - Removed the `prop_names` returned in the Stats API `event:goal` breakdown response
 - Removed the `prop-breakdown.csv` file from CSV export
 - Deprecated `CLICKHOUSE_MAX_BUFFER_SIZE`
+- Removed `/app/init-admin.sh` that was deprecated in v2.0.0 plausible/analytics#3903
+- Remove `DISABLE_AUTH` deprecation warning plausible/analytics#3904
 
 ### Changed
+- A visits `entry_page` and `exit_page` is only set and updated for pageviews, not custom events
 - Limit the number of Goal Conversions shown on the dashboard and render a "Details" link when there are more entries to show
 - Show Outbound Links / File Downloads / 404 Pages / Cloaked Links instead of Goal Conversions when filtering by the corresponding goal
 - Require custom properties to be explicitly added from Site Settings > Custom Properties in order for them to show up on the dashboard
@@ -48,6 +58,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Creating many sites no longer leads to cookie overflow
+- Ignore sessions without pageviews for `entry_page` and `exit_page` breakdowns
 - Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
 - Fix `conversion_rate` metric in a `browser_versions` breakdown
 - Calculate `conversion_rate` percentage change in the same way like `bounce_rate` (subtraction instead of division)
@@ -66,7 +77,10 @@ All notable changes to this project will be documented in this file.
 - Allow custom event timeseries in stats API plausible/analytics#3505
 - Fixes for sites with UTF characters in domain plausible/analytics#3560
 - Fix crash when using special characters in filter plausible/analytics#3634
+- Fix automatic scrolling to the bottom on the dashboard if previously selected properties tab plausible/analytics#3872
 - Allow running the container with arbitrary UID plausible/analytics#2986
+- Fix `width=manual` in embedded dashboards plausible/analytics#3910
+- Fix URL escaping when pipes are used in UTM tags plausible/analytics#3930
 
 ## v2.0.0 - 2023-07-12
 

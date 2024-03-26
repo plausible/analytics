@@ -1,4 +1,4 @@
-<%= form_for @conn, Routes.universal_analytics_path(@conn, :import, @site.domain), [class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
+<%= form_for @conn, Routes.google_analytics_path(@conn, :import, @site.domain), [class: "max-w-md w-full mx-auto bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8 mb-4 mt-8"], fn f -> %>
   <h2 class="text-xl font-black dark:text-gray-100">Import from Google Analytics</h2>
 
   <%= hidden_input(f, :access_token, value: @access_token) %>
@@ -9,15 +9,28 @@
   <%= case @start_date do %>
     <% {:ok, start_date} -> %>
       <div class="mt-6 text-sm text-gray-500 dark:text-gray-200">
-        Stats from this property and time period will be imported from your Google Analytics account to your Plausible dashboard
+        Stats from this
+        <%= if @property? do %>
+          property
+        <% else %>
+          view
+        <% end %>
+        and time period will be imported from your Google Analytics account to your Plausible dashboard
       </div>
 
       <div class="mt-6">
-        <%= styled_label(f, :view_id, "Google Analytics view") %>
+        <%= styled_label(
+          f,
+          :property_or_view,
+          "Google Analytics #{if @property?, do: "property", else: "view"}"
+        ) %>
         <span class="block w-full text-base dark:text-gray-100 sm:text-sm dark:bg-gray-800">
-          <%= @selected_view_id_name %>
+          <%= @selected_property_or_view_name %>
         </span>
-        <%= hidden_input(f, :view_id, readonly: "true", value: @selected_view_id) %>
+        <%= hidden_input(f, :property_or_view,
+          readonly: "true",
+          value: @selected_property_or_view
+        ) %>
       </div>
       <div class="flex justify-between mt-3">
         <div class="w-36">

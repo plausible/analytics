@@ -3,6 +3,7 @@ Mox.defmock(Plausible.HTTPClient.Mock, for: Plausible.HTTPClient.Interface)
 Application.ensure_all_started(:double)
 FunWithFlags.enable(:window_time_on_page)
 FunWithFlags.enable(:imports_exports)
+FunWithFlags.enable(:shield_pages)
 Ecto.Adapters.SQL.Sandbox.mode(Plausible.Repo, :manual)
 
 if Mix.env() == :small_test do

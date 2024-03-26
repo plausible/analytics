@@ -390,10 +390,10 @@ defmodule Plausible.Google.APITest do
     )
 
     assert {:ok,
-            %{
-              "one.test" => [{"57238190 - one.test", "57238190"}],
-              "two.test" => [{"54460083 - two.test", "54460083"}]
-            }} == Google.UA.API.list_views("access_token")
+            [
+              {"one.test", [{"57238190 - one.test", "57238190"}]},
+              {"two.test", [{"54460083 - two.test", "54460083"}]}
+            ]} == Google.UA.API.list_views("access_token")
   end
 
   test "list_views/1 returns authentication_failed when request fails with HTTP 403" do

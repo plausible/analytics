@@ -19,27 +19,22 @@ defmodule Plausible.Session.CacheStore do
   defp find_session(_domain, nil), do: nil
 
   defp find_session(event, user_id) do
-    from_cache = Cachex.get(:sessions, {event.site_id, user_id})
+    from_cache = Plausible.Cache.Adapter.get(:sessions, {event.site_id, user_id})
 
     case from_cache do
-      {:ok, nil} ->
+      nil ->
         nil
 
-      {:ok, session} ->
+      session ->
         if Timex.diff(event.timestamp, session.timestamp, :minutes) <= 30 do
           session
         end
-
-      {:error, e} ->
-        Sentry.capture_message("Cachex error", extra: %{error: e})
-        nil
     end
   end
 
   defp persist_session(session) do
     key = {session.site_id, session.user_id}
-    Cachex.put(:sessions, key, session, ttl: :timer.minutes(30))
-    session
+    Plausible.Cache.Adapter.put(:sessions, key, session)
   end
 
   defp update_session(session, event) do
@@ -47,7 +42,12 @@ defmodule Plausible.Session.CacheStore do
       session
       | user_id: event.user_id,
         timestamp: event.timestamp,
-        exit_page: event.pathname,
+        entry_page:
+          if(session.entry_page == "" and event.name == "pageview",
+            do: event.pathname,
+            else: session.entry_page
+          ),
+        exit_page: if(event.name == "pageview", do: event.pathname, else: session.exit_page),
         is_bounce: false,
         duration: Timex.diff(event.timestamp, session.start, :second) |> abs,
         pageviews:
@@ -63,8 +63,8 @@ defmodule Plausible.Session.CacheStore do
       hostname: event.hostname,
       site_id: event.site_id,
       user_id: event.user_id,
-      entry_page: event.pathname,
-      exit_page: event.pathname,
+      entry_page: if(event.name == "pageview", do: event.pathname, else: ""),
+      exit_page: if(event.name == "pageview", do: event.pathname, else: ""),
       is_bounce: true,
       duration: 0,
       pageviews: if(event.name == "pageview", do: 1, else: 0),

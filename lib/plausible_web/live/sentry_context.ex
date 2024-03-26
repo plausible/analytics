@@ -26,15 +26,9 @@ defmodule PlausibleWeb.Live.SentryContext do
       user_agent =
         Phoenix.LiveView.get_connect_info(socket, :user_agent)
 
-      socket_host =
-        case socket.host_uri do
-          :not_mounted_at_router -> :not_mounted_at_router
-          %URI{host: host} -> host
-        end
-
       request_context =
         %{
-          host: socket_host,
+          url: socket.host_uri,
           env: %{
             "REMOTE_ADDR" => get_ip(peer),
             "REMOTE_PORT" => peer && peer.port,

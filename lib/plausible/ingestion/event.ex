@@ -29,6 +29,7 @@ defmodule Plausible.Ingestion.Event do
           | :dc_ip
           | :site_ip_blocklist
           | :site_country_blocklist
+          | :site_page_blocklist
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -120,6 +121,7 @@ defmodule Plausible.Ingestion.Event do
     [
       &drop_datacenter_ip/1,
       &drop_shield_rule_ip/1,
+      &drop_shield_rule_page/1,
       &put_geolocation/1,
       &drop_shield_rule_country/1,
       &put_user_agent/1,
@@ -182,15 +184,18 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp drop_shield_rule_ip(%__MODULE__{} = event) do
-    domain = event.domain
-    address = event.request.remote_ip
+    if Plausible.Shields.ip_blocked?(event.domain, event.request.remote_ip) do
+      drop(event, :site_ip_blocklist)
+    else
+      event
+    end
+  end
 
-    case Plausible.Shield.IPRuleCache.get({domain, address}) do
-      %Plausible.Shield.IPRule{action: :deny} ->
-        drop(event, :site_ip_blocklist)
-
-      _ ->
-        event
+  defp drop_shield_rule_page(%__MODULE__{} = event) do
+    if Plausible.Shields.page_blocked?(event.domain, event.request.pathname) do
+      drop(event, :site_page_blocklist)
+    else
+      event
     end
   end
 
@@ -263,12 +268,10 @@ defmodule Plausible.Ingestion.Event do
          %__MODULE__{domain: domain, clickhouse_session_attrs: %{country_code: cc}} = event
        )
        when is_binary(domain) and is_binary(cc) do
-    case Plausible.Shield.CountryRuleCache.get({domain, String.upcase(cc)}) do
-      %Plausible.Shield.CountryRule{action: :deny} ->
-        drop(event, :site_country_blocklist)
-
-      _ ->
-        event
+    if Plausible.Shields.country_blocked?(domain, cc) do
+      drop(event, :site_country_blocklist)
+    else
+      event
     end
   end
 
@@ -381,18 +384,14 @@ defmodule Plausible.Ingestion.Event do
     uri = URI.parse(ref.referer)
 
     if PlausibleWeb.RefInspector.right_uri?(uri) do
-      host = String.replace_prefix(uri.host, "www.", "")
-      path = uri.path || ""
-      host <> String.trim_trailing(path, "/")
+      PlausibleWeb.RefInspector.format_referrer(uri)
     end
   end
 
   defp parse_user_agent(%Request{user_agent: user_agent}) when is_binary(user_agent) do
-    case Cachex.fetch(:user_agents, user_agent, &UAInspector.parse/1) do
-      {:ok, user_agent} -> user_agent
-      {:commit, user_agent} -> user_agent
-      _ -> nil
-    end
+    Plausible.Cache.Adapter.get(:user_agents, user_agent, fn ->
+      UAInspector.parse(user_agent)
+    end)
   end
 
   defp parse_user_agent(request), do: request

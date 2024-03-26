@@ -433,6 +433,128 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
     end
   end
 
+  describe "GET /api/stats/main-graph - conversion_rate plot" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "returns 400 when conversion rate is queried without a goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=conversion_rate"
+        )
+
+      assert %{"error" => error} = json_response(conn, 400)
+      assert error =~ "can only be queried with a goal filter"
+    end
+
+    test "displays conversion_rate for a month", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-31 00:00:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=conversion_rate&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+      assert Enum.count(plot) == 31
+
+      assert List.first(plot) == 33.3
+      assert Enum.at(plot, 10) == 0.0
+      assert List.last(plot) == 50.0
+    end
+  end
+
+  describe "GET /api/stats/main-graph - events (total conversions) plot" do
+    setup [:create_user, :log_in, :create_new_site]
+
+    test "returns 400 when the `events` metric is queried without a goal filter", %{
+      conn: conn,
+      site: site
+    } do
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=events"
+        )
+
+      assert %{"error" => error} = json_response(conn, 400)
+      assert error =~ "`events` can only be queried with a goal filter"
+    end
+
+    test "displays total conversions for a goal", %{conn: conn, site: site} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Different", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:event, name: "Signup", user_id: 123, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:event, name: "Signup", user_id: 123, timestamp: ~N[2021-01-31 00:00:00]),
+        build(:event, name: "Signup", user_id: 123, timestamp: ~N[2021-01-31 00:00:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=month&date=2021-01-01&metric=events&filters=#{filters}"
+        )
+
+      assert %{"plot" => plot} = json_response(conn, 200)
+      assert Enum.count(plot) == 31
+
+      assert List.first(plot) == 2
+      assert Enum.at(plot, 10) == 0.0
+      assert List.last(plot) == 3
+    end
+
+    test "displays total conversions per hour with previous day comparison plot", %{
+      conn: conn,
+      site: site
+    } do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Different", timestamp: ~N[2021-01-10 05:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-10 05:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-10 05:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-10 19:00:00]),
+        build(:pageview, timestamp: ~N[2021-01-10 19:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-11 04:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-11 05:00:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-11 18:00:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=day&date=2021-01-11&metric=events&filters=#{filters}&comparison=previous_period"
+        )
+
+      assert %{"plot" => curr, "comparison_plot" => prev} = json_response(conn, 200)
+      assert [0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0] = prev
+      assert [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0] = curr
+    end
+  end
+
   describe "GET /api/stats/main-graph - bounce_rate plot" do
     setup [:create_user, :log_in, :create_new_site, :add_imported_data]
 
@@ -968,6 +1090,36 @@ defmodule PlausibleWeb.Api.StatsController.MainGraphTest do
 
       assert 4 == Enum.sum(plot)
       assert 0 == Enum.sum(comparison_plot)
+    end
+
+    test "plots conversion rate previous period comparison", %{site: site, conn: conn} do
+      insert(:goal, site: site, event_name: "Signup")
+
+      populate_stats(site, [
+        build(:event, name: "Signup", timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:pageview, timestamp: ~N[2021-01-01 00:01:00]),
+        build(:event, name: "Signup", timestamp: ~N[2021-01-08 00:01:00]),
+        build(:pageview, timestamp: ~N[2021-01-08 00:01:00])
+      ])
+
+      filters = Jason.encode!(%{goal: "Signup"})
+
+      conn =
+        get(
+          conn,
+          "/api/stats/#{site.domain}/main-graph?period=7d&date=2021-01-14&comparison=previous_period&metric=conversion_rate&filters=#{filters}"
+        )
+
+      assert %{
+               "plot" => this_week_plot,
+               "comparison_plot" => last_week_plot,
+               "imported_source" => "Google Analytics",
+               "with_imported" => false
+             } = json_response(conn, 200)
+
+      assert this_week_plot == [50.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      assert last_week_plot == [33.3, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     end
   end
 
