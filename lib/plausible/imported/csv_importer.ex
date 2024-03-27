@@ -123,7 +123,9 @@ defmodule Plausible.Imported.CSVImporter do
         "end_date" => end_date
       }
 
-      File.stream!(local_path, _512KB = 512_000)
+      # we are reading in 512KB chunks for better performance
+      # the default would've been line by line (not great for a CSV)
+      File.stream!(local_path, 512_000)
       |> Stream.into(Ch.stream(ch, statement, params))
       |> Stream.run()
     end)
