@@ -3,7 +3,6 @@ defmodule Plausible.ClickhouseRepo.Migrations.HostnamesInSessions do
 
   def change do
     alter table(:sessions_v2) do
-      add(:entry_page_hostname, :string)
       add(:exit_page_hostname, :string)
     end
   end
