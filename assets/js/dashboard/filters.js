@@ -53,10 +53,10 @@ function filterText(filterType, key, query) {
 
   if (filterType === "props") {
     const { propKey, clauses, type } = parseQueryPropsFilter(query).find((filter) => filter.propKey.value === key)
-    return <>Property <b>{propKey.label}</b> {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    return <>Property <b>{propKey.label}</b> {type} {clauses.map(({ label }) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   } else if (formattedFilter) {
-    const {type, clauses} = parseQueryFilter(query, key)
-    return <>{formattedFilter} {type} {clauses.map(({label}) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
+    const { type, clauses } = parseQueryFilter(query, key)
+    return <>{formattedFilter} {type} {clauses.map(({ label }) => <b key={label}>{label}</b>).reduce((prev, curr) => [prev, ' or ', curr])} </>
   }
 
   throw new Error(`Unknown filter: ${key}`)
@@ -109,7 +109,7 @@ function DropdownContent({ history, site, query, wrapped }) {
   const [addingFilter, setAddingFilter] = useState(false);
 
   if (wrapped === 0 || addingFilter) {
-    let filterGroups = {...FILTER_GROUPS}
+    let filterGroups = { ...FILTER_GROUPS }
     if (!site.propsAvailable) delete filterGroups.props
 
     return Object.keys(filterGroups).map((option) => filterDropdownOption(site, option))
@@ -259,7 +259,7 @@ class Filters extends React.Component {
   }
 
   trackFilterMenu() {
-    window.plausible && window.plausible('Filter Menu: Open', {u: `${window.location.protocol}//${window.location.hostname}/:dashboard`})
+    window.plausible && window.plausible('Filter Menu: Open', { u: `${window.location.protocol}//${window.location.hostname}/:dashboard` })
   }
 
   renderDropDown() {
@@ -309,7 +309,9 @@ class Filters extends React.Component {
     if (this.state.wrapped !== 2) {
       return (
         <div id="filters" className="flex flex-wrap">
-          {(appliedFilters(query).map((filter) => this.renderListFilter(history, filter, query)))}
+          {(appliedFilters(query).map((filter) =>
+            this.renderListFilter(history, filter, query)
+          ))}
         </div>
       );
     }

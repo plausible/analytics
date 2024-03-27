@@ -208,6 +208,7 @@ defmodule Plausible.Stats.FilterSuggestions do
         "operating_system" -> :operating_system
         "operating_system_version" -> :operating_system_version
         "screen_size" -> :screen_size
+        "hostname" -> :hostname
         _ -> :unknown
       end
 
@@ -228,6 +229,12 @@ defmodule Plausible.Stats.FilterSuggestions do
           from(e in q,
             select: e.pathname,
             where: fragment("? ilike ?", e.pathname, ^filter_query)
+          )
+
+        :hostname ->
+          from(e in q,
+            select: e.hostname,
+            where: fragment("? ilike ?", e.hostname, ^filter_query)
           )
 
         :entry_page ->
