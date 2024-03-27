@@ -83,7 +83,7 @@ defmodule Plausible.ImportedTest do
                Imported.check_dates(site, ~D[2021-04-11], ~D[2024-01-12])
     end
 
-    test "picks longest conitnuous range when containing existing import" do
+    test "picks longest continuous range when containing existing import" do
       site = insert(:site)
 
       populate_stats(site, [
