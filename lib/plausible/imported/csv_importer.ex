@@ -1,6 +1,7 @@
 defmodule Plausible.Imported.CSVImporter do
   @moduledoc """
-  CSV importer from S3 that uses ClickHouse [s3 table function.](https://clickhouse.com/docs/en/sql-reference/table-functions/s3)
+  CSV importer from either S3 for which it uses ClickHouse [s3 table function](https://clickhouse.com/docs/en/sql-reference/table-functions/s3)
+  or local storage for which it uses [input function.](https://clickhouse.com/docs/en/sql-reference/table-functions/input)
   """
 
   use Plausible.Imported.Importer
@@ -16,10 +17,25 @@ defmodule Plausible.Imported.CSVImporter do
   def email_template(), do: "google_analytics_import.html"
 
   @impl true
-  def parse_args(%{"uploads" => uploads}), do: [uploads: uploads]
+  def parse_args(%{"uploads" => uploads, "storage" => storage}) do
+    [uploads: uploads, storage: storage]
+  end
 
   @impl true
   def import_data(site_import, opts) do
+    storage = Keyword.fetch!(opts, :storage)
+
+    case storage do
+      "s3" -> import_s3(site_import, opts)
+      "local" -> import_local(site_import, opts)
+    end
+  rescue
+    # we are cancelling on any argument or ClickHouse error
+    e in [ArgumentError, Ch.Error] ->
+      {:error, Exception.message(e)}
+  end
+
+  defp import_s3(site_import, opts) do
     %{
       id: import_id,
       site_id: site_id,
@@ -67,10 +83,55 @@ defmodule Plausible.Imported.CSVImporter do
 
       Ch.query!(ch, statement, params, timeout: :infinity)
     end)
-  rescue
-    # we are cancelling on any argument or ClickHouse errors
-    e in [ArgumentError, Ch.Error] ->
-      {:error, Exception.message(e)}
+  end
+
+  defp import_local(site_import, opts) do
+    %{
+      id: import_id,
+      site_id: site_id,
+      start_date: start_date,
+      end_date: end_date
+    } = site_import
+
+    uploads = Keyword.fetch!(opts, :uploads)
+
+    {:ok, ch} =
+      Plausible.IngestRepo.config()
+      |> Keyword.replace!(:pool_size, 1)
+      |> Ch.start_link()
+
+    Enum.each(uploads, fn upload ->
+      %{"filename" => filename, "local_path" => local_path} = upload
+
+      {table, _, _} = parse_filename!(filename)
+      input_structure = input_structure!(table)
+
+      statement =
+        """
+        INSERT INTO {table:Identifier} \
+        SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
+        FROM input({input_structure:String}) FORMAT CSVWithNames \
+        WHERE date >= {start_date:Date} AND date <= {end_date:Date}\
+        """
+
+      params = %{
+        "table" => table,
+        "site_id" => site_id,
+        "import_id" => import_id,
+        "input_structure" => input_structure,
+        "start_date" => start_date,
+        "end_date" => end_date
+      }
+
+      File.stream!(local_path, _512KB = 512_000)
+      |> Stream.into(Ch.stream(ch, statement, params))
+      |> Stream.run()
+    end)
+
+    Enum.each(uploads, fn upload ->
+      %{"local_path" => local_path} = upload
+      File.rm!(local_path)
+    end)
   end
 
   input_structures = %{
@@ -216,5 +277,27 @@ defmodule Plausible.Imported.CSVImporter do
   def extract_table(filename) do
     {table, _start_date, _end_date} = parse_filename!(filename)
     table
+  end
+
+  @doc """
+  Returns local directory for CSV imports storage.
+
+  Builds upon `$PERSISTENT_CACHE_DIR` (if set) and falls back to /tmp
+
+  Examples:
+
+      iex> local_dir = local_dir(_site_id = 37)
+      iex> String.ends_with?(local_dir, "/plausible-imports/37")
+      true
+
+  """
+  def local_dir(site_id) do
+    persistent_cache_dir = Application.get_env(:plausible, :persistent_cache_dir)
+
+    Path.join([
+      persistent_cache_dir || System.tmp_dir!(),
+      "plausible-imports",
+      Integer.to_string(site_id)
+    ])
   end
 end

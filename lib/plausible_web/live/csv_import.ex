@@ -1,26 +1,56 @@
 defmodule PlausibleWeb.Live.CSVImport do
   @moduledoc """
-  LiveView allowing uploading CSVs for imported tables to S3
+  LiveView allowing uploading CSVs for imported tables to S3 or local storage
   """
   use PlausibleWeb, :live_view
   alias Plausible.Imported.CSVImporter
 
   @impl true
   def mount(_params, session, socket) do
-    %{"site_id" => site_id, "user_id" => user_id} = session
+    %{"site_id" => site_id, "user_id" => user_id, "storage" => storage} = session
+
+    upload_opts = [
+      accept: [".csv", "text/csv"],
+      auto_upload: true,
+      max_entries: length(Plausible.Imported.tables()),
+      # 1GB
+      max_file_size: 1_000_000_000,
+      progress: &handle_progress/3
+    ]
+
+    upload_opts =
+      case storage do
+        "s3" -> [{:presign, &presign_upload/2} | upload_opts]
+        "local" -> upload_opts
+      end
+
+    upload_consumer =
+      case storage do
+        "s3" ->
+          fn meta, entry ->
+            {:ok, %{"s3_url" => meta.s3_url, "filename" => entry.client_name}}
+          end
+
+        "local" ->
+          local_dir = CSVImporter.local_dir(site_id)
+          File.mkdir_p!(local_dir)
+
+          fn meta, entry ->
+            local_path = Path.join(local_dir, Path.basename(meta.path))
+            File.rename!(meta.path, local_path)
+            {:ok, %{"local_path" => local_path, "filename" => entry.client_name}}
+          end
+      end
 
     socket =
       socket
-      |> assign(site_id: site_id, user_id: user_id)
-      |> allow_upload(:import,
-        accept: [".csv", "text/csv"],
-        auto_upload: true,
-        max_entries: length(Plausible.Imported.tables()),
-        # 1GB
-        max_file_size: 1_000_000_000,
-        external: &presign_upload/2,
-        progress: &handle_progress/3
+      |> assign(
+        site_id: site_id,
+        user_id: user_id,
+        storage: storage,
+        upload_consumer: upload_consumer
       )
+      |> allow_upload(:import, upload_opts)
       |> process_imported_tables()
 
     {:ok, socket}
@@ -137,20 +167,25 @@ defmodule PlausibleWeb.Live.CSVImport do
   end
 
   def handle_event("submit-upload-form", _params, socket) do
-    %{site_id: site_id, user_id: user_id, date_range: date_range} = socket.assigns
+    %{
+      storage: storage,
+      site_id: site_id,
+      user_id: user_id,
+      date_range: date_range,
+      upload_consumer: upload_consumer
+    } =
+      socket.assigns
+
     site = Plausible.Repo.get!(Plausible.Site, site_id)
     user = Plausible.Repo.get!(Plausible.Auth.User, user_id)
-
-    uploads =
-      consume_uploaded_entries(socket, :import, fn meta, entry ->
-        {:ok, %{"s3_url" => meta.s3_url, "filename" => entry.client_name}}
-      end)
+    uploads = consume_uploaded_entries(socket, :import, upload_consumer)
 
     {:ok, _job} =
       CSVImporter.new_import(site, user,
         start_date: date_range.first,
         end_date: date_range.last,
-        uploads: uploads
+        uploads: uploads,
+        storage: storage
       )
 
     redirect_to =
