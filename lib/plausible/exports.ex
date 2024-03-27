@@ -6,6 +6,24 @@ defmodule Plausible.Exports do
   require Plausible
   import Ecto.Query
 
+  @doc "Returns the date range for the site's events data or `nil` if there is no data"
+  @spec date_range(non_neg_integer) :: Date.range() | nil
+  def date_range(site_id) do
+    [%Date{} = start_date, %Date{} = end_date] =
+      Plausible.ClickhouseRepo.one(
+        from e in "events_v2",
+          where: [site_id: ^site_id],
+          select: [
+            fragment("toDate(min(?))", e.timestamp),
+            fragment("toDate(max(?))", e.timestamp)
+          ]
+      )
+
+    unless end_date == ~D[1970-01-01] do
+      Date.range(start_date, end_date)
+    end
+  end
+
   @doc """
   Renders filename for the Zip archive containing the exported CSV files.
 
