@@ -3,6 +3,8 @@ defmodule Plausible.Workers.ExportCSVLocal do
   Worker for running local CSV export jobs.
   """
 
+  # TODO unify with ExportCSV (same queue, same worker, different args, especially "storage" => "s3" or "local")
+
   use Oban.Worker,
     queue: :local_csv_export,
     max_attempts: 3
@@ -15,49 +17,23 @@ defmodule Plausible.Workers.ExportCSVLocal do
       args: %{
         "site_id" => site_id,
         "email_to" => email,
-        "local_path" => local_path
+        "local_path" => local_path,
+        "start_date" => start_date,
+        "end_date" => end_date
       }
     } = job
+
+    start_date = Date.from_iso8601!(start_date)
+    end_date = Date.from_iso8601!(end_date)
 
     {:ok, ch} =
       Plausible.ClickhouseRepo.config()
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    [min_date, max_date] = min_max_dates(ch, site_id)
-
-    if max_date == ~D[1970-01-01] do
-      nothing_to_export(email)
-    else
-      perform_export(ch, site_id, Date.range(min_date, max_date), local_path, email)
-    end
+    perform_export(ch, site_id, Date.range(start_date, end_date), local_path, email)
   after
     Exports.oban_notify()
-  end
-
-  defp min_max_dates(ch, site_id) do
-    %Ch.Result{rows: [[%Date{}, %Date{}] = min_max_dates]} =
-      Ch.query!(
-        ch,
-        "SELECT toDate(min(timestamp)), toDate(max(timestamp)) FROM events_v2 WHERE site_id={site_id:UInt64}",
-        %{"site_id" => site_id}
-      )
-
-    min_max_dates
-  end
-
-  defp nothing_to_export(email) do
-    # NOTE: replace with proper Plausible.Email template
-    Plausible.Mailer.deliver_now!(
-      Bamboo.Email.new_email(
-        from: PlausibleWeb.Email.mailer_email_from(),
-        to: email,
-        subject: "EXPORT FAILURE",
-        text_body: "there is nothing to export"
-      )
-    )
-
-    {:cancel, "there is nothing to export"}
   end
 
   defp perform_export(ch, site_id, date_range, local_path, email) do
@@ -83,6 +59,8 @@ defmodule Plausible.Workers.ExportCSVLocal do
     )
 
     File.mkdir_p!(Path.dirname(local_path))
+
+    if File.exists?(local_path), do: File.rm!(local_path)
     File.rename!(tmp_path, local_path)
 
     download_url =
