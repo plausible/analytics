@@ -100,36 +100,42 @@ defmodule Plausible.Imported.CSVImporter do
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    Enum.each(uploads, fn upload ->
-      %{"filename" => filename, "local_path" => local_path} = upload
+    DBConnection.run(
+      ch,
+      fn ch ->
+        Enum.each(uploads, fn upload ->
+          %{"filename" => filename, "local_path" => local_path} = upload
 
-      {table, _, _} = parse_filename!(filename)
-      input_structure = input_structure!(table)
+          {table, _, _} = parse_filename!(filename)
+          input_structure = input_structure!(table)
 
-      statement =
-        """
-        INSERT INTO {table:Identifier} \
-        SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
-        FROM input({input_structure:String}) \
-        WHERE date >= {start_date:Date} AND date <= {end_date:Date} \
-        FORMAT CSVWithNames\
-        """
+          statement =
+            """
+            INSERT INTO {table:Identifier} \
+            SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
+            FROM input({input_structure:String}) \
+            WHERE date >= {start_date:Date} AND date <= {end_date:Date} \
+            FORMAT CSVWithNames\
+            """
 
-      params = %{
-        "table" => table,
-        "site_id" => site_id,
-        "import_id" => import_id,
-        "input_structure" => input_structure,
-        "start_date" => start_date,
-        "end_date" => end_date
-      }
+          params = %{
+            "table" => table,
+            "site_id" => site_id,
+            "import_id" => import_id,
+            "input_structure" => input_structure,
+            "start_date" => start_date,
+            "end_date" => end_date
+          }
 
-      # we are reading in 512KB chunks for better performance
-      # the default would've been line by line (not great for a CSV)
-      File.stream!(local_path, 512_000)
-      |> Stream.into(Ch.stream(ch, statement, params))
-      |> Stream.run()
-    end)
+          # we are reading in 512KB chunks for better performance
+          # the default would've been line by line (not great for a CSV)
+          File.stream!(local_path, 512_000)
+          |> Stream.into(Ch.stream(ch, statement, params))
+          |> Stream.run()
+        end)
+      end,
+      timeout: :infinity
+    )
 
     Enum.each(uploads, fn upload ->
       %{"local_path" => local_path} = upload
