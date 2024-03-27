@@ -110,8 +110,9 @@ defmodule Plausible.Imported.CSVImporter do
         """
         INSERT INTO {table:Identifier} \
         SELECT {site_id:UInt64} AS site_id, *, {import_id:UInt64} AS import_id \
-        FROM input({input_structure:String}) FORMAT CSVWithNames \
-        WHERE date >= {start_date:Date} AND date <= {end_date:Date}\
+        FROM input({input_structure:String}) \
+        WHERE date >= {start_date:Date} AND date <= {end_date:Date} \
+        FORMAT CSVWithNames\
         """
 
       params = %{
