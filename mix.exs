@@ -19,6 +19,7 @@ defmodule Plausible.MixProject do
       releases: [
         plausible: [
           include_executables_for: [:unix],
+          reboot_system_after_config: true,
           config_providers: [
             {Config.Reader,
              path: {:system, "RELEASE_ROOT", "/import_extra_config.exs"}, imports: []}
