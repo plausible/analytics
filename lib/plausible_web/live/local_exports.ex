@@ -50,7 +50,7 @@ defmodule PlausibleWeb.Live.LocalExports do
             <div class="flex items-center">
               <Heroicons.clock
                 :if={local_export.state in ["scheduled", "available", "retryable"]}
-                mini
+                micro
                 class="h-4 w-4 text-indigo-600 dark:text-green-600"
               />
               <.spinner
@@ -59,12 +59,12 @@ defmodule PlausibleWeb.Live.LocalExports do
               />
               <Heroicons.check
                 :if={local_export.state == "completed"}
-                mini
+                micro
                 class="h-4 w-4 text-indigo-600 dark:text-green-600"
               />
               <Heroicons.exclamation_triangle
                 :if={local_export.state in ["discarded", "cancelled"]}
-                mini
+                micro
                 class="h-4 w-4 text-indigo-600 dark:text-green-600"
               />
 
@@ -105,7 +105,7 @@ defmodule PlausibleWeb.Live.LocalExports do
               data-confirm="Are you sure you want to delete this export?"
               class="text-red-600"
             >
-              <Heroicons.trash mini class="w-4 h-4 text-red-600" />
+              <Heroicons.trash micro class="w-4 h-4 text-red-600" />
             </button>
             <button
               :if={
@@ -117,7 +117,7 @@ defmodule PlausibleWeb.Live.LocalExports do
               data-confirm="Are you sure you want to cancel this export?"
               class="text-red-600"
             >
-              <Heroicons.x_circle mini class="w-4 h-4 text-red-600" />
+              <Heroicons.x_circle micro class="w-4 h-4 text-red-600" />
             </button>
           </div>
         </li>
