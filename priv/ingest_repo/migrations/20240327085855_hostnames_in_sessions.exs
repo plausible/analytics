@@ -5,7 +5,7 @@ defmodule Plausible.ClickhouseRepo.Migrations.HostnamesInSessions do
     execute """
     ALTER TABLE sessions_v2
     #{Plausible.MigrationUtils.on_cluster_statement("sessions_v2")}
-    ADD COLUMN exit_page_hostname String
+    ADD COLUMN exit_page_hostname String CODEC(ZSTD(3))
     """
   end
 
