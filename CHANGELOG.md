@@ -2,6 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 ### Added
+- Pages Block List in Site Settings
+- Add `conversion_rate` to Stats API Timeseries and on the main graph 
 - Add `total_conversions` and `conversion_rate` to `visitors.csv` in a goal-filtered CSV export
 - Ability to display total conversions (with a goal filter) on the main graph
 - Add `conversion_rate` to Stats API Timeseries and on the main graph
@@ -55,6 +57,8 @@ All notable changes to this project will be documented in this file.
 - Validate metric isn't queried multiple times
 
 ### Fixed
+- Creating many sites no longer leads to cookie overflow
+- Ignore sessions without pageviews for `entry_page` and `exit_page` breakdowns
 - Using `VersionedCollapsingMergeTree` to store visit data to avoid rare race conditions that led to wrong visit data being shown
 - Fix `conversion_rate` metric in a `browser_versions` breakdown
 - Calculate `conversion_rate` percentage change in the same way like `bounce_rate` (subtraction instead of division)

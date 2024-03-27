@@ -29,6 +29,7 @@ defmodule Plausible.Ingestion.Event do
           | :dc_ip
           | :site_ip_blocklist
           | :site_country_blocklist
+          | :site_page_blocklist
 
   @type t() :: %__MODULE__{
           domain: String.t() | nil,
@@ -99,6 +100,10 @@ defmodule Plausible.Ingestion.Event do
     [:plausible, :ingest, :event, :dropped]
   end
 
+  def telemetry_pipeline_step_duration() do
+    [:plausible, :ingest, :pipeline, :step]
+  end
+
   @spec emit_telemetry_buffered(t()) :: :ok
   def emit_telemetry_buffered(event) do
     :telemetry.execute(telemetry_event_buffered(), %{}, %{
@@ -118,31 +123,40 @@ defmodule Plausible.Ingestion.Event do
 
   defp pipeline() do
     [
-      &drop_datacenter_ip/1,
-      &drop_shield_rule_ip/1,
-      &put_geolocation/1,
-      &drop_shield_rule_country/1,
-      &put_user_agent/1,
-      &put_basic_info/1,
-      &put_referrer/1,
-      &put_utm_tags/1,
-      &put_props/1,
-      &put_revenue/1,
-      &put_salts/1,
-      &put_user_id/1,
-      &validate_clickhouse_event/1,
-      &register_session/1,
-      &write_to_buffer/1
+      drop_datacenter_ip: &drop_datacenter_ip/1,
+      drop_shield_rule_page: &drop_shield_rule_page/1,
+      drop_shield_rule_ip: &drop_shield_rule_ip/1,
+      put_geolocation: &put_geolocation/1,
+      drop_shield_rule_country: &drop_shield_rule_country/1,
+      put_user_agent: &put_user_agent/1,
+      put_basic_info: &put_basic_info/1,
+      put_referrer: &put_referrer/1,
+      put_utm_tags: &put_utm_tags/1,
+      put_props: &put_props/1,
+      put_revenue: &put_revenue/1,
+      put_salts: &put_salts/1,
+      put_user_id: &put_user_id/1,
+      validate_clickhouse_event: &validate_clickhouse_event/1,
+      register_session: &register_session/1,
+      write_to_buffer: &write_to_buffer/1
     ]
   end
 
   defp process_unless_dropped(%__MODULE__{} = initial_event, pipeline) do
-    Enum.reduce_while(pipeline, initial_event, fn pipeline_step, acc_event ->
-      case pipeline_step.(acc_event) do
-        %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
-        %__MODULE__{dropped?: false} = event -> {:cont, event}
-      end
+    Enum.reduce_while(pipeline, initial_event, fn {step_name, step_fn}, acc_event ->
+      Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
+        telemetry_pipeline_step_duration(),
+        fn -> execute_step(step_fn, acc_event) end,
+        %{step: "#{step_name}"}
+      )
     end)
+  end
+
+  defp execute_step(step_fn, acc_event) do
+    case step_fn.(acc_event) do
+      %__MODULE__{dropped?: true} = dropped -> {:halt, dropped}
+      %__MODULE__{dropped?: false} = event -> {:cont, event}
+    end
   end
 
   defp new(domain, request) do
@@ -182,15 +196,18 @@ defmodule Plausible.Ingestion.Event do
   end
 
   defp drop_shield_rule_ip(%__MODULE__{} = event) do
-    domain = event.domain
-    address = event.request.remote_ip
+    if Plausible.Shields.ip_blocked?(event.domain, event.request.remote_ip) do
+      drop(event, :site_ip_blocklist)
+    else
+      event
+    end
+  end
 
-    case Plausible.Shield.IPRuleCache.get({domain, address}) do
-      %Plausible.Shield.IPRule{action: :deny} ->
-        drop(event, :site_ip_blocklist)
-
-      _ ->
-        event
+  defp drop_shield_rule_page(%__MODULE__{} = event) do
+    if Plausible.Shields.page_blocked?(event.domain, event.request.pathname) do
+      drop(event, :site_page_blocklist)
+    else
+      event
     end
   end
 
@@ -263,12 +280,10 @@ defmodule Plausible.Ingestion.Event do
          %__MODULE__{domain: domain, clickhouse_session_attrs: %{country_code: cc}} = event
        )
        when is_binary(domain) and is_binary(cc) do
-    case Plausible.Shield.CountryRuleCache.get({domain, String.upcase(cc)}) do
-      %Plausible.Shield.CountryRule{action: :deny} ->
-        drop(event, :site_country_blocklist)
-
-      _ ->
-        event
+    if Plausible.Shields.country_blocked?(domain, cc) do
+      drop(event, :site_country_blocklist)
+    else
+      event
     end
   end
 

@@ -59,10 +59,7 @@ defmodule PlausibleWeb.StatsController do
 
     cond do
       stats_start_date && can_see_stats? ->
-        offer_email_report = get_session(conn, site.domain <> "_offer_email_report")
-
         conn
-        |> remove_email_report_banner(site)
         |> put_resp_header("x-robots-tag", "noindex, nofollow")
         |> render("stats.html",
           site: site,
@@ -72,7 +69,6 @@ defmodule PlausibleWeb.StatsController do
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(site.native_stats_start_at),
           title: title(conn, site),
-          offer_email_report: offer_email_report,
           demo: demo,
           flags: get_flags(conn.assigns[:current_user]),
           is_dbip: is_dbip(),
@@ -328,7 +324,6 @@ defmodule PlausibleWeb.StatsController do
           stats_start_date: stats_start_date,
           native_stats_start_date: NaiveDateTime.to_date(shared_link.site.native_stats_start_at),
           title: title(conn, shared_link.site),
-          offer_email_report: false,
           demo: false,
           dogfood_page_path: "/share/:dashboard",
           shared_link_auth: shared_link.slug,
@@ -348,14 +343,6 @@ defmodule PlausibleWeb.StatsController do
           site: shared_link.site,
           dogfood_page_path: "/share/:dashboard"
         )
-    end
-  end
-
-  defp remove_email_report_banner(conn, site) do
-    if conn.assigns[:current_user] do
-      delete_session(conn, site.domain <> "_offer_email_report")
-    else
-      conn
     end
   end
 

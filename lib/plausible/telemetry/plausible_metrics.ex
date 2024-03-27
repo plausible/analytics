@@ -47,6 +47,16 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
           unit: {:native, :millisecond},
           measurement: :duration
         ),
+        distribution(
+          metric_prefix ++ [:ingest, :events, :pipeline, :steps],
+          event_name: Ingestion.Event.telemetry_pipeline_step_duration(),
+          reporter_options: [
+            buckets: [10, 50, 100, 250, 350, 500, 1000, 5000, 10_000, 100_000, 500_000]
+          ],
+          unit: {:native, :microsecond},
+          measurement: :duration,
+          tags: [:step]
+        ),
         counter(
           metric_prefix ++ [:ingest, :events, :buffered, :total],
           event_name: Ingestion.Event.telemetry_event_buffered()
@@ -108,6 +118,19 @@ defmodule Plausible.PromEx.Plugins.PlausibleMetrics do
       count: Site.Cache.size(),
       hit_rate: Site.Cache.hit_rate()
     })
+  end
+
+  def measure_duration(event, fun, meta \\ %{}) when is_function(fun, 0) do
+    {duration, result} = time_it(fun)
+    :telemetry.execute(event, %{duration: duration}, meta)
+    result
+  end
+
+  defp time_it(fun) do
+    start = System.monotonic_time()
+    result = fun.()
+    stop = System.monotonic_time()
+    {stop - start, result}
   end
 
   defp write_buffer_metrics(metric_prefix, poll_rate) do

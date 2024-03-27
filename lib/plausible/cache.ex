@@ -176,25 +176,15 @@ defmodule Plausible.Cache do
       defp refresh(mode, query, opts) when mode in @modes do
         cache_name = Keyword.get(opts, :cache_name, name())
 
-        measure_duration(telemetry_event_refresh(cache_name, mode), fn ->
-          items = Plausible.Repo.all(query)
-          :ok = merge_items(items, opts)
-        end)
+        Plausible.PromEx.Plugins.PlausibleMetrics.measure_duration(
+          telemetry_event_refresh(cache_name, mode),
+          fn ->
+            items = Plausible.Repo.all(query)
+            :ok = merge_items(items, opts)
+          end
+        )
 
         :ok
-      end
-
-      defp measure_duration(event, fun) when is_function(fun, 0) do
-        {duration, result} = time_it(fun)
-        :telemetry.execute(event, %{duration: duration}, %{})
-        result
-      end
-
-      defp time_it(fun) do
-        start = System.monotonic_time()
-        result = fun.()
-        stop = System.monotonic_time()
-        {stop - start, result}
       end
     end
   end

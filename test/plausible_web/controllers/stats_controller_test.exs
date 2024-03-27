@@ -16,6 +16,18 @@ defmodule PlausibleWeb.StatsControllerTest do
 
       assert text_of_attr(resp, @react_container, "data-domain") == site.domain
       assert text_of_attr(resp, @react_container, "data-is-dbip") == "false"
+      assert text_of_attr(resp, @react_container, "data-has-goals") == "false"
+      assert text_of_attr(resp, @react_container, "data-conversions-opted-out") == "false"
+      assert text_of_attr(resp, @react_container, "data-funnels-opted-out") == "false"
+      assert text_of_attr(resp, @react_container, "data-props-opted-out") == "false"
+      assert text_of_attr(resp, @react_container, "data-props-available") == "true"
+      assert text_of_attr(resp, @react_container, "data-funnels-available") == "true"
+      assert text_of_attr(resp, @react_container, "data-has-props") == "false"
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "false"
+      assert text_of_attr(resp, @react_container, "data-embedded") == ""
+
+      [{"div", attrs, _}] = find(resp, @react_container)
+      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
 
       assert ["noindex, nofollow"] ==
                resp
@@ -61,7 +73,8 @@ defmodule PlausibleWeb.StatsControllerTest do
     test "can view stats of a website I've created", %{conn: conn, site: site} do
       populate_stats(site, [build(:pageview)])
       conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "stats-react-container"
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-logged-in") == "true"
     end
 
     test "shows locked page if page is locked", %{conn: conn, user: user} do
@@ -102,8 +115,11 @@ defmodule PlausibleWeb.StatsControllerTest do
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "stats-react-container"
-      assert html_response(conn, 200) =~ "This dashboard is actually locked"
+      resp = html_response(conn, 200)
+      assert resp =~ "This dashboard is actually locked"
+
+      [{"div", attrs, _}] = find(resp, @react_container)
+      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
     end
 
     test "can view a private locked dashboard without stats", %{conn: conn} do
@@ -120,7 +136,10 @@ defmodule PlausibleWeb.StatsControllerTest do
       populate_stats(site, [build(:pageview)])
 
       conn = get(conn, "/" <> site.domain)
-      assert html_response(conn, 200) =~ "stats-react-container"
+      resp = html_response(conn, 200)
+
+      [{"div", attrs, _}] = find(resp, @react_container)
+      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
     end
   end
 
@@ -285,7 +304,7 @@ defmodule PlausibleWeb.StatsControllerTest do
                ["2021-09-27", "0", "0", "0", "0.0", "", ""],
                ["2021-10-04", "0", "0", "0", "0.0", "", ""],
                ["2021-10-11", "0", "0", "0", "0.0", "", ""],
-               ["2021-10-18", "3", "3", "3", "1.0", "67", "20"],
+               ["2021-10-18", "3", "4", "3", "1.33", "33", "40"],
                [""]
              ]
     end
@@ -469,7 +488,17 @@ defmodule PlausibleWeb.StatsControllerTest do
         browser: "FirefoxNoVersion",
         operating_system: "MacNoVersion"
       ),
+      build(:pageview,
+        user_id: 456,
+        timestamp:
+          Timex.shift(~N[2021-10-20 12:00:00], days: -1, minutes: -1)
+          |> NaiveDateTime.truncate(:second),
+        pathname: "/signup",
+        "meta.key": ["variant"],
+        "meta.value": ["A"]
+      ),
       build(:event,
+        user_id: 456,
         timestamp:
           Timex.shift(~N[2021-10-20 12:00:00], days: -1) |> NaiveDateTime.truncate(:second),
         name: "Signup",
@@ -606,7 +635,24 @@ defmodule PlausibleWeb.StatsControllerTest do
       link = insert(:shared_link, site: site)
 
       conn = get(conn, "/share/test-site.com/?auth=#{link.slug}")
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-embedded") == "false"
       assert Plug.Conn.get_resp_header(conn, "x-frame-options") == []
+    end
+
+    test "returns page embedded page", %{
+      conn: conn
+    } do
+      site = insert(:site, domain: "test-site.com")
+      link = insert(:shared_link, site: site)
+
+      conn = get(conn, "/share/test-site.com/?auth=#{link.slug}&embed=true")
+      resp = html_response(conn, 200)
+      assert text_of_attr(resp, @react_container, "data-embedded") == "true"
+      assert Plug.Conn.get_resp_header(conn, "x-frame-options") == []
+
+      [{"div", attrs, _}] = find(resp, @react_container)
+      assert Enum.all?(attrs, fn {k, v} -> is_binary(k) and is_binary(v) end)
     end
 
     test "shows locked page if page is locked", %{conn: conn} do
