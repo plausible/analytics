@@ -139,65 +139,57 @@ defmodule Plausible.Imported do
     cutoff_date = Plausible.Sites.native_stats_start_date(site) || Timex.today(site.timezone)
     end_date = Enum.min([end_date, cutoff_date], Date)
 
-    if Date.diff(end_date, start_date) >= 2 do
-      import_range = Date.range(start_date, end_date)
-
-      existing_ranges =
-        site
-        |> Imported.list_all_imports(Imported.SiteImport.completed())
-        |> Enum.map(&build_open_range(&1.start_date, &1.end_date))
-        |> Enum.reject(&is_nil/1)
-
-      cropped_ranges = crop_date_range(import_range, existing_ranges)
-
-      if cropped_ranges == [] do
-        {:error, :no_time_window}
-      else
-        longest = Enum.max_by(cropped_ranges, &Date.diff(&1.last, &1.first))
-
-        {:ok, longest.first, longest.last}
-      end
+    with true <- Date.diff(end_date, start_date) >= 2,
+         [_ | _] = open_ranges <- find_open_ranges(start_date, end_date, site) do
+      longest = Enum.max_by(open_ranges, &Date.diff(&1.last, &1.first))
+      {:ok, longest.first, longest.last}
     else
-      {:error, :no_time_window}
+      _ -> {:error, :no_time_window}
     end
   end
 
-  defp build_open_range(start_date, end_date) do
-    if Date.diff(end_date, start_date) < 2 do
-      nil
-    else
-      Date.range(Date.add(start_date, 1), Date.add(end_date, -1))
+  defp find_open_ranges(start_date, end_date, site) do
+    occupied_ranges =
+      site
+      |> Imported.list_all_imports(Imported.SiteImport.completed())
+      |> Enum.reject(&(Date.diff(&1.end_date, &1.start_date) < 2))
+      |> Enum.map(&Date.range(&1.start_date, &1.end_date))
+
+    Date.range(start_date, end_date)
+    |> open_ranges(start_date, occupied_ranges, [])
+  end
+
+  # This function recursively finds open ranges that are not yet occupied
+  # by existing imported data. The idea is that we keep moving a dynamic
+  # date index `d` from start until the end of `imported_range`, hopping
+  # over each occupied range, and capturing the open ranges step-by-step
+  # in the `result` array.
+  defp open_ranges(import_range, d, [occupied_range | rest_of_occupied_ranges], result) do
+    cond do
+      Date.diff(occupied_range.last, d) <= 0 ->
+        open_ranges(import_range, d, rest_of_occupied_ranges, result)
+
+      in_range?(d, occupied_range) || Date.diff(occupied_range.first, d) < 2 ->
+        d = occupied_range.last
+        open_ranges(import_range, d, rest_of_occupied_ranges, result)
+
+      true ->
+        open_range = Date.range(d, occupied_range.first)
+        result = result ++ [open_range]
+        d = occupied_range.last
+        open_ranges(import_range, d, rest_of_occupied_ranges, result)
     end
   end
 
-  defp crop_date_range(range, cropping_ranges) do
-    cropping_ranges
-    |> Enum.map(&Enum.to_list/1)
-    |> Enum.reduce(Enum.to_list(range), fn existing, dates ->
-      dates -- existing
-    end)
-    |> Enum.reduce([], fn
-      date, [] ->
-        [date]
-
-      date, [%Date{} = prev_date | rest] ->
-        if Date.diff(date, prev_date) == 1 do
-          [Date.range(prev_date, date) | rest]
-        else
-          [date, Date.range(prev_date, prev_date) | rest]
-        end
-
-      date, [%Date.Range{} = range | rest] ->
-        if Date.diff(date, range.last) == 1 do
-          [Date.range(range.first, date) | rest]
-        else
-          [date, range | rest]
-        end
-    end)
-    |> finalize_crop()
-    |> Enum.reject(&(Date.diff(&1.last, &1.first) < 2))
+  defp open_ranges(import_range, d, [], result) do
+    if Date.diff(import_range.last, d) < 2 do
+      result
+    else
+      result ++ [Date.range(d, import_range.last)]
+    end
   end
 
-  defp finalize_crop([%Date{} = date | rest]), do: [Date.range(date, date) | rest]
-  defp finalize_crop(other), do: other
+  defp in_range?(date, range) do
+    Date.before?(range.first, date) && Date.after?(range.last, date)
+  end
 end
