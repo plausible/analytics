@@ -76,7 +76,8 @@ defmodule Plausible.Imported.CSVImporterTest do
                CSVImporter.new_import(site, user,
                  start_date: date_range.first,
                  end_date: date_range.last,
-                 uploads: uploads
+                 uploads: uploads,
+                 storage: "s3"
                )
 
       assert %Oban.Job{args: %{"import_id" => import_id, "uploads" => ^uploads} = args} =
@@ -93,7 +94,7 @@ defmodule Plausible.Imported.CSVImporterTest do
              ] = Plausible.Imported.list_all_imports(site)
 
       assert %{imported_data: nil} = Repo.reload!(site)
-      assert CSVImporter.parse_args(args) == [uploads: uploads]
+      assert CSVImporter.parse_args(args) == [uploads: uploads, storage: "s3"]
     end
   end
 
@@ -339,7 +340,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         CSVImporter.new_import(site, user,
           start_date: date_range.first,
           end_date: date_range.last,
-          uploads: uploads
+          uploads: uploads,
+          storage: "s3"
         )
 
       job = Repo.reload!(job)
@@ -393,7 +395,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         CSVImporter.new_import(site, user,
           start_date: date_range.first,
           end_date: date_range.last,
-          uploads: uploads
+          uploads: uploads,
+          storage: "s3"
         )
 
       job = Repo.reload!(job)
@@ -518,7 +521,8 @@ defmodule Plausible.Imported.CSVImporterTest do
         CSVImporter.new_import(site, user,
           start_date: date_range.first,
           end_date: date_range.last,
-          uploads: uploads
+          uploads: uploads,
+          storage: "s3"
         )
 
       job = Repo.reload!(job)

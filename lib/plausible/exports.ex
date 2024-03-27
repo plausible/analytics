@@ -58,7 +58,7 @@ defmodule Plausible.Exports do
     end
   end
 
-  @doc ~S"""
+  @doc """
   Returns local directory for CSV exports storage.
 
   Builds upon `$PERSISTENT_CACHE_DIR` (if set) and falls back to /tmp
