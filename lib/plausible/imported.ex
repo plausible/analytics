@@ -37,6 +37,9 @@ defmodule Plausible.Imported do
   # Maximum number of complete imports to account for when querying stats
   @max_complete_imports 5
 
+  @spec schemas() :: [module()]
+  def schemas, do: @tables
+
   @spec tables() :: [String.t()]
   def tables, do: @table_names
 
@@ -91,13 +94,16 @@ defmodule Plausible.Imported do
     ids =
       from(i in SiteImport,
         where: i.site_id == ^site.id and i.status == ^SiteImport.completed(),
-        select: i.id,
+        select: {i.legacy, i.id},
         limit: @max_complete_imports
       )
       |> Repo.all()
 
+    has_legacy? = Enum.any?(ids, fn {legacy?, _} -> legacy? end)
+    ids = Enum.map(ids, &elem(&1, 1))
+
     # account for legacy imports as well
-    if site.imported_data && site.imported_data.status == "ok" do
+    if has_legacy? || (site.imported_data && site.imported_data.status == "ok") do
       [0 | ids]
     else
       ids
