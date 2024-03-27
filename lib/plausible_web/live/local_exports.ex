@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.LocalExports do
   @impl true
   def render(assigns) do
     ~H"""
-    <header class="relative border-b border-gray-200 pb-4">
+    <header class="border-b border-gray-200 pb-4">
       <h3 class="mt-8 text-md leading-6 font-medium text-gray-900 dark:text-gray-100">
         Existing Exports
       </h3>
