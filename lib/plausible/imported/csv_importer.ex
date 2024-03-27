@@ -1,7 +1,7 @@
 defmodule Plausible.Imported.CSVImporter do
   @moduledoc """
   CSV importer from either S3 for which it uses ClickHouse [s3 table function](https://clickhouse.com/docs/en/sql-reference/table-functions/s3)
-  or local storage for which it uses [input function.](https://clickhouse.com/docs/en/sql-reference/table-functions/input)
+  or from local storage for which it uses [input function.](https://clickhouse.com/docs/en/sql-reference/table-functions/input)
   """
 
   use Plausible.Imported.Importer
