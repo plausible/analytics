@@ -140,15 +140,15 @@ defmodule Plausible.Imported do
     end_date = Enum.min([end_date, cutoff_date], Date)
 
     with true <- Date.diff(end_date, start_date) >= 2,
-         [_ | _] = open_ranges <- find_open_ranges(start_date, end_date, site) do
-      longest = Enum.max_by(open_ranges, &Date.diff(&1.last, &1.first))
+         [_ | _] = free_ranges <- find_free_ranges(start_date, end_date, site) do
+      longest = Enum.max_by(free_ranges, &Date.diff(&1.last, &1.first))
       {:ok, longest.first, longest.last}
     else
       _ -> {:error, :no_time_window}
     end
   end
 
-  defp find_open_ranges(start_date, end_date, site) do
+  defp find_free_ranges(start_date, end_date, site) do
     occupied_ranges =
       site
       |> Imported.list_all_imports(Imported.SiteImport.completed())
@@ -156,7 +156,7 @@ defmodule Plausible.Imported do
       |> Enum.map(&Date.range(&1.start_date, &1.end_date))
 
     Date.range(start_date, end_date)
-    |> open_ranges(start_date, occupied_ranges, [])
+    |> free_ranges(start_date, occupied_ranges, [])
   end
 
   # This function recursively finds open ranges that are not yet occupied
@@ -164,24 +164,24 @@ defmodule Plausible.Imported do
   # date index `d` from start until the end of `imported_range`, hopping
   # over each occupied range, and capturing the open ranges step-by-step
   # in the `result` array.
-  defp open_ranges(import_range, d, [occupied_range | rest_of_occupied_ranges], result) do
+  defp free_ranges(import_range, d, [occupied_range | rest_of_occupied_ranges], result) do
     cond do
       Date.diff(occupied_range.last, d) <= 0 ->
-        open_ranges(import_range, d, rest_of_occupied_ranges, result)
+        free_ranges(import_range, d, rest_of_occupied_ranges, result)
 
       in_range?(d, occupied_range) || Date.diff(occupied_range.first, d) < 2 ->
         d = occupied_range.last
-        open_ranges(import_range, d, rest_of_occupied_ranges, result)
+        free_ranges(import_range, d, rest_of_occupied_ranges, result)
 
       true ->
-        open_range = Date.range(d, occupied_range.first)
-        result = result ++ [open_range]
+        free_range = Date.range(d, occupied_range.first)
+        result = result ++ [free_range]
         d = occupied_range.last
-        open_ranges(import_range, d, rest_of_occupied_ranges, result)
+        free_ranges(import_range, d, rest_of_occupied_ranges, result)
     end
   end
 
-  defp open_ranges(import_range, d, [], result) do
+  defp free_ranges(import_range, d, [], result) do
     if Date.diff(import_range.last, d) < 2 do
       result
     else
