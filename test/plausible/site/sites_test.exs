@@ -2,6 +2,7 @@ defmodule Plausible.SitesTest do
   use Plausible.DataCase
 
   alias Plausible.Sites
+  doctest Sites, import: true
 
   describe "create a site" do
     test "creates a site" do
