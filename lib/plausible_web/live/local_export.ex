@@ -13,17 +13,32 @@ defmodule PlausibleWeb.Live.LocalExport do
     socket =
       socket
       |> assign(site_id: site_id, domain: domain, can_delete?: role in [:owner, :admin])
-      |> list_local_exports()
+      |> fetch_local_export()
 
-    if connected?(socket) do
-      Exports.oban_listen()
-    end
+    # if connected?(socket) do
+    #   Exports.oban_listen()
+    # end
 
     {:ok, socket}
   end
 
-  defp list_local_exports(socket) do
-    assign(socket, local_exports: Exports.list_local_exports(socket.assigns.site_id))
+  defp fetch_local_export(socket) do
+    %{site_id: site_id, site_timezone: site_timezone} = socket.assigns
+    local_path = Plausible.Exports.local_export_file(site_id)
+
+    local_export =
+      if File.exists?(local_path) do
+        %File.Stat{size: size, ctime: ctime} = File.stat!(local_path, time: :posix)
+
+        local_created_on =
+          DateTime.from_unix!(ctime)
+          |> Plausible.Timezones.to_datetime_in_timezone(site_timezone)
+          |> DateTime.to_date()
+
+        %{size: size, created_on: local_created_on}
+      end
+
+    assign(socket, local_export: local_export)
   end
 
   @impl true
@@ -127,21 +142,10 @@ defmodule PlausibleWeb.Live.LocalExport do
   end
 
   @impl true
-  def handle_event("delete", %{"path" => path}, socket) do
-    File.rm!(path)
-    {:noreply, socket}
-  end
-
-  def handle_event("cancel", %{"job-id" => job_id}, socket) do
-    Oban.cancel_job(String.to_integer(job_id))
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_info({:notification, Exports, %{"site_id" => site_id}}, socket) do
+  def handle_info({:notification, Exports, %{"site_id" => site_id} = details}, socket) do
     socket =
       if site_id == socket.assigns.site_id do
-        list_local_exports(socket)
+        fetch_local_export(socket)
       else
         socket
       end

@@ -28,7 +28,7 @@ defmodule Plausible.Workers.ExportAnalytics do
         extname: ".csv"
       )
 
-    # since each `perform` attempt runs in a separate process
+    # since each worker / `perform` attempt runs in a separate process
     # it's ok to use start_link to keep connection lifecycle
     # bound to that of the worker
     {:ok, ch} =
