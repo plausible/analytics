@@ -14,7 +14,7 @@ import LineGraphWithRouter from './line-graph'
 
 function fetchTopStats(site, query) {
   const q = { ...query }
-  
+
   if (!isComparisonEnabled(q.comparison)) {
     q.comparison = 'previous_period'
   }
@@ -73,10 +73,10 @@ export default function VisitorGraph(props) {
     fetchTopStats(site, query)
       .then((res) => {
         setTopStatData(res)
-        
+
         let metric = getStoredMetric()
         const availableMetrics = res.top_stats.filter(stat => !!stat.graph_metric).map(stat => stat.graph_metric)
-        
+
         if (!availableMetrics.includes(metric)) {
           metric = availableMetrics[0]
           storage.setItem(`metric__${site.domain}`, metric)
@@ -91,7 +91,7 @@ export default function VisitorGraph(props) {
   function fetchGraphData(metric, interval) {
     fetchMainGraph(site, query, metric, interval)
       .then((res) => {
-        setGraphData(res)
+        setGraphData({...res, metric})
         setLoading(LoadingState.loaded)
       })
   }

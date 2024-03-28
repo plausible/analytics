@@ -132,7 +132,6 @@ defmodule PlausibleWeb.Api.StatsController do
       site_import = Plausible.Imported.get_earliest_import(site)
 
       json(conn, %{
-        metric: metric,
         plot: plot_timeseries(timeseries_result, metric),
         labels: labels,
         comparison_plot: comparison_result && plot_timeseries(comparison_result, metric),
@@ -1344,7 +1343,6 @@ defmodule PlausibleWeb.Api.StatsController do
     metric =
       case params["metric"] do
         nil -> :visitors
-        "conversions" -> :visitors
         m -> Plausible.Stats.Metrics.from_string!(m)
       end
 
