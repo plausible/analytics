@@ -9,10 +9,14 @@ defmodule Plausible.Session.CacheStore do
       updated_session = update_session(found_session, event)
       buffer.insert([%{found_session | sign: -1}, %{updated_session | sign: 1}])
       persist_session(updated_session)
+
+      updated_session
     else
       new_session = new_session_from_event(event, session_attributes)
       buffer.insert([new_session])
       persist_session(new_session)
+
+      new_session
     end
   end
 
