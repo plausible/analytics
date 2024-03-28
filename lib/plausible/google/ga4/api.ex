@@ -64,6 +64,10 @@ defmodule Plausible.Google.GA4.API do
     GA4.HTTP.get_analytics_start_date(access_token, property)
   end
 
+  def get_analytics_end_date(access_token, property) do
+    GA4.HTTP.get_analytics_end_date(access_token, property)
+  end
+
   def import_analytics(date_range, property, auth, persist_fn) do
     Logger.debug(
       "[#{inspect(__MODULE__)}:#{property}] Starting import from #{date_range.first} to #{date_range.last}"
