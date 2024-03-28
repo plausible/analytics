@@ -1,6 +1,6 @@
-defmodule PlausibleWeb.Live.LocalExports do
+defmodule PlausibleWeb.Live.LocalExport do
   @moduledoc """
-  LiveView allowing listing and deleting local (i.e. on file system) exports.
+  LiveView allowing scheduling, watching, downloading, and deleting local exports.
   """
   use PlausibleWeb, :live_view
   use Phoenix.HTML
@@ -13,23 +13,38 @@ defmodule PlausibleWeb.Live.LocalExports do
     socket =
       socket
       |> assign(site_id: site_id, domain: domain, can_delete?: role in [:owner, :admin])
-      |> list_local_exports()
+      |> fetch_local_export()
 
-    if connected?(socket) do
-      Exports.oban_listen()
-    end
+    # if connected?(socket) do
+    #   Exports.oban_listen()
+    # end
 
     {:ok, socket}
   end
 
-  defp list_local_exports(socket) do
-    assign(socket, local_exports: Exports.list_local_exports(socket.assigns.site_id))
+  defp fetch_local_export(socket) do
+    %{site_id: site_id, site_timezone: site_timezone} = socket.assigns
+    local_path = Plausible.Exports.local_export_file(site_id)
+
+    local_export =
+      if File.exists?(local_path) do
+        %File.Stat{size: size, ctime: ctime} = File.stat!(local_path, time: :posix)
+
+        local_created_on =
+          DateTime.from_unix!(ctime)
+          |> Plausible.Timezones.to_datetime_in_timezone(site_timezone)
+          |> DateTime.to_date()
+
+        %{size: size, created_on: local_created_on}
+      end
+
+    assign(socket, local_export: local_export)
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <header class="border-b border-gray-200 pb-4">
+    <%!-- <header class="border-b border-gray-200 pb-4">
       <h3 class="mt-8 text-md leading-6 font-medium text-gray-900 dark:text-gray-100">
         Existing Exports
       </h3>
@@ -122,38 +137,20 @@ defmodule PlausibleWeb.Live.LocalExports do
           </div>
         </li>
       </ul>
-    <% end %>
+    <% end %> --%>
     """
   end
 
   @impl true
-  def handle_event("delete", %{"path" => path}, socket) do
-    File.rm!(path)
-    {:noreply, list_local_exports(socket)}
-  end
+  def handle_info({:notification, Exports, %{"site_id" => site_id} = details}, socket) do
+    socket =
+      if site_id == socket.assigns.site_id do
+        fetch_local_export(socket)
+      else
+        socket
+      end
 
-  def handle_event("cancel", %{"job-id" => job_id}, socket) do
-    Oban.cancel_job(String.to_integer(job_id))
-    {:noreply, list_local_exports(socket)}
-  end
-
-  @impl true
-  def handle_info({:notification, Exports, _details}, socket) do
-    {:noreply, list_local_exports(socket)}
-  end
-
-  @format_path_regex ~r/^(?<beginning>((.+?\/){1})).*(?<ending>(\/.*){3})$/
-
-  defp format_path(path) do
-    path_string =
-      path
-      |> String.replace_prefix("\"", "")
-      |> String.replace_suffix("\"", "")
-
-    case Regex.named_captures(@format_path_regex, path_string) do
-      %{"beginning" => beginning, "ending" => ending} -> "#{beginning}...#{ending}"
-      _ -> path_string
-    end
+    {:noreply, socket}
   end
 
   defp format_bytes(bytes) when is_integer(bytes) do

@@ -51,7 +51,7 @@ defmodule Plausible.S3 do
   """
   def import_presign_upload(site_id, filename) do
     config = ExAws.Config.new(:s3)
-    s3_path = Path.join(to_string(site_id), filename)
+    s3_path = Path.join(Integer.to_string(site_id), filename)
     bucket = imports_bucket()
     {:ok, presigned_url} = ExAws.S3.presigned_url(config, :put, bucket, s3_path)
     %{s3_url: extract_s3_url(presigned_url), presigned_url: presigned_url}
@@ -79,16 +79,11 @@ defmodule Plausible.S3 do
   @doc """
   Chunks and uploads Zip archive to the provided S3 destination.
 
-  Returns a presigned URL to download the exported Zip archive from S3.
-  The URL expires in 24 hours.
-
   In the current implementation the bucket always goes into the path component.
   """
   @spec export_upload_multipart(Enumerable.t(), String.t(), Path.t(), String.t(), keyword) ::
-          :uri_string.uri_string()
+          :ok
   def export_upload_multipart(stream, s3_bucket, s3_path, filename, config_overrides \\ []) do
-    config = ExAws.Config.new(:s3)
-
     # 5 MiB is the smallest chunk size AWS S3 supports
     chunk_into_parts(stream, 5 * 1024 * 1024)
     |> ExAws.S3.upload(s3_bucket, s3_path,
@@ -96,6 +91,19 @@ defmodule Plausible.S3 do
       content_type: "application/zip"
     )
     |> ExAws.request!(config_overrides)
+
+    :ok
+  end
+
+  @doc """
+  Returns a presigned URL to download the exported Zip archive from S3.
+  The URL expires in 24 hours.
+
+  In the current implementation the bucket always goes into the path component.
+  """
+  @spec export_download_url(String.t(), Path.t()) :: :uri_string.uri_string()
+  def export_download_url(s3_bucket, s3_path) do
+    config = ExAws.Config.new(:s3)
 
     {:ok, download_url} =
       ExAws.S3.presigned_url(config, :get, s3_bucket, s3_path, expires_in: _24hr = 86_400)

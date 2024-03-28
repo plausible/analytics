@@ -394,7 +394,7 @@ defmodule PlausibleWeb.Router do
 
     on_full_build do
     else
-      get "/:website/local-exports/:file", SiteController, :download_local_export
+      get "/:website/exported-archive", SiteController, :download_local_export
     end
 
     get "/:website/settings/import", SiteController, :csv_import
