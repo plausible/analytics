@@ -138,8 +138,15 @@ defmodule PlausibleWeb.Live.LocalExports do
   end
 
   @impl true
-  def handle_info({:notification, Exports, _details}, socket) do
-    {:noreply, list_local_exports(socket)}
+  def handle_info({:notification, Exports, %{"site_id" => site_id}}, socket) do
+    socket =
+      if site_id == socket.assigns.site_id do
+        list_local_exports(socket)
+      else
+        socket
+      end
+
+    {:noreply, socket}
   end
 
   @format_path_regex ~r/^(?<beginning>((.+?\/){1})).*(?<ending>(\/.*){3})$/
