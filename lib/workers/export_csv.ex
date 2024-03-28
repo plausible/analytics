@@ -41,11 +41,6 @@ defmodule Plausible.Workers.ExportCSV do
       "local" -> perform_local_export(ch, queries, args)
     end
 
-    # email delivery can potentially fail and cause already successful
-    # export to be repeated which is costly, hence email is delivered
-    # in a separate job
-    Oban.insert!(Plausible.Workers.NotifyExportCSV.new(args))
-
     :ok
   end
 

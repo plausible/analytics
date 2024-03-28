@@ -540,8 +540,7 @@ base_queues = [
   analytics_imports: 1,
   domain_change_transition: 1,
   check_accept_traffic_until: 1,
-  csv_export: 1,
-  csv_export_notify: 10
+  csv_export: 1
 ]
 
 cloud_queues = [

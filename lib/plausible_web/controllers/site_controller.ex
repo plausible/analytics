@@ -740,16 +740,16 @@ defmodule PlausibleWeb.SiteController do
       # TODO make rate limit configurable via env
       case Plausible.Exports.schedule_export_rate_limit(site, user, date_range, _max = 5) do
         {:ok, _job} ->
-          put_flash(conn, :success, "SCHEDULED. WAIT FOR MAIL")
+          put_flash(conn, :success, "EXPORT SCHEDULED")
 
         {:error, :rate_limit} ->
-          put_flash(conn, :error, "NOT SCHEDULED. TOO MANY EXPORTS TODAY")
+          put_flash(conn, :error, "EXPORT NOT SCHEDULED. TOO MANY TODAY")
       end
     end
   else
     defp schedule_export(conn, site, user, date_range) do
       Plausible.Exports.schedule_export!(site, user, date_range)
-      put_flash(conn, :success, "SCHEDULED. WAIT FOR MAIL")
+      put_flash(conn, :success, "EXPORT SCHEDULED")
     end
   end
 
