@@ -1,4 +1,11 @@
 defmodule Plausible.Workers.ClickhouseCleanSites do
+  @moduledoc """
+  Cleans deleted site data from ClickHouse asynchronously.
+
+  We batch up data deletions from ClickHouse as deleting a single site is
+  just as expensive as deleting many.
+  """
+
   use Plausible.Repo
   use Plausible.ClickhouseRepo
   use Plausible.IngestRepo
@@ -31,7 +38,7 @@ defmodule Plausible.Workers.ClickhouseCleanSites do
         "Clearing ClickHouse data for the following #{length(deleted_sites)} sites which have been deleted: #{inspect(deleted_sites)}"
       )
 
-      site_ids_expr = deleted_sites |> Enum.map(&to_string/1) |> Enum.join(", ")
+      site_ids_expr = deleted_sites |> Enum.map_join(", ", &to_string/1)
 
       for table <- @tables_to_clear do
         IngestRepo.query(
