@@ -382,7 +382,10 @@ defmodule PlausibleWeb.Api.StatsController do
         ]
       end
 
-    current_results = Stats.aggregate(site, query, metrics)
+    current_results =
+      Stats.aggregate(site, query, metrics)
+      |> IO.inspect(label: :current)
+
     prev_results = comparison_query && Stats.aggregate(site, comparison_query, metrics)
 
     stats =

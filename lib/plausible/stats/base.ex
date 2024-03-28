@@ -15,7 +15,7 @@ defmodule Plausible.Stats.Base do
   def base_event_query(site, query) do
     events_q = query_events(site, query)
 
-    if Enum.any?(Filters.visit_props(), &query.filters["visit:" <> &1]) do
+    if Enum.any?(Filters.visit_props_exclusive(), &query.filters["visit:" <> &1]) do
       sessions_q =
         from(
           s in query_sessions(site, query),
@@ -49,6 +49,8 @@ defmodule Plausible.Stats.Base do
     end
 
     q = from(e in q, where: ^dynamic_filter_condition(query, "event:page", :pathname))
+
+    q = from(e in q, where: ^dynamic_filter_condition(query, "event:hostname", :hostname))
 
     q =
       case query.filters["event:name"] do

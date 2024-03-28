@@ -28,7 +28,6 @@ defmodule Plausible.Stats.Query do
       |> put_parsed_filters(params)
       |> put_imported_opts(site, params)
       |> maybe_drop_prop_filter(site)
-      |> IO.inspect(label: :query)
 
     on_full_build do
       query = Plausible.Stats.Sampling.put_threshold(query, params)

@@ -47,8 +47,15 @@ defmodule Plausible.Session.CacheStore do
             do: event.pathname,
             else: session.entry_page
           ),
+        hostname:
+          if(event.name == "pageview" and session.hostname != event.hostname,
+            do: event.hostname,
+            else: session.hostname
+          )
+          |> IO.inspect(label: "updated_hostname_for user #{event.user_id}"),
         exit_page: if(event.name == "pageview", do: event.pathname, else: session.exit_page),
-        exit_page_hostname: if(event.name == "pageview", do: event.hostname, else: ""),
+        exit_page_hostname:
+          if(event.name == "pageview", do: event.hostname, else: session.exit_page_hostname),
         is_bounce: false,
         duration: Timex.diff(event.timestamp, session.start, :second) |> abs,
         pageviews:
@@ -61,7 +68,9 @@ defmodule Plausible.Session.CacheStore do
     %Plausible.ClickhouseSessionV2{
       sign: 1,
       session_id: Plausible.ClickhouseSessionV2.random_uint64(),
-      hostname: if(event.name == "pageview", do: event.hostname, else: ""),
+      hostname:
+        if(event.name == "pageview", do: event.hostname, else: "")
+        |> IO.inspect(label: "new hostname_for user #{event.user_id}"),
       site_id: event.site_id,
       user_id: event.user_id,
       entry_page: if(event.name == "pageview", do: event.pathname, else: ""),

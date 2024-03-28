@@ -19,6 +19,8 @@ defmodule Plausible.Stats.Aggregate do
   @session_metrics [:visits, :bounce_rate, :visit_duration, :views_per_visit, :sample_percent]
 
   def aggregate(site, query, metrics) do
+    IO.inspect(metrics, label: :metrics)
+
     {currency, metrics} =
       on_full_build do
         Plausible.Stats.Goal.Revenue.get_revenue_tracking_currency(site, query, metrics)
@@ -35,7 +37,10 @@ defmodule Plausible.Stats.Aggregate do
 
     event_task = fn -> aggregate_events(site, query, event_metrics) end
 
-    session_metrics = Enum.filter(metrics, &(&1 in @session_metrics))
+    session_metrics =
+      Enum.filter(metrics, &(&1 in @session_metrics))
+      |> IO.inspect(label: :session_metrics)
+
     session_task = fn -> aggregate_sessions(site, query, session_metrics) end
 
     time_on_page_task =
@@ -58,6 +63,7 @@ defmodule Plausible.Stats.Aggregate do
 
   defp aggregate_events(site, query, metrics) do
     from(e in base_event_query(site, query), select: ^select_event_metrics(metrics))
+    |> IO.inspect(label: :agg_query)
     |> merge_imported(site, query, :aggregate, metrics)
     |> maybe_add_conversion_rate(site, query, metrics, include_imported: query.include_imported)
     |> ClickhouseRepo.one()

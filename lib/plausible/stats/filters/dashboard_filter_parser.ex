@@ -11,6 +11,11 @@ defmodule Plausible.Stats.Filters.DashboardFilterParser do
   def parse_and_prefix(filters_map) do
     Enum.reduce(filters_map, %{}, fn {name, val}, new_filters ->
       cond do
+        name in Filters.event_props() and name in Filters.visit_props() ->
+          new_filters
+          |> Map.put("event:" <> name, filter_value(name, val))
+          |> Map.put("visit:" <> name, filter_value(name, val))
+
         name in Filters.visit_props() ->
           Map.put(new_filters, "visit:" <> name, filter_value(name, val))
 
@@ -31,7 +36,7 @@ defmodule Plausible.Stats.Filters.DashboardFilterParser do
     {is_negated, val} = parse_negated_prefix(val)
     {is_contains, val} = parse_contains_prefix(val)
     is_list = list_expression?(val)
-    is_wildcard = String.contains?(key, ["page", "goal"]) && wildcard_expression?(val)
+    is_wildcard = String.contains?(key, ["page", "goal", "hostname"]) && wildcard_expression?(val)
     val = if is_list, do: parse_member_list(val), else: remove_escape_chars(val)
     val = if key == "goal", do: wrap_goal_value(val), else: val
 
