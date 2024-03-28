@@ -1,76 +1,71 @@
 defmodule Plausible.Workers.ExportCSV do
   @moduledoc """
-  Worker for running S3 CSV export jobs.
+  Worker for running CSV export jobs.
+  Supports S3 and local storage.
   """
 
   use Oban.Worker,
-    queue: :s3_csv_export,
-    max_attempts: 3,
-    unique: [fields: [:args], keys: [:s3_bucket, :s3_path], period: 60]
+    queue: :csv_export,
+    max_attempts: 3
+
+  alias Plausible.Exports
 
   @impl true
-  def perform(job) do
-    %Oban.Job{
-      args:
-        %{
-          "site_id" => site_id,
-          "email_to" => email,
-          "s3_bucket" => s3_bucket,
-          "s3_path" => s3_path,
-          "start_date" => start_date,
-          "end_date" => end_date,
-          "archive_filename" => archive_filename
-        } = args
-    } = job
+  def perform(%Oban.Job{args: args}) do
+    %{
+      "storage" => storage,
+      "site_id" => site_id,
+      "start_date" => start_date,
+      "end_date" => end_date
+    } = args
 
     start_date = Date.from_iso8601!(start_date)
     end_date = Date.from_iso8601!(end_date)
 
+    queries =
+      Exports.export_queries(site_id,
+        date_range: Date.range(start_date, end_date),
+        extname: ".csv"
+      )
+
+    # since each `perform` attempt runs in a separate process
+    # it's ok to use start_link to keep connection lifecycle
+    # bound to that of the worker
     {:ok, ch} =
       Plausible.ClickhouseRepo.config()
       |> Keyword.replace!(:pool_size, 1)
       |> Ch.start_link()
 
-    s3_config_overrides = s3_config_overrides(args)
+    case storage do
+      "s3" -> perform_s3_export(ch, queries, args)
+      "local" -> perform_local_export(ch, queries, args)
+    end
 
-    download_url =
-      DBConnection.run(
-        ch,
-        fn conn ->
-          conn
-          |> Plausible.Exports.stream_archive(
-            Plausible.Exports.export_queries(site_id,
-              date_range: Date.range(start_date, end_date),
-              extname: ".csv"
-            ),
-            format: "CSVWithNames"
-          )
-          |> Plausible.S3.export_upload_multipart(
-            s3_bucket,
-            s3_path,
-            archive_filename,
-            s3_config_overrides
-          )
-        end,
-        timeout: :infinity
-      )
-
-    # NOTE: replace with proper Plausible.Email template
-    Plausible.Mailer.deliver_now!(
-      Bamboo.Email.new_email(
-        from: PlausibleWeb.Email.mailer_email_from(),
-        to: email,
-        subject: "EXPORT SUCCESS",
-        text_body: """
-        download it from #{download_url}! hurry up! you have 24 hours!"
-        """,
-        html_body: """
-        download it from <a href="#{download_url}">here</a>! hurry up! you have 24 hours!
-        """
-      )
-    )
+    # email delivery can potentially fail and cause already successful
+    # export to be repeated which is costly, hence email is delivered
+    # in a separate job
+    Oban.insert!(Plausible.Workers.NotifyExportCSV.new(args))
 
     :ok
+  end
+
+  defp perform_s3_export(ch, queries, args) do
+    %{
+      "s3_bucket" => s3_bucket,
+      "s3_path" => s3_path
+    } = args
+
+    s3_config_overrides = s3_config_overrides(args)
+
+    DBConnection.run(
+      ch,
+      fn conn ->
+        conn
+        |> Exports.stream_archive(queries, format: "CSVWithNames")
+        |> Plausible.S3.export_upload_multipart(s3_bucket, s3_path, s3_config_overrides)
+      end,
+      timeout: :infinity
+    )
   end
 
   # right now custom config is used in tests only (to access the minio container)
@@ -86,5 +81,24 @@ defmodule Plausible.Workers.ExportCSV do
     end
   else
     defp s3_config_overrides(_args), do: []
+  end
+
+  def perform_local_export(ch, queries, args) do
+    %{"local_path" => local_path} = args
+    tmp_path = Plug.Upload.random_file!("tmp-plausible-export")
+
+    DBConnection.run(
+      ch,
+      fn conn ->
+        Exports.stream_archive(conn, queries, format: "CSVWithNames")
+        |> Stream.into(File.stream!(tmp_path))
+        |> Stream.run()
+      end,
+      timeout: :infinity
+    )
+
+    File.mkdir_p!(Path.dirname(local_path))
+    if File.exists?(local_path), do: File.rm!(local_path)
+    File.rename!(tmp_path, local_path)
   end
 end

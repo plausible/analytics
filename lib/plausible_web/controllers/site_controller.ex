@@ -711,60 +711,60 @@ defmodule PlausibleWeb.SiteController do
   end
 
   on_full_build do
-    defp schedule_csv_export(site, user) do
-      Oban.insert!(
-        Plausible.Workers.ExportCSV.new(%{
-          "site_id" => site.id,
-          "email_to" => user.email,
-          "s3_bucket" => Plausible.S3.exports_bucket(),
-          "s3_path" => "Plausible-#{site.id}.zip"
-        })
-      )
-    end
+    # TODO
+    # def download_s3_export(conn, %{"file" => file}) do
+    # end
   else
-    defp schedule_csv_export(site, user) do
-      Oban.insert!(
-        Plausible.Workers.ExportCSVLocal.new(%{
-          "site_id" => site.id,
-          "email_to" => user.email,
-          "local_path" => Plausible.Exports.random_file(site.id)
-        })
-      )
-    end
-
     def download_local_export(conn, %{"file" => file}) do
-      alias Plausible.Exports
-
       site = conn.assigns.site
-      exports_dir = Exports.local_dir(site.id)
+      exports_dir = Plausible.Exports.local_dir(site.id)
       export_path = Path.join(exports_dir, file)
 
       if File.exists?(export_path) do
-        export_content_disposition =
-          Exports.content_disposition(
-            String.replace(site.domain, ".", "_") <> "-" <> file <> ".zip"
-          )
+        content_disposition = Plausible.Exports.content_disposition(file)
 
         conn
         |> put_resp_content_type("application/zip")
-        |> put_resp_header("content-disposition", export_content_disposition)
+        |> put_resp_header("content-disposition", content_disposition)
         |> send_file(200, export_path)
       else
         conn
-        |> put_flash(:error, "Export not found")
-        |> redirect(to: Routes.site_path(conn, :settings_imports_exports, site.domain))
+        |> put_flash(:error, "EXPORT NOT FOUND")
+        |> redirect(external: Routes.site_path(conn, :settings_imports_exports, site.domain))
       end
+    end
+  end
+
+  on_full_build do
+    defp schedule_export(conn, site, user, date_range) do
+      # TODO make rate limit configurable via env
+      case Plausible.Exports.schedule_export_rate_limit(site, user, date_range, _max = 5) do
+        {:ok, _job} ->
+          put_flash(conn, :success, "SCHEDULED. WAIT FOR MAIL")
+
+        {:error, :rate_limit} ->
+          put_flash(conn, :error, "NOT SCHEDULED. TOO MANY EXPORTS TODAY")
+      end
+    end
+  else
+    defp schedule_export(conn, site, user, date_range) do
+      Plausible.Exports.schedule_export!(site, user, date_range)
+      put_flash(conn, :success, "SCHEDULED. WAIT FOR MAIL")
     end
   end
 
   def csv_export(conn, _params) do
     %{site: site, current_user: user} = conn.assigns
 
-    schedule_csv_export(site, user)
+    conn =
+      if date_range = Plausible.Exports.date_range(site.id) do
+        # TODO use site.stats_start_date for date_range?
+        schedule_export(conn, site, user, date_range)
+      else
+        put_flash(conn, :error, "NO DATA TO EXPORT")
+      end
 
-    conn
-    |> put_flash(:success, "SCHEDULED. WAIT FOR MAIL")
-    |> redirect(to: Routes.site_path(conn, :settings_imports_exports, site.domain))
+    redirect(conn, external: Routes.site_path(conn, :settings_imports_exports, site.domain))
   end
 
   def csv_import(conn, _params) do

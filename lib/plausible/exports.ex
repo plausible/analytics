@@ -6,6 +6,73 @@ defmodule Plausible.Exports do
   require Plausible
   import Ecto.Query
 
+  # TODO make configurable via app env to avoid dialyzer warnings and simplify tests
+  @storage if Plausible.full_build?(), do: "s3", else: "local"
+
+  @doc """
+  TODO
+  """
+  @spec schedule_export!(Plausible.Site.t(), Plausible.Auth.User.t(), Date.Range.t()) ::
+          Oban.Job.t()
+  def schedule_export!(site, user, date_range) do
+    args = %{
+      "storage" => @storage,
+      "site_id" => site.id,
+      "email_to" => user.email,
+      "start_date" => date_range.first,
+      "end_date" => date_range.last
+    }
+
+    archive_filename = archive_filename(site.domain, date_range.first, date_range.last)
+
+    # TODO or just url :: s3://bucket/path | file:://path
+    extra_args =
+      case @storage do
+        "s3" ->
+          %{
+            "s3_bucket" => Plausible.S3.exports_bucket(),
+            "s3_path" => "/#{site.id}/#{archive_filename}"
+          }
+
+        "local" ->
+          %{
+            "local_path" => Path.join(local_dir(site.id), archive_filename)
+          }
+      end
+
+    Map.merge(args, extra_args)
+    |> Plausible.Workers.ExportCSV.new()
+    |> Oban.insert!()
+  end
+
+  @doc """
+  TODO
+  """
+  @spec schedule_export_rate_limit(
+          Plausible.Site.t(),
+          Plausible.Auth.User.t(),
+          Date.Range.t(),
+          pos_integer
+        ) ::
+          {:ok, Oban.Job.t()} | {:error, :rate_limit}
+  def schedule_export_rate_limit(site, user, date_range, max_jobs) do
+    Plausible.Repo.transaction(fn ->
+      exports_today_q =
+        from j in Oban.Job,
+          where: j.scheduled_at > fragment("now() - interval '24h'"),
+          where: j.worker == "Plausible.Workers.ExportCSV",
+          where: j.args["site_id"] == ^site.id
+
+      exports_today = Plausible.Repo.aggregate(exports_today_q, :count)
+
+      if exports_today < max_jobs do
+        {:ok, schedule_export!(site, user, date_range)}
+      else
+        {:error, :rate_limit}
+      end
+    end)
+  end
+
   @doc "Returns the date range for the site's events data or `nil` if there is no data"
   @spec date_range(non_neg_integer) :: Date.range() | nil
   def date_range(site_id) do
@@ -183,7 +250,11 @@ defmodule Plausible.Exports do
 
   @oban_channel __MODULE__
   @doc false
-  def oban_notify, do: Oban.Notifier.notify(Oban, @oban_channel, %{})
+  def oban_notify(site_id) do
+    Oban.Notifier.notify(Oban, @oban_channel, %{"site_id" => site_id})
+  end
+
+  # TODO subscribe only for site id
   @doc "Subscribes for export job updates"
   def oban_listen, do: Oban.Notifier.listen([@oban_channel])
 
@@ -209,6 +280,8 @@ defmodule Plausible.Exports do
 
       name <> extname
     end
+
+    # TODO limit export queries to the provided date range (if provided)
 
     %{
       filename.("imported_visitors") => export_visitors_q(site_id),

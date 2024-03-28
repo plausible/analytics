@@ -540,12 +540,8 @@ base_queues = [
   analytics_imports: 1,
   domain_change_transition: 1,
   check_accept_traffic_until: 1,
-  # NOTE: maybe move s3_csv_export to cloud_queues?
-  s3_csv_export: 1
-]
-
-selfhost_queues = [
-  local_csv_export: 1
+  csv_export: 1,
+  csv_export_notify: 10
 ]
 
 cloud_queues = [
@@ -555,12 +551,7 @@ cloud_queues = [
   lock_sites: 1
 ]
 
-queues =
-  if is_selfhost do
-    base_queues ++ selfhost_queues
-  else
-    base_queues ++ cloud_queues
-  end
+queues = if is_selfhost, do: base_queues, else: base_queues ++ cloud_queues
 
 cron_enabled = !disable_cron
 
