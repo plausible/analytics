@@ -59,7 +59,7 @@ defmodule Plausible.Site do
     # `site` in `assigns`.
     field :import_data_loaded, :boolean, default: false, virtual: true
     field :earliest_import_start_date, :date, virtual: true
-    field :earliest_import_end_date, :date, virtual: true
+    field :latest_import_end_date, :date, virtual: true
     field :complete_import_ids, {:array, :integer}, default: [], virtual: true
 
     timestamps()

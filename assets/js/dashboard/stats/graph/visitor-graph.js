@@ -286,7 +286,7 @@ class LineGraph extends React.Component {
   }
 
   importedNotice() {
-    if (!this.props.topStatData?.imported_source) return
+    if (!this.props.topStatData?.imports_exist) return
 
     const isBeforeNativeStats = (date) => {
       if (!date) return false
@@ -301,7 +301,6 @@ class LineGraph extends React.Component {
     const isComparingImportedPeriod = isBeforeNativeStats(this.props.topStatData.comparing_from)
 
     if (isQueryingImportedPeriod || isComparingImportedPeriod) {
-      const source = this.props.topStatData.imported_source
       const withImported = this.props.topStatData.with_imported;
       const strike = withImported ? "" : " line-through"
       const target = url.setQuery('with_imported', !withImported)
@@ -309,9 +308,9 @@ class LineGraph extends React.Component {
 
       return (
         <Link to={target} className="w-4 h-4 mx-2">
-          <div tooltip={`Stats ${tip}include data imported from ${source}.`} className="cursor-pointer w-4 h-4">
+          <div tooltip={`Stats ${tip}include imported data.`} className="cursor-pointer w-4 h-4">
             <svg className="absolute dark:text-gray-300 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>{source[0].toUpperCase()}</text>
+              <text x="4" y="18" fontSize="24" fill="currentColor" className={"text-gray-700 dark:text-gray-300" + strike}>G</text>
             </svg>
           </div>
         </Link>
