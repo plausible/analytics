@@ -1,6 +1,6 @@
-defmodule PlausibleWeb.Live.LocalExports do
+defmodule PlausibleWeb.Live.LocalExport do
   @moduledoc """
-  LiveView allowing listing and deleting local (i.e. on file system) exports.
+  LiveView allowing scheduling, watching, downloading, and deleting local exports.
   """
   use PlausibleWeb, :live_view
   use Phoenix.HTML
@@ -29,7 +29,7 @@ defmodule PlausibleWeb.Live.LocalExports do
   @impl true
   def render(assigns) do
     ~H"""
-    <header class="border-b border-gray-200 pb-4">
+    <%!-- <header class="border-b border-gray-200 pb-4">
       <h3 class="mt-8 text-md leading-6 font-medium text-gray-900 dark:text-gray-100">
         Existing Exports
       </h3>
@@ -122,19 +122,19 @@ defmodule PlausibleWeb.Live.LocalExports do
           </div>
         </li>
       </ul>
-    <% end %>
+    <% end %> --%>
     """
   end
 
   @impl true
   def handle_event("delete", %{"path" => path}, socket) do
     File.rm!(path)
-    {:noreply, list_local_exports(socket)}
+    {:noreply, socket}
   end
 
   def handle_event("cancel", %{"job-id" => job_id}, socket) do
     Oban.cancel_job(String.to_integer(job_id))
-    {:noreply, list_local_exports(socket)}
+    {:noreply, socket}
   end
 
   @impl true
@@ -147,20 +147,6 @@ defmodule PlausibleWeb.Live.LocalExports do
       end
 
     {:noreply, socket}
-  end
-
-  @format_path_regex ~r/^(?<beginning>((.+?\/){1})).*(?<ending>(\/.*){3})$/
-
-  defp format_path(path) do
-    path_string =
-      path
-      |> String.replace_prefix("\"", "")
-      |> String.replace_suffix("\"", "")
-
-    case Regex.named_captures(@format_path_regex, path_string) do
-      %{"beginning" => beginning, "ending" => ending} -> "#{beginning}...#{ending}"
-      _ -> path_string
-    end
   end
 
   defp format_bytes(bytes) when is_integer(bytes) do

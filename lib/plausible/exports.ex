@@ -40,7 +40,7 @@ defmodule Plausible.Exports do
       end
 
     Map.merge(args, extra_args)
-    |> Plausible.Workers.ExportCSV.new()
+    |> Plausible.Workers.ExportAnalytics.new()
     |> Oban.insert!()
   end
 
@@ -59,7 +59,7 @@ defmodule Plausible.Exports do
       exports_today_q =
         from j in Oban.Job,
           where: j.scheduled_at > fragment("now() - interval '24h'"),
-          where: j.worker == "Plausible.Workers.ExportCSV",
+          where: j.worker == "Plausible.Workers.ExportAnalytics",
           where: j.args["site_id"] == ^site.id
 
       exports_today = Plausible.Repo.aggregate(exports_today_q, :count)

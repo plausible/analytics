@@ -1,11 +1,11 @@
-defmodule Plausible.Workers.ExportCSV do
+defmodule Plausible.Workers.ExportAnalytics do
   @moduledoc """
   Worker for running CSV export jobs.
   Supports S3 and local storage.
   """
 
   use Oban.Worker,
-    queue: :csv_export,
+    queue: :analytics_exports,
     max_attempts: 3
 
   alias Plausible.Exports

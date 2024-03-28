@@ -480,7 +480,7 @@ defmodule Plausible.Imported.CSVImporterTest do
 
       # export archive to s3
       Oban.insert!(
-        Plausible.Workers.ExportCSV.new(%{
+        Plausible.Workers.ExportAnalytics.new(%{
           "site_id" => site.id,
           "email_to" => user.email,
           "s3_bucket" => "exports",
